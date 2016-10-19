@@ -1,0 +1,69 @@
+/* Custom CSS style for labelBee interface */
+
+canvas {
+    border: 1px solid #d3d3d3;
+}
+
+td {
+    padding-right: 40px;
+    vertical-align: top;
+}
+
+.container {
+  width: 100%; /*1170px;*/
+      border: solid 1pt black;
+}
+.canvaswrapper {
+    position: relative;
+    width: 100%;/*480px;*/
+    height: 100%; /*270px;*/
+    overflow: auto; 
+    border: solid 1pt black;
+}
+#canvasresize {
+    /* border: solid 1pt #F00; */
+    overflow: hidden; 
+    clip: rect(0, auto, auto, 0);
+    padding-right: 16px;
+}
+.ui-resizable-helper {
+	border: 2px dotted #F00;
+}
+
+
+.canvaswrapper > canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.axis text
+{
+    font-family: 'Arial';
+    font-size: 13px;
+}
+
+.outer {
+width: 510px;
+height: 320px;
+overflow: auto;
+}
+
+.inner {
+    width: 800px;
+    height: 600px;
+}
+
+svg {
+  font: 10px sans-serif;
+  shape-rendering: crispEdges;
+}
+
+rect {
+  fill: #eee;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #fff;
+}
