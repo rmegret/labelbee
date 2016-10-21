@@ -477,9 +477,15 @@ function loadFromFile(event) {
 }
 
 function onKeyDown(e) {
-    //console.log("onKeyDown: e=",e)
+    console.log("onKeyDown: e=",e)
     if (e.key == "Delete") {
         removeDecision();
+        return false
+    }
+    if (e.key == "p") {
+        $('#P').prop('checked', !$('#P').prop('checked'));
+        $( "#P" ).trigger( "change" );
+        //automatic_sub();
         return false
     }
     switch (e.keyCode) {
@@ -849,7 +855,6 @@ function forward3() {
     video2.seekForward(fps*60*5);
 }
 
-
 function vidEnd() {
     play.value = "Play";
 }
@@ -940,6 +945,7 @@ function addRectInteractive(id, startX, startY) {
             id.value = "no selection"
             console.log('onMouseUp: removing non validated activeObject=', activeObject)
             updateForm(undefined)
+            selectedBee = undefined
         }
         refresh();
     }
@@ -1422,9 +1428,11 @@ function showZoom(rect) {
 function selectBeeByID(id) {
    let rect = findRect(id);
    if (rect) {
-       selectBee(rect);
+       console.log('selectBeeByID: trying to select id=',id);
+       canvas1.setActiveObject(canvas1.item(id));
+       //selectBee(rect);
    } else {
-       selectedBee=undefined;
+       //selectedBee=undefined;
        console.log('selectBeeByID: No rect found for id=',id);
    }
 }
