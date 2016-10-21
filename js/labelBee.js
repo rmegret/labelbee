@@ -272,6 +272,7 @@ var g_Moving = false,
     g_Dragging = false;
 var fps;
 var videoinfo;
+var selectedBee = undefined
 
 function init() {
     videoinfo = {
@@ -310,6 +311,7 @@ function init() {
     canvas1.on('object:moving', onObjectMoving); // When a rectangle is being modified
     canvas1.on('object:modified', onObjectModified); // When a rectangle has been modified
     canvas1.on('object:selected', onObjectSelected); // When clicking on a rectangle
+    canvas1.on('selection:cleared', onObjectDeselected); // When deselecting an object   Not Working???
 
     $('#F').change(onActivityChanged)
     $('#P').change(onActivityChanged)
@@ -664,6 +666,8 @@ function onFrameChanged(event) {
     //getChronogram();
 
     refresh();
+    
+    selectBeeByID(selectedBee);
 }
 
 function refresh() {
@@ -1120,6 +1124,8 @@ function onMouseDown(option) {
         // Clicked on the background
         console.log('onMouseDown: no object selected', option)
 
+        canvas1.deactivateAllWithDispatch()
+
         var startY = option.e.offsetY,
             startX = option.e.offsetX;
         let videoXY = canvasToVideoCoords({
@@ -1148,6 +1154,8 @@ function onMouseDown(option) {
                 let width = r.width,
                     height = r.height
                 rect = addRect(prediction.id, startX - width / 2, startY - height / 2, width, height, "new");
+                rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
+                rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
                 console.log("onMouseDown: copied rect from ", obs)
             } else {
                 rect = addRect(prediction.id, startX - default_width / 2, startY - default_height / 2,
@@ -1227,6 +1235,10 @@ function onObjectSelected(option) {
         console.log("ActiveObject id=", canvas1.getActiveObject().id)
         selectBee(option.target)
     }
+}
+
+function onObjectDeselected(option) {
+   console.log("onObjectDeselected: ", option);
 }
 
 function onObjectMoving(option) {
@@ -1407,12 +1419,24 @@ function showZoom(rect) {
     zoom_ctx.stroke()
 }
 
+function selectBeeByID(id) {
+   let rect = findRect(id);
+   if (rect) {
+       selectBee(rect);
+   } else {
+       selectedBee=undefined;
+       console.log('selectBeeByID: No rect found for id=',id);
+   }
+}
+
 //This function is needed to update the display when a different bee is selected
 //in the GUI
 //function selectBee(beeId) {
 function selectBee(rect) {
     console.log("selectBee: rect=", rect);
     let beeId = rect.id;
+    
+    selectedBee = beeId;
 
     // Update form from rect
     updateForm(rect)
