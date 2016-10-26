@@ -9,16 +9,52 @@ td {
     vertical-align: top;
 }
 
+.overlay {
+  width: 100%; height:100%; 
+  position: absolute;   z-index: 100;
+  background: rgba(255,255,255, 0.8);
+  color: rgba(0,0,0, 1);
+  transition: opacity 500ms;
+  visibility: hidden;
+  opacity: 0;
+  display: none;
+  border: solid 2px red;
+}
+.overlay:target {
+  left: 0px;
+  padding: 20px;
+  visibility: visible;
+  opacity: 1;
+  display: block;
+  position: absolute;   z-index: 100; 
+}
+.overlay .closehelp {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  transition: all 200ms;
+  font-size: 18px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #F00;
+}
+
+.main {
+  position: absolute;
+  top: 53px;
+/*   margin-top: 53px; */
+}
 .container {
   width: 100%; /*1170px;*/
-      border: solid 1pt black;
+      /* border: solid 1pt black; */
 }
 .canvaswrapper {
     position: relative;
     width: 100%;/*480px;*/
     height: 100%; /*270px;*/
-    overflow: auto; 
-    border: solid 1pt black;
+    overflow: visible; 
+    /* border: solid 1pt black; */
+    border: none;
 }
 #canvasresize {
     /* border: solid 1pt #F00; */
@@ -53,6 +89,14 @@ overflow: auto;
     width: 800px;
     height: 600px;
 }
+
+.playing {
+    background-color: blue;
+}
+.playing:hover {
+    background-color: blue;
+}
+
 
 svg {
   font: 10px sans-serif;

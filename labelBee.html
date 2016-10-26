@@ -30,7 +30,8 @@
 </head>
 
 <body onload="init()">
-  <nav class="navbar navbar-inverse navbar-fixed-top">
+<!--   <nav class="navbar navbar-inverse navbar-fixed-top"> -->
+  <nav class="navbar navbar-inverse">
     <div class="container">
 
       <div class="navbar-header">
@@ -47,15 +48,42 @@
         <ul class="nav navbar-nav">
           <li class="active"><a href="#">Home</a></li>
           <li><a href="#about">About</a></li>
-          <li><a href="#contact">Contact</a></li>
-
+          <li><a href="#help">Help</a></li>
         </ul>
       </div>
       <!--/.nav-collapse -->
     </div>
   </nav>
 
-  <div class="container" style="margin-top:70px">
+  <div class="container main">
+  
+<div id="help" class="overlay">
+ 
+<a class="closehelp" href="#">Close help</a> 
+ 
+<h3>Quickhelp labelbee</h3>
+<h4>Keyboard:</h4>
+<ul>
+<li><kbd>&lt;</kbd>/<kbd>&gt;</kbd>: move 1 frame backward/forward</li>
+<li><kbd>&lt;</kbd>/<kbd>&gt;</kbd>+<kbd>Shift</kbd>: move 1 s, +<kbd>Ctrl</kbd>: move 1 min, +<kbd>Shift</kbd>+<kbd>Ctrl</kbd>: move 10 min</li>
+<br>
+<li><kbd>Space</kbd> : Play video</li>
+<li><kbd>Ctrl</kbd>+<kbd>Space</kbd> : Play video x4</li>
+<li><kbd>Shift</kbd>+<kbd>Space</kbd> : Play video backward</li>
+<li><kbd>Return</kbd> : validate and save current bee annotation (becomes yellow)</li>
+<li><kbd>P</kbd> : mark/unmark pollen</li>
+<li><kbd>&larr;</kbd>, <kbd>&rarr;</kbd>, <kbd>&uarr;</kbd> and <kbd>&darr;</kbd> : move current annotation box</li>
+
+</ul>
+<h4>Mouse:</h4>
+<ul>
+<li><kbd>Click</kbd>+<kbd>Drag</kbd> : Create annotation bbox (click for first corner, drag for second corner)</li>
+<li><kbd>Shift</kbd>+<kbd>Click</kbd> : Create annotation bbox in one click (shift click on center)</li>
+</ul>
+
+ 
+</div>
+  
     <table>
       <tr>
         <td>
@@ -78,13 +106,16 @@
             <button value="Previous minute" onclick="rewind3()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-backward"></span></button>
             <button value="Previous second" onclick="rewind2()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-backward"></span></button>
             <button value="Previous frame" onclick="rewind()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-backward"></span></button>
-            <button value="Play" onclick="playPauseVideo()" id="play" id="play2" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play"></span></button>
+            <button value="Play Backwards" onclick="playPauseVideoBackward()" id="playbackward" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-backward"></span></button>
+            <button value="Play" onclick="playPauseVideo()" id="play"  class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play"></span></button>
             <button value="Next frame" onclick="forward()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-forward"></span></button>
             <button value="Next second" onclick="forward2()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-forward"></span></button>
             <button value="Next minute" onclick="forward3()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-forward"></span></button>
             <input type="button" value="Submit info" onclick="submit_bee()" class="btn btn-info" style="position: inline">
-            <input type="button" value="Remove obs" onclick="removeDecision()" class="btn btn-info" style="position: inline"
+            <!-- Undo button: disabled due to bugs
+<input type="button" value="Remove obs" onclick="removeDecision()" class="btn btn-info" style="position: inline"
               id="special">
+ -->
           </p>
 
           <div id="canvasresize" class="ui-widget-content">
@@ -104,11 +135,16 @@
             ID <input type="text" value="" id="I" onkeypress="onKeyDown_IDEdit(event)" onClick="resetCheck()"></input>
             <input type="button" value="Check" onclick="grabandCheckID()" class="btn btn-info btn-sm" style="position: inline"
               id="special2">
+<!-- 
             <div><br/>
               <label class="checkbox-inline"><input type="checkbox" value="" id="marked">Marked</label>
               <label class="checkbox-inline"><input  type="checkbox" value="" id="permanent">Permanent</label>
             </div><br/>
+ -->
             <div>
+              <p><div id="videoSize">-</div>
+              <div id="canvasSize">-</div></p>
+            
               <p style="display:none">Bounding Box:</p>
               <table style="display:none">
                 <tr>
@@ -136,6 +172,7 @@
                   </td>
                 </tr>
               </table>
+              
               <div id="realTime">Real Time:</div>
               <div id="vidTime">Video Time:</div>
               <div class="frame">

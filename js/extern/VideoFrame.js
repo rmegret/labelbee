@@ -86,7 +86,9 @@ VideoFrame.prototype = {
 		var _video = this;
 		if (!format) { console.log('VideoFrame: Error - The listen method requires the format parameter.'); return; }
 		 this.interval = setInterval(function() {
-			if (_video.video.paused || _video.video.ended) { return; }
+			if (_video.video.paused || _video.video.ended) { 
+			    if (!this.intervalPlayBackwards) { return; }
+			}
 			var frame = ((format === 'SMPTE') ? _video.toSMPTE() : ((format === 'time') ? _video.toTime() : _video.get()));
 			if (_video.obj.callback) { _video.obj.callback(frame, format); }
 			return frame;
@@ -96,12 +98,15 @@ VideoFrame.prototype = {
 	stopListen : function() {
 		var _video = this;
 		clearInterval(_video.interval);
+		clearInterval(_video.intervalPlayBackwards);
 	},
 	fps : FrameRates,
 	setFrameRate : function(fr) {
 	    this.frameRate = fr;
 	}
 };
+
+
 
 /**
  * Returns the current time code in the video in HH:MM:SS format
@@ -279,3 +284,24 @@ VideoFrame.prototype.seekTo = function(config) {
 		this.video.currentTime = seekTime;
 	}
 };
+
+
+VideoFrame.prototype.playBackwards = function(tick) {
+		var _video = this;
+		this.video.pause();
+		 this.intervalPlayBackwards = setInterval(function() {
+			_video.seekBackward();
+			return true;
+		}, (tick ? tick : 1000 / _video.frameRate));
+        this.listen('frame');
+	};
+	
+	VideoFrame.prototype.playForwards = function(tick) {
+		var _video = this;
+		this.video.pause();
+		 this.intervalPlayBackwards = setInterval(function() {
+			_video.seekForward();
+			return true;
+		}, (tick ? tick : 1000 / _video.frameRate));
+        this.listen('frame');
+	};
