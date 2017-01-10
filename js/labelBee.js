@@ -27,12 +27,15 @@ var videoinfo;
 var selectedBee = undefined
 var logging = {
   "rects": false,
-  "frameEvents": true,
+  "frameEvents": false,
   "submitEvents": false,
-  "mouseEvents": false,
+  "mouseEvents": true,
   "keyEvents": false,
   "selectionEvents": false,
 }
+var canvasTform = [0, 0, 1]; // cx,cy,scale
+var plotTrack_range_backward = 5
+var plotTrack_range_forward = 5
 
 function init() {
     videoinfo = {
@@ -73,6 +76,7 @@ function init() {
     canvas1.on('object:modified', onObjectModified); // When a rectangle has been modified
     canvas1.on('object:selected', onObjectSelected); // When clicking on a rectangle
     canvas1.on('selection:cleared', onObjectDeselected); // When deselecting an object   Not Working???
+    $('.upper-canvas').bind('contextmenu', onMouseDown2);
 
     $('#F').change(onActivityChanged)
     $('#P').change(onActivityChanged)
@@ -250,6 +254,10 @@ function onKeyDown(e) {
         //automatic_sub();
         return false
     }
+    if (e.key == "r" && e.ctrlKey) {
+        refresh()
+        return false
+    }
     switch (e.keyCode) {
 /*        case 32: // Space
             var id_field = document.getElementById("I");
@@ -272,6 +280,7 @@ function onKeyDown(e) {
             }
             return false;
         case 27: // Escape
+            return true;
             var id_field = document.getElementById("I");
             if ($(id_field).is(':focus')) {
                 id_field.selectionStart = id_field.selectionEnd
@@ -390,13 +399,27 @@ function resizeCanvas(w,h) {
 }
 function refreshCanvasSize(event, ui) {
     console.log('refreshCanvasSize')
+    
     let wd = parseInt($("#canvasresize")[0].style.width)-16 // Assume width is in px
     let hd = video.videoHeight/video.videoWidth*wd
         
     resizeCanvas(wd,hd)
     
+    transformFactor = video.videoWidth / canvas.width;
+    
     $("#videoSize")[0].innerHTML = 'videoSize: '+video.videoWidth.toString() + 'x' + video.videoHeight.toString();
     $("#canvasSize")[0].innerHTML = 'canvasSize: '+wd.toString() + 'x' + hd.toString();
+    
+    let s = canvasTform[2];
+    let tx = (canvasTform[0]-vid_cx) / transformFactor + wd/2;
+    let ty = (canvasTform[1]-vid_cy) / transformFactor + hd/2;
+    
+    var ctx
+    ctx=canvas.getContext("2d");
+    ctx.transform(s,0,0,s,tx,ty);
+    
+    ctx=canvas1.getContext("2d");
+    ctx.transform(s,0,0,s,tx,ty);
         
     onFrameChanged()
 }
@@ -410,6 +433,9 @@ function onVideoLoaded(event) {
     
     console.log("w=",w)
     console.log("h=",h)
+    
+    vid_cx = w/2;
+    vid_cy = h/2;
     
     // Video pixel size
     //resizeCanvas(w,h)
@@ -431,7 +457,6 @@ function onVideoLoaded(event) {
     //resizeCanvasDisplay(wd,hd)
     //resizeCanvas(wd,hd)
     refreshCanvasSize()
-
     
     //onFrameChanged(event)
     video.oncanplay = onVideoReady
@@ -455,8 +480,6 @@ function onFrameChanged(event) {
     $('#currentFrame').html("Frame: " + Cframe);
     $('#vidTime').html("Video Time: " + video2.toHMSm(video2.toMilliseconds()/1000.0));
     $('#realTime').html("Real Time: " + video2.toHMSm((video2.toMilliseconds()*fps/videoinfo.realfps+video2.toMilliseconds(videoinfo.starttime))/1000.0));
-
-    transformFactor = video.videoWidth / canvas.width;
 
     updateForm(undefined);
     canvas1.clear();
@@ -534,15 +557,59 @@ function plotTracks(ctx) {
     let F = getCurrentFrame()
     let ids = getValidIDsForFrame(F)
 
-    let range_backward = 5
-    let range_forward = 5
-    let fmin = F-range_backward;
-    let fmax = F+range_forward;
+    let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1.2;
+    let fmin = F-plotTrack_range_backward;
+    let fmax = F+plotTrack_range_forward;
     if (fmin<0) fmin=0;
     //if (fmax>maxframe) fmax=maxframe;
 
     for (let id of ids) { // For each valid bee ID, create a track for it
+        let obs = getObsHandle(fmin, id, false)
+        let x = undefined, y=undefined, z=0;
+        if (!!obs) {
+            let rect = videoToCanvasCoords(obs)
+            x = rect.left + rect.width / 2;
+            y = rect.top + rect.height / 2;
+            z = 1;
+        }
+
+        setColor = function(f) {
+            if (f<=F) {
+                color = "rgba(255,0,0,"+(1-Math.abs((f-F)/frange))+")"
+                //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
+            } else {
+                color = "rgba(0,128,0,"+(1-Math.abs((f-F)/frange))+")"
+            }
+            return color;
+        }
+
+        for (let f=fmin+1; f<=fmax; f++) {
+            let obs = getObsHandle(f, id, false)
+            if (!obs) { z=0; continue;}
+            let rect = videoToCanvasCoords(obs)            
+            let x2 = rect.left + rect.width / 2;
+            let y2 = rect.top + rect.height / 2;
+            let z2 = 1;
+            
+            ctx.beginPath();
+            ctx.moveTo(x,y);
+            ctx.lineTo(x2,y2);
+            
+            ctx.lineWidth = 1
+            if (z)
+                ctx.setLineDash([])
+            else
+                ctx.setLineDash([10,10])
+            ctx.strokeStyle = setColor(f);
+            ctx.stroke();
+            ctx.strokeStyle = "none"
+            ctx.setLineDash([])
+            
+            x=x2; y=y2; z=z2;
+        }
         for (let f=fmin; f<=fmax; f++) {
+            if (f==F) continue;
+        
             let obs = getObsHandle(f, id, false)
             if (!obs) continue;
             let rect = videoToCanvasCoords(obs)
@@ -550,10 +617,23 @@ function plotTracks(ctx) {
             let x = rect.left + rect.width / 2;
             let y = rect.top + rect.height / 2;
     
-            if (f-F<0)
-                paintDot(ctx, {'x':x, 'y':y}, 3, "red", id)
-            else
-                paintDot(ctx, {'x':x, 'y':y}, 3, "green", id)
+//             if (f-F<0)
+//                 color = "red"
+//             else
+//                 color = "green"
+            color = setColor(f);
+                
+            radius = 3;
+            paintDot(ctx, {'x':x, 'y':y}, radius, color, id)    
+                
+            let acti = activityString(obs)
+
+            ctx.font = "8px Arial";
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(acti, x, y + radius + 3);
+            ctx.textBaseline = 'alphabetic';    
         }
     }
 }
@@ -570,7 +650,15 @@ function paintDot(ctx, pt, radius, color, id) {
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.fillText(String(id), x, y - radius - 3);
+}
 
+function activityString(obs) {
+    let acti = ''
+    if (obs.bool_acts[0]) acti += 'F'
+    if (obs.bool_acts[1]) acti += 'P'
+    if (obs.bool_acts[2]) acti += 'E'
+    if (obs.bool_acts[3]) acti += 'L'
+    return acti;
 }
 
 function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
@@ -596,11 +684,7 @@ function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
     ctx.textAlign = 'center';
     ctx.fillText(String(rect.id), x, y - radius - 3);
 
-    let acti = ''
-    if (rect.obs.bool_acts[0]) acti += 'F'
-    if (rect.obs.bool_acts[1]) acti += 'P'
-    if (rect.obs.bool_acts[2]) acti += 'E'
-    if (rect.obs.bool_acts[3]) acti += 'L'
+    let acti = activityString(rect.obs)
 
     ctx.font = "10px Arial";
     ctx.fillStyle = color;
@@ -872,7 +956,6 @@ function findRect(id) {
     return undefined
 }
 
-// REMI
 function getCurrentFrame() {
     return video2.get();
 }
@@ -966,6 +1049,19 @@ function predictId(frame, rect, mode) {
         id: default_id,
         reason: 'default'
     };
+}
+
+function onMouseDown2(ev) {
+   if (ev.ctrlKey) {
+      console.log("onMouseDown2",ev);
+      
+//      canvasTform[1] = 
+      
+      ev.preventDefault();
+      return false;
+   }
+   console.log("onMouseDown2");
+   return true;
 }
 
 function onMouseDown(option) {
@@ -1299,7 +1395,8 @@ function selectBeeByID(id) {
    if (rect) {
        if (logging.selectionEvents)
            console.log('selectBeeByID: trying to select id=',id);
-       canvas1.setActiveObject(canvas1.item(id));
+       //canvas1.setActiveObject(canvas1.item(id));
+       canvas1.setActiveObject(rect);
        //selectBee(rect);
    } else {
        //selectedBee=undefined;
@@ -1393,15 +1490,17 @@ function undoRemoveObs() {
 }
 
 function resetRemove() {
-    buttonManip = document.getElementById("special");
-    buttonManip.className = "btn btn-info";
-    buttonManip.value = "Remove obs";
+// Disabled for now
+//     buttonManip = document.getElementById("special");
+//     buttonManip.className = "btn btn-info";
+//     buttonManip.value = "Remove obs";
 }
 
 function resetCheck() {
-    buttonManip = document.getElementById("special2");
-    buttonManip.className = "btn btn-info btn-sm";
-    buttonManip.value = "Check";
+    console.log('WARNING: call to obsolete function resetCheck()');
+//     buttonManip = document.getElementById("special2");
+//     buttonManip.className = "btn btn-info btn-sm";
+//     buttonManip.value = "Check";
 }
 
 
@@ -1455,10 +1554,10 @@ function chronoObservation() {
 }
 
 //// Controller
-function grabandCheckID() {
-    var ID = document.getElementById("I");
-    doesExistButton(ID.value);
-}
+// function grabandCheckID() {
+//     var ID = document.getElementById("I");
+//     doesExistButton(ID.value);
+// }
 
 //function grabIDEditInfoCallChange(event) {
 function onKeyDown_IDEdit(event) {
@@ -1578,23 +1677,23 @@ function doesExist(ID) {
     return false;
 }
 
-function doesExistButton(ID) {
-    for (frame in Tracks) {
-        for (id in Tracks[frame]) {
-            if (id == ID) {
-                buttonManip2 = document.getElementById("special2");
-                buttonManip2.className = "btn btn-danger btn-sm";
-                buttonManip2.value = "Taken";
-                return true;
-            }
-        }
-    }
-
-    buttonManip2 = document.getElementById("special2");
-    buttonManip2.className = "btn btn-success btn-sm";
-    buttonManip2.value = "Free to use";
-    return false;
-}
+// function doesExistButton(ID) {
+//     for (frame in Tracks) {
+//         for (id in Tracks[frame]) {
+//             if (id == ID) {
+//                 buttonManip2 = document.getElementById("special2");
+//                 buttonManip2.className = "btn btn-danger btn-sm";
+//                 buttonManip2.value = "Taken";
+//                 return true;
+//             }
+//         }
+//     }
+// 
+//     buttonManip2 = document.getElementById("special2");
+//     buttonManip2.className = "btn btn-success btn-sm";
+//     buttonManip2.value = "Free to use";
+//     return false;
+// }
 
 function changeObservationID(frame, old_id, new_id) {
     // REMI: modified to be be independent of View

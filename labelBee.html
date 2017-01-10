@@ -88,18 +88,18 @@
       <tr>
         <td>
           <p>
-            <input type="button" value="Save JSON" onclick="saveToFile()" class="btn btn-info" style="display:inline" id="save">
-            <input type="button" value="Save CSV" onclick="saveToCSV()" class="btn btn-info" style="display:inline" id="saveCSV">
-            <input type="button" value="Save Bboxes" onclick="saveToBBoxes()" class="btn btn-info" style="display:inline" id="saveBBoxes">
-            <input type="file" value="Load" class="btn btn-info" style="display:inline" id="load">
-            <select id="selectboxVideo" name="" onchange="selectVideo()">
+                  <div class="btn btn-primary">
+                  <label for="selectboxVideo" class="primary">Video </label>
+                   <select id="selectboxVideo" name="video" onchange="selectVideo()" class="btn btn-primary">
                 <option value="data/testvideo.mp4" selected>testvideo.mp4</option>
                 <option value="data/36_01_H_160715100000.mp4">36_01_H_160715100000.mp4</option>
                 <option value="data/36_01_H_160715100000.webm">36_01_H_160715100000.webm</option>
                 <option value="data/36_01_H_160715100000.webm">36_01_H_160715100000_IPPP.mp4</option>
                 <option value="data/36_01_H_160715100000_IPPPP_1MB.mp4">36_01_H_160715100000_IPPPP_1MB.mp4</option>
                 <option value="data/36_01_H_160715100000_IPPPP_4MB.mp4">36_01_H_160715100000_IPPPP_4MB.mp4</option>
+                <option value="data/36_01_H_160715100000_copy.mp4">36_01_H_160715100000_copy.mp4</option>
             </select>
+             </div>
           </p>
           <p>
             <!--Change to div-->
@@ -128,13 +128,25 @@
           <video src="" id="video" style="display:none"></video>
         </td>
         <td>
-          <div>
+          <div style="min-width:180px;">
+                    <p></p>
+            <p>
+            <input type="button" value="Save JSON" class="btn btn-primary btn-sm" onclick="saveToFile()"  style="display:inline" id="save">
+            <label for="load" value="Load JSON" class="btn btn-primary btn-sm">Load JSON</label>
+            <input type="file" value="Load JSON" style="display:none" id="load">
+            </p><p>
+            <input type="button" value="Save CSV" class="btn btn-default btn-sm" onclick="saveToCSV()"  style="display:inline" id="saveCSV">
+            <input type="button" value="Save Bboxes" class="btn btn-default btn-sm" onclick="saveToBBoxes()"  style="display:inline" id="saveBBoxes">
+          </p>
+          
 <!--            <br/>
             <canvas id="zoom" width="200" height="150"></canvas> -->
             <p id="alert"></p>
             ID <input type="text" value="" id="I" onkeypress="onKeyDown_IDEdit(event)" onClick="resetCheck()"></input>
+<!-- 
             <input type="button" value="Check" onclick="grabandCheckID()" class="btn btn-info btn-sm" style="position: inline"
               id="special2">
+ -->
 <!-- 
             <div><br/>
               <label class="checkbox-inline"><input type="checkbox" value="" id="marked">Marked</label>
