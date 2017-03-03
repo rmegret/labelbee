@@ -15,8 +15,9 @@ var form_acts = [],
     currentFrame, video, video2, Cframe = 0;
 var Tracks = new Array(),
     temporaryObs = new Observation(0),
-    chronogramData = new Array(),
-    chronoObs = new chronoObservation();
+    chronogramData = new Array()
+//var chronoObs = new chronoObservation();
+var Tags = new Array()
 var buttonManip, undo = new Observation(0),
     alert1, transformFactor = 1.0;
 var vis, xAxis, yAxis, circles;
@@ -41,8 +42,7 @@ function init() {
     videoinfo = {
         'fps': 22, 
         'realfps': 20,  //realfps = 20.0078;
-        'starttime': '09:59:59.360',
-        'startdate': '2016-07-15'
+        'starttime': '2016-07-15T09:59:59.360'
     }
     fps = videoinfo.fps; 
     $('#selectboxVideo')[0].selectedIndex=1 // select long video
@@ -60,6 +60,7 @@ function init() {
     time = document.getElementById("vidTime");
     ctx = canvas.getContext('2d');
 
+    initChrono();
     drawChrono();
 
     video.addEventListener('ended', vidEnd, false);
@@ -85,9 +86,10 @@ function init() {
 
     // REMI: use keyboard
     $(window).on("keydown", onKeyDown);
+    //$('.upper-canvas').on("keydown", onKeyDown);
 
     document.getElementById('load').addEventListener('change', loadFromFile);
-
+    document.getElementById('loadtags').addEventListener('change', loadTagsFromFile);
     
     //$('#video')[0].onload = onFrameChanged
     $('#video')[0].onloadeddata = onVideoLoaded
@@ -104,10 +106,13 @@ function init() {
       aspectRatio: 1   // Need to put a value even to update it later
     });
     $("#canvasresize").on( "resizestop", refreshCanvasSize );
+    
 
     // Do not trigger first refresh: onloadeddata will call it
     // refresh();
     updateForm(undefined)
+    
+    loadFromFile0('data/Tracks-demo.json')
 }
 
 function selectVideo() {
@@ -227,10 +232,24 @@ function onReaderLoad(event) {
     Tracks = obj;
     onFrameChanged();
     
+    refreshChronogram()
+    
     console.log(event)
     //$("#load")[0].value='Loaded '+fileToRead
 }
+function loadFromFile0(fileToRead) {
+    console.log("loadFromFile0: importing from JSON...")
 
+    $.get(fileToRead, function(data) {
+        console.log("JSON loaded: ",data)
+        var obj = JSON.parse(data)
+        Tracks = obj;
+        onFrameChanged();
+        
+        refreshChronogram()
+    });
+
+}
 function loadFromFile(event) {
     console.log("loadFromFile: importing from JSON...")
 
@@ -241,10 +260,53 @@ function loadFromFile(event) {
     reader.readAsText(fileToRead);
 }
 
+function onTagsReaderLoad(event) {
+    console.log(event.target.result);
+    var obj = JSON.parse(event.target.result);
+    console.log(obj)
+    Tags = obj;
+    refreshChronogram()
+    //updateChronoTagBars()
+    onFrameChanged();
+    
+    console.log(event)
+    //$("#load")[0].value='Loaded '+fileToRead
+    
+    console.log(Tags)
+}
+
+function loadTagsFromFile(event) {
+    console.log("loadTagsFromFile: importing from JSON...")
+
+    fileToRead = event.target.files[0]
+
+    var reader = new FileReader();
+    reader.onload = onTagsReaderLoad;
+    reader.readAsText(fileToRead);
+}
+
+function onStartTimeChanged(event) {
+    console.log('onStartTimeChanged', event)
+
+    var d = new Date(event.target.value)
+    videoinfo.starttime = d.toISOString()
+    updateChronoXDomainFromVideo()
+    drawChrono()
+}
+function onFPSChanged(event) {
+    console.log('onFPSChanged', event)
+
+    videoinfo.fps = Number(event.target.value)
+    fps = videoinfo.fps
+    updateChronoXDomainFromVideo()
+    drawChrono()
+}
+
+
 function onKeyDown(e) {
     if (logging.keyEvents)
         console.log("onKeyDown: e=",e)
-    if (e.key == "Delete") {
+    if (e.key == "Delete" || e.key == 'd') {
         removeDecision();
         return false
     }
@@ -298,8 +360,9 @@ function onKeyDown(e) {
                 console.log("onKeyDown: 'S' bound to submit_bee. Prevented key 'S' to propagate to textfield.")
             return false; // Prevent using S in textfield
         case 13: // Enter
-            onKeyDown_IDEdit(e) // Forward to IDedit keydown handler
-            return false;
+            //onKeyDown_IDEdit(e) // Forward to IDedit keydown handler
+            //return false;
+            return true
         case 16: // Shift
         case 17: // Ctrl
         case 18: // Alt
@@ -334,6 +397,7 @@ function onKeyDown(e) {
         case 224: // Firefox
             break;
     }
+    /*
     let obj = canvas1.getActiveObject();
     if (obj) {
         switch (e.keyCode) {
@@ -371,6 +435,8 @@ function onKeyDown(e) {
                 return false;
         }
     }
+    */
+    /*
     if (e.keyCode >= 48 && e.keyCode <= 57) { // Numbers from 0 to 9
         if (!$("#I").is(':focus')) { // If ID not focused, focus it
             $("#I")[0].focus()
@@ -379,6 +445,7 @@ function onKeyDown(e) {
             return true; // Let keycode be transfered to field
         }
     }
+    */
 }
 
 function vidSet() {
@@ -424,12 +491,17 @@ function refreshCanvasSize(event, ui) {
     onFrameChanged()
 }
 
+var videoDuration=22
 function onVideoLoaded(event) {
     console.log('videoLoaded', event)
     var w,h
     
     w = video.videoWidth
     h = video.videoHeight
+    videoDuration = video.duration
+    
+    updateChronoXDomainFromVideo()
+    refreshChronogram()
     
     console.log("w=",w)
     console.log("h=",h)
@@ -479,7 +551,25 @@ function onFrameChanged(event) {
 
     $('#currentFrame').html("Frame: " + Cframe);
     $('#vidTime').html("Video Time: " + video2.toHMSm(video2.toMilliseconds()/1000.0));
-    $('#realTime').html("Real Time: " + video2.toHMSm((video2.toMilliseconds()*fps/videoinfo.realfps+video2.toMilliseconds(videoinfo.starttime))/1000.0));
+    var D = new Date(videoinfo.starttime)
+    D = new Date(D.getTime()+video2.toMilliseconds()*fps/videoinfo.realfps)
+    
+    function toLocaleISOString(date) {
+        // Polyfill to get local ISO instead of UTC http://stackoverflow.com/questions/14941615/how-to-convert-isostring-to-local-isostring-in-javascript
+        function pad(n) { return ("0"+n).substr(-2); }
+
+        var day = [date.getFullYear(), pad(date.getMonth()+1), pad(date.getDate())].join("-"),
+            time = [date.getHours(), date.getMinutes(), date.getSeconds()].map(pad).join(":");
+        if (date.getMilliseconds())
+            time += "."+date.getMilliseconds();
+        var o = date.getTimezoneOffset(),
+            h = Math.floor(Math.abs(o)/60),
+            m = Math.abs(o) % 60,
+            o = o==0 ? "Z" : (o<0 ? "+" : "-") + pad(h) + ":" + pad(m);
+        return day+"T"+time//+o;
+    }
+    
+    $('#realTime').html("Real Time: " + toLocaleISOString(D)) //video2.toHMSm((video2.toMilliseconds()*fps/videoinfo.realfps+video2.toMilliseconds(videoinfo.starttime))/1000.0));
 
     updateForm(undefined);
     canvas1.clear();
@@ -509,9 +599,12 @@ function refresh() {
         }
         
         plotBees(ctx); // Identify the rectangles
+        
+        plotTags(ctx)
     }
 
     //refreshChronogram();
+    updateChronoTime()
 }
 
 function canvasToVideoCoords(rect) {
@@ -532,6 +625,21 @@ function videoToCanvasCoords(obs) {
         height: obs.height / transformFactor2,
     }
 }
+function videoToCanvasPoint(pt) {
+    let transformFactor2 = transformFactor;
+    return {
+        x: pt.x / transformFactor2,
+        y: pt.y / transformFactor2,
+    }
+}
+function canvasToVideoPoint(pt) {
+    let transformFactor2 = transformFactor;
+    return {
+        x: pt.x * transformFactor2,
+        y: pt.y * transformFactor2,
+    }
+}
+
 
 function createRectsFromTracks() {
     let F = getCurrentFrame()
@@ -551,6 +659,37 @@ function plotBees(ctx) {
     for (let i in rects) { // For each rectangle, plot its identity
         identify(ctx, rects[i], 5);
     }
+}
+
+function plotTags(ctx) {
+    let F = getCurrentFrame()
+    let tagsFrame = Tags[F]
+    if (tagsFrame !== undefined) {
+        let tags = tagsFrame['tags']
+        //console.log('Found tags',tags)
+        for (let i in tags) {
+            let tag = tags[i]
+            console.log(tag)
+            plotTag(ctx, tag)            
+        }
+    }
+}
+function plotTag(ctx, tag) {
+    let color = 'blue'
+    let radius = 5
+
+    let pt = videoToCanvasPoint({"x":tag["c"][0], "y":tag["c"][1]})
+
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.font = "10px Arial";
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(String(tag.id), pt.x, pt.y + radius + 8);
 }
 
 function plotTracks(ctx) {
@@ -1356,7 +1495,7 @@ function submit_bee() {
 
     refresh();
 
-    //refreshChronogram();
+    refreshChronogram();
     resetRemove(); //you lose your chance of undoing remove
 }
 
@@ -1367,6 +1506,7 @@ function automatic_sub() {
     } else {
         console.log("automatic_sub: not submitted, as tmp rect")
         refresh() // Just refresh
+        refreshChronogram();
     }
 }
 
@@ -1453,7 +1593,7 @@ function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pr
             delete Tracks[video2.get()][activeObject.id];
         }
 
-        //refreshChronogram();
+        refreshChronogram();
     }
 
     refresh()
@@ -1591,6 +1731,7 @@ function onKeyDown_IDEdit(event) {
                 alert1.style.color = "red";
             }
             refresh();
+            refreshChronogram()
         }
     }
 }
@@ -1772,23 +1913,44 @@ function printTracks() {
 // ###########################################################
 // Chronogram
 
-var g_xRange = undefined,
-    g_xZoom = undefined;
+//var g_xRange = undefined
+//var g_xZoom = undefined;
+var plotArea
+
+function updateChronoTime() {
+    timeMark.call(vis.setTimeGeom)
+}
 
 function drawChrono() {
-
-    var margin = {
-            top: 20,
-            right: 20,
-            bottom: 30,
-            left: 40
-        },
-        width = 960 - margin.left - margin.right,
-        height = 300 - margin.top - margin.bottom;
-
-    var x = d3.scale.linear()
-        .range([0, width])
-        .domain([d3.min(chronogramData,
+     
+    // Rescale axes
+    updateChronoYDomain()
+    //vis.reinitScale()
+    vis.rescale()
+    vis.updateTScale()
+    
+    // Redraw activities
+    circles = plotArea.selectAll("rect").data(chronogramData);
+    circles
+        .enter()
+        .insert("rect")
+        .call(vis.setGeom)
+    circles.exit().remove();
+    
+    // Redraw timeline and tagBars
+    updateChronoTime()
+    updateChronoTagBars()
+}
+var updateChronoDomain = function(){
+    console.log('updateChronoDomain not yet defined')
+}
+function domainxFromVideo() {
+    var domain = [0, videoDuration*fps]
+    console.log("domainxFromVideo: domain=",domain)
+    return domain
+}
+function domainxFromChronogramData() {
+    return [d3.min(chronogramData,
                 function(d) {
                     return Number(d.x) - 0.5;
                 }),
@@ -1796,174 +1958,399 @@ function drawChrono() {
                 function(d) {
                     return Number(d.x) + 0.5;
                 })
-        ]);
-
-    var y = d3.scale.linear()
-        .range([0, height])
-        .domain([d3.min(chronogramData,
+        ]
+}
+function domainyFromChronogramData() {
+    if (chronogramData.length>0)
+    return [d3.min(chronogramData,
                 function(d) {
-                    return Number(d.y) - 0.5;
+                    return Number(d.y);
                 }),
             d3.max(chronogramData,
                 function(d) {
-                    return Number(d.y) + 0.5;
+                    return Number(d.y) + 1.0;
                 })
-        ]);
+        ]
+    else
+        return [0,1]
+}
+function updateChronoXDomainFromVideo() {
+    vis.xScale.domain(domainxFromVideo())
+}
+function updateChronoYDomain() {
+    vis.yScale.domain(domainyFromChronogramData())
+}
+
+var timeMark, circles, vis, tagArea
+function initChrono() {
+
+    var margin = {
+            top: 70,
+            right: 20,
+            bottom: 50,
+            left: 60
+        }
+    var width = 960 - margin.left - margin.right;
+    var height = 300 - margin.top - margin.bottom;
+
+    var xScale = d3.scale.linear()
+        .range([0, width])
+    var tScale = d3.time.scale.utc()
+        .range([0, width])
+    var yScale = d3.scale.linear()
+        .range([0, height])
+        
+    var updateTScale=function() {
+        var d = xScale.domain()
+        var a = new Date(videoinfo.starttime)
+        tScale.domain([ new Date(a.getTime()+d[0]/fps*1000) , new Date(a.getTime()+d[1]/fps*1000) ])
+        
+        if (vis) {
+            vis.select(".x.axis").call(vis.customXAxis);
+            vis.select(".t.axis").call(tAxis);
+            vis.select(".y.axis").call(yAxis);
+            
+            vis.selectAll(".t.axis > .tick > text")
+                .style("font-size", function(d) {
+                    if (d.getMilliseconds()!=0) return "8px"
+                    if (d.getSeconds()!=0) return "9px"
+                    if (d.getMinutes()!=0) return "12px"
+                    return "14px"
+                })
+        }
+        if (timeMark)
+            timeMark.call(setTimeGeom)
+        if (circles)
+            circles.call(setGeom)
+        if (tagArea)
+            updateChronoTagBars()
+    }
+    updateChronoDomain = function(domainx, domainy) {
+        xScale.domain(domainx)
+        yScale.domain(domainy)
+
+        updateTScale()
+        //tScale.domain([new Date
+    }
+    var reinitScale=function() {
+        xScale.domain(domainxFromVideo())
+        yScale.domain(domainyFromChronogramData())
+
+        updateTScale()
+        //tScale.domain([new Date(2012, 0, 1), new Date(2013, 0, 1)])
+    }
+    reinitScale()
 
     xAxis = d3.svg.axis()
-        .scale(x)
+        .scale(xScale)
         .orient("bottom")
-        .tickSize(-height);
+        .tickSize(5)
+        
+    function customXAxis(g) {
+        g.call(xAxis)
+        //g.select(".domain").remove()
+        g.selectAll(".tick text").style("font", "10px sans-serif")
+    }
+
+    var customTimeFormat = d3.time.format.multi([
+      ["%S.%L", function(d) { return d.getMilliseconds(); }],
+      ["%S", function(d) { return d.getSeconds(); }],
+      ["%H:%M", function(d) { return d.getMinutes(); }],
+      ["%H:00", function(d) { return d.getHours(); }],
+      ["%b %d", function(d) { return d.getDate() != 1; }],
+      ["%B", function(d) { return d.getMonth(); }],
+      ["%Y", function() { return true; }]
+    ]);
+
+    tAxis = d3.svg.axis()
+        .scale(tScale)
+        .orient("bottom")
+        .tickSize(-height)
+        .tickFormat(customTimeFormat)        
 
     yAxis = d3.svg.axis()
-        .scale(y)
+        .scale(yScale)
         .orient("left")
         .ticks(5)
         .tickSize(-width);
 
     var zoom = d3.behavior.zoom()
-        .x(x)
-        /*.y(y)*/
-        .scaleExtent([1, 32])
+        .x(xScale)
+        /*.y(yScale)*/
+        .scaleExtent([1/24, 1000])
         .on("zoom", zoomed);
-
-    if (g_xRange !== undefined) {
-        zoom.scale(g_xZoom.scale())
-        x.domain(g_xRange.domain());
+    function zoomed() { //Function inside function
+        //g_xRange = xScale;
+        //g_xZoom = zoom;
+        g_lastevent = d3.event
+        
+        updateTScale()
+        d3.event.sourceEvent.stopPropagation();
     }
 
-    vis = d3.select("#svgVisualize")
+        
+    var rescale=function() {
+        zoom.x(xScale)
+    }
+
+// To reinit with previous scale
+//     if (g_xRange !== undefined) {
+//         zoom.scale(g_xZoom.scale())
+//         xScale.domain(g_xRange.domain());
+//     }
+
+    vis0 = d3.select("#svgVisualize")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
+    vis = vis0
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-        .call(zoom);
+        .call(zoom)
+    vis
+        .on("dblclick.zoom", null)
+        .on("dragstart", function(){d3.event.sourceEvent.stopPropagation();})
+        .on("dragend", function(){d3.event.sourceEvent.stopPropagation();})
+        .on("zoomstart", function(){d3.event.sourceEvent.stopPropagation();})
+        .on("zoomend", function(){d3.event.sourceEvent.stopPropagation();})
 
-    vis.append("rect")
+    var plotframe = vis.append("rect").attr('class','plotframe')
         .attr("width", width)
         .attr("height", height)
-        .style("fill", "#f0f0ff")
+        .style("fill", "#f0fcff")
         .style("stroke", "gray")
+        
+    vis.on("click",function() {
+        if (d3.event.defaultPrevented) return;
+        var coords = d3.mouse(this);
+        
+        var frame = Math.round( xScale.invert(coords[0]) );
+        
+        console.log("Chrono: click on frame=",frame);
+        
+        video2.seekTo({'frame':frame})
+    })
+
+    vis.append("clipPath")       // define a clip path
+        .attr("id", "rect-clip") // give the clipPath an ID
+        .append("rect")          // shape it as a rect
+        .attr("x", 0)         // position the x left
+        .attr("y", 0)         // position the y top
+        .attr("width", width)         
+        .attr("height", height);         
 
     vis.append("g")
         .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
+        .attr("transform", "translate(0," + (height+20) + ")")
+        .call(customXAxis)
 
-    vis.append("g")
+    vis.insert("g")
+        .attr("class", "t axis")
+        .attr("transform", "translate(0," + (height) + ")")
+        .call(tAxis);
+
+    vis.insert("g")
         .attr("class", "y axis")
         .call(yAxis);
 
     // Add the text label for the x axis
-    vis.append("text")
-        .attr("transform", "translate(" + 70 + " ," + -10 + ")")
-        .style("text-anchor", "middle")
+    vis0.append("text")
+        .attr("x", margin.left-15).attr("y", margin.top+height+10)
+        .style("text-anchor", "end")
+        //.text("Frame");
+        .text("Time");
+    vis0.append("text")
+        .attr("x", margin.left-15).attr("y", margin.top+height+30)
+        .style("text-anchor", "end")
+        //.text("Frame");
         .text("Frame");
 
-
     // Add the text label for the Y axis
-    vis.append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", -40)
-        .attr("x", -220)
-        .attr("dy", "1em")
+    vis0.append("text")
+        .attr("transform", "rotate(-90, 10, "+(margin.top+height/2)+")")
+        .attr("x", 10).attr("y", margin.top+height/2)
+        //.attr("dy", "1em")
         .style("text-anchor", "middle")
         .text("Bee ID");
+    
+    var chronArea = vis.insert("g").attr("clip-path", "url(#rect-clip)")
+    chronArea.insert("rect").style("fill","none")
+        .attr("x",0).attr("y", 0)
+        .attr("width", width).attr("height", height)
+    
+    plotArea = chronArea.insert("g")
+    circles = plotArea.selectAll("rect").data(chronogramData);
 
-    var chronArea = vis.append("g");
+    function setGeom(selection) {
+        selection
+            .attr("x", function(d) {
+                return xScale(Number(d.x) - 0.5);
+            })
+            .attr("y", function(d) {
+                return yScale(Number(d.y) + 0.1);
+            })
+            .attr("height", function(d) {
+                return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
+            })
+            .attr("width", function(d) {
+                return (xScale(Number(d.x) + 1) - xScale(Number(d.x)));
+            })
+            .style("fill", activityColor)
+            .style("stroke", activityColor)
+            .style("stroke-width", "1px")
 
-    var timeMark = chronArea.append("rect")
-        .attr("x", function(d) {
-            return x(Number(getCurrentFrame()) - 0.05);
-        })
-        .attr("y", function(d) {
-            return y(-0.5);
-        })
-        .attr("height", function(d) {
-            return (y(Number(y.range()[1]) + 0.5) - y(-0.5));
-        })
-        .attr("width", function(d) {
-            return (x(0.1) - x(0.0));
-        })
-        .style("fill", "#ff0000")
+    }
 
-    circles = chronArea.append("g").selectAll("rect").data(chronogramData);
+    function activityColor(d) {
+            var color = "black";
+            if (d.Activity == "fanning")
+                color = "#20FF20";
+            else if (d.Activity == "entering")
+                color = "#FF0000";
+            else if (d.Activity == "exiting")
+                color = "#0000FF";
+            else if (d.Activity == "pollenating")
+                color = "#CFCF00";
+            return color;
+        }
 
     circles
         .enter()
         .insert("rect")
-        .attr("x", function(d) {
-            return x(Number(d.x) - 0.5);
-        })
-        .attr("y", function(d) {
-            return y(Number(d.y) - 0.4);
-        })
-        .attr("height", function(d) {
-            return (y(Number(d.y) + 0.4) - y(Number(d.y) - 0.4));
-        })
-        .attr("width", function(d) {
-            return (x(Number(d.x) + 1) - x(d.x));
-        })
-        .style("fill", function(d) {
-            var color = "black";
-            if (d.Activity == "fanning")
-                color = "#99CCFF";
-            else if (d.Activity == "entering")
-                color = "#FFFF00";
-            else if (d.Activity == "exiting")
-                color = "#CC00FF";
-            else if (d.Activity == "pollenating")
-                color = "#00CC99";
-            return color;
-        })
-        .style("stroke", "black");
-
-    function zoomed() { //Function inside function
-        g_xRange = x;
-        g_xZoom = zoom;
-
-        vis.select(".x.axis").call(xAxis);
-        vis.select(".y.axis").call(yAxis);
-
-        timeMark
+        .call(setGeom)
+        
+    function setTimeGeom(selection) {
+        selection
             .attr("x", function(d) {
-                return x(Number(getCurrentFrame()) - 0.05);
+                return xScale(Number(getCurrentFrame()) - 0.5);
             })
             .attr("y", function(d) {
-                return y(-0.5);
+                return yScale.range()[0];
             })
             .attr("height", function(d) {
-                return (y(Number(y.range()[1]) + 0.5) - y(-0.5));
+                return yScale.range()[1]-yScale.range()[0];
             })
             .attr("width", function(d) {
-                return (x(0.1) - x(0.0));
-            })
-
-        circles
-            .attr("x", function(d) {
-                return x(Number(d.x) - 0.5);
-            })
-            .attr("y", function(d) {
-                return y(Number(d.y) - 0.4);
-            })
-            .attr("height", function(d) {
-                return (y(Number(d.y) + 0.4) - y(Number(d.y) - 0.4));
-            })
-            .attr("width", function(d) {
-                return (x(Number(d.x) + 1) - x(d.x));
+                return (xScale(1) - xScale(0.0));
             })
     }
+    
+    // Store all callbacks for external reuse
+    vis.setTimeGeom=setTimeGeom
+    vis.setGeom=setGeom
+    vis.rescale=rescale
+    vis.reinitScale=reinitScale
+    vis.zoom=zoom
+    vis.updateTScale=updateTScale
+    vis.customXAxis=customXAxis
+    vis.xScale=xScale
+    vis.yScale=yScale
+    
+    timeMark = chronArea.append("rect").attr('class','timeMark')
+        .call(setTimeGeom)
+        .style("stroke", "#ff0000")
+    
+    initChronoTagBars()
+}
+
+function initChronoTagBars() {
+
+    var margin = {
+            top: 10,
+            right: 20,
+            bottom: 10,
+            left: 60
+        }
+    var tagAreaWidth = 960 - margin.left - margin.right;
+    var tagAreaHeight = 50;
+    
+    var yTagScale = d3.scale.linear()
+        .range([tagAreaHeight,0])
+        .domain([0, 10])
+    yTagAxis = d3.svg.axis()
+        .scale(yTagScale)
+        .orient("left")
+        .ticks(5)
+        .tickSize(-tagAreaWidth);
+
+    tagVis = vis0.append('g').attr('id','tagVis')
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    tagVis.insert("g")
+        .attr("class", "y tagAxis")
+        .call(yTagAxis)
+    tagVis.append("line").style("stroke", "black")
+          .attr({x1:0, y1:tagAreaHeight, x2:tagAreaWidth, y2:tagAreaHeight})
+    tagVis.append("text")
+        .attr("transform", "rotate(-90, -50, "+tagAreaHeight/2+")")
+        .attr("x", -50).attr("y", margin.top+tagAreaHeight/2)
+        //.attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .text("#Tags");
+
+    tagArea = tagVis.append('g').attr('id','tagArea')
+    tagArea.insert("rect").style("fill","none")
+        .attr("x",0).attr("y", -tagAreaHeight-margin.bottom)
+        .attr("width", tagAreaWidth).attr("height", tagAreaHeight)
+        
+    tagsChronogramData = []
+    var tagsBars = tagArea.selectAll("rect").data(tagsChronogramData);
+    tagsBars
+        .enter()
+        .call(insertTagBars)
+    tagsBars
+        .call(setTagBarsGeom)
+        
+    //tagArea.yTagScale = yTagScale
+    
+    function insertTagBars(selection) {
+        selection
+            .insert("rect")
+            .style("fill", "blue")
+            .style("stroke", "blue")
+            .style("stroke-width", "1px")
+    }
+    function setTagBarsGeom(selection) {
+        selection
+            .attr("x", function(d) {
+                return vis.xScale(Number(d.x) - 0.5);
+            })
+            .attr("y", function(d) {
+                return yTagScale(Number(d.y));
+            })
+            .attr("height", function(d) {
+                return -(yTagScale(Number(d.y)) - yTagScale(0.0));
+            })
+            .attr("width", function(d) {
+                return (vis.xScale(Number(d.x) + 0.5) 
+                        - vis.xScale(Number(d.x)-0.5));
+            })
+    }
+    
+    tagArea.setTagBarsGeom = setTagBarsGeom
+    tagArea.insertTagBars = insertTagBars
+}
+
+function updateChronoTagBars() {
+    tagBars = tagArea.selectAll("rect").data(tagsChronogramData);
+    tagBars
+        .enter()
+        .call(tagArea.insertTagBars)
+    tagBars.call(tagArea.setTagBarsGeom)
+    tagBars
+        .exit()
+        .remove();
 }
 
 function refreshChronogram() {
 
     //Deleting everything on the svg so we can recreate the updated chart
-    d3.selectAll("svg > *").remove();
+    //d3.selectAll("svg > *").remove();
     //Emptying the array so we won't have duplicates
-    for (var i = 0; i < chronogramData.length; i++)
-        chronogramData.pop();
+    //for (var i = 0; i < chronogramData.length; i++)
+    //    chronogramData.pop();
+    chronogramData.length = 0
     for (F in Tracks) {
         for (id in Tracks[F]) {
+            let chronoObs = new chronoObservation();
             chronoObs.x = F;
             chronoObs.y = id;
 
@@ -1978,11 +2365,17 @@ function refreshChronogram() {
             }
 
             chronogramData.push(chronoObs);
-
-            chronoObs = new chronoObservation();
         }
     }
+    
+    tagsChronogramData.length = 0
+    for (F in Tags) {
+        let tagsFrame = Tags[F]
+        let tagBar = {'x': Number(F), 'y':tagsFrame.tags.length}
+        tagsChronogramData.push(tagBar)
+    }
+    //updateChronoTagBars() // included in drawChrono
 
-    d3.selectAll("svg > *").remove();
+    //d3.selectAll("svg > *").remove();
     drawChrono();
 }

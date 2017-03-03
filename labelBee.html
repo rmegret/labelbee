@@ -131,13 +131,17 @@
           <div style="min-width:180px;">
                     <p></p>
             <p>
+            <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm">Load Tags</label>
+            <input type="file" value="Load Tags" style="display:none" id="loadtags">
+            </p>
+            <p>
             <input type="button" value="Save JSON" class="btn btn-primary btn-sm" onclick="saveToFile()"  style="display:inline" id="save">
             <label for="load" value="Load JSON" class="btn btn-primary btn-sm">Load JSON</label>
             <input type="file" value="Load JSON" style="display:none" id="load">
             </p><p>
             <input type="button" value="Save CSV" class="btn btn-default btn-sm" onclick="saveToCSV()"  style="display:inline" id="saveCSV">
             <input type="button" value="Save Bboxes" class="btn btn-default btn-sm" onclick="saveToBBoxes()"  style="display:inline" id="saveBBoxes">
-          </p>
+            </p>
           
 <!--            <br/>
             <canvas id="zoom" width="200" height="150"></canvas> -->
@@ -156,6 +160,9 @@
             <div>
               <p><div id="videoSize">-</div>
               <div id="canvasSize">-</div></p>
+              
+              <p><input type="text" value="2016-07-15T09:59:59.360" id="startTime" onchange="onStartTimeChanged(event)">
+            <input type="text" value="22" id="fps" onchange="onFPSChanged(event)"></p>
             
               <p style="display:none">Bounding Box:</p>
               <table style="display:none">

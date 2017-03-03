@@ -101,17 +101,24 @@ overflow: auto;
     background-color: blue;
 }
 
-
 svg {
   font: 10px sans-serif;
   shape-rendering: crispEdges;
 }
-
-rect {
-  fill: #eee;
+#svgVisualize {
+  border: solid 2px red;
 }
 
-.axis path, .axis line {
+.plotframe {
+  fill: #fff;
+  stroke: #000;
+}
+.timeMark {
+  fill: #f001;
+  stroke: #F00;
+}
+
+.axis path, .axis line, .tagAxis path, .tagAxis line {
   fill: none;
-  stroke: #fff;
+  stroke: #000;
 }
