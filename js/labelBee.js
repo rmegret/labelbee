@@ -45,7 +45,7 @@ function init() {
         'starttime': '2016-07-15T09:59:59.360'
     }
     fps = videoinfo.fps; 
-    $('#selectboxVideo')[0].selectedIndex=1 // select long video
+    $('#selectboxVideo')[0].selectedIndex=7 // select long video
 
     video2 = VideoFrame({
         id: 'video',
@@ -59,8 +59,14 @@ function init() {
     canvas = document.getElementById("canvas");
     time = document.getElementById("vidTime");
     ctx = canvas.getContext('2d');
+    
+    var showTags = true
+    var showTagsTracks = false
 
     initChrono();
+    
+    $('#excludedTags')[0].value = String(excludedTags)
+    
     drawChrono();
 
     video.addEventListener('ended', vidEnd, false);
@@ -112,7 +118,7 @@ function init() {
     // refresh();
     updateForm(undefined)
     
-    loadFromFile0('data/Tracks-demo.json')
+    //loadFromFile0('data/Tracks-demo.json')
 }
 
 function selectVideo() {
@@ -600,7 +606,10 @@ function refresh() {
         
         plotBees(ctx); // Identify the rectangles
         
-        plotTags(ctx)
+        if (showTagsTracks)
+            plotTagsTracks(ctx)
+        else if (showTags)
+            plotTags(ctx)
     }
 
     //refreshChronogram();
@@ -669,14 +678,30 @@ function plotTags(ctx) {
         //console.log('Found tags',tags)
         for (let i in tags) {
             let tag = tags[i]
-            console.log(tag)
+            //console.log(tag)
             plotTag(ctx, tag)            
         }
+        
+       let msg = ''
+       for (let i in tags) {
+           let tag = tags[i]
+            msg = msg + tag.id + ' H'+tag.hamming+ ' ('+tag.c[0]+','+tag.c[1]+')<br>'
+       }
+       $("#tagDetails")[0].innerHTML = msg
     }
 }
-function plotTag(ctx, tag) {
-    let color = 'blue'
-    let radius = 5
+function plotTag(ctx, tag, color, flags) {
+    if (color == undefined) {
+        color = 'red'
+    }
+    if (typeof(flags) === undefined) {
+      flags = {
+        "id":true,
+        "radius":5
+      }
+    }
+    let radius = flags.radius
+    if (typeof radius === 'undefined') { radius = 5; }
 
     let pt = videoToCanvasPoint({"x":tag["c"][0], "y":tag["c"][1]})
 
@@ -686,12 +711,80 @@ function plotTag(ctx, tag) {
     ctx.closePath();
     ctx.stroke();
 
-    ctx.font = "10px Arial";
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.fillText(String(tag.id), pt.x, pt.y + radius + 8);
+    if (flags.id==true) {
+      ctx.font = "10px Arial";
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText(String(tag.id), pt.x, pt.y + radius + 8);
+
+      ctx.font = "10px Arial";
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText("H"+tag.hamming, pt.x, pt.y + radius + 16);
+    }
+}
+function plotTagsTracks(ctx) {
+    let F = getCurrentFrame()
+    let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1;
+    let fmin = F-plotTrack_range_backward;
+    let fmax = F+plotTrack_range_forward;
+    if (fmin<0) fmin=0;
+    //if (fmax>maxframe) fmax=maxframe;
+
+    setColor = function(f) {
+        if (f<=F) {
+            color = "rgba(255,0,0,"+(1-Math.abs((f-F)/frange))+")"
+            //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
+        } else {
+            color = "rgba(0,0,255,"+(1-Math.abs((f-F)/frange))+")"
+        }
+        return color;
+    }
+
+    // Plot past and future tag positions
+    for (let f=fmin; f<=fmax; f++) {
+        let tagsFrame = Tags[f]
+        if (typeof(tagsFrame) === "undefined") continue;
+        let tags = tagsFrame['tags']
+        let color = setColor(f)
+        for (let i in tags) {
+            let tag = tags[i]
+            //console.log(tag)
+            
+            plotTag(ctx, tag, color, {"id":false, "radius": 2})            
+        }    
+    }
+    {
+        // Plot current tag position
+        let f=F;
+        let tagsFrame = Tags[f]
+        if (typeof(tagsFrame) !== "undefined") {
+        let tags = tagsFrame['tags']
+        let color = setColor(f)
+        for (let i in tags) {
+            let tag = tags[i]
+            //console.log(tag)
+            
+            plotTag(ctx, tag, color, {"id":true})            
+        }    
+        }
+    } 
+}
+function onShowTagsChanged() {
+    showTags = $('#showTags')[0].checked
+    onFrameChanged()
+}
+function onShowTagsTracksChanged() {
+    showTagsTracks = $('#showTagsTracks')[0].checked
+    onFrameChanged()
 }
 
+function onTrackWindowChanged() {
+    let range = Number($('#trackWindow')[0].value)
+    console.log("onTrackWindowChanged range=",range)
+    plotTrack_range_forward = range
+    plotTrack_range_backward = range
+}
 function plotTracks(ctx) {
     let F = getCurrentFrame()
     let ids = getValidIDsForFrame(F)
@@ -1922,7 +2015,6 @@ function updateChronoTime() {
 }
 
 function drawChrono() {
-     
     // Rescale axes
     updateChronoYDomain()
     //vis.reinitScale()
@@ -1930,16 +2022,16 @@ function drawChrono() {
     vis.updateTScale()
     
     // Redraw activities
-    circles = plotArea.selectAll("rect").data(chronogramData);
-    circles
-        .enter()
+    circles = plotArea.selectAll(".chrono").data(chronogramData);
+    circles.enter()
         .insert("rect")
         .call(vis.setGeom)
     circles.exit().remove();
     
     // Redraw timeline and tagBars
     updateChronoTime()
-    updateChronoTagBars()
+    //updateChronoTagBars()
+    updateTagIntervals()
 }
 var updateChronoDomain = function(){
     console.log('updateChronoDomain not yet defined')
@@ -1961,6 +2053,9 @@ function domainxFromChronogramData() {
         ]
 }
 function domainyFromChronogramData() {
+
+    return [0,20]
+
     if (chronogramData.length>0)
     return [d3.min(chronogramData,
                 function(d) {
@@ -2022,8 +2117,10 @@ function initChrono() {
             timeMark.call(setTimeGeom)
         if (circles)
             circles.call(setGeom)
-        if (tagArea)
+        if (tagArea) {
             updateChronoTagBars()
+            updateTagIntervals()
+        }
     }
     updateChronoDomain = function(domainx, domainy) {
         xScale.domain(domainx)
@@ -2177,40 +2274,64 @@ function initChrono() {
         .attr("x",0).attr("y", 0)
         .attr("width", width).attr("height", height)
     
+    // Insert plotAreaTags before so that it renders below
+    plotAreaTags = chronArea.insert("g")  
+    
     plotArea = chronArea.insert("g")
-    circles = plotArea.selectAll("rect").data(chronogramData);
+    circles = plotArea.selectAll(".chrono").data(chronogramData);
+    
+    tagsData = []
+    tagIntervals = []
+    tagSel = plotAreaTags.selectAll(".tag").data(tagIntervals);
+    insertTag(tagSel.enter())
 
     function setGeom(selection) {
         selection
             .attr("x", function(d) {
-                return xScale(Number(d.x) - 0.5);
+                //return xScale(Number(d.x) - 0.5);
+                return xScale(Number(d.x))-4;
             })
             .attr("y", function(d) {
                 return yScale(Number(d.y) + 0.1);
             })
-            .attr("height", function(d) {
-                return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
-            })
             .attr("width", function(d) {
-                return (xScale(Number(d.x) + 1) - xScale(Number(d.x)));
+                //return (xScale(Number(d.x) + 1) - xScale(Number(d.x)));
+                return 8
+            })
+            .attr("height", function(d) {
+                //return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
+                return activityHeight(d)
             })
             .style("fill", activityColor)
             .style("stroke", activityColor)
             .style("stroke-width", "1px")
+            .attr("class", "chrono");
 
     }
 
     function activityColor(d) {
             var color = "black";
-            if (d.Activity == "fanning")
-                color = "#20FF20";
-            else if (d.Activity == "entering")
+            if (d.Activity == "entering")
                 color = "#FF0000";
             else if (d.Activity == "exiting")
                 color = "#0000FF";
             else if (d.Activity == "pollenating")
                 color = "#CFCF00";
+            else if (d.Activity == "fanning")
+                color = "#20FF20";
             return color;
+        }
+    function activityHeight(d) {
+            var h = 2
+            if (d.Activity == "entering")
+                h=8
+            else if (d.Activity == "exiting")
+                h=8
+            else if (d.Activity == "pollenating")
+                h=6
+            else if (d.Activity == "fanning")
+                h=6;
+            return h;
         }
 
     circles
@@ -2249,8 +2370,48 @@ function initChrono() {
         .call(setTimeGeom)
         .style("stroke", "#ff0000")
     
-    initChronoTagBars()
+    // Tag Bars
+    //initChronoTagBars()
 }
+
+
+
+
+function insertTag(selection) {
+    selection
+        .insert("rect")
+        .style("fill", "blue")
+        .style("fill-opacity", "0.2")
+        .style("stroke", "blue")
+        .style("stroke-width", "1px")
+        //.attr("r",5)
+        .attr("class","tag")
+}
+function setTagGeom(selection) {
+    selection
+        .attr("x", function(d) {
+            //return xScale(Number(d.frame) - 0.5);
+            return vis.xScale(Number(d.begin));
+        })
+        .attr("y", function(d) {
+            return vis.yScale(Number(d.id));
+        })
+        .attr("width", function(d) {
+            return vis.xScale(Number(d.end))-vis.xScale(Number(d.begin));
+        })
+        .attr("height", function(d) {
+            return vis.yScale(Number(d.id)+1)-vis.yScale(Number(d.id));
+        })
+}
+function updateTagIntervals() {
+    // Redraw activities
+    tagSel = plotArea.selectAll(".tag").data(tagIntervals);
+    tagSel.enter().call(insertTag)
+    tagSel.call(setTagGeom)
+    tagSel.exit().remove();
+    setTagGeom(tagSel)
+}
+
 
 function initChronoTagBars() {
 
@@ -2293,11 +2454,8 @@ function initChronoTagBars() {
         
     tagsChronogramData = []
     var tagsBars = tagArea.selectAll("rect").data(tagsChronogramData);
-    tagsBars
-        .enter()
-        .call(insertTagBars)
-    tagsBars
-        .call(setTagBarsGeom)
+    tagsBars.enter().call(insertTagBars)
+    tagsBars.call(setTagBarsGeom)
         
     //tagArea.yTagScale = yTagScale
     
@@ -2331,15 +2489,13 @@ function initChronoTagBars() {
 
 function updateChronoTagBars() {
     tagBars = tagArea.selectAll("rect").data(tagsChronogramData);
-    tagBars
-        .enter()
-        .call(tagArea.insertTagBars)
+    tagBars.enter().call(tagArea.insertTagBars)
+    tagBars.exit().remove();
     tagBars.call(tagArea.setTagBarsGeom)
-    tagBars
-        .exit()
-        .remove();
 }
 
+//excludedTags = [123, 129, 132, 197, 242, 444, 636, 840, 896, 970, 1512, 1555, 1561, 1600, 1602, 1605, 1610, 1611, 1612, 1627, 1639, 1640, 1643, 1655, 1786, 1853, 1973]
+excludedTags = [886, 1602, 1610, 1611, 1640, 1755]
 function refreshChronogram() {
 
     //Deleting everything on the svg so we can recreate the updated chart
@@ -2354,27 +2510,102 @@ function refreshChronogram() {
             chronoObs.x = F;
             chronoObs.y = id;
 
-            if (Tracks[F][id].bool_acts[0]) {
-                chronoObs.Activity = "fanning";
-            } else if (Tracks[F][id].bool_acts[1]) {
-                chronoObs.Activity = "pollenating";
-            } else if (Tracks[F][id].bool_acts[2]) {
+            if (Tracks[F][id].bool_acts[2]) {
                 chronoObs.Activity = "entering";
             } else if (Tracks[F][id].bool_acts[3]) {
                 chronoObs.Activity = "exiting";
+            } else if (Tracks[F][id].bool_acts[1]) {
+                chronoObs.Activity = "pollenating";
+            } else if (Tracks[F][id].bool_acts[0]) {
+                chronoObs.Activity = "fanning";
             }
 
             chronogramData.push(chronoObs);
         }
     }
+
+    excludedTags = eval("["+$('#excludedTags')[0].value+']')
     
+    if (0) {
     tagsChronogramData.length = 0
-    for (F in Tags) {
-        let tagsFrame = Tags[F]
-        let tagBar = {'x': Number(F), 'y':tagsFrame.tags.length}
+    for (let F in Tags) {
+        let tags = Tags[F].tags
+        let count=0
+        for (let i in tags) {
+            let id = Number(tags[i].id)
+            let hamming = Number(tags[i].hamming)
+            if ((!excludedTags.includes(id)) && (hamming==0))
+                count += 1
+        }
+        let tagBar = {'x': Number(F), 'y':count}
         tagsChronogramData.push(tagBar)
     }
     //updateChronoTagBars() // included in drawChrono
+    }
+    
+    
+    tagsData.length=0
+//     for (let F in Tags) {
+//         let tags = Tags[F].tags
+//         for (let i in tags) {
+//             let id = Number(tags[i].id)
+//             let hamming = Number(tags[i].hamming)
+//             if ((!excludedTags.includes(id)) && (hamming==0)) {
+//               let tag = {
+//                 "frame":F,
+//                 "id":id
+//               }
+//               tagsData.push(tag)
+//             }
+//         }
+//     }
+
+    console.log("refreshChronogram: convert tags to intervals...")
+
+    ttags = []
+  
+    for (let F in Tags) {
+        let tags = Tags[F].tags
+        for (let i in tags) {
+            let id = Number(tags[i].id)
+            ttags[id]=[];
+        }
+    }
+    for (let F in Tags) {
+        let tags = Tags[F].tags
+        for (let i in tags) {
+            let id = Number(tags[i].id)
+            ttags[id][F]=tags[i];
+        }
+    }
+    tagIntervals = []
+    for (let id in ttags) {
+      let obsarray = ttags[id]
+      let activeInterval = []
+      let isActive = false
+      for (let f in obsarray) {
+        let tags = obsarray[f]
+        if (isActive) {
+          if (activeInterval.end == f-1) {
+            activeInterval.end = f
+          } else {
+            // Close previous 
+            tagIntervals.push(activeInterval)
+            // Open new one
+            activeInterval={'id':id,'begin':f,'end':f}
+          }
+        } else {
+          // Open new one
+          activeInterval={'id':id,'begin':f,'end':f}
+          isActive=true;
+        }
+      }
+      // Close if active
+      if (isActive)
+        tagIntervals.push(activeInterval)
+    }
+    
+    console.log("refreshChronogram: drawChrono()...")
 
     //d3.selectAll("svg > *").remove();
     drawChrono();
