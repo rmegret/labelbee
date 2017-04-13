@@ -139,7 +139,7 @@ VideoFrame.prototype = {
 	},
 	/** Clears the current interval */
 	stopListen : function() {
-	  console.log('VideoFrame.stopListen()')
+	  //console.log('VideoFrame.stopListen()')
 		var _video = this;
 		clearInterval(_video.interval);
 		clearInterval(_video.intervalPlayBackwards);

@@ -849,7 +849,7 @@ function playBackwards(option) {
 function pause() {
     // Was playing, pause
     if (logging.frameEvents)
-            console.log('pause');
+        console.log('pause');
 
     video2.video.pause();
     video2.stopListen();
