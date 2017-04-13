@@ -44,7 +44,7 @@ var VideoFrame = function(options) {
 	this.lastdisplayed = undefined
 	
 	let videoframe = this
-	this.timeupdatewrapper = function(event) {
+	this.frameChangedWrapper = function(event) {
 	  // Do not trigger callback twice for the same frame
 	  let frame = videoframe.get();
     if (frame == videoframe.lastdisplayed) return;
@@ -55,7 +55,28 @@ var VideoFrame = function(options) {
 	}
 	
 	// REMI: call callback on timeupdate instead of directly in seek, because seek sometime calls the callback too fast (image not yet updated)
-	this.video.addEventListener('timeupdate', this.timeupdatewrapper, false);
+	this.video.addEventListener('timeupdate', this.frameChangedWrapper, false);
+	
+	// Add some hooks to react to external control of video
+	this.hookEnded = function(event) {
+	     videoframe.stopListen()
+	  }
+	this.hookPlay = function(event) {
+      // If video starts playing from external source, hook up listener
+      // to trigger frequent frameChanged callback
+      if (videoframe.obj.callback && !videoframe.interval)
+        videoframe.listen("frame")
+	  }
+	this.hookPause = function(event) {
+      // If video paused from external source, stop listener
+      if (videoframe.interval)
+        videoframe.stopListen()
+      // FIXME: Interact badly with playBackwards, which triggers an async pause
+      // that kills its interval after creating it
+	  }
+  this.video.addEventListener('ended', videoframe.hookEnded, false);
+  this.video.addEventListener('play',  videoframe.hookPlay, false);
+  this.video.addEventListener('pause', videoframe.hookPause, false);
 };
 
 /**
@@ -102,7 +123,8 @@ VideoFrame.prototype = {
 	listen : function(format, tick) {
 		var _video = this;
 		if (!format) { console.log('VideoFrame: Error - The listen method requires the format parameter.'); return; }
-		 this.interval = setInterval(function(event) {
+		if (!!this.interval) {clearInterval(this.interval)}
+		this.interval = setInterval(function(event) {
 			if (_video.video.paused || _video.video.ended) {
 			    // If paused and not currently playing manually, abort
 			    if ((!this.intervalPlayBackwards) 
@@ -110,13 +132,14 @@ VideoFrame.prototype = {
 			}
 			var frame = ((format === 'SMPTE') ? _video.toSMPTE() : ((format === 'time') ? _video.toTime() : _video.get()));
 
-			_video.timeupdatewrapper(event)
+			_video.frameChangedWrapper(event)
       			
 			return frame;
 		}, (tick ? tick : 1000 / _video.frameRate / 2));
 	},
 	/** Clears the current interval */
 	stopListen : function() {
+	  console.log('VideoFrame.stopListen()')
 		var _video = this;
 		clearInterval(_video.interval);
 		clearInterval(_video.intervalPlayBackwards);
@@ -313,7 +336,8 @@ VideoFrame.prototype.seekTo = function(config) {
 
 VideoFrame.prototype.playBackwards = function(tick) {
 		var _video = this;
-		this.video.pause();
+		this.pause();
+		_video.displayed = true
 		this.intervalPlayBackwards = setInterval(function() {
       // Do not continue to next frame until timeupdate signal has been received
 		  if (!_video.displayed) return false
@@ -326,8 +350,9 @@ VideoFrame.prototype.playBackwards = function(tick) {
 	
 VideoFrame.prototype.playForwards = function(tick) {
 		var _video = this;
-		this.video.pause();
+		this.pause();
 		if (tick) {
+      _video.displayed = true
       this.intervalPlayForwards = setInterval(function() {
         // Do not continue to next frame until timeupdate signal has been received
         if (!_video.displayed) return false
@@ -341,3 +366,16 @@ VideoFrame.prototype.playForwards = function(tick) {
 		}
     this.listen('frame');
 };
+VideoFrame.prototype.pause = function() {
+    this.video.pause()
+    this.stopListen()
+    // NOTE: a seek may still be active. 
+    // It will trigger the frameChangedWrapper even though listen is off
+}
+
+VideoFrame.prototype.playingState = function() {
+  if (!!this.intervalPlayBackwards) return "playingBackwards"
+  else if (!!this.intervalPlayForwards || !this.video.paused) return "playingForwards"
+  else return "paused"
+}
+

@@ -74,9 +74,6 @@ function init() {
 
     // ## Video + canvas
 
-    video.addEventListener('ended', vidEnd, false);
-    video.addEventListener('play', vidSet, false);
-
     canvas1 = new fabric.Canvas('canvas1');
 
     canvas1.selection = false; // REMI: disable the blue selection (allow to select several rectangles at once, which poses problem)
@@ -775,62 +772,39 @@ function refresh() {
 
 // ## Video navigation
 
-player = { 
-    'state': 'paused', // paused, playingForwards, playingBackwards
-    'speed': 1.0
-  }
 function getCurrentFrame() {
     return video2.get();
 }
 
 function updateNavigationView() {
-   if (player.state == "paused") {
+   let playingState = video2.playingState()
+   if (playingState == "paused") {
         $("#play").value = "Play";
         $("#play").removeClass("playing");
         $("#playbackward").value = "Play Backwards";
         $("#playbackward").removeClass("playing");
-   } else if (player.state == "playingForwards") {
+   } else if (playingState == "playingForwards") {
         // Forwards
         $("#play").value = "Pause";
         $("#play").addClass("playing");
         $("#playbackward").value = "Play Backwards";
         $("#playbackward").removeClass("playing");
-    } else if (player.state == "playingBackwards") {
+    } else if (playingState == "playingBackwards") {
         // Backwards
         $("#play").value = "Play";
         $("#play").removeClass("playing");
         $("#playbackward").value = "Pause";
         $("#playbackward").addClass("playing");
     } else {
-        console.log('ERROR: unknown player.state:',player.state)
+        console.log('ERROR: unknown video2.playingState():',playingState)
     }
 }
 
-function vidSet() {
-    if (player.state=="paused") {
-        console.log('ERROR: vidSet called while player.state=="paused"')
-        console.log('  Updating player state to playing forwards')
-        player.state='playing'
-        player.direction='forwards'
-        updateNavigationView()
-    } else if (player.direction=="playingBackwards") {
-        console.log('ERROR: vidSet called while player.state=="playing" and direction="backwards"')
-        console.log('  Updating player state to playing forwards')
-        player.state='playing'
-        player.direction='forwards'
-        updateNavigationView()
-    }
-}
-function vidEnd() {
-    // Reached end of video
-    player.state = 'paused'
-    updateNavigationView()
-    video2.stopListen();
-}
 
 function playPauseVideo(option) {
     if (logging.guiEvents) console.log('playPauseVideo()');
-    if (player.state == "paused" || player.state == "playingBackwards") {
+    let playingState = video2.playingState()
+    if (playingState == "paused" || playingState == "playingBackwards") {
         playForwards(option)
     } else {
         pause()
@@ -838,7 +812,8 @@ function playPauseVideo(option) {
 }
 function playPauseVideoBackward(option) {
     if (logging.guiEvents) console.log('playPauseVideoBackward()');
-    if (player.state == "paused" || player.state == "playingForwards") {
+    let playingState = video2.playingState()
+    if (playingState == "paused" || playingState == "playingForwards") {
         playBackwards(option)
     } else {
         pause()
@@ -849,41 +824,36 @@ function playForwards(option) {
       if (logging.frameEvents)
             console.log('playForwards');
                  
-      // Start playing forward
-      player.state = 'playingForwards'
-      updateNavigationView()
-      
-      video2.stopListen(); // Cut any other play occuring
       if (Number(option)==2)
           video2.playForwards(1000.0/20/4);
       else {
           video2.playForwards()
       }
-
+      
+      updateNavigationView()
       // Any call to refresh is handled by the video2 callback to onFrameChanged
 }
 function playBackwards(option) {
       if (logging.frameEvents)
             console.log('playBackwards');
-      // Start playing backwards
-      player.state = 'playingBackwards'
-      updateNavigationView()
       
       video2.stopListen(); // Cut any other play occuring
       if (Number(option)==2)
           video2.playBackwards(1000.0/20/4);
       else
           video2.playBackwards();
+      updateNavigationView()
 
       // Any call to refresh is now handled by the video2 callback to onFrameChanged
 }
 function pause() {
     // Was playing, pause
-    player.state = 'paused'
-    updateNavigationView()
-            
+    if (logging.frameEvents)
+            console.log('pause');
+
     video2.video.pause();
     video2.stopListen();
+    updateNavigationView()
 }
 
 function rewind() {
