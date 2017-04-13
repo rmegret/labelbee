@@ -14,8 +14,7 @@ var form_acts = [],
     fanning, pollenating, entering, leaving, old, newB, is_old = false,
     currentFrame, video, video2, Cframe = 0;
 var Tracks = new Array(),
-    temporaryObs = new Observation(0),
-    chronogramData = new Array()
+    temporaryObs = new Observation(0)
 //var chronoObs = new chronoObservation();
 var Tags = new Array()
 var buttonManip, undo = new Observation(0),
@@ -63,11 +62,12 @@ function init() {
     var showTags = true
     var showTagsTracks = false
 
-    initChrono();
+    //initChrono();
+    chrono = new Chronogram()
     
     $('#excludedTags')[0].value = String(excludedTags)
     
-    drawChrono();
+    chrono.drawChrono();
 
     video.addEventListener('ended', vidEnd, false);
     video.addEventListener('play', vidSet, false);
@@ -296,16 +296,17 @@ function onStartTimeChanged(event) {
 
     var d = new Date(event.target.value)
     videoinfo.starttime = d.toISOString()
-    updateChronoXDomainFromVideo()
-    drawChrono()
+
+    chrono.updateChronoXDomainFromVideo()
+    chrono.drawChrono()
 }
 function onFPSChanged(event) {
     console.log('onFPSChanged', event)
 
     videoinfo.fps = Number(event.target.value)
     fps = videoinfo.fps
-    updateChronoXDomainFromVideo()
-    drawChrono()
+    chrono.updateChronoXDomainFromVideo()
+    chrono.drawChrono()
 }
 
 
@@ -506,7 +507,7 @@ function onVideoLoaded(event) {
     h = video.videoHeight
     videoDuration = video.duration
     
-    updateChronoXDomainFromVideo()
+    chrono.updateChronoXDomainFromVideo()
     refreshChronogram()
     
     console.log("w=",w)
@@ -613,7 +614,7 @@ function refresh() {
     }
 
     //refreshChronogram();
-    updateTimeMark()
+    chrono.updateTimeMark()
 }
 
 function canvasToVideoCoords(rect) {
@@ -2006,12 +2007,18 @@ function printTracks() {
 // ###########################################################
 // Chronogram
 
+function Chronogram() {
+// Create Chronogram
+
 //var g_xRange = undefined
 //var g_xZoom = undefined;
 var plotArea = undefined
 var timeMark = undefined
 var vis, tagArea
 var activityRects
+
+var chronogramData = [] // make it local scope
+var tagsChronogramData = []
 
 function drawChrono() {
     // Rescale axes
@@ -2399,7 +2406,8 @@ function updateActivities(onlyScaling) {
     }
 }
 function initActivities() {
-    chronogramData = []
+    //chronogramData = []
+    chronogramData.length = 0
     updateActivities()
 }
 
@@ -2518,7 +2526,8 @@ function initChronoTagBars() {
     tagArea.setTagBarsGeom = setTagBarsGeom
     tagArea.insertTagBars = insertTagBars
     
-    tagsChronogramData = []
+    //tagsChronogramData = []
+    tagsChronogramData.length = 0
     updateChronoTagBars()
 }
 
@@ -2534,6 +2543,21 @@ function updateChronoTagBars(onlyScaling) {
     }
 }
 
+// Init of Chrono
+this.drawChrono = drawChrono
+this.updateChronoXDomainFromVideo = updateChronoXDomainFromVideo
+this.updateTimeMark = updateTimeMark
+
+this.chronogramData = chronogramData
+this.tagsChronogramData = tagsChronogramData
+
+initChrono()
+
+return this
+
+} // Chronogram
+
+
 //excludedTags = [123, 129, 132, 197, 242, 444, 636, 840, 896, 970, 1512, 1555, 1561, 1600, 1602, 1605, 1610, 1611, 1612, 1627, 1639, 1640, 1643, 1655, 1786, 1853, 1973]
 excludedTags = [886, 1602, 1610, 1611, 1640, 1755]
 function refreshChronogram() {
@@ -2543,7 +2567,7 @@ function refreshChronogram() {
     //Emptying the array so we won't have duplicates
     //for (var i = 0; i < chronogramData.length; i++)
     //    chronogramData.pop();
-    chronogramData.length = 0
+    chrono.chronogramData.length = 0
     for (F in Tracks) {
         for (id in Tracks[F]) {
             let chronoObs = new chronoObservation();
@@ -2560,14 +2584,14 @@ function refreshChronogram() {
                 chronoObs.Activity = "fanning";
             }
 
-            chronogramData.push(chronoObs);
+            chrono.chronogramData.push(chronoObs);
         }
     }
 
     excludedTags = eval("["+$('#excludedTags')[0].value+']')
     
     if (1) {
-      tagsChronogramData.length = 0
+      chrono.tagsChronogramData.length = 0
       for (let F in Tags) {
           let tags = Tags[F].tags
           let count=0
@@ -2578,7 +2602,7 @@ function refreshChronogram() {
                   count += 1
           }
           let tagBar = {'x': Number(F), 'y':count}
-          tagsChronogramData.push(tagBar)
+          chrono.tagsChronogramData.push(tagBar)
       }
       //updateChronoTagBars() // included in drawChrono
     }
@@ -2648,5 +2672,5 @@ function refreshChronogram() {
     console.log("refreshChronogram: drawChrono()...")
 
     //d3.selectAll("svg > *").remove();
-    drawChrono();
+    chrono.drawChrono();
 }
