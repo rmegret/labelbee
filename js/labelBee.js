@@ -37,6 +37,9 @@ var canvasTform = [0, 0, 1]; // cx,cy,scale
 var plotTrack_range_backward = 5
 var plotTrack_range_forward = 5
 
+// ######################################################################
+// INITITALIZATION
+
 function init() {
     videoinfo = {
         'fps': 22, 
@@ -62,20 +65,22 @@ function init() {
     var showTags = true
     var showTagsTracks = false
 
+    // ### Chronogram
     //initChrono();
     chrono = new Chronogram()
-    
     $('#excludedTags')[0].value = String(excludedTags)
     
-    chrono.drawChrono();
+    //chrono.drawChrono();
+
+    // ## Video + canvas
 
     video.addEventListener('ended', vidEnd, false);
     video.addEventListener('play', vidSet, false);
 
     canvas1 = new fabric.Canvas('canvas1');
 
-    canvas1.selection = false; // REMI: disable the blue selection (allow to select several rectangles at once, which pose problem)
-    canvas1.uniScaleTransform = true; // REMI: allow free rescaling without constrained aspect ratio
+    canvas1.selection = false; // REMI: disable the blue selection (allow to select several rectangles at once, which poses problem)
+    canvas1.uniScaleTransform = true; // REMI: allow free rescaling of observations without constrained aspect ratio
     canvas1.centeredScaling = true; // REMI: rescale around center
     canvas1.on('mouse:down', onMouseDown);
     canvas1.on('mouse:up', onMouseUp);
@@ -85,14 +90,19 @@ function init() {
     canvas1.on('selection:cleared', onObjectDeselected); // When deselecting an object   Not Working???
     $('.upper-canvas').bind('contextmenu', onMouseDown2);
 
+    $("#canvasresize").resizable({
+      helper: "ui-resizable-helper",
+      aspectRatio: 1   // Need to put a value even to update it later
+    });
+    $("#canvasresize").on( "resizestop", refreshCanvasSize );
+
+
+    // ## Control panel
+
     $('#F').change(onActivityChanged)
     $('#P').change(onActivityChanged)
     $('#E').change(onActivityChanged)
     $('#L').change(onActivityChanged)
-
-    // REMI: use keyboard
-    $(window).on("keydown", onKeyDown);
-    //$('.upper-canvas').on("keydown", onKeyDown);
 
     document.getElementById('load').addEventListener('change', loadFromFile);
     document.getElementById('loadtags').addEventListener('change', loadTagsFromFile);
@@ -105,14 +115,15 @@ function init() {
     //$('#video')[0].src='test.mp4';
     selectVideo() // Get src from selectboxVideo
 
-    //currentFrame = $('#currentFrame');
+
+    // ## Keyboard control
+
+    // REMI: use keyboard
+    $(window).on("keydown", onKeyDown);
+    //$('.upper-canvas').on("keydown", onKeyDown);
+
     
-    $("#canvasresize").resizable({
-      helper: "ui-resizable-helper",
-      aspectRatio: 1   // Need to put a value even to update it later
-    });
-    $("#canvasresize").on( "resizestop", refreshCanvasSize );
-    
+    // ## Misc init
 
     // Do not trigger first refresh: onloadeddata will call it
     // refresh();
@@ -121,11 +132,231 @@ function init() {
     //loadFromFile0('data/Tracks-demo.json')
 }
 
-function selectVideo() {
-    let file = $('#selectboxVideo')[0].value
-    
-    $('#video')[0].src = file;
+
+// ######################################################################
+// MODEL: Tracks data structure
+
+function Activity(time, action) {
+    this.time = time;
+    this.action = action;
 }
+
+function Observation(ID) {
+    this.ID = ID
+    this.time = 0;
+    this.frame = 0;
+    this.x = 0;
+    this.y = 0;
+    this.cx = 0;
+    this.cy = 0;
+    this.width = 0;
+    this.height = 0;
+    this.marked = false;
+    this.permanent = false;
+
+    this.bool_acts = [false, false, false, false]; //Should be kept numerical because Ram
+}
+
+function cloneObs(obs) {
+    return {
+        ID: obs.ID,
+        time: obs.time,
+        frame: obs.frame,
+        x: obs.x,
+        y: obs.y,
+        cx: obs.cx,
+        cy: obs.cy,
+        width: obs.width,
+        height: obs.height,
+        marked: obs.marked,
+        permanent: obs.permanent,
+        bool_acts: [obs.bool_acts[0], obs.bool_acts[1], obs.bool_acts[2], obs.bool_acts[3]]
+    }
+}
+
+//// Chronogram prototype
+function chronoObservation() {
+    this.x = 0;
+    this.y = 0;
+    this.Activity = "";
+}
+
+//// Model
+function getValidIDsForFrame(frame) {
+    // Return an Iterator to Tracks[frame]
+
+    if (Tracks[frame] == undefined) {
+        return []
+    }
+    //NO: var ids = Array.from(Tracks[frame].keys()) // Problem: includes ids to undefined values also
+
+    let trackf = Tracks[frame];
+    let ids = [];
+    for (id in trackf) {
+        if (trackf[id] !== undefined) {
+            ids.push(id);
+        }
+    }
+    //console.log("getValidIDsForFrame: frame=",frame,",  Tracks[frame]=",trackf)
+    //console.log("getValidIDsForFrame: ids=",ids)
+    return ids;
+}
+
+function getObsHandle(frame, id, createIfEmpty) {
+    if (createIfEmpty == undefined)
+        createIfEmpty = false;
+
+    var obs = undefined
+    if (Tracks[frame] == undefined) {
+        if (createIfEmpty) {
+            //Tracks[frame] = new Array;
+            Tracks[frame] = {}
+        } else {
+            return undefined
+        }
+    }
+
+    if (Tracks[frame][id] == undefined) {
+        if (createIfEmpty) {
+            Tracks[frame][id] = new Observation(id);
+            //default_id++;
+        } else {
+            return undefined
+        }
+    }
+    return Tracks[frame][id]
+}
+
+function storeObs(tmpObs) {
+    var obs = getObsHandle(tmpObs.frame, tmpObs.ID, true);
+    obs.ID = tmpObs.ID;
+    obs.time = tmpObs.time;
+    obs.frame = tmpObs.frame;
+    obs.x = tmpObs.x; // REMI: tmpObs should have same units than obs (no transformFactor here)
+    obs.y = tmpObs.y;
+    obs.cx = tmpObs.cx;
+    obs.cy = tmpObs.cy;
+    obs.width = tmpObs.width
+    obs.height = tmpObs.height
+    obs.marked = tmpObs.marked;
+    obs.permanent = tmpObs.permanent;
+    obs.bool_acts[0] = tmpObs.bool_acts[0];
+    obs.bool_acts[1] = tmpObs.bool_acts[1];
+    obs.bool_acts[2] = tmpObs.bool_acts[2];
+    obs.bool_acts[3] = tmpObs.bool_acts[3];
+
+    if (logging.submitEvents)
+        console.log("Submitting obs = ", obs)
+}
+
+function doesExist(ID) {
+    for (frame in Tracks) {
+        for (id in Tracks[frame]) {
+            if (id == ID) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// function doesExistButton(ID) {
+//     for (frame in Tracks) {
+//         for (id in Tracks[frame]) {
+//             if (id == ID) {
+//                 buttonManip2 = document.getElementById("special2");
+//                 buttonManip2.className = "btn btn-danger btn-sm";
+//                 buttonManip2.value = "Taken";
+//                 return true;
+//             }
+//         }
+//     }
+// 
+//     buttonManip2 = document.getElementById("special2");
+//     buttonManip2.className = "btn btn-success btn-sm";
+//     buttonManip2.value = "Free to use";
+//     return false;
+// }
+
+function changeObservationID(frame, old_id, new_id) {
+    // REMI: modified to be be independent of View
+    if (Tracks[frame] != undefined) {
+        if (Tracks[frame][old_id] != undefined) {
+            if (logging.submitEvents)
+                console.log("changeObservationID: frame=", frame, "old_id=", old_id, " new_id=", new_id);
+            Tracks[frame][new_id] = Tracks[frame][old_id];
+            delete Tracks[frame][old_id];
+            Tracks[frame][new_id].ID = new_id;
+            return true
+        } else {
+            console.log("changeObservationID: There's no bee id=", old_id, " on frame=", frame);
+            return false
+        }
+    } else {
+        console.log("changeObservationID: Empty frame, frame=", frame);
+        return false
+    }
+}
+
+function addObs(obj) {
+    Tracks[obj.frame][obj.ID] = obj;
+    if (logging.submitEvents) {
+        console.log("This is obj in Tracks");
+        console.log(Tracks[obj.frame][obj.ID]);
+    }
+}
+
+function printTracks() {
+    //Just for debugging
+    console.log("This is Tracks:")
+    for (F in Tracks) {
+        for (iid in Tracks[F]) {
+            console.log("F =", F, ", iid =", iid, ", Tracks[F][idd] =", Tracks[F][iid])
+        }
+    }
+}
+
+function getObservation() { //Unimportant function with popup but using it for debugging for now
+
+    var id = document.getElementById("obID");
+    var frame = document.getElementById("obF");
+
+    var A1 = document.getElementById("A1");
+    var A2 = document.getElementById("A2");
+    var A3 = document.getElementById("A3");
+    var B1 = document.getElementById("B1");
+    var B2 = document.getElementById("B2");
+    var C1 = document.getElementById("C1");
+
+    if (doesExist(id.value) == true) {
+        A1.innerHTML = "ID: " + Tracks[frame.value][id.value].ID;
+        A2.innerHTML = "Frame: " + Tracks[frame.value][id.value].frame;
+        A3.innerHTML = "Time: " + Tracks[frame.value][id.value].time;
+        B1.innerHTML = "Permanent: " + Tracks[frame.value][id.value].permanent;
+        B2.innerHTML = "Marked: " + Tracks[frame.value][id.value].marked;
+        C1.innerHTML = "Activities: " + Tracks[frame.value][id.value].bool_acts;
+    } else {
+        A1.innerHTML = "Observation does not exist";
+        A2.innerHTML = "";
+        A3.innerHTML = "";
+        B1.innerHTML = "";
+        B2.innerHTML = "";
+        C1.innerHTML = "<img src='h2_6.png'>";
+    }
+
+    $(document).ready(function() {
+        $("#ok").click(function() {
+            $("#Modal3").modal();
+        });
+    });
+}
+
+
+
+// ######################################################################
+// INPUT/OUTPUT
+
+// ## Annotations control
 
 function saveToFile() {
     console.log("savetoFile: exporting to JSON...")
@@ -291,24 +522,12 @@ function loadTagsFromFile(event) {
     reader.readAsText(fileToRead);
 }
 
-function onStartTimeChanged(event) {
-    console.log('onStartTimeChanged', event)
 
-    var d = new Date(event.target.value)
-    videoinfo.starttime = d.toISOString()
 
-    chrono.updateChronoXDomainFromVideo()
-    chrono.drawChrono()
-}
-function onFPSChanged(event) {
-    console.log('onFPSChanged', event)
+// ######################################################################
+// CONTROLLERS
 
-    videoinfo.fps = Number(event.target.value)
-    fps = videoinfo.fps
-    chrono.updateChronoXDomainFromVideo()
-    chrono.drawChrono()
-}
-
+// ## Keyboard
 
 function onKeyDown(e) {
     if (logging.keyEvents)
@@ -455,49 +674,38 @@ function onKeyDown(e) {
     */
 }
 
-function vidSet() {
-    clearTimeout(vidTimer);
-    vidTimer = setTimeout(refresh, 25);
+
+
+// ## Video selection
+
+function selectVideo() {
+    let file = $('#selectboxVideo')[0].value
+    
+    $('#video')[0].src = file;
 }
 
 
-function resizeCanvas(w,h) {
-    canvas.width = w
-    canvas.height = h
-    canvas1.setWidth(w)
-    canvas1.setHeight(h)
-    
-    var wrap = $('.canvaswrapper')[0]
-    wrap.style.width = w.toString() + 'px'
-    wrap.style.height = h.toString() + 'px'
+// ## Video metadata
+
+function onStartTimeChanged(event) {
+    console.log('onStartTimeChanged', event)
+
+    var d = new Date(event.target.value)
+    videoinfo.starttime = d.toISOString()
+
+    chrono.updateChronoXDomainFromVideo()
+    chrono.drawChrono()
 }
-function refreshCanvasSize(event, ui) {
-    console.log('refreshCanvasSize')
-    
-    let wd = parseInt($("#canvasresize")[0].style.width)-16 // Assume width is in px
-    let hd = video.videoHeight/video.videoWidth*wd
-        
-    resizeCanvas(wd,hd)
-    
-    transformFactor = video.videoWidth / canvas.width;
-    
-    $("#videoSize")[0].innerHTML = 'videoSize: '+video.videoWidth.toString() + 'x' + video.videoHeight.toString();
-    $("#canvasSize")[0].innerHTML = 'canvasSize: '+wd.toString() + 'x' + hd.toString();
-    
-    let s = canvasTform[2];
-    let tx = (canvasTform[0]-vid_cx) / transformFactor + wd/2;
-    let ty = (canvasTform[1]-vid_cy) / transformFactor + hd/2;
-    
-    var ctx
-    ctx=canvas.getContext("2d");
-    ctx.transform(s,0,0,s,tx,ty);
-    
-    ctx=canvas1.getContext("2d");
-    ctx.transform(s,0,0,s,tx,ty);
-        
-    onFrameChanged()
+function onFPSChanged(event) {
+    console.log('onFPSChanged', event)
+
+    videoinfo.fps = Number(event.target.value)
+    fps = videoinfo.fps
+    chrono.updateChronoXDomainFromVideo()
+    chrono.drawChrono()
 }
 
+// # Video loading
 var videoDuration=22
 function onVideoLoaded(event) {
     console.log('videoLoaded', event)
@@ -545,6 +753,9 @@ function onVideoReady(event) {
     console.log('videoReady', event)
     rewind()
 }
+
+
+// # Video frame change
 
 // This callback is the only one that should handle frame changes. It is called automatically by video2
 function onFrameChanged(event) {
@@ -617,6 +828,164 @@ function refresh() {
     chrono.updateTimeMark()
 }
 
+
+// # Video Resizing
+function resizeCanvas(w,h) {
+    canvas.width = w
+    canvas.height = h
+    canvas1.setWidth(w)
+    canvas1.setHeight(h)
+    
+    var wrap = $('.canvaswrapper')[0]
+    wrap.style.width = w.toString() + 'px'
+    wrap.style.height = h.toString() + 'px'
+}
+function refreshCanvasSize(event, ui) {
+    console.log('refreshCanvasSize')
+    
+    let wd = parseInt($("#canvasresize")[0].style.width)-16 // Assume width is in px
+    let hd = video.videoHeight/video.videoWidth*wd
+        
+    resizeCanvas(wd,hd)
+    
+    transformFactor = video.videoWidth / canvas.width;
+    
+    $("#videoSize")[0].innerHTML = 'videoSize: '+video.videoWidth.toString() + 'x' + video.videoHeight.toString();
+    $("#canvasSize")[0].innerHTML = 'canvasSize: '+wd.toString() + 'x' + hd.toString();
+    
+    let s = canvasTform[2];
+    let tx = (canvasTform[0]-vid_cx) / transformFactor + wd/2;
+    let ty = (canvasTform[1]-vid_cy) / transformFactor + hd/2;
+    
+    var ctx
+    ctx=canvas.getContext("2d");
+    ctx.transform(s,0,0,s,tx,ty);
+    
+    ctx=canvas1.getContext("2d");
+    ctx.transform(s,0,0,s,tx,ty);
+        
+    onFrameChanged()
+}
+
+// ## Video navigation
+
+function getCurrentFrame() {
+    return video2.get();
+}
+
+function vidSet() {
+    clearTimeout(vidTimer);
+    vidTimer = setTimeout(refresh, 25);
+}
+
+function vidEnd() {
+    play.value = "Play";
+}
+
+function playPauseVideo(option) {
+    if (logging.guiEvents)
+        console.log('playPauseVideo()');
+    if (play.value == "Play") {
+        if (logging.frameEvents)
+            console.log('playPauseVideo: playing forwards');
+        //video.play();
+        play.value = "Pause";
+        playBackward.value = "Play Backwards";
+        $("#play").addClass("playing");
+        $("#playbackward").removeClass("playing");
+
+        video2.stopListen(); // Cut any other play occuring
+        video2.listen('frame'); // Configure the listener before starting playing to avoid missing any frame
+        
+        if (Number(option)==2)
+            video2.playForwards(1000.0/20/4);
+        else
+            video2.video.play();
+
+        // Any call to refresh is now handled by the video2 callback to onFrameChanged
+    } else {
+        if (logging.frameEvents)
+            console.log('playPauseVideo: stop playing forwards');
+        video.pause();
+        play.value = "Play";
+        playBackward.value = "Play Backwards";
+        $("#play").removeClass("playing");
+        $("#playbackward").removeClass("playing");
+
+        video2.video.pause();
+        video2.stopListen();
+
+        // Any call to refresh is now handled by the video2 callback to onFrameChanged
+    }
+}
+function playPauseVideoBackward(option) {
+    if (logging.guiEvents)
+        console.log('playPauseVideoBackward()');
+    if (playBackward.value == "Play Backwards") {
+        if (logging.frameEvents)
+            console.log('playPauseVideoBackward: playing backwards');
+        //video.play();
+        play.value = "Play";
+        playBackward.value = "Pause";
+        $("#playbackward").addClass("playing");
+        $("#play").removeClass("playing");
+
+        video2.stopListen(); // Cut any other play occuring
+        //video2.video.pause(); // Play using semi-manual trick (need to be paused)
+        //video2.listen('frame'); // Configure the listener before starting playing to avoid missing any frame
+        if (Number(option)==2)
+            video2.playBackwards(1000.0/20/4);
+        else
+            video2.playBackwards();
+
+
+        // Any call to refresh is now handled by the video2 callback to onFrameChanged
+    } else {
+        if (logging.frameEvents)
+            console.log('playPauseVideoBackward: stop playing backwards');
+        play.value = "Play";
+        playBackward.value = "Play Backwards";
+        $("#play").removeClass("playing");
+        $("#playbackward").removeClass("playing");
+
+        video2.video.pause();
+        video2.stopListen();
+
+        // Any call to refresh is now handled by the video2 callback to onFrameChanged
+    }
+}
+
+function rewind() {
+    video2.seekBackward();
+}
+function forward() {
+    video2.seekForward();
+}
+
+function rewind2() {
+    video2.seekBackward(fps);
+}
+function forward2() {
+    video2.seekForward(fps);
+}
+
+function rewind3() {
+    video2.seekBackward(fps*60);
+}
+function forward3() {
+    video2.seekForward(fps*60);
+}
+function rewind4() {
+    video2.seekBackward(fps*60*10);
+}
+function forward4() {
+    video2.seekForward(fps*60*10);
+}
+
+
+
+// ## Utils for annotation overlay
+
 function canvasToVideoCoords(rect) {
     return {
         x: rect.left * transformFactor,
@@ -650,6 +1019,7 @@ function canvasToVideoPoint(pt) {
     }
 }
 
+// ## Fabric.js rects
 
 function createRectsFromTracks() {
     let F = getCurrentFrame()
@@ -662,6 +1032,10 @@ function createRectsFromTracks() {
     }
 }
 
+// ## Direct canvas drawing
+
+// # Bee ID and their tracks
+
 function plotBees(ctx) {
     // Creation of rectangle was done in identify-->moved it to an explicit createRectsFromTracks()
     // Now, just plot identity
@@ -669,122 +1043,6 @@ function plotBees(ctx) {
     for (let i in rects) { // For each rectangle, plot its identity
         identify(ctx, rects[i], 5);
     }
-}
-
-function plotTags(ctx) {
-    let F = getCurrentFrame()
-    let tagsFrame = Tags[F]
-    if (tagsFrame !== undefined) {
-        let tags = tagsFrame['tags']
-        //console.log('Found tags',tags)
-        for (let i in tags) {
-            let tag = tags[i]
-            //console.log(tag)
-            plotTag(ctx, tag)            
-        }
-        
-       let msg = ''
-       for (let i in tags) {
-           let tag = tags[i]
-            msg = msg + tag.id + ' H'+tag.hamming+ ' ('+tag.c[0]+','+tag.c[1]+')<br>'
-       }
-       $("#tagDetails")[0].innerHTML = msg
-    }
-}
-function plotTag(ctx, tag, color, flags) {
-    if (color == undefined) {
-        color = 'red'
-    }
-    if (typeof flags === 'undefined') {
-      flags = {
-        "id":true,
-        "radius":5
-      }
-    }
-    let radius = flags.radius
-    if (typeof radius === 'undefined') { radius = 5; }
-
-    let pt = videoToCanvasPoint({"x":tag["c"][0], "y":tag["c"][1]})
-
-    ctx.beginPath();
-    ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = color;
-    ctx.closePath();
-    ctx.stroke();
-
-    if (flags.id==true) {
-      ctx.font = "10px Arial";
-      ctx.fillStyle = color;
-      ctx.textAlign = 'center';
-      ctx.fillText(String(tag.id), pt.x, pt.y + radius + 8);
-
-      ctx.font = "10px Arial";
-      ctx.fillStyle = color;
-      ctx.textAlign = 'center';
-      ctx.fillText("H"+tag.hamming, pt.x, pt.y + radius + 16);
-    }
-}
-function plotTagsTracks(ctx) {
-    let F = getCurrentFrame()
-    let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1;
-    let fmin = F-plotTrack_range_backward;
-    let fmax = F+plotTrack_range_forward;
-    if (fmin<0) fmin=0;
-    //if (fmax>maxframe) fmax=maxframe;
-
-    setColor = function(f) {
-        if (f<=F) {
-            color = "rgba(255,0,0,"+(1-Math.abs((f-F)/frange))+")"
-            //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
-        } else {
-            color = "rgba(0,0,255,"+(1-Math.abs((f-F)/frange))+")"
-        }
-        return color;
-    }
-
-    // Plot past and future tag positions
-    for (let f=fmin; f<=fmax; f++) {
-        let tagsFrame = Tags[f]
-        if (typeof(tagsFrame) === "undefined") continue;
-        let tags = tagsFrame['tags']
-        let color = setColor(f)
-        for (let i in tags) {
-            let tag = tags[i]
-            //console.log(tag)
-            
-            plotTag(ctx, tag, color, {"id":false, "radius": 2})            
-        }    
-    }
-    {
-        // Plot current tag position
-        let f=F;
-        let tagsFrame = Tags[f]
-        if (typeof(tagsFrame) !== "undefined") {
-        let tags = tagsFrame['tags']
-        let color = setColor(f)
-        for (let i in tags) {
-            let tag = tags[i]
-            //console.log(tag)
-            
-            plotTag(ctx, tag, color, {"id":true})            
-        }    
-        }
-    } 
-}
-function onShowTagsChanged() {
-    showTags = $('#showTags')[0].checked
-    onFrameChanged()
-}
-function onShowTagsTracksChanged() {
-    showTagsTracks = $('#showTagsTracks')[0].checked
-    onFrameChanged()
-}
-
-function onTrackWindowChanged() {
-    let range = Number($('#trackWindow')[0].value)
-    console.log("onTrackWindowChanged range=",range)
-    plotTrack_range_forward = range
-    plotTrack_range_backward = range
 }
 function plotTracks(ctx) {
     let F = getCurrentFrame()
@@ -927,108 +1185,122 @@ function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
     ctx.textBaseline = 'alphabetic';
 }
 
-function playPauseVideo(option) {
-    if (logging.guiEvents)
-        console.log('playPauseVideo()');
-    if (play.value == "Play") {
-        if (logging.frameEvents)
-            console.log('playPauseVideo: playing forwards');
-        //video.play();
-        play.value = "Pause";
-        playBackward.value = "Play Backwards";
-        $("#play").addClass("playing");
-        $("#playbackward").removeClass("playing");
+// # Tags and their tracks
 
-        video2.stopListen(); // Cut any other play occuring
-        video2.listen('frame'); // Configure the listener before starting playing to avoid missing any frame
+function plotTags(ctx) {
+    let F = getCurrentFrame()
+    let tagsFrame = Tags[F]
+    if (tagsFrame !== undefined) {
+        let tags = tagsFrame['tags']
+        //console.log('Found tags',tags)
+        for (let i in tags) {
+            let tag = tags[i]
+            //console.log(tag)
+            plotTag(ctx, tag)            
+        }
         
-        if (Number(option)==2)
-            video2.playForwards(1000.0/20/4);
-        else
-            video2.video.play();
-
-        // Any call to refresh is now handled by the video2 callback to onFrameChanged
-    } else {
-        if (logging.frameEvents)
-            console.log('playPauseVideo: stop playing forwards');
-        video.pause();
-        play.value = "Play";
-        playBackward.value = "Play Backwards";
-        $("#play").removeClass("playing");
-        $("#playbackward").removeClass("playing");
-
-        video2.video.pause();
-        video2.stopListen();
-
-        // Any call to refresh is now handled by the video2 callback to onFrameChanged
+       let msg = ''
+       for (let i in tags) {
+           let tag = tags[i]
+            msg = msg + tag.id + ' H'+tag.hamming+ ' ('+tag.c[0]+','+tag.c[1]+')<br>'
+       }
+       $("#tagDetails")[0].innerHTML = msg
     }
 }
-function playPauseVideoBackward(option) {
-    if (logging.guiEvents)
-        console.log('playPauseVideoBackward()');
-    if (playBackward.value == "Play Backwards") {
-        if (logging.frameEvents)
-            console.log('playPauseVideoBackward: playing backwards');
-        //video.play();
-        play.value = "Play";
-        playBackward.value = "Pause";
-        $("#playbackward").addClass("playing");
-        $("#play").removeClass("playing");
+function plotTag(ctx, tag, color, flags) {
+    if (color == undefined) {
+        color = 'red'
+    }
+    if (typeof flags === 'undefined') {
+      flags = {
+        "id":true,
+        "radius":5
+      }
+    }
+    let radius = flags.radius
+    if (typeof radius === 'undefined') { radius = 5; }
 
-        video2.stopListen(); // Cut any other play occuring
-        //video2.video.pause(); // Play using semi-manual trick (need to be paused)
-        //video2.listen('frame'); // Configure the listener before starting playing to avoid missing any frame
-        if (Number(option)==2)
-            video2.playBackwards(1000.0/20/4);
-        else
-            video2.playBackwards();
+    let pt = videoToCanvasPoint({"x":tag["c"][0], "y":tag["c"][1]})
 
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.closePath();
+    ctx.stroke();
 
-        // Any call to refresh is now handled by the video2 callback to onFrameChanged
-    } else {
-        if (logging.frameEvents)
-            console.log('playPauseVideoBackward: stop playing backwards');
-        play.value = "Play";
-        playBackward.value = "Play Backwards";
-        $("#play").removeClass("playing");
-        $("#playbackward").removeClass("playing");
+    if (flags.id==true) {
+      ctx.font = "10px Arial";
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText(String(tag.id), pt.x, pt.y + radius + 8);
 
-        video2.video.pause();
-        video2.stopListen();
-
-        // Any call to refresh is now handled by the video2 callback to onFrameChanged
+      ctx.font = "10px Arial";
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText("H"+tag.hamming, pt.x, pt.y + radius + 16);
     }
 }
+function plotTagsTracks(ctx) {
+    let F = getCurrentFrame()
+    let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1;
+    let fmin = F-plotTrack_range_backward;
+    let fmax = F+plotTrack_range_forward;
+    if (fmin<0) fmin=0;
+    //if (fmax>maxframe) fmax=maxframe;
 
-function rewind() {
-    video2.seekBackward();
+    setColor = function(f) {
+        if (f<=F) {
+            color = "rgba(255,0,0,"+(1-Math.abs((f-F)/frange))+")"
+            //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
+        } else {
+            color = "rgba(0,0,255,"+(1-Math.abs((f-F)/frange))+")"
+        }
+        return color;
+    }
+
+    // Plot past and future tag positions
+    for (let f=fmin; f<=fmax; f++) {
+        let tagsFrame = Tags[f]
+        if (typeof(tagsFrame) === "undefined") continue;
+        let tags = tagsFrame['tags']
+        let color = setColor(f)
+        for (let i in tags) {
+            let tag = tags[i]
+            //console.log(tag)
+            
+            plotTag(ctx, tag, color, {"id":false, "radius": 2})            
+        }    
+    }
+    {
+        // Plot current tag position
+        let f=F;
+        let tagsFrame = Tags[f]
+        if (typeof(tagsFrame) !== "undefined") {
+        let tags = tagsFrame['tags']
+        let color = setColor(f)
+        for (let i in tags) {
+            let tag = tags[i]
+            //console.log(tag)
+            
+            plotTag(ctx, tag, color, {"id":true})            
+        }    
+        }
+    } 
 }
-function forward() {
-    video2.seekForward();
+function onShowTagsChanged() {
+    showTags = $('#showTags')[0].checked
+    onFrameChanged()
+}
+function onShowTagsTracksChanged() {
+    showTagsTracks = $('#showTagsTracks')[0].checked
+    onFrameChanged()
 }
 
-function rewind2() {
-    video2.seekBackward(fps);
-}
-function forward2() {
-    video2.seekForward(fps);
-}
-
-function rewind3() {
-    video2.seekBackward(fps*60);
-}
-function forward3() {
-    video2.seekForward(fps*60);
-}
-function rewind4() {
-    video2.seekBackward(fps*60*10);
-}
-function forward4() {
-    video2.seekForward(fps*60*10);
-}
-
-function vidEnd() {
-    play.value = "Play";
+function onTrackWindowChanged() {
+    let range = Number($('#trackWindow')[0].value)
+    console.log("onTrackWindowChanged range=",range)
+    plotTrack_range_forward = range
+    plotTrack_range_backward = range
 }
 
 var flagShowTrack = false
@@ -1187,10 +1459,6 @@ function findRect(id) {
         }
     }
     return undefined
-}
-
-function getCurrentFrame() {
-    return video2.get();
 }
 
 function dist(x, y, x2, y2) {
@@ -1484,6 +1752,8 @@ function onActivityChanged(event) {
 }
 
 
+// # Form and current bee control
+
 /* Update form rectangle data from activeObject */
 function updateForm(activeObject) {
 
@@ -1604,26 +1874,6 @@ function automatic_sub() {
     }
 }
 
-function showZoom(rect) {
-    var zoom_canvas = $('#zoom')[0];
-    var zoom_ctx = zoom_canvas.getContext('2d');
-    zoom_ctx.clearRect(0, 0, 200, 150)
-    let w = rect.width,
-        h = rect.height
-    let mw = w * 0.5,
-        mh = h * 0.5
-    let w2 = w + 2 * mw,
-        h2 = h + 2 * mh
-    let sc = Math.min(5, 200 / w2)
-    zoom_ctx.drawImage(video, (rect.left - mw) * transformFactor, (rect.top - mh) * transformFactor, w2 *
-        transformFactor, h2 * transformFactor,
-        100 - w2 * sc / 2, 75 - h2 * sc / 2, w2 * sc, h2 * sc);
-    zoom_ctx.beginPath();
-    zoom_ctx.rect(100 - w * sc / 2, 75 - h * sc / 2, w * sc, h * sc)
-    zoom_ctx.strokeStyle = 'blue'
-    zoom_ctx.stroke()
-}
-
 function selectBeeByID(id) {
    let rect = findRect(id);
    if (rect) {
@@ -1694,9 +1944,31 @@ function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pr
 }
 
 
+// ## Auxiliary display
 
-// ###########################################################
-// Removing
+function showZoom(rect) {
+    var zoom_canvas = $('#zoom')[0];
+    var zoom_ctx = zoom_canvas.getContext('2d');
+    zoom_ctx.clearRect(0, 0, 200, 150)
+    let w = rect.width,
+        h = rect.height
+    let mw = w * 0.5,
+        mh = h * 0.5
+    let w2 = w + 2 * mw,
+        h2 = h + 2 * mh
+    let sc = Math.min(5, 200 / w2)
+    zoom_ctx.drawImage(video, (rect.left - mw) * transformFactor, (rect.top - mh) * transformFactor, w2 *
+        transformFactor, h2 * transformFactor,
+        100 - w2 * sc / 2, 75 - h2 * sc / 2, w2 * sc, h2 * sc);
+    zoom_ctx.beginPath();
+    zoom_ctx.rect(100 - w * sc / 2, 75 - h * sc / 2, w * sc, h * sc)
+    zoom_ctx.strokeStyle = 'blue'
+    zoom_ctx.stroke()
+}
+
+
+
+// ## Removing
 
 function removeDecision() {
     buttonManip = document.getElementById("special");
@@ -1738,55 +2010,7 @@ function resetCheck() {
 }
 
 
-
-// ######################################################################
-// Model: Tracks data structure
-
-function Activity(time, action) {
-    this.time = time;
-    this.action = action;
-}
-
-function Observation(ID) {
-    this.ID = ID
-    this.time = 0;
-    this.frame = 0;
-    this.x = 0;
-    this.y = 0;
-    this.cx = 0;
-    this.cy = 0;
-    this.width = 0;
-    this.height = 0;
-    this.marked = false;
-    this.permanent = false;
-
-    this.bool_acts = [false, false, false, false]; //Should be kept numerical because Ram
-}
-
-function cloneObs(obs) {
-    return {
-        ID: obs.ID,
-        time: obs.time,
-        frame: obs.frame,
-        x: obs.x,
-        y: obs.y,
-        cx: obs.cx,
-        cy: obs.cy,
-        width: obs.width,
-        height: obs.height,
-        marked: obs.marked,
-        permanent: obs.permanent,
-        bool_acts: [obs.bool_acts[0], obs.bool_acts[1], obs.bool_acts[2], obs.bool_acts[3]]
-    }
-}
-
-//// Chronogram prototype
-function chronoObservation() {
-    this.x = 0;
-    this.y = 0;
-    this.Activity = "";
-}
-
+// ## ID GUI
 //// Controller
 // function grabandCheckID() {
 //     var ID = document.getElementById("I");
@@ -1832,180 +2056,8 @@ function onKeyDown_IDEdit(event) {
 
 
 
-
-//// Model
-function getValidIDsForFrame(frame) {
-    // Return an Iterator to Tracks[frame]
-
-    if (Tracks[frame] == undefined) {
-        return []
-    }
-    //NO: var ids = Array.from(Tracks[frame].keys()) // Problem: includes ids to undefined values also
-
-    let trackf = Tracks[frame];
-    let ids = [];
-    for (id in trackf) {
-        if (trackf[id] !== undefined) {
-            ids.push(id);
-        }
-    }
-    //console.log("getValidIDsForFrame: frame=",frame,",  Tracks[frame]=",trackf)
-    //console.log("getValidIDsForFrame: ids=",ids)
-    return ids;
-}
-
-function getObsHandle(frame, id, createIfEmpty) {
-    if (createIfEmpty == undefined)
-        createIfEmpty = false;
-
-    var obs = undefined
-    if (Tracks[frame] == undefined) {
-        if (createIfEmpty) {
-            //Tracks[frame] = new Array;
-            Tracks[frame] = {}
-        } else {
-            return undefined
-        }
-    }
-
-    if (Tracks[frame][id] == undefined) {
-        if (createIfEmpty) {
-            Tracks[frame][id] = new Observation(id);
-            //default_id++;
-        } else {
-            return undefined
-        }
-    }
-    return Tracks[frame][id]
-}
-
-function storeObs(tmpObs) {
-    var obs = getObsHandle(tmpObs.frame, tmpObs.ID, true);
-    obs.ID = tmpObs.ID;
-    obs.time = tmpObs.time;
-    obs.frame = tmpObs.frame;
-    obs.x = tmpObs.x; // REMI: tmpObs should have same units than obs (no transformFactor here)
-    obs.y = tmpObs.y;
-    obs.cx = tmpObs.cx;
-    obs.cy = tmpObs.cy;
-    obs.width = tmpObs.width
-    obs.height = tmpObs.height
-    obs.marked = tmpObs.marked;
-    obs.permanent = tmpObs.permanent;
-    obs.bool_acts[0] = tmpObs.bool_acts[0];
-    obs.bool_acts[1] = tmpObs.bool_acts[1];
-    obs.bool_acts[2] = tmpObs.bool_acts[2];
-    obs.bool_acts[3] = tmpObs.bool_acts[3];
-
-    if (logging.submitEvents)
-        console.log("Submitting obs = ", obs)
-}
-
-function doesExist(ID) {
-    for (frame in Tracks) {
-        for (id in Tracks[frame]) {
-            if (id == ID) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-// function doesExistButton(ID) {
-//     for (frame in Tracks) {
-//         for (id in Tracks[frame]) {
-//             if (id == ID) {
-//                 buttonManip2 = document.getElementById("special2");
-//                 buttonManip2.className = "btn btn-danger btn-sm";
-//                 buttonManip2.value = "Taken";
-//                 return true;
-//             }
-//         }
-//     }
-// 
-//     buttonManip2 = document.getElementById("special2");
-//     buttonManip2.className = "btn btn-success btn-sm";
-//     buttonManip2.value = "Free to use";
-//     return false;
-// }
-
-function changeObservationID(frame, old_id, new_id) {
-    // REMI: modified to be be independent of View
-    if (Tracks[frame] != undefined) {
-        if (Tracks[frame][old_id] != undefined) {
-            if (logging.submitEvents)
-                console.log("changeObservationID: frame=", frame, "old_id=", old_id, " new_id=", new_id);
-            Tracks[frame][new_id] = Tracks[frame][old_id];
-            delete Tracks[frame][old_id];
-            Tracks[frame][new_id].ID = new_id;
-            return true
-        } else {
-            console.log("changeObservationID: There's no bee id=", old_id, " on frame=", frame);
-            return false
-        }
-    } else {
-        console.log("changeObservationID: Empty frame, frame=", frame);
-        return false
-    }
-}
-
-function getObservation() { //Unimportant function with popup but using it for debugging for now
-
-    var id = document.getElementById("obID");
-    var frame = document.getElementById("obF");
-
-    var A1 = document.getElementById("A1");
-    var A2 = document.getElementById("A2");
-    var A3 = document.getElementById("A3");
-    var B1 = document.getElementById("B1");
-    var B2 = document.getElementById("B2");
-    var C1 = document.getElementById("C1");
-
-    if (doesExist(id.value) == true) {
-        A1.innerHTML = "ID: " + Tracks[frame.value][id.value].ID;
-        A2.innerHTML = "Frame: " + Tracks[frame.value][id.value].frame;
-        A3.innerHTML = "Time: " + Tracks[frame.value][id.value].time;
-        B1.innerHTML = "Permanent: " + Tracks[frame.value][id.value].permanent;
-        B2.innerHTML = "Marked: " + Tracks[frame.value][id.value].marked;
-        C1.innerHTML = "Activities: " + Tracks[frame.value][id.value].bool_acts;
-    } else {
-        A1.innerHTML = "Observation does not exist";
-        A2.innerHTML = "";
-        A3.innerHTML = "";
-        B1.innerHTML = "";
-        B2.innerHTML = "";
-        C1.innerHTML = "<img src='h2_6.png'>";
-    }
-
-    $(document).ready(function() {
-        $("#ok").click(function() {
-            $("#Modal3").modal();
-        });
-    });
-}
-
-function addObs(obj) {
-    Tracks[obj.frame][obj.ID] = obj;
-    if (logging.submitEvents) {
-        console.log("This is obj in Tracks");
-        console.log(Tracks[obj.frame][obj.ID]);
-    }
-}
-
-function printTracks() {
-    //Just for debugging
-    console.log("This is Tracks:")
-    for (F in Tracks) {
-        for (iid in Tracks[F]) {
-            console.log("F =", F, ", iid =", iid, ", Tracks[F][idd] =", Tracks[F][iid])
-        }
-    }
-}
-
-
 // ###########################################################
-// Chronogram
+// CHRONOGRAM
 
 function Chronogram() {
 // Create Chronogram
@@ -2291,8 +2343,9 @@ function initChrono() {
     
     // Insert plotAreaTags before so that it renders below, 
     // and timeMark last so it appears on top
-    plotAreaTags = chronArea.insert("g")  
+
     plotArea = chronArea.insert("g")
+    plotAreaTags = chronArea.insert("g")  
     
     timeMark = initTimeMark(chronArea)
     
@@ -2550,6 +2603,8 @@ this.updateTimeMark = updateTimeMark
 
 this.chronogramData = chronogramData
 this.tagsChronogramData = tagsChronogramData
+// Caution: never replace these variables, as only the original onces are used inside the scope
+// To reinit chronogramData, use chrono.chronogramData.length = 0
 
 initChrono()
 
