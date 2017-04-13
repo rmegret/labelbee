@@ -36,9 +36,26 @@ var VideoFrame = function(options) {
 	this.obj = options || {};
 	this.frameRate = this.obj.frameRate || 24;
 	this.video = document.getElementById(this.obj.id) || document.getElementsByTagName('video')[0];
+
+	this.interval = undefined
+	this.intervalPlayForwards = undefined	
+	this.intervalPlayBackwards = undefined
+	this.displayed = false
+	this.lastdisplayed = undefined
+	
+	let videoframe = this
+	this.timeupdatewrapper = function(event) {
+	  // Do not trigger callback twice for the same frame
+	  let frame = videoframe.get();
+    if (frame == videoframe.lastdisplayed) return;
+    videoframe.lastdisplayed = frame;
+	  videoframe.displayed = true
+    
+    if (videoframe.obj.callback) { videoframe.obj.callback(frame, event); }
+	}
 	
 	// REMI: call callback on timeupdate instead of directly in seek, because seek sometime calls the callback too fast (image not yet updated)
-	this.video.addEventListener('timeupdate', this.obj.callback, false);
+	this.video.addEventListener('timeupdate', this.timeupdatewrapper, false);
 };
 
 /**
@@ -85,12 +102,16 @@ VideoFrame.prototype = {
 	listen : function(format, tick) {
 		var _video = this;
 		if (!format) { console.log('VideoFrame: Error - The listen method requires the format parameter.'); return; }
-		 this.interval = setInterval(function() {
-			if (_video.video.paused || _video.video.ended) { 
-			    if (!this.intervalPlayBackwards) { return; }
+		 this.interval = setInterval(function(event) {
+			if (_video.video.paused || _video.video.ended) {
+			    // If paused and not currently playing manually, abort
+			    if ((!this.intervalPlayBackwards) 
+			     && (!this.intervalPlayForwards)) { return; }
 			}
 			var frame = ((format === 'SMPTE') ? _video.toSMPTE() : ((format === 'time') ? _video.toTime() : _video.get()));
-			if (_video.obj.callback) { _video.obj.callback(frame, format); }
+
+			_video.timeupdatewrapper(event)
+      			
 			return frame;
 		}, (tick ? tick : 1000 / _video.frameRate / 2));
 	},
@@ -99,6 +120,10 @@ VideoFrame.prototype = {
 		var _video = this;
 		clearInterval(_video.interval);
 		clearInterval(_video.intervalPlayBackwards);
+		clearInterval(_video.intervalPlayForwards);
+		_video.interval = undefined
+		_video.intervalPlayBackwards = undefined
+		_video.intervalPlayForwards = undefined
 	},
 	fps : FrameRates,
 	setFrameRate : function(fr) {
@@ -289,19 +314,30 @@ VideoFrame.prototype.seekTo = function(config) {
 VideoFrame.prototype.playBackwards = function(tick) {
 		var _video = this;
 		this.video.pause();
-		 this.intervalPlayBackwards = setInterval(function() {
+		this.intervalPlayBackwards = setInterval(function() {
+      // Do not continue to next frame until timeupdate signal has been received
+		  if (!_video.displayed) return false
+		  _video.displayed = false
 			_video.seekBackward();
 			return true;
 		}, (tick ? tick : 1000 / _video.frameRate));
-        this.listen('frame');
-	};
+    this.listen('frame');
+};
 	
-	VideoFrame.prototype.playForwards = function(tick) {
+VideoFrame.prototype.playForwards = function(tick) {
 		var _video = this;
 		this.video.pause();
-		 this.intervalPlayBackwards = setInterval(function() {
-			_video.seekForward();
-			return true;
-		}, (tick ? tick : 1000 / _video.frameRate));
-        this.listen('frame');
-	};
+		if (tick) {
+      this.intervalPlayForwards = setInterval(function() {
+        // Do not continue to next frame until timeupdate signal has been received
+        if (!_video.displayed) return false
+        _video.displayed = false
+        _video.seekForward();
+        return true;
+      }, (tick ? tick : 1000 / _video.frameRate));
+		} else {
+		  // More efficient than seeking for each frame
+		  this.video.play()
+		}
+    this.listen('frame');
+};
