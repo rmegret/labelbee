@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Global variables
-var canvas, canvas1, canvas2, ctx, ctx2, vid, play, vidTimer, radius = 5,
+var canvas, canvas1, canvas2, ctx, ctx2, vid, play, radius = 5,
     dragging = false,
     time, final_id = 0;
 bee = [0, 0]; //Global array that stores the value of x, y
@@ -15,7 +15,6 @@ var form_acts = [],
     currentFrame, video, video2, Cframe = 0;
 var Tracks = new Array(),
     temporaryObs = new Observation(0)
-//var chronoObs = new chronoObservation();
 var Tags = new Array()
 var buttonManip, undo = new Observation(0),
     alert1, transformFactor = 1.0;
@@ -27,9 +26,10 @@ var videoinfo;
 var selectedBee = undefined
 var logging = {
   "rects": false,
-  "frameEvents": false,
+  "frameEvents": true,
+  "guiEvents": true,
   "submitEvents": false,
-  "mouseEvents": true,
+  "mouseEvents": false,
   "keyEvents": false,
   "selectionEvents": false,
 }
@@ -136,11 +136,6 @@ function init() {
 // ######################################################################
 // MODEL: Tracks data structure
 
-function Activity(time, action) {
-    this.time = time;
-    this.action = action;
-}
-
 function Observation(ID) {
     this.ID = ID
     this.time = 0;
@@ -174,14 +169,6 @@ function cloneObs(obs) {
     }
 }
 
-//// Chronogram prototype
-function chronoObservation() {
-    this.x = 0;
-    this.y = 0;
-    this.Activity = "";
-}
-
-//// Model
 function getValidIDsForFrame(frame) {
     // Return an Iterator to Tracks[frame]
 
@@ -200,6 +187,16 @@ function getValidIDsForFrame(frame) {
     //console.log("getValidIDsForFrame: frame=",frame,",  Tracks[frame]=",trackf)
     //console.log("getValidIDsForFrame: ids=",ids)
     return ids;
+}
+
+function obsDoesExist(frame, id) {
+    if (Tracks[frame] == undefined) {
+        return false
+    }
+    if (Tracks[frame][id] == undefined) {
+        return false
+    }
+    return true
 }
 
 function getObsHandle(frame, id, createIfEmpty) {
@@ -249,17 +246,6 @@ function storeObs(tmpObs) {
         console.log("Submitting obs = ", obs)
 }
 
-function doesExist(ID) {
-    for (frame in Tracks) {
-        for (id in Tracks[frame]) {
-            if (id == ID) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 // function doesExistButton(ID) {
 //     for (frame in Tracks) {
 //         for (id in Tracks[frame]) {
@@ -298,13 +284,6 @@ function changeObservationID(frame, old_id, new_id) {
     }
 }
 
-function addObs(obj) {
-    Tracks[obj.frame][obj.ID] = obj;
-    if (logging.submitEvents) {
-        console.log("This is obj in Tracks");
-        console.log(Tracks[obj.frame][obj.ID]);
-    }
-}
 
 function printTracks() {
     //Just for debugging
@@ -315,42 +294,6 @@ function printTracks() {
         }
     }
 }
-
-function getObservation() { //Unimportant function with popup but using it for debugging for now
-
-    var id = document.getElementById("obID");
-    var frame = document.getElementById("obF");
-
-    var A1 = document.getElementById("A1");
-    var A2 = document.getElementById("A2");
-    var A3 = document.getElementById("A3");
-    var B1 = document.getElementById("B1");
-    var B2 = document.getElementById("B2");
-    var C1 = document.getElementById("C1");
-
-    if (doesExist(id.value) == true) {
-        A1.innerHTML = "ID: " + Tracks[frame.value][id.value].ID;
-        A2.innerHTML = "Frame: " + Tracks[frame.value][id.value].frame;
-        A3.innerHTML = "Time: " + Tracks[frame.value][id.value].time;
-        B1.innerHTML = "Permanent: " + Tracks[frame.value][id.value].permanent;
-        B2.innerHTML = "Marked: " + Tracks[frame.value][id.value].marked;
-        C1.innerHTML = "Activities: " + Tracks[frame.value][id.value].bool_acts;
-    } else {
-        A1.innerHTML = "Observation does not exist";
-        A2.innerHTML = "";
-        A3.innerHTML = "";
-        B1.innerHTML = "";
-        B2.innerHTML = "";
-        C1.innerHTML = "<img src='h2_6.png'>";
-    }
-
-    $(document).ready(function() {
-        $("#ok").click(function() {
-            $("#Modal3").modal();
-        });
-    });
-}
-
 
 
 // ######################################################################
@@ -680,12 +623,13 @@ function onKeyDown(e) {
 
 function selectVideo() {
     let file = $('#selectboxVideo')[0].value
-    
     $('#video')[0].src = file;
+    
+    // Change handled in callback onVideoLoaded
 }
 
 
-// ## Video metadata
+// ## Video custom metadata
 
 function onStartTimeChanged(event) {
     console.log('onStartTimeChanged', event)
@@ -708,6 +652,7 @@ function onFPSChanged(event) {
 // # Video loading
 var videoDuration=22
 function onVideoLoaded(event) {
+    // Called when video metadata available (size, duration...)
     console.log('videoLoaded', event)
     var w,h
     
@@ -828,8 +773,148 @@ function refresh() {
     chrono.updateTimeMark()
 }
 
+// ## Video navigation
 
-// # Video Resizing
+player = { 
+    'state': 'paused', // paused, playingForwards, playingBackwards
+    'speed': 1.0
+  }
+function getCurrentFrame() {
+    return video2.get();
+}
+
+function updateNavigationView() {
+   if (player.state == "paused") {
+        $("#play").value = "Play";
+        $("#play").removeClass("playing");
+        $("#playbackward").value = "Play Backwards";
+        $("#playbackward").removeClass("playing");
+   } else if (player.state == "playingForwards") {
+        // Forwards
+        $("#play").value = "Pause";
+        $("#play").addClass("playing");
+        $("#playbackward").value = "Play Backwards";
+        $("#playbackward").removeClass("playing");
+    } else if (player.state == "playingBackwards") {
+        // Backwards
+        $("#play").value = "Play";
+        $("#play").removeClass("playing");
+        $("#playbackward").value = "Pause";
+        $("#playbackward").addClass("playing");
+    } else {
+        console.log('ERROR: unknown player.state:',player.state)
+    }
+}
+
+function vidSet() {
+    if (player.state=="paused") {
+        console.log('ERROR: vidSet called while player.state=="paused"')
+        console.log('  Updating player state to playing forwards')
+        player.state='playing'
+        player.direction='forwards'
+        updateNavigationView()
+    } else if (player.direction=="playingBackwards") {
+        console.log('ERROR: vidSet called while player.state=="playing" and direction="backwards"')
+        console.log('  Updating player state to playing forwards')
+        player.state='playing'
+        player.direction='forwards'
+        updateNavigationView()
+    }
+}
+function vidEnd() {
+    // Reached end of video
+    player.state = 'paused'
+    updateNavigationView()
+    video2.stopListen();
+}
+
+function playPauseVideo(option) {
+    if (logging.guiEvents) console.log('playPauseVideo()');
+    if (player.state == "paused" || player.state == "playingBackwards") {
+        playForwards(option)
+    } else {
+        pause()
+    }
+}
+function playPauseVideoBackward(option) {
+    if (logging.guiEvents) console.log('playPauseVideoBackward()');
+    if (player.state == "paused" || player.state == "playingForwards") {
+        playBackwards(option)
+    } else {
+        pause()
+    }
+}
+
+function playForwards(option) {      
+      if (logging.frameEvents)
+            console.log('playForwards');
+                 
+      // Start playing forward
+      player.state = 'playingForwards'
+      updateNavigationView()
+      
+      video2.stopListen(); // Cut any other play occuring
+      if (Number(option)==2)
+          video2.playForwards(1000.0/20/4);
+      else {
+          video2.playForwards()
+      }
+
+      // Any call to refresh is handled by the video2 callback to onFrameChanged
+}
+function playBackwards(option) {
+      if (logging.frameEvents)
+            console.log('playBackwards');
+      // Start playing backwards
+      player.state = 'playingBackwards'
+      updateNavigationView()
+      
+      video2.stopListen(); // Cut any other play occuring
+      if (Number(option)==2)
+          video2.playBackwards(1000.0/20/4);
+      else
+          video2.playBackwards();
+
+      // Any call to refresh is now handled by the video2 callback to onFrameChanged
+}
+function pause() {
+    // Was playing, pause
+    player.state = 'paused'
+    updateNavigationView()
+            
+    video2.video.pause();
+    video2.stopListen();
+}
+
+function rewind() {
+    video2.seekBackward();
+}
+function forward() {
+    video2.seekForward();
+}
+
+function rewind2() {
+    video2.seekBackward(fps);
+}
+function forward2() {
+    video2.seekForward(fps);
+}
+
+function rewind3() {
+    video2.seekBackward(fps*60);
+}
+function forward3() {
+    video2.seekForward(fps*60);
+}
+function rewind4() {
+    video2.seekBackward(fps*60*10);
+}
+function forward4() {
+    video2.seekForward(fps*60*10);
+}
+
+
+// # Canvas resizing utilities
 function resizeCanvas(w,h) {
     canvas.width = w
     canvas.height = h
@@ -866,125 +951,6 @@ function refreshCanvasSize(event, ui) {
         
     onFrameChanged()
 }
-
-// ## Video navigation
-
-function getCurrentFrame() {
-    return video2.get();
-}
-
-function vidSet() {
-    clearTimeout(vidTimer);
-    vidTimer = setTimeout(refresh, 25);
-}
-
-function vidEnd() {
-    play.value = "Play";
-}
-
-function playPauseVideo(option) {
-    if (logging.guiEvents)
-        console.log('playPauseVideo()');
-    if (play.value == "Play") {
-        if (logging.frameEvents)
-            console.log('playPauseVideo: playing forwards');
-        //video.play();
-        play.value = "Pause";
-        playBackward.value = "Play Backwards";
-        $("#play").addClass("playing");
-        $("#playbackward").removeClass("playing");
-
-        video2.stopListen(); // Cut any other play occuring
-        video2.listen('frame'); // Configure the listener before starting playing to avoid missing any frame
-        
-        if (Number(option)==2)
-            video2.playForwards(1000.0/20/4);
-        else
-            video2.video.play();
-
-        // Any call to refresh is now handled by the video2 callback to onFrameChanged
-    } else {
-        if (logging.frameEvents)
-            console.log('playPauseVideo: stop playing forwards');
-        video.pause();
-        play.value = "Play";
-        playBackward.value = "Play Backwards";
-        $("#play").removeClass("playing");
-        $("#playbackward").removeClass("playing");
-
-        video2.video.pause();
-        video2.stopListen();
-
-        // Any call to refresh is now handled by the video2 callback to onFrameChanged
-    }
-}
-function playPauseVideoBackward(option) {
-    if (logging.guiEvents)
-        console.log('playPauseVideoBackward()');
-    if (playBackward.value == "Play Backwards") {
-        if (logging.frameEvents)
-            console.log('playPauseVideoBackward: playing backwards');
-        //video.play();
-        play.value = "Play";
-        playBackward.value = "Pause";
-        $("#playbackward").addClass("playing");
-        $("#play").removeClass("playing");
-
-        video2.stopListen(); // Cut any other play occuring
-        //video2.video.pause(); // Play using semi-manual trick (need to be paused)
-        //video2.listen('frame'); // Configure the listener before starting playing to avoid missing any frame
-        if (Number(option)==2)
-            video2.playBackwards(1000.0/20/4);
-        else
-            video2.playBackwards();
-
-
-        // Any call to refresh is now handled by the video2 callback to onFrameChanged
-    } else {
-        if (logging.frameEvents)
-            console.log('playPauseVideoBackward: stop playing backwards');
-        play.value = "Play";
-        playBackward.value = "Play Backwards";
-        $("#play").removeClass("playing");
-        $("#playbackward").removeClass("playing");
-
-        video2.video.pause();
-        video2.stopListen();
-
-        // Any call to refresh is now handled by the video2 callback to onFrameChanged
-    }
-}
-
-function rewind() {
-    video2.seekBackward();
-}
-function forward() {
-    video2.seekForward();
-}
-
-function rewind2() {
-    video2.seekBackward(fps);
-}
-function forward2() {
-    video2.seekForward(fps);
-}
-
-function rewind3() {
-    video2.seekBackward(fps*60);
-}
-function forward3() {
-    video2.seekForward(fps*60);
-}
-function rewind4() {
-    video2.seekBackward(fps*60*10);
-}
-function forward4() {
-    video2.seekForward(fps*60*10);
-}
-
-
-
-// ## Utils for annotation overlay
 
 function canvasToVideoCoords(rect) {
     return {
@@ -1830,7 +1796,7 @@ function submit_bee() {
         return true;
     }
 
-    console.log(doesExist(activeObject.id));
+    console.log(obsDoesExist(getCurrentFrame(), activeObject.id));
 
     let tmpObs = activeObject.obs
     tmpObs.ID = final_id;
@@ -1930,7 +1896,7 @@ function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pr
         canvas1.remove(activeObject);
         temporaryObs = new Observation(0);
         console.log("deleteObjects",activeObject.id);
-        if (doesExist(activeObject.id)) {
+        if (obsDoesExist(getCurrentFrame(), activeObject.id)) {
             undo = Tracks[video2.get()][activeObject.id];
             console.log("This is undo");
             console.log(undo);
@@ -1988,7 +1954,7 @@ function undoRemoveObs() {
     buttonManip.className = "btn btn-success";
     buttonManip.value = "Undo Successful";
 
-    addObs(undo);
+    storeObs(undo);
 
     refresh();
 
@@ -2625,9 +2591,7 @@ function refreshChronogram() {
     chrono.chronogramData.length = 0
     for (F in Tracks) {
         for (id in Tracks[F]) {
-            let chronoObs = new chronoObservation();
-            chronoObs.x = F;
-            chronoObs.y = id;
+            let chronoObs = {'x':F, 'y':id, 'Activity':""};
 
             if (Tracks[F][id].bool_acts[2]) {
                 chronoObs.Activity = "entering";
