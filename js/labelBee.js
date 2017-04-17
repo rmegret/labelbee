@@ -23,7 +23,7 @@ var g_Moving = false,
     g_Dragging = false;
 var fps;
 var videoinfo;
-var selectedBee = undefined
+var defaultSelectedBee = undefined
 var logging = {
   "rects": false,
   "frameEvents": false,
@@ -31,7 +31,7 @@ var logging = {
   "submitEvents": false,
   "mouseEvents": true,
   "keyEvents": false,
-  "selectionEvents": false,
+  "selectionEvents": true,
 }
 var canvasTform = [0, 0, 1]; // cx,cy,scale
 var plotTrack_range_backward = 5
@@ -79,6 +79,8 @@ function init() {
 
     canvas1 = new fabric.Canvas('canvas1');
 
+    canvas1.selectionColor = "red"
+    canvas1.selectionBorderColor = "red"
     canvas1.selection = false; // REMI: disable the blue selection (allow to select several rectangles at once, which poses problem)
     canvas1.uniScaleTransform = true; // REMI: allow free rescaling of observations without constrained aspect ratio
     canvas1.centeredScaling = true; // REMI: rescale around center
@@ -129,8 +131,9 @@ function init() {
 
     // Do not trigger first refresh: onloadeddata will call it
     // refresh();
-    updateForm(undefined)
-    selectedBee = undefined
+    updateForm(null)
+    defaultSelectedBee = undefined
+    lastSelected = null // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
     
     //loadFromFile0('data/Tracks-demo.json')
 }
@@ -526,15 +529,15 @@ function onKeyDown(e) {
                 return false;
             }
             break;
-        case 83: // key S
-            submit_bee();
-            if (logging.keyEvents)
-                console.log("onKeyDown: 'S' bound to submit_bee. Prevented key 'S' to propagate to textfield.")
-            return false; // Prevent using S in textfield
-        case 13: // Enter
+        //case 83: // key S
+        //    submit_bee();
+        //    if (logging.keyEvents)
+        //        console.log("onKeyDown: 'S' bound to submit_bee. Prevented key 'S' to propagate to textfield.")
+        //    return false; // Prevent using S in textfield
+        //case 13: // Enter
             //onKeyDown_IDEdit(e) // Forward to IDedit keydown handler
             //return false;
-            return true
+        //    return true
         case 16: // Shift
         case 17: // Ctrl
         case 18: // Alt
@@ -743,14 +746,18 @@ function onFrameChanged(event) {
     $('#vidTime').html("Video Time: " + video2.toHMSm(getCurrentVideoTime()))
     $('#realTime').html("Real Time: " + toLocaleISOString(getCurrentRealDate()))
 
+    alert1 = document.getElementById("alert");
+    alert1.style.color = "black";
+    alert1.innerHTML = "";
+
     canvas1.clear();
     createRectsFromTracks()
 
     refresh();
 
     default_id = 0; // Default to 0, then incremented inside if already used    
-    selectBeeByID(selectedBee);
-    //updateForm(undefined);
+    selectBeeByID(defaultSelectedBee);
+    //updateForm(null);
 }
 
 function refresh() {
@@ -1258,6 +1265,9 @@ function clickShowTrack() {
 }
 
 
+
+// ######## Mouse control #######
+
 var default_width = 60;
 var default_height = 40;
 
@@ -1266,6 +1276,9 @@ var default_height = 40;
 // the user is supposed to drag the other corner
 // startX and startY in canvas coordinates
 function addRectInteractive(id, startX, startY) {
+    if (logging.mouseEvents)
+        console.log('addRectInteractive(',id,startX,startY,')')
+
     var rect = addRect(id, startX, startY, 1, 1, "new");
     var topleft = {
         x: startX,
@@ -1319,6 +1332,7 @@ function addRectInteractive(id, startX, startY) {
             console.log('onMouseUp_Dragging: rect=', rect, 'active=', canvas1.getActiveObject())
         if (activeObject.validated) {
             fixRectSizeAfterScaling(activeObject) // Fix negative width or height
+            updateRectObsGeometry(activeObject) // Copy geometry to obs
                 //canvas1.deactivateAll()
             rect.hasControls = true; // Reactivate controls when created
             canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
@@ -1331,7 +1345,12 @@ function addRectInteractive(id, startX, startY) {
             updateForm(activeObject)
             $('#I')[0].focus() // Set focus to allow easy ID typing
             $('#I')[0].select()
+            
+            alert1 = document.getElementById("alert");
+            alert1.style.color = "green";
+            alert1.innerHTML = "Press enter to validate ID";
         } else {
+            // Not enough drag to define a new rectangle
             canvas1.deactivateAll()
             canvas1.remove(activeObject);
             //canvas1.renderAll();
@@ -1340,8 +1359,6 @@ function addRectInteractive(id, startX, startY) {
             if (logging.mouseEvents)
                 console.log('onMouseUp: removing non validated activeObject=', activeObject)
             deselectBee()
-            //updateForm(undefined)
-            //selectedBee = undefined
         }
         refresh();
     }
@@ -1357,6 +1374,9 @@ function addRect(id, startX, startY, width, height, status, obs) {
     var tmpObs
     if (status === "new") {
         tmpObs = new Observation(id)
+        tmpObs.ID = id
+        tmpObs.frame = getCurrentFrame()
+        tmpObs.time = getCurrentVideoTime()
         tmpObs.bool_acts[0] = $('#F').prop('checked');
         tmpObs.bool_acts[1] = $('#P').prop('checked');
         tmpObs.bool_acts[2] = $('#E').prop('checked');
@@ -1379,7 +1399,10 @@ function addRect(id, startX, startY, width, height, status, obs) {
         fill: 'transparent',
         stroke: 'blue',
         strokewidth: 6,
+        cornerColor: 'red',
+        cornerSize: 6
     });
+    updateRectObsGeometry(rect)
     if (logging.addRect)
         console.log("addRect: rect =", rect)
 
@@ -1523,6 +1546,10 @@ function onMouseDown(option) {
         g_Dragging = false;
         canvas1.off('mouse:move');
     }
+    
+    alert1 = document.getElementById("alert");
+    alert1.style.color = "black";
+    alert1.innerHTML = "";
 
     //console.log('onMouseDown',option)
     resetCheck(); //Check button goes back to blue
@@ -1648,18 +1675,32 @@ function onMouseUp(option) {
 }
 
 function onObjectSelected(option) {
-    console.log("onObjectSelected", option)
+    if (logging.selectionEvents)
+        console.log("onObjectSelected:", option)
     //var activeObject = canvas1.getActiveObject();
     if (typeof option.target.id != "undefined") {
         console.log("Current object id=", option.target.id)
         console.log("ActiveObject id=", canvas1.getActiveObject().id)
         selectBee(option.target)
+        lastSelected = option.target
     }
 }
 
 function onObjectDeselected(option) {
-   if (logging.selectionEvent)
-       console.log("onObjectDeselected: ", option);
+    if (logging.selectionEvents)
+        console.log("onObjectDeselected: ", option);
+       
+    if (lastSelected != null) {
+        if (lastSelected.status=="new") {
+            if (logging.mouseEvents)
+                console.log('onObjectDeselected: removing non submitted lastSelected=', lastSelected)
+
+            // Remove tmp rect as soon as it becomes inactive
+            canvas1.remove(lastSelected);
+            lastSelected = null
+            refresh()
+        }
+    }
 }
 
 function onObjectMoving(option) {
@@ -1669,6 +1710,8 @@ function onObjectMoving(option) {
     var activeObject = option.target; //canvas1.getActiveObject();
     fixRectSizeAfterScaling(activeObject)
     console.log("onObjectMoving: activeObject=", activeObject);
+    
+    updateRectObsGeometry(activeObject)
 
     canvas1.renderAll(); // Refresh rectangles drawing
     updateForm(activeObject);
@@ -1680,6 +1723,8 @@ function onObjectModified(option) {
     var activeObject = option.target; //canvas1.getActiveObject();
     fixRectSizeAfterScaling(activeObject)
     console.log("onObjectModified: activeObject=", activeObject);
+    
+    updateRectObsGeometry(activeObject)
 
     canvas1.renderAll(); // Refresh rectangles drawing
     updateForm(activeObject);
@@ -1688,60 +1733,71 @@ function onObjectModified(option) {
 }
 
 function onActivityChanged(event) {
-    console.log("onActivityChanged: event=", event)
+    if (logging.guiEvents)
+        console.log("onActivityChanged: event=", event)
     var activeObject = canvas1.getActiveObject()
-    if (typeof activeObject != "undefined") {
-        let tmpObs = activeObject.obs;
-        tmpObs.bool_acts[0] = $('#F').prop('checked');
-        tmpObs.bool_acts[1] = $('#P').prop('checked');
-        tmpObs.bool_acts[2] = $('#E').prop('checked');
-        tmpObs.bool_acts[3] = $('#L').prop('checked');
+    if (activeObject != null) {
+        updateRectObsActivity(activeObject)
         automatic_sub()
     }
+}
+
+
+function updateRectObsGeometry(activeObject) {
+    let videoRect = canvasToVideoCoords(activeObject)
+    
+    // Update Observation attached to rectangle from current Rect size
+    let obs = activeObject.obs
+    obs.x = videoRect.x
+    obs.y = videoRect.y
+    obs.width = videoRect.width
+    obs.height = videoRect.height
+    obs.cx = (videoRect.x + videoRect.width / 2);
+    obs.cy = (videoRect.y + videoRect.height / 2);
+}
+function updateRectObsActivity(activeObject) {
+    // Update Observation attached to rectangle from Form information
+    let obs = activeObject.obs
+    obs.bool_acts[0] = $('#F').prop('checked');
+    obs.bool_acts[1] = $('#P').prop('checked');
+    obs.bool_acts[2] = $('#E').prop('checked');
+    obs.bool_acts[3] = $('#L').prop('checked');
 }
 
 
 // # Form and current bee control
 
 /* Update form rectangle data from activeObject */
+/* CAUTION: use updateForm(null) for empty form */
 function updateForm(activeObject) {
 
-    var id = document.getElementById("I");
-    var width = document.getElementById("W");
-    var height = document.getElementById("H");
-    var cx = document.getElementById("CX");
-    var cy = document.getElementById("CY");
-    var x = document.getElementById("X");
-    var y = document.getElementById("Y");
-
-    if (typeof activeObject == "undefined") {
-        id.value = '-'
-        x.innerHTML = "X: -"
-        y.innerHTML = "Y: -"
-        width.innerHTML = "Width: [" + default_width + "]"
-        height.innerHTML = "Height: [" + default_height + "]"
-        cx.innerHTML = "Center X: -"
-        cy.innerHTML = "Center Y: -"
+    if (activeObject == null) {
+        $('#I').val('-')
+        
+        $('#X').html("X: -")
+        $('#Y').html("Y: -")
+        $('#W').html("Width: -")
+        $('#H').html("Height: -")
+        $('#CX').html("Center X: -")
+        $('#CY').html("Center X: -")
         
         $('#F').prop('checked', false);
         $('#P').prop('checked', false);
         $('#E').prop('checked', false);
         $('#L').prop('checked', false);
     } else {
-        id.value = activeObject.id;
+        $('#I').val(activeObject.id)
+        
         w = activeObject.width;
         h = activeObject.height;
-
         let vr = canvasToVideoCoords(activeObject)
-
-        x.innerHTML = "X: " + vr.x.toFixed(0);
-        y.innerHTML = "Y: " + vr.y.toFixed(0);
-
-        width.innerHTML = "Width: " + vr.width.toFixed(0);
-        height.innerHTML = "Height: " + vr.height.toFixed(0);
-
-        cx.innerHTML = "Center X: " + (vr.x + vr.width / 2).toFixed(0);
-        cy.innerHTML = "Center Y: " + (vr.y + vr.height / 2).toFixed(0);
+        
+        $('#X').html("X: " + vr.x.toFixed(0))
+        $('#Y').html("Y: " + vr.y.toFixed(0))
+        $('#W').html("Width: " + vr.width.toFixed(0))
+        $('#H').html("Height: " + vr.height.toFixed(0))
+        $('#CX').html("Center X: " + (vr.x + vr.width / 2).toFixed(0))
+        $('#CY').html("Center Y: " + (vr.y + vr.height / 2).toFixed(0))
 
         let obs = activeObject.obs;
         if (typeof obs == "undefined") {
@@ -1767,9 +1823,7 @@ function submit_bee() {
     }
 
     // Use current id
-    //final_id = $('#I')[0].value;
-    //activeObject.id = final_id;
-    final_id = activeObject.id;
+    let final_id = activeObject.id;
     if (activeObject.status === "new" && getObsHandle(getCurrentFrame(), final_id, false) !== undefined) {
         console.log('submit_bee: trying to replace existing bee with new observation. ABORT')
         alert1 = document.getElementById("alert");
@@ -1789,25 +1843,28 @@ function submit_bee() {
 
     let tmpObs = activeObject.obs
     tmpObs.ID = final_id;
-    updateForm(activeObject);
+    //updateForm(activeObject);
 
-    let videoRect = canvasToVideoCoords(activeObject)
-
-    //Transform the coordinates to video coordinates before saving them in Tracks
+    /*
+    // All that has already been updated continuously
     tmpObs.time = video.currentTime;
     tmpObs.frame = getCurrentFrame();
+    
+    let videoRect = canvasToVideoCoords(activeObject)
     tmpObs.x = videoRect.x
     tmpObs.y = videoRect.y
     tmpObs.width = videoRect.width
     tmpObs.height = videoRect.height
     tmpObs.cx = (videoRect.x + videoRect.width / 2);
     tmpObs.cy = (videoRect.y + videoRect.height / 2);
+    
     tmpObs.marked = $('#marked').prop('checked');
     tmpObs.permanent = $('#permanent').prop('checked');
     tmpObs.bool_acts[0] = $('#F').prop('checked');
     tmpObs.bool_acts[1] = $('#P').prop('checked');
     tmpObs.bool_acts[2] = $('#E').prop('checked');
     tmpObs.bool_acts[3] = $('#L').prop('checked');
+    */
 
     storeObs(tmpObs);
     activeObject.status = "db"
@@ -1839,35 +1896,46 @@ function selectBeeByID(id) {
       // TESTME: selectBee was commented
       selectBee(rect);
    } else {
-      updateForm(undefined)
-      //selectedBee=undefined;
+      canvas1.deactivateAll().renderAll(); // Deselect rect if any
+      updateForm(null)
+      // defaultSelectedBee = undefined // Do not cancel default if not found
       if (logging.selectionEvents)
          console.log('selectBeeByID: No rect found for id=',id);
    }
 }
 
-//This function is needed to update the display when a different bee is selected
-//in the GUI
+// selectBee: called when clicking on a rectangle
 function selectBee(rect) {
     if (logging.selectionEvents)
         console.log("selectBee: rect=", rect);
     let beeId = rect.id;
     
-    selectedBee = beeId;
+    defaultSelectedBee = beeId;
 
     // Update form from rect
     updateForm(rect)
     //showZoom(rect)
 }
+// deselectBee: called when clicking out of a rectangle
 function deselectBee() {
-    updateForm(undefined)
-    selectedBee = undefined
+    canvas1.deactivateAll().renderAll(); // Deselect rect
+    updateForm(null)
+    defaultSelectedBee = undefined // Do not keep default when explicit deselect
+}
+function getSelectedID() {
+    // Truth on selected bee ID comes from Fabric.js canvas
+    var activeObject = canvas1.getActiveObject();
+    if (activeObject == null) {
+        return undefined
+    } else {
+        return activeObject.id
+    }
 }
 
 function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pressed
     //Deletes an observation
-    var activeObject = canvas1.getActiveObject(),
-        activeGroup = canvas1.getActiveGroup();
+    var activeObject = canvas1.getActiveObject()
+    var activeGroup = canvas1.getActiveGroup()
 
     if (activeObject) {
         canvas1.remove(activeObject);
