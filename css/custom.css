@@ -3,6 +3,18 @@
 canvas {
     border: 1px solid #d3d3d3;
 }
+/* IMPORTANT: position #canvas and #video for overlapping */
+/* canvas-container is positioned relative to the last one */
+#canvas {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+#video {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
 
 td {
     padding-right: 40px;

@@ -26,16 +26,17 @@ var videoinfo;
 var selectedBee = undefined
 var logging = {
   "rects": false,
-  "frameEvents": true,
-  "guiEvents": true,
+  "frameEvents": false,
+  "guiEvents": false,
   "submitEvents": false,
-  "mouseEvents": false,
+  "mouseEvents": true,
   "keyEvents": false,
   "selectionEvents": false,
 }
 var canvasTform = [0, 0, 1]; // cx,cy,scale
 var plotTrack_range_backward = 5
 var plotTrack_range_forward = 5
+var flagCopyVideoToCanvas = true
 
 // ######################################################################
 // INITITALIZATION
@@ -86,6 +87,8 @@ function init() {
     canvas1.on('object:selected', onObjectSelected); // When clicking on a rectangle
     canvas1.on('selection:cleared', onObjectDeselected); // When deselecting an object   Not Working???
     $('.upper-canvas').bind('contextmenu', onMouseDown2);
+    
+    $('#video').on('mouseDown', onMouseDown);
 
     $("#canvasresize").resizable({
       helper: "ui-resizable-helper",
@@ -125,6 +128,7 @@ function init() {
     // Do not trigger first refresh: onloadeddata will call it
     // refresh();
     updateForm(undefined)
+    selectedBee = undefined
     
     //loadFromFile0('data/Tracks-demo.json')
 }
@@ -699,56 +703,64 @@ function onVideoReady(event) {
 
 // # Video frame change
 
+// Auxiliary
+function getCurrentFrame() {
+    return video2.get();
+}
+function getCurrentVideoTime(format) {
+  return video2.toMilliseconds()/1000.0
+}
+function getCurrentRealDate(format) {
+  var D = new Date(videoinfo.starttime)
+  D = new Date(D.getTime()+video2.toMilliseconds()*fps/videoinfo.realfps)
+  return D
+}
+function toLocaleISOString(date) {
+    // Polyfill to get local ISO instead of UTC http://stackoverflow.com/questions/14941615/how-to-convert-isostring-to-local-isostring-in-javascript
+    function pad(n) { return ("0"+n).substr(-2); }
+
+    var day = [date.getFullYear(), pad(date.getMonth()+1), pad(date.getDate())].join("-"),
+        time = [date.getHours(), date.getMinutes(), date.getSeconds()].map(pad).join(":");
+    if (date.getMilliseconds())
+        time += "."+date.getMilliseconds();
+    var o = date.getTimezoneOffset(),
+        h = Math.floor(Math.abs(o)/60),
+        m = Math.abs(o) % 60,
+        o = o==0 ? "Z" : (o<0 ? "+" : "-") + pad(h) + ":" + pad(m);
+    return day+"T"+time//+o;
+}
+
 // This callback is the only one that should handle frame changes. It is called automatically by video2
 function onFrameChanged(event) {
+    Cframe = getCurrentFrame();
+    
     if (logging.frameEvents)
-        console.log('frameChanged', video2.toMilliseconds()/1000.0)
+        console.log('frameChanged', Cframe)
 
-    //Cframe = video2.get();
-    //Cframe = event.frame;
-    Cframe = getCurrentFrame(); // Use a high-level API that encapsulate video2.get()
-    //console.log("onFrameChanged: ",event, Cframe)
+    $('#currentFrame').html("Frame: " + Cframe)
+    $('#vidTime').html("Video Time: " + video2.toHMSm(getCurrentVideoTime()))
+    $('#realTime').html("Real Time: " + toLocaleISOString(getCurrentRealDate()))
 
-    $('#currentFrame').html("Frame: " + Cframe);
-    $('#vidTime').html("Video Time: " + video2.toHMSm(video2.toMilliseconds()/1000.0));
-    var D = new Date(videoinfo.starttime)
-    D = new Date(D.getTime()+video2.toMilliseconds()*fps/videoinfo.realfps)
-    
-    function toLocaleISOString(date) {
-        // Polyfill to get local ISO instead of UTC http://stackoverflow.com/questions/14941615/how-to-convert-isostring-to-local-isostring-in-javascript
-        function pad(n) { return ("0"+n).substr(-2); }
-
-        var day = [date.getFullYear(), pad(date.getMonth()+1), pad(date.getDate())].join("-"),
-            time = [date.getHours(), date.getMinutes(), date.getSeconds()].map(pad).join(":");
-        if (date.getMilliseconds())
-            time += "."+date.getMilliseconds();
-        var o = date.getTimezoneOffset(),
-            h = Math.floor(Math.abs(o)/60),
-            m = Math.abs(o) % 60,
-            o = o==0 ? "Z" : (o<0 ? "+" : "-") + pad(h) + ":" + pad(m);
-        return day+"T"+time//+o;
-    }
-    
-    $('#realTime').html("Real Time: " + toLocaleISOString(D)) //video2.toHMSm((video2.toMilliseconds()*fps/videoinfo.realfps+video2.toMilliseconds(videoinfo.starttime))/1000.0));
-
-    updateForm(undefined);
     canvas1.clear();
-
-    default_id = 0; // Default to 0, then incremented inside createRectsFromTracks
     createRectsFromTracks()
 
-    //refreshChronogram();
-
     refresh();
-    
+
+    default_id = 0; // Default to 0, then incremented inside if already used    
     selectBeeByID(selectedBee);
+    //updateForm(undefined);
 }
 
 function refresh() {
-    // Updating the form for frame and time is now done in onFrameChanged()
-    //ctx.drawImage(video, 0, 0);
-    ctx.drawImage(video, 0, 0, video.videoWidth / transformFactor, video.videoHeight / transformFactor);
-
+    if (flagCopyVideoToCanvas) {
+      // Copy video to canvas for fully synchronous display
+      ctx.drawImage(video, 0, 0, video.videoWidth / transformFactor, video.videoHeight / transformFactor);
+    } else {
+      // Rely on video under canvas. More efficient (one copy less), but
+      // may have some time discrepency between video and overlay
+      ctx.clearRect(0,0,video.videoWidth / transformFactor, video.videoHeight / transformFactor)
+    }
+  
     // for each new frame, we need to reset everything:
     // remove all rectangles and recreate them
     if (canvas1) {
@@ -771,10 +783,6 @@ function refresh() {
 }
 
 // ## Video navigation
-
-function getCurrentFrame() {
-    return video2.get();
-}
 
 function updateNavigationView() {
    let playingState = video2.playingState()
@@ -799,7 +807,6 @@ function updateNavigationView() {
         console.log('ERROR: unknown video2.playingState():',playingState)
     }
 }
-
 
 function playPauseVideo(option) {
     if (logging.guiEvents) console.log('playPauseVideo()');
@@ -891,6 +898,9 @@ function resizeCanvas(w,h) {
     canvas1.setWidth(w)
     canvas1.setHeight(h)
     
+    $("#video").width(w)
+    $("#video").height(h)
+    
     var wrap = $('.canvaswrapper')[0]
     wrap.style.width = w.toString() + 'px'
     wrap.style.height = h.toString() + 'px'
@@ -960,7 +970,7 @@ function canvasToVideoPoint(pt) {
 function createRectsFromTracks() {
     let F = getCurrentFrame()
     let ids = getValidIDsForFrame(F)
-        //console.log("createRectsFromTracks: ",{frame:F,ids:ids})
+    //console.log("createRectsFromTracks: ",{frame:F,ids:ids})
     for (let id of ids) { // For each valid bee ID, create a rect for it
         let obs = getObsHandle(F, id, false)
         let r = videoToCanvasCoords(obs)
@@ -1327,8 +1337,9 @@ function addRectInteractive(id, startX, startY) {
             id.value = "no selection"
             if (logging.mouseEvents)
                 console.log('onMouseUp: removing non validated activeObject=', activeObject)
-            updateForm(undefined)
-            selectedBee = undefined
+            deselectBee()
+            //updateForm(undefined)
+            //selectedBee = undefined
         }
         refresh();
     }
@@ -1636,8 +1647,8 @@ function onMouseUp(option) {
 
 function onObjectSelected(option) {
     console.log("onObjectSelected", option)
-        //var activeObject = canvas1.getActiveObject();
-    if (option.target.id != undefined) {
+    //var activeObject = canvas1.getActiveObject();
+    if (typeof option.target.id != "undefined") {
         console.log("Current object id=", option.target.id)
         console.log("ActiveObject id=", canvas1.getActiveObject().id)
         selectBee(option.target)
@@ -1677,7 +1688,7 @@ function onObjectModified(option) {
 function onActivityChanged(event) {
     console.log("onActivityChanged: event=", event)
     var activeObject = canvas1.getActiveObject()
-    if (activeObject !== undefined) {
+    if (typeof activeObject != "undefined") {
         let tmpObs = activeObject.obs;
         tmpObs.bool_acts[0] = $('#F').prop('checked');
         tmpObs.bool_acts[1] = $('#P').prop('checked');
@@ -1701,7 +1712,7 @@ function updateForm(activeObject) {
     var x = document.getElementById("X");
     var y = document.getElementById("Y");
 
-    if (activeObject === undefined) {
+    if (typeof activeObject == "undefined") {
         id.value = '-'
         x.innerHTML = "X: -"
         y.innerHTML = "Y: -"
@@ -1709,6 +1720,7 @@ function updateForm(activeObject) {
         height.innerHTML = "Height: [" + default_height + "]"
         cx.innerHTML = "Center X: -"
         cy.innerHTML = "Center Y: -"
+        
         $('#F').prop('checked', false);
         $('#P').prop('checked', false);
         $('#E').prop('checked', false);
@@ -1730,6 +1742,11 @@ function updateForm(activeObject) {
         cy.innerHTML = "Center Y: " + (vr.y + vr.height / 2).toFixed(0);
 
         let obs = activeObject.obs;
+        if (typeof obs == "undefined") {
+            console.log("ERROR: updateForm called for activeObject with non existing observation. activeObject=", activeObject)
+            return
+        }
+        
         $('#F').prop('checked', obs.bool_acts[0]);
         $('#P').prop('checked', obs.bool_acts[1]);
         $('#E').prop('checked', obs.bool_acts[2]);
@@ -1813,21 +1830,22 @@ function automatic_sub() {
 function selectBeeByID(id) {
    let rect = findRect(id);
    if (rect) {
-       if (logging.selectionEvents)
-           console.log('selectBeeByID: trying to select id=',id);
-       //canvas1.setActiveObject(canvas1.item(id));
-       canvas1.setActiveObject(rect);
-       //selectBee(rect);
+      if (logging.selectionEvents)
+         console.log('selectBeeByID: trying to select id=',id);
+      //canvas1.setActiveObject(canvas1.item(id));
+      canvas1.setActiveObject(rect);
+      // TESTME: selectBee was commented
+      selectBee(rect);
    } else {
-       //selectedBee=undefined;
-       if (logging.selectionEvents)
-           console.log('selectBeeByID: No rect found for id=',id);
+      updateForm(undefined)
+      //selectedBee=undefined;
+      if (logging.selectionEvents)
+         console.log('selectBeeByID: No rect found for id=',id);
    }
 }
 
 //This function is needed to update the display when a different bee is selected
 //in the GUI
-//function selectBee(beeId) {
 function selectBee(rect) {
     if (logging.selectionEvents)
         console.log("selectBee: rect=", rect);
@@ -1838,23 +1856,10 @@ function selectBee(rect) {
     // Update form from rect
     updateForm(rect)
     //showZoom(rect)
-
-    // Update form from matching observation
-    //var obs = getObsHandle(getCurrentFrame(), beeId, false);
-    var obs = rect.obs;
-    if (obs == undefined) {
-        console.log("WARNING: selectBee called for rect with non existing observation. rect=", rect)
-        return
-    } else {
-        if (logging.selectionEvents)
-            console.log("selectBee: obs=", obs)
-    }
-    $('#marked').prop('checked', obs.marked);
-    $('#permanent').prop('checked', obs.permanent);
-    $('#F').prop('checked', obs.bool_acts[0]);
-    $('#P').prop('checked', obs.bool_acts[1]);
-    $('#E').prop('checked', obs.bool_acts[2]);
-    $('#L').prop('checked', obs.bool_acts[3]);
+}
+function deselectBee() {
+    updateForm(undefined)
+    selectedBee = undefined
 }
 
 function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pressed

@@ -198,7 +198,7 @@ VideoFrame.prototype.toSMPTE = function(frame) {
 	return SMPTE;
 };
 
-VideoFrame.prototype.toHMSm = function(seconds, offset) {
+VideoFrame.prototype.toHMSm = function(seconds) {
 	if (seconds===undefined) { return this.toTime(this.video.currentTime); }
 	function wrap(n) { return ((n < 10) ? '0' + n : n); }
 	function pad(n,k) {
