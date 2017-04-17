@@ -136,6 +136,7 @@ VideoFrame.prototype = {
       			
 			return frame;
 		}, (tick ? tick : 1000 / _video.frameRate / 2));
+		if (_video.onListen) { _video.onListen({'target': _video}); }
 	},
 	/** Clears the current interval */
 	stopListen : function() {
@@ -147,6 +148,7 @@ VideoFrame.prototype = {
 		_video.interval = undefined
 		_video.intervalPlayBackwards = undefined
 		_video.intervalPlayForwards = undefined
+		if (_video.onStopListen) { _video.onStopListen({'target': _video}); }
 	},
 	fps : FrameRates,
 	setFrameRate : function(fr) {

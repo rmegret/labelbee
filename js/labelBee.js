@@ -55,6 +55,8 @@ function init() {
         frameRate: fps, //30,
         callback: onFrameChanged // VERY IMPORTANT: all frame changes (play,next,prev...) trigger this callback. No refresh should be done outside of this callback
     });
+    video2.onListen = function() {console.log('video2.onListen')}
+    video2.onStopListen = function() {console.log('video2.onStopListen')}
 
     video = document.getElementById("video");
     play = document.getElementById("play"); //play button
