@@ -113,7 +113,7 @@
             <button value="Next frame" onclick="forward()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-forward"></span></button>
             <button value="Next second" onclick="forward2()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-forward"></span></button>
             <button value="Next minute" onclick="forward3()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-forward"></span></button>
-            <input type="button" value="Submit info" onclick="submit_bee()" class="btn btn-info" style="position: inline">
+<!--             <input type="button" value="Submit info" onclick="submit_bee()" class="btn btn-info" style="position: inline"> -->
             <!-- Undo button: disabled due to bugs
 <input type="button" value="Remove obs" onclick="removeDecision()" class="btn btn-info" style="position: inline"
               id="special">
@@ -146,8 +146,18 @@
             <input type="button" value="Save Bboxes" class="btn btn-default btn-sm" onclick="saveToBBoxes()"  style="display:inline" id="saveBBoxes">
             </p>
           
-<!--            <br/>
-            <canvas id="zoom" width="200" height="150"></canvas> -->
+           <br/>
+            <div style="border:solid #c0c0c0 1px;">
+            <div class="checkbox" style="display:inline">
+            <label><input type="checkbox" checked="false" id="checkboxShowZoom" onclick="clickShowZoom()">Zoom</label>
+            </div>
+            <div class="checkbox" style="display:inline">
+            <label><input type="checkbox" checked="true" id="checkboxZoomShowOverlay" onclick="clickZoomShowOverlay()">with overlay</label>
+            </div>
+            <div id="zoomDiv">
+            <canvas id="zoom" width="200" height="200"></canvas>
+            </div>
+            </div>
             <p id="alert"></p>
             ID <input type="text" value="" id="I" onkeypress="onKeyDown_IDEdit(event)" onClick="resetCheck()"></input>
 <!-- 

@@ -29,9 +29,9 @@ var logging = {
   "frameEvents": false,
   "guiEvents": false,
   "submitEvents": false,
-  "mouseEvents": true,
-  "keyEvents": false,
-  "selectionEvents": true,
+  "mouseEvents": false,
+  "keyEvents": true,
+  "selectionEvents": false,
 }
 var canvasTform = [0, 0, 1]; // cx,cy,scale
 var plotTrack_range_backward = 5
@@ -101,6 +101,11 @@ function init() {
     $("#canvasresize").on( "resizestop", refreshCanvasSize );
 
 
+    $("#zoom").resizable({
+      helper: "ui-resizable-helper",
+      aspectRatio: 1   // Need to put a value even to update it later
+    });
+
     // ## Control panel
 
     $('#F').change(onActivityChanged)
@@ -120,12 +125,17 @@ function init() {
     selectVideo() // Get src from selectboxVideo
 
 
+    zoomShowOverlay = false
+    $('#checkboxZoomShowOverlay').prop('checked', zoomShowOverlay);
+    flagShowZoom = true
+    $('#checkboxShowZoom').prop('checked', flagShowZoom);
+
     // ## Keyboard control
 
     // REMI: use keyboard
     $(window).on("keydown", onKeyDown);
     //$('.upper-canvas').on("keydown", onKeyDown);
-
+    //$('.upper-canvas').focus();
     
     // ## Misc init
 
@@ -529,6 +539,11 @@ function onKeyDown(e) {
                 return false;
             }
             break;
+        case 90: // Z (showZoom)
+            flagShowZoom = !flagShowZoom
+            $('#checkboxShowZoom').prop('checked',flagShowZoom)
+            updateShowZoom()
+            return false;
         //case 83: // key S
         //    submit_bee();
         //    if (logging.keyEvents)
@@ -1268,7 +1283,7 @@ function clickShowTrack() {
 
 // ######## Mouse control #######
 
-var default_width = 60;
+var default_width = 40;
 var default_height = 40;
 
 // Auxiliary functions to manage fabric rectangles
@@ -1704,18 +1719,22 @@ function onObjectDeselected(option) {
 }
 
 function onObjectMoving(option) {
-    return; // No real need for Moving, we can update everything once at the end in onObjectModified
+    //return; // No real need for Moving, we can update everything once at the end in onObjectModified
 
     // Called during translation only
     var activeObject = option.target; //canvas1.getActiveObject();
-    fixRectSizeAfterScaling(activeObject)
     console.log("onObjectMoving: activeObject=", activeObject);
     
+    fixRectSizeAfterScaling(activeObject)
     updateRectObsGeometry(activeObject)
 
     canvas1.renderAll(); // Refresh rectangles drawing
     updateForm(activeObject);
     //automatic_sub();
+    
+    if (flagShowZoom) {
+        showZoom(activeObject)
+    }
 }
 
 function onObjectModified(option) {
@@ -1730,6 +1749,10 @@ function onObjectModified(option) {
     updateForm(activeObject);
     //showZoom(activeObject)
     automatic_sub();
+    
+    if (flagShowZoom) {
+        showZoom(activeObject)
+    }
 }
 
 function onActivityChanged(event) {
@@ -1914,7 +1937,10 @@ function selectBee(rect) {
 
     // Update form from rect
     updateForm(rect)
-    //showZoom(rect)
+    
+    if (flagShowZoom) {
+        showZoom(rect)
+    }
 }
 // deselectBee: called when clicking out of a rectangle
 function deselectBee() {
@@ -1957,24 +1983,54 @@ function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pr
 
 // ## Auxiliary display
 
+function clickZoomShowOverlay() {
+    zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
+    if ($('#zoom').is(':visible')) {
+        showZoom(lastSelected)
+    }
+}
+function clickShowZoom() {
+    flagShowZoom = $('#checkboxShowZoom').is(':checked')
+    updateShowZoom()
+}
+function updateShowZoom() {
+    if (flagShowZoom) {
+        $('#zoomDiv').show()
+        showZoom(lastSelected)
+    } else {
+        $('#zoomDiv').hide()
+    }
+}
 function showZoom(rect) {
+    let zw=400
+    let zh=400
+
     var zoom_canvas = $('#zoom')[0];
     var zoom_ctx = zoom_canvas.getContext('2d');
-    zoom_ctx.clearRect(0, 0, 200, 150)
-    let w = rect.width,
-        h = rect.height
-    let mw = w * 0.5,
-        mh = h * 0.5
-    let w2 = w + 2 * mw,
-        h2 = h + 2 * mh
-    let sc = Math.min(5, 200 / w2)
-    zoom_ctx.drawImage(video, (rect.left - mw) * transformFactor, (rect.top - mh) * transformFactor, w2 *
-        transformFactor, h2 * transformFactor,
-        100 - w2 * sc / 2, 75 - h2 * sc / 2, w2 * sc, h2 * sc);
-    zoom_ctx.beginPath();
-    zoom_ctx.rect(100 - w * sc / 2, 75 - h * sc / 2, w * sc, h * sc)
-    zoom_ctx.strokeStyle = 'blue'
-    zoom_ctx.stroke()
+    zoom_canvas.width=zw
+    zoom_canvas.height=zh
+    zoom_ctx.clearRect(0, 0, zw,zh)
+    let w = zw, h = zh
+    let mw = w * 0.5,  mh = h * 0.5
+    let w2 = w + 2 * mw, h2 = h + 2 * mh
+    zoom_ctx.drawImage(video, 
+       (rect.obs.cx - mw), (rect.obs.cy - mh), w, h,
+        0,0,zh,zw);
+    
+    zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
+    if (zoomShowOverlay) {
+      let activeObject = canvas1.getActiveObject()
+      let obs = activeObject.obs
+    
+      zoom_ctx.beginPath();
+      zoom_ctx.moveTo(mw,0)
+      zoom_ctx.lineTo(mw,zh)
+      zoom_ctx.moveTo(0,mh)
+      zoom_ctx.lineTo(zw,mh)
+      zoom_ctx.rect(mw+obs.x-obs.cx,mh+obs.y-obs.cy, obs.width,obs.height)
+      zoom_ctx.strokeStyle = 'blue'
+      zoom_ctx.stroke()        
+    }
 }
 
 
