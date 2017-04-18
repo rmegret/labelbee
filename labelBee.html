@@ -105,14 +105,14 @@
           </p>
           <p>
             <!--Change to div-->
-            <button value="Previous minute" onclick="rewind3()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-backward"></span></button>
-            <button value="Previous second" onclick="rewind2()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-backward"></span></button>
-            <button value="Previous frame" onclick="rewind()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-backward"></span></button>
-            <button value="Play Backwards" onclick="playPauseVideoBackward()" id="playbackward" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-backward"></span></button>
-            <button value="Play" onclick="playPauseVideo()" id="play"  class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play"></span></button>
-            <button value="Next frame" onclick="forward()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-forward"></span></button>
-            <button value="Next second" onclick="forward2()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-forward"></span></button>
-            <button value="Next minute" onclick="forward3()" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-forward"></span></button>
+            <button value="Previous minute" onclick="rewind3()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-backward"></span></button>
+            <button value="Previous second" onclick="rewind2()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-backward"></span></button>
+            <button value="Previous frame" onclick="rewind()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-backward"></span></button>
+            <button value="Play Backwards" onclick="playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-backward"></span></button>
+            <button value="Play" onclick="playPauseVideo()" id="play"  type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play"></span></button>
+            <button value="Next frame" onclick="forward()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-forward"></span></button>
+            <button value="Next second" onclick="forward2()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-forward"></span></button>
+            <button value="Next minute" onclick="forward3()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-forward"></span></button>
 <!--             <input type="button" value="Submit info" onclick="submit_bee()" class="btn btn-info" style="position: inline"> -->
             <!-- Undo button: disabled due to bugs
 <input type="button" value="Remove obs" onclick="removeDecision()" class="btn btn-info" style="position: inline"
@@ -159,7 +159,7 @@
             </div>
             </div>
             <p id="alert"></p>
-            ID <input type="text" value="" id="I" onkeypress="onKeyDown_IDEdit(event)" onClick="resetCheck()"></input>
+            ID <input type="text" value="" id="I" onkeypress="onKeyDown_IDEdit(event)"></input>
 <!-- 
             <input type="button" value="Check" onclick="grabandCheckID()" class="btn btn-info btn-sm" style="position: inline"
               id="special2">

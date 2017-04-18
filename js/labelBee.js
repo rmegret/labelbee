@@ -1,3 +1,5 @@
+/*jshint esversion: 6, asi: true */
+
 ////////////////////////////////////////////////////////////////////////////////
 // Global variables
 var canvas, canvas1, canvas2, ctx, ctx2, vid, play, radius = 5,
@@ -5,16 +7,18 @@ var canvas, canvas1, canvas2, ctx, ctx2, vid, play, radius = 5,
     time, final_id = 0;
 bee = [0, 0]; //Global array that stores the value of x, y
 g_activities = ["fanning", "pollenating", "entering", "exiting"]; //global string array of activities
-var x, y, cx, cy, width, height
-var default_id = 0
-var video, video2
-var Tracks = new Array()
-var Tags = new Array()
-var buttonManip, undo = new Observation(0),
-    alert1, transformFactor = 1.0;
-var vis
+var x, y, cx, cy, width, height;
+var default_id = 0;
+var video, video2;
+var Tracks = [];
+var Tags = [];
+var buttonManip;
+var undo = new Observation(0);
+var alert1;
+var transformFactor = 1.0;
+var vis;
 var videoinfo;
-var defaultSelectedBee = undefined
+var defaultSelectedBee;
 var logging = {
   "rects": false,
   "frameEvents": false,
@@ -27,11 +31,11 @@ var logging = {
   "chrono": false,
   "videoEvents": false,
   "canvasEvents": false
-}
+};
 var canvasTform = [0, 0, 1]; // cx,cy,scale
-var plotTrack_range_backward = 5
-var plotTrack_range_forward = 5
-var flagCopyVideoToCanvas = true
+var plotTrack_range_backward = 5;
+var plotTrack_range_forward = 5;
+var flagCopyVideoToCanvas = true;
 
 // ######################################################################
 // INITITALIZATION
@@ -42,16 +46,16 @@ function init() {
         'realfps': 20,  //realfps = 20.0078;
         'starttime': '2016-07-15T09:59:59.360',
         'duration': 1/fps
-    }
-    $('#selectboxVideo')[0].selectedIndex=7 // select long video
+    };
+    $('#selectboxVideo')[0].selectedIndex=7; // select long video
 
     video2 = VideoFrame({
         id: 'video',
         frameRate: videoinfo.fps,
         callback: onFrameChanged // VERY IMPORTANT: all frame changes (play,next,prev...) trigger this callback. No refresh should be done outside of this callback
     });
-    video2.onListen = function() {console.log('video2.onListen')}
-    video2.onStopListen = function() {console.log('video2.onStopListen')}
+    video2.onListen = function() {console.log('video2.onListen');};
+    video2.onStopListen = function() {console.log('video2.onStopListen');};
 
     video = document.getElementById("video");
     play = document.getElementById("play"); //play button
@@ -60,13 +64,13 @@ function init() {
     time = document.getElementById("vidTime");
     ctx = canvas.getContext('2d');
     
-    var showTags = true
-    var showTagsTracks = false
+    var showTags = true;
+    var showTagsTracks = false;
 
     // ### Chronogram
     //initChrono();
-    chrono = new Chronogram()
-    $('#excludedTags')[0].value = String(excludedTags)
+    chrono = new Chronogram();
+    $('#excludedTags')[0].value = String(excludedTags);
     
     //chrono.drawChrono();
 
@@ -74,8 +78,8 @@ function init() {
 
     canvas1 = new fabric.Canvas('canvas1');
 
-    canvas1.selectionColor = "red"
-    canvas1.selectionBorderColor = "red"
+    canvas1.selectionColor = "red";
+    canvas1.selectionBorderColor = "red";
     canvas1.selection = false; // REMI: disable the blue selection (allow to select several rectangles at once, which poses problem)
     canvas1.uniScaleTransform = true; // REMI: allow free rescaling of observations without constrained aspect ratio
     canvas1.centeredScaling = true; // REMI: rescale around center
@@ -103,26 +107,27 @@ function init() {
 
     // ## Control panel
 
-    $('#F').change(onActivityChanged)
-    $('#P').change(onActivityChanged)
-    $('#E').change(onActivityChanged)
-    $('#L').change(onActivityChanged)
+    $('#F').change(onActivityChanged);
+    $('#P').change(onActivityChanged);
+    $('#E').change(onActivityChanged);
+    $('#L').change(onActivityChanged);
 
     document.getElementById('load').addEventListener('change', loadFromFile);
-    document.getElementById('loadtags').addEventListener('change', loadTagsFromFile);
+    document.getElementById('loadtags')
+            .addEventListener('change', loadTagsFromFile);
     
     //$('#video')[0].onload = onFrameChanged
-    $('#video')[0].onloadeddata = onVideoLoaded
+    $('#video')[0].onloadeddata = onVideoLoaded;
     //$('#video')[0].src = 'data/testvideo.mp4';
     //$('#video')[0].src='36_01_H_160715100000.mp4';
     //$('#video')[0].src='NVR_ch1_main_20160429104800_20160429105800.mp4';
     //$('#video')[0].src='test.mp4';
-    selectVideo() // Get src from selectboxVideo
+    selectVideo(); // Get src from selectboxVideo
 
 
-    zoomShowOverlay = false
+    zoomShowOverlay = false;
     $('#checkboxZoomShowOverlay').prop('checked', zoomShowOverlay);
-    flagShowZoom = true
+    flagShowZoom = true;
     $('#checkboxShowZoom').prop('checked', flagShowZoom);
 
     // ## Keyboard control
@@ -136,9 +141,9 @@ function init() {
 
     // Do not trigger first refresh: onloadeddata will call it
     // refresh();
-    updateForm(null)
-    defaultSelectedBee = undefined
-    lastSelected = null // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
+    updateForm(null);
+    defaultSelectedBee = undefined;
+    lastSelected = null; // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
     
     //loadFromFile0('data/Tracks-demo.json')
 }
@@ -148,7 +153,7 @@ function init() {
 // MODEL: Tracks data structure
 
 function Observation(ID) {
-    this.ID = ID
+    this.ID = ID;
     this.time = 0;
     this.frame = 0;
     this.x = 0;
@@ -177,14 +182,14 @@ function cloneObs(obs) {
         marked: obs.marked,
         permanent: obs.permanent,
         bool_acts: [obs.bool_acts[0], obs.bool_acts[1], obs.bool_acts[2], obs.bool_acts[3]]
-    }
+    };
 }
 
 function getValidIDsForFrame(frame) {
     // Return an Iterator to Tracks[frame]
 
-    if (Tracks[frame] == undefined) {
-        return []
+    if (Tracks[frame] === undefined) {
+        return [];
     }
     //NO: var ids = Array.from(Tracks[frame].keys()) // Problem: includes ids to undefined values also
 
@@ -201,21 +206,21 @@ function getValidIDsForFrame(frame) {
 }
 
 function obsDoesExist(frame, id) {
-    if (Tracks[frame] == undefined) {
+    if (Tracks[frame] === undefined) {
         return false
     }
-    if (Tracks[frame][id] == undefined) {
+    if (Tracks[frame][id] === undefined) {
         return false
     }
     return true
 }
 
 function getObsHandle(frame, id, createIfEmpty) {
-    if (createIfEmpty == undefined)
+    if (createIfEmpty === undefined)
         createIfEmpty = false;
 
-    var obs = undefined
-    if (Tracks[frame] == undefined) {
+    var obs
+    if (Tracks[frame] === undefined) {
         if (createIfEmpty) {
             //Tracks[frame] = new Array;
             Tracks[frame] = {}
@@ -224,7 +229,7 @@ function getObsHandle(frame, id, createIfEmpty) {
         }
     }
 
-    if (Tracks[frame][id] == undefined) {
+    if (Tracks[frame][id] === undefined) {
         if (createIfEmpty) {
             Tracks[frame][id] = new Observation(id);
             //default_id++;
@@ -277,8 +282,8 @@ function storeObs(tmpObs) {
 
 function changeObservationID(frame, old_id, new_id) {
     // REMI: modified to be be independent of View
-    if (Tracks[frame] != undefined) {
-        if (Tracks[frame][old_id] != undefined) {
+    if (Tracks[frame] !== undefined) {
+        if (Tracks[frame][old_id] !== undefined) {
             if (logging.submitEvents)
                 console.log("changeObservationID: frame=", frame, "old_id=", old_id, " new_id=", new_id);
             Tracks[frame][new_id] = Tracks[frame][old_id];
@@ -299,8 +304,8 @@ function changeObservationID(frame, old_id, new_id) {
 function printTracks() {
     //Just for debugging
     console.log("This is Tracks:")
-    for (F in Tracks) {
-        for (iid in Tracks[F]) {
+    for (let F in Tracks) {
+        for (let iid in Tracks[F]) {
             console.log("F =", F, ", iid =", iid, ", Tracks[F][idd] =", Tracks[F][iid])
         }
     }
@@ -335,8 +340,8 @@ function saveToFile() {
 
 function tracksToCSV(Tracks) {
     var csv = "Date,Time (frame),ID,Action,Cargo,Shift\n"
-    if (Tracks == undefined) return csv
-    for (F in Tracks)
+    if (Tracks === undefined) return csv
+    for (let F in Tracks)
         for (let id in Tracks[F]) {
             var obs = Tracks[F][id]
             var action = "",
@@ -378,18 +383,18 @@ function saveToCSV() {
 
 function tracksToBBoxes(Tracks) {
     var csv = "#frame,left,top,right,bottom,pollen,arrive,leave,fanning\n"
-    if (Tracks == undefined) return csv
-    for (F in Tracks)
+    if (Tracks === undefined) return csv
+    for (let F in Tracks)
         for (let id in Tracks[F]) {
             var obs = Tracks[F][id]
             
-            csv += (F + "," + obs.x + "," + obs.y 
-                     + "," + (obs.x+obs.width) + "," + (obs.y+obs.height) 
-                     + "," + Number(obs.bool_acts[1])  // pollen
-                     + "," + Number(obs.bool_acts[2])  // arrive
-                     + "," + Number(obs.bool_acts[3])  // leave
-                     + "," + Number(obs.bool_acts[0])  // fanning
-                     + "\n")
+            csv += (F + "," + obs.x + "," + obs.y +
+                     "," + (obs.x+obs.width) + "," + (obs.y+obs.height) +
+                     "," + Number(obs.bool_acts[1]) + // pollen
+                     "," + Number(obs.bool_acts[2]) + // arrive
+                     "," + Number(obs.bool_acts[3]) + // leave
+                     "," + Number(obs.bool_acts[0]) + // fanning
+                     "\n")
         }
     return csv
 }
@@ -483,9 +488,56 @@ function loadTagsFromFile(event) {
 
 // ## Keyboard
 
+function onKeyDown_IDEdit(event) {
+    if (logging.keyEvents)
+        console.log("onKeyDown_IDEdit: event=",event)
+    var key = event.which || event.keyCode;
+    if (key == 13) { // Enter
+        let alert1 = document.getElementById("alert");
+        let frame = getCurrentFrame()
+        let fieldID = document.getElementById("I");
+        let new_id = fieldID.value
+
+        let activeObject = canvas1.getActiveObject()
+        if (activeObject.status === "new") {
+            activeObject.id = new_id
+            alert1.innerHTML = "ID changed + submitted"
+            alert1.style.color = "green";
+            submit_bee(activeObject)
+        } else /* status=="db"*/ {
+            let old_id = activeObject.id
+            if (changeObservationID(frame, old_id, new_id)) {
+                // Successfull
+                activeObject.id = new_id
+                alert1.innerHTML = "ID changed succesfully!"
+                alert1.style.color = "green";
+            } else {
+                console.log("onKeyDown_IDEdit: unsuccessfull ID change", {
+                    object: activeObject,
+                    old_id: old_id,
+                    new_id: new_id
+                })
+                alert1.innerHTML = "ID not changed"
+                alert1.style.color = "red";
+            }
+            refresh();
+            refreshChronogram()
+        }
+    }
+}
+
 function onKeyDown(e) {
     if (logging.keyEvents)
         console.log("onKeyDown: e=",e)
+    if (e.target == document.getElementById("I")) {
+        if (e.keyCode==32 || e.keyCode==188 || e.keyCode==190) {
+          console.log("onKeyDown: detected keydown happened in textfield #I with keyCode for navigation shortcuts. Canceling it and showing a message.")
+          alert1 = document.getElementById("alert");
+          alert1.style.color = "green";
+          alert1.innerHTML = "Editing ID. Press ESC to exit...";
+          return false
+        }
+    }
     if (e.key == "Delete" || e.key == 'd') {
         removeDecision();
         return false
@@ -522,11 +574,11 @@ function onKeyDown(e) {
             }
             return false;
         case 27: // Escape
-            return true;
+            //return true;
             var id_field = document.getElementById("I");
             if ($(id_field).is(':focus')) {
                 id_field.selectionStart = id_field.selectionEnd
-                id_field.blur(); // Facilitate changing the id
+                id_field.blur();
                 return false;
             } else {
                 id_field.focus(); // Facilitate changing the id
@@ -744,10 +796,10 @@ function toLocaleISOString(date) {
         time = [date.getHours(), date.getMinutes(), date.getSeconds()].map(pad).join(":");
     if (date.getMilliseconds())
         time += "."+date.getMilliseconds();
-    var o = date.getTimezoneOffset(),
-        h = Math.floor(Math.abs(o)/60),
-        m = Math.abs(o) % 60,
-        o = o==0 ? "Z" : (o<0 ? "+" : "-") + pad(h) + ":" + pad(m);
+    var o = date.getTimezoneOffset();
+    var h = Math.floor(Math.abs(o)/60);
+    var m = Math.abs(o) % 60;
+    o = o===0 ? "Z" : (o<0 ? "+" : "-") + pad(h) + ":" + pad(m);
     return day+"T"+time//+o;
 }
 
@@ -1026,24 +1078,24 @@ function plotTracks(ctx) {
     if (fmin<0) fmin=0;
     //if (fmax>maxframe) fmax=maxframe;
 
+    setColor = function(f) {
+        if (f<=F) {
+            color = "rgba(255,0,0,"+(1-Math.abs((f-F)/frange))+")"
+            //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
+        } else {
+            color = "rgba(0,128,0,"+(1-Math.abs((f-F)/frange))+")"
+        }
+        return color;
+    }
+
     for (let id of ids) { // For each valid bee ID, create a track for it
         let obs = getObsHandle(fmin, id, false)
-        let x = undefined, y=undefined, z=0;
+        let x=undefined, y=undefined, z=0;
         if (!!obs) {
             let rect = videoToCanvasCoords(obs)
             x = rect.left + rect.width / 2;
             y = rect.top + rect.height / 2;
             z = 1;
-        }
-
-        setColor = function(f) {
-            if (f<=F) {
-                color = "rgba(255,0,0,"+(1-Math.abs((f-F)/frange))+")"
-                //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
-            } else {
-                color = "rgba(0,128,0,"+(1-Math.abs((f-F)/frange))+")"
-            }
-            return color;
         }
 
         for (let f=fmin+1; f<=fmax; f++) {
@@ -1163,7 +1215,7 @@ function plotTags(ctx) {
     let F = getCurrentFrame()
     let tagsFrame = Tags[F]
     if (tagsFrame !== undefined) {
-        let tags = tagsFrame['tags']
+        let tags = tagsFrame.tags
         //console.log('Found tags',tags)
         for (let i in tags) {
             let tag = tags[i]
@@ -1180,7 +1232,7 @@ function plotTags(ctx) {
     }
 }
 function plotTag(ctx, tag, color, flags) {
-    if (color == undefined) {
+    if (color === undefined) {
         color = 'red'
     }
     if (typeof flags === 'undefined') {
@@ -1192,7 +1244,7 @@ function plotTag(ctx, tag, color, flags) {
     let radius = flags.radius
     if (typeof radius === 'undefined') { radius = 5; }
 
-    let pt = videoToCanvasPoint({"x":tag["c"][0], "y":tag["c"][1]})
+    let pt = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
 
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
@@ -1200,7 +1252,7 @@ function plotTag(ctx, tag, color, flags) {
     ctx.closePath();
     ctx.stroke();
 
-    if (flags.id==true) {
+    if (flags.id===true) {
       ctx.font = "10px Arial";
       ctx.fillStyle = color;
       ctx.textAlign = 'center';
@@ -1234,7 +1286,7 @@ function plotTagsTracks(ctx) {
     for (let f=fmin; f<=fmax; f++) {
         let tagsFrame = Tags[f]
         if (typeof(tagsFrame) === "undefined") continue;
-        let tags = tagsFrame['tags']
+        let tags = tagsFrame.tags
         let color = setColor(f)
         for (let i in tags) {
             let tag = tags[i]
@@ -1248,7 +1300,7 @@ function plotTagsTracks(ctx) {
         let f=F;
         let tagsFrame = Tags[f]
         if (typeof(tagsFrame) !== "undefined") {
-        let tags = tagsFrame['tags']
+        let tags = tagsFrame.tags
         let color = setColor(f)
         for (let i in tags) {
             let tag = tags[i]
@@ -1440,7 +1492,7 @@ function findRect(id) {
 
     var rects = canvas1.getObjects();
     if (rects) {
-        var r = undefined;
+        var r;
         for (var i = 0; i < rects.length; i++) {
             if (rects[i].id == id) {
                 r = rects[i];
@@ -1465,28 +1517,29 @@ function predictId(frame, rect, mode) {
         //console.log('obs=',obs,'rect=',rect)
         if (mode == "distance_topleft") {
             // Compare the distance from (x,y) to topleft corner of obs
-            var d = dist(rect.x, rect.y, obs.x, obs.y);
+            let d = dist(rect.x, rect.y, obs.x, obs.y);
             if (d < 40) {
                 return true;
             }
         } else if (mode == "distance_center") {
             // Compare the distance from rect center to obs center
-            var d = dist(rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height, obs.x + 0.5 * obs.width,
-                obs.y + 0.5 * obs.height);
+            let d = dist(rect.x + 0.5 * rect.width, rect.y + 0.5 * rect.height,
+                         obs.x + 0.5 * obs.width, obs.y + 0.5 * obs.height);
             if (d < 40) {
                 return true;
             }
         } else if (mode == "pointinside") {
             // Check if center of rect is inside obs
-            if ((rect.x >= obs.x) && (rect.x <= obs.x + obs.width) && (rect.y >= obs.y) && (rect.y <= obs
-                    .y + obs.height)) {
+            if ((rect.x >= obs.x) && (rect.x <= obs.x + obs.width) &&
+                (rect.y >= obs.y) && (rect.y <= obs.y + obs.height)) {
                 return true
             }
         } else if (mode == "pointinside") {
             // Check if center of rect is inside obs
             var cx = rect.x + 0.5 * w,
                 cy = rect.y + 0.5 * h;
-            if ((cx >= obs.x) && (cx <= obs.x + obs.width) && (cy >= obs.y) && (cy <= obs.y + obs.height)) {
+            if ((cx >= obs.x) && (cx <= obs.x + obs.width) && 
+                (cy >= obs.y) && (cy <= obs.y + obs.height)) {
                 return true
             }
         } else {
@@ -1495,7 +1548,7 @@ function predictId(frame, rect, mode) {
         return false;
     }
     if (frame > 0) {
-        var ids = getValidIDsForFrame(frame - 1);
+        let ids = getValidIDsForFrame(frame - 1);
         //console.log("ids=",ids)
         for (let id of ids) {
             var obs = getObsHandle(frame - 1, id, false);
@@ -1516,10 +1569,10 @@ function predictId(frame, rect, mode) {
             }
         }
     }
-    var ids = getValidIDsForFrame(frame + 1);
+    let ids = getValidIDsForFrame(frame + 1);
     //console.log("ids=",ids)
     for (let id of ids) {
-        var obs = getObsHandle(frame + 1, id, false);
+        let obs = getObsHandle(frame + 1, id, false);
         //console.log("id=",id,"obs=",obs)
         if (checkMatch(obs, rect, mode)) {
             if (findRect(id))
@@ -1700,7 +1753,7 @@ function onObjectDeselected(option) {
     if (logging.selectionEvents)
         console.log("onObjectDeselected: ", option);
        
-    if (lastSelected != null) {
+    if (lastSelected !== null) {
         if (lastSelected.status=="new") {
             if (logging.mouseEvents)
                 console.log('onObjectDeselected: removing non submitted lastSelected=', lastSelected)
@@ -1756,7 +1809,7 @@ function onActivityChanged(event) {
     if (logging.guiEvents)
         console.log("onActivityChanged: event=", event)
     var activeObject = canvas1.getActiveObject()
-    if (activeObject != null) {
+    if (activeObject !== null) {
         updateRectObsActivity(activeObject)
         automatic_sub()
     }
@@ -1791,7 +1844,7 @@ function updateRectObsActivity(activeObject) {
 /* CAUTION: use updateForm(null) for empty form */
 function updateForm(activeObject) {
 
-    if (activeObject == null) {
+    if (activeObject === null) {
         $('#I').val('-')
         
         $('#X').html("X: -")
@@ -1835,7 +1888,7 @@ function updateForm(activeObject) {
 
 function submit_bee() {
     var activeObject = canvas1.getActiveObject();
-    if (activeObject == null) {
+    if (activeObject === null) {
         alert1 = document.getElementById("alert");
         alert1.style.color = "red";
         alert1.innerHTML = "No bee selected";
@@ -1946,7 +1999,7 @@ function deselectBee() {
 function getSelectedID() {
     // Truth on selected bee ID comes from Fabric.js canvas
     var activeObject = canvas1.getActiveObject();
-    if (activeObject == null) {
+    if (activeObject === null) {
         return undefined
     } else {
         return activeObject.id
@@ -2064,51 +2117,6 @@ function resetRemove() {
 }
 
 
-// ## ID GUI
-//// Controller
-// function grabandCheckID() {
-//     var ID = document.getElementById("I");
-//     doesExistButton(ID.value);
-// }
-
-//function grabIDEditInfoCallChange(event) {
-function onKeyDown_IDEdit(event) {
-    var key = event.which || event.keyCode;
-    if (key == 13) { // Enter
-        let alert1 = document.getElementById("alert");
-        let frame = getCurrentFrame()
-        let fieldID = document.getElementById("I");
-        let new_id = fieldID.value
-
-        let activeObject = canvas1.getActiveObject()
-        if (activeObject.status === "new") {
-            activeObject.id = new_id
-            alert1.innerHTML = "ID changed + submitted"
-            alert1.style.color = "green";
-            submit_bee(activeObject)
-        } else /* status=="db"*/ {
-            let old_id = activeObject.id
-            if (changeObservationID(frame, old_id, new_id)) {
-                // Successfull
-                activeObject.id = new_id
-                alert1.innerHTML = "ID changed succesfully!"
-                alert1.style.color = "green";
-            } else {
-                console.log("onKeyDown_IDEdit: unsuccessfull ID change", {
-                    object: activeObject,
-                    old_id: old_id,
-                    new_id: new_id
-                })
-                alert1.innerHTML = "ID not changed"
-                alert1.style.color = "red";
-            }
-            refresh();
-            refreshChronogram()
-        }
-    }
-}
-
-
 
 // ###########################################################
 // CHRONOGRAM
@@ -2116,9 +2124,7 @@ function onKeyDown_IDEdit(event) {
 function Chronogram() {
 // Create Chronogram
 
-//var g_xRange = undefined
-//var g_xZoom = undefined;
-var plotArea = undefined
+var plotArea
 var vis, tagArea
 var activityRects
 
@@ -2219,9 +2225,9 @@ function initChrono() {
             
             vis.selectAll(".t.axis > .tick > text")
                 .style("font-size", function(d) {
-                    if (d.getMilliseconds()!=0) return "8px"
-                    if (d.getSeconds()!=0) return "9px"
-                    if (d.getMinutes()!=0) return "12px"
+                    if (d.getMilliseconds()!==0) return "8px"
+                    if (d.getSeconds()!==0) return "9px"
+                    if (d.getMinutes()!==0) return "12px"
                     return "14px"
                 })
 
@@ -2633,8 +2639,7 @@ function initChronoTagBars() {
                 return -(yTagScale(Number(d.y)) - yTagScale(0.0));
             })
             .attr("width", function(d) {
-                return (vis.xScale(Number(d.x) + 0.5) 
-                        - vis.xScale(Number(d.x)-0.5));
+                return (vis.xScale(Number(d.x) + 0.5) - vis.xScale(Number(d.x)-0.5));
             })
     }
     
@@ -2703,6 +2708,7 @@ function refreshChronogram() {
         }
     }
 
+    // FIXME: need to sanitize input
     excludedTags = eval("["+$('#excludedTags')[0].value+']')
     
     if (1) {
@@ -2713,7 +2719,7 @@ function refreshChronogram() {
           for (let i in tags) {
               let id = Number(tags[i].id)
               let hamming = Number(tags[i].hamming)
-              if ((!excludedTags.includes(id)) && (hamming==0))
+              if ((!excludedTags.includes(id)) && (hamming===0))
                   count += 1
           }
           let tagBar = {'x': Number(F), 'y':count}
