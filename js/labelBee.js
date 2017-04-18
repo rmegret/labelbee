@@ -82,13 +82,14 @@ function init() {
     canvas1.selectionBorderColor = "red";
     canvas1.selection = false; // REMI: disable the blue selection (allow to select several rectangles at once, which poses problem)
     canvas1.uniScaleTransform = true; // REMI: allow free rescaling of observations without constrained aspect ratio
-    canvas1.centeredScaling = true; // REMI: rescale around center
+    //canvas1.centeredScaling = true; // REMI: rescale around center
     canvas1.on('mouse:down', onMouseDown);
     canvas1.on('mouse:up', onMouseUp);
-    canvas1.on('object:moving', onObjectMoving); // When a rectangle is being modified
-    canvas1.on('object:modified', onObjectModified); // When a rectangle has been modified
-    canvas1.on('object:selected', onObjectSelected); // When clicking on a rectangle
-    canvas1.on('selection:cleared', onObjectDeselected); // When deselecting an object   Not Working???
+    canvas1.on('object:moving', onObjectMoving); // During translation
+    canvas1.on('object:scaling', onObjectMoving); // During scaling
+    canvas1.on('object:modified', onObjectModified); // After modification
+    canvas1.on('object:selected', onObjectSelected); // After mousedown
+    canvas1.on('selection:cleared', onObjectDeselected); // After mousedown out of existing rectangles
     $('.upper-canvas').bind('contextmenu', onMouseDown2);
     
     $('#video').on('mouseDown', onMouseDown);
