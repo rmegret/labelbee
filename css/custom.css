@@ -16,6 +16,7 @@ canvas {
   right: 0px;
 }
 
+
 td {
     padding-right: 40px;
     vertical-align: top;
@@ -134,7 +135,8 @@ svg {
   stroke: #000;
 }
 .timeMark {
-  fill: #f001;
+  fill: #F00;
+  fill-opacity: 0.2;
   stroke: #F00;
 }
 

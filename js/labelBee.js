@@ -5,23 +5,14 @@ var canvas, canvas1, canvas2, ctx, ctx2, vid, play, radius = 5,
     time, final_id = 0;
 bee = [0, 0]; //Global array that stores the value of x, y
 g_activities = ["fanning", "pollenating", "entering", "exiting"]; //global string array of activities
-var x, y, cx, cy, width, height, id, default_id = 0,
-    marked, permanent, activities = [],
-    bool_acts = [],
-    is_marked = false,
-    is_permanent = false;
-var form_acts = [],
-    fanning, pollenating, entering, leaving, old, newB, is_old = false,
-    currentFrame, video, video2, Cframe = 0;
-var Tracks = new Array(),
-    temporaryObs = new Observation(0)
+var x, y, cx, cy, width, height
+var default_id = 0
+var video, video2
+var Tracks = new Array()
 var Tags = new Array()
 var buttonManip, undo = new Observation(0),
     alert1, transformFactor = 1.0;
-var vis, xAxis, yAxis
-var g_Moving = false,
-    g_Dragging = false;
-var fps;
+var vis
 var videoinfo;
 var defaultSelectedBee = undefined
 var logging = {
@@ -30,8 +21,12 @@ var logging = {
   "guiEvents": false,
   "submitEvents": false,
   "mouseEvents": false,
-  "keyEvents": true,
+  "mouseMoveEvents": false,
+  "keyEvents": false,
   "selectionEvents": false,
+  "chrono": false,
+  "videoEvents": false,
+  "canvasEvents": false
 }
 var canvasTform = [0, 0, 1]; // cx,cy,scale
 var plotTrack_range_backward = 5
@@ -45,14 +40,14 @@ function init() {
     videoinfo = {
         'fps': 22, 
         'realfps': 20,  //realfps = 20.0078;
-        'starttime': '2016-07-15T09:59:59.360'
+        'starttime': '2016-07-15T09:59:59.360',
+        'duration': 1/fps
     }
-    fps = videoinfo.fps; 
     $('#selectboxVideo')[0].selectedIndex=7 // select long video
 
     video2 = VideoFrame({
         id: 'video',
-        frameRate: fps, //30,
+        frameRate: videoinfo.fps,
         callback: onFrameChanged // VERY IMPORTANT: all frame changes (play,next,prev...) trigger this callback. No refresh should be done outside of this callback
     });
     video2.onListen = function() {console.log('video2.onListen')}
@@ -195,7 +190,7 @@ function getValidIDsForFrame(frame) {
 
     let trackf = Tracks[frame];
     let ids = [];
-    for (id in trackf) {
+    for (let id in trackf) {
         if (trackf[id] !== undefined) {
             ids.push(id);
         }
@@ -264,7 +259,7 @@ function storeObs(tmpObs) {
 
 // function doesExistButton(ID) {
 //     for (frame in Tracks) {
-//         for (id in Tracks[frame]) {
+//         for (let id in Tracks[frame]) {
 //             if (id == ID) {
 //                 buttonManip2 = document.getElementById("special2");
 //                 buttonManip2.className = "btn btn-danger btn-sm";
@@ -342,7 +337,7 @@ function tracksToCSV(Tracks) {
     var csv = "Date,Time (frame),ID,Action,Cargo,Shift\n"
     if (Tracks == undefined) return csv
     for (F in Tracks)
-        for (id in Tracks[F]) {
+        for (let id in Tracks[F]) {
             var obs = Tracks[F][id]
             var action = "",
                 cargo = ""
@@ -385,7 +380,7 @@ function tracksToBBoxes(Tracks) {
     var csv = "#frame,left,top,right,bottom,pollen,arrive,leave,fanning\n"
     if (Tracks == undefined) return csv
     for (F in Tracks)
-        for (id in Tracks[F]) {
+        for (let id in Tracks[F]) {
             var obs = Tracks[F][id]
             
             csv += (F + "," + obs.x + "," + obs.y 
@@ -549,10 +544,14 @@ function onKeyDown(e) {
         //    if (logging.keyEvents)
         //        console.log("onKeyDown: 'S' bound to submit_bee. Prevented key 'S' to propagate to textfield.")
         //    return false; // Prevent using S in textfield
-        //case 13: // Enter
+        case 13: // Enter
+            if ($(document.activeElement)[0]==document.body) {
+                // No specific focus, process the key
+                submit_bee();
+            }
             //onKeyDown_IDEdit(e) // Forward to IDedit keydown handler
             //return false;
-        //    return true
+            return true
         case 16: // Shift
         case 17: // Ctrl
         case 18: // Alt
@@ -665,27 +664,28 @@ function onFPSChanged(event) {
     console.log('onFPSChanged', event)
 
     videoinfo.fps = Number(event.target.value)
-    fps = videoinfo.fps
     chrono.updateChronoXDomainFromVideo()
     chrono.drawChrono()
 }
 
 // # Video loading
-var videoDuration=22
 function onVideoLoaded(event) {
     // Called when video metadata available (size, duration...)
-    console.log('videoLoaded', event)
+    if (logging.videoEvents)
+        console.log('videoLoaded', event)
     var w,h
     
     w = video.videoWidth
     h = video.videoHeight
-    videoDuration = video.duration
+    videoinfo.duration = video.duration
     
     chrono.updateChronoXDomainFromVideo()
     refreshChronogram()
     
-    console.log("w=",w)
-    console.log("h=",h)
+    if (logging.videoEvents) {
+        console.log("w=",w)
+        console.log("h=",h)
+    }
     
     vid_cx = w/2;
     vid_cy = h/2;
@@ -716,7 +716,8 @@ function onVideoLoaded(event) {
 }
 function onVideoReady(event) {
     video.oncanplay = undefined
-    console.log('videoReady', event)
+    if (logging.videoEvents)
+        console.log('videoReady', event)
     rewind()
 }
 
@@ -732,7 +733,7 @@ function getCurrentVideoTime(format) {
 }
 function getCurrentRealDate(format) {
   var D = new Date(videoinfo.starttime)
-  D = new Date(D.getTime()+video2.toMilliseconds()*fps/videoinfo.realfps)
+  D = new Date(D.getTime()+video2.toMilliseconds()*videoinfo.fps/videoinfo.realfps)
   return D
 }
 function toLocaleISOString(date) {
@@ -752,7 +753,7 @@ function toLocaleISOString(date) {
 
 // This callback is the only one that should handle frame changes. It is called automatically by video2
 function onFrameChanged(event) {
-    Cframe = getCurrentFrame();
+    let Cframe = getCurrentFrame();
     
     if (logging.frameEvents)
         console.log('frameChanged', Cframe)
@@ -895,23 +896,23 @@ function forward() {
 }
 
 function rewind2() {
-    video2.seekBackward(fps);
+    video2.seekBackward(videoinfo.fps);
 }
 function forward2() {
-    video2.seekForward(fps);
+    video2.seekForward(videoinfo.fps);
 }
 
 function rewind3() {
-    video2.seekBackward(fps*60);
+    video2.seekBackward(videoinfo.fps*60);
 }
 function forward3() {
-    video2.seekForward(fps*60);
+    video2.seekForward(videoinfo.fps*60);
 }
 function rewind4() {
-    video2.seekBackward(fps*60*10);
+    video2.seekBackward(videoinfo.fps*60*10);
 }
 function forward4() {
-    video2.seekForward(fps*60*10);
+    video2.seekForward(videoinfo.fps*60*10);
 }
 
 
@@ -930,7 +931,8 @@ function resizeCanvas(w,h) {
     wrap.style.height = h.toString() + 'px'
 }
 function refreshCanvasSize(event, ui) {
-    console.log('refreshCanvasSize')
+    if (logging.canvasEvents)
+        console.log('refreshCanvasSize')
     
     let wd = parseInt($("#canvasresize")[0].style.width)-16 // Assume width is in px
     let hd = video.videoHeight/video.videoWidth*wd
@@ -1305,6 +1307,8 @@ function addRectInteractive(id, startX, startY) {
     //canvas1.renderAll();
 
     var onMouseMove_Dragging = function(option) {
+        if (logging.mouseMoveEvents)
+            console.log("onMouseMove_Dragging: option=", option);
         var e = option.e;
 
         rect.validated = true; // Need dragging a bit to validate the rectangle
@@ -1369,8 +1373,7 @@ function addRectInteractive(id, startX, startY) {
             canvas1.deactivateAll()
             canvas1.remove(activeObject);
             //canvas1.renderAll();
-            id = document.getElementById("I");
-            id.value = "no selection"
+            //$("#I").val("no selection")
             if (logging.mouseEvents)
                 console.log('onMouseUp: removing non validated activeObject=', activeObject)
             deselectBee()
@@ -1555,19 +1558,13 @@ function onMouseDown2(ev) {
 function onMouseDown(option) {
     if (logging.mouseEvents)
         console.log('onMouseDown: option=', option)
-    if (g_Moving || g_Dragging) {
-        console.log("WARNING in onMouseDown: moving or dragging already active. Aborting them.");
-        g_Moving = false;
-        g_Dragging = false;
-        canvas1.off('mouse:move');
-    }
     
     alert1 = document.getElementById("alert");
     alert1.style.color = "black";
     alert1.innerHTML = "";
 
     //console.log('onMouseDown',option)
-    resetCheck(); //Check button goes back to blue
+    //resetCheck(); //Check button goes back to blue
     alert1 = document.getElementById("alert");
     alert1.innerHTML = "";
     if (typeof option.target != "undefined") {
@@ -1600,8 +1597,7 @@ function onMouseDown(option) {
                 x: videoX,
                 y: videoY
             }, "pointinside");
-            id = document.getElementById("I");
-            id.value = prediction.id;
+            $("#I").val(prediction.id)
 
             if (prediction.obs) {
                 let obs = prediction.obs;
@@ -1638,8 +1634,7 @@ function onMouseDown(option) {
                 x: videoX,
                 y: videoY
             }, "distance_topleft");
-            id = document.getElementById("I");
-            id.value = prediction.id;
+            $("#I").val(prediction.id)
 
             // Create rectangle interactively
             rect = addRectInteractive(prediction.id, startX, startY);
@@ -1650,7 +1645,6 @@ function onMouseDown(option) {
         if (logging.mouseEvents)
             console.log("Click time: " + video.currentTime)
 
-        g_Dragging = true;
         updateForm(rect)
     }
 
@@ -1694,8 +1688,9 @@ function onObjectSelected(option) {
         console.log("onObjectSelected:", option)
     //var activeObject = canvas1.getActiveObject();
     if (typeof option.target.id != "undefined") {
-        console.log("Current object id=", option.target.id)
-        console.log("ActiveObject id=", canvas1.getActiveObject().id)
+        if (option.target.id != canvas1.getActiveObject().id) {
+            console.log('ERROR in onObjectSelected: option.target.id != canvas1.getActiveObject().id', option.target.id, canvas1.getActiveObject().id)
+        }
         selectBee(option.target)
         lastSelected = option.target
     }
@@ -1723,7 +1718,8 @@ function onObjectMoving(option) {
 
     // Called during translation only
     var activeObject = option.target; //canvas1.getActiveObject();
-    console.log("onObjectMoving: activeObject=", activeObject);
+    if (logging.mouseMoveEvents)
+      console.log("onObjectMoving: activeObject=", activeObject);
     
     fixRectSizeAfterScaling(activeObject)
     updateRectObsGeometry(activeObject)
@@ -1741,7 +1737,8 @@ function onObjectModified(option) {
     // Called after translation or scaling
     var activeObject = option.target; //canvas1.getActiveObject();
     fixRectSizeAfterScaling(activeObject)
-    console.log("onObjectModified: activeObject=", activeObject);
+    if (logging.mouseEvents)
+      console.log("onObjectModified: activeObject=", activeObject);
     
     updateRectObsGeometry(activeObject)
 
@@ -1862,8 +1859,6 @@ function submit_bee() {
         return true;
     }
 
-    console.log(obsDoesExist(getCurrentFrame(), activeObject.id));
-
     let tmpObs = activeObject.obs
     tmpObs.ID = final_id;
     //updateForm(activeObject);
@@ -1965,7 +1960,6 @@ function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pr
 
     if (activeObject) {
         canvas1.remove(activeObject);
-        temporaryObs = new Observation(0);
         console.log("deleteObjects",activeObject.id);
         if (obsDoesExist(getCurrentFrame(), activeObject.id)) {
             undo = Tracks[video2.get()][activeObject.id];
@@ -2069,13 +2063,6 @@ function resetRemove() {
 //     buttonManip.value = "Remove obs";
 }
 
-function resetCheck() {
-    console.log('WARNING: call to obsolete function resetCheck()');
-//     buttonManip = document.getElementById("special2");
-//     buttonManip.className = "btn btn-info btn-sm";
-//     buttonManip.value = "Check";
-}
-
 
 // ## ID GUI
 //// Controller
@@ -2132,7 +2119,6 @@ function Chronogram() {
 //var g_xRange = undefined
 //var g_xZoom = undefined;
 var plotArea = undefined
-var timeMark = undefined
 var vis, tagArea
 var activityRects
 
@@ -2157,8 +2143,13 @@ var updateChronoDomain = function(){
     console.log('updateChronoDomain not yet defined')
 }
 function domainxFromVideo() {
-    var domain = [0, videoDuration*fps]
-    console.log("domainxFromVideo: domain=",domain)
+    var domain
+    if (isNaN(videoinfo.duration))
+      domain = [0,1]
+    else
+      domain = [0, videoinfo.duration*videoinfo.fps]
+    if (logging.chrono)
+      console.log("domainxFromVideo: domain=",domain)
     return domain
 }
 function domainxFromChronogramData() {
@@ -2219,12 +2210,12 @@ function initChrono() {
         //console.log('updateTScale()')
         var d = xScale.domain()
         var a = new Date(videoinfo.starttime)
-        tScale.domain([ new Date(a.getTime()+d[0]/fps*1000) , new Date(a.getTime()+d[1]/fps*1000) ])
+        tScale.domain([ new Date(a.getTime()+d[0]/videoinfo.fps*1000) , new Date(a.getTime()+d[1]/videoinfo.fps*1000) ])
         
         if (vis) {
             vis.select(".x.axis").call(vis.customXAxis);
-            vis.select(".t.axis").call(tAxis);
-            vis.select(".y.axis").call(yAxis);
+            vis.select(".t.axis").call(vis.tAxis);
+            vis.select(".y.axis").call(vis.yAxis);
             
             vis.selectAll(".t.axis > .tick > text")
                 .style("font-size", function(d) {
@@ -2233,18 +2224,19 @@ function initChrono() {
                     if (d.getMinutes()!=0) return "12px"
                     return "14px"
                 })
-        }
-        
-        // FIXME: use an observer pattern instead
-        if (typeof timeMark !== 'undefined')
-            updateTimeMark()
-        if (typeof activityRects !== 'undefined')
-            updateActivities(true)  // true->lightweight update
-        if (typeof tagArea !== 'undefined') {
-            updateChronoTagBars(true) // true->lightweight update
-        }
-        if (typeof tagSel !== 'undefined') {
-            updateTagIntervals(true) // true->lightweight update
+
+            // FIXME: use an observer pattern instead
+            if (typeof vis.timeMark !== 'undefined')
+                updateTimeMark()
+            if (typeof activityRects !== 'undefined')
+                updateActivities(true)  // true->lightweight update
+            if (typeof tagArea !== 'undefined') {
+                updateChronoTagBars(true) // true->lightweight update
+            }
+            if (typeof tagSel !== 'undefined') {
+                updateTagIntervals(true) // true->lightweight update
+            }
+
         }
     }
     updateChronoDomain = function(domainx, domainy) {
@@ -2290,7 +2282,7 @@ function initChrono() {
 //     }
 
     // ## Axis objects (display based on the scale)
-    xAxis = d3.svg.axis()
+    var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient("bottom")
         .tickSize(5)
@@ -2311,13 +2303,13 @@ function initChrono() {
       ["%Y", function() { return true; }]
     ]);
 
-    tAxis = d3.svg.axis()
+    var tAxis = d3.svg.axis()
         .scale(tScale)
         .orient("bottom")
         .tickSize(-height)
         .tickFormat(customTimeFormat)        
 
-    yAxis = d3.svg.axis()
+    var yAxis = d3.svg.axis()
         .scale(yScale)
         .orient("left")
         .ticks(5)
@@ -2414,7 +2406,7 @@ function initChrono() {
     plotArea = chronArea.insert("g")
     plotAreaTags = chronArea.insert("g")  
     
-    timeMark = initTimeMark(chronArea)
+    vis.timeMark = initTimeMark(chronArea)
     
     initChronoTagBars()
 
@@ -2428,22 +2420,26 @@ function initChrono() {
     vis.zoom=zoom
     vis.updateTScale=updateTScale
     vis.customXAxis=customXAxis
+    vis.xAxis=xAxis
+    vis.yAxis=yAxis
+    vis.tAxis=tAxis
 }
 
 
 function initTimeMark(parent) {
-    timeMarkData = [{ 'frame':0 }]
     var timeMark = parent.append("rect")
-          .attr('class','timeMark')
-          .style("stroke", "#ff0000")
-          .data(timeMarkData)
+          .attr('class','timeMark') // For timeMark style, look at custom.css
           .call(setTimeGeom)
     return timeMark
 }
 function setTimeGeom(selection) {
+    var frame = getCurrentFrame();
+    if (typeof frame == "undefined") {
+      frame = 0;
+    }          
     selection
         .attr("x", function(d) {
-            return vis.xScale(d.frame - 0.5);
+            return vis.xScale(frame - 0.5);
         })
         .attr("y", function(d) {
             return vis.yScale.range()[0];
@@ -2456,8 +2452,7 @@ function setTimeGeom(selection) {
         })
 }
 function updateTimeMark() {
-    timeMarkData[0].frame = Number(getCurrentFrame())
-    timeMark.data(timeMarkData).call(setTimeGeom)
+    vis.timeMark.call(setTimeGeom)
 }
 
 
@@ -2690,8 +2685,8 @@ function refreshChronogram() {
     //for (var i = 0; i < chronogramData.length; i++)
     //    chronogramData.pop();
     chrono.chronogramData.length = 0
-    for (F in Tracks) {
-        for (id in Tracks[F]) {
+    for (let F in Tracks) {
+        for (let id in Tracks[F]) {
             let chronoObs = {'x':F, 'y':id, 'Activity':""};
 
             if (Tracks[F][id].bool_acts[2]) {
@@ -2744,7 +2739,8 @@ function refreshChronogram() {
 //         }
 //     }
 
-    console.log("refreshChronogram: convert tags to intervals...")
+    if (logging.chrono)
+        console.log("refreshChronogram: convert tags to intervals...")
 
     ttags = []
   
@@ -2789,7 +2785,8 @@ function refreshChronogram() {
         tagIntervals.push(activeInterval)
     }
     
-    console.log("refreshChronogram: drawChrono()...")
+    if (logging.chrono)
+        console.log("refreshChronogram: drawChrono()...")
 
     //d3.selectAll("svg > *").remove();
     chrono.drawChrono();
