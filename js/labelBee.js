@@ -40,6 +40,15 @@ var flagCopyVideoToCanvas = true;
 // ######################################################################
 // INITITALIZATION
 
+function initVideoSelectbox(optionList) {
+    var selectbox = $("#selectboxVideo")
+    selectbox.find('option').remove()
+
+    $.each(optionList, function (i, el) {
+        selectbox.append("<option value='data/"+el+"'>"+el+"</option>");
+    });
+}
+
 function init() {
     videoinfo = {
         'fps': 22, 
@@ -47,7 +56,10 @@ function init() {
         'starttime': '2016-07-15T09:59:59.360',
         'duration': 1/fps
     };
-    $('#selectboxVideo')[0].selectedIndex=7; // select long video
+    
+    initVideoSelectbox(['testvideo.mp4','vlc1.mp4','vlc2.mp4','1_02_R_170419141405.mp4'])
+    
+    $('#selectboxVideo')[0].selectedIndex=0; // select long video
 
     video2 = VideoFrame({
         id: 'video',
@@ -68,11 +80,8 @@ function init() {
     var showTagsTracks = false;
 
     // ### Chronogram
-    //initChrono();
-    chrono = new Chronogram();
+    initChrono();
     $('#excludedTags')[0].value = String(excludedTags);
-    
-    //chrono.drawChrono();
 
     // ## Video + canvas
 
@@ -130,6 +139,11 @@ function init() {
     $('#checkboxZoomShowOverlay').prop('checked', zoomShowOverlay);
     flagShowZoom = true;
     $('#checkboxShowZoom').prop('checked', flagShowZoom);
+    
+    $( "#videoinfo" ).accordion({
+        collapsible: true,
+        active: false
+    });
 
     // ## Keyboard control
 
@@ -710,15 +724,15 @@ function onStartTimeChanged(event) {
     var d = new Date(event.target.value)
     videoinfo.starttime = d.toISOString()
 
-    chrono.updateChronoXDomainFromVideo()
-    chrono.drawChrono()
+    updateChronoXDomainFromVideo()
+    drawChrono()
 }
 function onFPSChanged(event) {
     console.log('onFPSChanged', event)
 
     videoinfo.fps = Number(event.target.value)
-    chrono.updateChronoXDomainFromVideo()
-    chrono.drawChrono()
+    updateChronoXDomainFromVideo()
+    drawChrono()
 }
 
 // # Video loading
@@ -731,9 +745,6 @@ function onVideoLoaded(event) {
     w = video.videoWidth
     h = video.videoHeight
     videoinfo.duration = video.duration
-    
-    chrono.updateChronoXDomainFromVideo()
-    refreshChronogram()
     
     if (logging.videoEvents) {
         console.log("w=",w)
@@ -766,6 +777,10 @@ function onVideoLoaded(event) {
     
     //onFrameChanged(event)
     video.oncanplay = onVideoReady
+    
+    
+    updateChronoXDomainFromVideo()   // Should trigger refresh automatically
+    //refreshChronogram()
 }
 function onVideoReady(event) {
     video.oncanplay = undefined
@@ -838,6 +853,8 @@ function refresh() {
       // may have some time discrepency between video and overlay
       ctx.clearRect(0,0,video.videoWidth / transformFactor, video.videoHeight / transformFactor)
     }
+    
+    updateTimeMark()
   
     // for each new frame, we need to reset everything:
     // remove all rectangles and recreate them
@@ -857,7 +874,6 @@ function refresh() {
     }
 
     //refreshChronogram();
-    chrono.updateTimeMark()
 }
 
 // ## Video navigation
@@ -1595,6 +1611,21 @@ function predictId(frame, rect, mode) {
         reason: 'default'
     };
 }
+function predictIdFromTags(frame, pt, mode) {
+    var tmp = Tags[frame];
+    if (tmp === undefined) return {id: undefined, tag: undefined, reason:'notFound'};
+    var frame_tags = tmp.tags;
+    if (frame_tags !== undefined) {
+        for (let k in frame_tags) {
+            let tag = frame_tags[k];
+            let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
+            if (d < 40) {
+                return {id: tag.id, tag: tag, reason:'distance'};
+            }
+        }
+    }
+    return {id: undefined, tag: undefined, reason:'notFound'};
+}
 
 function onMouseDown2(ev) {
    if (ev.ctrlKey) {
@@ -1651,9 +1682,39 @@ function onMouseDown(option) {
                 x: videoX,
                 y: videoY
             }, "pointinside");
+            let predictionTag = predictIdFromTags(getCurrentFrame(), {
+                x: videoX,
+                y: videoY
+            }, "distance");
             $("#I").val(prediction.id)
 
-            if (prediction.obs) {
+            if (predictionTag.id !== undefined) {
+                // If found a tag on this frame
+                if (logging.mouseEvents)
+                    console.log("onMouseDown: predictionTag=", predictionTag)
+                let tag = predictionTag.tag;
+                let pt = videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
+                
+                if (prediction.obs && prediction.id==tag.id) {
+                    // If found a rect with same id as tag on adjacent frame
+                    let obs = prediction.obs;
+                    // Copy rectangle from source of prediction
+                    // addRect takes canvas coordinates units
+                    let r = videoToCanvasCoords(obs)
+                    rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new");
+                    rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
+                    rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
+                } else {
+                    // Only found tag
+                    rect = addRect(predictionTag.id, 
+                               pt.x - default_width / 2, 
+                               pt.y - default_height / 2,
+                               default_width, default_height, "new");
+                }
+                if (logging.mouseEvents)
+                    console.log("onMouseDown: copied rect from tag ", tag)
+            } else if (prediction.obs) {
+                // Only found rect
                 let obs = prediction.obs;
                 // Copy rectangle from source of prediction
                 // addRect takes canvas coordinates units
@@ -1666,6 +1727,7 @@ function onMouseDown(option) {
                 if (logging.mouseEvents)
                     console.log("onMouseDown: copied rect from ", obs)
             } else {
+                // Did not find any tag nor rect
                 rect = addRect(prediction.id, startX - default_width / 2, startY - default_height / 2,
                     default_width, default_height, "new");
                 if (logging.mouseEvents)
@@ -1997,6 +2059,7 @@ function deselectBee() {
     updateForm(null)
     defaultSelectedBee = undefined // Do not keep default when explicit deselect
 }
+// getSelectedID: return undefined or an id
 function getSelectedID() {
     // Truth on selected bee ID comes from Fabric.js canvas
     var activeObject = canvas1.getActiveObject();
@@ -2005,6 +2068,11 @@ function getSelectedID() {
     } else {
         return activeObject.id
     }
+}
+// getSelectedRect: return null or a Fabric.js rect
+function getSelectedRect() {
+    // Truth on selected bee ID comes from Fabric.js canvas
+    return canvas1.getActiveObject();
 }
 
 function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pressed
@@ -2026,6 +2094,37 @@ function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pr
     }
 
     refresh()
+}
+
+var undoStack = []
+function undoPush(action, info) {
+  if (action==="new") {
+      let rect = info
+      undoStack.push({action: action, id: rect.id})
+  }
+  if (action==="delete") {
+      let rect = info
+      undoStack.push({action: action, oldObs: rect.obs})
+  }
+  if (action==="move") {
+      let rect = info
+      undoStack.push({action: action, oldObs: rect.obs})
+  }
+}
+function undoPop() {
+  if (undoStack.length===0) return;
+  if (action==="new") {
+      let rect = info
+      undoStack.push({action: action, id: rect.id})
+  }
+  if (action==="delete") {
+      let rect = info
+      undoStack.push({action: action, oldObs: rect.obs})
+  }
+  if (action==="move") {
+      let rect = info
+      undoStack.push({action: action, oldObs: rect.obs})
+  }
 }
 
 
@@ -2122,33 +2221,54 @@ function resetRemove() {
 // ###########################################################
 // CHRONOGRAM
 
-function Chronogram() {
-// Create Chronogram
 
-var plotArea
-var vis, tagArea
+var axes
 var activityRects
 
 var chronogramData = [] // make it local scope
 var tagsChronogramData = []
 
-function drawChrono() {
-    // Rescale axes
-    updateChronoYDomain()
-    //vis.reinitScale()
-    vis.rescale()
-    vis.updateTScale()
-        
-    // Redraw activities
-    updateActivities()
-    // Redraw timeline and tagBars
-    updateTimeMark()
-    updateChronoTagBars()
-    updateTagIntervals()
+function initChrono() {
+    // SVG adjust to its parent #chronoDiv
+    var svg = d3.select("#svgVisualize")    
+    svg.attr("width", "100%").attr("height", "100%")
+
+    /* ## Build the axes (resizable) ## */
+
+    axes = new ChronoAxes(svg)
+    axes.onClick = onAxesClick         // Callback when the user clicks in axes
+    axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
+    
+    // For some reason, svg does not have the correct size at the beginning,
+    // trigger an asynchronous refresh
+    setTimeout(axes.refreshLayout, 50)
+    
+    // Make it resizable using jQuery-UI
+    $("#chronoDiv").resizable({
+      helper: "ui-resizable-helper",
+    });
+    // Detect #chronoDiv resize using ResizeSensor.js
+    // Note: cannot detect resize of SVG directly
+    new ResizeSensor($("#chronoDiv")[0], function() {
+       console.log('#chronoDiv resized');
+       axes.refreshLayout()
+    });
+    // Equivalent pure jQuery seems to have trouble 
+    // the size of chronoDiv seems to be defined after the callback is called
+    //     $("#chronoDiv").on("resize", function(event) {
+    //         console.log('#chronoDiv.onresize',event)
+    //         axes.refreshLayout()
+    //         return false
+    //       })
+
+
+    /* ## Init chronogram content ## */
+    
+    initActivities()     
+    initTagIntervals()
 }
-var updateChronoDomain = function(){
-    console.log('updateChronoDomain not yet defined')
-}
+
+/* Synchronization between chronogram, video and chronogramData */
 function domainxFromVideo() {
     var domain
     if (isNaN(videoinfo.duration))
@@ -2160,146 +2280,247 @@ function domainxFromVideo() {
     return domain
 }
 function domainxFromChronogramData() {
-    return [d3.min(chronogramData,
-                function(d) {
-                    return Number(d.x) - 0.5;
-                }),
-            d3.max(chronogramData,
-                function(d) {
-                    return Number(d.x) + 0.5;
-                })
-        ]
+    if (chronogramData.length === 0) return [0,1]
+    var range = d3.extent(chronogramData, function(d) {return Number(d.x); })
+    return [range[0]-0.5, range[1]+0.5] // add some margin
 }
 function domainyFromChronogramData() {
-
-    // FIXME: hardcoded for testing
-    return [0,20]
-
-    if (chronogramData.length>0)
-    return [d3.min(chronogramData,
-                function(d) {
-                    return Number(d.y);
-                }),
-            d3.max(chronogramData,
-                function(d) {
-                    return Number(d.y) + 1.0;
-                })
-        ]
-    else
-        return [0,1]
+    if (chronogramData.length === 0) return [0,1]
+    var range = d3.extent(chronogramData, function(d) {return Number(d.y); })
+    return [range[0], range[1]+1.0] // Add 1.0 for the height of the interval
 }
+
+/* Update chronogram axes properties */
 function updateChronoXDomainFromVideo() {
-    vis.xScale.domain(domainxFromVideo())
+    axes.xdomain(domainxFromVideo())
 }
 function updateChronoYDomain() {
-    vis.yScale.domain(domainyFromChronogramData())
+    axes.ydomain(domainyFromChronogramData())
 }
-function initChrono() {
+function updateTimeMark() {
+    var frame = getCurrentFrame();
+    if (typeof frame == "undefined") {
+      frame = 0;
+    }
+    axes.setTimeMark(frame);
+}
 
+/* Callbacks to react to changes in chronogram axes */
+function onAxesClick(event) {
+    // User clicked in chronogram axes
+    var frame = event.frame
+    var id = event.id
+    console.log("onAxesClick: seeking to frame=",frame,"...");
+ 
+    video2.seekTo({'frame':frame})
+    // external controller logic is supposed to call back updateTimeMark
+    // to update the view
+}
+function onAxesChanged(event) {
+    // User zoomed, scrolled or changed chronogram range or size */
+    console.log('onAxesChanged: event=',event)
+    
+    updateChrono()
+}
+
+/* Callback to react to change in chronogramData */
+function drawChrono() {
+    // Strong update:
+    // Redraw chronogram after change in chronogramData content
+    // Need to adjust range
+    
+    updateChronoYDomain()
+    //axes.ydomain([0,20]) // Uncomment for testing
+    
+    updateChrono()
+}
+
+/* Update chronogram content */
+function updateChrono() {
+    // Weak update:
+    // Update chronogram without adjusting range
+    
+    // IMPORTANT: do not call axes.refreshAxes() or any
+    // function that triggers is such as axes.here, 
+    // as it would generate an infinite loop
+    // Put that is the stronger update function drawChrono
+    
+    // Redraw activities
+    updateActivities()
+    
+    // Redraw timeline and tagBars
+    updateTimeMark() // Normally already updated by frameChanged
+
+    updateTagIntervals()
+}
+
+
+function ChronoAxes(parent) {
+    // Create by passing the SVG parent element as D3 selector
+    // Axes adjust automatically to SVG size
+
+    var axes = this 
+    axes.parent = parent
+    
+    /* ### MODEL/VIEW: Layout sizes ### */
+    
     var margin = {
-            top: 70,
+            left: 60,
+            top: 15,
             right: 20,
-            bottom: 50,
-            left: 60
+            bottom: 50
         }
-    var width = 960 - margin.left - margin.right;
-    var height = 300 - margin.top - margin.bottom;
+        
+    // Local variables visible throughout the function
+    // Updated by recomputeSizes()
+    var svgWidth, svgHeight
+    var left, top, width, height
+    
+    function recomputeSizes() {
+        // Get actual width of parent SVG
+        svgWidth  = parent.node().width.baseVal.value
+        svgHeight = parent.node().height.baseVal.value
+    
+        // Compute position/dimensions of plotArea
+        left = margin.left
+        top = margin.top
+        width = svgWidth - margin.left - margin.right
+        height = svgHeight - margin.top - margin.bottom
+        
+        console.log({
+            svgWidth: svgWidth,
+            svgHeight: svgHeight,
+            left: left,
+            top: top,
+            width: width,
+            height: height
+        })
+    }
+    recomputeSizes()
+    
+    // Layout sizes exports
+    axes.margin = margin
+    // axes.recomputeSizes = recomputeSizes // Private. Called by refreshLayout()
 
-    // ## Scale objects
+
+    /* ### INTERNAL MODEL for the axes: scales */
+
+    // ## Scale objects (model that maps (frames,id) to pixels)
     var xScale = d3.scale.linear()
         .range([0, width])
     var tScale = d3.time.scale.utc()
         .range([0, width])
     var yScale = d3.scale.linear()
-        .range([0, height])
-        
-    var updateTScale=function() {
+        .range([0, height])        
+    // axis scales API
+    function updateTDomain() {        
+        /* Update tScale based on xScale */
+        // FIXME: avoid accessing global variables by deining API to change 
+        // the video parameters
         //console.log('updateTScale()')
-        var d = xScale.domain()
-        var a = new Date(videoinfo.starttime)
-        tScale.domain([ new Date(a.getTime()+d[0]/videoinfo.fps*1000) , new Date(a.getTime()+d[1]/videoinfo.fps*1000) ])
-        
-        if (vis) {
-            vis.select(".x.axis").call(vis.customXAxis);
-            vis.select(".t.axis").call(vis.tAxis);
-            vis.select(".y.axis").call(vis.yAxis);
-            
-            vis.selectAll(".t.axis > .tick > text")
-                .style("font-size", function(d) {
-                    if (d.getMilliseconds()!==0) return "8px"
-                    if (d.getSeconds()!==0) return "9px"
-                    if (d.getMinutes()!==0) return "12px"
-                    return "14px"
-                })
-
-            // FIXME: use an observer pattern instead
-            if (typeof vis.timeMark !== 'undefined')
-                updateTimeMark()
-            if (typeof activityRects !== 'undefined')
-                updateActivities(true)  // true->lightweight update
-            if (typeof tagArea !== 'undefined') {
-                updateChronoTagBars(true) // true->lightweight update
-            }
-            if (typeof tagSel !== 'undefined') {
-                updateTagIntervals(true) // true->lightweight update
-            }
-
-        }
+        var d = xScale.domain()  // Get X domain expressed in frames
+        var a = new Date(videoinfo.starttime) // Get start time of video
+        tScale.domain([ new Date(a.getTime()+d[0]/videoinfo.fps*1000), 
+                        new Date(a.getTime()+d[1]/videoinfo.fps*1000) ])
     }
-    updateChronoDomain = function(domainx, domainy) {
-        xScale.domain(domainx)
-        yScale.domain(domainy)
-
-        updateTScale()
-        //tScale.domain([new Date
+    function xdomain(domain) {
+        /* Update xAxis and tAxis to domain = [firstFrame, lastFrame] */
+        xScale.domain(domain)
+        updateTDomain()
+        reinitZoom()
+        refreshAxes({'type': 'xDomainChanged','domain':domain})
+        return axes // return itself to be able to chain commands
     }
-    var reinitScale=function() {
-        xScale.domain(domainxFromVideo())
-        yScale.domain(domainyFromChronogramData())
-
-        updateTScale()
-        //tScale.domain([new Date(2012, 0, 1), new Date(2013, 0, 1)])
+    function ydomain(domain) {
+        /* Update yAxis to domain = [minID, maxID] */
+        yScale.domain(domain)
+        refreshAxes({'type': 'yDomainChanged','domain':domain})
+        return axes // return itself to be able to chain commands
     }
-    reinitScale()
+    // axis scales exports
+    axes.xScale=xScale   // Public, used by refreshTimeMark (could be closured)
+    axes.yScale=yScale
+    axes.tScale=tScale
+    axes.xdomain = xdomain
+    axes.ydomain = ydomain
+    //axes.updateTDomain=updateTDomain  // Private
+
+
+    /* ### VIEW: axes, layout */
+
+    // DOM Hierarchy of axes. e.g. for xAxisGroup:
+    // .x.axis > g.tick > line (created by xAxis)
+    // .x.axis > g.tick > text (created by xAxis)
+    // .x.axis > path.domain   (created by xAxis)
+    // .x.axis > text.label    (created by xAxisInit, updated by xAxisResized)
+    // .x.axis                 (transform updated by xAxisInit and xAxisResized)
     
-        // ## Interactive zooming (applies to the scale objects)
-    var zoom = d3.behavior.zoom()
-        .x(xScale)
-        /*.y(yScale)*/
-        .scaleExtent([1/24, 1000])
-        .on("zoom", zoomed);
-    function zoomed() { //Function inside function
-        //g_xRange = xScale;
-        //g_xZoom = zoom;
-        g_lastevent = d3.event
-        
-        updateTScale()
-        d3.event.sourceEvent.stopPropagation();
-    }
+    // How to use:
+    // xAxisGroup == d3.select('.x.axis')  /* D3 sel. of axis top <g> element */
+    // xAxisInit(xAxisGroup)     /* create the axis, labels... */
+    // xAxisResized(xAxisGroup)  /* update full axis based on layout sizes */
+    // xAxis(xAxisGroup)         /* update only the axis ticks */
 
-        
-    var rescale=function() {
-        zoom.x(xScale)
-    }
-
-// To reinit with previous scale
-//     if (g_xRange !== undefined) {
-//         zoom.scale(g_xZoom.scale())
-//         xScale.domain(g_xRange.domain());
-//     }
-
-    // ## Axis objects (display based on the scale)
+    // ## Axis creation methods for X axis
     var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient("bottom")
         .tickSize(5)
-        
-    function customXAxis(g) {
-        g.call(xAxis)
-        //g.select(".domain").remove()
-        g.selectAll(".tick text").style("font", "10px sans-serif")
+    function xAxisInit(xAxisGroup) {
+        // Create the SVG elements and styles
+        xAxisGroup.attr("transform", "translate(0," + (height+20) + ")")
+        xAxisGroup.insert("rect",":first-child").attr('class','bgRect')
+              .attr("x",0).attr("y",0)
+              .attr("width",width).attr("height",19)
+              .style("fill", "#fff0f0")
+        xAxisGroup.append("text").attr("class", "label")
+              .attr("x", -15).attr("y", 15)  // Relative to xaxis group
+              .style("text-anchor", "end")
+              .text("Frame");
+        xAxisGroup.call(xAxis) // Create axis and ticks
+        return xAxisGroup
     }
+    function xAxisResized(xAxisGroup) {
+      
+        if (true) {
+            // Change range is a way that does not break the zoom interaction
+            // See http://stackoverflow.com/questions/25875316/
 
+            (function() {
+                // Cache zoom parameters
+                var cacheScale = zoom.scale();
+                var cacheTranslate = zoom.translate();
+                var cacheTranslatePerc = zoom.translate().map( 
+                   function(v,i,a) {return (v * -1) / getFullWidth();} );
+                zoom.scale( 1 ).translate( [0, 0] );
+
+                // Change the range
+                xScale.range( [0, width] );
+
+                // Reapply zoom parameters
+                zoom.x( xScale );
+                zoom.scale( cacheScale );
+                cacheTranslate[0] = -(getFullWidth() * cacheTranslatePerc[0]);
+                zoom.translate( cacheTranslate );
+
+                function getFullWidth() { 
+                    return xScale.range()[1] * zoom.scale();
+                }
+            })()
+        } else
+            // Simple way
+            xScale.range([0, width])  // Update scaling model
+        
+        xAxis.ticks(Math.ceil(width/50)) // Around 50px per tick for frames
+
+        xAxisGroup.attr("transform", "translate(0," + (height+20) + ")")
+        xAxisGroup.selectAll(".bgRect")
+              .attr("width",width).attr("height",19)
+        xAxisGroup.call(xAxis)
+        return xAxisGroup
+    }
+    
+    // ## Axis creation methods for T axis
     var customTimeFormat = d3.time.format.multi([
       ["%S.%L", function(d) { return d.getMilliseconds(); }],
       ["%S", function(d) { return d.getSeconds(); }],
@@ -2309,158 +2530,327 @@ function initChrono() {
       ["%B", function(d) { return d.getMonth(); }],
       ["%Y", function() { return true; }]
     ]);
-
-    var tAxis = d3.svg.axis()
+    var tAxisBase = d3.svg.axis()
         .scale(tScale)
         .orient("bottom")
-        .tickSize(-height)
-        .tickFormat(customTimeFormat)        
+        .tickSize(-height)   // Used as gridline
+        .tickFormat(customTimeFormat)
+    var tAxis = function(tAxisParent) {
+        // See http://stackoverflow.com/questions/29305824 
+        // for how to customize the D3 axis object
+        //svg.selectAll(".t.axis > .tick > text") 
+        tAxisParent.call(tAxisBase)    // Update axis view (ticks, labels...)
+        tAxisParent.selectAll(".tick > text")  // Refine tick properties
+            .attr('class',function (d) {
+                // Define different classes depending on scale
+                // Loot at custom.css for how this is converted into font-size
+                if (d.getMilliseconds()!==0) return "ms_tick"
+                if (d.getSeconds()!==0) return "s_tick"
+                if (d.getMinutes()!==0) return "m_tick"
+                return "h_tick"
+            })
+    }
+    function tAxisInit(tAxisGroup) {
+        tAxisGroup.attr("transform", "translate(0," + (height) + ")")
+        tAxisGroup.insert("rect",":first-child").attr('class','bgRect')
+              .attr("x",0).attr("y",0)
+              .attr("width",width).attr("height",19)
+              .style("fill", "#f0f0f0")
+        tAxisGroup.append("text").attr("class", "label")
+          .attr("x", -15).attr("y", 15)  // Relative to taxis group
+          .style("text-anchor", "end")
+          .text("Time");
+        tAxisGroup.call(tAxis);
+        return tAxisGroup
+    }
+    function tAxisResized(tAxisGroup) {
+        tScale.range([0, width])
+        
+        tAxisBase.ticks(Math.ceil(width/100)) // Around 100px per tick for time
+        tAxisBase.tickSize(-height)
+        
+        tAxisGroup.attr("transform", "translate(0," + (height) + ")")
+        tAxisGroup.select('.bgRect')
+              .attr("x",0).attr("y",0)
+              .attr("width",width).attr("height",19)
+        tAxisGroup.call(tAxis);
+        return tAxisGroup
+    }
 
+    // ## Axis creation methods for Y axis
     var yAxis = d3.svg.axis()
         .scale(yScale)
         .orient("left")
         .ticks(5)
-        .tickSize(-width);
-
-    // ## Build the layout
-
-    vis0 = d3.select("#svgVisualize")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-    vis = vis0
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-        .call(zoom)
-    vis
-        .on("dblclick.zoom", null)
-        .on("dragstart", function(){d3.event.sourceEvent.stopPropagation();})
-        .on("dragend", function(){d3.event.sourceEvent.stopPropagation();})
-        .on("zoomstart", function(){d3.event.sourceEvent.stopPropagation();})
-        .on("zoomend", function(){d3.event.sourceEvent.stopPropagation();})
-
+        .tickSize(-width); // Grid line
+    function yAxisInit(yAxisGroup) {
+        yAxisGroup.insert("rect",":first-child").attr('class','bgRect')
+              .attr("x",-40).attr("y",0)
+              .attr("width",40).attr("height",height)
+              .style("fill", "#fffff0")
+        yAxisGroup.append("text").attr("class", "label")
+            .attr("transform", "rotate(-90, -30, "+(height/2)+")")
+            .attr("x", -40).attr("y", height/2)
+            //.attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Bee ID");
+        yAxisGroup.call(yAxis);
+        return yAxisGroup
+    }
+    function yAxisResized(yAxisGroup) {
+        yScale.range([0, height])
         
-    vis.xScale=xScale
-    vis.yScale=yScale
-    
+        yAxis.ticks(Math.ceil(height/20)) // Around 20 per tick for IDs
+        yAxis.tickSize(-width); // Grid line
 
-    var plotframe = vis.append("rect").attr('class','plotframe')
+        yAxisGroup.select('.bgRect')
+              .attr("x",-40).attr("y",0)
+              .attr("width",40).attr("height",height)
+        yAxisGroup.select('.label')
+            .attr("transform", "rotate(-90, -30, "+(height/2)+")")
+            .attr("x", -40).attr("y", height/2)
+        yAxisGroup.call(yAxis);
+        return yAxisGroup
+    }
+    
+    /*
+    axes.xAxis = xAxis    // Private
+    axes.tAxis = tAxis    // Private
+    axes.yAxis = yAxis    // Private
+    //*/
+
+    
+    // ### Layout hierarchy
+    // D3 DOM selections are children of 'svg > #chronoGroup'
+    //    example: 'svg > #chronoGroup' > .x.axis'
+    // For convenience, some elements are also stored as fields
+    // of the axes object
+    //    example: axes.xAxisGroup
+    //
+    //    D3 selection                      JS handle
+    // -----------------------------------------------------
+    // #chronoGroup                      axes.chronoGroup
+    //    .plotAreaBackground
+    //    .x.axis                        axes.xAxisGroup
+    //    .t.axis                        axes.tAxisGroup
+    //    .y.axis                        axes.yAxisGroup
+    //    #plotAreaClipPath
+    //    .plotArea                      axes.plotArea     
+    //    .timeMark                      axes.timeMark
+
+
+    // ## Top-level group with coordinates aligned with plotArea */
+    var chronoGroup = parent
+        .append("g").attr("id", "chronoGroup")
+        .attr("transform", "translate("+left+","+top+")")
+    axes.chronoGroup = chronoGroup
+    chronoGroup.append("rect").attr('class','plotAreaBackground')
         .attr("width", width)
         .attr("height", height)
         .style("fill", "#f0fcff")
         .style("stroke", "gray")
-        
-    vis.on("click",function() {
-        if (d3.event.defaultPrevented) return;
-        var coords = d3.mouse(this);
-        
-        var frame = Math.round( xScale.invert(coords[0]) );
-        
-        console.log("Chrono: click on frame=",frame);
-        
-        video2.seekTo({'frame':frame})
-    })
-
-    vis.append("clipPath")       // define a clip path
-        .attr("id", "rect-clip") // give the clipPath an ID
+    
+    // ## Axes widgets */
+    var xAxisGroup = chronoGroup.append("g").attr("class", "x axis")
+        .call(xAxisInit)
+    var tAxisGroup = chronoGroup.insert("g").attr("class", "t axis")
+        .call(tAxisInit)
+    var yAxisGroup = chronoGroup.insert("g").attr("class", "y axis")
+        .call(yAxisInit)
+    
+    // ## Plot area (clipped)
+    chronoGroup.append("clipPath")       // define a clip path
+        .attr("id", "plotAreaClipPath") // give the clipPath an ID
         .append("rect")          // shape it as a rect
         .attr("x", 0)         // position the x left
         .attr("y", 0)         // position the y top
         .attr("width", width)         
-        .attr("height", height);         
+        .attr("height", height);
+    var clippedArea = chronoGroup.insert("g")
+                      .attr("clip-path", "url(#plotAreaClipPath)")
 
-    vis.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + (height+20) + ")")
-        .call(customXAxis)
-
-    vis.insert("g")
-        .attr("class", "t axis")
-        .attr("transform", "translate(0," + (height) + ")")
-        .call(tAxis);
-
-    vis.insert("g")
-        .attr("class", "y axis")
-        .call(yAxis);
-
-    // Add the text label for the x axis
-    vis0.append("text")
-        .attr("x", margin.left-15).attr("y", margin.top+height+10)
-        .style("text-anchor", "end")
-        //.text("Frame");
-        .text("Time");
-    vis0.append("text")
-        .attr("x", margin.left-15).attr("y", margin.top+height+30)
-        .style("text-anchor", "end")
-        //.text("Frame");
-        .text("Frame");
-
-    // Add the text label for the Y axis
-    vis0.append("text")
-        .attr("transform", "rotate(-90, 10, "+(margin.top+height/2)+")")
-        .attr("x", 10).attr("y", margin.top+height/2)
-        //.attr("dy", "1em")
-        .style("text-anchor", "middle")
-        .text("Bee ID");
+    // ## Content can be inserted in plotArea
+    // so that timeMark will always be on top
+    plotArea = clippedArea.insert("g").attr("class","plotArea")
     
-    chronArea = vis.insert("g").attr("clip-path", "url(#rect-clip)")
-    chronArea.insert("rect").style("fill","none")
-        .attr("x",0).attr("y", 0)
-        .attr("width", width).attr("height", height)
-    
-    // Insert plotAreaTags before so that it renders below, 
-    // and timeMark last so it appears on top
+    axes.xAxisGroup = xAxisGroup //  Public
+    axes.tAxisGroup = tAxisGroup //  Public
+    axes.yAxisGroup = yAxisGroup //  Public
+    axes.plotArea   = plotArea   //  Public
+  
+    insertTimeMark(clippedArea)
+  
 
-    plotArea = chronArea.insert("g")
-    plotAreaTags = chronArea.insert("g")  
+          
+        
+    // ### View update and signaling ###
+        
+    function refreshLayout() {
+        /* Update layout sizes and SVG elements accordingly */
+        /* To be called when SVG has resized or user changed the margins */
+        recomputeSizes()
     
-    vis.timeMark = initTimeMark(chronArea)
-    
-    initChronoTagBars()
+        xAxisGroup.call(xAxisResized)
+        tAxisGroup.call(tAxisResized)
+        yAxisGroup.call(yAxisResized)
+        chronoGroup.attr("transform", "translate("+left+","+top+")")
+        chronoGroup.select(".plotAreaBackground")
+                   .attr("width", width)         
+                   .attr("height", height);
+        chronoGroup.select("#plotAreaClipPath > rect")
+                   .attr("width", width)         
+                   .attr("height", height);
+                   
+        chronoGroup.select(".zoomEventRect")
+                   .attr("width", width)         
+                   .attr("height", height);  
+        
+        refreshAxes({'type': 'resize'})
+    }
+    axes.refreshLayout = refreshLayout
+        
+    function triggerEvent(fun, event) {
+        /* Util function: call the callback if it is valid, else return false */
+        if (typeof fun === 'function')
+            fun(event)
+            return true
+        if (typeof fun === 'undefined')
+            return true
+        return false // Error: invalid callback
+    }
+    function refreshAxes(event) {
+        /* Redraw axes ticks. To be called when scales have changed */
+        updateTDomain() // Update tScale based on xScale
 
-    // Init elements
-    initActivities()
-    initTagIntervals()
-            
-    // Store all handles for external reuse
-    vis.rescale=rescale
-    vis.reinitScale=reinitScale
-    vis.zoom=zoom
-    vis.updateTScale=updateTScale
-    vis.customXAxis=customXAxis
-    vis.xAxis=xAxis
-    vis.yAxis=yAxis
-    vis.tAxis=tAxis
+        // Can access xAxisGroup from JS, or using D3 selector ".x.axis":
+        // xAxisGroup == axes.parent.select(".x.axis")
+        // to redraw the axes after scale change
+        chronoGroup.select('.x.axis').call(xAxis);
+        chronoGroup.select('.t.axis').call(tAxis);
+        chronoGroup.select('.y.axis').call(yAxis);
+        
+        refreshTimeMark()
+
+        // Signal the plot content should be redrawn
+        // Protection for infinite loops: trigger only if internal events
+        if (typeof event === 'object' && 
+            (event.type==='xDomainChanged' || 
+             event.type==='yDomainChanged' || 
+             event.type==='zoom_x' || 
+             event.type==='resize')) {
+            if (!triggerEvent(axes.onAxesChanged, event))
+                console.log('WARNING in refreshAxes: callback not valid, onAxesChanged=',onAxesChanged)
+                 } else {
+                     console.log('WARNING refreshAxes: onAxesChanged not called, as event not within predefined list. event=',event)
+                 }
+    }
+    axes.refreshAxes = refreshAxes
+    
+    // Callback to be defined by the user
+    // Called whenever the axes scale changed (resize or zoom)
+    axes.onAxesChanged = undefined
+
+    
+    // ### timeMark API ###
+    
+    // timeMark Methods
+    function insertTimeMark(parent) {
+        var timeMark = parent.append("rect")
+              .attr('class','timeMark') 
+        // For timeMark style, look at custom.css
+        timeMark.frame = 0    // Store current frame inside timeMark object
+        axes.timeMark = timeMark
+        refreshTimeMark()
+    }
+    function refreshTimeMark() {
+        var frame = axes.timeMark.frame;
+        axes.timeMark
+            .attr("x", function(d) {
+                return axes.xScale(frame - 0.5);
+            })
+            .attr("y", function(d) {
+                return axes.yScale.range()[0];
+            })
+            .attr("height", function(d) {
+                return axes.yScale.range()[1]-axes.yScale.range()[0];
+            })
+            .attr("width", function(d) {
+                return (axes.xScale(1) - axes.xScale(0.0));
+            })
+    }
+    function setTimeMark(frame) {
+        if (typeof axes.timeMark === 'undefined') {
+            console.log('ChronoAxes.setTimeMark called, but timeMark is undefined. Ignored.')
+            return
+        }
+        axes.timeMark.frame=frame;
+        refreshTimeMark()
+    }
+    
+    // timeMark Exports
+    axes.setTimeMark = setTimeMark
+    // axes.timeMark = timeMark // Private
+    
+    
+    
+    // ### CONTROLER: Add mouse interaction ###
+
+    // ## Zooming (applies to the xScale object only)
+    var zoom = d3.behavior.zoom()
+    zoom.x(xScale)  // horizontal zoom applies to xScale
+        /*.y(yScale)*/
+        .scaleExtent([1/24, 1000]) // Put limit in how far we can zoom in/out
+        .on("zoom", zoomed);
+    //    chronoGroup.select(".plotAreaBackground").call(zoom)
+    // Zoom behavior is applied to an invisible rect on top of the plotArea
+    chronoGroup.append("rect").attr('class', 'zoomEventRect')
+               .style("fill", "none")
+               .attr("width", width).attr("height", height)
+               .style("pointer-events", "all")
+               .call(zoom)
+    function zoomed() {
+        refreshAxes({'type': 'zoom_x', 'd3_event': d3.event})
+        // Avoid scroll event to trigger normal scrolling in the browser
+        d3.event.sourceEvent.stopPropagation(); 
+    }
+    var reinitZoom=function() {
+        zoom.x(xScale)
+    }
+    axes.reinitZoom = reinitZoom
+    
+    // ## Click callback, can be modified by the user as axes.onClick=...
+    axes.onClick = undefined
+    
+    chronoGroup.on("click",function() {
+        if (typeof axes.onClick == 'undefined') return;
+        if (d3.event.defaultPrevented) return;
+        
+        var coords = d3.mouse(this);
+        var frame = Math.round( xScale.invert(coords[0]) );
+        var id = Math.round( yScale.invert(coords[1]) );
+    
+        console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
+    
+        // Trigger the callback, passing frame and id information
+        if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id}))
+            console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+    })
+    
+    return axes
+    
+    // Usage:
+    // // Creation
+    // axes = new ChronoAxes(svgParentSelection)
+    // // Update the axis domains
+    // axes.xdomain( [ minframe, maxframe] )
+    // axes.ydomain( [ minid, maxid] )
+    // axes.refreshLayout()
+    // // Change timeMark
+    // axes.setTimeMark(frame)
+    // // Set callback when clicked
+    // axes.onClick(function(event){ event.frame...})
 }
 
-
-function initTimeMark(parent) {
-    var timeMark = parent.append("rect")
-          .attr('class','timeMark') // For timeMark style, look at custom.css
-          .call(setTimeGeom)
-    return timeMark
-}
-function setTimeGeom(selection) {
-    var frame = getCurrentFrame();
-    if (typeof frame == "undefined") {
-      frame = 0;
-    }          
-    selection
-        .attr("x", function(d) {
-            return vis.xScale(frame - 0.5);
-        })
-        .attr("y", function(d) {
-            return vis.yScale.range()[0];
-        })
-        .attr("height", function(d) {
-            return vis.yScale.range()[1]-vis.yScale.range()[0];
-        })
-        .attr("width", function(d) {
-            return (vis.xScale(1) - vis.xScale(0.0));
-        })
-}
-function updateTimeMark() {
-    vis.timeMark.call(setTimeGeom)
-}
 
 
 
@@ -2468,17 +2858,17 @@ function insertActivities(selection) {
     selection
         .insert("rect")
         .style("stroke-width", "1px")
-        .attr("class", "chrono")
+        .attr("class", "activity")
         .call(setGeomActivity)
 }
 function setGeomActivity(selection) {
     selection
         .attr("x", function(d) {
             //return xScale(Number(d.x) - 0.5);
-            return vis.xScale(Number(d.x))-4;
+            return axes.xScale(Number(d.x))-4;
         })
         .attr("y", function(d) {
-            return vis.yScale(Number(d.y) + 0.1);
+            return axes.yScale(Number(d.y) + 0.1);
         })
         .attr("width", function(d) {
             //return (xScale(Number(d.x) + 1) - xScale(Number(d.x)));
@@ -2519,12 +2909,15 @@ function updateActivities(onlyScaling) {
     // Redraw activities
     if (onlyScaling) {
       // Lightweight update (reuse previous activityRects)
+      activityRects = axes.plotArea.selectAll(".activity").data(chronogramData);
       activityRects.call(setGeomActivity)
     } else {
       // Full update
-      activityRects = plotArea.selectAll(".chrono").data(chronogramData);
+      console.log('updateActivities')
+      activityRects = axes.plotArea.selectAll(".activity").data(chronogramData)
+          .call(setGeomActivity)
       activityRects.enter().call(insertActivities)
-      activityRects.exit().remove();
+      activityRects.exit().remove()
     }
 }
 function initActivities() {
@@ -2549,16 +2942,16 @@ function setTagGeom(selection) {
     selection
         .attr("x", function(d) {
             //return xScale(Number(d.frame) - 0.5);
-            return vis.xScale(Number(d.begin));
+            return axes.xScale(Number(d.begin));
         })
         .attr("y", function(d) {
-            return vis.yScale(Number(d.id));
+            return axes.yScale(Number(d.id));
         })
         .attr("width", function(d) {
-            return vis.xScale(Number(d.end))-vis.xScale(Number(d.begin));
+            return axes.xScale(Number(d.end))-axes.xScale(Number(d.begin));
         })
         .attr("height", function(d) {
-            return vis.yScale(Number(d.id)+1)-vis.yScale(Number(d.id));
+            return axes.yScale(Number(d.id)+1)-axes.yScale(Number(d.id));
         })
 }
 function updateTagIntervals(onlyScaling) {
@@ -2566,7 +2959,7 @@ function updateTagIntervals(onlyScaling) {
     if (onlyScaling) {
       setTagGeom(tagSel)
     } else {
-      tagSel = plotArea.selectAll(".tag").data(tagIntervals);
+      tagSel = axes.plotArea.selectAll(".tag").data(tagIntervals);
       tagSel.enter().call(insertTag)
       tagSel.exit().remove();
       setTagGeom(tagSel)
@@ -2599,7 +2992,9 @@ function initChronoTagBars() {
         .ticks(5)
         .tickSize(-tagAreaWidth);
 
-    tagVis = vis0.append('g').attr('id','tagVis')
+    axes.margin.top = 65;
+    axes.refreshLayout()
+    tagVis = axes.parent.append('g').attr('id','tagVis')
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
     tagVis.insert("g")
         .attr("class", "y tagAxis")
@@ -2630,18 +3025,18 @@ function initChronoTagBars() {
     }
     function setTagBarsGeom(selection) {
         selection
-            .attr("x", function(d) {
-                return vis.xScale(Number(d.x) - 0.5);
-            })
-            .attr("y", function(d) {
-                return yTagScale(Number(d.y));
-            })
-            .attr("height", function(d) {
-                return -(yTagScale(Number(d.y)) - yTagScale(0.0));
-            })
-            .attr("width", function(d) {
-                return (vis.xScale(Number(d.x) + 0.5) - vis.xScale(Number(d.x)-0.5));
-            })
+          .attr("x", function(d) {
+              return axes.xScale(Number(d.x) - 0.5);
+          })
+          .attr("y", function(d) {
+              return axes.yTagScale(Number(d.y));
+          })
+          .attr("height", function(d) {
+              return -(axes.yTagScale(Number(d.y)) - axes.yTagScale(0.0));
+          })
+          .attr("width", function(d) {
+              return (axes.xScale(Number(d.x) + 0.5) - axes.xScale(Number(d.x)-0.5));
+          })
     }
     
     tagArea.setTagBarsGeom = setTagBarsGeom
@@ -2653,6 +3048,10 @@ function initChronoTagBars() {
 }
 
 function updateChronoTagBars(onlyScaling) {
+    if (typeof tagArea === 'undefined') {
+        console.log('updateChronoTagBars: tagArea undefined, abort.')
+        return
+    }
     if (onlyScaling) {
       tagBars = tagArea.selectAll(".tagBar")
       tagBars.call(tagArea.setTagBarsGeom)
@@ -2664,21 +3063,7 @@ function updateChronoTagBars(onlyScaling) {
     }
 }
 
-// Init of Chrono
-this.drawChrono = drawChrono
-this.updateChronoXDomainFromVideo = updateChronoXDomainFromVideo
-this.updateTimeMark = updateTimeMark
 
-this.chronogramData = chronogramData
-this.tagsChronogramData = tagsChronogramData
-// Caution: never replace these variables, as only the original onces are used inside the scope
-// To reinit chronogramData, use chrono.chronogramData.length = 0
-
-initChrono()
-
-return this
-
-} // Chronogram
 
 
 //excludedTags = [123, 129, 132, 197, 242, 444, 636, 840, 896, 970, 1512, 1555, 1561, 1600, 1602, 1605, 1610, 1611, 1612, 1627, 1639, 1640, 1643, 1655, 1786, 1853, 1973]
@@ -2690,7 +3075,7 @@ function refreshChronogram() {
     //Emptying the array so we won't have duplicates
     //for (var i = 0; i < chronogramData.length; i++)
     //    chronogramData.pop();
-    chrono.chronogramData.length = 0
+    chronogramData.length = 0
     for (let F in Tracks) {
         for (let id in Tracks[F]) {
             let chronoObs = {'x':F, 'y':id, 'Activity':""};
@@ -2705,7 +3090,7 @@ function refreshChronogram() {
                 chronoObs.Activity = "fanning";
             }
 
-            chrono.chronogramData.push(chronoObs);
+            chronogramData.push(chronoObs);
         }
     }
 
@@ -2713,7 +3098,7 @@ function refreshChronogram() {
     excludedTags = eval("["+$('#excludedTags')[0].value+']')
     
     if (1) {
-      chrono.tagsChronogramData.length = 0
+      tagsChronogramData.length = 0
       for (let F in Tags) {
           let tags = Tags[F].tags
           let count=0
@@ -2724,7 +3109,7 @@ function refreshChronogram() {
                   count += 1
           }
           let tagBar = {'x': Number(F), 'y':count}
-          chrono.tagsChronogramData.push(tagBar)
+          tagsChronogramData.push(tagBar)
       }
       //updateChronoTagBars() // included in drawChrono
     }
@@ -2796,5 +3181,5 @@ function refreshChronogram() {
         console.log("refreshChronogram: drawChrono()...")
 
     //d3.selectAll("svg > *").remove();
-    chrono.drawChrono();
+    drawChrono();
 }

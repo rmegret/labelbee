@@ -144,3 +144,30 @@ svg {
   fill: none;
   stroke: #000;
 }
+
+/* Style for axis ticks */
+.axis.x .tick > text {
+    font: 12px sans-serif;
+}
+.axis.t .tick > text.ms_tick {
+    font: 8px sans-serif;
+}
+.axis.t .tick > text.s_tick {
+    font: 9px sans-serif;
+}
+.axis.t .tick > text.m_tick {
+    font: 12px sans-serif;
+}
+.axis.t .tick > text.h_tick {
+    font: 14px sans-serif;
+}
+
+/* Axis label */
+.axis text.label {
+    font: 12px sans-serif;
+    font-weight: bold;
+}
+
+
+
+

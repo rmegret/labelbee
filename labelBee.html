@@ -26,6 +26,8 @@
   <script type="text/javascript" src="js/extern/fabric/dist/fabric.js"></script>
   <script type="text/javascript" src="js/extern/D3/d3.js"></script>
   
+  <script type="text/javascript" src="js/extern/marcj-css-element-queries-134443d/src/ResizeSensor.js"></script>
+  
   <script type="text/javascript" src="js/labelBee.js"></script>
 </head>
 
@@ -87,6 +89,14 @@
     <table>
       <tr>
         <td>
+            <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm">Load Tags</label>
+            <input type="file" value="Load Tags" style="display:none" id="loadtags">
+            <input type="button" value="Save JSON" class="btn btn-primary btn-sm" onclick="saveToFile()"  style="display:inline" id="save">
+            <label for="load" value="Load JSON" class="btn btn-primary btn-sm">Load JSON</label>
+            <input type="file" value="Load JSON" style="display:none" id="load">
+            <input type="button" value="Save CSV" class="btn btn-default btn-sm" onclick="saveToCSV()"  style="display:inline" id="saveCSV">
+            <input type="button" value="Save Bboxes" class="btn btn-default btn-sm" onclick="saveToBBoxes()"  style="display:inline" id="saveBBoxes">
+
           <p>
                   <div class="btn btn-primary">
                   <label for="selectboxVideo" class="primary">Video </label>
@@ -114,38 +124,50 @@
             <button value="Next second" onclick="forward2()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-forward"></span></button>
             <button value="Next minute" onclick="forward3()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-forward"></span></button>
 <!--             <input type="button" value="Submit info" onclick="submit_bee()" class="btn btn-info" style="position: inline"> -->
-            <!-- Undo button: disabled due to bugs
-<input type="button" value="Remove obs" onclick="removeDecision()" class="btn btn-info" style="position: inline"
-              id="special">
- -->
+<!--             Undo button: disabled due to bugs -->
+<input type="button" value="Remove obs" onclick="removeDecision()" class="btn btn-info" style="position: inline" id="special">
+
           </p>
+          
+            <div id="beeInfo" class="">
+            <b>Bee</b> ID <input type="text" size="6" value="" id="I" onkeypress="onKeyDown_IDEdit(event)" onClick="resetCheck()"></input>
+<!--             <div display="inline-block"> -->
+            <div class="checkbox-inline">
+              <label><input type="checkbox" value="" id="F">Fanning</label>
+            </div>
+            <div class="checkbox-inline">
+              <label><input type="checkbox" value="" id="P">Pollen</label>
+            </div>
+            <div class="checkbox-inline">
+              <label><input type="checkbox" value="" id="E">Entering</label>
+            </div>
+            <div class="checkbox-inline">
+              <label><input type="checkbox" value="" id="L">Departing</label>
+            </div>
+<!--             </div> -->
+            <p id="alert"></p>
+            </div>
 
           <div id="canvasresize" class="ui-widget-content">
-          <div class="canvaswrapper">
-            <video src="" id="video" style="width:400px; z-index: 1"></video>
-            <canvas id="canvas" style="z-index: 2"></canvas>
-            <canvas id="canvas1" style="border: none; z-index: 3"></canvas>
-          </div>
+              <div class="canvaswrapper">
+                <video src="" id="video" style="width:400px; z-index: 1"></video>
+                <canvas id="canvas" style="z-index: 2"></canvas>
+                <canvas id="canvas1" style="border: none; z-index: 3"></canvas>
+              </div>
           </div>
 
 <!--           <video src="" id="video" style="display:none"></video> -->
+
+          <div id="chronoDiv" class="ui-widget-content" 
+               width="400" height="200" style="padding-right: 16px;">
+              <svg id="svgVisualize" width="100%" height="100%"></svg>
+          </div>
+
         </td>
         <td>
           <div style="min-width:180px;">
                     <p></p>
-            <p>
-            <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm">Load Tags</label>
-            <input type="file" value="Load Tags" style="display:none" id="loadtags">
-            </p>
-            <p>
-            <input type="button" value="Save JSON" class="btn btn-primary btn-sm" onclick="saveToFile()"  style="display:inline" id="save">
-            <label for="load" value="Load JSON" class="btn btn-primary btn-sm">Load JSON</label>
-            <input type="file" value="Load JSON" style="display:none" id="load">
-            </p><p>
-            <input type="button" value="Save CSV" class="btn btn-default btn-sm" onclick="saveToCSV()"  style="display:inline" id="saveCSV">
-            <input type="button" value="Save Bboxes" class="btn btn-default btn-sm" onclick="saveToBBoxes()"  style="display:inline" id="saveBBoxes">
-            </p>
-          
+            <p>          
            <br/>
             <div style="border:solid #c0c0c0 1px;">
             <div class="checkbox" style="display:inline">
@@ -170,7 +192,9 @@
               <label class="checkbox-inline"><input  type="checkbox" value="" id="permanent">Permanent</label>
             </div><br/>
  -->
-            <div>
+            <div id='videoinfo'>  <!-- Note: jQuery-UI accordion -->
+              <label>Video Info</label>
+              <div>
               <p><div id="videoSize">-</div>
               <div id="canvasSize">-</div></p>
               
@@ -210,20 +234,7 @@
               <div class="frame">
                 <span id="currentFrame">Frame: 0</span>
               </div>
-            </div><br/> Activities:
-            <div class="checkbox">
-              <label><input type="checkbox" value="" id="F">Fanning</label>
-            </div>
-            <div class="checkbox">
-              <label><input type="checkbox" value="" id="P">Carrying pollen</label>
-            </div>
-            <div class="checkbox">
-              <label><input type="checkbox" value="" id="E">Entering colony</label>
-            </div>
-            <div class="checkbox">
-              <label><input type="checkbox" value="" id="L">Departing colony</label>
-            </div>
-          </div>
+            
           <br>
           <div class="checkbox">
             <label><input type="checkbox" checked="false" id="checkboxShowTrack" onclick="clickShowTrack()">showTracks</label>
@@ -237,12 +248,12 @@
           <div class="text">
           <label>Track window<input type="text" value="20" id="trackWindow" onchange="onTrackWindowChanged(event)"></label>
           </div>
+          </div>
   </div>
   </td>
   </tr>
   </table>
-  <br/><br/>
-  <svg id="svgVisualize" width="960" height="500"></svg>
+
   <br/>
   <input type="text" style="width:500px;" value="-" id="excludedTags" onchange="onExcludedTagsChanged(event)"><br/>
   Tag details
