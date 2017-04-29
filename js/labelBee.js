@@ -2881,9 +2881,9 @@ function ChronoAxes(parent) {
     // // Change timeMark
     // axes.setTimeMark(frame)
     // // Set callback when clicked
-    // axes.onClick(function(event){ event.frame...})
+    // axes.onClick = function(event){ event.frame...}
     // // Set callback when zoomed or resized
-    // axes.onAxesChanged(function(){...})
+    // axes.onAxesChanged = function(){...}
 }
 
 
