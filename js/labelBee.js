@@ -8,7 +8,6 @@ var canvas, canvas1, canvas2, ctx, ctx2, vid, play, radius = 5,
 bee = [0, 0]; //Global array that stores the value of x, y
 g_activities = ["fanning", "pollenating", "entering", "exiting"]; //global string array of activities
 var x, y, cx, cy, width, height;
-var default_id = 0;
 var video, video2;
 var Tracks = [];
 var Tags = [];
@@ -29,7 +28,8 @@ var logging = {
   "selectionEvents": false,
   "chrono": false,
   "videoEvents": false,
-  "canvasEvents": false
+  "canvasEvents": false,
+  "idPrediction": true,
 };
 var canvasTform = [0, 0, 1]; // cx,cy,scale
 var plotTrack_range_backward = 5;
@@ -245,7 +245,6 @@ function getObsHandle(frame, id, createIfEmpty) {
     var obs
     if (Tracks[frame] === undefined) {
         if (createIfEmpty) {
-            //Tracks[frame] = new Array;
             Tracks[frame] = {}
         } else {
             return undefined
@@ -255,7 +254,6 @@ function getObsHandle(frame, id, createIfEmpty) {
     if (Tracks[frame][id] === undefined) {
         if (createIfEmpty) {
             Tracks[frame][id] = new Observation(id);
-            //default_id++;
         } else {
             return undefined
         }
@@ -820,27 +818,11 @@ function onFrameChanged(event) {
     createRectsFromTracks()
 
     refresh();
-
-    computeDefaultNewID()
       
     selectBeeByID(defaultSelectedBee);
     //updateForm(null);
 }
 
-function computeDefaultNewID() {
-    let ids = getValidIDsForFrame(getCurrentFrame())
-    if (ids.length == 0) return 0
-    let id = 0
-    function contains(A,id) {
-        for (let i in A) {
-            if (A[i] == id) return true // NOTE: 4=='4' is considered true
-        }
-        return false
-    }
-    while (contains(ids,id)) id++
-    default_id =  id
-    //console.log("computeDefaultNewID: default_id=",default_id)
-}
 
 function refresh() {
     if (flagCopyVideoToCanvas) {
@@ -1593,7 +1575,7 @@ function predictId(frame, rect, mode) {
             if (checkMatch(obs, rect, mode)) {
                 if (findRect(id))
                     return {
-                        id: default_id,
+                        id: computeDefaultNewID(),
                         predicted_id: id,
                         predicted_obs: obs,
                         reason: 'conflict'
@@ -1614,7 +1596,7 @@ function predictId(frame, rect, mode) {
         if (checkMatch(obs, rect, mode)) {
             if (findRect(id))
                 return {
-                    id: default_id,
+                    id: computeDefaultNewID(),
                     predicted_id: id,
                     predicted_obs: obs,
                     reason: 'conflict'
@@ -1627,7 +1609,7 @@ function predictId(frame, rect, mode) {
         }
     }
     return {
-        id: default_id,
+        id: computeDefaultNewID(),
         reason: 'default'
     };
 }
@@ -1645,6 +1627,26 @@ function predictIdFromTags(frame, pt, mode) {
         }
     }
     return {id: undefined, tag: undefined, reason:'notFound'};
+}
+function computeDefaultNewID() {
+    var default_id = 0
+    let frame = getCurrentFrame()
+    let ids = getValidIDsForFrame(frame)
+    if (ids.length == 0) {
+        return 0
+    }
+    function contains(A,id) {
+        for (let i in A) {
+            if (A[i] == id) return true // NOTE: 4=='4' is considered true
+        }
+        return false
+    }
+    while (contains(ids,default_id)) default_id++
+    if (logging.idPrediction) {
+        console.log("computeDefaultNewID: frame=",frame," default_id=",default_id)
+        console.log("   ids=",ids)
+    }
+    return default_id
 }
 
 function onMouseDown2(ev) {
@@ -1701,6 +1703,11 @@ function onMouseDown(option) {
                 y: videoY
             }, "distance");
             $("#I").val(prediction.id)
+            
+            if (logging.idPrediction) {
+                console.log('onMouseDown: predictId         --> prediction=',prediction)
+                console.log('onMouseDown: predictIdFromTags --> predictionTag=',predictionTag)
+            }
 
             if (predictionTag.id !== undefined) {
                 // If found a tag on this frame
@@ -1969,10 +1976,7 @@ function submit_bee() {
 
     storeObs(tmpObs);
     activeObject.status = "db"
-    
-    if (final_id == default_id)
-        computeDefaultNewID() // Recompute default_id in case we just used it
-
+  
     refresh();
     refreshChronogram();
 }
