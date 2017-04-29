@@ -2226,21 +2226,19 @@ function showZoom(rect) {
 // ###########################################################
 // CHRONOGRAM
 
-
-var axes
-var activityRects
-
-var chronogramData = []
-var tagsChronogramData = []
-
 function initChrono() {
+    // global variables
+    axes = undefined
+    chronogramData = []
+    tagsChronogramData = []
+
     // SVG adjust to its parent #chronoDiv
     var svg = d3.select("#svgVisualize")    
     svg.attr("width", "100%").attr("height", "100%")
 
     /* ## Build the axes (resizable) ## */
 
-    axes = new ChronoAxes(svg)
+    axes = new ChronoAxes(svg, videoinfo)
     axes.onClick = onAxesClick         // Callback when the user clicks in axes
     axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
     
@@ -2362,9 +2360,10 @@ function updateChrono() {
 }
 
 
-function ChronoAxes(parent) {
+function ChronoAxes(parent, videoinfo) {
     // Create by passing the SVG parent element as D3 selector
     // Axes adjust automatically to SVG size
+    // videoinfo should have fields fps and starttime
 
     var axes = this 
     axes.parent = parent
@@ -2394,14 +2393,14 @@ function ChronoAxes(parent) {
         width = svgWidth - margin.left - margin.right
         height = svgHeight - margin.top - margin.bottom
         
-        console.log({
-            svgWidth: svgWidth,
-            svgHeight: svgHeight,
-            left: left,
-            top: top,
-            width: width,
-            height: height
-        })
+//         console.log({
+//             svgWidth: svgWidth,
+//             svgHeight: svgHeight,
+//             left: left,
+//             top: top,
+//             width: width,
+//             height: height
+//         })
     }
     recomputeSizes()
     
@@ -2411,6 +2410,8 @@ function ChronoAxes(parent) {
 
 
     /* ### INTERNAL MODEL for the axes: scales */
+    
+    axes.videoinfo = videoinfo
 
     // ## Scale objects (model that maps (frames,id) to pixels)
     var xScale = d3.scale.linear()
@@ -2426,9 +2427,9 @@ function ChronoAxes(parent) {
         // the video parameters
         //console.log('updateTScale()')
         var d = xScale.domain()  // Get X domain expressed in frames
-        var a = new Date(videoinfo.starttime) // Get start time of video
-        tScale.domain([ new Date(a.getTime()+d[0]/videoinfo.fps*1000), 
-                        new Date(a.getTime()+d[1]/videoinfo.fps*1000) ])
+        var a = new Date(axes.videoinfo.starttime) // Get start time of video
+        tScale.domain([ new Date(a.getTime()+d[0]/axes.videoinfo.fps*1000), 
+                        new Date(a.getTime()+d[1]/axes.videoinfo.fps*1000) ])
     }
     function xdomain(domain) {
         /* Update xAxis and tAxis to domain = [firstFrame, lastFrame] */
@@ -2835,7 +2836,7 @@ function ChronoAxes(parent) {
         // Define wrapper that calls original if test is true
         function filteredCallback() {
             var args=arguments
-            console.log('args=',args)
+            //console.log('args=',args)
             if (filterFun(d3.event))
                 originalCallback.apply(this, args)
         }
@@ -2948,7 +2949,7 @@ function updateActivities(onlyScaling) {
       activityRects.call(setGeomActivity)
     } else {
       // Full update
-      console.log('updateActivities')
+      //console.log('updateActivities')
       activityRects = axes.plotArea.selectAll(".activity").data(chronogramData)
           .call(setGeomActivity)
       activityRects.enter().call(insertActivities)
