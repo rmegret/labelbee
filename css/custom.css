@@ -168,6 +168,10 @@ svg {
     font-weight: bold;
 }
 
-
+button > p.multiline {
+    line-height: 1em;
+    margin: 0px;
+    font-size: x-small;
+}
 
 

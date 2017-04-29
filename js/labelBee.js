@@ -14,7 +14,6 @@ var Tracks = [];
 var Tags = [];
 var buttonManip;
 var undo = new Observation(0);
-var alert1;
 var transformFactor = 1.0;
 var vis;
 var videoinfo;
@@ -163,6 +162,15 @@ function init() {
     //loadFromFile0('data/Tracks-demo.json')
 }
 
+function printMessage(html, color) {
+    if (typeof color === 'undefined') color='black'
+    var alert1 = document.getElementById("alert");
+    alert1.style.color = color;
+    alert1.innerHTML = html
+    
+    if (html !== "")
+        console.log("MESSAGE: %c"+html, "color:"+color)
+}
 
 // ######################################################################
 // MODEL: Tracks data structure
@@ -203,7 +211,7 @@ function cloneObs(obs) {
 function getValidIDsForFrame(frame) {
     // Return an Iterator to Tracks[frame]
 
-    if (Tracks[frame] === undefined) {
+    if (typeof Tracks[frame] === 'undefined') {
         return [];
     }
     //NO: var ids = Array.from(Tracks[frame].keys()) // Problem: includes ids to undefined values also
@@ -211,7 +219,7 @@ function getValidIDsForFrame(frame) {
     let trackf = Tracks[frame];
     let ids = [];
     for (let id in trackf) {
-        if (trackf[id] !== undefined) {
+        if (typeof trackf[id] !== 'undefined') {
             ids.push(id);
         }
     }
@@ -276,24 +284,6 @@ function storeObs(tmpObs) {
     if (logging.submitEvents)
         console.log("Submitting obs = ", obs)
 }
-
-// function doesExistButton(ID) {
-//     for (frame in Tracks) {
-//         for (let id in Tracks[frame]) {
-//             if (id == ID) {
-//                 buttonManip2 = document.getElementById("special2");
-//                 buttonManip2.className = "btn btn-danger btn-sm";
-//                 buttonManip2.value = "Taken";
-//                 return true;
-//             }
-//         }
-//     }
-// 
-//     buttonManip2 = document.getElementById("special2");
-//     buttonManip2.className = "btn btn-success btn-sm";
-//     buttonManip2.value = "Free to use";
-//     return false;
-// }
 
 function changeObservationID(frame, old_id, new_id) {
     // REMI: modified to be be independent of View
@@ -508,7 +498,6 @@ function onKeyDown_IDEdit(event) {
         console.log("onKeyDown_IDEdit: event=",event)
     var key = event.which || event.keyCode;
     if (key == 13) { // Enter
-        let alert1 = document.getElementById("alert");
         let frame = getCurrentFrame()
         let fieldID = document.getElementById("I");
         let new_id = fieldID.value
@@ -516,24 +505,21 @@ function onKeyDown_IDEdit(event) {
         let activeObject = canvas1.getActiveObject()
         if (activeObject.status === "new") {
             activeObject.id = new_id
-            alert1.innerHTML = "ID changed + submitted"
-            alert1.style.color = "green";
+            printMessage("ID changed + submitted", "green")
             submit_bee(activeObject)
         } else /* status=="db"*/ {
             let old_id = activeObject.id
             if (changeObservationID(frame, old_id, new_id)) {
                 // Successfull
                 activeObject.id = new_id
-                alert1.innerHTML = "ID changed succesfully!"
-                alert1.style.color = "green";
+                printMessage("ID changed succesfully!", "green")
             } else {
                 console.log("onKeyDown_IDEdit: unsuccessfull ID change", {
                     object: activeObject,
                     old_id: old_id,
                     new_id: new_id
                 })
-                alert1.innerHTML = "ID not changed"
-                alert1.style.color = "red";
+                printMessage("ID not changed", "orange")
             }
             refresh();
             refreshChronogram()
@@ -547,9 +533,7 @@ function onKeyDown(e) {
     if (e.target == document.getElementById("I")) {
         if (e.keyCode==32 || e.keyCode==188 || e.keyCode==190) {
           console.log("onKeyDown: detected keydown happened in textfield #I with keyCode for navigation shortcuts. Canceling it and showing a message.")
-          alert1 = document.getElementById("alert");
-          alert1.style.color = "green";
-          alert1.innerHTML = "Editing ID. Press ESC to exit...";
+          printMessage("Editing ID. Press ESC to exit...", "green")
           return false
         }
     }
@@ -830,18 +814,32 @@ function onFrameChanged(event) {
     $('#vidTime').html("Video Time: " + video2.toHMSm(getCurrentVideoTime()))
     $('#realTime').html("Real Time: " + toLocaleISOString(getCurrentRealDate()))
 
-    alert1 = document.getElementById("alert");
-    alert1.style.color = "black";
-    alert1.innerHTML = "";
+    printMessage("")
 
     canvas1.clear();
     createRectsFromTracks()
 
     refresh();
 
-    default_id = 0; // Default to 0, then incremented inside if already used    
+    computeDefaultNewID()
+      
     selectBeeByID(defaultSelectedBee);
     //updateForm(null);
+}
+
+function computeDefaultNewID() {
+    let ids = getValidIDsForFrame(getCurrentFrame())
+    if (ids.length == 0) return 0
+    let id = 0
+    function contains(A,id) {
+        for (let i in A) {
+            if (A[i] == id) return true // NOTE: 4=='4' is considered true
+        }
+        return false
+    }
+    while (contains(ids,id)) id++
+    default_id =  id
+    //console.log("computeDefaultNewID: default_id=",default_id)
 }
 
 function refresh() {
@@ -853,6 +851,9 @@ function refresh() {
       // may have some time discrepency between video and overlay
       ctx.clearRect(0,0,video.videoWidth / transformFactor, video.videoHeight / transformFactor)
     }
+    
+    updateDeleteButton()
+    updateUndoButton()
     
     updateTimeMark()
   
@@ -1060,7 +1061,7 @@ function canvasToVideoPoint(pt) {
     }
 }
 
-// ## Fabric.js rects
+// ## Fabric.js rects vs observations
 
 function createRectsFromTracks() {
     let F = getCurrentFrame()
@@ -1068,9 +1069,33 @@ function createRectsFromTracks() {
     //console.log("createRectsFromTracks: ",{frame:F,ids:ids})
     for (let id of ids) { // For each valid bee ID, create a rect for it
         let obs = getObsHandle(F, id, false)
-        let r = videoToCanvasCoords(obs)
-        addRect(obs.ID, r.left, r.top, r.width, r.height, "db", obs)
+        addRectFromObs(obs)
     }
+}
+function addRectFromObs(obs) {
+    let r = videoToCanvasCoords(obs)
+    var rect = addRect(obs.ID, r.left, r.top, r.width, r.height, "db", obs)
+    return rect
+}
+function updateRectObsGeometry(activeObject) {
+    let videoRect = canvasToVideoCoords(activeObject)
+    
+    // Update Observation attached to rectangle from current Rect size
+    let obs = activeObject.obs
+    obs.x = videoRect.x
+    obs.y = videoRect.y
+    obs.width = videoRect.width
+    obs.height = videoRect.height
+    obs.cx = (videoRect.x + videoRect.width / 2);
+    obs.cy = (videoRect.y + videoRect.height / 2);
+}
+function updateRectObsActivity(activeObject) {
+    // Update Observation attached to rectangle from Form information
+    let obs = activeObject.obs
+    obs.bool_acts[0] = $('#F').prop('checked');
+    obs.bool_acts[1] = $('#P').prop('checked');
+    obs.bool_acts[2] = $('#E').prop('checked');
+    obs.bool_acts[3] = $('#L').prop('checked');
 }
 
 // ## Direct canvas drawing
@@ -1434,9 +1459,7 @@ function addRectInteractive(id, startX, startY) {
             $('#I')[0].focus() // Set focus to allow easy ID typing
             $('#I')[0].select()
             
-            alert1 = document.getElementById("alert");
-            alert1.style.color = "green";
-            alert1.innerHTML = "Press enter to validate ID";
+            printMessage("Press enter to validate ID", "green")
         } else {
             // Not enough drag to define a new rectangle
             canvas1.deactivateAll()
@@ -1495,9 +1518,6 @@ function addRect(id, startX, startY, width, height, status, obs) {
 
     rect.setControlVisible('mtr', false)
     canvas1.add(rect);
-
-    if (parseInt(default_id) <= id)
-        default_id = parseInt(id) + 1;
 
     if (logging.addRect)
         console.log("added");
@@ -1644,14 +1664,8 @@ function onMouseDown(option) {
     if (logging.mouseEvents)
         console.log('onMouseDown: option=', option)
     
-    alert1 = document.getElementById("alert");
-    alert1.style.color = "black";
-    alert1.innerHTML = "";
+    printMessage("")
 
-    //console.log('onMouseDown',option)
-    //resetCheck(); //Check button goes back to blue
-    alert1 = document.getElementById("alert");
-    alert1.innerHTML = "";
     if (typeof option.target != "undefined") {
         // Clicked on an existing object
         if (logging.mouseEvents)
@@ -1809,6 +1823,7 @@ function onObjectSelected(option) {
         }
         selectBee(option.target)
         lastSelected = option.target
+        updateDeleteButton()
     }
 }
 
@@ -1826,6 +1841,7 @@ function onObjectDeselected(option) {
             lastSelected = null
             refresh()
         }
+        updateDeleteButton()
     }
 }
 
@@ -1876,28 +1892,6 @@ function onActivityChanged(event) {
         updateRectObsActivity(activeObject)
         automatic_sub()
     }
-}
-
-
-function updateRectObsGeometry(activeObject) {
-    let videoRect = canvasToVideoCoords(activeObject)
-    
-    // Update Observation attached to rectangle from current Rect size
-    let obs = activeObject.obs
-    obs.x = videoRect.x
-    obs.y = videoRect.y
-    obs.width = videoRect.width
-    obs.height = videoRect.height
-    obs.cx = (videoRect.x + videoRect.width / 2);
-    obs.cy = (videoRect.y + videoRect.height / 2);
-}
-function updateRectObsActivity(activeObject) {
-    // Update Observation attached to rectangle from Form information
-    let obs = activeObject.obs
-    obs.bool_acts[0] = $('#F').prop('checked');
-    obs.bool_acts[1] = $('#P').prop('checked');
-    obs.bool_acts[2] = $('#E').prop('checked');
-    obs.bool_acts[3] = $('#L').prop('checked');
 }
 
 
@@ -1952,9 +1946,7 @@ function updateForm(activeObject) {
 function submit_bee() {
     var activeObject = canvas1.getActiveObject();
     if (activeObject === null) {
-        alert1 = document.getElementById("alert");
-        alert1.style.color = "red";
-        alert1.innerHTML = "No bee selected";
+        printMessage("No bee selected", "red")
         return false;
     }
 
@@ -1962,16 +1954,12 @@ function submit_bee() {
     let final_id = activeObject.id;
     if (activeObject.status === "new" && getObsHandle(getCurrentFrame(), final_id, false) !== undefined) {
         console.log('submit_bee: trying to replace existing bee with new observation. ABORT')
-        alert1 = document.getElementById("alert");
-        alert1.style.color = "red";
-        alert1.innerHTML = "Conflict of ID: bee " + final_id + " already exists in this frame.";
+        printMessage("Conflict of ID: bee " + final_id + " already exists in this frame.", "red")
         return false;
     }
     if (activeObject.status === "db" && getObsHandle(getCurrentFrame(), final_id, false) === undefined) {
         console.log('submit_bee: rectangle supposed to be existing in DB, but not found. Writing anyway.')
-        alert1 = document.getElementById("alert");
-        alert1.style.color = "red";
-        alert1.innerHTML = "Internal issue. See console.log";
+        printMessage("Internal issue. See console.log", "red")
         return true;
     }
 
@@ -1979,34 +1967,14 @@ function submit_bee() {
     tmpObs.ID = final_id;
     //updateForm(activeObject);
 
-    /*
-    // All that has already been updated continuously
-    tmpObs.time = video.currentTime;
-    tmpObs.frame = getCurrentFrame();
-    
-    let videoRect = canvasToVideoCoords(activeObject)
-    tmpObs.x = videoRect.x
-    tmpObs.y = videoRect.y
-    tmpObs.width = videoRect.width
-    tmpObs.height = videoRect.height
-    tmpObs.cx = (videoRect.x + videoRect.width / 2);
-    tmpObs.cy = (videoRect.y + videoRect.height / 2);
-    
-    tmpObs.marked = $('#marked').prop('checked');
-    tmpObs.permanent = $('#permanent').prop('checked');
-    tmpObs.bool_acts[0] = $('#F').prop('checked');
-    tmpObs.bool_acts[1] = $('#P').prop('checked');
-    tmpObs.bool_acts[2] = $('#E').prop('checked');
-    tmpObs.bool_acts[3] = $('#L').prop('checked');
-    */
-
     storeObs(tmpObs);
     activeObject.status = "db"
+    
+    if (final_id == default_id)
+        computeDefaultNewID() // Recompute default_id in case we just used it
 
     refresh();
-
     refreshChronogram();
-    resetRemove(); //you lose your chance of undoing remove
 }
 
 function automatic_sub() {
@@ -2042,8 +2010,10 @@ function selectBeeByID(id) {
 function selectBee(rect) {
     if (logging.selectionEvents)
         console.log("selectBee: rect=", rect);
-    let beeId = rect.id;
-    
+        
+    updateDeleteButton()
+        
+    let beeId = rect.id;    
     defaultSelectedBee = beeId;
 
     // Update form from rect
@@ -2058,6 +2028,7 @@ function deselectBee() {
     canvas1.deactivateAll().renderAll(); // Deselect rect
     updateForm(null)
     defaultSelectedBee = undefined // Do not keep default when explicit deselect
+    updateDeleteButton()
 }
 // getSelectedID: return undefined or an id
 function getSelectedID() {
@@ -2075,55 +2046,116 @@ function getSelectedRect() {
     return canvas1.getActiveObject();
 }
 
-function deleteObjects() { //Deletes selected rectangle(s) when remove bee is pressed
-    //Deletes an observation
+/* Deleting bees and undo stack */
+
+// CONTROL
+
+function deleteSelected() { 
+    //Deletes selected rectangle(s)/observation when remove bee is pressed
     var activeObject = canvas1.getActiveObject()
     var activeGroup = canvas1.getActiveGroup()
 
     if (activeObject) {
         canvas1.remove(activeObject);
-        console.log("deleteObjects",activeObject.id);
+        console.log("deleteObjects ",activeObject.id);
         if (obsDoesExist(getCurrentFrame(), activeObject.id)) {
-            undo = Tracks[video2.get()][activeObject.id];
-            console.log("This is undo");
-            console.log(undo);
+            obs = cloneObs(Tracks[video2.get()][activeObject.id])
             delete Tracks[video2.get()][activeObject.id];
+            undoPush('delete', obs)
         }
 
+        refresh()
         refreshChronogram();
     }
-
-    refresh()
 }
+function undoAction() {
+    var undoInfo = undoPop()
+    if (typeof undoInfo !== 'undefined') {
+        if (undoInfo.action==='delete') {
+            let obs = undoInfo.obs
+            
+            if (obs.frame != getCurrentFrame()) {
+                // Put it back in the DB and jump to frame
+                storeObs(obs);
+                video2.seekTo({'frame':obs.frame})
+                return
+            }
+            
+            storeObs(obs);
+            rect = addRectFromObs(obs)
+            console.log("rect=",rect)
+            canvas1.setActiveObject(rect)
+            //submit_bee()
+            selectBee(rect)
+        }
+    
+        refresh();
+        refreshChronogram();
+    }
+}
+function updateDeleteButton() {
+    if (canvas1.getActiveObject() === null) {
+        $('#deleteButton').addClass('disabled')
+    } else {
+        $('#deleteButton').removeClass('disabled')
+    }
+}
+
+// MODEL
 
 var undoStack = []
 function undoPush(action, info) {
   if (action==="new") {
-      let rect = info
-      undoStack.push({action: action, id: rect.id})
+      let obs = info
+      undoStack.push({action: action, obs: obs})
   }
   if (action==="delete") {
-      let rect = info
-      undoStack.push({action: action, oldObs: rect.obs})
+      let obs = info
+      undoStack.push({action: action, obs: obs})
   }
   if (action==="move") {
       let rect = info
       undoStack.push({action: action, oldObs: rect.obs})
   }
+  updateUndoButton()
 }
 function undoPop() {
-  if (undoStack.length===0) return;
-  if (action==="new") {
-      let rect = info
-      undoStack.push({action: action, id: rect.id})
+  if (undoStack.length===0) {
+      console.log('ERROR: undoPop called with empty stack')
+      return undefined;
   }
+  var undoInfo = undoStack.pop()
+  console.log('undoPop: undoInfo=',undoInfo)
+  var action = undoInfo.action
   if (action==="delete") {
-      let rect = info
-      undoStack.push({action: action, oldObs: rect.obs})
+      // Ok, we got it
+  } else {
+      console.log('Undo '+action+': not implemented')
+      return undefined
   }
-  if (action==="move") {
-      let rect = info
-      undoStack.push({action: action, oldObs: rect.obs})
+  updateUndoButton()
+  return undoInfo
+}
+function updateUndoButton() {
+  if (undoStack.length == 0) {
+      $('#undoButton').addClass('disabled')
+      $('#undoButton').val("Undo")
+      return
+  } else {
+      $('#undoButton').removeClass('disabled')
+  }
+      
+  var undoInfo = undoStack[undoStack.length-1]
+  var action=undoInfo.action
+  if (action==="delete") {
+      let obs = undoInfo.obs
+      if (obs.frame == getCurrentFrame()) {
+          $('#undoButton').html("Undelete "+obs.ID)
+      } else {
+          $('#undoButton').html("<p class='multiline'>Undelete "+obs.ID+'<br> in frame '+obs.frame+'</p>')
+      }
+  } else {
+      $('#undoButton').val("Undo?")
   }
 }
 
@@ -2182,39 +2214,7 @@ function showZoom(rect) {
 
 
 
-// ## Removing
 
-function removeDecision() {
-    buttonManip = document.getElementById("special");
-    if (buttonManip.className == "btn btn-info") {
-        deleteObjects();
-        buttonManip = document.getElementById("special");
-        buttonManip.className = "btn btn-danger";
-        buttonManip.value = "Undo";
-    } else {
-        undoRemoveObs();
-    }
-}
-
-
-function undoRemoveObs() {
-    buttonManip = document.getElementById("special");
-    buttonManip.className = "btn btn-success";
-    buttonManip.value = "Undo Successful";
-
-    storeObs(undo);
-
-    refresh();
-
-    refreshChronogram();
-}
-
-function resetRemove() {
-// Disabled for now
-//     buttonManip = document.getElementById("special");
-//     buttonManip.className = "btn btn-info";
-//     buttonManip.value = "Remove obs";
-}
 
 
 
@@ -2225,7 +2225,7 @@ function resetRemove() {
 var axes
 var activityRects
 
-var chronogramData = [] // make it local scope
+var chronogramData = []
 var tagsChronogramData = []
 
 function initChrono() {
@@ -2620,7 +2620,8 @@ function ChronoAxes(parent) {
     //*/
 
     
-    // ### Layout hierarchy
+    /* ### Layout hierarchy of the axes ### */
+    
     // D3 DOM selections are children of 'svg > #chronoGroup'
     //    example: 'svg > #chronoGroup' > .x.axis'
     // For convenience, some elements are also stored as fields
@@ -2672,15 +2673,14 @@ function ChronoAxes(parent) {
     // ## Content can be inserted in plotArea
     // so that timeMark will always be on top
     plotArea = clippedArea.insert("g").attr("class","plotArea")
-    
-    axes.xAxisGroup = xAxisGroup //  Public
-    axes.tAxisGroup = tAxisGroup //  Public
-    axes.yAxisGroup = yAxisGroup //  Public
-    axes.plotArea   = plotArea   //  Public
   
     insertTimeMark(clippedArea)
   
-
+    // Exports of the layout
+    //axes.xAxisGroup = xAxisGroup //  Private
+    //axes.tAxisGroup = tAxisGroup //  Private
+    //axes.yAxisGroup = yAxisGroup //  Private
+    axes.plotArea   = plotArea   //  Public
           
         
     // ### View update and signaling ###
@@ -2786,11 +2786,9 @@ function ChronoAxes(parent) {
         axes.timeMark.frame=frame;
         refreshTimeMark()
     }
-    
     // timeMark Exports
-    axes.setTimeMark = setTimeMark
     // axes.timeMark = timeMark // Private
-    
+    axes.setTimeMark = setTimeMark
     
     
     // ### CONTROLER: Add mouse interaction ###
@@ -2844,11 +2842,13 @@ function ChronoAxes(parent) {
     // // Update the axis domains
     // axes.xdomain( [ minframe, maxframe] )
     // axes.ydomain( [ minid, maxid] )
-    // axes.refreshLayout()
+    // axes.refreshLayout() // Read directly svgParent size
     // // Change timeMark
     // axes.setTimeMark(frame)
     // // Set callback when clicked
     // axes.onClick(function(event){ event.frame...})
+    // // Set callback when zoomed or resized
+    // axes.onAxesChanged(function(){...})
 }
 
 
