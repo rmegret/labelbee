@@ -30,6 +30,7 @@ var logging = {
   "videoEvents": false,
   "canvasEvents": false,
   "idPrediction": true,
+  "axesEvents": false
 };
 var canvasTform = [0, 0, 1]; // cx,cy,scale
 var plotTrack_range_backward = 5;
@@ -2314,7 +2315,8 @@ function onAxesClick(event) {
     // User clicked in chronogram axes
     var frame = event.frame
     var id = event.id
-    console.log("onAxesClick: seeking to frame=",frame,"...");
+    if (logging.axesEvents)
+        console.log("onAxesClick: seeking to frame=",frame,"...");
  
     video2.seekTo({'frame':frame})
     // external controller logic is supposed to call back updateTimeMark
@@ -2322,7 +2324,8 @@ function onAxesClick(event) {
 }
 function onAxesChanged(event) {
     // User zoomed, scrolled or changed chronogram range or size */
-    console.log('onAxesChanged: event=',event)
+    if (logging.axesEvents)
+        console.log('onAxesChanged: event=',event)
     
     updateChrono()
 }
@@ -2744,9 +2747,9 @@ function ChronoAxes(parent) {
              event.type==='resize')) {
             if (!triggerEvent(axes.onAxesChanged, event))
                 console.log('WARNING in refreshAxes: callback not valid, onAxesChanged=',onAxesChanged)
-                 } else {
-                     console.log('WARNING refreshAxes: onAxesChanged not called, as event not within predefined list. event=',event)
-                 }
+             } else {
+                 console.log('WARNING refreshAxes: onAxesChanged not called, as event not within predefined list. event=',event)
+             }
     }
     axes.refreshAxes = refreshAxes
     
@@ -2802,7 +2805,7 @@ function ChronoAxes(parent) {
     zoom.x(xScale)  // horizontal zoom applies to xScale
         /*.y(yScale)*/
         .scaleExtent([1/24, 1000]) // Put limit in how far we can zoom in/out
-        .on("zoom", zoomed);
+        .on("zoom", onZoom)
     //    chronoGroup.select(".plotAreaBackground").call(zoom)
     // Zoom behavior is applied to an invisible rect on top of the plotArea
     chronoGroup.append("rect").attr('class', 'zoomEventRect')
@@ -2810,7 +2813,9 @@ function ChronoAxes(parent) {
                .attr("width", width).attr("height", height)
                .style("pointer-events", "all")
                .call(zoom)
-    function zoomed() {
+    function onZoom() {
+        if (logging.axesEvents)
+            console.log('zoomed',d3.event)
         refreshAxes({'type': 'zoom_x', 'd3_event': d3.event})
         // Avoid scroll event to trigger normal scrolling in the browser
         d3.event.sourceEvent.stopPropagation(); 
@@ -2818,6 +2823,31 @@ function ChronoAxes(parent) {
     var reinitZoom=function() {
         zoom.x(xScale)
     }
+    
+    /* Monkey patch events from D3 selection */
+    function injectEventFilter(eventSource, eventType, filterFun) {
+        // Get original D3 callback
+        originalCallback = eventSource.on(eventType)
+        if (typeof originalCallback !== 'function') {
+            console.log('injectZoomEventFilter: no callback found for '+eventSource+'.on('+eventType+')')
+            return
+        }
+        // Define wrapper that calls original if test is true
+        function filteredCallback() {
+            var args=arguments
+            console.log('args=',args)
+            if (filterFun(d3.event))
+                originalCallback.apply(this, args)
+        }
+        // Replace by filtered callback
+        eventSource.on(eventType, filteredCallback)
+    }
+    // Need shift key to zoom 
+    // (to avoid zooming when just scrolling across the page)
+    injectEventFilter( chronoGroup.select(".zoomEventRect"), 
+          "wheel.zoom", function(event) {return event.shiftKey==true} )
+
+    axes.zoom = zoom  // Private
     axes.reinitZoom = reinitZoom
     
     // ## Click callback, can be modified by the user as axes.onClick=...
@@ -2831,7 +2861,8 @@ function ChronoAxes(parent) {
         var frame = Math.round( xScale.invert(coords[0]) );
         var id = Math.round( yScale.invert(coords[1]) );
     
-        console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
+        if (logging.axesEvents)
+            console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
     
         // Trigger the callback, passing frame and id information
         if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id}))
