@@ -71,6 +71,7 @@ function ChronoAxes(parent, videoinfo) {
                         new Date(a.getTime()+d[1]/axes.videoinfo.fps*1000) ])
     }
     function xdomain(domain) {
+        if (!arguments.length) return xScale.domain();
         /* Update xAxis and tAxis to domain = [firstFrame, lastFrame] */
         xScale.domain(domain)
         updateTDomain()
@@ -79,6 +80,7 @@ function ChronoAxes(parent, videoinfo) {
         return axes // return itself to be able to chain commands
     }
     function ydomain(domain) {
+        if (!arguments.length) return yScale.domain();
         /* Update yAxis to domain = [minID, maxID] */
         yScale.domain(domain)
         refreshAxes({'type': 'yDomainChanged','domain':domain})
