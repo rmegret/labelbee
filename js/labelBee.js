@@ -81,7 +81,6 @@ function init() {
 
     // ### Chronogram
     initChrono();
-    $('#excludedTags')[0].value = String(excludedTags);
 
     // ## Video + canvas
 
@@ -140,9 +139,11 @@ function init() {
     flagShowZoom = true;
     $('#checkboxShowZoom').prop('checked', flagShowZoom);
     
-    $( "#videoinfo" ).accordion({
+    $( ".collapsible" ).accordion({
         collapsible: true,
-        active: false
+        active: false,
+        heightStyle: "content",
+        animate:false
     });
 
     // ## Keyboard control
@@ -1254,6 +1255,7 @@ function plotTags(ctx) {
             msg = msg + tag.id + ' H'+tag.hamming+ ' ('+tag.c[0]+','+tag.c[1]+')<br>'
        }
        $("#tagDetails")[0].innerHTML = msg
+       console.log('plotTags: msg=',msg)
     }
 }
 function plotTag(ctx, tag, color, flags) {
@@ -2292,13 +2294,20 @@ function domainyFromChronogramData() {
     var range = d3.extent(chronogramData, function(d) {return Number(d.y); })
     return [range[0], range[1]+1.0] // Add 1.0 for the height of the interval
 }
+function domainyFromTagData() {
+    if (tagIntervals.length === 0) return [0,1]
+    var range = d3.extent(tagIntervals, function(d) {return Number(d.id); })
+    return [range[0], range[1]+1.0] // Add 1.0 for the height of the interval
+}
 
 /* Update chronogram axes properties */
 function updateChronoXDomainFromVideo() {
     axes.xdomain(domainxFromVideo())
 }
 function updateChronoYDomain() {
-    axes.ydomain(domainyFromChronogramData())
+    var a = domainyFromChronogramData()
+    var b = domainyFromTagData()
+    axes.ydomain([Math.min(a[0],b[0]),Math.max(a[1],b[1])])
 }
 function updateTimeMark() {
     var frame = getCurrentFrame();
@@ -2577,8 +2586,7 @@ function updateChronoTagBars(onlyScaling) {
 
 
 
-//excludedTags = [123, 129, 132, 197, 242, 444, 636, 840, 896, 970, 1512, 1555, 1561, 1600, 1602, 1605, 1610, 1611, 1612, 1627, 1639, 1640, 1643, 1655, 1786, 1853, 1973]
-excludedTags = [886, 1602, 1610, 1611, 1640, 1755]
+
 function refreshChronogram() {
 
     //Deleting everything on the svg so we can recreate the updated chart
@@ -2604,9 +2612,6 @@ function refreshChronogram() {
             chronogramData.push(chronoObs);
         }
     }
-
-    // FIXME: need to sanitize input
-    excludedTags = eval("["+$('#excludedTags')[0].value+']')
     
     if (1) {
       tagsChronogramData.length = 0
@@ -2616,7 +2621,7 @@ function refreshChronogram() {
           for (let i in tags) {
               let id = Number(tags[i].id)
               let hamming = Number(tags[i].hamming)
-              if ((!excludedTags.includes(id)) && (hamming===0))
+              if (hamming===0)
                   count += 1
           }
           let tagBar = {'x': Number(F), 'y':count}
@@ -2632,7 +2637,7 @@ function refreshChronogram() {
 //         for (let i in tags) {
 //             let id = Number(tags[i].id)
 //             let hamming = Number(tags[i].hamming)
-//             if ((!excludedTags.includes(id)) && (hamming==0)) {
+//             if (hamming==0) {
 //               let tag = {
 //                 "frame":F,
 //                 "id":id
