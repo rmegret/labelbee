@@ -472,7 +472,6 @@ function onTagsReaderLoad(event) {
     console.log(obj)
     Tags = obj;
     refreshChronogram()
-    //updateChronoTagBars()
     onFrameChanged();
     
     console.log(event)
@@ -2393,7 +2392,7 @@ function updateChrono() {
     // Redraw activities
     updateActivities()
     
-    // Redraw timeline and tagBars
+    // Redraw timeline
     updateTimeMark() // Normally already updated by frameChanged
 
     updateTagIntervals()
@@ -2517,102 +2516,11 @@ function updateTagIntervals(onlyScaling) {
     }
 }
 function initTagIntervals() {
-    tagsData = []
+    //tagsData = []
     tagIntervals = []
     updateTagIntervals()
 }
 
-
-function initChronoTagBars() {
-
-    var margin = {
-            top: 10,
-            right: 20,
-            bottom: 10,
-            left: 60
-        }
-    var tagAreaWidth = 960 - margin.left - margin.right;
-    var tagAreaHeight = 50;
-    
-    var yTagScale = d3.scale.linear()
-        .range([tagAreaHeight,0])
-        .domain([0, 10])
-    yTagAxis = d3.svg.axis()
-        .scale(yTagScale)
-        .orient("left")
-        .ticks(5)
-        .tickSize(-tagAreaWidth);
-
-    axes.margin.top = 65;
-    axes.refreshLayout()
-    tagVis = axes.parent.append('g').attr('id','tagVis')
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-    tagVis.insert("g")
-        .attr("class", "y tagAxis")
-        .call(yTagAxis)
-    tagVis.append("line").style("stroke", "black")
-          .attr({x1:0, y1:tagAreaHeight, x2:tagAreaWidth, y2:tagAreaHeight})
-    tagVis.append("text")
-        .attr("transform", "rotate(-90, -50, "+tagAreaHeight/2+")")
-        .attr("x", -50).attr("y", margin.top+tagAreaHeight/2)
-        //.attr("dy", "1em")
-        .style("text-anchor", "middle")
-        .text("#Tags");
-
-    tagArea = tagVis.append('g').attr('id','tagArea')
-    tagArea.insert("rect").style("fill","none")
-        .attr("x",0).attr("y", -tagAreaHeight-margin.bottom)
-        .attr("width", tagAreaWidth).attr("height", tagAreaHeight)
-        
-    //tagArea.yTagScale = yTagScale
-    
-    function insertTagBars(selection) {
-        selection
-            .insert("rect")
-            .attr("class", "tagBar")
-            .style("fill", "blue")
-            .style("stroke", "blue")
-            .style("stroke-width", "1px")
-    }
-    function setTagBarsGeom(selection) {
-        selection
-          .attr("x", function(d) {
-              return axes.xScale(Number(d.x) - 0.5);
-          })
-          .attr("y", function(d) {
-              return axes.yTagScale(Number(d.y));
-          })
-          .attr("height", function(d) {
-              return -(axes.yTagScale(Number(d.y)) - axes.yTagScale(0.0));
-          })
-          .attr("width", function(d) {
-              return (axes.xScale(Number(d.x) + 0.5) - axes.xScale(Number(d.x)-0.5));
-          })
-    }
-    
-    tagArea.setTagBarsGeom = setTagBarsGeom
-    tagArea.insertTagBars = insertTagBars
-    
-    //tagsChronogramData = []
-    tagsChronogramData.length = 0
-    updateChronoTagBars()
-}
-
-function updateChronoTagBars(onlyScaling) {
-    if (typeof tagArea === 'undefined') {
-        console.log('updateChronoTagBars: tagArea undefined, abort.')
-        return
-    }
-    if (onlyScaling) {
-      tagBars = tagArea.selectAll(".tagBar")
-      tagBars.call(tagArea.setTagBarsGeom)
-    } else {
-      tagBars = tagArea.selectAll(".tagBar").data(tagsChronogramData);
-      tagBars.enter().call(tagArea.insertTagBars)
-      tagBars.exit().remove();
-      tagBars.call(tagArea.setTagBarsGeom)
-    }
-}
 
 
 
@@ -2643,26 +2551,9 @@ function refreshChronogram() {
             chronogramData.push(chronoObs);
         }
     }
+  
     
-    if (1) {
-      tagsChronogramData.length = 0
-      for (let F in Tags) {
-          let tags = Tags[F].tags
-          let count=0
-          for (let i in tags) {
-              let id = Number(tags[i].id)
-              let hamming = Number(tags[i].hamming)
-              if (hamming===0)
-                  count += 1
-          }
-          let tagBar = {'x': Number(F), 'y':count}
-          tagsChronogramData.push(tagBar)
-      }
-      //updateChronoTagBars() // included in drawChrono
-    }
-    
-    
-    tagsData.length=0
+//  tagsData.length=0
 //     for (let F in Tags) {
 //         let tags = Tags[F].tags
 //         for (let i in tags) {
