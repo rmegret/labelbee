@@ -128,6 +128,7 @@ svg {
 }
 #svgVisualize {
   border: solid 2px red;
+  min-width: 200px;
 }
 
 .plotframe {

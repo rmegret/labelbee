@@ -46,7 +46,13 @@ function ChronoAxes(parent, videoinfo) {
     // Layout sizes exports
     axes.margin = margin
     // axes.recomputeSizes = recomputeSizes // Private. Called by refreshLayout()
-
+    /* Getters for accessing computer layout */
+    axes.width = function() {
+        return width // Return local private variable
+    }
+    axes.height = function() {
+        return height // Return local private variable
+    }
 
     /* ### INTERNAL MODEL for the axes: scales */
     
@@ -293,7 +299,8 @@ function ChronoAxes(parent, videoinfo) {
     var chronoGroup = parent
         .append("g").attr("id", "chronoGroup")
         .attr("transform", "translate("+left+","+top+")")
-    axes.chronoGroup = chronoGroup
+    axes.chronoGroup = chronoGroup //  Public
+    
     chronoGroup.append("rect").attr('class','plotAreaBackground')
         .attr("width", width)
         .attr("height", height)

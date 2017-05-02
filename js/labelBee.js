@@ -51,10 +51,12 @@ function initVideoSelectbox(optionList) {
 
 function init() {
     videoinfo = {
+        'name': 'No video loaded',
         'fps': 22, 
         'realfps': 20,  //realfps = 20.0078;
         'starttime': '2016-07-15T09:59:59.360',
-        'duration': 1/fps
+        'duration': 1/fps, // Duration in seconds
+        'nframes': 1
     };
     $('#fps').val(videoinfo.fps)
     initVideoSelectbox(['testvideo.mp4','vlc1.mp4','vlc2.mp4','1_02_R_170419141405.mp4'])
@@ -734,6 +736,8 @@ function onVideoLoaded(event) {
     w = video.videoWidth
     h = video.videoHeight
     videoinfo.duration = video.duration
+    videoinfo.nframes = Math.floor(videoinfo.duration*videoinfo.fps)
+    videoinfo.name = video.src
     
     if (logging.videoEvents) {
         console.log("w=",w)
@@ -2301,6 +2305,8 @@ function initChrono() {
     
     initActivities()     
     initTagIntervals()
+    
+    initVideoSpan()
 }
 
 /* Synchronization between chronogram, video and chronogramData */
@@ -2396,6 +2402,8 @@ function updateChrono() {
     updateTimeMark() // Normally already updated by frameChanged
 
     updateTagIntervals()
+    
+    updateVideoSpan()
 }
 
 
@@ -2403,10 +2411,53 @@ function updateChrono() {
 
 
 
+function initVideoSpan() {
+    var chronoGroup = axes.chronoGroup
+    videoSpan = chronoGroup
+        .append("g").attr('id','videoSpan')
+        .attr("clip-path", "url(#videoSpanClipPath)")
+    videoSpan.append("clipPath")
+        .attr("id", "videoSpanClipPath") // give the clipPath an ID
+        .append("rect")
+        .attr("x", 0).attr("y", -15)
+        .attr("width", axes.width()).attr("height", 15)
+    videoSpan.append("rect").attr('class','background')
+        .attr("x", 0).attr("y", -15)
+        .attr("width", axes.width()).attr("height", 15)
+        .style("stroke-width", "1px")
+        .style("fill", "#f0fff0")
+    videoSpan.append("rect").attr('class','interval')
+        .attr("x", 0).attr("y", -15)
+        .attr("width", axes.width()).attr("height", 15)
+        .style("stroke", "blue")
+        .style("fill", "skyblue")
+    videoSpan.append("text").attr('class','label')
+        .style("text-anchor", "start")
+        .text("video name ?");
+}
+function updateVideoSpan() {
+    var videoSpan = axes.chronoGroup.select('#videoSpan')
+    //videoSpan.attr("transform",
+    //               "translate("+(axes.margin.left)+","+(axes.margin.top)+")")
+    videoSpan.selectAll('#videoSpanClipPath > rect')
+             .attr("width", axes.width()).attr("y", -15)
+    videoSpan.selectAll('.background')
+             .attr("x", 0).attr("y", -15)
+             .attr("width", axes.width()).attr("height", 15)
+    videoSpan.selectAll('.interval')
+             .attr("x", axes.xScale(0)).attr("y", -13)
+             .attr("width", axes.xScale(videoinfo.nframes)-axes.xScale(0))
+             .attr("height", 11);
+    videoSpan.selectAll('.label')
+             .attr("x", axes.xScale(0)+2).attr("y", -4)
+             .text(videoinfo.name.split('/').pop())
+}
+
+
+
 
 function insertActivities(selection) {
-    selection
-        .insert("rect")
+    selection.insert("rect")
         .style("stroke-width", "1px")
         .attr("class", "activity")
         .call(setGeomActivity)
@@ -2475,6 +2526,7 @@ function initActivities() {
     chronogramData.length = 0
     updateActivities()
 }
+
 
 
 function insertTag(selection) {
