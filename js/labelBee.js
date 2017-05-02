@@ -56,10 +56,10 @@ function init() {
         'starttime': '2016-07-15T09:59:59.360',
         'duration': 1/fps
     };
-    
+    $('#fps').val(videoinfo.fps)
     initVideoSelectbox(['testvideo.mp4','vlc1.mp4','vlc2.mp4','1_02_R_170419141405.mp4'])
     
-    $('#selectboxVideo')[0].selectedIndex=0; // select long video
+    $('#selectboxVideo')[0].selectedIndex=1; // select long video
 
     video2 = VideoFrame({
         id: 'video',
@@ -76,8 +76,13 @@ function init() {
     time = document.getElementById("vidTime");
     ctx = canvas.getContext('2d');
     
-    var showTags = true;
-    var showTagsTracks = false;
+    // Global
+    showTags = true;
+    showTagsTracks = false;
+    showTagsOrientation = true
+    $('#showTags')[0].checked=showTags
+    $('#showTagsTracks')[0].checked=showTagsTracks
+    $('#showTagsOrientation')[0].checked=showTagsOrientation
 
     // ### Chronogram
     initChrono();
@@ -473,7 +478,7 @@ function onTagsReaderLoad(event) {
     console.log(event)
     //$("#load")[0].value='Loaded '+fileToRead
     
-    console.log(Tags)
+    //console.log(Tags)
 }
 
 function loadTagsFromFile(event) {
@@ -715,6 +720,7 @@ function onFPSChanged(event) {
     console.log('onFPSChanged', event)
 
     videoinfo.fps = Number(event.target.value)
+    video2.frameRate = videoinfo.fps
     updateChronoXDomainFromVideo()
     drawChrono()
 }
@@ -1272,6 +1278,31 @@ function plotTag(ctx, tag, color, flags) {
     if (typeof radius === 'undefined') { radius = 5; }
 
     let pt = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+    
+    
+    if (showTagsOrientation && typeof tag.p !== 'undefined') {
+      let p = tag.p;
+      let ppt=[]
+      for (let i of [0,1,2,3]) {
+          ppt[i] = videoToCanvasPoint({"x":p[i][0], "y":p[i][1]})
+      if (false)
+          ctx.beginPath();
+          ctx.arc(ppt.x, ppt.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = 'magenta'
+          ctx.fill();
+        }
+      let dir = [ppt[1].x-ppt[2].x,ppt[1].y-ppt[2].y]
+      let m = Math.sqrt(dir[0]*dir[0]+dir[1]*dir[1])
+      dir = [dir[0]/m, dir[1]/m]
+      let L=40, L1=35, W1=4
+      ctx.beginPath();
+      ctx.moveTo(pt.x-dir[0]*L, pt.y-dir[1]*L)
+      ctx.lineTo(pt.x+dir[0]*L, pt.y+dir[1]*L)
+      ctx.lineTo(pt.x+dir[0]*L1+dir[1]*W1, pt.y+dir[1]*L1-dir[0]*W1)
+      ctx.strokeStyle = 'magenta'
+      ctx.stroke();
+    }
+    
 
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);

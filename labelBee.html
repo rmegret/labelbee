@@ -170,7 +170,7 @@
               
                 <input type="text" value="2016-07-15T09:59:59.360"  
                        id="startTime" onchange="onStartTimeChanged(event)">
-                <input type="text" value="22" id="fps" onchange="onFPSChanged(event)">
+                <input type="text" value="undefined" id="fps" onchange="onFPSChanged(event)">
               
                 <div id="realTime">Real Time:</div>
                 <div id="vidTime">Video Time:</div>
@@ -241,6 +241,9 @@
                   </div>
                   <div class="checkbox">
                     <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">showTags</label>
+                  </div>
+                  <div class="checkbox">
+                    <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">showTagsOrientation</label>
                   </div>
                   <div class="text">
                   <label>Track window<input type="text" value="20" id="trackWindow" onchange="onTrackWindowChanged(event)"></label>
