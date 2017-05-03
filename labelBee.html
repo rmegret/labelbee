@@ -59,33 +59,6 @@
 
   <div class="container main">
   
-<div id="help" class="overlay">
- 
-<a class="closehelp" href="#">Close help</a> 
- 
-<h3>Quickhelp labelbee</h3>
-<h4>Keyboard:</h4>
-<ul>
-<li><kbd>&lt;</kbd>/<kbd>&gt;</kbd>: move 1 frame backward/forward</li>
-<li><kbd>&lt;</kbd>/<kbd>&gt;</kbd>+<kbd>Shift</kbd>: move 1 s, +<kbd>Ctrl</kbd>: move 1 min, +<kbd>Shift</kbd>+<kbd>Ctrl</kbd>: move 10 min</li>
-<br>
-<li><kbd>Space</kbd> : Play video</li>
-<li><kbd>Ctrl</kbd>+<kbd>Space</kbd> : Play video x4</li>
-<li><kbd>Shift</kbd>+<kbd>Space</kbd> : Play video backward</li>
-<li><kbd>Return</kbd> : validate and save current bee annotation (becomes yellow)</li>
-<li><kbd>P</kbd> : mark/unmark pollen</li>
-<li><kbd>&larr;</kbd>, <kbd>&rarr;</kbd>, <kbd>&uarr;</kbd> and <kbd>&darr;</kbd> : move current annotation box</li>
-
-</ul>
-<h4>Mouse:</h4>
-<ul>
-<li><kbd>Click</kbd>+<kbd>Drag</kbd> : Create annotation bbox (click for first corner, drag for second corner)</li>
-<li><kbd>Shift</kbd>+<kbd>Click</kbd> : Create annotation bbox in one click (shift click on center)</li>
-</ul>
-
- 
-</div>
-  
     <table>
       <tr>
         <td>
@@ -147,6 +120,17 @@
 
             <div id='right-side'>  
             
+            <div id='userpanel' class='collapsible'>
+              <label>User/Display</label>
+              <div>
+                <label for="logout" value="Logout" class="btn btn-primary btn-sm">Log out</label>
+                <input type="button" style="display:none" id="logout" onclick="alert('not implemented')">
+              
+                <label for="fullscreen" value="Fullscreen" class="btn btn-primary btn-sm">Fullscreen</label>
+                <input type="button" value="Fullscreen" style="display:none" id="fullscreen" onclick="toggleFullScreen()">
+              </div>
+            </div>
+            
             <div id='videoinfo' class='collapsible'> 
               <label>Video Info</label>
               <div>
@@ -184,11 +168,15 @@
             <div id='I/O' class='collapsible'> 
               <label>I/O</label>
               <div>
-                <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm">Load Tags</label>
+                <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm" tabindex=0>Load Tags</label>
                 <input type="file" value="Load Tags" style="display:none" id="loadtags">
-                <input type="button" value="Save JSON" class="btn btn-primary btn-sm" onclick="saveToFile()"  style="display:inline" id="save">
-                <label for="load" value="Load JSON" class="btn btn-primary btn-sm">Load JSON</label>
+                
+                <label for="save" value="Save JSON" class="btn btn-primary btn-sm" tabindex=0>Save JSON</label>
+                <input type="button" value="Save JSON" class="btn btn-primary btn-sm" onclick="saveToFile()"  style="display:none" id="save">
+                
+                <label for="load" value="Load JSON" class="btn btn-primary btn-sm" tabindex=0>Load JSON</label>
                 <input type="file" value="Load JSON" style="display:none" id="load">
+                
                 <input type="button" value="Save CSV" class="btn btn-default btn-sm" onclick="saveToCSV()"  style="display:inline" id="saveCSV">
                 <input type="button" value="Save Bboxes" class="btn btn-default btn-sm" onclick="saveToBBoxes()"  style="display:inline" id="saveBBoxes">
               </div>
@@ -231,7 +219,7 @@
             </div>
             
             <div id='parameters' class='collapsible'>
-                <label>Parameters</label>
+                <label>Parameters <span class="glyphicon glyphicon-wrench"></span></label>
                 <div>
                   <div class="checkbox">
                     <label><input type="checkbox" checked="false" id="checkboxShowTrack" onclick="clickShowTrack()">showTracks</label>
@@ -248,6 +236,34 @@
                   <div class="text">
                   <label>Track window<input type="text" value="20" id="trackWindow" onchange="onTrackWindowChanged(event)"></label>
                   </div>
+                </div>
+            </div>
+            
+            <div id='quickhelp' class='collapsible'>
+                <label>Quick Help <span class="glyphicon glyphicon-question-sign"></span></label>
+                <div>
+
+                  <b>Keyboard:</b>
+                  <ul>
+                  <li><kbd>&lt;</kbd>/<kbd>&gt;</kbd>: move 1 frame backward/forward</li>
+                  <li>+<kbd>Shift</kbd>: move 1 s</li>
+                  <li>+<kbd>Ctrl</kbd>: move 1 min</li>
+                  <li>+<kbd>Shift</kbd>+<kbd>Ctrl</kbd>: move 10 min</li>
+                  <br>
+                  <li><kbd>Space</kbd> : Play video</li>
+                  <li><kbd>Ctrl</kbd>+<kbd>Space</kbd> : Play video x4</li>
+                  <li><kbd>Shift</kbd>+<kbd>Space</kbd> : Play video backward</li>
+                  <li><kbd>Return</kbd> : validate and save current bee annotation (becomes yellow)</li>
+                  <li><kbd>P</kbd> : mark/unmark pollen</li>
+                  <li><kbd>&larr;</kbd>, <kbd>&rarr;</kbd>, <kbd>&uarr;</kbd> and <kbd>&darr;</kbd> : move current annotation box</li>
+                  </ul>
+                  
+                  <b>Mouse:</b>
+                  <ul>
+                  <li><kbd>Click</kbd>+<kbd>Drag</kbd> : Create annotation bbox (click for first corner, drag for second corner)</li>
+                  <li><kbd>Shift</kbd>+<kbd>Click</kbd> : Create annotation bbox in one click (shift click on center)</li>
+                  </ul>
+
                 </div>
             </div>
             

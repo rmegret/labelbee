@@ -60,6 +60,7 @@ select{
   position: absolute;
   top: 53px;
 /*   margin-top: 53px; */
+  padding: 10px;
 }
 .container {
   width: 100%; /*1170px;*/
@@ -127,7 +128,7 @@ svg {
   shape-rendering: crispEdges;
 }
 #svgVisualize {
-  border: solid 2px red;
+/*   border: solid 2px red; */
   min-width: 200px;
 }
 
@@ -175,4 +176,22 @@ button > p.multiline {
     font-size: x-small;
 }
 
+#quickhelp ul {
+    padding-left: 20px;
+}
+#quickhelp kbd {
+    padding: 0px 3px;
+    font-size: 90%;
+    color: #000;
+    background-color: #bbddff;
+    border-radius: 3px;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .25);
+    border: black 1px solid;
+}
 
+.container.main:-webkit-full-screen{
+    top: 0px;
+    height: 100%;
+    width: 100%;
+    overflow:scroll;
+}

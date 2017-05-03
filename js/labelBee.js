@@ -186,6 +186,17 @@ function printMessage(html, color) {
         console.log("MESSAGE: %c"+html, "color:"+color)
 }
 
+function toggleFullScreen() {
+  var main = $('.container.main')[0]
+  if (!document.fullscreenElement) {
+      main.webkitRequestFullscreen();
+  } else {
+    if (main.exitFullscreen) {
+      main.exitFullscreen(); 
+    }
+  }
+}
+
 // ######################################################################
 // MODEL: Tracks data structure
 
