@@ -2403,7 +2403,7 @@ function onAxesClick(event) {
  
     if (frame==getCurrentFrame()) {
         // Try to select the bee in current frame
-         selectBeeByID(id))
+         selectBeeByID(id)
     } else {
         if (obsDoesExist(frame,id)) {
             // Set the id as default selection before seeking the frame
