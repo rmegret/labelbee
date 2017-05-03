@@ -52,7 +52,7 @@ function initVideoSelectbox(optionList) {
 function init() {
     videoinfo = {
         'name': 'No video loaded',
-        'fps': 22, 
+        'fps': 20, 
         'realfps': 20,  //realfps = 20.0078;
         'starttime': '2016-07-15T09:59:59.360',
         'duration': 1/fps, // Duration in seconds
