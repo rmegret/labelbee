@@ -2276,7 +2276,8 @@ function initChrono() {
 
     /* ## Build the axes (resizable) ## */
 
-    axes = new ChronoAxes(svg, videoinfo)
+    options = {useOrdinalScale: true}
+    axes = new ChronoAxes(svg, videoinfo, options)
     axes.onClick = onAxesClick         // Callback when the user clicks in axes
     axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
     
@@ -2337,16 +2338,52 @@ function domainyFromTagData() {
     var range = d3.extent(tagIntervals, function(d) {return Number(d.id); })
     return [range[0], range[1]+1.0] // Add 1.0 for the height of the interval
 }
+function validIdsDomain() {
+    if (chronogramData.length === 0) return []
+    let ids = new Set()
+    chronogramData.forEach(function(d) {ids.add(d.y)})
+    return [...ids] // Convert to array
+}
+function validTagIdsDomain() {
+    if (tagIntervals.length === 0) return []
+    let ids = new Set()
+    tagIntervals.forEach(function(d) {ids.add(d.id)})
+    return [...ids] // Convert to array
+}
+
 
 /* Update chronogram axes properties */
 function updateChronoXDomainFromVideo() {
     axes.xdomain(domainxFromVideo())
 }
 function updateChronoYDomain() {
-    var a = domainyFromChronogramData()
-    var b = domainyFromTagData()
-    //axes.ydomain([Math.min(a[0],b[0]),Math.max(a[1],b[1])])
-    axes.ydomain(['0','1','2','3','10','12'])
+    //var a = domainyFromChronogramData()
+    //var b = domainyFromTagData()
+    //axes.ydomain([Math.min(a[0],b[0]),Math.max(a[1],b[1])]) // Linear scale
+    
+    // Utility function to sort mixed numbers/alpha+number
+    // Source: http://stackoverflow.com/a/4340448
+    function parseItem (item) {
+      const [, stringPart = '', numberPart = 0] = /(^[a-zA-Z]*)(\d*)$/.exec(item) || [];
+      return [stringPart, numberPart];
+    }
+    function mixedCompare(a,b) {
+        const [stringA, numberA] = parseItem(a);
+        const [stringB, numberB] = parseItem(b);
+        const comparison = stringA.localeCompare(stringB);
+        return comparison === 0 ? Number(numberA) - Number(numberB) : comparison;
+    }
+    
+    let domain = validIdsDomain()
+    let domainTags = validTagIdsDomain()
+    domainset = new Set([...domain, ...domainTags]) // Merge the sets
+    domain = [...domainset].sort(mixedCompare) // convert back to sorted array
+    
+    if (domain.length === 0) return ['empty']
+    axes.ydomain(domain)
+    
+    //axes.ydomain(['0','1','2','3','10','12']) // Testing
+    
 }
 function updateTimeMark() {
     var frame = getCurrentFrame();
@@ -2365,8 +2402,8 @@ function onAxesClick(event) {
         console.log("onAxesClick: seeking to frame=",frame,"...");
  
     if (frame==getCurrentFrame()) {
-        // Try to select the bee
-        selectBeeByID(id)
+        // Try to select the bee in current frame
+         selectBeeByID(id))
     } else {
         if (obsDoesExist(frame,id)) {
             // Set the id as default selection before seeking the frame
@@ -2440,7 +2477,7 @@ function initVideoSpan() {
         .style("fill", "#f0fff0")
     videoSpan.append("rect").attr('class','interval')
         .attr("x", 0).attr("y", -15)
-        .attr("width", axes.width()).attr("height", 15)
+        .attr("width", 1).attr("height", 15) // Just init
         .style("stroke", "blue")
         .style("fill", "skyblue")
     videoSpan.append("text").attr('class','label')
@@ -2458,7 +2495,7 @@ function updateVideoSpan() {
              .attr("width", axes.width()).attr("height", 15)
     videoSpan.selectAll('.interval')
              .attr("x", axes.xScale(0)).attr("y", -13)
-             .attr("width", axes.xScale(videoinfo.nframes)-axes.xScale(0))
+             .attr("width", axes.xScale(videoinfo.nframes+1)-axes.xScale(0))
              .attr("height", 11);
     videoSpan.selectAll('.label')
              .attr("x", axes.xScale(0)+2).attr("y", -4)
@@ -2477,15 +2514,15 @@ function insertActivities(selection) {
 function setGeomActivity(selection) {
     selection
         .attr("x", function(d) {
-            //return xScale(Number(d.x) - 0.5);
-            return axes.xScale(Number(d.x))-4;
+            return axes.xScale(Number(d.x));
         })
         .attr("y", function(d) {
-            return axes.yScale(Number(d.y) + 0.1);
+//             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
+            return axes.yScale(Number(d.y)) + 0.1*axes.yScale.rangeBand(); // ordinal
         })
         .attr("width", function(d) {
-            //return (xScale(Number(d.x) + 1) - xScale(Number(d.x)));
-            return 8
+            return (Math.max( axes.xScale(Number(d.x) + 1) - axes.xScale(Number(d.x)), 10 )); // Min 10 pixels
+            //return 8
         })
         .attr("height", function(d) {
             //return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
@@ -2565,7 +2602,7 @@ function setTagGeom(selection) {
             return axes.xScale(Number(d.end))-axes.xScale(Number(d.begin));
         })
         .attr("height", function(d) {
-            return axes.yScale(Number(d.id)+1)-axes.yScale(Number(d.id));
+            return axes.yScale.rangeBand(); // Ordinal scale
         })
 }
 function updateTagIntervals(onlyScaling) {

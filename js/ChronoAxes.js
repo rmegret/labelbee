@@ -1,5 +1,5 @@
 
-function ChronoAxes(parent, videoinfo) {
+function ChronoAxes(parent, videoinfo, options) {
     // Create by passing the SVG parent element as D3 selector
     // Axes adjust automatically to SVG size
     // videoinfo should have fields fps and starttime
@@ -63,8 +63,15 @@ function ChronoAxes(parent, videoinfo) {
         .range([0, width])
     var tScale = d3.time.scale.utc()
         .range([0, width])
-    var yScale = d3.scale.linear()
-        .range([0, height])        
+    var yScale
+    if (options.useOrdinalScale) {
+        yScale = d3.scale.ordinal()
+        .domain([0,1,2])
+        .rangeBands([0, height],0)
+    } else {
+        yScale = d3.scale.linear()
+        .range([0, height])
+    }
     // axis scales API
     function updateTDomain() {        
         /* Update tScale based on xScale */
@@ -233,11 +240,35 @@ function ChronoAxes(parent, videoinfo) {
     }
 
     // ## Axis creation methods for Y axis
-    var yAxis = d3.svg.axis()
+    var yAxisBase = d3.svg.axis()
         .scale(yScale)
         .orient("left")
         .ticks(5)
-        .tickSize(-width); // Grid line
+        .tickSize(0); // Use manual grid creation below
+        //.tickSize(-width); // Grid line
+    var yAxis = function(yAxisParent) {
+        // See http://stackoverflow.com/questions/29305824 
+        // for how to customize the D3 axis object
+        //svg.selectAll(".t.axis > .tick > text") 
+        yAxisParent.call(yAxisBase)    // Update axis view (ticks, labels...)
+        // Create the grid manually, D3 does not seem to be able to draw a grid not centered on the ticks
+        if (options.useOrdinalScale) {
+          console.log(yScale.range())
+          let join = yAxisParent.selectAll(".gridline").data(yScale.range())
+          join.exit().remove()
+          join.enter()
+            .append("line")
+            .attr("class", "gridline")
+          join
+            .attr("x1", 0)
+            .attr("x2", width)
+            .attr("y1", function(d){ return d;})
+            .attr("y2", function(d){ return d;})
+            .attr("fill", "none")
+            .attr("stroke", "gray")
+            .attr("stroke-width", "1px")
+          }
+    }
     function yAxisInit(yAxisGroup) {
         yAxisGroup.insert("rect",":first-child").attr('class','bgRect')
               .attr("x",-40).attr("y",0)
@@ -253,10 +284,13 @@ function ChronoAxes(parent, videoinfo) {
         return yAxisGroup
     }
     function yAxisResized(yAxisGroup) {
-        yScale.range([0, height])
+        if (options.useOrdinalScale)
+            yScale.rangeBands([0, height],0)
+        else
+            yScale.range([0, height])
         
-        yAxis.ticks(Math.ceil(height/20)) // Around 20 per tick for IDs
-        yAxis.tickSize(-width); // Grid line
+        yAxisBase.ticks(Math.ceil(height/20)) // Around 20 per tick for IDs
+        //yAxisBase.tickSize(-width); // Grid line
 
         yAxisGroup.select('.bgRect')
               .attr("x",-40).attr("y",0)
@@ -330,7 +364,7 @@ function ChronoAxes(parent, videoinfo) {
     // so that timeMark will always be on top
     plotArea = clippedArea.insert("g").attr("class","plotArea")
   
-    insertTimeMark(clippedArea)
+    insertTimeMark(chronoGroup)  // Show on top of everything
   
     // Exports of the layout
     //axes.xAxisGroup = xAxisGroup //  Private
@@ -422,16 +456,17 @@ function ChronoAxes(parent, videoinfo) {
         var frame = axes.timeMark.frame;
         axes.timeMark
             .attr("x", function(d) {
-                return axes.xScale(frame - 0.5);
+                return axes.xScale(frame);
             })
             .attr("y", function(d) {
-                return axes.yScale.range()[0];
-            })
-            .attr("height", function(d) {
-                return axes.yScale.range()[1]-axes.yScale.range()[0];
+                return 0;  // In plotArea translated coordinates
             })
             .attr("width", function(d) {
                 return (axes.xScale(1) - axes.xScale(0.0));
+            })
+            .attr("height", function(d) {
+                //return axes.height() + 40;   // Extend onto the bottom axes
+                return axes.height();   // FIXME: tickMark need its own clipPath
             })
     }
     function setTimeMark(frame) {
@@ -508,7 +543,14 @@ function ChronoAxes(parent, videoinfo) {
         
         var coords = d3.mouse(this);
         var frame = Math.round( xScale.invert(coords[0]) );
-        var id = Math.round( yScale.invert(coords[1]) );
+        var id 
+        if (options.useOrdinalScale) {
+          let range = yScale.range()
+          id = Math.floor((coords[1]-range[0])/(range[1]-range[0]));
+          if (id<0 || id>= yScale.domain().length) id=undefined
+        } else {
+          id = Math.round( yScale.invert(coords[1]) );
+        }
     
         if (logging.axesEvents)
             console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
