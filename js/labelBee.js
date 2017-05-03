@@ -22,14 +22,14 @@ var logging = {
   "frameEvents": false,
   "guiEvents": false,
   "submitEvents": false,
-  "mouseEvents": false,
+  "mouseEvents": true,
   "mouseMoveEvents": false,
   "keyEvents": false,
   "selectionEvents": false,
   "chrono": false,
   "videoEvents": false,
   "canvasEvents": false,
-  "idPrediction": true,
+  "idPrediction": false,
   "axesEvents": false
 };
 var canvasTform = [0, 0, 1]; // cx,cy,scale
@@ -109,6 +109,8 @@ function init() {
     canvas1.on('object:selected', onObjectSelected); // After mousedown
     canvas1.on('selection:cleared', onObjectDeselected); // After mousedown out of existing rectangles
     $('.upper-canvas').bind('contextmenu', onMouseDown2);
+
+    //$('.upper-canvas').bind('wheel', onMouseWheel); // FIXME: Still buggy
     
     $('#video').on('mouseDown', onMouseDown);
 
@@ -214,7 +216,7 @@ function copyObs(obs, tmpObs) {
     obs.ID = tmpObs.ID;
     obs.time = tmpObs.time;
     obs.frame = tmpObs.frame;
-    obs.x = tmpObs.x; // REMI: tmpObs should have same units than obs (no transformFactor here)
+    obs.x = tmpObs.x;
     
     obs.y = tmpObs.y;
     obs.cx = tmpObs.cx;
@@ -844,11 +846,15 @@ function onFrameChanged(event) {
 function refresh() {
     if (flagCopyVideoToCanvas) {
       // Copy video to canvas for fully synchronous display
-      ctx.drawImage(video, 0, 0, video.videoWidth / transformFactor, video.videoHeight / transformFactor);
+      //ctx.drawImage(video, 0, 0, video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor);
+      ctx.drawImage(video, 
+                    canvasTransform[4], canvasTransform[5],
+                      canvasTransform[0]*canvas.width, canvasTransform[3]*canvas.height,
+                    0, 0, canvas.width, canvas.height);
     } else {
       // Rely on video under canvas. More efficient (one copy less), but
       // may have some time discrepency between video and overlay
-      ctx.clearRect(0,0,video.videoWidth / transformFactor, video.videoHeight / transformFactor)
+      ctx.clearRect(0,0,video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor)
     }
     
     updateDeleteButton()
@@ -860,10 +866,17 @@ function refresh() {
 
     //refreshChronogram();
 }
+function refreshRectFromObs() {
+    for (let rect of canvas1.getObjects()) {
+        if (typeof rect.obs !== 'undefined')
+            updateRectFromObsGeometry(rect)
+    }
+}
 function refreshOverlay() {
     // for each refresh, we need to reset everything:
     // remove all rectangles and recreate them
     if (canvas1) {
+        //refreshRectFromObs() // Avoid update loops to avoid drifting objects
         canvas1.renderAll(); // Render all rectangles
         
         if (flagShowTrack) {
@@ -1016,49 +1029,129 @@ function refreshCanvasSize(event, ui) {
     $("#videoSize")[0].innerHTML = 'videoSize: '+video.videoWidth.toString() + 'x' + video.videoHeight.toString();
     $("#canvasSize")[0].innerHTML = 'canvasSize: '+wd.toString() + 'x' + hd.toString();
     
-    let s = canvasTform[2];
-    let tx = (canvasTform[0]-vid_cx) / transformFactor + wd/2;
-    let ty = (canvasTform[1]-vid_cy) / transformFactor + hd/2;
+    //let s = canvasTform[2];
+    //let tx = (canvasTform[0]-vid_cx) / transformFactor + wd/2;
+    //let ty = (canvasTform[1]-vid_cy) / transformFactor + hd/2;
     
-    var ctx=canvas.getContext("2d");
-    ctx.transform(s,0,0,s,tx,ty);
+    canvasTransformSet([transformFactor,0, 0,transformFactor, 0,0])
     
-    var ctx1=canvas1.getContext("2d");
-    ctx1.transform(s,0,0,s,tx,ty);
+    
+    // Don't use ctx.transform, as it also reduces the drawings overlays
+    // Instead, we scale everything manually
+    //var ctx=canvas.getContext("2d");
+    //ctx.transform(...canvasTransform);
+    //var ctx1=canvas1.getContext("2d");
+    //ctx1.transform(...canvasTransform);
         
     onFrameChanged()
 }
 
-function canvasToVideoCoords(rect) {
-    return {
-        x: rect.left * transformFactor,
-        y: rect.top * transformFactor,
-        width: rect.width * transformFactor,
-        height: rect.height * transformFactor,
+var canvasTransform = [1,0, 0,1, 0,0]  // Global
+function canvasTransformSet(array) {
+    for (let i=0; i<6; i++) {
+        canvasTransform[i]=array[i]
     }
+    refreshRectFromObs()
+}
+function canvasTransformScale(scaling, center) {
+    if (canvasTransform[0]*scaling > transformFactor) 
+        scaling = transformFactor/canvasTransform[0] 
+        // Can not zoom out more than initial
+
+    canvasTransform[0]=canvasTransform[0]*scaling
+    canvasTransform[3]=canvasTransform[3]*scaling
+    canvasTransform[4]=canvasTransform[4]-canvasTransform[0]*center[0]*(scaling-1)
+    canvasTransform[5]=canvasTransform[5]-canvasTransform[3]*center[1]*(scaling-1)
+    if (canvasTransform[4]<0) canvasTransform[4]=0
+    if (canvasTransform[5]<0) canvasTransform[5]=0
+    if (canvasTransform[4]>video.videoWidth-10) canvasTransform[4]=video.videoWidth-10
+    if (canvasTransform[5]>video.videoHeight-10) canvasTransform[5]=video.videoHeight-10
+    
+    refreshRectFromObs()
+}
+function canvasTransformApplyPoint(pt, inverse) {
+    if (inverse) {
+        return {
+          x: (pt.x-canvasTransform[4])/canvasTransform[0],
+          y: (pt.y-canvasTransform[5])/canvasTransform[3]
+          }
+    } else {
+        return {
+          x: canvasTransform[0]*pt.x+canvasTransform[4],
+          y: canvasTransform[3]*pt.y+canvasTransform[5]
+          }
+    }
+}
+function canvasTransformApplyVector(vec, inverse) {
+    if (inverse) {
+        return {
+          x: vec.x/canvasTransform[0],
+          y: vec.y/canvasTransform[3]
+          }
+    } else {
+        return {
+          x: canvasTransform[0]*vec.x,
+          y: canvasTransform[3]*vec.y
+          }
+    }
+}
+function canvasTransformApplyRect(rect, inverse) {
+    // Only upright rect
+    if (inverse) {
+        return {
+          left: (rect.left-canvasTransform[4])/canvasTransform[0],
+          top: (rect.top-canvasTransform[5])/canvasTransform[3],
+          width: rect.width/canvasTransform[0],
+          height: rect.height/canvasTransform[3]   
+          }
+    } else {
+        return {
+          left: canvasTransform[0]*rect.left+canvasTransform[4],
+          top: canvasTransform[3]*rect.top+canvasTransform[5],
+          width: canvasTransform[0]*rect.width,
+          height: canvasTransform[3]*rect.height,      
+          }
+    }
+}
+
+function canvasToVideoCoords(rect) {
+    let R2 = canvasTransformApplyRect(rect)
+    return { x: R2.left, y: R2.top,
+            width: R2.width, height: R2.height
+            }
+//     return {
+//         x: rect.left * transformFactor,
+//         y: rect.top * transformFactor,
+//         width: rect.width * transformFactor,
+//         height: rect.height * transformFactor,
+//     }
 }
 function videoToCanvasCoords(obs) {
-    let transformFactor2 = transformFactor;
-    return {
-        left: obs.x / transformFactor2,
-        top: obs.y / transformFactor2,
-        width: obs.width / transformFactor2,
-        height: obs.height / transformFactor2,
-    }
-}
-function videoToCanvasPoint(pt) {
-    let transformFactor2 = transformFactor;
-    return {
-        x: pt.x / transformFactor2,
-        y: pt.y / transformFactor2,
-    }
+    let R = {left:obs.x, top:obs.y, width:obs.width, height: obs.height}
+    let R2 = canvasTransformApplyRect(R, true)
+    return R2
+//     let transformFactor2 = transformFactor;
+//     return {
+//         left: obs.x / transformFactor2,
+//         top: obs.y / transformFactor2,
+//         width: obs.width / transformFactor2,
+//         height: obs.height / transformFactor2,
+//     }
 }
 function canvasToVideoPoint(pt) {
-    let transformFactor2 = transformFactor;
-    return {
-        x: pt.x * transformFactor2,
-        y: pt.y * transformFactor2,
-    }
+    return canvasTransformApplyPoint(pt)
+//     let transformFactor2 = transformFactor;
+//     return {
+//         x: pt.x * transformFactor2,
+//         y: pt.y * transformFactor2,
+//     }
+}
+function videoToCanvasPoint(pt) {
+    return canvasTransformApplyPoint(pt, true)
+//     return {
+//         x: pt.x / transformFactor2,
+//         y: pt.y / transformFactor2,
+//     }
 }
 
 // ## Fabric.js rects vs observations
@@ -1076,6 +1169,29 @@ function addRectFromObs(obs) {
     let r = videoToCanvasCoords(obs)
     var rect = addRect(obs.ID, r.left, r.top, r.width, r.height, "db", obs)
     return rect
+}
+function updateRectFromObsGeometry(rect) {
+    let obs = rect.obs
+    if (typeof obs === 'undefined') {
+        console.log('updateRectFromObsGeometry: activeObject.obs undefined')
+        return
+    }
+
+    let canvasRect = videoToCanvasCoords(obs)
+    
+    //let cx = (canvasRect.left + canvasRect.width / 2);
+    //let cy = (canvasRect.top + canvasRect.height / 2);
+    let cx = canvasRect.left;
+    let cy = canvasRect.top;
+    
+    // CAUTION: rect.left/top are misnamed. When originX/originY='center', they
+    // Correspond to rectangle center
+    rect.setLeft(cx)     // unrotated left (rotation around center)
+    rect.setTop(cy)      // unrotated top
+    rect.setWidth(canvasRect.width)
+    rect.setHeight(canvasRect.height)
+    rect.setAngle(obs.angle)
+    rect.setCoords()
 }
 function updateRectObsGeometry(activeObject) {
     let geom = rotatedRectGeometry(activeObject);
@@ -1944,8 +2060,8 @@ function onMouseDown(option) {
                 target: rect,
                 e: option.e
             })
-        } else {
-            // If no SHIFT key, draw the box directly. Try to predict ID using TopLeft corner
+        } else if (option.e.ctrlKey) {
+            // If no SHIFT key, but CTRL key, draw the box directly. Try to predict ID using TopLeft corner
             let prediction = predictId(getCurrentFrame(), {
                 x: videoX,
                 y: videoY
@@ -1956,16 +2072,51 @@ function onMouseDown(option) {
             rect = addRectInteractive(prediction.id, startX, startY);
             if (logging.mouseEvents)
                 console.log("onMouseDown: creating new rect interactive", rect)
+        } else {
+            // If no SHIFT, nor CTRL, try to pan the image
+            //startPanning(option) // FIXME: need to debug rect update when panning
         }
 
         if (logging.mouseEvents)
             console.log("Click time: " + video.currentTime)
 
-        updateForm(rect)
+//        updateForm(rect)
     }
 
     // REMI: Select ID field to facilitate changing ID
     document.getElementById("I").focus();
+}
+
+function startPanning(option) {
+    panning={}
+    panning.p0 = {
+        x:  option.e.offsetX,
+        y:  option.e.offsetY
+    }
+    panning.canvasTransform0 = [...canvasTransform]
+
+    var onMouseMove_Panning = function(option) {
+        if (logging.mouseMoveEvents)
+            console.log("onMouseMove_Panning: option=", option);
+        var e = option.e;
+        
+        canvasTransformSet(panning.canvasTransform0)
+        canvasTransform[4] = panning.canvasTransform0[4]-(e.offsetX-panning.p0.x)*panning.canvasTransform0[0]
+        canvasTransform[5] = panning.canvasTransform0[5]-(e.offsetY-panning.p0.y)*panning.canvasTransform0[3]
+
+        refresh()
+    }
+    var onMouseUp_Panning = function(e) {
+        if (logging.mouseEvents)
+            console.log("onMouseUp_Panning: e=", e);
+        canvas1.off('mouse:move', onMouseMove_Panning);
+        canvas1.off('mouse:up', onMouseUp_Panning);
+
+        refresh();
+    }
+
+    canvas1.on('mouse:up', onMouseUp_Panning);
+    canvas1.on('mouse:move', onMouseMove_Panning);
 }
 
 // REMI: Scaling arectangle in Fabric.js does not change width,height: it changes only scaleX and scaleY
@@ -1997,6 +2148,36 @@ function onMouseUp(option) {
         console.log('onMouseUp: option=', option)
         //canvas1.off('mouse:move'); // See onMouseUp_Dragging
         // All moving stuff handled now by event onObjectModified() and onMouseUp_Dragging()
+}
+
+extraScale = 1
+function onMouseWheel(option) {
+    if (!option.shiftKey) return;
+    if (logging.mouseEvents)
+        console.log('onMouseWheel: option=', option)
+    let delta = option.originalEvent.wheelDelta;
+    
+    let scaling = Math.pow(2,delta/512)
+    
+    //var rect = canvas.getBoundingClientRect();
+    //let cx = option.originalEvent.clientX - rect.left
+    //let cy = option.originalEvent.clientY - rect.top
+    cx = option.originalEvent.offsetX
+    cy = option.originalEvent.offsetY
+
+    let center = [cx, cy]
+    
+    canvasTransformScale(scaling, center)
+    
+//     extraScale *= scaling
+//     if (extraScale<1) extraScale = 1
+    if (logging.mouseEvents) {
+        console.log('onMouseWheel: scaling=', scaling, ' center=', center)
+        console.log('onMouseWheel: canvasTransform=', canvasTransform)
+    }
+    
+    refresh()
+    option.preventDefault();
 }
 
 function onObjectSelected(option) {
