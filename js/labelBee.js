@@ -92,12 +92,15 @@ function init() {
     // ## Video + canvas
 
     canvas1 = new fabric.Canvas('canvas1');
+    //ctx1 = $('.upper-canvas')[0].getContext('2d');
+    ctx1 = $('#canvas1')[0].getContext('2d');
 
     canvas1.selectionColor = "red";
     canvas1.selectionBorderColor = "red";
     canvas1.selection = false; // REMI: disable the blue selection (allow to select several rectangles at once, which poses problem)
     canvas1.uniScaleTransform = true; // REMI: allow free rescaling of observations without constrained aspect ratio
     //canvas1.centeredScaling = true; // REMI: rescale around center
+    
     canvas1.on('mouse:down', onMouseDown);
     canvas1.on('mouse:up', onMouseUp);
     canvas1.on('object:moving', onObjectMoving); // During translation
@@ -196,25 +199,36 @@ function Observation(ID) {
     this.height = 0;
     this.marked = false;
     this.permanent = false;
+    this.angle = 0;
 
     this.bool_acts = [false, false, false, false]; //Should be kept numerical because Ram
 }
 
 function cloneObs(obs) {
-    return {
-        ID: obs.ID,
-        time: obs.time,
-        frame: obs.frame,
-        x: obs.x,
-        y: obs.y,
-        cx: obs.cx,
-        cy: obs.cy,
-        width: obs.width,
-        height: obs.height,
-        marked: obs.marked,
-        permanent: obs.permanent,
-        bool_acts: [obs.bool_acts[0], obs.bool_acts[1], obs.bool_acts[2], obs.bool_acts[3]]
-    };
+    let cloned = {}
+    copyObs(cloned, obs)
+    return cloned
+}
+
+function copyObs(obs, tmpObs) {
+    obs.ID = tmpObs.ID;
+    obs.time = tmpObs.time;
+    obs.frame = tmpObs.frame;
+    obs.x = tmpObs.x; // REMI: tmpObs should have same units than obs (no transformFactor here)
+    
+    obs.y = tmpObs.y;
+    obs.cx = tmpObs.cx;
+    obs.cy = tmpObs.cy;
+    obs.width = tmpObs.width
+    obs.height = tmpObs.height
+    obs.marked = tmpObs.marked;
+    obs.permanent = tmpObs.permanent;
+    obs.bool_acts = []
+    obs.bool_acts[0] = tmpObs.bool_acts[0];
+    obs.bool_acts[1] = tmpObs.bool_acts[1];
+    obs.bool_acts[2] = tmpObs.bool_acts[2];
+    obs.bool_acts[3] = tmpObs.bool_acts[3];
+    obs.angle = tmpObs.angle;
 }
 
 function getValidIDsForFrame(frame) {
@@ -272,21 +286,8 @@ function getObsHandle(frame, id, createIfEmpty) {
 
 function storeObs(tmpObs) {
     var obs = getObsHandle(tmpObs.frame, tmpObs.ID, true);
-    obs.ID = tmpObs.ID;
-    obs.time = tmpObs.time;
-    obs.frame = tmpObs.frame;
-    obs.x = tmpObs.x; // REMI: tmpObs should have same units than obs (no transformFactor here)
-    obs.y = tmpObs.y;
-    obs.cx = tmpObs.cx;
-    obs.cy = tmpObs.cy;
-    obs.width = tmpObs.width
-    obs.height = tmpObs.height
-    obs.marked = tmpObs.marked;
-    obs.permanent = tmpObs.permanent;
-    obs.bool_acts[0] = tmpObs.bool_acts[0];
-    obs.bool_acts[1] = tmpObs.bool_acts[1];
-    obs.bool_acts[2] = tmpObs.bool_acts[2];
-    obs.bool_acts[3] = tmpObs.bool_acts[3];
+    
+    copyObs(obs, tmpObs)
 
     if (logging.submitEvents)
         console.log("Submitting obs = ", obs)
@@ -367,7 +368,11 @@ function tracksToCSV(Tracks) {
             if (obs.bool_acts[3]) action += (action === "" ? "" : ";") + "went out"
 
             if (obs.bool_acts[1]) cargo += "pollen"
-            csv += "nodate," + F + "," + obs.ID + "," + action + "," + cargo + ",\n"
+            csv += "nodate," + F + "," + obs.ID + "," + action + "," + cargo
+            
+            csv += ','  // Shift ?
+            
+            csv += "\n"
         }
     return csv
 }
@@ -394,7 +399,7 @@ function saveToCSV() {
 }
 
 function tracksToBBoxes(Tracks) {
-    var csv = "#frame,left,top,right,bottom,pollen,arrive,leave,fanning\n"
+    var csv = "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n"
     if (Tracks === undefined) return csv
     for (let F in Tracks)
         for (let id in Tracks[F]) {
@@ -406,6 +411,7 @@ function tracksToBBoxes(Tracks) {
                      "," + Number(obs.bool_acts[2]) + // arrive
                      "," + Number(obs.bool_acts[3]) + // leave
                      "," + Number(obs.bool_acts[0]) + // fanning
+                     "," + Number(obs.angle) + // angle
                      "\n")
         }
     return csv
@@ -469,14 +475,14 @@ function loadFromFile(event) {
 }
 
 function onTagsReaderLoad(event) {
-    console.log(event.target.result);
+    //console.log(event.target.result);
     var obj = JSON.parse(event.target.result);
-    console.log(obj)
+    //console.log(obj) // Caution: heavy
     Tags = obj;
     refreshChronogram()
     onFrameChanged();
     
-    console.log(event)
+    //console.log(event)
     //$("#load")[0].value='Loaded '+fileToRead
     
     //console.log(Tags)
@@ -543,8 +549,8 @@ function onKeyDown(e) {
           return false
         }
     }
-    if (e.key == "Delete" || e.key == 'd') {
-        removeDecision();
+    if (e.key == "Delete" || e.key == 'd' || e.key == 'Backspace') {
+        deleteSelected();
         return false
     }
     if (e.key == "p") {
@@ -850,7 +856,12 @@ function refresh() {
     
     updateTimeMark()
   
-    // for each new frame, we need to reset everything:
+    refreshOverlay()
+
+    //refreshChronogram();
+}
+function refreshOverlay() {
+    // for each refresh, we need to reset everything:
     // remove all rectangles and recreate them
     if (canvas1) {
         canvas1.renderAll(); // Render all rectangles
@@ -859,15 +870,13 @@ function refresh() {
             plotTracks(ctx);
         }
         
-        plotBees(ctx); // Identify the rectangles
+        //plotBees(ctx1); // Not needed, identification done directly in BeeRect
         
         if (showTagsTracks)
             plotTagsTracks(ctx)
         else if (showTags)
             plotTags(ctx)
     }
-
-    //refreshChronogram();
 }
 
 // ## Video navigation
@@ -1011,12 +1020,11 @@ function refreshCanvasSize(event, ui) {
     let tx = (canvasTform[0]-vid_cx) / transformFactor + wd/2;
     let ty = (canvasTform[1]-vid_cy) / transformFactor + hd/2;
     
-    var ctx
-    ctx=canvas.getContext("2d");
+    var ctx=canvas.getContext("2d");
     ctx.transform(s,0,0,s,tx,ty);
     
-    ctx=canvas1.getContext("2d");
-    ctx.transform(s,0,0,s,tx,ty);
+    var ctx1=canvas1.getContext("2d");
+    ctx1.transform(s,0,0,s,tx,ty);
         
     onFrameChanged()
 }
@@ -1029,7 +1037,6 @@ function canvasToVideoCoords(rect) {
         height: rect.height * transformFactor,
     }
 }
-
 function videoToCanvasCoords(obs) {
     let transformFactor2 = transformFactor;
     return {
@@ -1071,14 +1078,18 @@ function addRectFromObs(obs) {
     return rect
 }
 function updateRectObsGeometry(activeObject) {
-    let videoRect = canvasToVideoCoords(activeObject)
+    let geom = rotatedRectGeometry(activeObject);
+    let canvasRect = {left:geom.unrotated.left, top:geom.unrotated.top, 
+                      width: geom.unrotated.width, height: geom.unrotated.height}
+    let videoRect = canvasToVideoCoords(canvasRect)
     
     // Update Observation attached to rectangle from current Rect size
     let obs = activeObject.obs
-    obs.x = videoRect.x
-    obs.y = videoRect.y
+    obs.x = videoRect.x    // unrotated left (rotation around center)
+    obs.y = videoRect.y    // unrotated top
     obs.width = videoRect.width
     obs.height = videoRect.height
+    obs.angle = activeObject.angle    
     obs.cx = (videoRect.x + videoRect.width / 2);
     obs.cy = (videoRect.y + videoRect.height / 2);
 }
@@ -1095,14 +1106,15 @@ function updateRectObsActivity(activeObject) {
 
 // # Bee ID and their tracks
 
-function plotBees(ctx) {
-    // Creation of rectangle was done in identify-->moved it to an explicit createRectsFromTracks()
-    // Now, just plot identity
-    let rects = canvas1.getObjects()
-    for (let i in rects) { // For each rectangle, plot its identity
-        identify(ctx, rects[i], 5);
-    }
-}
+// Obsolete: identification done directly in BeeRect
+// function plotBees(ctx) {
+//     // Creation of rectangle was done in identify-->moved it to an explicit createRectsFromTracks()
+//     // Now, just plot identity
+//     let rects = canvas1.getObjects()
+//     for (let i in rects) { // For each rectangle, plot its identity
+//         identify(ctx, rects[i], 5);
+//     }
+// }
 function plotTracks(ctx) {
     let F = getCurrentFrame()
     let ids = getValidIDsForFrame(F)
@@ -1128,8 +1140,9 @@ function plotTracks(ctx) {
         let x=undefined, y=undefined, z=0;
         if (!!obs) {
             let rect = videoToCanvasCoords(obs)
-            x = rect.left + rect.width / 2;
-            y = rect.top + rect.height / 2;
+            let geom = rotatedRectGeometry(rect)
+            x = geom.center.x
+            y = geom.center.y
             z = 1;
         }
 
@@ -1137,8 +1150,9 @@ function plotTracks(ctx) {
             let obs = getObsHandle(f, id, false)
             if (!obs) { z=0; continue;}
             let rect = videoToCanvasCoords(obs)            
-            let x2 = rect.left + rect.width / 2;
-            let y2 = rect.top + rect.height / 2;
+            let geom = rotatedRectGeometry(rect)
+            let x2 = geom.center.x
+            let y2 = geom.center.y
             let z2 = 1;
             
             ctx.beginPath();
@@ -1164,8 +1178,9 @@ function plotTracks(ctx) {
             if (!obs) continue;
             let rect = videoToCanvasCoords(obs)
             
-            let x = rect.left + rect.width / 2;
-            let y = rect.top + rect.height / 2;
+            let geom = rotatedRectGeometry(rect)
+            let x = geom.center.x
+            let y = geom.center.y
     
 //             if (f-F<0)
 //                 color = "red"
@@ -1212,6 +1227,7 @@ function activityString(obs) {
 }
 
 function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
+
     var color
     if (rect.status === "new")
         color = "green"
@@ -1220,8 +1236,49 @@ function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
     else
         color = "red" //problem
 
-    let x = rect.left + rect.width / 2;
-    let y = rect.top + rect.height / 2;
+    //let x = rect.left + rect.width / 2;
+    //let y = rect.top + rect.height / 2;
+    let geom = rotatedRectGeometry(rect)
+    let x = geom.center.x
+    let y = geom.center.y
+    
+    console.log('identify ctx=',ctx, x,y)
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = "20px Arial";
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(String(rect.id), x, y - radius - 3);
+
+    let acti = activityString(rect.obs)
+
+    ctx.font = "10px Arial";
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(acti, x, y + radius + 3);
+    ctx.textBaseline = 'alphabetic';
+}
+function identifyBeeRect(ctx, rect, radius) {
+
+    var color
+    if (rect.status === "new")
+        color = "green"
+    else if (rect.status === "db")
+        color = "yellow"
+    else
+        color = "red" //problem
+
+    // Local coordinates ?
+    let x = 0
+    let y = 0
+    
+    //console.log('identifyBeeRect ctx=',ctx, x,y)
 
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -1267,6 +1324,23 @@ function plotTags(ctx) {
        console.log('plotTags: msg=',msg)
     }
 }
+function tagCorners(tag) {
+    if (typeof tag.p === 'undefined') return undefined
+    let ppt=[]
+    for (let i of [0,1,2,3]) {
+          ppt[i] = videoToCanvasPoint({"x":tag.p[i][0], "y":tag.p[i][1]})
+    }
+    return ppt
+}
+function tagUp(tag) {
+    if (typeof tag.p === 'undefined') return undefined
+    let p = tag.p;
+    let ppt = tagCorners(tag);
+    let dir = [ppt[1].x-ppt[2].x,ppt[1].y-ppt[2].y]
+    let m = Math.sqrt(dir[0]*dir[0]+dir[1]*dir[1])
+    dir = [dir[0]/m, dir[1]/m]
+    return dir
+}
 function plotTag(ctx, tag, color, flags) {
     if (color === undefined) {
         color = 'red'
@@ -1282,30 +1356,27 @@ function plotTag(ctx, tag, color, flags) {
 
     let pt = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
     
-    
-    if (showTagsOrientation && typeof tag.p !== 'undefined') {
-      let p = tag.p;
-      let ppt=[]
-      for (let i of [0,1,2,3]) {
-          ppt[i] = videoToCanvasPoint({"x":p[i][0], "y":p[i][1]})
-      if (false)
-          ctx.beginPath();
-          ctx.arc(ppt.x, ppt.y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = 'magenta'
-          ctx.fill();
-        }
-      let dir = [ppt[1].x-ppt[2].x,ppt[1].y-ppt[2].y]
-      let m = Math.sqrt(dir[0]*dir[0]+dir[1]*dir[1])
-      dir = [dir[0]/m, dir[1]/m]
-      let L=40, L1=35, W1=4
-      ctx.beginPath();
-      ctx.moveTo(pt.x-dir[0]*L, pt.y-dir[1]*L)
-      ctx.lineTo(pt.x+dir[0]*L, pt.y+dir[1]*L)
-      ctx.lineTo(pt.x+dir[0]*L1+dir[1]*W1, pt.y+dir[1]*L1-dir[0]*W1)
-      ctx.strokeStyle = 'magenta'
-      ctx.stroke();
+    if (showTagsOrientation) {
+      if (false) {
+          let ppt = tagCorners(tag)
+          if (typeof ppt !== 'undefined') {
+            ctx.beginPath();
+            ctx.arc(ppt.x, ppt.y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'magenta'
+            ctx.fill();
+          }
+      }
+      let dir = tagUp(tag)
+      if (typeof dir !== 'undefined') {
+        let L=40, L1=35, W1=4
+        ctx.beginPath();
+        ctx.moveTo(pt.x-dir[0]*L, pt.y-dir[1]*L)
+        ctx.lineTo(pt.x+dir[0]*L, pt.y+dir[1]*L)
+        ctx.lineTo(pt.x+dir[0]*L1+dir[1]*W1, pt.y+dir[1]*L1-dir[0]*W1)
+        ctx.strokeStyle = 'magenta'
+        ctx.stroke();
+      }
     }
-    
 
     ctx.beginPath();
     ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
@@ -1497,9 +1568,51 @@ function addRectInteractive(id, startX, startY) {
     return rect;
 }
 
+function rotatedRectGeometry(rect) {
+    // Compute various properties of Fabric.js rotated rect
+    var geom = {}
+    
+    rect.setCoords() // Compute coordinates
+    var coords = rect.oCoords
+    console.log(rect)
+    geom.center={x: (coords.tl.x+coords.br.x)/2, y: (coords.tl.y+coords.br.y)/2}
+    geom.tl={x: coords.tl.x, y: coords.tl.y}
+    geom.br={x: coords.br.x, y: coords.br.y}
+    let center = {x: (coords.tl.x+coords.br.x)/2, 
+                  y: (coords.tl.y+coords.br.y)/2}
+    geom.unrotated = {left: center.x-rect.width/2, top: center.y-rect.height/2,
+                      width: rect.width, height: rect.height
+                      }
+    
+    if (typeof rect.angle !== 'undefined')
+        geom.angle = rect.angle
+    else
+        geom.angle = 0
+    
+    return geom
+}
+
+fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
+    type: 'beerect',
+    
+    initialize: function (element, options) {
+        options = options || {};
+
+        this.callSuper('initialize', element, options);
+    },
+    
+    _render: function (ctx) {
+        this.callSuper('_render', ctx);
+        
+        identifyBeeRect(ctx, this, 5);
+    }
+});
+
 // Create a fabric rectangle at specific place
 // all units in canvas coordinates
-function addRect(id, startX, startY, width, height, status, obs) {
+function addRect(id, startX, startY, width, height, status, obs, angle) {
+    console.log('addRect: id=',id)
+
     var tmpObs
     if (status === "new") {
         tmpObs = new Observation(id)
@@ -1516,7 +1629,17 @@ function addRect(id, startX, startY, width, height, status, obs) {
         console.log("addRect: error, status unknown. status=", status)
     }
 
-    var rect = new fabric.Rect({
+    if (typeof angle !== 'undefined') {
+        console.log('addRect: apply angle=',angle)
+    } else {
+        console.log('addRect: angle=',angle)
+        angle = 0
+    }
+    if (typeof obs !== 'undefined') {
+        angle = obs.angle
+    }
+
+    var rect = new fabric.BeeRect({
         id: id,
         //new_id: id, // never_used
         status: status,
@@ -1529,13 +1652,20 @@ function addRect(id, startX, startY, width, height, status, obs) {
         stroke: 'blue',
         strokewidth: 6,
         cornerColor: 'red',
-        cornerSize: 6
+        cornerSize: 6,
+        rotatingPointOffset: 20,
+        centeredRotation: true,
+        
+        //hasRotatingPoint: true,
+        //lockRotation: false
     });
+    rect.setAngle(angle);
+    
     updateRectObsGeometry(rect)
     if (logging.addRect)
         console.log("addRect: rect =", rect)
 
-    rect.setControlVisible('mtr', false)
+    //rect.setControlVisible('mtr', false)  // Remove rotation handle
     canvas1.add(rect);
 
     if (logging.addRect)
@@ -1764,10 +1894,22 @@ function onMouseDown(option) {
                     rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
                 } else {
                     // Only found tag
-                    rect = addRect(predictionTag.id, 
+                    
+                    let up = tagUp(tag)
+                    if (typeof up !== 'undefined') {
+                        let angle = Math.atan2(up[0], -up[1])/Math.PI*180
+                        console.log("MouseDown: found angle=",angle, 'up=',up)
+                        rect = addRect(predictionTag.id, 
+                               pt.x - default_width / 2, 
+                               pt.y - default_height / 2,
+                               default_width, default_height, "new", undefined, angle);
+                    } else {
+                        console.log("MouseDown: angle not found")
+                        rect = addRect(predictionTag.id, 
                                pt.x - default_width / 2, 
                                pt.y - default_height / 2,
                                default_width, default_height, "new");
+                    }
                 }
                 if (logging.mouseEvents)
                     console.log("onMouseDown: copied rect from tag ", tag)
@@ -1900,7 +2042,9 @@ function onObjectMoving(option) {
     fixRectSizeAfterScaling(activeObject)
     updateRectObsGeometry(activeObject)
 
-    canvas1.renderAll(); // Refresh rectangles drawing
+    //canvas1.renderAll(); // Refresh rectangles drawing
+    refreshOverlay()
+    
     updateForm(activeObject);
     //automatic_sub();
     
@@ -1918,7 +2062,8 @@ function onObjectModified(option) {
     
     updateRectObsGeometry(activeObject)
 
-    canvas1.renderAll(); // Refresh rectangles drawing
+    //canvas1.renderAll(); // Refresh rectangles drawing
+    refreshOverlay()
     updateForm(activeObject);
     //showZoom(activeObject)
     automatic_sub();
