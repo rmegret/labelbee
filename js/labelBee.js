@@ -2038,12 +2038,14 @@ function selectBeeByID(id) {
       canvas1.setActiveObject(rect);
       // TESTME: selectBee was commented
       selectBee(rect);
+      return true
    } else {
       canvas1.deactivateAll().renderAll(); // Deselect rect if any
       updateForm(null)
       // defaultSelectedBee = undefined // Do not cancel default if not found
       if (logging.selectionEvents)
          console.log('selectBeeByID: No rect found for id=',id);
+      return false
    }
 }
 
@@ -2343,7 +2345,8 @@ function updateChronoXDomainFromVideo() {
 function updateChronoYDomain() {
     var a = domainyFromChronogramData()
     var b = domainyFromTagData()
-    axes.ydomain([Math.min(a[0],b[0]),Math.max(a[1],b[1])])
+    //axes.ydomain([Math.min(a[0],b[0]),Math.max(a[1],b[1])])
+    axes.ydomain(['0','1','2','3','10','12'])
 }
 function updateTimeMark() {
     var frame = getCurrentFrame();
@@ -2361,9 +2364,18 @@ function onAxesClick(event) {
     if (logging.axesEvents)
         console.log("onAxesClick: seeking to frame=",frame,"...");
  
-    video2.seekTo({'frame':frame})
-    // external controller logic is supposed to call back updateTimeMark
-    // to update the view
+    if (frame==getCurrentFrame()) {
+        // Try to select the bee
+        selectBeeByID(id)
+    } else {
+        if (obsDoesExist(frame,id)) {
+            // Set the id as default selection before seeking the frame
+            defaultSelectedBee = id
+        }
+        video2.seekTo({'frame':frame})
+        // external controller logic is supposed to call back updateTimeMark
+        // to update the view
+    }
 }
 function onAxesChanged(event) {
     // User zoomed, scrolled or changed chronogram range or size */
