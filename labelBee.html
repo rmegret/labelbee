@@ -9,9 +9,6 @@
   <meta name="description" content="labelBee video annotation system">
   <meta name="author" content="Rémi Mégret">
 
-  <link href="css/bootstrap.css" rel="stylesheet">
-  <link href="css/custom.css" rel="stylesheet">
-
   <link rel="icon" type="image/png" href="images/BeeTrackerlogo.png">
 
   <title>LabelBee</title>
@@ -19,6 +16,9 @@
   <script src="js/extern/jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
   <script src="js/extern/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
   <link href="js/extern/jquery-ui-1.12.1.custom/jquery-ui.css" rel="stylesheet">
+
+  <link href="css/bootstrap.css" rel="stylesheet">
+  <link href="css/custom.css" rel="stylesheet">
 
  <!--  <script type="text/javascript" src="js/extern/jquery.js"></script> -->
   <script type="text/javascript" src="js/extern/bootstrap.js"></script>
@@ -135,8 +135,10 @@
               <label>Video Info</label>
               <div>
 <!--                 <div class="btn btn-primary"> -->
-                  <label for="selectboxVideo" class="primary">Video </label>
-                  <select id="selectboxVideo" name="video" onchange="selectVideo()" class="btn btn-primary">
+                  <div class='subpanel'>
+                  <label class="primary">Video </label><br>
+                  File:
+                  <select id="selectboxVideo" name="video" onchange="selectVideo()" class="">
                       <option value="data/testvideo.mp4" selected>testvideo.mp4</option>
                       <option value="data/36_01_H_160715100000.mp4">36_01_H_160715100000.mp4</option>
                       <option value="data/36_01_H_160715100000.webm">36_01_H_160715100000.webm</option>
@@ -151,17 +153,28 @@
               
                 <div id="videoSize">-</div>
                 <div id="canvasSize">-</div>
-              
+                Video FPS:
+                <input type="text" value="???" id="videofps"
+                 onchange="onVideoFPSChanged(event)"  size="4">
+                  <br>
+                </div>
+                <div class='subpanel'>
+                  <label class="primary">Time calibration </label>
+                  <br>
+                Start Time:
                 <input type="text" value="2016-07-15T09:59:59.360"  
-                       id="startTime" onchange="onStartTimeChanged(event)">
-                <input type="text" value="undefined" id="fps" onchange="onFPSChanged(event)">
-              
+                       id="startTime" onchange="onStartTimeChanged(event)" size="25">
+                  <br>      
+                Real FPS: 
+                <input type="text" value="???" id="realfps"
+                 onchange="onFPSChanged(event)" size="4">
+                  <br>
                 <div id="realTime">Real Time:</div>
                 <div id="vidTime">Video Time:</div>
                 <div class="frame">
                   <span id="currentFrame">Frame: 0</span>
                 </div>
-                
+                </div>
               </div>
             </div> <!-- videoinfo -->            
             
@@ -258,10 +271,17 @@
                   <li><kbd>&larr;</kbd>, <kbd>&rarr;</kbd>, <kbd>&uarr;</kbd> and <kbd>&darr;</kbd> : move current annotation box</li>
                   </ul>
                   
-                  <b>Mouse:</b>
+                  <b>Mouse in the canvas:</b>
                   <ul>
-                  <li><kbd>Click</kbd>+<kbd>Drag</kbd> : Create annotation bbox (click for first corner, drag for second corner)</li>
+                  <li><kbd>Ctrl</kbd>+<kbd>Drag</kbd> : Create annotation bbox (click for first corner, drag for second corner)</li>
                   <li><kbd>Shift</kbd>+<kbd>Click</kbd> : Create annotation bbox in one click (shift click on center)</li>
+                  </ul>
+
+                  <b>Mouse in the chronogram:</b>
+                  <ul>
+                  <li><kbd>Drag</kbd>: pan left/right</li>
+                  <li><kbd>Shift</kbd>+<kbd>Mousewheel</kbd>: zoom in/out</li>
+                  <li><kbd>Click</kbd>: change frame, select ID</li>
                   </ul>
 
                 </div>

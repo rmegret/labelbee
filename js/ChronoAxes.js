@@ -80,8 +80,8 @@ function ChronoAxes(parent, videoinfo, options) {
         //console.log('updateTScale()')
         var d = xScale.domain()  // Get X domain expressed in frames
         var a = new Date(axes.videoinfo.starttime) // Get start time of video
-        tScale.domain([ new Date(a.getTime()+d[0]/axes.videoinfo.fps*1000), 
-                        new Date(a.getTime()+d[1]/axes.videoinfo.fps*1000) ])
+        tScale.domain([ new Date(a.getTime()+d[0]/axes.videoinfo.realfps*1000), 
+                        new Date(a.getTime()+d[1]/axes.videoinfo.realfps*1000) ])
     }
     function xdomain(domain) {
         if (!arguments.length) return xScale.domain();
@@ -253,7 +253,7 @@ function ChronoAxes(parent, videoinfo, options) {
         yAxisParent.call(yAxisBase)    // Update axis view (ticks, labels...)
         // Create the grid manually, D3 does not seem to be able to draw a grid not centered on the ticks
         if (options.useOrdinalScale) {
-          console.log(yScale.range())
+          //console.log(yScale.range())
           let join = yAxisParent.selectAll(".gridline").data(yScale.range())
           join.exit().remove()
           join.enter()

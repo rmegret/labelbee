@@ -195,3 +195,13 @@ button > p.multiline {
     width: 100%;
     overflow:scroll;
 }
+
+.subpanel {
+    margin: 10px 0px;
+/*     border: lightgray solid 1px; */
+}
+
+
+.ui-accordion .ui-accordion-content {
+    padding: 10px 10px;
+}

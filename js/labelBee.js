@@ -52,20 +52,22 @@ function initVideoSelectbox(optionList) {
 function init() {
     videoinfo = {
         'name': 'No video loaded',
-        'fps': 20, 
+        'videofps': 20, // Should be equal to realfps (unless broken encoder)
         'realfps': 20,  //realfps = 20.0078;
         'starttime': '2016-07-15T09:59:59.360',
-        'duration': 1/fps, // Duration in seconds
+        'duration': 1/20, // Duration in seconds
         'nframes': 1
     };
-    $('#fps').val(videoinfo.fps)
+    $('#videofps').val(videoinfo.videofps)
+    $('#realfps').val(videoinfo.realfps)
     initVideoSelectbox(['testvideo.mp4','vlc1.mp4','vlc2.mp4','1_02_R_170419141405.mp4'])
     
     $('#selectboxVideo')[0].selectedIndex=1; // select long video
 
     video2 = VideoFrame({
         id: 'video',
-        frameRate: videoinfo.fps,
+        /* We use the fps declared in the video here, even if not real */
+        frameRate: videoinfo.videofps,
         callback: onFrameChanged // VERY IMPORTANT: all frame changes (play,next,prev...) trigger this callback. No refresh should be done outside of this callback
     });
     video2.onListen = function() {console.log('video2.onListen');};
@@ -736,12 +738,18 @@ function onStartTimeChanged(event) {
     updateChronoXDomainFromVideo()
     drawChrono()
 }
-function onFPSChanged(event) {
-    console.log('onFPSChanged', event)
+function onVideoFPSChanged(event) {
+    console.log('onVideoFPSChanged', event)
 
-    videoinfo.fps = Number(event.target.value)
-    video2.frameRate = videoinfo.fps
-    updateChronoXDomainFromVideo()
+    videoinfo.videofps = Number(event.target.value)
+    video2.frameRate = videoinfo.videofps
+    onVideoLoaded() // Force recomputation of various parameters: nframes...
+}
+function onFPSChanged(event) {
+    console.log('onFPSChanged (real)', event)
+
+    videoinfo.realfps = Number(event.target.value)
+    updateChronoXDomainFromVideo() // Change the real timeline
     drawChrono()
 }
 
@@ -755,7 +763,7 @@ function onVideoLoaded(event) {
     w = video.videoWidth
     h = video.videoHeight
     videoinfo.duration = video.duration
-    videoinfo.nframes = Math.floor(videoinfo.duration*videoinfo.fps)
+    videoinfo.nframes = Math.floor(videoinfo.duration*videoinfo.videofps)
     videoinfo.name = video.src
     
     if (logging.videoEvents) {
@@ -813,7 +821,7 @@ function getCurrentVideoTime(format) {
 }
 function getCurrentRealDate(format) {
   var D = new Date(videoinfo.starttime)
-  D = new Date(D.getTime()+video2.toMilliseconds()*videoinfo.fps/videoinfo.realfps)
+  D = new Date(D.getTime()+video2.toMilliseconds()*videoinfo.videofps/videoinfo.realfps)
   return D
 }
 function toLocaleISOString(date) {
@@ -992,23 +1000,23 @@ function forward() {
 }
 
 function rewind2() {
-    video2.seekBackward(videoinfo.fps);
+    video2.seekBackward(videoinfo.videofps);
 }
 function forward2() {
-    video2.seekForward(videoinfo.fps);
+    video2.seekForward(videoinfo.videofps);
 }
 
 function rewind3() {
-    video2.seekBackward(videoinfo.fps*60);
+    video2.seekBackward(videoinfo.videofps*60);
 }
 function forward3() {
-    video2.seekForward(videoinfo.fps*60);
+    video2.seekForward(videoinfo.videofps*60);
 }
 function rewind4() {
-    video2.seekBackward(videoinfo.fps*60*10);
+    video2.seekBackward(videoinfo.videofps*60*10);
 }
 function forward4() {
-    video2.seekForward(videoinfo.fps*60*10);
+    video2.seekForward(videoinfo.videofps*60*10);
 }
 
 
@@ -2655,7 +2663,7 @@ function domainxFromVideo() {
     if (isNaN(videoinfo.duration))
       domain = [0,1]
     else
-      domain = [0, videoinfo.duration*videoinfo.fps]
+      domain = [0, videoinfo.nframes]
     if (logging.chrono)
       console.log("domainxFromVideo: domain=",domain)
     return domain
