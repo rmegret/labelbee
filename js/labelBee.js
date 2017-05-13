@@ -22,7 +22,7 @@ var logging = {
   "frameEvents": false,
   "guiEvents": false,
   "submitEvents": false,
-  "mouseEvents": true,
+  "mouseEvents": false,
   "mouseMoveEvents": false,
   "keyEvents": false,
   "selectionEvents": false,
@@ -40,13 +40,29 @@ var flagCopyVideoToCanvas = true;
 // ######################################################################
 // INITITALIZATION
 
-function initVideoSelectbox(optionList) {
+videoList = []
+function initVideoSelectbox() {
     var selectbox = $("#selectboxVideo")
     selectbox.find('option').remove()
 
-    $.each(optionList, function (i, el) {
+    $.each(videoList, function (i, el) {
         selectbox.append("<option value='data/"+el+"'>"+el+"</option>");
     });
+}
+function addVideoToList(videoname) {
+    videoList.push(videoname)
+    initVideoSelectbox()
+    $('#selectboxVideo')[0].selectedIndex=videoList.length-1;
+    selectVideo()
+}
+function addVideoClick() {
+    var videoname = prompt("Add video to the list and select it:\n\nEnter video filename\ndata/ will be prefixed to its name", "vlc1.mp4");
+
+    if (videoname == null || videoname == "") {
+        console.log('addVideoClick: no video name entered')
+    } else {
+        addVideoToList(videoname)
+    }
 }
 
 function init() {
@@ -60,7 +76,9 @@ function init() {
     };
     $('#videofps').val(videoinfo.videofps)
     $('#realfps').val(videoinfo.realfps)
-    initVideoSelectbox(['testvideo.mp4','vlc1.mp4','vlc2.mp4','1_02_R_170419141405.mp4'])
+    
+    videoList = ['testvideo.mp4','vlc1.mp4','vlc2.mp4','1_02_R_170419141405.mp4','1_02_R_170426151700_cleaned.mp4','36_01_H_160715100000_copy.mp4']
+    initVideoSelectbox()
     
     $('#selectboxVideo')[0].selectedIndex=1; // select long video
 
@@ -81,12 +99,20 @@ function init() {
     ctx = canvas.getContext('2d');
     
     // Global
-    showTags = true;
+    showObs = true
+    showObsTracks = true
+    showObsChrono = false
+    showTags = false;
     showTagsTracks = false;
-    showTagsOrientation = true
+    showTagsOrientation = false
+    showTagsChrono = false
+    $('#showObs')[0].checked=showObs
+    $('#showObsTracks')[0].checked=showObsTracks
     $('#showTags')[0].checked=showTags
     $('#showTagsTracks')[0].checked=showTagsTracks
     $('#showTagsOrientation')[0].checked=showTagsOrientation
+    $('#showTagsChrono')[0].checked=showTagsChrono
+    $('#showObsChrono')[0].checked=showObsChrono
 
     // ### Chronogram
     initChrono();
@@ -249,7 +275,7 @@ function copyObs(obs, tmpObs) {
 function getValidIDsForFrame(frame) {
     // Return an Iterator to Tracks[frame]
 
-    if (typeof Tracks[frame] === 'undefined') {
+    if (Tracks[frame] == null) {
         return [];
     }
     //NO: var ids = Array.from(Tracks[frame].keys()) // Problem: includes ids to undefined values also
@@ -257,7 +283,7 @@ function getValidIDsForFrame(frame) {
     let trackf = Tracks[frame];
     let ids = [];
     for (let id in trackf) {
-        if (typeof trackf[id] !== 'undefined') {
+        if (trackf[id] != null) {
             ids.push(id);
         }
     }
@@ -267,21 +293,21 @@ function getValidIDsForFrame(frame) {
 }
 
 function obsDoesExist(frame, id) {
-    if (Tracks[frame] === undefined) {
+    if (Tracks[frame] == null) {
         return false
     }
-    if (Tracks[frame][id] === undefined) {
+    if (Tracks[frame][id] == null) {
         return false
     }
     return true
 }
 
 function getObsHandle(frame, id, createIfEmpty) {
-    if (createIfEmpty === undefined)
+    if (createIfEmpty == null)
         createIfEmpty = false;
 
     var obs
-    if (Tracks[frame] === undefined) {
+    if (Tracks[frame] == null) {
         if (createIfEmpty) {
             Tracks[frame] = {}
         } else {
@@ -289,7 +315,7 @@ function getObsHandle(frame, id, createIfEmpty) {
         }
     }
 
-    if (Tracks[frame][id] === undefined) {
+    if (Tracks[frame][id] == null) {
         if (createIfEmpty) {
             Tracks[frame][id] = new Observation(id);
         } else {
@@ -311,7 +337,7 @@ function storeObs(tmpObs) {
 function changeObservationID(frame, old_id, new_id) {
     // REMI: modified to be be independent of View
     if (Tracks[frame] !== undefined) {
-        if (Tracks[frame][old_id] !== undefined) {
+        if (typeof Tracks[frame][old_id] !== 'undefined') {
             if (logging.submitEvents)
                 console.log("changeObservationID: frame=", frame, "old_id=", old_id, " new_id=", new_id);
             Tracks[frame][new_id] = Tracks[frame][old_id];
@@ -489,11 +515,30 @@ function loadFromFile(event) {
     reader.readAsText(fileToRead);
 }
 
+function tagsAddFrames(Tags) {
+
+      for (let f in Tags) {
+        let tagsFrame = Tags[f].tags
+        if (tagsFrame == null) continue;
+
+        for (let i in tagsFrame) {
+            let tag = tagsFrame[i]
+            if (tag == null) continue;
+            
+            tag.frame=Number(f)          
+        }    
+    }
+
+}
+
 function onTagsReaderLoad(event) {
     //console.log(event.target.result);
     var obj = JSON.parse(event.target.result);
     //console.log(obj) // Caution: heavy
     Tags = obj;
+    
+    tagsAddFrames(Tags)
+    
     refreshChronogram()
     onFrameChanged();
     
@@ -563,6 +608,11 @@ function onKeyDown(e) {
           printMessage("Editing ID. Press ESC to exit...", "green")
           return false
         }
+    }
+    if (e.target.type == "text") {
+        if (logging.keyEvents)
+            console.log("keyDown goes to text field")
+        return true
     }
     if (e.key == "Delete" || e.key == 'd' || e.key == 'Backspace') {
         deleteSelected();
@@ -898,7 +948,7 @@ function refreshOverlay() {
         //refreshRectFromObs() // Avoid update loops to avoid drifting objects
         canvas1.renderAll(); // Render all rectangles
         
-        if (flagShowTrack) {
+        if (showObsTracks) {
             plotTracks(ctx);
         }
         
@@ -1275,9 +1325,11 @@ function plotTracks(ctx) {
         let x=undefined, y=undefined, z=0;
         if (!!obs) {
             let rect = videoToCanvasCoords(obs)
-            let geom = rotatedRectGeometry(rect)
-            x = geom.center.x
-            y = geom.center.y
+            //let geom = rotatedRectGeometry(rect)
+            //x = geom.center.x
+            //y = geom.center.y
+            x = rect.left+rect.width/2
+            y = rect.top+rect.height/2
             z = 1;
         }
 
@@ -1285,9 +1337,10 @@ function plotTracks(ctx) {
             let obs = getObsHandle(f, id, false)
             if (!obs) { z=0; continue;}
             let rect = videoToCanvasCoords(obs)            
-            let geom = rotatedRectGeometry(rect)
-            let x2 = geom.center.x
-            let y2 = geom.center.y
+            let x2 = rect.left+rect.width/2
+            let y2 = rect.top+rect.height/2
+//             let x2 = geom.center.x
+//             let y2 = geom.center.y
             let z2 = 1;
             
             ctx.beginPath();
@@ -1313,9 +1366,9 @@ function plotTracks(ctx) {
             if (!obs) continue;
             let rect = videoToCanvasCoords(obs)
             
-            let geom = rotatedRectGeometry(rect)
-            let x = geom.center.x
-            let y = geom.center.y
+            //let geom = rotatedRectGeometry(rect)
+            x = rect.left+rect.width/2
+            y = rect.top+rect.height/2
     
 //             if (f-F<0)
 //                 color = "red"
@@ -1476,9 +1529,22 @@ function tagUp(tag) {
     dir = [dir[0]/m, dir[1]/m]
     return dir
 }
+function tagAngle(tag) {
+    let up = tagUp(tag)
+    if (typeof up === 'undefined') return undefined
+    let angle = Math.atan2(up[0], -up[1])/Math.PI*180
+}
 function plotTag(ctx, tag, color, flags) {
+    if (!tagsSampleFilter(tag)) {
+        return
+    }
     if (color === undefined) {
-        color = 'red'
+        if (tag.hamming==0)
+          color = '#ff0000'
+        else if (tag.hamming==2)
+          color = '#ff6000'
+        else
+          color = '#ffb000'
     }
     if (typeof flags === 'undefined') {
       flags = {
@@ -1513,11 +1579,24 @@ function plotTag(ctx, tag, color, flags) {
       }
     }
 
-    ctx.beginPath();
-    ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = color;
-    ctx.closePath();
-    ctx.stroke();
+    if (typeof defaultSelectedBee !== 'undefined' && tag.id == defaultSelectedBee) {
+      ctx.save()
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'black'
+      ctx.fill()
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore()
+    } else {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = color;
+      ctx.closePath();
+      ctx.stroke();
+    }
 
     if (flags.id===true) {
       ctx.font = "10px Arial";
@@ -1539,17 +1618,34 @@ function plotTagsTracks(ctx) {
     if (fmin<0) fmin=0;
     //if (fmax>maxframe) fmax=maxframe;
 
-    setColor = function(f) {
-        if (f<=F) {
-            color = "rgba(255,0,0,"+(1-Math.abs((f-F)/frange))+")"
-            //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
+    let tProx = function(f) {
+        return (1-Math.abs((f-F)/frange))
+    }
+    let tProxSigned = function(f) {
+        return ((f-F)/frange)
+    }
+    let setColor = function(f) {
+        if (false) {
+            let T = tProx(f)
+            if (f<=F) {
+                color = "rgba(255,0,0,"+T+")"
+                //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
+            } else {
+                color = "rgba(0,0,255,"+T+")"
+            }
         } else {
-            color = "rgba(0,0,255,"+(1-Math.abs((f-F)/frange))+")"
+            let T = tProx(f)
+            let S = tProxSigned(f)/2+0.5
+            let r = Math.round(255*(1-S))
+            let g = 0
+            let b = Math.round(255*S)
+            color = "rgba("+r+","+g+","+b+","+T+")"
         }
         return color;
     }
 
     // Plot past and future tag positions
+    let p0 = []
     for (let f=fmin; f<=fmax; f++) {
         let tagsFrame = Tags[f]
         if (typeof(tagsFrame) === "undefined") continue;
@@ -1557,9 +1653,24 @@ function plotTagsTracks(ctx) {
         let color = setColor(f)
         for (let i in tags) {
             let tag = tags[i]
-            //console.log(tag)
             
-            plotTag(ctx, tag, color, {"id":false, "radius": 2})            
+            if (!tagsSampleFilter(tag)) {
+                    continue
+                }
+            
+            //console.log(tag)
+            let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+            
+            if (typeof p0[tag.id] !== 'undefined') {
+                ctx.beginPath();
+                ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
+                ctx.lineTo(p1.x,p1.y)
+                ctx.strokeStyle = color;
+                ctx.stroke();
+            }
+            p0[tag.id] = {x:p1.x, y:p1.y}
+            
+            plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
         }    
     }
     {
@@ -1579,7 +1690,9 @@ function plotTagsTracks(ctx) {
     } 
 }
 function onShowTagsChanged() {
+    // Callback when display parameters have changed
     showTags = $('#showTags')[0].checked
+    showTagsOrientation = $('#showTagsOrientation')[0].checked
     onFrameChanged()
 }
 function onShowTagsTracksChanged() {
@@ -1594,9 +1707,29 @@ function onTrackWindowChanged() {
     plotTrack_range_backward = range
 }
 
-var flagShowTrack = false
-function clickShowTrack() {
-    flagShowTrack = $("#checkboxShowTrack")[0].checked
+tagsSampleFilter = function(tag) {return true}
+tagsIDFilter = function(idinfo) {return true}
+function onTagsParametersChanged() {
+    // Callback when tags chronogram computation parameters have changed
+    tagsSampleFilter = Function("tag",$('#tagsSampleFilter')[0].value)
+    tagsIDFilter = Function("idinfo",$('#tagsIDFilter')[0].value)
+    console.log('onTagsParametersChanged:\ntagsSampleFilter=',tagsSampleFilter,
+                '\ntagsIDFilter=',tagsIDFilter)
+    refreshChronogram()
+}
+
+function onChronoParametersChanged() {
+    // Callback when chronogram computation parameters have changed
+    showTagsChrono = $('#showTagsChrono')[0].checked
+    showObsChrono = $('#showObsChrono')[0].checked
+    console.log('onChronoParametersChanged:showTagsChrono\n=',showTagsChrono)
+    refreshChronogram()
+}
+
+var showObsTracks = false
+function onShowObsChanged() {
+    showObs = $('#showObs')[0].checked
+    showObsTracks = $("#showObsTrack")[0].checked
     refresh()
 }
 
@@ -2030,9 +2163,8 @@ function onMouseDown(option) {
                 } else {
                     // Only found tag
                     
-                    let up = tagUp(tag)
-                    if (typeof up !== 'undefined') {
-                        let angle = Math.atan2(up[0], -up[1])/Math.PI*180
+                    let angle = tagAngle(tag)
+                    if (typeof angle !== 'undefined') {
                         console.log("MouseDown: found angle=",angle, 'up=',up)
                         rect = addRect(predictionTag.id, 
                                pt.x - default_width / 2, 
@@ -2374,7 +2506,9 @@ function automatic_sub() {
     }
 }
 
+tagSelection=undefined
 function selectBeeByID(id) {
+   tagSelection = id 
    let rect = findRect(id);
    if (rect) {
       if (logging.selectionEvents)
@@ -2724,7 +2858,8 @@ function updateChronoYDomain() {
     domainset = new Set([...domain, ...domainTags]) // Merge the sets
     domain = [...domainset].sort(mixedCompare) // convert back to sorted array
     
-    if (domain.length === 0) return ['empty']
+    console.log('updateChronoYDomain: domain=',domain)
+    
     axes.ydomain(domain)
     
     //axes.ydomain(['0','1','2','3','10','12']) // Testing
@@ -2746,6 +2881,7 @@ function onAxesClick(event) {
     if (logging.axesEvents)
         console.log("onAxesClick: seeking to frame=",frame,"...");
  
+    defaultSelectedBee = id
     if (frame==getCurrentFrame()) {
         // Try to select the bee in current frame
          selectBeeByID(id)
@@ -2980,21 +3116,23 @@ function refreshChronogram() {
     //for (var i = 0; i < chronogramData.length; i++)
     //    chronogramData.pop();
     chronogramData.length = 0
-    for (let F in Tracks) {
-        for (let id in Tracks[F]) {
-            let chronoObs = {'x':F, 'y':id, 'Activity':""};
+    if (showObsChrono) {
+        for (let F in Tracks) {
+            for (let id in Tracks[F]) {
+                let chronoObs = {'x':F, 'y':id, 'Activity':""};
 
-            if (Tracks[F][id].bool_acts[2]) {
-                chronoObs.Activity = "entering";
-            } else if (Tracks[F][id].bool_acts[3]) {
-                chronoObs.Activity = "exiting";
-            } else if (Tracks[F][id].bool_acts[1]) {
-                chronoObs.Activity = "pollenating";
-            } else if (Tracks[F][id].bool_acts[0]) {
-                chronoObs.Activity = "fanning";
+                if (Tracks[F][id].bool_acts[2]) {
+                    chronoObs.Activity = "entering";
+                } else if (Tracks[F][id].bool_acts[3]) {
+                    chronoObs.Activity = "exiting";
+                } else if (Tracks[F][id].bool_acts[1]) {
+                    chronoObs.Activity = "pollenating";
+                } else if (Tracks[F][id].bool_acts[0]) {
+                    chronoObs.Activity = "fanning";
+                }
+
+                chronogramData.push(chronoObs);
             }
-
-            chronogramData.push(chronoObs);
         }
     }
   
@@ -3018,47 +3156,59 @@ function refreshChronogram() {
     if (logging.chrono)
         console.log("refreshChronogram: convert tags to intervals...")
 
-    ttags = []
-  
-    for (let F in Tags) {
-        let tags = Tags[F].tags
-        for (let i in tags) {
-            let id = Number(tags[i].id)
-            ttags[id]=[];
-        }
-    }
-    for (let F in Tags) {
-        let tags = Tags[F].tags
-        for (let i in tags) {
-            let id = Number(tags[i].id)
-            ttags[id][F]=tags[i];
-        }
-    }
+
     tagIntervals = []
-    for (let id in ttags) {
-      let obsarray = ttags[id]
-      let activeInterval = []
-      let isActive = false
-      for (let f in obsarray) {
-        let tags = obsarray[f]
-        if (isActive) {
-          if (activeInterval.end == f-1) {
-            activeInterval.end = f
-          } else {
-            // Close previous 
-            tagIntervals.push(activeInterval)
-            // Open new one
-            activeInterval={'id':id,'begin':f,'end':f}
-          }
-        } else {
-          // Open new one
-          activeInterval={'id':id,'begin':f,'end':f}
-          isActive=true;
+    if (showTagsChrono) {
+        /* Transpose Tags data structure */
+        ttags = []
+        for (let F in Tags) {
+            let tags = Tags[F].tags
+            for (let i in tags) {
+                let id = Number(tags[i].id)
+                ttags[id]=[];
+            }
         }
-      }
-      // Close if active
-      if (isActive)
-        tagIntervals.push(activeInterval)
+        for (let F in Tags) {
+            let tags = Tags[F].tags
+            for (let i in tags) {
+                let id = Number(tags[i].id)
+                ttags[id][F]=tags[i];
+            }
+        }
+    
+        /* Convert to intervals */
+        for (let id in ttags) {
+          let obsarray = ttags[id]
+          let activeInterval = []
+          let isActive = false
+          for (let f in obsarray) {
+            let tags = obsarray[f]
+        
+            if (!tagsSampleFilter(tags)) {
+                continue
+            }
+        
+            if (isActive) {
+              if (activeInterval.end == f-1) {
+                activeInterval.end = f
+              } else {
+                // Close previous 
+                activeInterval['end']++
+                tagIntervals.push(activeInterval)
+                // Open new one
+                activeInterval={'id':id,'begin':f,'end':f}
+              }
+            } else {
+              // Open new one
+              activeInterval={'id':id,'begin':f,'end':f}
+              isActive=true;
+            }
+          }
+          // Close if active
+          if (isActive)
+            activeInterval['end']++
+            tagIntervals.push(activeInterval)
+        }
     }
     
     if (logging.chrono)

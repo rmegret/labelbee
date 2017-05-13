@@ -66,7 +66,7 @@ function ChronoAxes(parent, videoinfo, options) {
     var yScale
     if (options.useOrdinalScale) {
         yScale = d3.scale.ordinal()
-        .domain([0,1,2])
+        .domain(['-'])
         .rangeBands([0, height],0)
     } else {
         yScale = d3.scale.linear()
@@ -95,6 +95,7 @@ function ChronoAxes(parent, videoinfo, options) {
     function ydomain(domain) {
         if (!arguments.length) return yScale.domain();
         /* Update yAxis to domain = [minID, maxID] */
+        if (domain.length == 0) domain=['-']
         yScale.domain(domain)
         refreshAxes({'type': 'yDomainChanged','domain':domain})
         return axes // return itself to be able to chain commands
@@ -546,10 +547,18 @@ function ChronoAxes(parent, videoinfo, options) {
         var id 
         if (options.useOrdinalScale) {
           let range = yScale.range()
-          id = Math.floor((coords[1]-range[0])/(range[1]-range[0]));
-          if (id<0 || id>= yScale.domain().length) id=undefined
+          rank = Math.floor((coords[1]-range[0])/(range[1]-range[0]));
+          if (rank<0 || rank>= yScale.domain().length)
+             id = undefined
+          else
+             id = yScale.domain()[rank]
+          console.log("chronoGroup.onClick: rank=", rank)
         } else {
-          id = Math.round( yScale.invert(coords[1]) );
+          rank = Math.round( yScale.invert(coords[1]) );
+          if (rank<yScale.domain()[0] || rank> yScale.domain()[1])
+            id=undefined
+          else
+            id = rank
         }
     
         if (logging.axesEvents)

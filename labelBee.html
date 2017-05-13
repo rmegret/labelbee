@@ -136,18 +136,13 @@
               <div>
 <!--                 <div class="btn btn-primary"> -->
                   <div class='subpanel'>
-                  <label class="primary">Video </label><br>
+                  <label class="primary">Video 
+                  <button value="Add video to list" onclick="addVideoClick()" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                  </label><br>
                   File:
                   <select id="selectboxVideo" name="video" onchange="selectVideo()" class="">
-                      <option value="data/testvideo.mp4" selected>testvideo.mp4</option>
-                      <option value="data/36_01_H_160715100000.mp4">36_01_H_160715100000.mp4</option>
-                      <option value="data/36_01_H_160715100000.webm">36_01_H_160715100000.webm</option>
-                      <option value="data/36_01_H_160715100000.webm">36_01_H_160715100000_IPPP.mp4</option>
-                      <option value="data/36_01_H_160715100000_IPPPP_1MB.mp4">36_01_H_160715100000_IPPPP_1MB.mp4</option>
-                      <option value="data/36_01_H_160715100000_IPPPP_4MB.mp4">36_01_H_160715100000_IPPPP_4MB.mp4</option>
-                      <option value="data/36_01_H_160715100000_copy.mp4">36_01_H_160715100000_copy.mp4</option>
-                      <option value="data/vlc1.mp4">vlc1.mp4</option>
-                      <option value="data/vlc2.mp4">vlc2.mp4</option>
+                      <option value="data/undefined.mp4" selected>Not yet initialized</option>
+                      <!-- This menu is initialized in labelBee.js:init() -->
                   </select> <!-- selectboxVideo -->  
 <!--                 </div>  -->
               
@@ -235,19 +230,36 @@
                 <label>Parameters <span class="glyphicon glyphicon-wrench"></span></label>
                 <div>
                   <div class="checkbox">
-                    <label><input type="checkbox" checked="false" id="checkboxShowTrack" onclick="clickShowTrack()">showTracks</label>
+                    <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()">Show Obs</label>
                   </div>
                   <div class="checkbox">
-                    <label><input type="checkbox" checked="true" id="showTagsTracks" onclick="onShowTagsTracksChanged()">showTagsTracks</label>
+                    <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Obs Tracks</label>
+                  </div>
+                  <hr>
+                  <div class="checkbox">
+                    <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">Show Tags</label>
                   </div>
                   <div class="checkbox">
-                    <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">showTags</label>
+                    <label><input type="checkbox" checked="true" id="showTagsTracks" onclick="onShowTagsTracksChanged()">Show Tags Tracks</label>
                   </div>
                   <div class="checkbox">
-                    <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">showTagsOrientation</label>
+                    <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">Show Tags Orientation</label>
                   </div>
                   <div class="text">
                   <label>Track window<input type="text" value="20" id="trackWindow" onchange="onTrackWindowChanged(event)"></label>
+                  </div>
+                  <div class="text">
+                  <label>Tags sample filter<input type="text" value="return true" id="tagsSampleFilter" onchange="onTagsParametersChanged(event)"></label>
+                  </div>
+                  <div class="text">
+                  <label>Tags ID filter<input type="text" value="return true" id="tagsIDFilter" onchange="onTagsParametersChanged(event)"></label>
+                  </div>
+                  <hr>
+                  <div class="checkbox">
+                    <label><input type="checkbox" checked="true" id="showObsChrono" onclick="onChronoParametersChanged()"/>Show Obs Chrono</label>
+                  </div>
+                  <div class="checkbox">
+                    <label><input type="checkbox" checked="true" id="showTagsChrono" onclick="onChronoParametersChanged()"/>Show Tags Chrono</label>
                   </div>
                 </div>
             </div>
