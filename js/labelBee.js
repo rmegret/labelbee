@@ -72,12 +72,12 @@ function init() {
         'realfps': 20,  //realfps = 20.0078;
         'starttime': '2016-07-15T09:59:59.360',
         'duration': 1/20, // Duration in seconds
-        'nframes': 1
+        'nframes': 1,
+        'frameoffset':0
     };
-    $('#videofps').val(videoinfo.videofps)
-    $('#realfps').val(videoinfo.realfps)
+    updateVideoInfoForm()
     
-    videoList = ['testvideo.mp4','vlc1.mp4','vlc2.mp4','1_02_R_170419141405.mp4','1_02_R_170426151700_cleaned.mp4','36_01_H_160715100000_copy.mp4']
+    videoList = ['testvideo.mp4','vlc1.mp4','vlc2.mp4','1_02_R_170419141405.mp4','1_02_R_170426151700_cleaned.mp4','36_01_H_160715100000_copy.mp4','GuraboTest/4_02_R_170511130000.mp4']
     initVideoSelectbox()
     
     $('#selectboxVideo')[0].selectedIndex=1; // select long video
@@ -102,10 +102,10 @@ function init() {
     showObs = true
     showObsTracks = true
     showObsChrono = false
-    showTags = false;
-    showTagsTracks = false;
+    showTags = true;
+    showTagsTracks = true;
     showTagsOrientation = false
-    showTagsChrono = false
+    showTagsChrono = true
     $('#showObs')[0].checked=showObs
     $('#showObsTracks')[0].checked=showObsTracks
     $('#showTags')[0].checked=showTags
@@ -802,9 +802,72 @@ function onFPSChanged(event) {
     updateChronoXDomainFromVideo() // Change the real timeline
     drawChrono()
 }
+function onFrameOffsetChanged(event) {
+    console.log('onFrameOffsetChanged (real)', event)
+
+    videoinfo.frameoffset = Number(event.target.value)
+    onVideoLoaded() // Force recomputation of various parameters: nframes...
+}
+
+function updateVideoInfoForm() {
+    $('#videofps').val(videoinfo.videofps)
+    $('#realfps').val(videoinfo.realfps)
+    $('#startTime').val(videoinfo.starttime)
+    $('#videoTagsFamily').val(videoinfo.tagsfamily)
+    $('#videoPlace').val(videoinfo.place)
+    $('#videoComments').text(videoinfo.comments)
+}
+
+function onVideoLoaded(event) {
+    if (logging.videoEvents)
+        console.log('videoLoaded', event)
+    
+    let videourl = video.src;
+    let infourl = videourl+'.info'
+        
+    var jqxhr = $.getJSON( infourl, function(data) {
+        if (logging.videoEvents)
+            console.log( "videoLoaded.getInfo loaded" );
+        console.log('videojsoninfo = ',data)    
+        videojsoninfo = data
+        
+        if ($.isNumeric(videojsoninfo.videofps)) {
+          videoinfo.videofps = Number(videojsoninfo.videofps)
+          video2.frameRate = videoinfo.videofps
+        }
+        if ($.isNumeric(videojsoninfo.realfps)) {
+          videoinfo.realfps = Number(videojsoninfo.realfps)
+        }
+        if (videojsoninfo.starttime instanceof Date && 
+            !isNaN(videojsoninfo.starttime.valueOf())) {
+          videoinfo.starttime = videojsoninfo.starttime
+        }
+        if (typeof videojsoninfo.tagsfamily !== 'undefined') {
+          videoinfo.tagsfamily = videojsoninfo.tagsfamily
+        }
+        if (typeof videojsoninfo.place !== 'undefined') {
+          videoinfo.place = videojsoninfo.place
+        }
+        if (typeof videojsoninfo.comments !== 'undefined') {
+          videoinfo.comments = videojsoninfo.comments
+        }
+
+        //'starttime': '2016-07-15T09:59:59.360',
+        //'duration': 1/20, // Duration in seconds
+        //'nframes': 1
+        
+        updateVideoInfoForm()
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        console.log( "videoLoaded.getInfo error=", textStatus, "details=", errorThrown);
+      })
+      .complete(function() { 
+        onVideoLoadedWithInfo(event)
+      })
+}
 
 // # Video loading
-function onVideoLoaded(event) {
+function onVideoLoadedWithInfo(event) {
     // Called when video metadata available (size, duration...)
     if (logging.videoEvents)
         console.log('videoLoaded', event)
@@ -864,7 +927,7 @@ function onVideoReady(event) {
 
 // Auxiliary
 function getCurrentFrame() {
-    return video2.get();
+    return video2.get()-videoinfo.frameoffset;
 }
 function getCurrentVideoTime(format) {
   return video2.toMilliseconds()/1000.0
@@ -889,14 +952,37 @@ function toLocaleISOString(date) {
     return day+"T"+time//+o;
 }
 
+var seekWallTime = 0;
+var seekTiming = false
+function startSeekTimer() {
+    seekWallTime = new Date().getTime()
+    seekTiming = true
+}
+function seekFrame(frame) {
+    startSeekTimer()
+    video2.seekTo({'frame':frame+videoinfo.frameoffset})
+}
+
+function onFrameTextChanged() {
+    let frame = Number($('#currentFrame').val())
+    seekFrame(frame)
+}
+
 // This callback is the only one that should handle frame changes. It is called automatically by video2
 function onFrameChanged(event) {
     let Cframe = getCurrentFrame();
     
+    if (seekTiming) {
+        seekTiming=false;
+        let elapsed = (new Date().getTime() - seekWallTime)/1000.0
+        console.log('Seek frame '+Cframe+': elapsed='+elapsed+' s')
+    }
+    
     if (logging.frameEvents)
         console.log('frameChanged', Cframe)
 
-    $('#currentFrame').html("Frame: " + Cframe)
+    //$('#currentFrame').html("Frame: " + Cframe)
+    $('#currentFrame').val(Cframe)
     $('#vidTime').html("Video Time: " + video2.toHMSm(getCurrentVideoTime()))
     $('#realTime').html("Real Time: " + toLocaleISOString(getCurrentRealDate()))
 
@@ -909,6 +995,10 @@ function onFrameChanged(event) {
       
     selectBeeByID(defaultSelectedBee);
     //updateForm(null);
+    
+    if (flagShowZoom) {
+        showZoomTag()
+    }
 }
 
 
@@ -1043,29 +1133,37 @@ function pause() {
 }
 
 function rewind() {
+    startSeekTimer()
     video2.seekBackward();
 }
 function forward() {
+    startSeekTimer()
     video2.seekForward();
 }
 
 function rewind2() {
+    startSeekTimer()
     video2.seekBackward(videoinfo.videofps);
 }
 function forward2() {
+    startSeekTimer()
     video2.seekForward(videoinfo.videofps);
 }
 
 function rewind3() {
+    startSeekTimer()
     video2.seekBackward(videoinfo.videofps*60);
 }
 function forward3() {
+    startSeekTimer()
     video2.seekForward(videoinfo.videofps*60);
 }
 function rewind4() {
+    startSeekTimer()
     video2.seekBackward(videoinfo.videofps*60*10);
 }
 function forward4() {
+    startSeekTimer()
     video2.seekForward(videoinfo.videofps*60*10);
 }
 
@@ -1509,7 +1607,7 @@ function plotTags(ctx) {
             msg = msg + tag.id + ' H'+tag.hamming+ ' ('+tag.c[0]+','+tag.c[1]+')<br>'
        }
        $("#tagDetails")[0].innerHTML = msg
-       console.log('plotTags: msg=',msg)
+       //console.log('plotTags: msg=',msg)
     }
 }
 function tagCorners(tag) {
@@ -1533,6 +1631,7 @@ function tagAngle(tag) {
     let up = tagUp(tag)
     if (typeof up === 'undefined') return undefined
     let angle = Math.atan2(up[0], -up[1])/Math.PI*180
+    return angle
 }
 function plotTag(ctx, tag, color, flags) {
     if (!tagsSampleFilter(tag)) {
@@ -1583,12 +1682,16 @@ function plotTag(ctx, tag, color, flags) {
       ctx.save()
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = 'black'
-      ctx.fill()
       ctx.strokeStyle = color;
       ctx.lineWidth = 3;
       ctx.closePath();
       ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, radius+2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'yellow';
+      ctx.lineWidth = 3;
+      ctx.closePath();
+      //ctx.stroke();
       ctx.restore()
     } else {
       ctx.beginPath();
@@ -1610,6 +1713,18 @@ function plotTag(ctx, tag, color, flags) {
       ctx.fillText("H"+tag.hamming, pt.x, pt.y + radius + 16);
     }
 }
+
+function getTag(f, id) {
+    if (typeof Tags === 'undefined') return undefined
+    let tagsFrame = Tags[f]
+    if (typeof(tagsFrame) === "undefined") return undefined;
+    let tags = tagsFrame.tags
+    for (let i in tags) {
+        if (tags[i].id == id) { return tags[i];}
+    }
+    return undefined
+}
+
 function plotTagsTracks(ctx) {
     let F = getCurrentFrame()
     let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1;
@@ -1673,6 +1788,51 @@ function plotTagsTracks(ctx) {
             plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
         }    
     }
+    
+    // Plot past and future tag positions
+    if (typeof defaultSelectedBee !== 'undefined') {
+        console.log('defaultSelectedBee=',defaultSelectedBee)
+        let p0 = []
+        for (let f=fmin; f<=fmax; f++) {
+            let tagsFrame = Tags[f]
+            if (typeof(tagsFrame) === "undefined") continue;
+            let tags = tagsFrame.tags
+            let color = setColor(f)
+            
+            let ii = -1
+            for (let i in tags) {
+                if (tags[i].id == defaultSelectedBee) { ii=i; break;}
+            }
+            if (ii<0) continue;
+            let tag = tags[ii]
+            {
+                //console.log('tag=',tag)
+                if (!tag) continue;
+            
+                if (!tagsSampleFilter(tag)) {
+                        continue
+                    }
+            
+                //console.log(tag)
+                let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+            
+                if (typeof p0[tag.id] !== 'undefined') {
+                    ctx.save()
+                    ctx.beginPath();
+                    ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
+                    ctx.lineTo(p1.x,p1.y)
+                    ctx.strokeStyle = 'yellow';
+                    ctx.lineWidth = 5
+                    ctx.stroke();
+                    ctx.restore()
+                }
+                p0[tag.id] = {x:p1.x, y:p1.y}
+            
+                //plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
+            }    
+        }
+    }
+    
     {
         // Plot current tag position
         let f=F;
@@ -2599,7 +2759,7 @@ function undoAction() {
             if (obs.frame != getCurrentFrame()) {
                 // Put it back in the DB and jump to frame
                 storeObs(obs);
-                video2.seekTo({'frame':obs.frame})
+                seekFrame(obs.frame)
                 return
             }
             
@@ -2703,6 +2863,9 @@ function updateShowZoom() {
     }
 }
 function showZoom(rect) {
+    showZoomTag(defaultSelectedBee)
+    return
+
     let zw=400
     let zh=400
 
@@ -2734,6 +2897,72 @@ function showZoom(rect) {
     }
 }
 
+function getCurrentTag() {
+    return getTag(getCurrentFrame(), defaultSelectedBee)
+}
+
+var oldCX, oldCY, oldAngle;
+function showZoomTag() {
+    let zw=400
+    let zh=400
+
+    console.log('showZoomTag')
+  
+    let cx=0
+    let cy=0
+    let tag=getCurrentTag()
+    if (typeof tag === 'undefined') {
+        cx = oldCX
+        cy = oldCY
+        angle = oldAngle
+    } else {
+        cx = tag.c[0]
+        cy = tag.c[1]
+        angle = tagAngle(tag)/180*Math.PI
+    }
+    
+    oldCX = cx
+    oldCY = cy
+    oldAngle = angle
+
+    var zoom_canvas = $('#zoom')[0];
+    var zoom_ctx = zoom_canvas.getContext('2d');
+    zoom_canvas.width=zw
+    zoom_canvas.height=zh
+    zoom_ctx.clearRect(0, 0, zw,zh)
+    let w = zw, h = zh
+    let mw = w * 0.5,  mh = h * 0.5
+    let w2 = w + 2 * mw, h2 = h + 2 * mh
+    
+    zoom_ctx.save()
+    zoom_ctx.translate(mw,mh)
+    zoom_ctx.rotate(-angle)
+    zoom_ctx.translate(-mw,-mh)
+    zoom_ctx.drawImage(video, 
+       (cx - mw), (cy - mh), w, h,
+        0,0,zh,zw);
+    zoom_ctx.restore()
+    
+    zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
+    if (zoomShowOverlay) {
+      zoom_ctx.save()
+      zoom_ctx.beginPath();
+      zoom_ctx.moveTo(mw,0)
+      zoom_ctx.lineTo(mw,zh)
+      zoom_ctx.moveTo(0,mh)
+      zoom_ctx.lineTo(zw,mh)
+      zoom_ctx.strokeStyle = 'blue'
+      zoom_ctx.stroke()   
+      
+      if (typeof tag !== 'undefined') {
+          zoom_ctx.beginPath();
+          zoom_ctx.rect(mw-3,mh-3,6,6)
+          zoom_ctx.fillStyle = 'yellow'
+          zoom_ctx.fill()   
+      }     
+      zoom_ctx.restore()
+    }
+}
 
 
 
@@ -2890,7 +3119,7 @@ function onAxesClick(event) {
             // Set the id as default selection before seeking the frame
             defaultSelectedBee = id
         }
-        video2.seekTo({'frame':frame})
+        seekFrame(frame)
         // external controller logic is supposed to call back updateTimeMark
         // to update the view
     }
