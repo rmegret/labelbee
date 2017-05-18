@@ -6,6 +6,7 @@ function ChronoAxes(parent, videoinfo, options) {
 
     var axes = this 
     axes.parent = parent
+    axes.selectedID = null
     
     /* ### MODEL/VIEW: Layout sizes ### */
     
@@ -421,6 +422,7 @@ function ChronoAxes(parent, videoinfo, options) {
         chronoGroup.select('.y.axis').call(yAxis);
         
         refreshTimeMark()
+        refreshIdSelection()
 
         // Signal the plot content should be redrawn
         // Protection for infinite loops: trigger only if internal events
@@ -440,6 +442,24 @@ function ChronoAxes(parent, videoinfo, options) {
     // Callback to be defined by the user
     // Called whenever the axes scale changed (resize or zoom)
     axes.onAxesChanged = undefined
+    
+    // ### ID selection API ###
+    function selectId(id) {
+      axes.selectedID = id
+      refreshIdSelection()
+    }
+    function refreshIdSelection() {
+    //axes.refreshIdSelection = function(){
+        axes.chronoGroup.select('.y.axis').selectAll('.tick')
+                   .style('fill','black')
+                   .style('font-weight','normal')
+        axes.chronoGroup.select('.y.axis').selectAll('.tick')
+                   .filter(function(d) {return d==axes.selectedID})
+                   .style('fill','blue')
+                   .style('font-weight','bold')
+    }
+    axes.refreshIdSelection = refreshIdSelection
+    axes.selectId=selectId
 
     
     // ### timeMark API ###

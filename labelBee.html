@@ -109,9 +109,28 @@
 
 <!--           <video src="" id="video" style="display:none"></video> -->
 
-          <div id="chronoDiv" class="ui-widget-content" 
-               width="400" height="200" style="padding-right: 16px;">
-              <svg id="svgVisualize" width="100%" height="100%"></svg>
+          <div>
+              Height:
+              <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram height">h-</span></button>
+              <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram height">h=</span></button>
+              <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram height">h+</span></button>
+              &nbsp;
+              Width:
+              <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram width">w-</span></button>
+              <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram width">w=</span></button>
+              <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram width">w+</span></button>
+              &nbsp;
+              Tags:
+              <button value="H0" onclick="chronoFilter('H0')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming==0">H0</span></button>
+              <button value="H1" onclick="chronoFilter('H1')" type="button" class="btn btn-info  btn-xs" title="Show only tags with Hamming<=1">H1</span></button>
+              <button value="H2" onclick="chronoFilter('H2')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming<=2">H2</span></button>
+              <button value="H&infin;" onclick="chronoFilter('Hall')" type="button" class="btn btn-info btn-xs" title="Show all tags, including virtual ones">all</span></button>
+              &Delta;<input type="text" value="0" size="2" id="tagsIntervalFilterMinLength" onchange="onTagsParametersChanged(event)">
+
+              <div id="chronoDiv" class="ui-widget-content" 
+                   width="400" height="200" style="padding-right: 16px;">
+                  <svg id="svgVisualize" width="100%" height="100%"></svg>
+              </div>
           </div>
 
         </td>
@@ -268,6 +287,9 @@
                     <label><input type="checkbox" checked="true" id="showTagsTracks" onclick="onShowTagsTracksChanged()">Show Tags Tracks</label>
                   </div>
                   <div class="checkbox">
+                    <label><input type="checkbox" checked="true" id="showSelectedTagsTracks" onclick="onShowTagsTracksChanged()">Show Selected Track</label>
+                  </div>
+                  <div class="checkbox">
                     <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">Show Tags Orientation</label>
                   </div>
                   <div class="text">
@@ -276,6 +298,11 @@
                   <div class="text">
                   <label>Tags sample filter<input type="text" value="return true" id="tagsSampleFilter" onchange="onTagsParametersChanged(event)"></label>
                   </div>
+                  <br>
+                  <div class="text">
+                  <label>Tags interval filter<input type="text" value="return true" id="tagsIntervalFilter" onchange="onTagsParametersChanged(event)"></label>
+                  </div>
+                  <br>
                   <div class="text">
                   <label>Tags ID filter<input type="text" value="return true" id="tagsIDFilter" onchange="onTagsParametersChanged(event)"></label>
                   </div>

@@ -80,7 +80,7 @@ function init() {
     videoList = ['testvideo.mp4','vlc1.mp4','vlc2.mp4','1_02_R_170419141405.mp4','1_02_R_170426151700_cleaned.mp4','36_01_H_160715100000_copy.mp4','GuraboTest/4_02_R_170511130000.mp4']
     initVideoSelectbox()
     
-    $('#selectboxVideo')[0].selectedIndex=1; // select long video
+    $('#selectboxVideo')[0].selectedIndex=6; // select long video
 
     video2 = VideoFrame({
         id: 'video',
@@ -103,13 +103,15 @@ function init() {
     showObsTracks = true
     showObsChrono = false
     showTags = true;
-    showTagsTracks = true;
+    showTagsTracks = false
+    showSelectedTagsTracks = true
     showTagsOrientation = false
     showTagsChrono = true
     $('#showObs')[0].checked=showObs
     $('#showObsTracks')[0].checked=showObsTracks
     $('#showTags')[0].checked=showTags
     $('#showTagsTracks')[0].checked=showTagsTracks
+    $('#showSelectedTagsTracks')[0].checked=showTagsTracks
     $('#showTagsOrientation')[0].checked=showTagsOrientation
     $('#showTagsChrono')[0].checked=showTagsChrono
     $('#showObsChrono')[0].checked=showObsChrono
@@ -371,15 +373,7 @@ function printTracks() {
 
 // ## Annotations control
 
-function saveToFile() {
-    console.log("savetoFile: exporting to JSON...")
-
-    var json = JSON.stringify(Tracks);
-    var filename = "Tracks.json";
-
-    var blob = new Blob([json], {
-        type: "text/json"
-    });
+function saveBlobToFile(blob, filename) {
     var url = window.URL.createObjectURL(blob);
     var a = document.createElement("a");
     a.hidden = true;
@@ -387,9 +381,33 @@ function saveToFile() {
     a.href = url;
     a.download = filename;
     a.click();
-    console.log("savetoFile: waiting for user to save to file")
+    console.log("saveBlobToFile: waiting for user to save to file")
         //window.URL.revokeObjectURL(url);
-    console.log("savetoFile: done")
+    console.log("saveBlobToFile: done")
+    
+    // New simplified API?
+    //saveAs(blob, filename)
+}
+function saveObjToJsonFile(obj, filename) {
+    var json = JSON.stringify(obj);
+
+    var blob = new Blob([json], {
+        type: "text/json"
+    });
+    
+    saveBlobToFile(blob, filename)
+}
+function saveCSVToFile(txt, filename) {
+    var blob = new Blob([txt], {
+        type: "text/csv"
+    });
+    saveBlobToFile(blob, filename)
+}
+
+function saveToFile() {
+    console.log("savetoFile: exporting to JSON...")
+
+    saveObjToJsonFile(Tracks, 'Tracks.json')
 }
 
 function tracksToCSV(Tracks) {
@@ -422,22 +440,10 @@ function saveToCSV() {
     console.log("savetoFile: exporting to CSV...")
 
     var txt = tracksToCSV(Tracks);
-    var filename = "Tracks.csv";
 
-    var blob = new Blob([txt], {
-        type: "text/csv"
-    });
-    var url = window.URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.hidden = true;
-    document.body.appendChild(a);
-    a.href = url;
-    a.download = filename;
-    a.click();
-    console.log("savetoFile: waiting for user to save to file")
-        //window.URL.revokeObjectURL(url);
-    console.log("savetoFile: done")
+    saveCSVToFile(txt, 'Tacks.csv')
 }
+
 
 function tracksToBBoxes(Tracks) {
     var csv = "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n"
@@ -463,21 +469,8 @@ function saveToBBoxes() {
     console.log("with simple format: frame, left, top, right, bottom, pollen")
 
     var txt = tracksToBBoxes(Tracks);
-    var filename = "BBoxes.csv";
 
-    var blob = new Blob([txt], {
-        type: "text/csv"
-    });
-    var url = window.URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.hidden = true;
-    document.body.appendChild(a);
-    a.href = url;
-    a.download = filename;
-    a.click();
-    console.log("saveToBBoxes: waiting for user to save to file")
-        //window.URL.revokeObjectURL(url);
-    console.log("saveToBBoxes: done")
+    saveCSVToFile(blob, "BBoxes.csv")
 }
 
 function onReaderLoad(event) {
@@ -516,7 +509,6 @@ function loadFromFile(event) {
 }
 
 function tagsAddFrames(Tags) {
-
       for (let f in Tags) {
         let tagsFrame = Tags[f].tags
         if (tagsFrame == null) continue;
@@ -528,7 +520,53 @@ function tagsAddFrames(Tags) {
             tag.frame=Number(f)          
         }    
     }
+}
 
+function chronoAdjust(mode) {
+    let factor = 1.2
+    let mh = axes.margin.top+axes.margin.bottom
+    let mw = axes.margin.left+axes.margin.right
+    if (mode == 'H-') {
+        let h = ($('#chronoDiv').height()-mh)/factor+mh
+        if (h<100) h=100;
+        $('#chronoDiv').height(h)
+    }
+    if (mode == 'H=') {
+        adjustChronogramHeight(10)
+    }
+    if (mode == 'H+') {
+        let h = ($('#chronoDiv').height()-mh)*factor+mh
+        $('#chronoDiv').height(h)
+    }
+
+    if (mode == 'W-') {
+        let w = ($('#chronoDiv').width()-mw)/factor+mw
+        if (w<200) w=200;
+        $('#chronoDiv').width(w)
+    }
+    if (mode == 'W=') {
+        let w = $('#canvasresize').width()
+        if (w<200) w=200;
+        $('#chronoDiv').width(w)
+    }
+    if (mode == 'W+') {
+        let w = ($('#chronoDiv').width()-mw)*factor+mw
+        $('#chronoDiv').width(w)
+    }
+}
+
+function adjustChronogramHeight(itemHeight) {
+    if (itemHeight == null) {
+        itemHeight = 10
+    }
+
+    let mh = axes.margin.top+axes.margin.bottom
+    let domain = axes.ydomain()
+    let minheight = domain.length*itemHeight + mh
+    if (minheight < 100) minheight = 100;
+    //if ($('#chronoDiv').height() < minheight) {
+        $('#chronoDiv').height(minheight)
+    //}
 }
 
 function onTagsReaderLoad(event) {
@@ -540,6 +578,9 @@ function onTagsReaderLoad(event) {
     tagsAddFrames(Tags)
     
     refreshChronogram()
+    
+    adjustChronogramHeight()
+    
     onFrameChanged();
     
     //console.log(event)
@@ -558,6 +599,11 @@ function loadTagsFromFile(event) {
     reader.readAsText(fileToRead);
 }
 
+function saveTagsToFile(event) {
+    console.log("saveTagsToFile: exporting to JSON...")
+
+    saveObjToJsonFile(Tags, 'Tags.json')
+}
 
 
 // ######################################################################
@@ -1044,7 +1090,7 @@ function refreshOverlay() {
         
         //plotBees(ctx1); // Not needed, identification done directly in BeeRect
         
-        if (showTagsTracks)
+        if (showTagsTracks || showSelectedTagsTracks)
             plotTagsTracks(ctx)
         else if (showTags)
             plotTags(ctx)
@@ -1633,6 +1679,26 @@ function tagAngle(tag) {
     let angle = Math.atan2(up[0], -up[1])/Math.PI*180
     return angle
 }
+function plotTagOrientation(ctx, tag, color) {
+      let pt = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+      let dir = tagUp(tag)
+      if (typeof dir !== 'undefined') {
+        ctx.save()
+        let L=40, L1=35, W1=4
+        ctx.beginPath();
+        ctx.moveTo(pt.x-dir[0]*L, pt.y-dir[1]*L)
+        ctx.lineTo(pt.x+dir[0]*L, pt.y+dir[1]*L)
+        ctx.lineTo(pt.x+dir[0]*L1+dir[1]*W1, pt.y+dir[1]*L1-dir[0]*W1)
+        ctx.strokeStyle = color
+        if (tag.hamming>2)
+            ctx.setLineDash([4,4])
+        ctx.stroke();
+        ctx.restore()
+      }
+}
+function isCurrentSelection(id) {
+  return typeof defaultSelectedBee !== 'undefined' && id == defaultSelectedBee
+}
 function plotTag(ctx, tag, color, flags) {
     if (!tagsSampleFilter(tag)) {
         return
@@ -1648,7 +1714,8 @@ function plotTag(ctx, tag, color, flags) {
     if (typeof flags === 'undefined') {
       flags = {
         "id":true,
-        "radius":5
+        "radius":5,
+        "simple":false
       }
     }
     let radius = flags.radius
@@ -1656,49 +1723,45 @@ function plotTag(ctx, tag, color, flags) {
 
     let pt = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
     
-    if (showTagsOrientation) {
-      if (false) {
-          let ppt = tagCorners(tag)
-          if (typeof ppt !== 'undefined') {
-            ctx.beginPath();
-            ctx.arc(ppt.x, ppt.y, 3, 0, Math.PI * 2);
-            ctx.fillStyle = 'magenta'
-            ctx.fill();
-          }
-      }
-      let dir = tagUp(tag)
-      if (typeof dir !== 'undefined') {
-        let L=40, L1=35, W1=4
+    if (isCurrentSelection(tag.id)) {
+        ctx.save()
         ctx.beginPath();
-        ctx.moveTo(pt.x-dir[0]*L, pt.y-dir[1]*L)
-        ctx.lineTo(pt.x+dir[0]*L, pt.y+dir[1]*L)
-        ctx.lineTo(pt.x+dir[0]*L1+dir[1]*W1, pt.y+dir[1]*L1-dir[0]*W1)
-        ctx.strokeStyle = 'magenta'
+        ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.closePath();
         ctx.stroke();
-      }
-    }
-
-    if (typeof defaultSelectedBee !== 'undefined' && tag.id == defaultSelectedBee) {
-      ctx.save()
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
-      ctx.closePath();
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, radius+2, 0, Math.PI * 2);
-      ctx.strokeStyle = 'yellow';
-      ctx.lineWidth = 3;
-      ctx.closePath();
-      //ctx.stroke();
-      ctx.restore()
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, radius+2, 0, Math.PI * 2);
+        ctx.strokeStyle = 'yellow';
+        ctx.lineWidth = 3;
+        ctx.closePath();
+      
+        if (tag.frame == getCurrentFrame()) {
+            if (showTagsOrientation) {
+                plotTagOrientation(ctx, tag, '#00ff00')
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(pt.x-20,pt.y)
+                ctx.lineTo(pt.x+20,pt.y)
+                ctx.moveTo(pt.x,pt.y-20)
+                ctx.lineTo(pt.x,pt.y+20)
+                ctx.strokeStyle = '#00FF00';
+                ctx.lineWidth = 3;
+                ctx.closePath();
+                ctx.stroke();
+            }
+            ctx.restore()
+        }
     } else {
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = color;
-      ctx.closePath();
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = color;
+        ctx.closePath();
+        ctx.stroke();
+        if (tag.frame == getCurrentFrame() && showTagsOrientation) {
+            plotTagOrientation(ctx, tag, 'magenta')
+        }
     }
 
     if (flags.id===true) {
@@ -1759,6 +1822,7 @@ function plotTagsTracks(ctx) {
         return color;
     }
 
+    if (showTagsTracks) {
     // Plot past and future tag positions
     let p0 = []
     for (let f=fmin; f<=fmax; f++) {
@@ -1777,19 +1841,30 @@ function plotTagsTracks(ctx) {
             let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
             
             if (typeof p0[tag.id] !== 'undefined') {
+                ctx.save()
                 ctx.beginPath();
                 ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
                 ctx.lineTo(p1.x,p1.y)
                 ctx.strokeStyle = color;
+                if (tag.hamming<1000)
+                    ctx.setLineDash([])
+                else
+                    ctx.setLineDash([2,2])
                 ctx.stroke();
+                ctx.restore()
             }
             p0[tag.id] = {x:p1.x, y:p1.y}
             
-            plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
+            if (tag.hamming<1000)
+              plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
+            else
+              plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
         }    
     }
+    }
     
-    // Plot past and future tag positions
+    if (showSelectedTagsTracks) {
+    // Plot track of selected bee
     if (typeof defaultSelectedBee !== 'undefined') {
         console.log('defaultSelectedBee=',defaultSelectedBee)
         let p0 = []
@@ -1821,8 +1896,17 @@ function plotTagsTracks(ctx) {
                     ctx.beginPath();
                     ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
                     ctx.lineTo(p1.x,p1.y)
-                    ctx.strokeStyle = 'yellow';
-                    ctx.lineWidth = 5
+                    let T = tProx(f)
+                    let S = tProxSigned(f)
+                    if (S>0)
+                        ctx.strokeStyle = "rgba(255,255,0,"+T+")";
+                    else
+                        ctx.strokeStyle = "rgba(128,255,128,"+T+")";
+                    ctx.lineWidth = T*2
+                    if (tag.hamming<1000)
+                        ctx.setLineDash([])
+                    else
+                        ctx.setLineDash([2,2])
                     ctx.stroke();
                     ctx.restore()
                 }
@@ -1831,6 +1915,7 @@ function plotTagsTracks(ctx) {
                 //plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
             }    
         }
+    }
     }
     
     {
@@ -1857,6 +1942,7 @@ function onShowTagsChanged() {
 }
 function onShowTagsTracksChanged() {
     showTagsTracks = $('#showTagsTracks')[0].checked
+    showSelectedTagsTracks = $('#showSelectedTagsTracks')[0].checked
     onFrameChanged()
 }
 
@@ -1868,14 +1954,47 @@ function onTrackWindowChanged() {
 }
 
 tagsSampleFilter = function(tag) {return true}
+tagsIntervalFilter = function(interval) {return true}
 tagsIDFilter = function(idinfo) {return true}
 function onTagsParametersChanged() {
+    console.log('onTagsParametersChanged')
     // Callback when tags chronogram computation parameters have changed
     tagsSampleFilter = Function("tag",$('#tagsSampleFilter')[0].value)
+    
+    let minLength = Number($('#tagsIntervalFilterMinLength').val())
+    
+    tagsIntervalFilter = function(interval) {
+      let fun = Function("interval",$('#tagsIntervalFilter')[0].value)
+      return (interval.end-interval.begin>=minLength) && fun(interval)
+    }
     tagsIDFilter = Function("idinfo",$('#tagsIDFilter')[0].value)
     console.log('onTagsParametersChanged:\ntagsSampleFilter=',tagsSampleFilter,
+                'tagsIntervalFilter=',tagsIntervalFilter,
                 '\ntagsIDFilter=',tagsIDFilter)
     refreshChronogram()
+}
+function onTagsParametersSelectChanged(event) {
+  $('#tagsIntervalFilter').val($('#tagsIntervalFilterSelect').val())
+  onTagsParametersChanged()
+}
+
+function chronoFilter(mode) {
+  if (mode=='H0') {
+      $('#tagsSampleFilter').val('return tag.hamming==0')
+      onTagsParametersChanged()
+  }
+  if (mode=='H1') {
+      $('#tagsSampleFilter').val('return tag.hamming<=1')
+      onTagsParametersChanged()
+  }
+  if (mode=='H2') {
+      $('#tagsSampleFilter').val('return tag.hamming<=2')
+      onTagsParametersChanged()
+  }
+  if (mode=='Hall') {
+      $('#tagsSampleFilter').val('return true')
+      onTagsParametersChanged()
+  }
 }
 
 function onChronoParametersChanged() {
@@ -2210,9 +2329,9 @@ function predictId(frame, rect, mode) {
 }
 function predictIdFromTags(frame, pt, mode) {
     var tmp = Tags[frame];
-    if (tmp === undefined) return {id: undefined, tag: undefined, reason:'notFound'};
+    if (tmp == null) return {id: undefined, tag: undefined, reason:'notFound'};
     var frame_tags = tmp.tags;
-    if (frame_tags !== undefined) {
+    if (frame_tags != null) {
         for (let k in frame_tags) {
             let tag = frame_tags[k];
             let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
@@ -2255,6 +2374,25 @@ function onMouseDown2(ev) {
    }
    console.log("onMouseDown2");
    return true;
+}
+
+function onBackgroundClick(option) {
+    console.log('onBackgroundClick option=',option)
+    let ptCanvas = {x: option.e.offsetX,
+            y: option.e.offsetY}
+    let pt = canvasToVideoPoint(ptCanvas)
+    console.log('pt=',pt)
+    pt = {x:pt.x, y:pt.y}
+    console.log('pt=',pt)
+
+    tmp = predictIdFromTags(getCurrentFrame(), pt)
+    
+    console.log('id=',tmp.id)
+    
+    if (tmp.id != null) {
+        selectBeeByID(tmp.id)
+        refresh()
+    }
 }
 
 function onMouseDown(option) {
@@ -2325,7 +2463,7 @@ function onMouseDown(option) {
                     
                     let angle = tagAngle(tag)
                     if (typeof angle !== 'undefined') {
-                        console.log("MouseDown: found angle=",angle, 'up=',up)
+                        console.log("MouseDown: found angle=",angle)
                         rect = addRect(predictionTag.id, 
                                pt.x - default_width / 2, 
                                pt.y - default_height / 2,
@@ -2459,6 +2597,7 @@ function onMouseUp(option) {
         console.log('onMouseUp: option=', option)
         //canvas1.off('mouse:move'); // See onMouseUp_Dragging
         // All moving stuff handled now by event onObjectModified() and onMouseUp_Dragging()
+    onBackgroundClick(option)
 }
 
 extraScale = 1
@@ -2677,11 +2816,14 @@ function selectBeeByID(id) {
       canvas1.setActiveObject(rect);
       // TESTME: selectBee was commented
       selectBee(rect);
+      axes.selectId(id)
       return true
    } else {
       canvas1.deactivateAll().renderAll(); // Deselect rect if any
       updateForm(null)
       // defaultSelectedBee = undefined // Do not cancel default if not found
+      defaultSelectedBee = id // Set default
+      axes.selectId(id)
       if (logging.selectionEvents)
          console.log('selectBeeByID: No rect found for id=',id);
       return false
@@ -3418,12 +3560,17 @@ function refreshChronogram() {
             }
         
             if (isActive) {
+              let doPush = false
               if (activeInterval.end == f-1) {
                 activeInterval.end = f
               } else {
+                doPush = true
+              }
+              if (doPush) {
                 // Close previous 
                 activeInterval['end']++
-                tagIntervals.push(activeInterval)
+                if (tagsIntervalFilter(activeInterval))
+                    tagIntervals.push(activeInterval)
                 // Open new one
                 activeInterval={'id':id,'begin':f,'end':f}
               }
@@ -3436,7 +3583,8 @@ function refreshChronogram() {
           // Close if active
           if (isActive)
             activeInterval['end']++
-            tagIntervals.push(activeInterval)
+            if (tagsIntervalFilter(activeInterval))
+                tagIntervals.push(activeInterval)
         }
     }
     
@@ -3445,4 +3593,100 @@ function refreshChronogram() {
 
     //d3.selectAll("svg > *").remove();
     drawChrono();
+}
+
+
+function interpolateTags(maxgap) {
+    tagIntervals = []
+
+        /* Transpose Tags data structure */
+        let ttags = []
+        for (let F in Tags) {
+            let tags = Tags[F].tags
+            for (let i in tags) {
+                let id = Number(tags[i].id)
+                ttags[id]=[];
+            }
+        }
+        for (let F in Tags) {
+            let tags = Tags[F].tags
+            for (let i in tags) {
+                let id = Number(tags[i].id)
+                ttags[id][F]=tags[i];
+            }
+        }
+        
+        function pushInterpolate(id,f1,f2) {
+            let T1 = ttags[id][f1]
+            let T2 = ttags[id][f2]
+            let P1 = T1.p
+            
+            for (let j=f1+1; j<f2; j++) {
+                let a = (j-f1)/(f2-f1)
+                let cx = (1-a)*T1.c[0] + a*T2.c[0]
+                let cy = (1-a)*T1.c[1] + a*T2.c[1]
+                let dx = cx - T1.c[0]
+                let dy = cy - T1.c[1]
+                //cx = T1.c[0]
+                //cy = T1.c[1]
+                //dx = 0
+                //dy = 0
+                let pts = [ 
+                            [P1[0][0]+dx,P1[0][1]+dy],
+                            [P1[1][0]+dx,P1[1][1]+dy],
+                            [P1[2][0]+dx,P1[2][1]+dy],
+                            [P1[3][0]+dx,P1[3][1]+dy]
+                          ];
+                if (Tags[j] == null) {
+                    Tags[j] = {tags:[]}
+                }
+                Tags[j].tags.push({id: id, c: [cx,cy], hamming: 1000, p: pts, frame: j})
+                console.log('interpolate id='+id+' f='+j)
+            }
+        }
+    
+        /* Convert to intervals */
+        for (let id in ttags) {
+          let obsarray = ttags[id]
+          let activeInterval = []
+          let isActive = false
+          for (let f0 in obsarray) {
+            let f = Number(f0)
+            let tags = obsarray[f]
+        
+            if (!tagsSampleFilter(tags)) {
+                continue
+            }
+        
+            if (isActive) {
+              let doPush = false
+              if (activeInterval.end == f-1) {
+                activeInterval.end = f
+              } else if (f - activeInterval.end < maxgap) {
+                  // Try to interpolate
+                  
+                  pushInterpolate(id,activeInterval.end,f)
+                  
+                  activeInterval.end = f
+              } else {
+                  doPush = true
+              }
+              if (doPush) {
+                // Close previous 
+                //activeInterval['end']++
+                //tagIntervals.push(activeInterval)
+                // Open new one
+                activeInterval={'id':id,'begin':f,'end':f}
+              }
+            } else {
+              // Open new one
+              activeInterval={'id':id,'begin':f,'end':f}
+              isActive=true;
+            }
+          }
+          // Close if active
+          if (isActive)
+            activeInterval['end']++
+            //tagIntervals.push(activeInterval)
+        }
 }
