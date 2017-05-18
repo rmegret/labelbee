@@ -366,7 +366,7 @@ function ChronoAxes(parent, videoinfo, options) {
     // so that timeMark will always be on top
     plotArea = clippedArea.insert("g").attr("class","plotArea")
   
-    insertTimeMark(chronoGroup)  // Show on top of everything
+    insertTimeMark(clippedArea)  // Show on top of everything, but still clip it
   
     // Exports of the layout
     //axes.xAxisGroup = xAxisGroup //  Private
@@ -474,21 +474,32 @@ function ChronoAxes(parent, videoinfo, options) {
         refreshTimeMark()
     }
     function refreshTimeMark() {
-        var frame = axes.timeMark.frame;
-        axes.timeMark
-            .attr("x", function(d) {
-                return axes.xScale(frame);
-            })
-            .attr("y", function(d) {
-                return 0;  // In plotArea translated coordinates
-            })
-            .attr("width", function(d) {
-                return (axes.xScale(1) - axes.xScale(0.0));
-            })
-            .attr("height", function(d) {
-                //return axes.height() + 40;   // Extend onto the bottom axes
-                return axes.height();   // FIXME: tickMark need its own clipPath
-            })
+        let frame = axes.timeMark.frame;
+        let isOut = false;
+        if (frame<=axes.xScale.domain()[0]-1) {
+            frame = axes.xScale.domain()[0]
+            isOut = true
+        } else if (frame>=axes.xScale.domain()[1]) {
+            frame = axes.xScale.domain()[1]
+            isOut = true
+        }
+        if (isOut) {
+            axes.timeMark
+                .attr("x", axes.xScale(frame)-1)
+                .attr("y", 0) 
+                .attr("width", 2)
+                .attr("height", axes.height())
+                .attr("class", "timeMark out")
+        } else {
+            let w = axes.xScale(1) - axes.xScale(0.0)
+            let isThin = w<2
+            axes.timeMark
+                .attr("x", axes.xScale(frame))
+                .attr("y", 0)  // In plotArea translated coordinates
+                .attr("width", isThin?1:w)
+                .attr("height", axes.height())
+                .attr("class", isThin?"timeMark thin":"timeMark")
+        }
     }
     function setTimeMark(frame) {
         if (typeof axes.timeMark === 'undefined') {

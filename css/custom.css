@@ -140,6 +140,16 @@ svg {
   fill: #F00;
   fill-opacity: 0.2;
   stroke: #F00;
+  stroke-width: 1;
+}
+.timeMark.thin {
+  stroke-width: 2;
+}
+.timeMark.out {
+  fill: none;
+  stroke: #F00;
+  stroke-dasharray: 2px,2px;
+  stroke-width: 3;
 }
 
 .axis path, .axis line, .tagAxis path, .tagAxis line {
