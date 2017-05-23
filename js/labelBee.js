@@ -1008,6 +1008,10 @@ function seekFrame(frame) {
     startSeekTimer()
     video2.seekTo({'frame':frame+videoinfo.frameoffset})
 }
+function fastSeekFrame(frame) {
+    startSeekTimer()
+    video2.seekTo({'frame':frame+videoinfo.frameoffset, 'fast':true})
+}
 
 function onFrameTextChanged() {
     let frame = Number($('#currentFrame').val())
@@ -3251,6 +3255,11 @@ function onAxesClick(event) {
     var id = event.id
     if (logging.axesEvents)
         console.log("onAxesClick: seeking to frame=",frame,"...");
+ 
+    if (event.type==="move") {
+        fastSeekFrame(frame)
+        return;
+    }
  
     defaultSelectedBee = id
     if (frame==getCurrentFrame()) {

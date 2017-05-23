@@ -331,7 +331,10 @@ VideoFrame.prototype.seekTo = function(config) {
 	}
 
 	if (!isNaN(seekTime)) {
-		this.video.currentTime = seekTime;
+	  if (option.fast)
+	    this.video.fastSeek(seekTime)
+	  else
+      this.video.currentTime = seekTime;
 	}
 };
 

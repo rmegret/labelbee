@@ -600,6 +600,42 @@ function ChronoAxes(parent, videoinfo, options) {
             console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
     })
     
+    chronoGroup.on("mousemove",function() {
+        if (!d3.event.ctrlKey) return;
+        if (typeof axes.onClick == 'undefined') return;
+        if (d3.event.defaultPrevented) return;
+        
+        var coords = d3.mouse(this);
+        var frame = Math.round( xScale.invert(coords[0]) );
+        
+        if (typeof glob_offset === 'undefined') glob_offset=0
+        frame = Math.round(frame/40)*40+glob_offset
+        
+        var id 
+        if (options.useOrdinalScale) {
+          let range = yScale.range()
+          rank = Math.floor((coords[1]-range[0])/(range[1]-range[0]));
+          if (rank<0 || rank>= yScale.domain().length)
+             id = undefined
+          else
+             id = yScale.domain()[rank]
+          //console.log("chronoGroup.onClick: rank=", rank)
+        } else {
+          rank = Math.round( yScale.invert(coords[1]) );
+          if (rank<yScale.domain()[0] || rank> yScale.domain()[1])
+            id=undefined
+          else
+            id = rank
+        }
+    
+        if (logging.axesEvents)
+            console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
+    
+        // Trigger the callback, passing frame and id information
+        if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id, 'type': 'move'}))
+            console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+    })
+    
     return axes
     
     // Usage:
