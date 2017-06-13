@@ -1894,18 +1894,22 @@ function plotTagsTracks(ctx) {
             
                 //console.log(tag)
                 let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+                
+
+                let T = tProx(f)
+                let S = tProxSigned(f)
+                let color2
+                if (S>0)
+                    color2 = "rgba(255,255,0,"+T+")";
+                else
+                    color2 = "rgba(128,255,128,"+T+")";
             
                 if (typeof p0[tag.id] !== 'undefined') {
                     ctx.save()
                     ctx.beginPath();
                     ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
                     ctx.lineTo(p1.x,p1.y)
-                    let T = tProx(f)
-                    let S = tProxSigned(f)
-                    if (S>0)
-                        ctx.strokeStyle = "rgba(255,255,0,"+T+")";
-                    else
-                        ctx.strokeStyle = "rgba(128,255,128,"+T+")";
+                    ctx.strokeStyle = color2
                     ctx.lineWidth = T*2
                     if (tag.hamming<1000)
                         ctx.setLineDash([])
@@ -1915,8 +1919,8 @@ function plotTagsTracks(ctx) {
                     ctx.restore()
                 }
                 p0[tag.id] = {x:p1.x, y:p1.y}
-            
-                //plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
+                
+                plotTag(ctx, tag, color2, {"id":false, "radius": 3*tProx(f)+1})            
             }    
         }
     }
@@ -2331,6 +2335,8 @@ function predictId(frame, rect, mode) {
         reason: 'default'
     };
 }
+
+predictIdClickRadius = 40
 function predictIdFromTags(frame, pt, mode) {
     var tmp = Tags[frame];
     if (tmp == null) return {id: undefined, tag: undefined, reason:'notFound'};
@@ -2339,12 +2345,31 @@ function predictIdFromTags(frame, pt, mode) {
         for (let k in frame_tags) {
             let tag = frame_tags[k];
             let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
-            if (d < 40) {
+            if (d < predictIdClickRadius) {
                 return {id: tag.id, tag: tag, reason:'distance'};
             }
         }
     }
     return {id: undefined, tag: undefined, reason:'notFound'};
+}
+function predictIdFromTagsMultiframe(frameInterval, pt, mode) {
+    let out = {id: undefined, tag: undefined, reason:'notFound', d:Infinity, frame: undefined};
+    
+    for (let frame = frameInterval[0]; frame<=frameInterval[1]; frame++) {
+        var tmp = Tags[frame];
+        if (tmp == null) continue
+        var frame_tags = tmp.tags;
+        if (frame_tags != null) {
+            for (let k in frame_tags) {
+                let tag = frame_tags[k];
+                let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
+                if (d < predictIdClickRadius && d < out.d) {
+                    out = {id: tag.id, tag: tag, reason:'distance', d:d, frame:frame};
+                }
+            }
+        }
+    }
+    return out;
 }
 function computeDefaultNewID() {
     var default_id = 0
@@ -2389,12 +2414,34 @@ function onBackgroundClick(option) {
     pt = {x:pt.x, y:pt.y}
     console.log('pt=',pt)
 
-    tmp = predictIdFromTags(getCurrentFrame(), pt)
+    let clickMultiframe = true
+    if (!clickMultiframe) {
+      tmp = predictIdFromTags(getCurrentFrame(), pt)
+      
+      console.log('id=',tmp.id)
     
-    console.log('id=',tmp.id)
+      if (tmp.id != null) {
+          selectBeeByID(tmp.id)
+          refresh()
+      }
+
+    } else {
+      tmp = predictIdFromTagsMultiframe([getCurrentFrame()-plotTrack_range_forward, getCurrentFrame()+plotTrack_range_forward], pt)
+      
+      console.log('id=',tmp.id, 'frame=', tmp.frame)
     
-    if (tmp.id != null) {
-        selectBeeByID(tmp.id)
+      if (tmp.id != null) {
+        selectBeeByIDandFrame(tmp.id,tmp.frame)
+      }
+    }
+    
+}
+function selectBeeByIDandFrame(id,frame) {
+    if (frame != getCurrentFrame()) {
+        defaultSelectedBee = id
+        seekFrame(frame)
+    } else {
+        selectBeeByID(id)
         refresh()
     }
 }
