@@ -492,11 +492,12 @@ function ChronoAxes(parent, videoinfo, options) {
                 .attr("class", "timeMark out")
         } else {
             let w = axes.xScale(1) - axes.xScale(0.0)
-            let isThin = w<2
+            let minW = 1
+            let isThin = w<minW
             axes.timeMark
-                .attr("x", axes.xScale(frame))
+                .attr("x", axes.xScale(frame) - 1)
                 .attr("y", 0)  // In plotArea translated coordinates
-                .attr("width", isThin?1:w)
+                .attr("width", isThin?(minW+2):(w+2))
                 .attr("height", axes.height())
                 .attr("class", isThin?"timeMark thin":"timeMark")
         }
