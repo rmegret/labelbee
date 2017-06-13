@@ -338,8 +338,8 @@ function storeObs(tmpObs) {
 
 function changeObservationID(frame, old_id, new_id) {
     // REMI: modified to be be independent of View
-    if (Tracks[frame] !== undefined) {
-        if (typeof Tracks[frame][old_id] !== 'undefined') {
+    if (Tracks[frame] != null) {
+        if (Tracks[frame][old_id] != null) {
             if (logging.submitEvents)
                 console.log("changeObservationID: frame=", frame, "old_id=", old_id, " new_id=", new_id);
             Tracks[frame][new_id] = Tracks[frame][old_id];
