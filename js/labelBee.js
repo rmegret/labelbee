@@ -869,7 +869,7 @@ function onVideoLoaded(event) {
         console.log('videoLoaded', event)
     
     let videourl = video.src;
-    let infourl = videourl+'.info'
+    let infourl = videourl+'.info.json'
         
     var jqxhr = $.getJSON( infourl, function(data) {
         if (logging.videoEvents)
