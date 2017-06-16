@@ -80,7 +80,7 @@ function saveToCSV() {
 
     var txt = tracksToCSV(Tracks);
 
-    saveCSVToFile(txt, 'Tacks.csv')
+    saveCSVToFile(txt, 'Tracks.csv')
 }
 
 
@@ -102,14 +102,34 @@ function tracksToBBoxes(Tracks) {
         }
     return csv
 }
+function tracksToBBoxes2(Tracks) {
+    var csv = "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n"
+    if (Tracks === undefined) return csv
+    for (let F in Tracks)
+        for (let id in Tracks[F]) {
+            var obs = Tracks[F][id]
+            
+            csv += (F + "," + obs.ID + 
+                     "," + (obs.x+obs.width/2) + "," + (obs.y+obs.height/2) +
+                     "," + Number(obs.angle) + // angle
+                     "," + (obs.x) + "," + (obs.y) +
+                     "," + (obs.x+obs.width) + "," + (obs.y+obs.height) +
+                     "," + Number(obs.bool_acts[1]) + // pollen
+                     "," + Number(obs.bool_acts[2]) + // arrive
+                     "," + Number(obs.bool_acts[3]) + // leave
+                     "," + Number(obs.bool_acts[0]) + // fanning
+                     "\n")
+        }
+    return csv
+}
 
 function saveToBBoxes() {
     console.log("saveToBBoxes: exporting bounding boxes to CSV...")
     console.log("with simple format: frame, left, top, right, bottom, pollen")
 
-    var txt = tracksToBBoxes(Tracks);
+    var txt = tracksToBBoxes2(Tracks);
 
-    saveCSVToFile(blob, "BBoxes.csv")
+    saveCSVToFile(txt, "BBoxes.csv")
 }
 
 function onReaderLoad(event) {

@@ -1285,6 +1285,12 @@ function onBackgroundClick(option) {
     console.log('pt=',pt)
     pt = {x:pt.x, y:pt.y}
     console.log('pt=',pt)
+    
+    if (!option.e.altKey) {
+        console.log('onBackgroundClick: click ignored, altKey=='+option.e.altKey)
+        return
+    }
+
 
     let clickMultiframe = true
     if (!clickMultiframe) {

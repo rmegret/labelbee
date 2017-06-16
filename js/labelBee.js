@@ -12,6 +12,7 @@ var Tags = [];
 //var vis;
 
 
+/** Debugging levels */
 var logging = {
   "rects": false,
   "frameEvents": false,
@@ -35,7 +36,7 @@ var logging = {
 
 
  
-
+/** Global init */
 function init() {
     // import * from "VideoList.js";
     initVideoSelection()

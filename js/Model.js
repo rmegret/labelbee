@@ -6,6 +6,7 @@
 // ######################################################################
 // MODEL: Tracks data structure
 
+/** Basic Annotation class */
 function Observation(ID) {
     this.ID = ID;
     this.time = 0;
