@@ -137,14 +137,14 @@ VideoControl.prototype.forward4 = function() {
 
 // # Get current frame/time
 VideoControl.prototype.getCurrentFrame = function() {
-    return videoControl.video2.get()-videoinfo.frameoffset;
+    return this.video2.get()-videoinfo.frameoffset;
 }
 VideoControl.prototype.getCurrentVideoTime = function(format) {
-    return videoControl.video2.toMilliseconds()/1000.0
+    return this.video2.toMilliseconds()/1000.0
 }
 VideoControl.prototype.getCurrentRealDate = function(format) {
     var D = new Date(videoinfo.starttime)
-    D = new Date(D.getTime()+videoControl.video2.toMilliseconds()*videoinfo.videofps/videoinfo.realfps)
+    D = new Date(D.getTime()+this.video2.toMilliseconds()*videoinfo.videofps/videoinfo.realfps)
     return D
 }
 
