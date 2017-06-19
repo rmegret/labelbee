@@ -189,7 +189,7 @@ function onAxesClick(event) {
         console.log("onAxesClick: seeking to frame=",frame,"...");
  
     if (event.type==="move") {
-        fastSeekFrame(frame)
+        videoControl.seekFrame(frame, true)
         return;
     }
  
@@ -202,7 +202,7 @@ function onAxesClick(event) {
             // Set the id as default selection before seeking the frame
             defaultSelectedBee = id
         }
-        seekFrame(frame)
+        videoControl.seekFrame(frame)
         // external controller logic is supposed to call back updateTimeMark
         // to update the view
     }

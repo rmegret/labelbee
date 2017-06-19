@@ -130,7 +130,7 @@ function refreshCanvasSize(event, ui) {
     //var ctx1=canvas1.getContext("2d");
     //ctx1.transform(...canvasTransform);
         
-    onFrameChanged()
+    videoControl.hardRefresh()
 }
 
 var canvasTransform = [1,0, 0,1, 0,0]  // Global
@@ -889,7 +889,7 @@ var showObsTracks = false
 function onShowObsChanged() {
     showObs = $('#showObs')[0].checked
     showObsTracks = $("#showObsTrack")[0].checked
-    refresh()
+    videoControl.refresh()
 }
 
 
@@ -987,7 +987,7 @@ function addRectInteractive(id, startX, startY) {
                 console.log('onMouseUp: removing non validated activeObject=', activeObject)
             deselectBee()
         }
-        refresh();
+        videoControl.refresh();
     }
 
     canvas1.on('mouse:up', onMouseUp_Dragging);
@@ -1044,8 +1044,8 @@ function addRect(id, startX, startY, width, height, status, obs, angle) {
     if (status === "new") {
         tmpObs = new Observation(id)
         tmpObs.ID = id
-        tmpObs.frame = getCurrentFrame()
-        tmpObs.time = getCurrentVideoTime()
+        tmpObs.frame = videoControl.getCurrentFrame()
+        tmpObs.time = videoControl.getCurrentVideoTime()
         tmpObs.bool_acts[0] = $('#F').prop('checked');
         tmpObs.bool_acts[1] = $('#P').prop('checked');
         tmpObs.bool_acts[2] = $('#E').prop('checked');
@@ -1300,7 +1300,7 @@ function onBackgroundClick(option) {
     
       if (tmp.id != null) {
           selectBeeByID(tmp.id)
-          refresh()
+          videoControl.refresh()
       }
 
     } else {
@@ -1317,10 +1317,10 @@ function onBackgroundClick(option) {
 function selectBeeByIDandFrame(id,frame) {
     if (frame != getCurrentFrame()) {
         defaultSelectedBee = id
-        seekFrame(frame)
+        videoControl.seekFrame(frame)
     } else {
         selectBeeByID(id)
-        refresh()
+        videoControl.refresh()
     }
 }
 
@@ -1479,7 +1479,7 @@ function startPanning(option) {
         canvasTransform[4] = panning.canvasTransform0[4]-(e.offsetX-panning.p0.x)*panning.canvasTransform0[0]
         canvasTransform[5] = panning.canvasTransform0[5]-(e.offsetY-panning.p0.y)*panning.canvasTransform0[3]
 
-        refresh()
+        videoControl.refresh()
     }
     var onMouseUp_Panning = function(e) {
         if (logging.mouseEvents)
@@ -1487,7 +1487,7 @@ function startPanning(option) {
         canvas1.off('mouse:move', onMouseMove_Panning);
         canvas1.off('mouse:up', onMouseUp_Panning);
 
-        refresh();
+        videoControl.refresh();
     }
 
     canvas1.on('mouse:up', onMouseUp_Panning);
@@ -1552,7 +1552,7 @@ function onMouseWheel(option) {
         console.log('onMouseWheel: canvasTransform=', canvasTransform)
     }
     
-    refresh()
+    videoControl.refresh()
     option.preventDefault();
 }
 
@@ -1582,7 +1582,7 @@ function onObjectDeselected(option) {
             // Remove tmp rect as soon as it becomes inactive
             canvas1.remove(lastSelected);
             lastSelected = null
-            refresh()
+            videoControl.refresh()
         }
         updateDeleteButton()
     }

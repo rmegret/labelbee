@@ -137,7 +137,7 @@ function onReaderLoad(event) {
     var obj = JSON.parse(event.target.result);
     console.log(obj)
     Tracks = obj;
-    onFrameChanged();
+    videoControl.onFrameChanged();
     
     refreshChronogram()
     
@@ -151,7 +151,7 @@ function loadFromFile0(fileToRead) {
         console.log("JSON loaded: ",data)
         var obj = JSON.parse(data)
         Tracks = obj;
-        onFrameChanged();
+        videoControl.onFrameChanged();
         
         refreshChronogram()
     });
@@ -196,7 +196,7 @@ function onTagsReaderLoad(event) {
     
     adjustChronogramHeight()
     
-    onFrameChanged();
+    videoControl.onFrameChanged();
     
     //console.log(event)
     //$("#load")[0].value='Loaded '+fileToRead

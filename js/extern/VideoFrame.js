@@ -9,6 +9,7 @@ Contributors:
 Allen Sarkisyan - Lead engineer
 Paige Raynes - Product Development
 Dan Jacinto - Video Asset Quality Analyst
+Modified: Rémi Mégret, 2016-17, keep MIT license for VideoFrame.js file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

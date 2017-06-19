@@ -6,9 +6,6 @@ var canvas, canvas1, ctx, ctx2, vid, radius = 5,
     dragging = false,
     final_id = 0;
 var x, y, cx, cy, width, height;
-//var video, video2;
-var Tracks = [];
-var Tags = [];
 //var vis;
 
 
@@ -34,7 +31,6 @@ var logging = {
 // ######################################################################
 // INITITALIZATION
 
-
  
 /** Global init */
 function init() {
@@ -43,7 +39,10 @@ function init() {
     $('#selectboxVideo')[0].selectedIndex=6; // select long video
         
     // import * from "VideoNavigation";
-    videoControl = new VideoControl()
+    videoControl = new VideoControl('video') // Attach control to #video
+    
+    // Polyfill to get a global getCurrentFrame
+    getCurrentFrame = videoControl.getCurrentFrame.bind(videoControl)
 
     //video = document.getElementById("video");
     //play = document.getElementById("play"); //play button
@@ -91,7 +90,7 @@ function init() {
     
     //loadFromFile0('data/Tracks-demo.json')
     
-    $('#video')[0].onloadeddata = onVideoLoaded;
+    //$('#video')[0].onloadeddata = onVideoLoaded;// Now handled by VideoControl
     selectVideo(); // Get src from selectboxVideo
 }
 
@@ -155,7 +154,7 @@ function onKeyDown_IDEdit(event) {
                 })
                 printMessage("ID not changed", "orange")
             }
-            refresh();
+            videoControl.refresh();
             refreshChronogram()
         }
     }
@@ -187,7 +186,7 @@ function onKeyDown(e) {
         return false
     }
     if (e.key == "r" && e.ctrlKey) {
-        refresh()
+        videoControl.refresh()
         return false
     }
     switch (e.keyCode) {
@@ -201,14 +200,14 @@ function onKeyDown(e) {
         case 32: // Space
             if (e.ctrlKey) {
                 if (e.shiftKey)
-                    playPauseVideoBackward(2);
+                    videoControl.playPauseVideoBackward(2);
                 else
-                    playPauseVideo(2);
+                    videoControl.playPauseVideo(2);
             } else {
                 if (e.shiftKey)
-                    playPauseVideoBackward();
+                    videoControl.playPauseVideoBackward();
                 else
-                    playPauseVideo();
+                    videoControl.playPauseVideo();
             }
             return false;
         case 27: // Escape
@@ -252,23 +251,23 @@ function onKeyDown(e) {
             break;
         case 188: // <
             if (e.ctrlKey && e.shiftKey)
-                rewind4();
+                videoControl.rewind4();
             else if (e.ctrlKey)
-                rewind3();
+                videoControl.rewind3();
             else if (e.shiftKey)
-                rewind2();
+                videoControl.rewind2();
             else
-                rewind();
+                videoControl.rewind();
             return false;
         case 190: // >
             if (e.ctrlKey && e.shiftKey)
-                forward4();
+                videoControl.forward4();
             else if (e.ctrlKey)
-                forward3();
+                videoControl.forward3();
             if (e.shiftKey)
-                forward2();
+                videoControl.forward2();
             else
-                forward();
+                videoControl.forward();
             return false;
             // Mac CMD Key
         case 91: // Safari, Chrome
@@ -287,7 +286,7 @@ function onKeyDown(e) {
                 } else
                     obj.left -= 10;
                 obj.setCoords();
-                refresh();
+                videoControl.refresh();
                 return false;
             case 39: // Right
                 if (e.ctrlKey) {
@@ -296,7 +295,7 @@ function onKeyDown(e) {
                 } else
                     obj.set("left", parseFloat(obj.get("left")) + 10)
                 obj.setCoords();
-                refresh();
+                videoControl.refresh();
                 return false;
             case 38: // Up
                 if (e.ctrlKey) {
@@ -305,12 +304,12 @@ function onKeyDown(e) {
                 } else
                     obj.set("top", parseFloat(obj.get("top")) - 10)
                 obj.setCoords();
-                refresh();
+                videoControl.refresh();
                 return false;
             case 40: // Down
                 obj.set("top", parseFloat(obj.get("top")) + 10)
                 obj.setCoords();
-                refresh();
+                videoControl.refresh();
                 return false;
         }
     }

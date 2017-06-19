@@ -1,33 +1,158 @@
 /*jshint esversion: 6, asi: true */
 
 // ## VideoControl
-// Video Control: frame/time conversion, seek, 
+// Video Control: frame/time conversion, seek
 
 // import {VideoFrame} from "extern/VideoFrame.js";
 
-function VideoControl() {
-    if (this === window) { return new VideoControl(); }
+function VideoControl(videoTagId) {
+    if (this === window) { 
+        console.log('ERROR: VideoControl should be created with "new VideoControl()"')
+        return new VideoControl(); 
+    }
     
-    flagCopyVideoToCanvas = true;
+    this.flagCopyVideoToCanvas = true;
+    this.seekWallTime = 0;
+    this.seekTiming = false
     
-    if (typeof video2 !== 'undefined') { console.log('WARNING in VideoControl.js: video2 already defined. Overwriting.') }
+    if (typeof videoTagId === 'undefined')
+        videoTagId = 'video'; // Default HTML5 video tag to attach to
     
-    video2 = new VideoFrame({
-        id: 'video',
+    this.video2 = new VideoFrame({
+        id: videoTagId,
         /* We use the fps declared in the video here, even if not real */
         frameRate: videoinfo.videofps,
-        callback: onFrameChanged // VERY IMPORTANT: all frame changes (play,next,prev...) trigger this callback. No refresh should be done outside of this callback
+        callback: this.onFrameChanged.bind(this) // VERY IMPORTANT: all frame changes (play,next,prev...) trigger this callback. No refresh should be done outside of this callback
     });
-    video2.onListen = function() {console.log('video2.onListen');};
-    video2.onStopListen = function() {console.log('video2.onStopListen');};
+    this.video2.onListen = function() {console.log('video2.onListen');};
+    this.video2.onStopListen = function() {console.log('video2.onStopListen');};
+    
+    this.video = this.video2.video; // Same as $('#video')[0]
+    this.video.onloadeddata = this.onVideoLoaded.bind(this);
 }
+
+// ## Control
 
 VideoControl.prototype = {}
 
-// ## Video navigation
+// ### Play/pause
 
-function updateNavigationView() {
-   let playingState = video2.playingState()
+VideoControl.prototype.playPauseVideo = function(option) {
+    if (logging.guiEvents) console.log('playPauseVideo()');
+    let playingState = this.video2.playingState()
+    if (playingState == "paused" || playingState == "playingBackwards") {
+        this.playForwards(option)
+    } else {
+        this.pause()
+    }
+}
+VideoControl.prototype.playPauseVideoBackward = function(option) {
+    if (logging.guiEvents) console.log('playPauseVideoBackward()');
+    let playingState = this.video2.playingState()
+    if (playingState == "paused" || playingState == "playingForwards") {
+        this.playBackwards(option)
+    } else {
+        this.pause()
+    }
+}
+VideoControl.prototype.playForwards = function(option) {      
+      if (logging.frameEvents)
+            console.log('playForwards');
+                 
+      if (Number(option)==2)
+          this.video2.playForwards(1000.0/20/4);
+      else {
+          this.video2.playForwards()
+      }
+      
+      updateNavigationView()
+      // Any call to refresh is handled by the video2 callback to onFrameChanged
+}
+VideoControl.prototype.playBackwards = function(option) {
+      if (logging.frameEvents)
+            console.log('playBackwards');
+      
+      this.video2.stopListen(); // Cut any other play occuring
+      if (Number(option)==2)
+          this.video2.playBackwards(1000.0/20/4);
+      else
+          this.video2.playBackwards();
+      updateNavigationView()
+
+      // Any call to refresh is now handled by the video2 callback to onFrameChanged
+}
+VideoControl.prototype.pause = function() {
+    // Was playing, pause
+    if (logging.frameEvents)
+        console.log('pause');
+
+    this.video2.video.pause();
+    this.video2.stopListen();
+    updateNavigationView()
+}
+
+// # Change current frame
+VideoControl.prototype.startSeekTimer = function() {
+    this.seekWallTime = new Date().getTime()
+    this.seekTiming = true
+}
+
+VideoControl.prototype.seekFrame = function(frame, useFastSeek) {
+    this.startSeekTimer()
+    if (useFastSeek) {
+        this.video2.seekTo({'frame':frame+videoinfo.frameoffset, 
+                       'fast':true}) // Experimental, not actually faster
+    } else {
+        this.video2.seekTo({'frame':frame+videoinfo.frameoffset})
+    }
+}
+VideoControl.prototype.rewind = function(frames) {
+    if (!frames) frames = 1;
+    this.startSeekTimer()
+    this.video2.seekBackward(frames);
+}
+VideoControl.prototype.forward = function(frames) {
+    if (!frames) frames = 1;
+    this.startSeekTimer()
+    this.video2.seekForward(frames);
+}
+VideoControl.prototype.rewind2 = function() {
+    this.rewind(videoinfo.videofps);
+}
+VideoControl.prototype.forward2 = function() {
+    this.forward(videoinfo.videofps);
+}
+VideoControl.prototype.rewind3 = function() {
+    this.rewind(videoinfo.videofps*10); // 10s
+}
+VideoControl.prototype.forward3 = function() {
+    this.forward(videoinfo.videofps*10);
+}
+VideoControl.prototype.rewind4 = function() {
+    this.rewind(videoinfo.videofps*60); // 1 min
+}
+VideoControl.prototype.forward4 = function() {
+    this.forward(videoinfo.videofps*60);
+}
+
+// # Get current frame/time
+VideoControl.prototype.getCurrentFrame = function() {
+    return videoControl.video2.get()-videoinfo.frameoffset;
+}
+VideoControl.prototype.getCurrentVideoTime = function(format) {
+    return videoControl.video2.toMilliseconds()/1000.0
+}
+VideoControl.prototype.getCurrentRealDate = function(format) {
+    var D = new Date(videoinfo.starttime)
+    D = new Date(D.getTime()+videoControl.video2.toMilliseconds()*videoinfo.videofps/videoinfo.realfps)
+    return D
+}
+
+
+// ## View
+
+VideoControl.prototype.updateNavigationView = function() {
+   let playingState = this.video2.playingState()
    if (playingState == "paused") {
         $("#play").value = "Play";
         $("#play").removeClass("playing");
@@ -50,171 +175,60 @@ function updateNavigationView() {
     }
 }
 
-function playPauseVideo(option) {
-    if (logging.guiEvents) console.log('playPauseVideo()');
-    let playingState = video2.playingState()
-    if (playingState == "paused" || playingState == "playingBackwards") {
-        playForwards(option)
-    } else {
-        pause()
-    }
-}
-function playPauseVideoBackward(option) {
-    if (logging.guiEvents) console.log('playPauseVideoBackward()');
-    let playingState = video2.playingState()
-    if (playingState == "paused" || playingState == "playingForwards") {
-        playBackwards(option)
-    } else {
-        pause()
-    }
-}
-
-function playForwards(option) {      
-      if (logging.frameEvents)
-            console.log('playForwards');
-                 
-      if (Number(option)==2)
-          video2.playForwards(1000.0/20/4);
-      else {
-          video2.playForwards()
-      }
-      
-      updateNavigationView()
-      // Any call to refresh is handled by the video2 callback to onFrameChanged
-}
-function playBackwards(option) {
-      if (logging.frameEvents)
-            console.log('playBackwards');
-      
-      video2.stopListen(); // Cut any other play occuring
-      if (Number(option)==2)
-          video2.playBackwards(1000.0/20/4);
-      else
-          video2.playBackwards();
-      updateNavigationView()
-
-      // Any call to refresh is now handled by the video2 callback to onFrameChanged
-}
-function pause() {
-    // Was playing, pause
-    if (logging.frameEvents)
-        console.log('pause');
-
-    video2.video.pause();
-    video2.stopListen();
-    updateNavigationView()
-}
-
-function rewind() {
-    startSeekTimer()
-    video2.seekBackward();
-}
-function forward() {
-    startSeekTimer()
-    video2.seekForward();
-}
-
-function rewind2() {
-    startSeekTimer()
-    video2.seekBackward(videoinfo.videofps);
-}
-function forward2() {
-    startSeekTimer()
-    video2.seekForward(videoinfo.videofps);
-}
-
-function rewind3() {
-    startSeekTimer()
-    video2.seekBackward(videoinfo.videofps*60);
-}
-function forward3() {
-    startSeekTimer()
-    video2.seekForward(videoinfo.videofps*60);
-}
-function rewind4() {
-    startSeekTimer()
-    video2.seekBackward(videoinfo.videofps*60*10);
-}
-function forward4() {
-    startSeekTimer()
-    video2.seekForward(videoinfo.videofps*60*10);
-}
-
-
-// # Video frame change
-
-// Auxiliary
-function getCurrentFrame() {
-    return video2.get()-videoinfo.frameoffset;
-}
-function getCurrentVideoTime(format) {
-  return video2.toMilliseconds()/1000.0
-}
-function getCurrentRealDate(format) {
-  var D = new Date(videoinfo.starttime)
-  D = new Date(D.getTime()+video2.toMilliseconds()*videoinfo.videofps/videoinfo.realfps)
-  return D
-}
-function toLocaleISOString(date) {
-    // Polyfill to get local ISO instead of UTC http://stackoverflow.com/questions/14941615/how-to-convert-isostring-to-local-isostring-in-javascript
-    function pad(n) { return ("0"+n).substr(-2); }
-
-    var day = [date.getFullYear(), pad(date.getMonth()+1), pad(date.getDate())].join("-"),
-        time = [date.getHours(), date.getMinutes(), date.getSeconds()].map(pad).join(":");
-    if (date.getMilliseconds())
-        time += "."+date.getMilliseconds();
-    var o = date.getTimezoneOffset();
-    var h = Math.floor(Math.abs(o)/60);
-    var m = Math.abs(o) % 60;
-    o = o===0 ? "Z" : (o<0 ? "+" : "-") + pad(h) + ":" + pad(m);
-    return day+"T"+time//+o;
-}
-
-var seekWallTime = 0;
-var seekTiming = false
-function startSeekTimer() {
-    seekWallTime = new Date().getTime()
-    seekTiming = true
-}
-function seekFrame(frame) {
-    startSeekTimer()
-    video2.seekTo({'frame':frame+videoinfo.frameoffset})
-}
-function fastSeekFrame(frame) {
-    startSeekTimer()
-    video2.seekTo({'frame':frame+videoinfo.frameoffset, 'fast':true})
-}
-
-function onFrameTextChanged() {
+// Event handler
+VideoControl.prototype.onFrameTextChanged = function() {
     let frame = Number($('#currentFrame').val())
-    seekFrame(frame)
+    this.seekFrame(frame)
 }
 
 // This callback is the only one that should handle frame changes. It is called automatically by video2
-function onFrameChanged(event) {
-    let Cframe = getCurrentFrame();
+VideoControl.prototype.onFrameChanged = function(event) {
+    let Cframe = this.getCurrentFrame();
     
-    if (seekTiming) {
-        seekTiming=false;
-        let elapsed = (new Date().getTime() - seekWallTime)/1000.0
+    if (this.seekTiming) {
+        this.seekTiming=false;
+        let elapsed = (new Date().getTime() - this.seekWallTime)/1000.0
         console.log('Seek frame '+Cframe+': elapsed='+elapsed+' s')
     }
     
     if (logging.frameEvents)
         console.log('frameChanged', Cframe)
 
+    this.hardRefresh();
+}
+
+VideoControl.prototype.hardRefresh = function() {
+    let Cframe = this.getCurrentFrame();
+    if (logging.frameEvents)
+        console.log('hardRefresh', Cframe)
+        
+    function toLocaleISOString(date) {
+        // Polyfill to get local ISO instead of UTC http://stackoverflow.com/questions/14941615/how-to-convert-isostring-to-local-isostring-in-javascript
+        function pad(n) { return ("0"+n).substr(-2); }
+
+        var day = [date.getFullYear(), pad(date.getMonth()+1), pad(date.getDate())].join("-"),
+            time = [date.getHours(), date.getMinutes(), date.getSeconds()].map(pad).join(":");
+        if (date.getMilliseconds())
+            time += "."+date.getMilliseconds();
+        var o = date.getTimezoneOffset();
+        var h = Math.floor(Math.abs(o)/60);
+        var m = Math.abs(o) % 60;
+        o = o===0 ? "Z" : (o<0 ? "+" : "-") + pad(h) + ":" + pad(m);
+        return day+"T"+time//+o;
+    }
+        
     //$('#currentFrame').html("Frame: " + Cframe)
     $('#currentFrame').val(Cframe)
-    $('#vidTime').html("Video Time: " + video2.toHMSm(getCurrentVideoTime()))
-    $('#realTime').html("Real Time: " + toLocaleISOString(getCurrentRealDate()))
+    $('#vidTime').html("Video Time: " + this.video2.toHMSm(this.getCurrentVideoTime()))
+    $('#realTime').html("Real Time: " + toLocaleISOString(this.getCurrentRealDate()))
 
     printMessage("")
+    
+    this.refresh()
 
     canvas1.clear();
     createRectsFromTracks()
-
-    refresh();
-      
+    
     selectBeeByID(defaultSelectedBee);
     //updateForm(null);
     
@@ -222,11 +236,9 @@ function onFrameChanged(event) {
         showZoomTag()
     }
 }
-
-
-function refresh() {
+VideoControl.prototype.refresh = function() {
     let video = $('#video')[0]
-    if (flagCopyVideoToCanvas) {
+    if (this.flagCopyVideoToCanvas) {
       // Copy video to canvas for fully synchronous display
       //ctx.drawImage(video, 0, 0, video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor);
       ctx.drawImage(video, 
@@ -248,3 +260,117 @@ function refresh() {
 
     //refreshChronogram();
 }
+
+VideoControl.prototype.loadVideo = function(url) {
+    this.video.src = url;
+}
+
+VideoControl.prototype.onVideoLoaded = function(event) {
+    if (logging.videoEvents)
+        console.log('onVideoLoaded', event)
+    
+    this.onVideoSizeChanged()
+    
+    videoinfo.duration = this.video.duration
+    videoinfo.name = this.video.src
+    
+    let videourl = this.video.src;
+    let infourl = videourl+'.info.json'
+    this.loadVideoInfo(infourl)
+}
+
+VideoControl.prototype.onVideoSizeChanged = function() {
+    /* Video size */
+    
+    var w,h
+    
+    w = this.video.videoWidth
+    h = this.video.videoHeight
+    
+    if (logging.videoEvents) {
+        console.log("videoSizeChanged: w=",w," h=",h)
+    }    
+    vid_cx = w/2;
+    vid_cy = h/2;
+    
+    // Video pixel size
+    //resizeCanvas(w,h)
+    
+    // Display size
+    let wd = w, hd=h;
+    
+    while (wd>800) {
+        wd/=2.0
+        hd/=2.0
+    }
+    
+    $("#canvasresize")[0].style.width = (wd+16).toString() + 'px'
+    $("#canvasresize")[0].style.height = hd.toString() + 'px'
+    $("#canvasresize").resizable({
+      helper: "ui-resizable-helper",
+      aspectRatio: w / h
+    });
+    //resizeCanvasDisplay(wd,hd)
+    //resizeCanvas(wd,hd)
+    refreshCanvasSize()
+}
+
+VideoControl.prototype.loadVideoInfo = function(infourl) {
+    let videoControl = this;
+    var jqxhr = $.getJSON( infourl, function(data) {
+        if (logging.videoEvents)
+            console.log( "loadVideoInfo loaded" );
+        console.log('videojsoninfo = ',data)    
+        videojsoninfo = data
+        
+        if ($.isNumeric(videojsoninfo.videofps)) {
+          videoinfo.videofps = Number(videojsoninfo.videofps)
+          videoControl.video2.frameRate = videoinfo.videofps
+        }
+        if ($.isNumeric(videojsoninfo.realfps)) {
+          videoinfo.realfps = Number(videojsoninfo.realfps)
+        }
+        if (videojsoninfo.starttime instanceof Date && 
+            !isNaN(videojsoninfo.starttime.valueOf())) {
+          videoinfo.starttime = videojsoninfo.starttime
+        }
+        if (typeof videojsoninfo.tagsfamily !== 'undefined') {
+          videoinfo.tagsfamily = videojsoninfo.tagsfamily
+        }
+        if (typeof videojsoninfo.place !== 'undefined') {
+          videoinfo.place = videojsoninfo.place
+        }
+        if (typeof videojsoninfo.comments !== 'undefined') {
+          videoinfo.comments = videojsoninfo.comments
+        }
+
+        //'starttime': '2016-07-15T09:59:59.360',
+        //'duration': 1/20, // Duration in seconds
+        //'nframes': 1
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        console.log( "loadVideoInfo error=", textStatus, "details=", errorThrown);
+      })
+      .complete(function() { 
+        videoControl.onVideoInfoChanged()
+      })
+}
+VideoControl.prototype.onVideoInfoChanged = function() {
+    if (logging.videoEvents)
+        console.log('onVideoInfoChanged', event)
+
+    videoinfo.nframes = Math.floor(videoinfo.duration*videoinfo.videofps)
+    this.video2.frameRate = videoinfo.videofps
+        
+    updateVideoInfoForm()
+        
+    updateChronoXDomainFromVideo()   // Should trigger chrono refresh
+    //refreshChronogram()
+}
+
+// function onVideoReady(event) {
+//     video.oncanplay = undefined
+//     if (logging.videoEvents)
+//         console.log('videoReady', event)
+//     videoControl.rewind()
+// }

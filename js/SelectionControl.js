@@ -87,7 +87,7 @@ function submit_bee() {
     storeObs(tmpObs);
     activeObject.status = "db"
   
-    refresh();
+    videoControl.refresh();
     refreshChronogram();
 }
 
@@ -97,7 +97,7 @@ function automatic_sub() {
         submit_bee()
     } else {
         console.log("automatic_sub: not submitted, as tmp rect")
-        refresh() // Just refresh
+        videoControl.refresh() // Just refresh
         refreshChronogram();
     }
 }
@@ -184,15 +184,16 @@ function deleteSelected() {
         canvas1.remove(activeObject);
         console.log("deleteObjects ",activeObject.id);
         if (obsDoesExist(getCurrentFrame(), activeObject.id)) {
-            obs = cloneObs(Tracks[video2.get()][activeObject.id])
-            delete Tracks[video2.get()][activeObject.id];
+            obs = cloneObs(Tracks[getCurrentFrame()][activeObject.id])
+            delete Tracks[getCurrentFrame()][activeObject.id];
             undoPush('delete', obs)
         }
 
-        refresh()
+        videoControl.refresh()
         refreshChronogram();
     }
 }
+
 function undoAction() {
     var undoInfo = undoPop()
     if (typeof undoInfo !== 'undefined') {
@@ -202,7 +203,7 @@ function undoAction() {
             if (obs.frame != getCurrentFrame()) {
                 // Put it back in the DB and jump to frame
                 storeObs(obs);
-                seekFrame(obs.frame)
+                videoControl.seekFrame(obs.frame)
                 return
             }
             
@@ -214,7 +215,7 @@ function undoAction() {
             selectBee(rect)
         }
     
-        refresh();
+        videoControl.refresh();
         refreshChronogram();
     }
 }

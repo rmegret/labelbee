@@ -73,14 +73,14 @@
 
           <p>
             <!--Change to div-->
-            <button value="Previous minute" onclick="rewind3()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-backward"></span></button>
-            <button value="Previous second" onclick="rewind2()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-backward"></span></button>
-            <button value="Previous frame" onclick="rewind()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-backward"></span></button>
-            <button value="Play Backwards" onclick="playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-backward"></span></button>
-            <button value="Play" onclick="playPauseVideo()" id="play"  type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play"></span></button>
-            <button value="Next frame" onclick="forward()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-forward"></span></button>
-            <button value="Next second" onclick="forward2()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-forward"></span></button>
-            <button value="Next minute" onclick="forward3()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-forward"></span></button>
+            <button value="Previous minute" onclick="videoControl.rewind3()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-backward"></span></button>
+            <button value="Previous second" onclick="videoControl.rewind2()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-backward"></span></button>
+            <button value="Previous frame" onclick="videoControl.rewind()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-backward"></span></button>
+            <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-backward"></span></button>
+            <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play"></span></button>
+            <button value="Next frame" onclick="videoControl.forward()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-forward"></span></button>
+            <button value="Next second" onclick="videoControl.forward2()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-forward"></span></button>
+            <button value="Next minute" onclick="videoControl.forward3()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-forward"></span></button>
 <!--             <input type="button" value="Submit info" onclick="submit_bee()" class="btn btn-info" style="position: inline"> -->
             <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-info" style="position: inline" id="deleteButton">
             <button type="button" onclick="undoAction()" class="btn btn-info" style="position: inline" id="undoButton">Undo</button>
@@ -180,7 +180,7 @@
  -->
                 Frame
                       <input type="text" value="-" id="currentFrame"
-                       onchange="onFrameTextChanged(event)" size="6">
+                       onchange="videoControl.onFrameTextChanged(event)" size="6">
                 <div id="vidTime">Video Time:</div>
                 <div id="realTime">Real Time:</div>
                 </div>

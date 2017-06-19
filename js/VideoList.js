@@ -39,7 +39,7 @@ function initVideoSelectbox() {
 }
 function selectVideo() {
     let file = $('#selectboxVideo')[0].value
-    $('#video')[0].src = file;
+    videoControl.loadVideo(file)
     
     // Change handled in callback onVideoLoaded
 }
@@ -77,8 +77,8 @@ function onVideoFPSChanged(event) {
     console.log('onVideoFPSChanged', event)
 
     videoinfo.videofps = Number(event.target.value)
-    video2.frameRate = videoinfo.videofps
-    onVideoLoaded() // Force recomputation of various parameters: nframes...
+    //video2.frameRate = videoinfo.videofps // Now handled by videoControl
+    videoControl.onVideoInfoChanged() // Force recomputation of various parameters: nframes...
 }
 function onFPSChanged(event) {
     console.log('onFPSChanged (real)', event)
@@ -91,7 +91,7 @@ function onFrameOffsetChanged(event) {
     console.log('onFrameOffsetChanged (real)', event)
 
     videoinfo.frameoffset = Number(event.target.value)
-    onVideoLoaded() // Force recomputation of various parameters: nframes...
+    videoControl.onVideoInfoChanged() // Force recomputation of various parameters: nframes...
 }
 
 function updateVideoInfoForm() {
@@ -103,106 +103,3 @@ function updateVideoInfoForm() {
     $('#videoComments').text(videoinfo.comments)
 }
 
-function onVideoLoaded(event) {
-    if (logging.videoEvents)
-        console.log('videoLoaded', event)
-    
-    let videourl = video.src;
-    let infourl = videourl+'.info.json'
-        
-    var jqxhr = $.getJSON( infourl, function(data) {
-        if (logging.videoEvents)
-            console.log( "videoLoaded.getInfo loaded" );
-        console.log('videojsoninfo = ',data)    
-        videojsoninfo = data
-        
-        if ($.isNumeric(videojsoninfo.videofps)) {
-          videoinfo.videofps = Number(videojsoninfo.videofps)
-          video2.frameRate = videoinfo.videofps
-        }
-        if ($.isNumeric(videojsoninfo.realfps)) {
-          videoinfo.realfps = Number(videojsoninfo.realfps)
-        }
-        if (videojsoninfo.starttime instanceof Date && 
-            !isNaN(videojsoninfo.starttime.valueOf())) {
-          videoinfo.starttime = videojsoninfo.starttime
-        }
-        if (typeof videojsoninfo.tagsfamily !== 'undefined') {
-          videoinfo.tagsfamily = videojsoninfo.tagsfamily
-        }
-        if (typeof videojsoninfo.place !== 'undefined') {
-          videoinfo.place = videojsoninfo.place
-        }
-        if (typeof videojsoninfo.comments !== 'undefined') {
-          videoinfo.comments = videojsoninfo.comments
-        }
-
-        //'starttime': '2016-07-15T09:59:59.360',
-        //'duration': 1/20, // Duration in seconds
-        //'nframes': 1
-        
-        updateVideoInfoForm()
-      })
-      .fail(function(jqXHR, textStatus, errorThrown) {
-        console.log( "videoLoaded.getInfo error=", textStatus, "details=", errorThrown);
-      })
-      .complete(function() { 
-        onVideoLoadedWithInfo(event)
-      })
-}
-
-// # Video loading
-function onVideoLoadedWithInfo(event) {
-    // Called when video metadata available (size, duration...)
-    if (logging.videoEvents)
-        console.log('videoLoaded', event)
-    var w,h
-    
-    w = video.videoWidth
-    h = video.videoHeight
-    videoinfo.duration = video.duration
-    videoinfo.nframes = Math.floor(videoinfo.duration*videoinfo.videofps)
-    videoinfo.name = video.src
-    
-    if (logging.videoEvents) {
-        console.log("w=",w)
-        console.log("h=",h)
-    }
-    
-    vid_cx = w/2;
-    vid_cy = h/2;
-    
-    // Video pixel size
-    //resizeCanvas(w,h)
-    
-    // Display size
-    let wd = w, hd=h;
-    
-    while (wd>800) {
-        wd/=2.0
-        hd/=2.0
-    }
-    
-    $("#canvasresize")[0].style.width = (wd+16).toString() + 'px'
-    $("#canvasresize")[0].style.height = hd.toString() + 'px'
-    $("#canvasresize").resizable({
-      helper: "ui-resizable-helper",
-      aspectRatio: w / h
-    });
-    //resizeCanvasDisplay(wd,hd)
-    //resizeCanvas(wd,hd)
-    refreshCanvasSize()
-    
-    //onFrameChanged(event)
-    video.oncanplay = onVideoReady
-    
-    
-    updateChronoXDomainFromVideo()   // Should trigger refresh automatically
-    //refreshChronogram()
-}
-function onVideoReady(event) {
-    video.oncanplay = undefined
-    if (logging.videoEvents)
-        console.log('videoReady', event)
-    rewind()
-}
