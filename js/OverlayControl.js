@@ -57,9 +57,9 @@ function OverlayControl(canvasTagId) {
     canvas1.on('object:selected', onObjectSelected); // After mousedown
     canvas1.on('selection:cleared', onObjectDeselected); // After mousedown out of existing rectangles
 
-    $('#video').on('mouseDown', onMouseDown);    
+    //$('#video').on('mouseDown', onMouseDown);    
     $('.upper-canvas').bind('contextmenu', onMouseDown2);
-    //$('.upper-canvas').bind('wheel', onMouseWheel); // FIXME: Still buggy
+    $('.upper-canvas').bind('wheel', onMouseWheel);
 
     $("#canvasresize").resizable({
       helper: "ui-resizable-helper",
@@ -68,31 +68,6 @@ function OverlayControl(canvasTagId) {
     $("#canvasresize").on( "resizestop", refreshCanvasSize );
 }
 
-function refreshRectFromObs() {
-    for (let rect of canvas1.getObjects()) {
-        if (typeof rect.obs !== 'undefined')
-            updateRectFromObsGeometry(rect)
-    }
-}
-function refreshOverlay() {
-    // for each refresh, we need to reset everything:
-    // remove all rectangles and recreate them
-    if (canvas1) {
-        //refreshRectFromObs() // Avoid update loops to avoid drifting objects
-        canvas1.renderAll(); // Render all rectangles
-        
-        if (showObsTracks) {
-            plotTracks(ctx);
-        }
-        
-        //plotBees(ctx1); // Not needed, identification done directly in BeeRect
-        
-        if (showTagsTracks || showSelectedTagsTracks)
-            plotTagsTracks(ctx)
-        else if (showTags)
-            plotTags(ctx)
-    }
-}
 
 
 
@@ -151,21 +126,41 @@ function canvasTransformSet(array) {
     }
     refreshRectFromObs()
 }
+function canvasTransform_Fix() {
+    let video = $('#video')[0]
+    let w1 = canvas.width
+    let h1 = canvas.height
+    let w2 = video.videoWidth
+    let h2 = video.videoHeight
+    
+    //console.log(w1,h1,w2,h2)
+    
+    if (canvasTransform[4]<0) canvasTransform[4]=0
+    if (canvasTransform[5]<0) canvasTransform[5]=0
+    if (canvasTransform[4]+canvasTransform[0]*w1>w2)
+        canvasTransform[4]=w2-canvasTransform[0]*w1
+    if (canvasTransform[5]+canvasTransform[3]*h1>h2)
+        canvasTransform[5]=h2-canvasTransform[3]*h1
+}
 function canvasTransformScale(scaling, center) {
     if (canvasTransform[0]*scaling > transformFactor) 
         scaling = transformFactor/canvasTransform[0] 
         // Can not zoom out more than initial
 
-    let video = $('#video')[0]
-
     canvasTransform[0]=canvasTransform[0]*scaling
     canvasTransform[3]=canvasTransform[3]*scaling
     canvasTransform[4]=canvasTransform[4]-canvasTransform[0]*center[0]*(scaling-1)
     canvasTransform[5]=canvasTransform[5]-canvasTransform[3]*center[1]*(scaling-1)
-    if (canvasTransform[4]<0) canvasTransform[4]=0
-    if (canvasTransform[5]<0) canvasTransform[5]=0
-    if (canvasTransform[4]>video.videoWidth-10) canvasTransform[4]=video.videoWidth-10
-    if (canvasTransform[5]>video.videoHeight-10) canvasTransform[5]=video.videoHeight-10
+    
+    canvasTransform_Fix()
+    
+    refreshRectFromObs()
+}
+function canvasTransformPan(dx, dy) {
+    canvasTransform[4] -= dx * canvasTransform[0]
+    canvasTransform[5] -= dy * canvasTransform[3]
+    
+    canvasTransform_Fix()
     
     refreshRectFromObs()
 }
@@ -249,21 +244,36 @@ function videoToCanvasRect(rect) {
 
 // ## Fabric.js rects vs observations
 
-function createRectsFromTracks() {
-    let F = getCurrentFrame()
-    let ids = getValidIDsForFrame(F)
-    //console.log("createRectsFromTracks: ",{frame:F,ids:ids})
-    for (let id of ids) { // For each valid bee ID, create a rect for it
-        let obs = getObsHandle(F, id, false)
-        addRectFromObs(obs)
+function refreshOverlay() {
+    if (canvas1) {
+        canvas1.renderAll(); // Clear and render all rectangles
+        
+        if (showObsTracks) {
+            plotTracks(ctx);
+        }
+        
+        //plotBees(ctx1); // Not needed, identification done directly in BeeRect
+        
+        if (showTagsTracks || showSelectedTagsTracks)
+            plotTagsTracks(ctx)
+        else if (showTags)
+            plotTags(ctx)
     }
 }
-function addRectFromObs(obs) {
-    let r = obsToCanvasRect(obs)
-    var rect = addRect(obs.ID, r.left, r.top, r.width, r.height, "db", obs)
-    return rect
+
+function refreshRectFromObs() {
+    let rectList = canvas1.getObjects()
+    if (logging.overlay)
+        console.log("refreshRectFromObs: updating ",rectList.length," rect(s)")
+    for (let rect of rectList) {
+        if (typeof rect.obs !== 'undefined')
+            updateRectFromObsGeometry(rect)
+    }
+    refreshOverlay()
 }
 function updateRectFromObsGeometry(rect) {
+    if (logging.overlay)
+        console.log('updateRectFromObsGeometry: rect=',rect)
     let obs = rect.obs
     if (typeof obs === 'undefined') {
         console.log('updateRectFromObsGeometry: activeObject.obs undefined')
@@ -272,10 +282,10 @@ function updateRectFromObsGeometry(rect) {
 
     let canvasRect = obsToCanvasRect(obs)
     
-    //let cx = (canvasRect.left + canvasRect.width / 2);
-    //let cy = (canvasRect.top + canvasRect.height / 2);
-    let cx = canvasRect.left;
-    let cy = canvasRect.top;
+    let cx = (canvasRect.left + canvasRect.width / 2);
+    let cy = (canvasRect.top + canvasRect.height / 2);
+    //let cx = canvasRect.left;
+    //let cy = canvasRect.top;
     
     // CAUTION: rect.left/top are misnamed. When originX/originY='center', they
     // Correspond to rectangle center
@@ -286,12 +296,161 @@ function updateRectFromObsGeometry(rect) {
     rect.setAngle(obs.angle)
     rect.setCoords()
 }
+function createRectsFromTracks() {
+    let F = getCurrentFrame()
+    let ids = getValidIDsForFrame(F)
+    if (logging.overlay)
+        console.log("createRectsFromTracks: ",{frame:F,ids:ids})
+    for (let id of ids) { // For each valid bee ID, create a rect for it
+        let obs = getObsHandle(F, id, false)
+        addRectFromObs(obs)
+    }
+}
+function addRectFromObs(inputObs, status) {
+    if (typeof inputObs === 'undefined') {
+        console.log('ERROR in addRectFromObs: input obs undefined')
+        return undefined
+    }
+    
+    if (typeof status == 'undefined')
+        status = "db"
+    if (status !== "new" && status !== "db") {
+        console.log("ERROR in addRectFromObs: status=", status, " unknown")
+        return undefined
+    }
+    
+    var obs = cloneObs(inputObs)
+    if (typeof obs.angle === 'undefined') {
+        console.log('WARNING in addRectFromObs: obs.angle undefined, default to 0')
+        obs.angle = 0;
+    }
+    
+    var rect = new fabric.BeeRect({
+        id: obs.ID,
+        status: status,
+        obs: obs,
+        top: undefined,
+        left: undefined,
+        width: undefined,
+        height: undefined,
+        fill: 'transparent',
+        stroke: 'blue',
+        strokewidth: 6,
+        cornerColor: 'red',
+        cornerSize: 6,
+        rotatingPointOffset: 20,
+        centeredRotation: true,
+        //hasRotatingPoint: true,
+        //lockRotation: false
+    });
+    rect.originX = 'center'
+    rect.originY = 'center'
+
+    //rect.setAngle(obs.angle); // Done in update
+    updateRectFromObsGeometry(rect)
+    
+    //rect.setControlVisible('mtr', false)  // Remove rotation handle
+    canvas1.add(rect);
+    
+    if (logging.addRect)
+        console.log("addRectFromObs: added rect=",rect);
+    
+    //var rect = addRect(obs.ID, r.left, r.top, r.width, r.height, "db", obs)
+    return rect
+}
+/* Rectangles */
+function rotatedRectGeometry(rect) {
+    // Compute various properties of Fabric.js rotated rect
+    var geom = {}
+    
+    rect.setCoords() // Compute coordinates
+    var coords = rect.oCoords
+    console.log(rect)
+    geom.center={x: (coords.tl.x+coords.br.x)/2, y: (coords.tl.y+coords.br.y)/2}
+    geom.tl={x: coords.tl.x, y: coords.tl.y}
+    geom.br={x: coords.br.x, y: coords.br.y}
+    let center = {x: (coords.tl.x+coords.br.x)/2, 
+                  y: (coords.tl.y+coords.br.y)/2}
+    geom.unrotated = {left: center.x-rect.width/2, top: center.y-rect.height/2,
+                      width: rect.width, height: rect.height
+                      }
+    
+    if (typeof rect.angle !== 'undefined')
+        geom.angle = rect.angle
+    else
+        geom.angle = 0
+    
+    return geom
+}
+fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
+    type: 'beerect',
+    
+    initialize: function (element, options) {
+        options = options || {};
+
+        this.callSuper('initialize', element, options);
+    },
+    
+    _render: function (ctx) {
+        this.callSuper('_render', ctx);
+        
+        identifyBeeRect(ctx, this, 5);
+    }
+});
+// Create a fabric rectangle at specific place, all units in canvas coordinates
+function addRect(id, startX, startY, width, height, status, inputObs, angle) {
+    console.log('addRect: id=',id)
+
+    var obs
+    if (status === "new") {
+        obs = new Observation(id)
+        obs.ID = id
+        obs.frame = videoControl.getCurrentFrame()
+        obs.time = videoControl.getCurrentVideoTime()
+        updateObsActivityFromForm(obs)
+        
+        let canvasRect = {left: startX, top: startY, 
+                          width: width, height: height}
+        let videoRect = canvasToVideoRect(canvasRect)
+        obs.x = videoRect.left
+        obs.y = videoRect.top
+        obs.width = videoRect.width
+        obs.height = videoRect.height
+        obs.angle = 0 
+    } else if (status === "db") {
+        obs = cloneObs(inputObs)
+        if (typeof obs.angle === 'undefined') {
+            obs.angle = 0
+        }
+    } else {
+        console.log("addRect: error, status unknown. status=", status)
+    }
+
+    var rect = addRectFromObs(obs, status)
+    
+    return rect;
+}
+// Try to find a fabric rectangle with a given id
+function findRect(id) {
+
+    var rects = canvas1.getObjects();
+    if (rects) {
+        var r;
+        for (var i = 0; i < rects.length; i++) {
+            if (rects[i].id == id) {
+                r = rects[i];
+                return r;
+            }
+        }
+    }
+    return undefined
+}
+
 function updateRectObsGeometry(activeObject) {
+    if (logging.overlay)
+        console.log('updateRectObsGeometry: activeObject=',activeObject)
+
     let geom = rotatedRectGeometry(activeObject);
-    /* let canvasRect = {left:geom.unrotated.left, top:geom.unrotated.top, 
-                      width: geom.unrotated.width, height: geom.unrotated.height}
-        let videoRect = canvasTransformApplyRect(canvasRect)
-    */
     let videoRect = canvasToVideoRect(geom.unrotated)
     
     // Update Observation attached to rectangle from current Rect size
@@ -307,6 +466,10 @@ function updateRectObsGeometry(activeObject) {
 function updateRectObsActivity(activeObject) {
     // Update Observation attached to rectangle from Form information
     let obs = activeObject.obs
+    updateObsActivityFromForm(obs)
+}
+function updateObsActivityFromForm(obs) {
+    // Update Observation attached to rectangle from Form information
     obs.bool_acts[0] = $('#F').prop('checked');
     obs.bool_acts[1] = $('#P').prop('checked');
     obs.bool_acts[2] = $('#E').prop('checked');
@@ -317,15 +480,107 @@ function updateRectObsActivity(activeObject) {
 
 // # Bee ID and their tracks
 
-// Obsolete: identification done directly in BeeRect
-// function plotBees(ctx) {
-//     // Creation of rectangle was done in identify-->moved it to an explicit createRectsFromTracks()
-//     // Now, just plot identity
-//     let rects = canvas1.getObjects()
-//     for (let i in rects) { // For each rectangle, plot its identity
-//         identify(ctx, rects[i], 5);
-//     }
-// }
+/* Basic drawing */
+function paintDot(ctx, pt, radius, color, id) {
+    let x=pt.x, y=pt.y;
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = "10px Arial";
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(String(id), x, y - radius - 3);
+}
+function activityString(obs) {
+    let acti = ''
+    if (obs.bool_acts[0]) acti += 'F'
+    if (obs.bool_acts[1]) acti += 'P'
+    if (obs.bool_acts[2]) acti += 'E'
+    if (obs.bool_acts[3]) acti += 'L'
+    return acti;
+}
+function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
+
+    var color
+    if (rect.status === "new")
+        color = "green"
+    else if (rect.status === "db")
+        color = "yellow"
+    else
+        color = "red" //problem
+
+    //let x = rect.left + rect.width / 2;
+    //let y = rect.top + rect.height / 2;
+    let geom = rotatedRectGeometry(rect)
+    let x = geom.center.x
+    let y = geom.center.y
+    
+    console.log('identify ctx=',ctx, x,y)
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = "20px Arial";
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(String(rect.id), x, y - radius - 3);
+
+    let acti = activityString(rect.obs)
+
+    ctx.font = "10px Arial";
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(acti, x, y + radius + 3);
+    ctx.textBaseline = 'alphabetic';
+}
+function identifyBeeRect(ctx, rect, radius) {
+
+    var color
+    if (rect.status === "new")
+        color = "green"
+    else if (rect.status === "db")
+        color = "yellow"
+    else
+        color = "red" //problem
+
+    // Local coordinates ?
+    let x = 0
+    let y = 0
+    
+    //console.log('identifyBeeRect ctx=',ctx, x,y)
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.font = "20px Arial";
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.fillText(String(rect.id), x, y - radius - 3);
+
+    let acti = activityString(rect.obs)
+
+    ctx.font = "10px Arial";
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(acti, x, y + radius + 3);
+    ctx.textBaseline = 'alphabetic';
+}
+
+
+
+/* Obs tracks */
 function plotTracks(ctx) {
     let F = getCurrentFrame()
     let ids = getValidIDsForFrame(F)
@@ -416,127 +671,31 @@ function plotTracks(ctx) {
         }
     }
 }
-function paintDot(ctx, pt, radius, color, id) {
-    let x=pt.x, y=pt.y;
 
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.font = "10px Arial";
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.fillText(String(id), x, y - radius - 3);
+/* Options */
+var showObsTracks = false
+function onShowObsChanged() {
+    showObs = $('#showObs')[0].checked
+    showObsTracks = $("#showObsTrack")[0].checked
+    videoControl.refresh()
 }
 
-function activityString(obs) {
-    let acti = ''
-    if (obs.bool_acts[0]) acti += 'F'
-    if (obs.bool_acts[1]) acti += 'P'
-    if (obs.bool_acts[2]) acti += 'E'
-    if (obs.bool_acts[3]) acti += 'L'
-    return acti;
-}
-
-function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
-
-    var color
-    if (rect.status === "new")
-        color = "green"
-    else if (rect.status === "db")
-        color = "yellow"
-    else
-        color = "red" //problem
-
-    //let x = rect.left + rect.width / 2;
-    //let y = rect.top + rect.height / 2;
-    let geom = rotatedRectGeometry(rect)
-    let x = geom.center.x
-    let y = geom.center.y
-    
-    console.log('identify ctx=',ctx, x,y)
-
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.font = "20px Arial";
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.fillText(String(rect.id), x, y - radius - 3);
-
-    let acti = activityString(rect.obs)
-
-    ctx.font = "10px Arial";
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(acti, x, y + radius + 3);
-    ctx.textBaseline = 'alphabetic';
-}
-function identifyBeeRect(ctx, rect, radius) {
-
-    var color
-    if (rect.status === "new")
-        color = "green"
-    else if (rect.status === "db")
-        color = "yellow"
-    else
-        color = "red" //problem
-
-    // Local coordinates ?
-    let x = 0
-    let y = 0
-    
-    //console.log('identifyBeeRect ctx=',ctx, x,y)
-
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.font = "20px Arial";
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.fillText(String(rect.id), x, y - radius - 3);
-
-    let acti = activityString(rect.obs)
-
-    ctx.font = "10px Arial";
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(acti, x, y + radius + 3);
-    ctx.textBaseline = 'alphabetic';
-}
 
 // # Tags and their tracks
 
-function plotTags(ctx) {
-    let F = getCurrentFrame()
-    let tagsFrame = Tags[F]
-    if (tagsFrame !== undefined) {
-        let tags = tagsFrame.tags
-        //console.log('Found tags',tags)
-        for (let i in tags) {
-            let tag = tags[i]
-            //console.log(tag)
-            plotTag(ctx, tag)            
-        }
-        
-       let msg = ''
-       for (let i in tags) {
-           let tag = tags[i]
-            msg = msg + tag.id + ' H'+tag.hamming+ ' ('+tag.c[0]+','+tag.c[1]+')<br>'
-       }
-       $("#tagDetails")[0].innerHTML = msg
-       //console.log('plotTags: msg=',msg)
+/* Access */
+function getTag(f, id) {
+    if (typeof Tags === 'undefined') return undefined
+    let tagsFrame = Tags[f]
+    if (typeof(tagsFrame) === "undefined") return undefined;
+    let tags = tagsFrame.tags
+    for (let i in tags) {
+        if (tags[i].id == id) { return tags[i];}
     }
+    return undefined
+}
+function isCurrentSelection(id) {
+  return typeof defaultSelectedBee !== 'undefined' && id == defaultSelectedBee
 }
 function tagCorners(tag) {
     if (typeof tag.p === 'undefined') return undefined
@@ -561,26 +720,8 @@ function tagAngle(tag) {
     let angle = Math.atan2(up[0], -up[1])/Math.PI*180
     return angle
 }
-function plotTagOrientation(ctx, tag, color) {
-      let pt = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
-      let dir = tagUp(tag)
-      if (typeof dir !== 'undefined') {
-        ctx.save()
-        let L=40, L1=35, W1=4
-        ctx.beginPath();
-        ctx.moveTo(pt.x-dir[0]*L, pt.y-dir[1]*L)
-        ctx.lineTo(pt.x+dir[0]*L, pt.y+dir[1]*L)
-        ctx.lineTo(pt.x+dir[0]*L1+dir[1]*W1, pt.y+dir[1]*L1-dir[0]*W1)
-        ctx.strokeStyle = color
-        if (tag.hamming>2)
-            ctx.setLineDash([4,4])
-        ctx.stroke();
-        ctx.restore()
-      }
-}
-function isCurrentSelection(id) {
-  return typeof defaultSelectedBee !== 'undefined' && id == defaultSelectedBee
-}
+
+/* Basic drawing */
 function plotTag(ctx, tag, color, flags) {
     if (!tagsSampleFilter(tag)) {
         return
@@ -658,18 +799,46 @@ function plotTag(ctx, tag, color, flags) {
       ctx.fillText("H"+tag.hamming, pt.x, pt.y + radius + 16);
     }
 }
-
-function getTag(f, id) {
-    if (typeof Tags === 'undefined') return undefined
-    let tagsFrame = Tags[f]
-    if (typeof(tagsFrame) === "undefined") return undefined;
-    let tags = tagsFrame.tags
-    for (let i in tags) {
-        if (tags[i].id == id) { return tags[i];}
+function plotTagOrientation(ctx, tag, color) {
+      let pt = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+      let dir = tagUp(tag)
+      if (typeof dir !== 'undefined') {
+        ctx.save()
+        let L=40, L1=35, W1=4
+        ctx.beginPath();
+        ctx.moveTo(pt.x-dir[0]*L, pt.y-dir[1]*L)
+        ctx.lineTo(pt.x+dir[0]*L, pt.y+dir[1]*L)
+        ctx.lineTo(pt.x+dir[0]*L1+dir[1]*W1, pt.y+dir[1]*L1-dir[0]*W1)
+        ctx.strokeStyle = color
+        if (tag.hamming>2)
+            ctx.setLineDash([4,4])
+        ctx.stroke();
+        ctx.restore()
+      }
+}
+function plotTags(ctx) {
+    let F = getCurrentFrame()
+    let tagsFrame = Tags[F]
+    if (tagsFrame !== undefined) {
+        let tags = tagsFrame.tags
+        //console.log('Found tags',tags)
+        for (let i in tags) {
+            let tag = tags[i]
+            //console.log(tag)
+            plotTag(ctx, tag)            
+        }
+        
+       let msg = ''
+       for (let i in tags) {
+           let tag = tags[i]
+            msg = msg + tag.id + ' H'+tag.hamming+ ' ('+tag.c[0]+','+tag.c[1]+')<br>'
+       }
+       $("#tagDetails")[0].innerHTML = msg
+       //console.log('plotTags: msg=',msg)
     }
-    return undefined
 }
 
+/* Tag tracks */
 function plotTagsTracks(ctx) {
     let F = getCurrentFrame()
     let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1;
@@ -820,6 +989,8 @@ function plotTagsTracks(ctx) {
         }
     } 
 }
+
+/* Options */
 function onShowTagsChanged() {
     // Callback when display parameters have changed
     showTags = $('#showTags')[0].checked
@@ -831,7 +1002,6 @@ function onShowTagsTracksChanged() {
     showSelectedTagsTracks = $('#showSelectedTagsTracks')[0].checked
     onFrameChanged()
 }
-
 function onTrackWindowChanged() {
     let range = Number($('#trackWindow')[0].value)
     console.log("onTrackWindowChanged range=",range)
@@ -839,6 +1009,7 @@ function onTrackWindowChanged() {
     plotTrack_range_backward = range
 }
 
+/* Filters */
 tagsSampleFilter = function(tag) {return true}
 tagsIntervalFilter = function(interval) {return true}
 tagsIDFilter = function(idinfo) {return true}
@@ -863,7 +1034,6 @@ function onTagsParametersSelectChanged(event) {
   $('#tagsIntervalFilter').val($('#tagsIntervalFilterSelect').val())
   onTagsParametersChanged()
 }
-
 function chronoFilter(mode) {
   if (mode=='H0') {
       $('#tagsSampleFilter').val('return tag.hamming==0')
@@ -882,7 +1052,6 @@ function chronoFilter(mode) {
       onTagsParametersChanged()
   }
 }
-
 function onChronoParametersChanged() {
     // Callback when chronogram computation parameters have changed
     showTagsChrono = $('#showTagsChrono')[0].checked
@@ -891,237 +1060,11 @@ function onChronoParametersChanged() {
     refreshChronogram()
 }
 
-var showObsTracks = false
-function onShowObsChanged() {
-    showObs = $('#showObs')[0].checked
-    showObsTracks = $("#showObsTrack")[0].checked
-    videoControl.refresh()
-}
 
 
+/* ### ID prediction */
 
-// ######## Mouse control #######
-
-var default_width = 40;
-var default_height = 40;
-
-// Auxiliary functions to manage fabric rectangles
-// Create a fabric rectangle with (top,left) corner
-// the user is supposed to drag the other corner
-// startX and startY in canvas coordinates
-function addRectInteractive(id, startX, startY) {
-    if (logging.mouseEvents)
-        console.log('addRectInteractive(',id,startX,startY,')')
-
-    var rect = addRect(id, startX, startY, 1, 1, "new");
-    var topleft = {
-        x: startX,
-        y: startY
-    }
-    var center = rect.getCenterPoint()
-    rect.hasControls = false; // Do not show controls when creating
-    canvas1.setActiveObject(rect);
-    //canvas1.renderAll();
-
-    var onMouseMove_Dragging = function(option) {
-        if (logging.mouseMoveEvents)
-            console.log("onMouseMove_Dragging: option=", option);
-        var e = option.e;
-
-        rect.validated = true; // Need dragging a bit to validate the rectangle
-
-        if (e.ctrlKey) {
-            //rect.set('width', e.offsetX - topleft.x);
-            //rect.set('height', e.offsetY - topleft.y);
-            let w = (e.offsetX - center.x) * 2,
-                h = (e.offsetY - center.y) * 2;
-            rect.set({
-                width: w,
-                height: h,
-                left: center.x - w / 2,
-                top: center.y - h / 2
-            });
-        } else {
-            let w = (e.offsetX - topleft.x),
-                h = (e.offsetY - topleft.y);
-            rect.set({
-                width: w,
-                height: h,
-                left: topleft.x,
-                top: topleft.y
-            });
-        }
-        rect.setCoords();
-        //canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
-        canvas1.renderAll(); // Refresh rectangles drawing
-
-        updateForm(rect);
-    }
-    var onMouseUp_Dragging = function(e) {
-        if (logging.mouseEvents)
-            console.log("onMouseUp_Dragging: e=", e);
-        canvas1.off('mouse:move', onMouseMove_Dragging);
-        canvas1.off('mouse:up', onMouseUp_Dragging);
-
-        var activeObject = rect;
-        if (logging.mouseEvents)
-            console.log('onMouseUp_Dragging: rect=', rect, 'active=', canvas1.getActiveObject())
-        if (activeObject.validated) {
-            fixRectSizeAfterScaling(activeObject) // Fix negative width or height
-            updateRectObsGeometry(activeObject) // Copy geometry to obs
-                //canvas1.deactivateAll()
-            rect.hasControls = true; // Reactivate controls when created
-            canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
-            canvas1.renderAll();
-
-            // Update default size to latest rectangle created
-            default_width = activeObject.width;
-            default_height = activeObject.height;
-
-            updateForm(activeObject)
-            $('#I')[0].focus() // Set focus to allow easy ID typing
-            $('#I')[0].select()
-            
-            printMessage("Press enter to validate ID", "green")
-        } else {
-            // Not enough drag to define a new rectangle
-            canvas1.deactivateAll()
-            canvas1.remove(activeObject);
-            //canvas1.renderAll();
-            //$("#I").val("no selection")
-            if (logging.mouseEvents)
-                console.log('onMouseUp: removing non validated activeObject=', activeObject)
-            deselectBee()
-        }
-        videoControl.refresh();
-    }
-
-    canvas1.on('mouse:up', onMouseUp_Dragging);
-    canvas1.on('mouse:move', onMouseMove_Dragging);
-    return rect;
-}
-
-function rotatedRectGeometry(rect) {
-    // Compute various properties of Fabric.js rotated rect
-    var geom = {}
-    
-    rect.setCoords() // Compute coordinates
-    var coords = rect.oCoords
-    console.log(rect)
-    geom.center={x: (coords.tl.x+coords.br.x)/2, y: (coords.tl.y+coords.br.y)/2}
-    geom.tl={x: coords.tl.x, y: coords.tl.y}
-    geom.br={x: coords.br.x, y: coords.br.y}
-    let center = {x: (coords.tl.x+coords.br.x)/2, 
-                  y: (coords.tl.y+coords.br.y)/2}
-    geom.unrotated = {left: center.x-rect.width/2, top: center.y-rect.height/2,
-                      width: rect.width, height: rect.height
-                      }
-    
-    if (typeof rect.angle !== 'undefined')
-        geom.angle = rect.angle
-    else
-        geom.angle = 0
-    
-    return geom
-}
-
-fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
-    type: 'beerect',
-    
-    initialize: function (element, options) {
-        options = options || {};
-
-        this.callSuper('initialize', element, options);
-    },
-    
-    _render: function (ctx) {
-        this.callSuper('_render', ctx);
-        
-        identifyBeeRect(ctx, this, 5);
-    }
-});
-
-// Create a fabric rectangle at specific place
-// all units in canvas coordinates
-function addRect(id, startX, startY, width, height, status, obs, angle) {
-    console.log('addRect: id=',id)
-
-    var tmpObs
-    if (status === "new") {
-        tmpObs = new Observation(id)
-        tmpObs.ID = id
-        tmpObs.frame = videoControl.getCurrentFrame()
-        tmpObs.time = videoControl.getCurrentVideoTime()
-        tmpObs.bool_acts[0] = $('#F').prop('checked');
-        tmpObs.bool_acts[1] = $('#P').prop('checked');
-        tmpObs.bool_acts[2] = $('#E').prop('checked');
-        tmpObs.bool_acts[3] = $('#L').prop('checked');
-    } else if (status === "db") {
-        tmpObs = cloneObs(obs)
-    } else {
-        console.log("addRect: error, status unknown. status=", status)
-    }
-
-    if (typeof angle !== 'undefined') {
-        console.log('addRect: apply angle=',angle)
-    } else {
-        console.log('addRect: angle=',angle)
-        angle = 0
-    }
-    if (typeof obs !== 'undefined') {
-        angle = obs.angle
-    }
-
-    var rect = new fabric.BeeRect({
-        id: id,
-        //new_id: id, // never_used
-        status: status,
-        obs: tmpObs,
-        top: startY,
-        left: startX,
-        width: width,
-        height: height,
-        fill: 'transparent',
-        stroke: 'blue',
-        strokewidth: 6,
-        cornerColor: 'red',
-        cornerSize: 6,
-        rotatingPointOffset: 20,
-        centeredRotation: true,
-        
-        //hasRotatingPoint: true,
-        //lockRotation: false
-    });
-    rect.setAngle(angle);
-    
-    updateRectObsGeometry(rect)
-    if (logging.addRect)
-        console.log("addRect: rect =", rect)
-
-    //rect.setControlVisible('mtr', false)  // Remove rotation handle
-    canvas1.add(rect);
-
-    if (logging.addRect)
-        console.log("added");
-    return rect;
-}
-
-// Try to find a fabric rectangle with a given id
-function findRect(id) {
-
-    var rects = canvas1.getObjects();
-    if (rects) {
-        var r;
-        for (var i = 0; i < rects.length; i++) {
-            if (rects[i].id == id) {
-                r = rects[i];
-                return r;
-            }
-        }
-    }
-    return undefined
-}
-
+// Auxiliary for Predict
 function dist(x, y, x2, y2) {
     return Math.sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2));
 }
@@ -1270,64 +1213,268 @@ function computeDefaultNewID() {
     return default_id
 }
 
-function onMouseDown2(ev) {
-   if (ev.ctrlKey) {
-      console.log("onMouseDown2",ev);
-      
-//      canvasTform[1] = 
-      
-      ev.preventDefault();
-      return false;
-   }
-   console.log("onMouseDown2");
-   return true;
-}
 
-function onBackgroundClick(option) {
-    console.log('onBackgroundClick option=',option)
-    let ptCanvas = {x: option.e.offsetX,
-            y: option.e.offsetY}
-    let pt = canvasToVideoPoint(ptCanvas)
-    console.log('pt=',pt)
-    pt = {x:pt.x, y:pt.y}
-    console.log('pt=',pt)
-    
-    if (!option.e.altKey) {
-        console.log('onBackgroundClick: click ignored, altKey=='+option.e.altKey)
-        return
+// ######## Mouse control #######
+
+var default_width = 40;
+var default_height = 40;
+
+/* Create new rect from prediction */
+function onMouseDown_predict(option) {
+    var startY = option.e.offsetY, startX = option.e.offsetX;
+    let canvasXY = {x: startX, y: startX}
+    let videoXY = canvasToVideoPoint(canvasXY)
+    var rect;
+
+    // predictId takes video/obs coordinates units
+    let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
+    let predictionTag = predictIdFromTags(getCurrentFrame(), videoXY, "distance");
+    $("#I").val(prediction.id)
+  
+    if (logging.idPrediction) {
+        console.log('onMouseDown: predictId         --> prediction=',prediction)
+        console.log('onMouseDown: predictIdFromTags --> predictionTag=',predictionTag)
     }
 
+    if (predictionTag.id !== undefined) {
+        // If found a tag on this frame
+        if (logging.mouseEvents)
+            console.log("onMouseDown: predictionTag=", predictionTag)
+        let tag = predictionTag.tag;
+        let pt = videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
+      
+        if (prediction.obs && prediction.id==tag.id) {
+            // If found a rect with same id as tag on adjacent frame
+            let obs = prediction.obs;
+            // Copy rectangle from source of prediction
+            // addRect takes canvas coordinates units
+            let r = obsToCanvasRect(obs)
+            rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new");
+            rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
+            rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
+        } else {
+            // Only found tag
+          
+            let angle = tagAngle(tag)
+            if (typeof angle !== 'undefined') {
+                console.log("MouseDown: found angle=",angle)
+                rect = addRect(predictionTag.id, 
+                       pt.x - default_width / 2, 
+                       pt.y - default_height / 2,
+                       default_width, default_height, "new", undefined, angle);
+            } else {
+                console.log("MouseDown: angle not found")
+                rect = addRect(predictionTag.id, 
+                       pt.x - default_width / 2, 
+                       pt.y - default_height / 2,
+                       default_width, default_height, "new");
+            }
+        }
+        if (logging.mouseEvents)
+            console.log("onMouseDown: copied rect from tag ", tag)
+    } else if (prediction.obs) {
+        // Only found rect
+        let obs = prediction.obs;
+        // Copy rectangle from source of prediction
+        // addRect takes canvas coordinates units
+        let r = obsToCanvasRect(obs)
+        let width = r.width,
+            height = r.height
+        rect = addRect(prediction.id, startX - width / 2, startY - height / 2, width, height, "new");
+        rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
+        rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
+        if (logging.mouseEvents)
+            console.log("onMouseDown: copied rect from ", obs)
+    } else {
+        // Did not find any tag nor rect
+        rect = addRect(prediction.id, startX - default_width / 2, startY - default_height / 2,
+            default_width, default_height, "new");
+        if (logging.mouseEvents)
+            console.log("onMouseDown: created new rect with default size ", rect)
+    }
+    rect.setCoords();
+    canvas1.setActiveObject(rect);
+    canvas1.renderAll();
+
+    //automatic_sub();
+    submit_bee();
+    // Fire mouse:down again, this time with the created target
+    canvas1.fire("mouse:down", {
+        target: rect,
+        e: option.e
+    })
+}
+
+/* Create new rectangle interactively (dragging) */
+function onMouseDown_interactiveRect(option) {
+    if (logging.mouseEvents)
+        console.log("onMouseDown_interactiveRect: new rect at ", startX, startY)
+
+    var startX = option.e.offsetX, startY = option.e.offsetY;
+
+    let canvasXY = {x: startX, y: startX}
+    let clientXY = {x: option.e.clientX, y: option.e.clientY}
+    let videoXY = canvasToVideoPoint(canvasXY)
+    let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
+    $("#I").val(prediction.id)
+
+    let id = prediction.id;
+        
+    var rect = addRect(id, startX, startY, 1, 1, "new");
+    var topleft = { x: startX, y: startY }
+
+    var center = rect.getCenterPoint()
+    rect.hasControls = false; // Do not show controls when creating
+    canvas1.setActiveObject(rect);
+    //canvas1.renderAll();
+
+    var onMouseMove_interactiveRect = function(option) {
+        if (logging.mouseMoveEvents)
+            console.log("onMouseMove_interactiveRect: option=", option);
+        var e = option.e;
+
+        rect.validated = true; // Need dragging a bit to validate the rectangle
+
+        let delta = {x: e.clientX - clientXY.x, y: e.clientY - clientXY.y}
+
+        if (e.ctrlKey) {
+            let w = delta.x * 2,
+                h = delta.y * 2;
+            rect.set({
+                width: w,
+                height: h,
+                // Note: Fabric.js quirk with originX=originY='center':
+                // left,top means centerX,centerY !!!
+                left: center.x, 
+                top: center.y
+            });
+        } else {
+            let w = delta.x,
+                h = delta.y;
+            rect.set({
+                width: w,
+                height: h,
+                // Note: Fabric.js quirk with originX=originY='center':
+                // left,top means centerX,centerY !!!
+                left: topleft.x+w/2,
+                top: topleft.y+h/2
+            });
+        }
+        rect.setCoords();
+        //canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
+        canvas1.renderAll(); // Refresh rectangles drawing
+
+        updateForm(rect);
+    }
+    var onMouseUp_interactiveRect = function(e) {
+        if (logging.mouseEvents)
+            console.log("onMouseUp_interactiveRect: e=", e);
+        canvas1.off('mouse:move', onMouseMove_interactiveRect);
+        canvas1.off('mouse:up', onMouseUp_interactiveRect);
+
+        var activeObject = rect;
+        if (logging.mouseEvents)
+            console.log('onMouseUp_interactiveRect: rect=', rect, 'active=', canvas1.getActiveObject())
+        if (activeObject.validated) {
+            fixRectSizeAfterScaling(activeObject) // Fix negative width or height
+            updateRectObsGeometry(activeObject) // Copy geometry to obs
+                //canvas1.deactivateAll()
+            rect.hasControls = true; // Reactivate controls when created
+            canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
+            canvas1.renderAll();
+
+            // Update default size to latest rectangle created
+            default_width = activeObject.width;
+            default_height = activeObject.height;
+
+            updateForm(activeObject)
+            $('#I')[0].focus() // Set focus to allow easy ID typing
+            $('#I')[0].select()
+            
+            printMessage("Press enter to validate ID", "green")
+        } else {
+            // Not enough drag to define a new rectangle
+            canvas1.deactivateAll()
+            canvas1.remove(activeObject);
+            //canvas1.renderAll();
+            //$("#I").val("no selection")
+            if (logging.mouseEvents)
+                console.log('onMouseUp: removing non validated activeObject=', activeObject)
+            deselectBee()
+        }
+        videoControl.refresh();
+    }
+
+    canvas1.on('mouse:up', onMouseUp_interactiveRect);
+    canvas1.on('mouse:move', onMouseMove_interactiveRect);
+    return rect;
+}
+
+/* Find close trajectory tag, go to frame and select tag */
+function onMouseDown_selectMultiframe(option) {
+    console.log('onMouseDown_selectMultiframe: option=',option)
+    
+    let ptCanvas = {x: option.e.offsetX, y: option.e.offsetY}
+    let pt = canvasToVideoPoint(ptCanvas)
 
     let clickMultiframe = true
     if (!clickMultiframe) {
       tmp = predictIdFromTags(getCurrentFrame(), pt)
-      
-      console.log('id=',tmp.id)
     
       if (tmp.id != null) {
+          console.log('onMouseDown_selectMultiframe: found id=',tmp.id)
           selectBeeByID(tmp.id)
           videoControl.refresh()
       }
 
     } else {
       tmp = predictIdFromTagsMultiframe([getCurrentFrame()-plotTrack_range_forward, getCurrentFrame()+plotTrack_range_forward], pt)
-      
-      console.log('id=',tmp.id, 'frame=', tmp.frame)
     
       if (tmp.id != null) {
+        console.log('onMouseDown_selectMultiframe: found id=',tmp.id, 'frame=', tmp.frame)
         selectBeeByIDandFrame(tmp.id,tmp.frame)
       }
     }
     
 }
-function selectBeeByIDandFrame(id,frame) {
-    if (frame != getCurrentFrame()) {
-        defaultSelectedBee = id
-        videoControl.seekFrame(frame)
-    } else {
-        selectBeeByID(id)
+
+/* Canvas zoom and pan */
+function onMouseDown_panning(option) {
+    panning={}
+    panning.p0 = {
+        x:  option.e.clientX,
+        y:  option.e.clientY
+    }
+    panning.canvasTransform0 = [...canvasTransform]
+    if (logging.mouseMoveEvents)
+        console.log("onMouseDown_panning: option=", option);
+
+    var onMouseMove_panning = function(option) {
+        if (logging.mouseMoveEvents)
+            console.log("onMouseMove_panning: option=", option);
+        var e = option.e;
+        let dx = e.clientX-panning.p0.x
+        let dy = e.clientY-panning.p0.y
+        
+        canvasTransformSet(panning.canvasTransform0)
+        canvasTransform[4] = panning.canvasTransform0[4]-dx*panning.canvasTransform0[0]
+        canvasTransform[5] = panning.canvasTransform0[5]-dy*panning.canvasTransform0[3]
+        
+        canvasTransform_Fix()
+
         videoControl.refresh()
     }
+    var onMouseUp_panning = function(e) {
+        if (logging.mouseEvents)
+            console.log("onMouseUp_panning: e=", e);
+        canvas1.off('mouse:move', onMouseMove_panning);
+        canvas1.off('mouse:up', onMouseUp_panning);
+
+        videoControl.refresh();
+    }
+
+    canvas1.on('mouse:up', onMouseUp_panning);
+    canvas1.on('mouse:move', onMouseMove_panning);
 }
 
 function onMouseDown(option) {
@@ -1337,154 +1484,99 @@ function onMouseDown(option) {
     printMessage("")
 
     if (typeof option.target != "undefined") {
-        // Clicked on an existing object
-        if (logging.mouseEvents)
-            console.log("onMouseDown: Clicked on object ", option.target)
+        if (option.e.altKey) {
+            onMouseDown_panning(option)
+        } else {
+            // Clicked on an existing object
+            if (logging.mouseEvents)
+                console.log("onMouseDown: Clicked on object ", option.target)
             // This is now handled by event onObjectSelected()
-        return false;
+            return false;
+        }
     } else {
         // Clicked on the background
         if (logging.addRect)
             console.log('onMouseDown: no object selected', option)
 
+        // Deselect current bee
         canvas1.deactivateAllWithDispatch()
 
-        var startY = option.e.offsetY, startX = option.e.offsetX;
-        let canvasXY = {x: startX, y: startX}
-        let videoXY = canvasToVideoPoint(canvasXY)
-        var rect;
-
         if (option.e.shiftKey) {
-            // If SHIFT down, try to copy prediction, else create box centered on click
-            // predictId takes video/obs coordinates units
-            let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
-            let predictionTag = predictIdFromTags(getCurrentFrame(), videoXY, "distance");
-            $("#I").val(prediction.id)
-            
-            if (logging.idPrediction) {
-                console.log('onMouseDown: predictId         --> prediction=',prediction)
-                console.log('onMouseDown: predictIdFromTags --> predictionTag=',predictionTag)
-            }
-
-            if (predictionTag.id !== undefined) {
-                // If found a tag on this frame
-                if (logging.mouseEvents)
-                    console.log("onMouseDown: predictionTag=", predictionTag)
-                let tag = predictionTag.tag;
-                let pt = videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
-                
-                if (prediction.obs && prediction.id==tag.id) {
-                    // If found a rect with same id as tag on adjacent frame
-                    let obs = prediction.obs;
-                    // Copy rectangle from source of prediction
-                    // addRect takes canvas coordinates units
-                    let r = obsToCanvasRect(obs)
-                    rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new");
-                    rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
-                    rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
-                } else {
-                    // Only found tag
-                    
-                    let angle = tagAngle(tag)
-                    if (typeof angle !== 'undefined') {
-                        console.log("MouseDown: found angle=",angle)
-                        rect = addRect(predictionTag.id, 
-                               pt.x - default_width / 2, 
-                               pt.y - default_height / 2,
-                               default_width, default_height, "new", undefined, angle);
-                    } else {
-                        console.log("MouseDown: angle not found")
-                        rect = addRect(predictionTag.id, 
-                               pt.x - default_width / 2, 
-                               pt.y - default_height / 2,
-                               default_width, default_height, "new");
-                    }
-                }
-                if (logging.mouseEvents)
-                    console.log("onMouseDown: copied rect from tag ", tag)
-            } else if (prediction.obs) {
-                // Only found rect
-                let obs = prediction.obs;
-                // Copy rectangle from source of prediction
-                // addRect takes canvas coordinates units
-                let r = obsToCanvasRect(obs)
-                let width = r.width,
-                    height = r.height
-                rect = addRect(prediction.id, startX - width / 2, startY - height / 2, width, height, "new");
-                rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
-                rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
-                if (logging.mouseEvents)
-                    console.log("onMouseDown: copied rect from ", obs)
-            } else {
-                // Did not find any tag nor rect
-                rect = addRect(prediction.id, startX - default_width / 2, startY - default_height / 2,
-                    default_width, default_height, "new");
-                if (logging.mouseEvents)
-                    console.log("onMouseDown: created new rect with default size ", rect)
-            }
-            rect.setCoords();
-            canvas1.setActiveObject(rect);
-            canvas1.renderAll();
-
-            //automatic_sub();
-            submit_bee();
-            // Fire mouse:down again, this time with the created target
-            canvas1.fire("mouse:down", {
-                target: rect,
-                e: option.e
-            })
+            // If SHIFT down, try to copy prediction
+            // or create box centered on click if none
+            onMouseDown_predict(option)
         } else if (option.e.ctrlKey) {
-            // If no SHIFT key, but CTRL key, draw the box directly. Try to predict ID using TopLeft corner
-            let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
-            $("#I").val(prediction.id)
-
-            // Create rectangle interactively
-            rect = addRectInteractive(prediction.id, startX, startY);
-            if (logging.mouseEvents)
-                console.log("onMouseDown: creating new rect interactive", rect)
+            // If CTRL key, draw the box directly. Try to predict ID using TopLeft corner
+            onMouseDown_interactiveRect(option)
+        } else if (option.e.altKey) {
+            // If ALT key, do panning
+            onMouseDown_panning(option)
         } else {
-            // If no SHIFT, nor CTRL, try to pan the image
-            //startPanning(option) // FIXME: need to debug rect update when panning
+            // If no key, background click: try to select trajectory
+            onMouseDown_selectMultiframe(option)
         }
-
-//        updateForm(rect)
     }
-
-    // REMI: Select ID field to facilitate changing ID
-    document.getElementById("I").focus();
 }
 
-function startPanning(option) {
-    panning={}
-    panning.p0 = {
-        x:  option.e.offsetX,
-        y:  option.e.offsetY
-    }
-    panning.canvasTransform0 = [...canvasTransform]
 
-    var onMouseMove_Panning = function(option) {
-        if (logging.mouseMoveEvents)
-            console.log("onMouseMove_Panning: option=", option);
-        var e = option.e;
-        
-        canvasTransformSet(panning.canvasTransform0)
-        canvasTransform[4] = panning.canvasTransform0[4]-(e.offsetX-panning.p0.x)*panning.canvasTransform0[0]
-        canvasTransform[5] = panning.canvasTransform0[5]-(e.offsetY-panning.p0.y)*panning.canvasTransform0[3]
-
-        videoControl.refresh()
-    }
-    var onMouseUp_Panning = function(e) {
-        if (logging.mouseEvents)
-            console.log("onMouseUp_Panning: e=", e);
-        canvas1.off('mouse:move', onMouseMove_Panning);
-        canvas1.off('mouse:up', onMouseUp_Panning);
-
-        videoControl.refresh();
-    }
-
-    canvas1.on('mouse:up', onMouseUp_Panning);
-    canvas1.on('mouse:move', onMouseMove_Panning);
+extraScale = 1
+function onMouseWheel(option) {
+    if (option.altKey && option.ctrlKey) onMouseWheel_Zooming(option);
+    else if (option.altKey) onMouseWheel_Panning(option);
+    // else, ignore
 }
+function onMouseWheel_Zooming(option) {
+    //if (!option.shiftKey) return;
+    if (logging.mouseEvents)
+        console.log('onMouseWheel_Zooming: option=', option)
+    let delta = option.originalEvent.wheelDelta;
+    
+    let scaling = Math.pow(2,delta/512)
+    
+    //var rect = canvas.getBoundingClientRect();
+    //let cx = option.originalEvent.clientX - rect.left
+    //let cy = option.originalEvent.clientY - rect.top
+    cx = option.originalEvent.offsetX
+    cy = option.originalEvent.offsetY
+
+    let center = [cx, cy]
+    
+    canvasTransformScale(scaling, center)
+    
+//     extraScale *= scaling
+//     if (extraScale<1) extraScale = 1
+    if (logging.mouseEvents) {
+        console.log('onMouseWheel: scaling=', scaling, ' center=', center)
+        console.log('onMouseWheel: canvasTransform=', canvasTransform)
+    }
+    
+    videoControl.refresh()
+    option.preventDefault();
+}
+function onMouseWheel_Panning(option) {
+    //if (!option.shiftKey) return;
+    let deltaX = option.originalEvent.wheelDeltaX;
+    let deltaY = option.originalEvent.wheelDeltaY;
+    if (logging.mouseEvents)
+        console.log('onMouseWheel_Panning: deltaX=', deltaX, ' deltaY=',deltaY)
+    
+    canvasTransformPan(deltaX, deltaY)
+    
+    videoControl.refresh()
+    option.preventDefault();
+}
+
+function onMouseDown2(ev) {
+   if (ev.ctrlKey) {
+      console.log("onMouseDown2",ev);
+      
+      ev.preventDefault();
+      return false;
+   }
+   console.log("onMouseDown2");
+   return true;
+}
+
 
 // REMI: Scaling arectangle in Fabric.js does not change width,height: it changes only scaleX and scaleY
 // fix this by converting scaleX,scaleY into width,height change
@@ -1513,40 +1605,14 @@ function fixRectSizeAfterScaling(rect) {
 function onMouseUp(option) {
     if (logging.mouseEvents)
         console.log('onMouseUp: option=', option)
-        //canvas1.off('mouse:move'); // See onMouseUp_Dragging
-        // All moving stuff handled now by event onObjectModified() and onMouseUp_Dragging()
-    onBackgroundClick(option)
+    // All mouseUp stuff should be handled directly by ad-hoc callbacks
+    // attached/detached in mouseDown code
 }
 
-extraScale = 1
-function onMouseWheel(option) {
-    if (!option.shiftKey) return;
-    if (logging.mouseEvents)
-        console.log('onMouseWheel: option=', option)
-    let delta = option.originalEvent.wheelDelta;
-    
-    let scaling = Math.pow(2,delta/512)
-    
-    //var rect = canvas.getBoundingClientRect();
-    //let cx = option.originalEvent.clientX - rect.left
-    //let cy = option.originalEvent.clientY - rect.top
-    cx = option.originalEvent.offsetX
-    cy = option.originalEvent.offsetY
 
-    let center = [cx, cy]
-    
-    canvasTransformScale(scaling, center)
-    
-//     extraScale *= scaling
-//     if (extraScale<1) extraScale = 1
-    if (logging.mouseEvents) {
-        console.log('onMouseWheel: scaling=', scaling, ' center=', center)
-        console.log('onMouseWheel: canvasTransform=', canvasTransform)
-    }
-    
-    videoControl.refresh()
-    option.preventDefault();
-}
+
+
+
 
 function onObjectSelected(option) {
     if (logging.selectionEvents)

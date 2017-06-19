@@ -18,12 +18,14 @@ var logging = {
   "mouseEvents": false,
   "mouseMoveEvents": false,
   "keyEvents": false,
+  "overlay": true,
   "selectionEvents": false,
   "chrono": false,
   "videoEvents": false,
   "canvasEvents": false,
   "idPrediction": false,
-  "axesEvents": false
+  "axesEvents": false,
+  "zoomTag": false
 };
 
 
@@ -45,7 +47,7 @@ function init() {
     getCurrentFrame = videoControl.getCurrentFrame.bind(videoControl)
 
     // import * from "OverlayControl.js";
-    overlay = OverlayControl('canvas')
+    overlay = new OverlayControl('canvas')
 
     // import * from "ChronoControl.js";
     initChrono();

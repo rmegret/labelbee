@@ -73,7 +73,8 @@ function showZoomTag() {
     let zw=400
     let zh=400
 
-    console.log('showZoomTag')
+    if (logging.zoomTag)
+        console.log('showZoomTag')
   
     let cx=0
     let cy=0

@@ -126,6 +126,15 @@ function selectBeeByID(id) {
       return false
    }
 }
+function selectBeeByIDandFrame(id,frame) {
+    if (frame != getCurrentFrame()) {
+        defaultSelectedBee = id
+        videoControl.seekFrame(frame)
+    } else {
+        selectBeeByID(id)
+        videoControl.refresh()
+    }
+}
 
 // selectBee: called when clicking on a rectangle
 function selectBee(rect) {
@@ -144,6 +153,7 @@ function selectBee(rect) {
         showZoom(rect)
     }
 }
+
 // deselectBee: called when clicking out of a rectangle
 function deselectBee() {
     canvas1.deactivateAll().renderAll(); // Deselect rect

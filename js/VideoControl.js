@@ -63,7 +63,7 @@ VideoControl.prototype.playForwards = function(option) {
           this.video2.playForwards()
       }
       
-      updateNavigationView()
+      this.updateNavigationView()
       // Any call to refresh is handled by the video2 callback to onFrameChanged
 }
 VideoControl.prototype.playBackwards = function(option) {
@@ -75,7 +75,7 @@ VideoControl.prototype.playBackwards = function(option) {
           this.video2.playBackwards(1000.0/20/4);
       else
           this.video2.playBackwards();
-      updateNavigationView()
+      this.updateNavigationView()
 
       // Any call to refresh is now handled by the video2 callback to onFrameChanged
 }
@@ -86,7 +86,7 @@ VideoControl.prototype.pause = function() {
 
     this.video2.video.pause();
     this.video2.stopListen();
-    updateNavigationView()
+    this.updateNavigationView()
 }
 
 // # Change current frame
@@ -248,13 +248,12 @@ VideoControl.prototype.refresh = function() {
       // may have some time discrepency between video and overlay
       ctx.clearRect(0,0,video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor)
     }
+    refreshOverlay()
     
     updateDeleteButton()
     updateUndoButton()
     
     updateTimeMark()
-  
-    refreshOverlay()
 
     //refreshChronogram();
 }
@@ -347,7 +346,7 @@ VideoControl.prototype.loadVideoInfo = function(infourl) {
         //'nframes': 1
       })
       .fail(function(jqXHR, textStatus, errorThrown) {
-        console.log( "loadVideoInfo error=", textStatus, "details=", errorThrown);
+        console.log( "loadVideoInfo: could not load ",infourl,"\nerror='", textStatus, "', details='", errorThrown,"'\n  videoInfo unchanged")
       })
       .complete(function() { 
         videoControl.onVideoInfoChanged()
