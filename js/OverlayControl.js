@@ -2,7 +2,16 @@
 
 // ## Video + canvas
 
-function initOverlayControl() {
+function OverlayControl(canvasTagId) {
+    if (this === window) { 
+        console.log('ERROR: OverlayControl should be created with "new OverlayControl()"')
+        return new OverlayControl(); 
+    }
+
+    if (typeof canvasTagId === 'undefined')
+        canvasTagId = 'canvas'; // Default HTML5 canvas tag to attach to
+    canvas = document.getElementById(canvasTagId);
+    ctx = canvas.getContext('2d');
 
     // Globals
     transformFactor = 1.0;
@@ -31,6 +40,8 @@ function initOverlayControl() {
     canvas1 = new fabric.Canvas('canvas1');
     //ctx1 = $('.upper-canvas')[0].getContext('2d');
     ctx1 = $('#canvas1')[0].getContext('2d');
+    
+    this.canvas1 = canvas1;
 
     canvas1.selectionColor = "red";
     canvas1.selectionBorderColor = "red";
@@ -158,89 +169,82 @@ function canvasTransformScale(scaling, center) {
     
     refreshRectFromObs()
 }
-function canvasTransformApplyPoint(pt, inverse) {
-    if (inverse) {
-        return {
-          x: (pt.x-canvasTransform[4])/canvasTransform[0],
-          y: (pt.y-canvasTransform[5])/canvasTransform[3]
-          }
-    } else {
-        return {
-          x: canvasTransform[0]*pt.x+canvasTransform[4],
-          y: canvasTransform[3]*pt.y+canvasTransform[5]
-          }
-    }
-}
-function canvasTransformApplyVector(vec, inverse) {
-    if (inverse) {
-        return {
-          x: vec.x/canvasTransform[0],
-          y: vec.y/canvasTransform[3]
-          }
-    } else {
-        return {
-          x: canvasTransform[0]*vec.x,
-          y: canvasTransform[3]*vec.y
-          }
-    }
-}
-function canvasTransformApplyRect(rect, inverse) {
-    // Only upright rect
-    if (inverse) {
-        return {
-          left: (rect.left-canvasTransform[4])/canvasTransform[0],
-          top: (rect.top-canvasTransform[5])/canvasTransform[3],
-          width: rect.width/canvasTransform[0],
-          height: rect.height/canvasTransform[3]   
-          }
-    } else {
-        return {
-          left: canvasTransform[0]*rect.left+canvasTransform[4],
-          top: canvasTransform[3]*rect.top+canvasTransform[5],
-          width: canvasTransform[0]*rect.width,
-          height: canvasTransform[3]*rect.height,      
-          }
-    }
-}
 
-function canvasToVideoCoords(rect) {
-    let R2 = canvasTransformApplyRect(rect)
-    return { x: R2.left, y: R2.top,
-            width: R2.width, height: R2.height
-            }
-//     return {
-//         x: rect.left * transformFactor,
-//         y: rect.top * transformFactor,
-//         width: rect.width * transformFactor,
-//         height: rect.height * transformFactor,
+// function canvasTransformApplyVector(vec, inverse) {
+//     if (inverse) {
+//         return {
+//           x: vec.x/canvasTransform[0],
+//           y: vec.y/canvasTransform[3]
+//           }
+//     } else {
+//         return {
+//           x: canvasTransform[0]*vec.x,
+//           y: canvasTransform[3]*vec.y
+//           }
 //     }
-}
-function videoToCanvasCoords(obs) {
+// }
+// function canvasTransformApplyRect(rect, inverse) {
+//     // Only upright rect
+//     if (inverse) {
+//         return {
+//           left: (rect.left-canvasTransform[4])/canvasTransform[0],
+//           top: (rect.top-canvasTransform[5])/canvasTransform[3],
+//           width: rect.width/canvasTransform[0],
+//           height: rect.height/canvasTransform[3]   
+//           }
+//     } else {
+//         return {
+//           left: canvasTransform[0]*rect.left+canvasTransform[4],
+//           top: canvasTransform[3]*rect.top+canvasTransform[5],
+//           width: canvasTransform[0]*rect.width,
+//           height: canvasTransform[3]*rect.height,      
+//           }
+//     }
+// }
+
+// function canvasToVideoCoords(rect) {
+//     let R2 = canvasTransformApplyRect(rect)
+//     return { x: R2.left, y: R2.top,
+//             width: R2.width, height: R2.height
+//             }
+// }
+// function videoToCanvasCoords(obs) {
+//     let R = {left:obs.x, top:obs.y, width:obs.width, height: obs.height}
+//     let R2 = canvasTransformApplyRect(R, true)
+//     return R2
+// }
+function obsToCanvasRect(obs) {
     let R = {left:obs.x, top:obs.y, width:obs.width, height: obs.height}
-    let R2 = canvasTransformApplyRect(R, true)
+    let R2 = videoToCanvasRect(R)
     return R2
-//     let transformFactor2 = transformFactor;
-//     return {
-//         left: obs.x / transformFactor2,
-//         top: obs.y / transformFactor2,
-//         width: obs.width / transformFactor2,
-//         height: obs.height / transformFactor2,
-//     }
 }
 function canvasToVideoPoint(pt) {
-    return canvasTransformApplyPoint(pt)
-//     let transformFactor2 = transformFactor;
-//     return {
-//         x: pt.x * transformFactor2,
-//         y: pt.y * transformFactor2,
-//     }
+    return {
+      x: canvasTransform[0]*pt.x+canvasTransform[4],
+      y: canvasTransform[3]*pt.y+canvasTransform[5]
+      }
 }
 function videoToCanvasPoint(pt) {
-    return canvasTransformApplyPoint(pt, true)
-//     return {
-//         x: pt.x / transformFactor2,
-//         y: pt.y / transformFactor2,
-//     }
+    return {
+      x: (pt.x-canvasTransform[4])/canvasTransform[0],
+      y: (pt.y-canvasTransform[5])/canvasTransform[3]
+      }
+}
+function canvasToVideoRect(rect) {
+    return {
+      left: canvasTransform[0]*rect.left+canvasTransform[4],
+      top: canvasTransform[3]*rect.top+canvasTransform[5],
+      width: canvasTransform[0]*rect.width,
+      height: canvasTransform[3]*rect.height,      
+      }
+}
+function videoToCanvasRect(rect) {
+    return {
+      left: (rect.left-canvasTransform[4])/canvasTransform[0],
+      top: (rect.top-canvasTransform[5])/canvasTransform[3],
+      width: rect.width/canvasTransform[0],
+      height: rect.height/canvasTransform[3]   
+      }
 }
 
 // ## Fabric.js rects vs observations
@@ -255,7 +259,7 @@ function createRectsFromTracks() {
     }
 }
 function addRectFromObs(obs) {
-    let r = videoToCanvasCoords(obs)
+    let r = obsToCanvasRect(obs)
     var rect = addRect(obs.ID, r.left, r.top, r.width, r.height, "db", obs)
     return rect
 }
@@ -266,7 +270,7 @@ function updateRectFromObsGeometry(rect) {
         return
     }
 
-    let canvasRect = videoToCanvasCoords(obs)
+    let canvasRect = obsToCanvasRect(obs)
     
     //let cx = (canvasRect.left + canvasRect.width / 2);
     //let cy = (canvasRect.top + canvasRect.height / 2);
@@ -284,19 +288,21 @@ function updateRectFromObsGeometry(rect) {
 }
 function updateRectObsGeometry(activeObject) {
     let geom = rotatedRectGeometry(activeObject);
-    let canvasRect = {left:geom.unrotated.left, top:geom.unrotated.top, 
+    /* let canvasRect = {left:geom.unrotated.left, top:geom.unrotated.top, 
                       width: geom.unrotated.width, height: geom.unrotated.height}
-    let videoRect = canvasToVideoCoords(canvasRect)
+        let videoRect = canvasTransformApplyRect(canvasRect)
+    */
+    let videoRect = canvasToVideoRect(geom.unrotated)
     
     // Update Observation attached to rectangle from current Rect size
     let obs = activeObject.obs
-    obs.x = videoRect.x    // unrotated left (rotation around center)
-    obs.y = videoRect.y    // unrotated top
+    obs.x = videoRect.left    // unrotated left (rotation around center)
+    obs.y = videoRect.top     // unrotated top
     obs.width = videoRect.width
     obs.height = videoRect.height
     obs.angle = activeObject.angle    
-    obs.cx = (videoRect.x + videoRect.width / 2);
-    obs.cy = (videoRect.y + videoRect.height / 2);
+    obs.cx = (videoRect.left + videoRect.width / 2);
+    obs.cy = (videoRect.top + videoRect.height / 2);
 }
 function updateRectObsActivity(activeObject) {
     // Update Observation attached to rectangle from Form information
@@ -344,7 +350,7 @@ function plotTracks(ctx) {
         let obs = getObsHandle(fmin, id, false)
         let x=undefined, y=undefined, z=0;
         if (!!obs) {
-            let rect = videoToCanvasCoords(obs)
+            let rect = obsToCanvasRect(obs)
             //let geom = rotatedRectGeometry(rect)
             //x = geom.center.x
             //y = geom.center.y
@@ -356,7 +362,7 @@ function plotTracks(ctx) {
         for (let f=fmin+1; f<=fmax; f++) {
             let obs = getObsHandle(f, id, false)
             if (!obs) { z=0; continue;}
-            let rect = videoToCanvasCoords(obs)            
+            let rect = obsToCanvasRect(obs)            
             let x2 = rect.left+rect.width/2
             let y2 = rect.top+rect.height/2
 //             let x2 = geom.center.x
@@ -384,7 +390,7 @@ function plotTracks(ctx) {
         
             let obs = getObsHandle(f, id, false)
             if (!obs) continue;
-            let rect = videoToCanvasCoords(obs)
+            let rect = obsToCanvasRect(obs)
             
             //let geom = rotatedRectGeometry(rect)
             x = rect.left+rect.width/2
@@ -1343,27 +1349,16 @@ function onMouseDown(option) {
 
         canvas1.deactivateAllWithDispatch()
 
-        var startY = option.e.offsetY,
-            startX = option.e.offsetX;
-        let videoXY = canvasToVideoCoords({
-            left: startX,
-            top: startY
-        })
-        var videoX = videoXY.x;
-        var videoY = videoXY.y;
+        var startY = option.e.offsetY, startX = option.e.offsetX;
+        let canvasXY = {x: startX, y: startX}
+        let videoXY = canvasToVideoPoint(canvasXY)
         var rect;
 
         if (option.e.shiftKey) {
             // If SHIFT down, try to copy prediction, else create box centered on click
             // predictId takes video/obs coordinates units
-            let prediction = predictId(getCurrentFrame(), {
-                x: videoX,
-                y: videoY
-            }, "pointinside");
-            let predictionTag = predictIdFromTags(getCurrentFrame(), {
-                x: videoX,
-                y: videoY
-            }, "distance");
+            let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
+            let predictionTag = predictIdFromTags(getCurrentFrame(), videoXY, "distance");
             $("#I").val(prediction.id)
             
             if (logging.idPrediction) {
@@ -1383,7 +1378,7 @@ function onMouseDown(option) {
                     let obs = prediction.obs;
                     // Copy rectangle from source of prediction
                     // addRect takes canvas coordinates units
-                    let r = videoToCanvasCoords(obs)
+                    let r = obsToCanvasRect(obs)
                     rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new");
                     rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
                     rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
@@ -1412,7 +1407,7 @@ function onMouseDown(option) {
                 let obs = prediction.obs;
                 // Copy rectangle from source of prediction
                 // addRect takes canvas coordinates units
-                let r = videoToCanvasCoords(obs)
+                let r = obsToCanvasRect(obs)
                 let width = r.width,
                     height = r.height
                 rect = addRect(prediction.id, startX - width / 2, startY - height / 2, width, height, "new");
@@ -1440,10 +1435,7 @@ function onMouseDown(option) {
             })
         } else if (option.e.ctrlKey) {
             // If no SHIFT key, but CTRL key, draw the box directly. Try to predict ID using TopLeft corner
-            let prediction = predictId(getCurrentFrame(), {
-                x: videoX,
-                y: videoY
-            }, "distance_topleft");
+            let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
             $("#I").val(prediction.id)
 
             // Create rectangle interactively

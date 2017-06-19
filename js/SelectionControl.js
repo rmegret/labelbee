@@ -37,14 +37,14 @@ function updateForm(activeObject) {
         
         w = activeObject.width;
         h = activeObject.height;
-        let vr = canvasToVideoCoords(activeObject)
+        let vr = canvasToVideoRect(activeObject)
         
-        $('#X').html("X: " + vr.x.toFixed(0))
-        $('#Y').html("Y: " + vr.y.toFixed(0))
+        $('#X').html("X: " + vr.left.toFixed(0))
+        $('#Y').html("Y: " + vr.top.toFixed(0))
         $('#W').html("Width: " + vr.width.toFixed(0))
         $('#H').html("Height: " + vr.height.toFixed(0))
-        $('#CX').html("Center X: " + (vr.x + vr.width / 2).toFixed(0))
-        $('#CY').html("Center Y: " + (vr.y + vr.height / 2).toFixed(0))
+        $('#CX').html("Center X: " + (vr.left + vr.width / 2).toFixed(0))
+        $('#CY').html("Center Y: " + (vr.top + vr.height / 2).toFixed(0))
 
         let obs = activeObject.obs;
         if (typeof obs == "undefined") {

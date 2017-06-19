@@ -44,13 +44,8 @@ function init() {
     // Polyfill to get a global getCurrentFrame
     getCurrentFrame = videoControl.getCurrentFrame.bind(videoControl)
 
-    //video = document.getElementById("video");
-    //play = document.getElementById("play"); //play button
-    canvas = document.getElementById("canvas");
-    ctx = canvas.getContext('2d');
-
     // import * from "OverlayControl.js";
-    initOverlayControl()
+    overlay = OverlayControl('canvas')
 
     // import * from "ChronoControl.js";
     initChrono();

@@ -31,9 +31,7 @@ function VideoControl(videoTagId) {
     this.video.onloadeddata = this.onVideoLoaded.bind(this);
 }
 
-// ## Control
-
-VideoControl.prototype = {}
+VideoControl.prototype = {} // Prepare for all VideoControl methods
 
 // ### Play/pause
 
