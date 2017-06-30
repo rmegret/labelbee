@@ -132,17 +132,18 @@ function saveToBBoxes() {
     saveCSVToFile(txt, "BBoxes.csv")
 }
 
+function setTracks(obj) {
+    console.log('setTracks: changing Tracks data structure and refreshing...')
+    Tracks = obj;
+    videoControl.onFrameChanged();
+    refreshChronogram()
+}
 function onReaderLoad(event) {
     console.log(event.target.result);
     var obj = JSON.parse(event.target.result);
     console.log(obj)
-    Tracks = obj;
-    videoControl.onFrameChanged();
     
-    refreshChronogram()
-    
-    console.log(event)
-    //$("#load")[0].value='Loaded '+fileToRead
+    setTracks(obj);
 }
 function loadFromFile0(fileToRead) {
     console.log("loadFromFile0: importing from JSON...")
@@ -150,10 +151,7 @@ function loadFromFile0(fileToRead) {
     $.get(fileToRead, function(data) {
         console.log("JSON loaded: ",data)
         var obj = JSON.parse(data)
-        Tracks = obj;
-        videoControl.onFrameChanged();
-        
-        refreshChronogram()
+        setTracks(obj);
     });
 
 }
@@ -183,25 +181,22 @@ function tagsAddFrames(Tags) {
 
 
 
-
-function onTagsReaderLoad(event) {
-    //console.log(event.target.result);
-    var obj = JSON.parse(event.target.result);
-    //console.log(obj) // Caution: heavy
+function setTags(obj) {
+    console.log('setTags: changing Tags data structure and refreshing...')
     Tags = obj;
     
     tagsAddFrames(Tags)
     
     refreshChronogram()
-    
     adjustChronogramHeight()
-    
     videoControl.onFrameChanged();
-    
-    //console.log(event)
-    //$("#load")[0].value='Loaded '+fileToRead
-    
-    //console.log(Tags)
+}
+function onTagsReaderLoad(event) {
+    //console.log(event.target.result);
+    var obj = JSON.parse(event.target.result);
+    //console.log(obj) // Caution: heavy
+
+    setTags(obj);
 }
 
 function loadTagsFromFile(event) {
@@ -218,4 +213,58 @@ function saveTagsToFile(event) {
     console.log("saveTagsToFile: exporting to JSON...")
 
     saveObjToJsonFile(Tags, 'Tags.json')
+}
+
+
+// Server I/O
+
+var serverURL = 'http://127.0.0.1:5000/';
+function jsonFromServer() {     
+    var path = window.prompt("Please enter path for Track JSON (server)","data/2017-06-Gurabo/Tracks_2_02_R_170609100000.json");
+    if (path==null || path=="") {
+        console.log('jsonFromServer: canceled')
+        return;
+    }
+    
+    console.log('jsonFromServer: loading path "'+path+'"...')  
+
+     $.getJSON( path ,
+        function(data) {
+          console.log('jsonFromServer: loaded "'+path+'"')  
+        }
+      )
+      .done(function(data) {
+          setTracks(data)
+        }
+      )
+      .fail(function(data) {
+          console.log('jsonFromServer: ERROR loading "'+path+'"')  
+        }
+      )
+}
+function tagsFromServer() {     
+    var path = window.prompt("Please enter path for Tags JSON (server)","data/2017-06-Gurabo/tags_2_02_R_170609100000_0-72000.json");
+    if (path==null || path=="") {
+        console.log('tagsFromServer: canceled')
+        return;
+    }
+    
+    console.log('tagsFromServer: loading path "'+path+'"...')  
+
+     $.getJSON( path ,
+        function(data) {
+          console.log('tagsFromServer: loaded "'+path+'"')  
+        }
+      )
+      .done(function(data) {
+          setTags(data)
+        }
+      )
+      .fail(function(data) {
+          console.log('tagsFromServer: ERROR loading "'+path+'"')  
+        }
+      )
+}
+function jsonToServer() {
+  window.open(serverURL,'popUpWindow','height=500,width=400,left=100,top=100,resizable=yes,scrollbars=yes,toolbar=yes,menubar=no,location=no,directories=no, status=yes');
 }

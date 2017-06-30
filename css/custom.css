@@ -206,14 +206,34 @@ button > p.multiline {
     overflow:scroll;
 }
 
+.ui-widget label,
+.ui-widget input {
+  margin: 2px;
+}
+
+.ui-widget input.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 3px;
+}
+.ui-widget input.btn-xs {
+  padding: 1px 5px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 3px;
+}
+
+
 .subpanel {
-    margin: 10px 0px;
+    margin: 5px 0px;
 /*     border: lightgray solid 1px; */
 }
 
 
+
 .ui-accordion .ui-accordion-content {
-    padding: 10px 10px;
+    padding: 5px 5px;
 }
 
 }
@@ -231,7 +251,6 @@ button > p.multiline {
 	border-top: 0;
 	overflow: auto;
 }
-
 .subpanel >
 .ui-state-active,
 .ui-widget-content .ui-state-active,
@@ -240,9 +259,20 @@ a.ui-button:active,
 .ui-button:active,
 .ui-button.ui-state-active:hover {
   border: 1px solid #808080;
-  background: #a0a0a0;
+/*   background: #70b0f0; */
+  background: #f6f6f6;
 	font-weight: normal;
-	color: white;
+	color: black;
+}
+.subpanel > .ui-state-active .ui-icon {
+  background-image: url(../js/extern/jquery-ui-1.12.1.custom/images/ui-icons_444444_256x240.png);
+}
+.subpanel > .ui-widget-content {
+    border: 1px solid #aaa;
+}
+.subpanel.ui-accordion {
+    border-radius: 3px;
+    box-shadow: 1px 1px grey;
 }
 
 #videoComments {

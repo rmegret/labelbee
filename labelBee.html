@@ -232,17 +232,42 @@
             <div id='I/O' class='collapsible'> 
               <label>I/O</label>
               <div>
-                <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm" tabindex=0>Load Tags</label>
-                <input type="file" value="Load Tags" style="display:none" id="loadtags">
+              
+              <div class='subpanel collapsible'>
+                  <label>Local storage</label>
+                  <div>
+                      <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm" tabindex=0>Load Tags</label>
+                      <input id="loadtags" type="file" style="display:none" >
                 
-                <label for="save" value="Save JSON" class="btn btn-primary btn-sm" tabindex=0>Save JSON</label>
-                <input type="button" value="Save JSON" class="btn btn-primary btn-sm" onclick="saveToFile()"  style="display:none" id="save">
+                      <label for="load" value="Load Tracks" class="btn btn-primary btn-sm" tabindex=0>Load Tracks</label>
+                      <input id="load" type="file" style="display:none">
+
+                      <br>
+
+                      <input id="save" onclick="saveToFile()" type="button" value="Save Tracks" class="btn btn-default btn-sm" >
                 
-                <label for="load" value="Load JSON" class="btn btn-primary btn-sm" tabindex=0>Load JSON</label>
-                <input type="file" value="Load JSON" style="display:none" id="load">
-                
-                <input type="button" value="Save CSV" class="btn btn-default btn-sm" onclick="saveToCSV()"  style="display:inline" id="saveCSV">
-                <input type="button" value="Save Bboxes" class="btn btn-default btn-sm" onclick="saveToBBoxes()"  style="display:inline" id="saveBBoxes">
+                      <input id="saveCSV" onclick="saveToCSV()" type="button" value="Save Tracks (CSV)" class="btn btn-default btn-sm">
+                      
+                      <input id="saveBBoxes" onclick="saveToBBoxes()" type="button" value="Save Tracks (BBox)" class="btn btn-default btn-sm" >
+                      
+                  </div>
+              </div>
+              <div class='subpanel collapsible'>
+                  <label>Server storage</label>
+                  <div>
+                    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+                    <input id="jsonFromServer" onclick="jsonFromServer()" type="button" value="Load Tracks"  class="btn btn-primary btn-sm">
+                    
+                    <input id="tagsFromServer" onclick="tagsFromServer()"  type="button" value="Load Tags" class="btn btn-primary btn-sm">
+  
+                    <br>
+
+                    <input disabled id="jsonToServer" onclick="jsonToServer()" type="button" value="Save Tracks" class="btn btn-basic btn-sm"></button>
+
+                  </div>
+              </div>
+              
               </div>
             </div>
             
