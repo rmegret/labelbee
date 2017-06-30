@@ -631,3 +631,22 @@ function interpolateTags(maxgap) {
             //tagIntervals.push(activeInterval)
         }
 }
+
+function computeMotionDirection() {
+    cacheTags()
+    for (var activeInterval of tagIntervals) {
+        let tags1 = getTags(activeInterval.begin, activeInterval.id)
+        let tags2 = getTags(activeInterval.end, activeInterval.id)
+        activeInterval.dir = undefined
+        if (tags1 == null || tags2 == null) continue;
+        if (tags1.length == 1 && tags2.length == 1) {
+            let tag1 = tags1[0]
+            let tag2 = tags2[0]
+            if (tag2.c[1] < tag1.c[1])
+                activeInterval.dir = 'entering'
+            else if (tag2.c[1] > tag1.c[1])
+                activeInterval.dir = 'exiting'
+        }
+    }
+    updateTagIntervals()
+}

@@ -145,3 +145,33 @@ function printTracks() {
         }
     }
 }
+
+
+
+// Model of Tags
+
+function cacheTags() {
+    tagCache = []
+    for (let F in Tags) {
+        let tags = Tags[F].tags
+        for (let i in tags) {
+            let tag = tags[i]
+            let id = Number(tag.id)
+            let key = F.toString()+','+id.toString()
+            if (typeof ttags[key] === 'undefined')
+                tagCache[key]=[tag]
+            else
+                tagCache[key].push(tag);
+        }
+    }
+}
+
+/** Returns a list of tags matching frame and id. 
+    Can be empty, have one element, or several */
+function getTags(frame, id) {
+    let key = frame.toString()+','+id.toString()
+    let value = tagCache[key]
+    return value
+    //if (typeof value === "undefined") return undefined;
+    //return value
+}
