@@ -18,7 +18,7 @@ var logging = {
   "mouseEvents": false,
   "mouseMoveEvents": false,
   "keyEvents": false,
-  "overlay": true,
+  "overlay": false,
   "selectionEvents": false,
   "chrono": false,
   "videoEvents": false,

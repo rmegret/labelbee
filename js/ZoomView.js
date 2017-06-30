@@ -31,7 +31,7 @@ function updateShowZoom() {
     }
 }
 function showZoom(rect) {
-    showZoomTag(defaultSelectedBee)
+    refreshZoom(defaultSelectedBee)
     return
 
     let zw=400
@@ -69,7 +69,7 @@ function showZoom(rect) {
 
 
 var oldCX, oldCY, oldAngle;
-function showZoomTag() {
+function refreshZoom() {
     let zw=400
     let zh=400
 
