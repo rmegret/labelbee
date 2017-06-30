@@ -502,6 +502,10 @@ function updateObsActivityFromForm(obs) {
     obs.bool_acts[1] = $('#P').prop('checked');
     obs.bool_acts[2] = $('#E').prop('checked');
     obs.bool_acts[3] = $('#L').prop('checked');
+    obs.notes = $('#notes').prop('value')
+    
+    if (logging.guiEvents)
+        console.log("updateObsActivityFromForm: obs=", obs)
 }
 
 // ## Direct canvas drawing
@@ -522,6 +526,26 @@ function paintDot(ctx, pt, radius, color, id) {
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.fillText(String(id), x, y - radius - 3);
+}
+function wrapText(context, text, x, y, maxWidth, lineHeight) {
+  // From http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
+  var words = text.split(' ');
+  var line = '';
+
+  for(var n = 0; n < words.length; n++) {
+    var testLine = line + words[n] + ' ';
+    var metrics = context.measureText(testLine);
+    var testWidth = metrics.width;
+    if (testWidth > maxWidth && n > 0) {
+      context.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    }
+    else {
+      line = testLine;
+    }
+  }
+  context.fillText(line, x, y);
 }
 function activityString(obs) {
     let acti = ''
@@ -585,6 +609,11 @@ function identifyBeeRect(ctx, rect, radius) {
     
     //console.log('identifyBeeRect ctx=',ctx, x,y)
 
+    ctx.save()
+    
+    // Compensate rotation to have upright labels
+    ctx.rotate(-rect.angle/180*Math.PI)
+
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fillStyle = color;
@@ -604,6 +633,16 @@ function identifyBeeRect(ctx, rect, radius) {
     ctx.textBaseline = 'top';
     ctx.fillText(acti, x, y + radius + 3);
     ctx.textBaseline = 'alphabetic';
+    
+    if (typeof rect.obs.notes !== 'undefined') {
+        ctx.font = "10px Arial";
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        wrapText(ctx, rect.obs.notes, x, y + radius + 3 + 12, 80, 10)
+    }
+    
+    ctx.restore()
 }
 
 
@@ -1528,7 +1567,8 @@ function onMouseDown(option) {
             console.log('onMouseDown: no object selected', option)
 
         // Deselect current bee
-        canvas1.deactivateAllWithDispatch()
+        //canvas1.deactivateAllWithDispatch()
+        deselectBee()
 
         if (option.e.shiftKey) {
             // If SHIFT down, try to copy prediction

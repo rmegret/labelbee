@@ -253,3 +253,14 @@ width: 100%;
 textarea[readonly] {
   border: solid 1px #e5e5e5;
 }
+textarea {
+  vertical-align: top;
+}
+.textbox-inline {
+  display: flex;
+}
+.resizedTextbox {
+  flex-grow: 1;
+  height: 1.5em;
+  padding: 1px
+}

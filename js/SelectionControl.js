@@ -12,11 +12,20 @@ function initSelectionControl() {
     $('#P').change(onActivityChanged);
     $('#E').change(onActivityChanged);
     $('#L').change(onActivityChanged);
+    
+    $("#notes").keydown(function(event){
+      if (event.which == 13){
+        onActivityChanged(event);
+      }
+    });
 }
 
 /* Update form rectangle data from activeObject */
 /* CAUTION: use updateForm(null) for empty form */
 function updateForm(activeObject) {
+    if (logging.form) {
+        console.log('updateForm: activeObject=',activeObject)
+    }
 
     if (activeObject === null) {
         $('#I').val('-')
@@ -32,6 +41,7 @@ function updateForm(activeObject) {
         $('#P').prop('checked', false);
         $('#E').prop('checked', false);
         $('#L').prop('checked', false);
+        $('#notes').prop('value', '');
     } else {
         $('#I').val(activeObject.id)
         
@@ -56,6 +66,10 @@ function updateForm(activeObject) {
         $('#P').prop('checked', obs.bool_acts[1]);
         $('#E').prop('checked', obs.bool_acts[2]);
         $('#L').prop('checked', obs.bool_acts[3]);
+        if (typeof obs.notes === 'undefined')
+            $('#notes').prop('value', '');
+        else
+            $('#notes').prop('value', obs.notes);
     }
 
 }
@@ -156,7 +170,8 @@ function selectBee(rect) {
 
 // deselectBee: called when clicking out of a rectangle
 function deselectBee() {
-    canvas1.deactivateAll().renderAll(); // Deselect rect
+    //canvas1.deactivateAll().renderAll(); // Deselect rect
+    canvas1.deactivateAllWithDispatch()
     updateForm(null)
     defaultSelectedBee = undefined // Do not keep default when explicit deselect
     updateDeleteButton()
