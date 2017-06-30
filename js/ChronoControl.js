@@ -311,10 +311,10 @@ function setGeomActivity(selection) {
         })
         .attr("y", function(d) {
 //             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
-            return axes.yScale(Number(d.y)) + 0.1*axes.yScale.rangeBand(); // ordinal
+            return axes.yScale(d.y) + 0.1*axes.yScale.rangeBand(); // ordinal
         })
         .attr("width", function(d) {
-            return (Math.max( axes.xScale(Number(d.x) + 1) - axes.xScale(Number(d.x)), 10 )); // Min 10 pixels
+            return (Math.max( axes.xScale(Number(d.x) + 1) - axes.xScale(Number(d.x)), 3 )); // Min 10 pixels
             //return 8
         })
         .attr("height", function(d) {
@@ -326,12 +326,12 @@ function setGeomActivity(selection) {
 }
 function activityColor(d) {
         var color = "black";
-        if (d.Activity == "entering")
+        if (d.Activity == "pollenating")
+            color = "#CFCF00";
+        else if (d.Activity == "entering")
             color = "#FF0000";
         else if (d.Activity == "exiting")
             color = "#0000FF";
-        else if (d.Activity == "pollenating")
-            color = "#CFCF00";
         else if (d.Activity == "fanning")
             color = "#20FF20";
         return color;
@@ -339,9 +339,9 @@ function activityColor(d) {
 function activityHeight(d) {
         var h = 2
         if (d.Activity == "entering")
-            h=8
+            h=4
         else if (d.Activity == "exiting")
-            h=8
+            h=4
         else if (d.Activity == "pollenating")
             h=6
         else if (d.Activity == "fanning")
@@ -352,12 +352,12 @@ function updateActivities(onlyScaling) {
     // Redraw activities
     if (onlyScaling) {
       // Lightweight update (reuse previous activityRects)
-      activityRects = axes.plotArea.selectAll(".activity").data(chronogramData);
+      let activityRects = axes.plotArea.selectAll(".activity").data(chronogramData);
       activityRects.call(setGeomActivity)
     } else {
       // Full update
       //console.log('updateActivities')
-      activityRects = axes.plotArea.selectAll(".activity").data(chronogramData)
+      let activityRects = axes.plotArea.selectAll(".activity").data(chronogramData)
           .call(setGeomActivity)
       activityRects.enter().call(insertActivities)
       activityRects.exit().remove()
@@ -397,6 +397,22 @@ function setTagGeom(selection) {
         .attr("height", function(d) {
             return axes.yScale.rangeBand(); // Ordinal scale
         })
+        .style("fill", function(d) {
+            if (d.dir=="entering")
+                return '#ffc0c0'
+            else if (d.dir=="exiting")
+                return '#c0c0ff'
+            else
+                return 'blue'
+        })
+        .style("stroke", function(d) {
+            if (d.dir=="entering")
+                return '#ffc0c0'
+            else if (d.dir=="exiting")
+                return '#c0c0ff'
+            else
+                return 'blue'
+        })
 }
 function updateTagIntervals(onlyScaling) {
     // Redraw tag intervals
@@ -433,12 +449,12 @@ function refreshChronogram() {
             for (let id in Tracks[F]) {
                 let chronoObs = {'x':F, 'y':id, 'Activity':""};
 
-                if (Tracks[F][id].bool_acts[2]) {
+                if (Tracks[F][id].bool_acts[1]) {
+                    chronoObs.Activity = "pollenating";
+                } else if (Tracks[F][id].bool_acts[2]) {
                     chronoObs.Activity = "entering";
                 } else if (Tracks[F][id].bool_acts[3]) {
                     chronoObs.Activity = "exiting";
-                } else if (Tracks[F][id].bool_acts[1]) {
-                    chronoObs.Activity = "pollenating";
                 } else if (Tracks[F][id].bool_acts[0]) {
                     chronoObs.Activity = "fanning";
                 }
