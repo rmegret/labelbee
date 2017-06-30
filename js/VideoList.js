@@ -26,7 +26,8 @@ function initVideoSelection() {
                   '1_02_R_170419141405.mp4',
                   '1_02_R_170426151700_cleaned.mp4',
                   '36_01_H_160715100000_copy.mp4',
-                  'GuraboTest/4_02_R_170511130000.mp4' ]
+                  'GuraboTest/4_02_R_170511130000.mp4',
+                  '2017-06-Gurabo/2_02_R_170609100000.mp4' ]
     initVideoSelectbox()
 }
 function initVideoSelectbox() {

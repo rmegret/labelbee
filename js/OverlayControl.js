@@ -38,7 +38,6 @@ function OverlayControl(canvasTagId) {
 
 
     canvas1 = new fabric.Canvas('canvas1');
-    //ctx1 = $('.upper-canvas')[0].getContext('2d');
     ctx1 = $('#canvas1')[0].getContext('2d');
     
     this.canvas1 = canvas1;
@@ -66,48 +65,83 @@ function OverlayControl(canvasTagId) {
       aspectRatio: 1   // Need to put a value even to update it later
     });
     $("#canvasresize").on( "resizestop", refreshCanvasSize );
+    //$("#canvasresize").on( "resize", refreshCanvasSize ); // Continuous (not working)
+    canvasTransform = [1,0, 0,1, 0,0]  // Global
+    canvasTransformReference = {w:100, h:100} // Keep previous canvas size
 }
 
 
+function canvasSetVideoSize(w,h) {
+    // Resize canvas to have same aspect-ratio as video
 
+    var wd=w,hd=h
+    if (true) {
+      // Keep same canvas width as before, simply adjust aspect-ratio
+      wd = canvas.width
+      hd = h*canvas.width/w
+    } else {
+        // Automatic scaling to be smaller than 800pix
+        while (wd>800) {
+            wd/=2.0
+            hd/=2.0
+        }
+    }
 
+    $("#canvasresize")[0].style.width = (wd+16).toString() + 'px'
+    $("#canvasresize")[0].style.height = hd.toString() + 'px'
+    $("#canvasresize").resizable({
+      helper: "ui-resizable-helper",
+      aspectRatio: w / h
+    });
 
-// # Canvas resizing utilities
-function resizeCanvas(w,h) {
-    canvas.width = w
-    canvas.height = h
-    canvas1.setWidth(w)
-    canvas1.setHeight(h)
-    
-    $("#video").width(w)
-    $("#video").height(h)
-    
-    var wrap = $('.canvaswrapper')[0]
-    wrap.style.width = w.toString() + 'px'
-    wrap.style.height = h.toString() + 'px'
+    refreshCanvasSize()
+    canvasTransformReset()
 }
 function refreshCanvasSize(event, ui) {
-    if (logging.canvasEvents)
-        console.log('refreshCanvasSize')
+    // Refresh based on new video size or new canvas size
+    if (logging.canvasEvents) {
+        console.log('refreshCanvasSize: event=',event)
+        console.log('refreshCanvasSize: event.target.clientWidth=',event.target.clientWidth)
+    }
+        
+    // Internal canvas size adjusting utility
+    // Ensures all canvas elements have same size
+    function resizeCanvas(w,h) {    
+        if (logging.canvasEvents)
+            console.log('refreshCanvasSize.resizeCanvas: w=',w," h=",h)
+    
+        canvas.width = w
+        canvas.height = h
+        canvas1.setWidth(w)
+        canvas1.setHeight(h)
+    
+        $("#video").width(w)
+        $("#video").height(h)
+    
+        var wrap = $('.canvaswrapper')[0]
+        wrap.style.width = w.toString() + 'px'
+        wrap.style.height = h.toString() + 'px'
+    }
         
     let video = $('#video')[0]
-    
-    let wd = parseInt($("#canvasresize")[0].style.width)-16 // Assume width is in px
+    // Assume width is in px to parse #canvasresize size
+    let wd = parseInt($("#canvasresize")[0].style.width)-16
     let hd = video.videoHeight/video.videoWidth*wd
         
     resizeCanvas(wd,hd)
     
-    transformFactor = video.videoWidth / canvas.width;
-    
     $("#videoSize")[0].innerHTML = 'videoSize: '+video.videoWidth.toString() + 'x' + video.videoHeight.toString();
     $("#canvasSize")[0].innerHTML = 'canvasSize: '+wd.toString() + 'x' + hd.toString();
+
+
+    // Change transform to keep same image content, just scaled    
+    var scaling = canvasTransformReference.w/canvas.width
+    var center = [canvasTransformReference.w/2, canvasTransformReference.h/2] 
+    var center2 = [canvas.width/2, canvas.height/2]
+    canvasTransformReference.w = canvas.width
+    canvasTransformReference.h = canvas.height
     
-    //let s = canvasTform[2];
-    //let tx = (canvasTform[0]-vid_cx) / transformFactor + wd/2;
-    //let ty = (canvasTform[1]-vid_cy) / transformFactor + hd/2;
-    
-    canvasTransformSet([transformFactor,0, 0,transformFactor, 0,0])
-    
+    canvasTransformScale(scaling, center, center2)
     
     // Don't use ctx.transform, as it also reduces the drawings overlays
     // Instead, we scale everything manually
@@ -116,15 +150,27 @@ function refreshCanvasSize(event, ui) {
     //var ctx1=canvas1.getContext("2d");
     //ctx1.transform(...canvasTransform);
         
-    videoControl.hardRefresh()
+    videoControl.refresh() // Already done in canvasTransformScale()
 }
 
-var canvasTransform = [1,0, 0,1, 0,0]  // Global
+function canvasTransformInternalReset() {
+    let video = $('#video')[0]
+    transformFactor = video.videoWidth / canvas.width;
+    canvasTransformSet([transformFactor,0, 0,transformFactor, 0,0])
+    canvasTransformReference.w = canvas.width
+    canvasTransformReference.h = canvas.height
+}
+function canvasTransformReset() {
+    canvasTransformInternalReset()
+    canvasTransform_Fix()    
+    videoControl.refresh()
+}
 function canvasTransformSet(array) {
     for (let i=0; i<6; i++) {
         canvasTransform[i]=array[i]
     }
-    refreshRectFromObs()
+    canvasTransform_Fix()
+    videoControl.refresh()
 }
 function canvasTransform_Fix() {
     let video = $('#video')[0]
@@ -133,6 +179,11 @@ function canvasTransform_Fix() {
     let w2 = video.videoWidth
     let h2 = video.videoHeight
     
+    if (canvasTransform[0]*w1>w2 && canvasTransform[3]*h1>h2) {
+        let scaling = Math.max(w2/w1,h2/h1)
+        canvasTransform[0]=scaling;
+        canvasTransform[3]=scaling;
+    }    
     //console.log(w1,h1,w2,h2)
     
     if (canvasTransform[4]<0) canvasTransform[4]=0
@@ -141,20 +192,39 @@ function canvasTransform_Fix() {
         canvasTransform[4]=w2-canvasTransform[0]*w1
     if (canvasTransform[5]+canvasTransform[3]*h1>h2)
         canvasTransform[5]=h2-canvasTransform[3]*h1
+        
+    // Check degenerate
+    var hasNan = false;
+    for (let i=0; i<6; i++) hasNan |= isNaN(canvasTransform[i]);
+    if (hasNan || canvasTransform[0]<=0 || canvasTransform[3]<=0) {
+        console.log('ERROR in canvasTransform_Fix: degenerate canvasTransform. Reinit')
+        canvasTransformInternalReset()
+    }
 }
-function canvasTransformScale(scaling, center) {
+function canvasTransformScale(scaling, center, center2) {
+    // center is scaling center in current canvas coordinates
+    // center2 (optional) is scaling center in new canvas coordinates
+    /*
     if (canvasTransform[0]*scaling > transformFactor) 
         scaling = transformFactor/canvasTransform[0] 
         // Can not zoom out more than initial
-
+    */
+    
+    //center[1]+=2
+    //center[0]+=2
+    
+    if (typeof center2 === 'undefined')
+        center2 = center;
+        
+    //console.log('canvasTransformScale: center=',center)
+    canvasTransform[4]+=canvasTransform[0]*(center[0]-scaling*center2[0])
+    canvasTransform[5]+=canvasTransform[3]*(center[1]-scaling*center2[1])
     canvasTransform[0]=canvasTransform[0]*scaling
     canvasTransform[3]=canvasTransform[3]*scaling
-    canvasTransform[4]=canvasTransform[4]-canvasTransform[0]*center[0]*(scaling-1)
-    canvasTransform[5]=canvasTransform[5]-canvasTransform[3]*center[1]*(scaling-1)
     
     canvasTransform_Fix()
     
-    refreshRectFromObs()
+    videoControl.refresh()
 }
 function canvasTransformPan(dx, dy) {
     canvasTransform[4] -= dx * canvasTransform[0]
@@ -162,52 +232,9 @@ function canvasTransformPan(dx, dy) {
     
     canvasTransform_Fix()
     
-    refreshRectFromObs()
+    videoControl.refresh()
 }
 
-// function canvasTransformApplyVector(vec, inverse) {
-//     if (inverse) {
-//         return {
-//           x: vec.x/canvasTransform[0],
-//           y: vec.y/canvasTransform[3]
-//           }
-//     } else {
-//         return {
-//           x: canvasTransform[0]*vec.x,
-//           y: canvasTransform[3]*vec.y
-//           }
-//     }
-// }
-// function canvasTransformApplyRect(rect, inverse) {
-//     // Only upright rect
-//     if (inverse) {
-//         return {
-//           left: (rect.left-canvasTransform[4])/canvasTransform[0],
-//           top: (rect.top-canvasTransform[5])/canvasTransform[3],
-//           width: rect.width/canvasTransform[0],
-//           height: rect.height/canvasTransform[3]   
-//           }
-//     } else {
-//         return {
-//           left: canvasTransform[0]*rect.left+canvasTransform[4],
-//           top: canvasTransform[3]*rect.top+canvasTransform[5],
-//           width: canvasTransform[0]*rect.width,
-//           height: canvasTransform[3]*rect.height,      
-//           }
-//     }
-// }
-
-// function canvasToVideoCoords(rect) {
-//     let R2 = canvasTransformApplyRect(rect)
-//     return { x: R2.left, y: R2.top,
-//             width: R2.width, height: R2.height
-//             }
-// }
-// function videoToCanvasCoords(obs) {
-//     let R = {left:obs.x, top:obs.y, width:obs.width, height: obs.height}
-//     let R2 = canvasTransformApplyRect(R, true)
-//     return R2
-// }
 function obsToCanvasRect(obs) {
     let R = {left:obs.x, top:obs.y, width:obs.width, height: obs.height}
     let R2 = videoToCanvasRect(R)
@@ -246,6 +273,7 @@ function videoToCanvasRect(rect) {
 
 function refreshOverlay() {
     if (canvas1) {
+        refreshRectFromObs()
         canvas1.renderAll(); // Clear and render all rectangles
         
         if (showObsTracks) {
@@ -263,13 +291,13 @@ function refreshOverlay() {
 
 function refreshRectFromObs() {
     let rectList = canvas1.getObjects()
-    if (logging.overlay)
-        console.log("refreshRectFromObs: updating ",rectList.length," rect(s)")
+    //if (logging.overlay)
+    //    console.log("refreshRectFromObs: updating ",rectList.length," rect(s)")
     for (let rect of rectList) {
         if (typeof rect.obs !== 'undefined')
             updateRectFromObsGeometry(rect)
     }
-    refreshOverlay()
+    //refreshOverlay() // Avoid infinite cycle
 }
 function updateRectFromObsGeometry(rect) {
     if (logging.overlay)
@@ -917,7 +945,7 @@ function plotTagsTracks(ctx) {
     if (showSelectedTagsTracks) {
     // Plot track of selected bee
     if (typeof defaultSelectedBee !== 'undefined') {
-        console.log('defaultSelectedBee=',defaultSelectedBee)
+        //console.log('defaultSelectedBee=',defaultSelectedBee)
         let p0 = []
         for (let f=fmin; f<=fmax; f++) {
             let tagsFrame = Tags[f]
@@ -1440,12 +1468,13 @@ function onMouseDown_selectMultiframe(option) {
 
 /* Canvas zoom and pan */
 function onMouseDown_panning(option) {
-    panning={}
+    var panning={}
     panning.p0 = {
         x:  option.e.clientX,
         y:  option.e.clientY
     }
     panning.canvasTransform0 = [...canvasTransform]
+    panning.canvasTransform = [...canvasTransform]
     if (logging.mouseMoveEvents)
         console.log("onMouseDown_panning: option=", option);
 
@@ -1456,11 +1485,11 @@ function onMouseDown_panning(option) {
         let dx = e.clientX-panning.p0.x
         let dy = e.clientY-panning.p0.y
         
-        canvasTransformSet(panning.canvasTransform0)
-        canvasTransform[4] = panning.canvasTransform0[4]-dx*panning.canvasTransform0[0]
-        canvasTransform[5] = panning.canvasTransform0[5]-dy*panning.canvasTransform0[3]
+        panning.canvasTransform[4] = panning.canvasTransform0[4]-dx*panning.canvasTransform0[0]
+        panning.canvasTransform[5] = panning.canvasTransform0[5]-dy*panning.canvasTransform0[3]
+        canvasTransformSet(panning.canvasTransform)
         
-        canvasTransform_Fix()
+        //canvasTransform_Fix()
 
         videoControl.refresh()
     }
@@ -1581,6 +1610,9 @@ function onMouseDown2(ev) {
 // REMI: Scaling arectangle in Fabric.js does not change width,height: it changes only scaleX and scaleY
 // fix this by converting scaleX,scaleY into width,height change
 function fixRectSizeAfterScaling(rect) {
+    if (logging.mouseMoveEvents)
+        console.log('fixRectSizeAfterScaling: rect=',rect)
+
     rect.set('width', rect.get('width') * rect.get('scaleX'));
     rect.set('scaleX', 1);
     rect.set('height', rect.get('height') * rect.get('scaleY'));

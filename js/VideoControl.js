@@ -221,18 +221,15 @@ VideoControl.prototype.hardRefresh = function() {
     $('#realTime').html("Real Time: " + toLocaleISOString(this.getCurrentRealDate()))
 
     printMessage("")
-    
-    this.refresh()
 
     canvas1.clear();
     createRectsFromTracks()
-    
+
     selectBeeByID(defaultSelectedBee);
     //updateForm(null);
     
-    if (flagShowZoom) {
-        showZoomTag()
-    }
+    this.refresh()
+    
 }
 VideoControl.prototype.refresh = function() {
     let video = $('#video')[0]
@@ -250,6 +247,10 @@ VideoControl.prototype.refresh = function() {
     }
     refreshOverlay()
     
+    if (flagShowZoom) {
+        refreshZoom()
+    }
+    
     updateDeleteButton()
     updateUndoButton()
     
@@ -260,6 +261,7 @@ VideoControl.prototype.refresh = function() {
 
 VideoControl.prototype.loadVideo = function(url) {
     this.video.src = url;
+    // Update of display handled in callback onVideoLoaded
 }
 
 VideoControl.prototype.onVideoLoaded = function(event) {
@@ -287,70 +289,50 @@ VideoControl.prototype.onVideoSizeChanged = function() {
     if (logging.videoEvents) {
         console.log("videoSizeChanged: w=",w," h=",h)
     }    
-    vid_cx = w/2;
-    vid_cy = h/2;
-    
-    // Video pixel size
-    //resizeCanvas(w,h)
-    
-    // Display size
-    let wd = w, hd=h;
-    
-    while (wd>800) {
-        wd/=2.0
-        hd/=2.0
-    }
-    
-    $("#canvasresize")[0].style.width = (wd+16).toString() + 'px'
-    $("#canvasresize")[0].style.height = hd.toString() + 'px'
-    $("#canvasresize").resizable({
-      helper: "ui-resizable-helper",
-      aspectRatio: w / h
-    });
-    //resizeCanvasDisplay(wd,hd)
-    //resizeCanvas(wd,hd)
-    refreshCanvasSize()
+        
+    canvasSetVideoSize(w,h)
 }
 
 VideoControl.prototype.loadVideoInfo = function(infourl) {
     let videoControl = this;
     var jqxhr = $.getJSON( infourl, function(data) {
-        if (logging.videoEvents)
-            console.log( "loadVideoInfo loaded" );
-        console.log('videojsoninfo = ',data)    
-        videojsoninfo = data
+            if (logging.videoEvents)
+                console.log( "loadVideoInfo loaded" );
+            console.log('videojsoninfo = ',data)    
+            videojsoninfo = data
         
-        if ($.isNumeric(videojsoninfo.videofps)) {
-          videoinfo.videofps = Number(videojsoninfo.videofps)
-          videoControl.video2.frameRate = videoinfo.videofps
-        }
-        if ($.isNumeric(videojsoninfo.realfps)) {
-          videoinfo.realfps = Number(videojsoninfo.realfps)
-        }
-        if (videojsoninfo.starttime instanceof Date && 
-            !isNaN(videojsoninfo.starttime.valueOf())) {
-          videoinfo.starttime = videojsoninfo.starttime
-        }
-        if (typeof videojsoninfo.tagsfamily !== 'undefined') {
-          videoinfo.tagsfamily = videojsoninfo.tagsfamily
-        }
-        if (typeof videojsoninfo.place !== 'undefined') {
-          videoinfo.place = videojsoninfo.place
-        }
-        if (typeof videojsoninfo.comments !== 'undefined') {
-          videoinfo.comments = videojsoninfo.comments
-        }
+            if ($.isNumeric(videojsoninfo.videofps)) {
+              videoinfo.videofps = Number(videojsoninfo.videofps)
+              videoControl.video2.frameRate = videoinfo.videofps
+            }
+            if ($.isNumeric(videojsoninfo.realfps)) {
+              videoinfo.realfps = Number(videojsoninfo.realfps)
+            }
+            if (videojsoninfo.starttime instanceof Date && 
+                !isNaN(videojsoninfo.starttime.valueOf())) {
+              videoinfo.starttime = videojsoninfo.starttime
+            }
+            if (typeof videojsoninfo.tagsfamily !== 'undefined') {
+              videoinfo.tagsfamily = videojsoninfo.tagsfamily
+            }
+            if (typeof videojsoninfo.place !== 'undefined') {
+              videoinfo.place = videojsoninfo.place
+            }
+            if (typeof videojsoninfo.comments !== 'undefined') {
+              videoinfo.comments = videojsoninfo.comments
+            }
 
-        //'starttime': '2016-07-15T09:59:59.360',
-        //'duration': 1/20, // Duration in seconds
-        //'nframes': 1
-      })
-      .fail(function(jqXHR, textStatus, errorThrown) {
-        console.log( "loadVideoInfo: could not load ",infourl,"\nerror='", textStatus, "', details='", errorThrown,"'\n  videoInfo unchanged")
-      })
-      .complete(function() { 
-        videoControl.onVideoInfoChanged()
-      })
+            //'starttime': '2016-07-15T09:59:59.360',
+            //'duration': 1/20, // Duration in seconds
+            //'nframes': 1
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            console.log( "loadVideoInfo: could not load ",infourl,"\nerror='", textStatus, "', details='", errorThrown,"'\n  videoInfo unchanged")
+        })
+        .complete(function() { 
+            videoControl.onVideoInfoChanged()
+        })
+    // Update of videoInfo handled in callback onVideoInfoChanged
 }
 VideoControl.prototype.onVideoInfoChanged = function() {
     if (logging.videoEvents)
