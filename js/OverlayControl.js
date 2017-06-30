@@ -1062,12 +1062,12 @@ function onShowTagsChanged() {
     // Callback when display parameters have changed
     showTags = $('#showTags')[0].checked
     showTagsOrientation = $('#showTagsOrientation')[0].checked
-    onFrameChanged()
+    videoControl.onFrameChanged()
 }
 function onShowTagsTracksChanged() {
     showTagsTracks = $('#showTagsTracks')[0].checked
     showSelectedTagsTracks = $('#showSelectedTagsTracks')[0].checked
-    onFrameChanged()
+    onFrameChanged.onFrameChanged()
 }
 function onTrackWindowChanged() {
     let range = Number($('#trackWindow')[0].value)
