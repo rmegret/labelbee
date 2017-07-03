@@ -294,3 +294,30 @@ textarea {
   height: 1.5em;
   padding: 1px
 }
+
+#videoName {
+    color: #444;
+    padding: 3px;
+    background: #eee;
+}
+
+#videoList, 
+#videoList td {
+/*     border: 1px solid black; */
+    padding: 3px;
+}
+#videoList tr.selected {
+    font-weight: bold;
+}
+#videoList td:first-child {
+    text-align: center;
+    vertical-align: middle;
+    padding: 1px;
+}
+#videoList td:first-child button,
+#videoList td:first-child input {
+    display: inline-block;
+}​
+.glyph-xs {
+    font-size: 10px;
+}

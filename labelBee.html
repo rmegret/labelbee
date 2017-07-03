@@ -73,17 +73,17 @@
 
           <p>
             <!--Change to div-->
-            <button value="Previous minute" onclick="videoControl.rewind3()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-backward"></span></button>
-            <button value="Previous second" onclick="videoControl.rewind2()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-backward"></span></button>
-            <button value="Previous frame" onclick="videoControl.rewind()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-backward"></span></button>
-            <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-backward"></span></button>
-            <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play"></span></button>
-            <button value="Next frame" onclick="videoControl.forward()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-step-forward"></span></button>
-            <button value="Next second" onclick="videoControl.forward2()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-forward"></span></button>
-            <button value="Next minute" onclick="videoControl.forward3()" type="button" class="btn btn-info" style="height: 33px"><span class="glyphicon glyphicon-fast-forward"></span></button>
+            <button value="Previous minute" onclick="videoControl.rewind3()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-fast-backward"></span></button>
+            <button value="Previous second" onclick="videoControl.rewind2()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-backward"></span></button>
+            <button value="Previous frame" onclick="videoControl.rewind()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-step-backward"></span></button>
+            <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-backward"></span></button>
+            <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play"></span></button>
+            <button value="Next frame" onclick="videoControl.forward()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-step-forward"></span></button>
+            <button value="Next second" onclick="videoControl.forward2()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-forward"></span></button>
+            <button value="Next minute" onclick="videoControl.forward3()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-fast-forward"></span></button>
 <!--             <input type="button" value="Submit info" onclick="submit_bee()" class="btn btn-info" style="position: inline"> -->
-            <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-info" style="position: inline" id="deleteButton">
-            <button type="button" onclick="undoAction()" class="btn btn-info" style="position: inline" id="undoButton">Undo</button>
+            <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-info btn-sm" style="position: inline" id="deleteButton">
+            <button type="button" onclick="undoAction()" class="btn btn-info btn-sm" style="position: inline" id="undoButton">Undo</button>
 
           </p>
           <p>
@@ -167,26 +167,24 @@
               <div>
 <!--                 <div class="btn btn-primary"> -->
                   <div class='subpanel'>
-                  <label class="primary">Video 
-                  <button value="Add video to list" onclick="addVideoClick()" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus-sign"></span></button>
-                  </label><br>
-                  File:
-                  <select id="selectboxVideo" name="video" onchange="selectVideo()" class="">
-                      <option value="data/undefined.mp4" selected>Not yet initialized</option>
-                      <!-- This menu is initialized in labelBee.js:init() -->
-                  </select> <!-- selectboxVideo -->  
-<!--                 </div>  -->
-                <br><br>
-<!-- 
-                <div class="frame">
-                  <span id="currentFrame">Frame: 0</span>
-                </div>
- -->
-                Frame
-                      <input type="text" value="-" id="currentFrame"
-                       onchange="videoControl.onFrameTextChanged(event)" size="6">
-                <div id="vidTime">Video Time:</div>
-                <div id="realTime">Real Time:</div>
+                      <label class="primary">Current Video</label>
+                      <br>
+                      <div id="videoName" class="small">-</div>
+                      Frame <input type="text" value="-" id="currentFrame" onchange="videoControl.onFrameTextChanged(event)" size="6">
+                      <div id="vidTime">Video Time:</div>
+                      <div id="realTime">Real Time:</div>
+                      <select id="selectboxVideo" name="video" onchange="onSelectboxVideoChanged()" class="">
+                          <option value="data/undefined.mp4" selected>Not yet initialized</option>
+                      </select> <!-- selectboxVideo -->  
+                  </div>
+                
+                <div class='subpanel collapsible'>
+                  <label class="primary">Video List </label>
+                  <div>
+    <!--                 </div>  -->
+                      <table id='videoList'>
+                      </table>
+                  </div>
                 </div>
                 
                 <div class='subpanel collapsible'>

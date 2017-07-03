@@ -273,6 +273,9 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     videoinfo.duration = this.video.duration
     videoinfo.name = this.video.src
     
+    let name = videoinfo.name
+    $('#videoName').html(name)
+    
     let videourl = this.video.src;
     let infourl = videourl+'.info.json'
     this.loadVideoInfo(infourl)

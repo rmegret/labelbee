@@ -37,12 +37,10 @@ var logging = {
 /** Global init */
 function init() {
     // import * from "VideoList.js";
-    initVideoSelection()
-    $('#selectboxVideo')[0].selectedIndex=6; // select long video
+    initVideoList()
         
     // import * from "VideoNavigation";
     videoControl = new VideoControl('video') // Attach control to #video
-    
     // Polyfill to get a global getCurrentFrame
     getCurrentFrame = videoControl.getCurrentFrame.bind(videoControl)
 
@@ -87,8 +85,10 @@ function init() {
     
     //loadFromFile0('data/Tracks-demo.json')
     
-    //$('#video')[0].onloadeddata = onVideoLoaded;// Now handled by VideoControl
-    selectVideo(); // Get src from selectboxVideo
+    /* Set defaults */
+    
+    selectVideoByID(6)
+    //Will trigger videoControl.onVideoLoaded
 }
 
 function printMessage(html, color) {
