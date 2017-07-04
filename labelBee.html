@@ -122,22 +122,41 @@
 <!--           <video src="" id="video" style="display:none"></video> -->
 
           <div>
+              <div class='block'>
               Height:
               <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram height">h-</span></button>
               <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram height">h=</span></button>
               <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram height">h+</span></button>
-              &nbsp;
+              </div>
+              <div class='block'>
               Width:
               <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram width">w-</span></button>
               <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram width">w=</span></button>
               <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram width">w+</span></button>
-              &nbsp;
+              </div>
+              <div class='block'>
               Tags:
               <button value="H0" onclick="chronoFilter('H0')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming==0">H0</span></button>
               <button value="H1" onclick="chronoFilter('H1')" type="button" class="btn btn-info  btn-xs" title="Show only tags with Hamming<=1">H1</span></button>
               <button value="H2" onclick="chronoFilter('H2')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming<=2">H2</span></button>
               <button value="H&infin;" onclick="chronoFilter('Hall')" type="button" class="btn btn-info btn-xs" title="Show all tags, including virtual ones">all</span></button>
               &Delta;<input type="text" value="0" size="2" id="tagsIntervalFilterMinLength" onchange="onTagsParametersChanged(event)">
+              </div>
+              <div class='block'>
+              Tracks:
+              <button value="win-" onclick="scaleTrackWindow(0.5)" type="button" class="btn btn-default btn-xs" title="Reduce track window">win-</span></button>
+              <button value="win+" onclick="scaleTrackWindow(2)" type="button" class="btn btn-default btn-xs" title="Extend track window">win+</span></button>
+              <button value="1s" onclick="setTrackWindow(20)" type="button" class="btn btn-default btn-xs" title="Track window = 1s">1s</span></button>
+              <button value="10s" onclick="setTrackWindow(200)" type="button" class="btn btn-default btn-xs" title="Track window = 10s">10s</span></button>
+              <button value="1m" onclick="setTrackWindow(1200)" type="button" class="btn btn-default btn-xs" title="Track window = 1min">1m</span></button>
+              </div>
+              
+<!-- 
+              <div class='block'>
+              Misc:
+              <button value="ghost" onclick="plotGhostImage()" type="button" class="btn btn-default btn-xs" title="Plot averaged image">Ghost</span></button>
+              </div>
+ -->
 
               <div id="chronoDiv" class="ui-widget-content" 
                    width="400" height="200" style="padding-right: 16px;">

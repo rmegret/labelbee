@@ -321,3 +321,8 @@ textarea {
 .glyph-xs {
     font-size: 10px;
 }
+
+.block {
+    display: inline-block;
+    margin: 2px 5px;
+}

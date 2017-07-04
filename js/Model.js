@@ -73,6 +73,19 @@ function getValidIDsForFrame(frame) {
     //console.log("getValidIDsForFrame: ids=",ids)
     return ids;
 }
+function getValidIDsForFrames(interval) {
+    let fmin = interval[0];
+    let fmax = interval[1];
+    
+    var ids=new Set();
+    for (let f=fmin; f<=fmax; f++) {
+        let fids = getValidIDsForFrame(f);
+        for (let id of fids) {
+            ids.add(id);
+        }
+    }    
+    return [...ids.values()];
+}
 
 function obsDoesExist(frame, id) {
     if (Tracks[frame] == null) {

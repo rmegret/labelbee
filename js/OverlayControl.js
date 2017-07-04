@@ -13,29 +13,30 @@ function OverlayControl(canvasTagId) {
     canvas = document.getElementById(canvasTagId);
     ctx = canvas.getContext('2d');
 
-    // Globals
-    transformFactor = 1.0;
-    canvasTform = [0, 0, 1]; // cx,cy,scale
-    plotTrack_range_backward = 5;
-    plotTrack_range_forward = 5;
+    /* Obs and Tags plotting params */
+    trackWindow = 200 // 10s
+    plotTrack_range_backward = trackWindow;
+    plotTrack_range_forward = trackWindow;
+    $('#trackWindow').val(trackWindow)
 
     showObs = true
     showObsTracks = true
-    showObsChrono = false
+    showObsChrono = true
     showTags = true;
-    showTagsTracks = false
+    showTagsTracks = true
     showSelectedTagsTracks = true
     showTagsOrientation = false
     showTagsChrono = true
-    $('#showObs')[0].checked=showObs
-    $('#showObsTracks')[0].checked=showObsTracks
-    $('#showTags')[0].checked=showTags
-    $('#showTagsTracks')[0].checked=showTagsTracks
-    $('#showSelectedTagsTracks')[0].checked=showTagsTracks
-    $('#showTagsOrientation')[0].checked=showTagsOrientation
-    $('#showTagsChrono')[0].checked=showTagsChrono
-    $('#showObsChrono')[0].checked=showObsChrono
+    $('#showObs').prop('checked',showObs)
+    $('#showObsTracks').prop('checked',showObsTracks)
+    $('#showTags').prop('checked',showTags)
+    $('#showTagsTracks').prop('checked',showTagsTracks)
+    $('#showSelectedTagsTracks').prop('checked',showTagsTracks)
+    $('#showTagsOrientation').prop('checked',showTagsOrientation)
+    $('#showTagsChrono').prop('checked',showTagsChrono)
+    $('#showObsChrono').prop('checked',showObsChrono)
 
+    /* Overlay and selection */
 
     canvas1 = new fabric.Canvas('canvas1');
     ctx1 = $('#canvas1')[0].getContext('2d');
@@ -60,12 +61,16 @@ function OverlayControl(canvasTagId) {
     $('.upper-canvas').bind('contextmenu', onMouseDown2);
     $('.upper-canvas').bind('wheel', onMouseWheel);
 
+    /* Canvas transform */
+
     $("#canvasresize").resizable({
       helper: "ui-resizable-helper",
       aspectRatio: 1   // Need to put a value even to update it later
     });
     $("#canvasresize").on( "resizestop", refreshCanvasSize );
     //$("#canvasresize").on( "resize", refreshCanvasSize ); // Continuous (not working)
+    
+    transformFactor = 1.0;
     canvasTransform = [1,0, 0,1, 0,0]  // Global
     canvasTransformReference = {w:100, h:100} // Keep previous canvas size
 }
@@ -650,13 +655,15 @@ function identifyBeeRect(ctx, rect, radius) {
 /* Obs tracks */
 function plotTracks(ctx) {
     let F = getCurrentFrame()
-    let ids = getValidIDsForFrame(F)
 
     let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1.2;
     let fmin = F-plotTrack_range_backward;
     let fmax = F+plotTrack_range_forward;
     if (fmin<0) fmin=0;
     //if (fmax>maxframe) fmax=maxframe;
+    
+    //let ids = getValidIDsForFrame(F)
+    let ids = getValidIDsForFrames([fmin,fmax])
 
     setColor = function(f) {
         if (f<=F) {
@@ -738,6 +745,7 @@ function plotTracks(ctx) {
         }
     }
 }
+
 
 /* Options */
 var showObsTracks = false
@@ -1072,8 +1080,23 @@ function onShowTagsTracksChanged() {
 function onTrackWindowChanged() {
     let range = Number($('#trackWindow')[0].value)
     console.log("onTrackWindowChanged range=",range)
+    trackWindow = range
     plotTrack_range_forward = range
     plotTrack_range_backward = range
+    
+    videoControl.refresh();
+}
+function setTrackWindow(L) {
+    $('#trackWindow').val(L)
+    onTrackWindowChanged()
+}
+function scaleTrackWindow(factor) {
+    let L = Number($('#trackWindow').val())
+    console.log("scaleTrackWindow: factor=",factor,"with L=",L)
+    L = Math.ceil(L * Number(factor));
+    if (L<0) L=0;
+    if (isNaN(L)) L=1;
+    setTrackWindow(L)
 }
 
 /* Filters */
@@ -1222,6 +1245,24 @@ function predictId(frame, rect, mode) {
         id: computeDefaultNewID(),
         reason: 'default'
     };
+}
+function predictIdFromObsMultiframe(frameInterval, pt, mode) {
+    let out = {id: undefined, obs: undefined, reason:'notFound', d:Infinity, frame: undefined};
+    
+    for (let frame = frameInterval[0]; frame<=frameInterval[1]; frame++) {
+        let ids = getValidIDsForFrame(frame);
+        for (let id of ids) {
+            let obs = getObsHandle(frame, id, false);
+            var cx = obs.x + obs.width/2,
+                cy = obs.y + obs.height/2;
+            //console.log("id=",id,"obs=",obs)
+            let d = dist(pt.x, pt.y, cx, cy);
+            if (d < predictIdClickRadius && d < out.d) {
+                out = {id: id, obs: obs, reason:'distance', d:d, frame:frame};
+            }
+        }
+    }
+    return out;
 }
 
 predictIdClickRadius = 40
@@ -1484,6 +1525,8 @@ function onMouseDown_selectMultiframe(option) {
     let ptCanvas = {x: option.e.offsetX, y: option.e.offsetY}
     let pt = canvasToVideoPoint(ptCanvas)
 
+    var tmp
+
     let clickMultiframe = true
     if (!clickMultiframe) {
       tmp = predictIdFromTags(getCurrentFrame(), pt)
@@ -1495,11 +1538,22 @@ function onMouseDown_selectMultiframe(option) {
       }
 
     } else {
-      tmp = predictIdFromTagsMultiframe([getCurrentFrame()-plotTrack_range_forward, getCurrentFrame()+plotTrack_range_forward], pt)
+      if (showObsTracks) {
+          tmp = predictIdFromObsMultiframe([getCurrentFrame()-plotTrack_range_forward, getCurrentFrame()+plotTrack_range_forward], pt)
     
-      if (tmp.id != null) {
-        console.log('onMouseDown_selectMultiframe: found id=',tmp.id, 'frame=', tmp.frame)
-        selectBeeByIDandFrame(tmp.id,tmp.frame)
+          if (tmp.id != null) {
+            console.log('onMouseDown_selectMultiframe: found Obs id=',tmp.id, 'frame=', tmp.frame)
+            selectBeeByIDandFrame(tmp.id,tmp.frame)
+          }
+      }
+    
+      if (showTagsTracks || showSelectedTagsTracks) {
+          tmp = predictIdFromTagsMultiframe([getCurrentFrame()-plotTrack_range_forward, getCurrentFrame()+plotTrack_range_forward], pt)
+    
+          if (tmp.id != null) {
+            console.log('onMouseDown_selectMultiframe: found Tag id=',tmp.id, 'frame=', tmp.frame)
+            selectBeeByIDandFrame(tmp.id,tmp.frame)
+          }
       }
     }
     
