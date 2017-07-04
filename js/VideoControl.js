@@ -29,6 +29,11 @@ function VideoControl(videoTagId) {
     
     this.video = this.video2.video; // Same as $('#video')[0]
     this.video.onloadeddata = this.onVideoLoaded.bind(this);
+    
+    this.previewVideo = document.createElement('video');
+    let videoControl = this;
+    this.previewVideo.addEventListener('timeupdate', 
+          function() {videoControl.onPreviewFrameChanged()}, false);
 }
 
 VideoControl.prototype = {} // Prepare for all VideoControl methods
@@ -98,8 +103,10 @@ VideoControl.prototype.startSeekTimer = function() {
 VideoControl.prototype.seekFrame = function(frame, useFastSeek) {
     this.startSeekTimer()
     if (useFastSeek) {
-        this.video2.seekTo({'frame':frame+videoinfo.frameoffset, 
-                       'fast':true}) // Experimental, not actually faster
+        this.previewFrame = frame;
+        let t = Math.round((frame+Number(videoinfo.frameoffset))/40)*40/20
+        console.log('videoControl.seekFrame: FAST, f=',frame,' t=',t)
+        this.previewVideo.currentTime =  t
     } else {
         this.video2.seekTo({'frame':frame+videoinfo.frameoffset})
     }
@@ -199,6 +206,19 @@ VideoControl.prototype.onFrameChanged = function(event) {
     $( this ).trigger('frame:change') 
 }
 
+VideoControl.prototype.onPreviewFrameChanged = function(event) {
+    console.log('videoControl.onPreviewFrameChanged')
+    canvas1.clear();
+    let previewScaleX = this.video.videoWidth/this.previewVideo.videoWidth;
+    let previewScaleY = this.video.videoHeight/this.previewVideo.videoHeight;
+    ctx.drawImage(this.previewVideo, 
+                    canvasTransform[4]/previewScaleX, canvasTransform[5]/previewScaleY,
+                      canvasTransform[0]*canvas.width/previewScaleX, canvasTransform[3]*canvas.height/previewScaleY,
+                    0, 0, canvas.width, canvas.height);
+                    
+    $( this ).trigger('previewframe:change')
+}
+
 VideoControl.prototype.hardRefresh = function() {
     let Cframe = this.getCurrentFrame();
     if (logging.frameEvents)
@@ -236,7 +256,7 @@ VideoControl.prototype.hardRefresh = function() {
     
 }
 VideoControl.prototype.refresh = function() {
-    let video = $('#video')[0]
+    let video = this.video; // same as $('#video')[0]
     if (this.flagCopyVideoToCanvas) {
       // Copy video to canvas for fully synchronous display
       //ctx.drawImage(video, 0, 0, video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor);
@@ -264,13 +284,37 @@ VideoControl.prototype.refresh = function() {
 }
 
 VideoControl.prototype.loadVideo = function(url) {
+    if (logging.videoEvents)
+        console.log('loadVideo: url=',url)
+
     this.video.src = url;
+    this.videoRawURL = url;
     // Update of display handled in callback onVideoLoaded
+}
+VideoControl.prototype.loadPreviewVideo = function(previewURL) {
+    function onPreviewVideoLoaded(event) {
+        if (logging.videoEvents)
+            console.log('onPreviewVideoLoaded', event)
+
+        console.log('onPreviewVideoLoaded: PREVIEW available. Use CTRL+mousemove in the chronogram. url=',event.target.src)
+    }
+    function onPreviewVideoError(e) {
+        if (logging.videoEvents)
+            console.log('onPreviewVideoError: could not load preview video. err=',e)
+    }
+    this.previewVideo.onerror=onPreviewVideoError
+    this.previewVideo.onloadeddata=onPreviewVideoLoaded
+
+    this.previewVideo.src = previewURL;
+    if (logging.videoEvents)
+        console.log('loadPreviewVideo: previewURL=',previewURL)
 }
 
 VideoControl.prototype.onVideoLoaded = function(event) {
     if (logging.videoEvents)
         console.log('onVideoLoaded', event)
+        
+    console.log('onVideoLoaded: VIDEO loaded ',this.video.src)
     
     this.onVideoSizeChanged()
     
@@ -280,9 +324,11 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     let name = videoinfo.name
     $('#videoName').html(name)
     
-    let videourl = this.video.src;
-    let infourl = videourl+'.info.json'
-    this.loadVideoInfo(infourl)
+    let videourl = this.videoRawURL;
+    
+    this.loadVideoInfo(videourl+'.info.json')
+    
+    this.loadPreviewVideo(videourl+'.preview.mp4');
 }
 
 VideoControl.prototype.onVideoSizeChanged = function() {

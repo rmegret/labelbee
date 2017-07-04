@@ -90,6 +90,16 @@ function initChrono() {
     //       })
 
     $( videoControl ).on('frame:change', updateTimeMark)
+    
+    function updatePreviewTimeMark() {
+        axes.setTimeMark(videoControl.previewFrame);
+    }
+    function endPreview() {
+        updateTimeMark();
+        videoControl.hardRefresh();
+    }
+    $( videoControl ).on('previewframe:change', updatePreviewTimeMark)
+    $( axes ).on('previewframe:trackend', endPreview)
 
     /* ## Init chronogram content ## */
     
