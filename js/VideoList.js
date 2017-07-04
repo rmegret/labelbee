@@ -16,7 +16,31 @@ function initVideoList() {
                   '1_02_R_170426151700_cleaned.mp4',
                   '36_01_H_160715100000_copy.mp4',
                   'GuraboTest/4_02_R_170511130000.mp4',
-                  '2017-06-Gurabo/2_02_R_170609100000.mp4' ]
+                  '2017-06-Gurabo/2_02_R_170609100000.mp4',
+                   ]
+    videoList = [ 'testvideo.mp4',
+                  'vlc1.mp4',
+                  'vlc2.mp4',
+                  '1_02_R_170419141405.mp4',
+                  '1_02_R_170426151700_cleaned.mp4',
+                  '36_01_H_160715100000_copy.mp4',
+                  'GuraboTest/4_02_R_170511130000.mp4',
+                  '2017-06-Gurabo/2_02_R_170609100000.mp4',
+                  'videoGurabo/20_02_R_170604000000.mp4',
+                  'videoGurabo/21_02_R_170604010000.mp4',
+                  'videoGurabo/22_02_R_170604020000.mp4',
+                  'videoGurabo/23_02_R_170604030000.mp4',
+                  'videoGurabo/24_02_R_170604040000.mp4',
+                  'videoGurabo/25_02_R_170604050000.mp4',
+                  'videoGurabo/26_02_R_170604060000.mp4',
+                  'videoGurabo/27_02_R_170604070000.mp4',
+                  'videoGurabo/28_02_R_170604080000.mp4',
+                  'videoGurabo/29_02_R_170604090000.mp4',
+                  'videoGurabo/30_02_R_170604100000.mp4',
+                  'videoGurabo/31_02_R_170604110000.mp4',
+                  'videoGurabo/32_02_R_170604120000.mp4',
+                  'videoGurabo/58_02_R_170604140000.mp4'
+                   ]
     videoListCurrentID = 0;
     updateVideoList()
     updateVideoSelectbox()
