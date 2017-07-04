@@ -7,6 +7,9 @@ function OverlayControl(canvasTagId) {
         console.log('ERROR: OverlayControl should be created with "new OverlayControl()"')
         return new OverlayControl(); 
     }
+    
+    // Events:
+    // overlay.on('trackWindow:change',...)
 
     if (typeof canvasTagId === 'undefined')
         canvasTagId = 'canvas'; // Default HTML5 canvas tag to attach to
@@ -1083,6 +1086,8 @@ function onTrackWindowChanged() {
     trackWindow = range
     plotTrack_range_forward = range
     plotTrack_range_backward = range
+    
+    $(overlay).trigger('trackWindow:change')
     
     videoControl.refresh();
 }

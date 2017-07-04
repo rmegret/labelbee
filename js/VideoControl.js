@@ -193,6 +193,10 @@ VideoControl.prototype.onFrameChanged = function(event) {
         console.log('frameChanged', Cframe)
 
     this.hardRefresh();
+    
+    // Trigger public event (used by ChronoControl to change 
+    // trackWindow View and timeMark View)
+    $( this ).trigger('frame:change') 
 }
 
 VideoControl.prototype.hardRefresh = function() {
@@ -254,7 +258,7 @@ VideoControl.prototype.refresh = function() {
     updateDeleteButton()
     updateUndoButton()
     
-    updateTimeMark()
+    //updateTimeMark() // Now handled through 'frameChanged' jQuery event
 
     //refreshChronogram();
 }

@@ -89,6 +89,7 @@ function initChrono() {
     //         return false
     //       })
 
+    $( videoControl ).on('frame:change', updateTimeMark)
 
     /* ## Init chronogram content ## */
     
@@ -96,6 +97,7 @@ function initChrono() {
     initTagIntervals()
     
     initVideoSpan()
+    initTrackWindowSpan()
 }
 
 /* Synchronization between chronogram, video and chronogramData */
@@ -246,6 +248,7 @@ function updateChrono() {
     updateTagIntervals()
     
     updateVideoSpan()
+    updateTrackWindowSpan()
 }
 
 
@@ -295,6 +298,39 @@ function updateVideoSpan() {
              .text(videoinfo.name.split('/').pop())
 }
 
+function initTrackWindowSpan() {
+    var chronoGroup = axes.chronoGroup
+    trackWindowSpan = chronoGroup
+        .append("g").attr('id','trackWindowSpan')
+        .attr("clip-path", "url(#trackWindowSpanClipPath)")
+    trackWindowSpan.append("clipPath")
+        .attr("id", "trackWindowSpanClipPath") // give the clipPath an ID
+        .append("rect")
+        .attr("x", 0).attr("y", -15)
+        .attr("width", axes.width()).attr("height", 15)
+    trackWindowSpan.append("rect").attr('class','interval')
+        .attr("x", 0).attr("y", -15)
+        .attr("width", 1).attr("height", 15) // Just init
+        .style("stroke-width", "1px")
+        .style("stroke", "pink")
+        .style("fill", "pink")
+        .style("fill-opacity", "0.4")
+        
+    $( videoControl ).on('frame:change', updateTrackWindowSpan)
+    $( overlay ).on('trackWindow:change', updateTrackWindowSpan)
+}
+function updateTrackWindowSpan() {
+    var trackWindowSpan = axes.chronoGroup.select('#trackWindowSpan')
+    trackWindowSpan.selectAll('#trackWindowSpanClipPath > rect')
+             .attr("width", axes.width()).attr("y", -15)
+    let f = getCurrentFrame()
+    let fmin = f-trackWindow
+    let fmax = f+trackWindow
+    trackWindowSpan.selectAll('.interval')
+             .attr("x", axes.xScale(fmin)).attr("y", -13)
+             .attr("width", axes.xScale(fmax)-axes.xScale(fmin))
+             .attr("height", 11);
+}
 
 
 
