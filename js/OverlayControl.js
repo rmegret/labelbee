@@ -452,7 +452,8 @@ function addRect(id, startX, startY, width, height, status, inputObs, angle) {
         obs.y = videoRect.top
         obs.width = videoRect.width
         obs.height = videoRect.height
-        obs.angle = 0 
+        if (angle == null) angle = 0;
+        obs.angle = angle 
     } else if (status === "db") {
         obs = cloneObs(inputObs)
         if (typeof obs.angle === 'undefined') {
@@ -1334,17 +1335,20 @@ var default_height = 40;
 
 /* Create new rect from prediction */
 function onMouseDown_predict(option) {
-    var startY = option.e.offsetY, startX = option.e.offsetX;
-    let canvasXY = {x: startX, y: startX}
+    var startX = option.e.offsetX, startY = option.e.offsetY;
+    let canvasXY = {x: startX, y: startY}
     let videoXY = canvasToVideoPoint(canvasXY)
     var rect;
+    
+    if (logging.mouseEvents)
+        console.log('onMouseDown: no object selected', option)
 
     // predictId takes video/obs coordinates units
     let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
     let predictionTag = predictIdFromTags(getCurrentFrame(), videoXY, "distance");
-    $("#I").val(prediction.id)
+    //$("#I").val(prediction.id)
   
-    if (logging.idPrediction) {
+    if (logging.mouseEvents) {
         console.log('onMouseDown: predictId         --> prediction=',prediction)
         console.log('onMouseDown: predictIdFromTags --> predictionTag=',predictionTag)
     }
@@ -1359,6 +1363,10 @@ function onMouseDown_predict(option) {
         if (prediction.obs && prediction.id==tag.id) {
             // If found a rect with same id as tag on adjacent frame
             let obs = prediction.obs;
+            
+            if (logging.mouseEvents)
+                console.log("onMouseDown: copying rect from tag ", tag, " and obs ",obs)
+            
             // Copy rectangle from source of prediction
             // addRect takes canvas coordinates units
             let r = obsToCanvasRect(obs)
@@ -1367,6 +1375,8 @@ function onMouseDown_predict(option) {
             rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
         } else {
             // Only found tag
+            if (logging.mouseEvents)
+                console.log("onMouseDown: copying rect from tag ", tag)
           
             let angle = tagAngle(tag)
             if (typeof angle !== 'undefined') {
@@ -1383,11 +1393,14 @@ function onMouseDown_predict(option) {
                        default_width, default_height, "new");
             }
         }
-        if (logging.mouseEvents)
-            console.log("onMouseDown: copied rect from tag ", tag)
+
     } else if (prediction.obs) {
         // Only found rect
         let obs = prediction.obs;
+        
+        if (logging.mouseEvents)
+            console.log("onMouseDown: prediction obs=", obs)
+        
         // Copy rectangle from source of prediction
         // addRect takes canvas coordinates units
         let r = obsToCanvasRect(obs)
@@ -1403,7 +1416,7 @@ function onMouseDown_predict(option) {
         rect = addRect(prediction.id, startX - default_width / 2, startY - default_height / 2,
             default_width, default_height, "new");
         if (logging.mouseEvents)
-            console.log("onMouseDown: created new rect with default size ", rect)
+            console.log("onMouseDown: did not find tag or event, created new rect with default size ", rect)
     }
     rect.setCoords();
     canvas1.setActiveObject(rect);
@@ -1622,7 +1635,7 @@ function onMouseDown(option) {
         }
     } else {
         // Clicked on the background
-        if (logging.addRect)
+        if (logging.mouseEvents)
             console.log('onMouseDown: no object selected', option)
 
         // Deselect current bee
