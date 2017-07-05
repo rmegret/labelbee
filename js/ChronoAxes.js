@@ -570,28 +570,34 @@ function ChronoAxes(parent, videoinfo, options) {
     // ## Click callback, can be modified by the user as axes.onClick=...
     axes.onClick = undefined
     
-    chronoGroup.on("click",function() {
-        if (typeof axes.onClick == 'undefined') return;
-        if (d3.event.defaultPrevented) return;
-        
-        var coords = d3.mouse(this);
-        var frame = Math.round( xScale.invert(coords[0]) );
+    function invertYScale(y) {
         var id 
         if (options.useOrdinalScale) {
-          let range = yScale.range()
-          rank = Math.floor((coords[1]-range[0])/(range[1]-range[0]));
+          let rangeExtent = yScale.rangeExtent()
+          let rangeBand = yScale.rangeBand()
+          rank = Math.floor((y-rangeExtent[0])/rangeBand);
           if (rank<0 || rank>= yScale.domain().length)
              id = undefined
           else
              id = yScale.domain()[rank]
           console.log("chronoGroup.onClick: rank=", rank)
         } else {
-          rank = Math.round( yScale.invert(coords[1]) );
+          rank = Math.round( yScale.invert(y) );
           if (rank<yScale.domain()[0] || rank> yScale.domain()[1])
-            id=undefined
+            id = undefined
           else
             id = rank
         }
+        return id
+    }
+    
+    chronoGroup.on("click",function() {
+        if (typeof axes.onClick == 'undefined') return;
+        if (d3.event.defaultPrevented) return;
+        
+        var coords = d3.mouse(this);
+        var frame = Math.round( xScale.invert(coords[0]) );
+        var id = invertYScale( coords[1] )
     
         if (logging.axesEvents)
             console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
@@ -668,22 +674,7 @@ function ChronoAxes(parent, videoinfo, options) {
             if (typeof glob_offset === 'undefined') glob_offset=0
             //frame = Math.round(frame/40)*40+glob_offset
         
-            var id 
-            if (options.useOrdinalScale) {
-              let range = yScale.range()
-              rank = Math.floor((coords[1]-range[0])/(range[1]-range[0]));
-              if (rank<0 || rank>= yScale.domain().length)
-                 id = undefined
-              else
-                 id = yScale.domain()[rank]
-              //console.log("chronoGroup.onClick: rank=", rank)
-            } else {
-              rank = Math.round( yScale.invert(coords[1]) );
-              if (rank<yScale.domain()[0] || rank> yScale.domain()[1])
-                id = undefined
-              else
-                id = rank
-            }
+            var id = invertYScale( coords[1] )
     
             if (logging.axesEvents)
                 console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
