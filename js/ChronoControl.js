@@ -227,6 +227,46 @@ function onAxesChanged(event) {
     updateChrono()
 }
 
+function gotoNextEvent() {
+    let frame = videoControl.getCurrentFrame()
+    let id = defaultSelectedBee
+    console.log("id=",id)
+    let interval = findNextTagEvent(Number(frame), id)
+    console.log(interval)
+    defaultSelectedBee = id
+    videoControl.seekFrame(Number(interval.begin))
+}
+function findNextTagEvent(frame, id) {
+    let list = tagIntervals.filter(
+          function(element) {return element.id==id && Number(element.begin)>frame}
+        ).sort(
+          function(a,b) {return Number(a.begin)-Number(b.begin)}
+        )
+    console.log(list)
+    if (list.length==0) return undefined
+    return list[0]
+}
+
+function gotoPreviousEvent() {
+    let frame = videoControl.getCurrentFrame()
+    let id = defaultSelectedBee
+    console.log("id=",id)
+    let interval = findPreviousTagEvent(Number(frame), id)
+    console.log(interval)
+    defaultSelectedBee = id
+    videoControl.seekFrame(Number(interval.end))
+}
+function findPreviousTagEvent(frame, id) {
+    let list = tagIntervals.filter(
+          function(element) {return element.id==id && Number(element.end)<frame}
+        ).sort(
+          function(a,b) {return Number(b.end)-Number(a.end)}
+        )
+    console.log(list)
+    if (list.length==0) return undefined
+    return list[0]
+}
+
 /* Callback to react to change in chronogramData */
 function drawChrono() {
     // Strong update:
@@ -590,6 +630,13 @@ function refreshChronogram() {
                 tagIntervals.push(activeInterval)
         }
     }
+    
+    if (logging.chrono)
+        console.log("refreshChronogram: sorting()...")
+    tagsIntervalsSortedBegin = tagIntervals.slice();
+    tagsIntervalsSortedBegin.sort(function(a,b) {return a.begin-b.begin})
+    tagsIntervalsSortedEnd = tagIntervals.slice();
+    tagsIntervalsSortedEnd.sort(function(a,b) {return a.end-b.end})
     
     if (logging.chrono)
         console.log("refreshChronogram: drawChrono()...")
