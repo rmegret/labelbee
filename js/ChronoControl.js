@@ -631,12 +631,12 @@ function refreshChronogram() {
         }
     }
     
-    if (logging.chrono)
-        console.log("refreshChronogram: sorting()...")
-    tagsIntervalsSortedBegin = tagIntervals.slice();
-    tagsIntervalsSortedBegin.sort(function(a,b) {return a.begin-b.begin})
-    tagsIntervalsSortedEnd = tagIntervals.slice();
-    tagsIntervalsSortedEnd.sort(function(a,b) {return a.end-b.end})
+//     if (logging.chrono)
+//         console.log("refreshChronogram: sorting()...")
+//     tagsIntervalsSortedBegin = tagIntervals.slice();
+//     tagsIntervalsSortedBegin.sort(function(a,b) {return a.begin-b.begin})
+//     tagsIntervalsSortedEnd = tagIntervals.slice();
+//     tagsIntervalsSortedEnd.sort(function(a,b) {return a.end-b.end})
     
     if (logging.chrono)
         console.log("refreshChronogram: drawChrono()...")
