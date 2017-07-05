@@ -570,28 +570,34 @@ function ChronoAxes(parent, videoinfo, options) {
     // ## Click callback, can be modified by the user as axes.onClick=...
     axes.onClick = undefined
     
-    chronoGroup.on("click",function() {
-        if (typeof axes.onClick == 'undefined') return;
-        if (d3.event.defaultPrevented) return;
-        
-        var coords = d3.mouse(this);
-        var frame = Math.round( xScale.invert(coords[0]) );
+    function invertYScale(y) {
         var id 
         if (options.useOrdinalScale) {
-          let range = yScale.range()
-          rank = Math.floor((coords[1]-range[0])/(range[1]-range[0]));
+          let rangeExtent = yScale.rangeExtent()
+          let rangeBand = yScale.rangeBand()
+          rank = Math.floor((y-rangeExtent[0])/rangeBand);
           if (rank<0 || rank>= yScale.domain().length)
              id = undefined
           else
              id = yScale.domain()[rank]
           console.log("chronoGroup.onClick: rank=", rank)
         } else {
-          rank = Math.round( yScale.invert(coords[1]) );
+          rank = Math.round( yScale.invert(y) );
           if (rank<yScale.domain()[0] || rank> yScale.domain()[1])
-            id=undefined
+            id = undefined
           else
             id = rank
         }
+        return id
+    }
+    
+    chronoGroup.on("click",function() {
+        if (typeof axes.onClick == 'undefined') return;
+        if (d3.event.defaultPrevented) return;
+        
+        var coords = d3.mouse(this);
+        var frame = Math.round( xScale.invert(coords[0]) );
+        var id = invertYScale( coords[1] )
     
         if (logging.axesEvents)
             console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
@@ -601,41 +607,89 @@ function ChronoAxes(parent, videoinfo, options) {
             console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
     })
     
-    chronoGroup.on("mousemove",function() {
-        if (!d3.event.ctrlKey) return;
-        if (typeof axes.onClick == 'undefined') return;
-        if (d3.event.defaultPrevented) return;
-        
-        var coords = d3.mouse(this);
-        var frame = Math.round( xScale.invert(coords[0]) );
-        
-        if (typeof glob_offset === 'undefined') glob_offset=0
-        frame = Math.round(frame/40)*40+glob_offset
-        
-        var id 
-        if (options.useOrdinalScale) {
-          let range = yScale.range()
-          rank = Math.floor((coords[1]-range[0])/(range[1]-range[0]));
-          if (rank<0 || rank>= yScale.domain().length)
-             id = undefined
-          else
-             id = yScale.domain()[rank]
-          //console.log("chronoGroup.onClick: rank=", rank)
-        } else {
-          rank = Math.round( yScale.invert(coords[1]) );
-          if (rank<yScale.domain()[0] || rank> yScale.domain()[1])
-            id=undefined
-          else
-            id = rank
+    injectTrackFrame(chronoGroup);
+    function injectTrackFrame(target) {
+        d3.select("body").on('keydown',trackFrame_keyDown) // D3 callback
+        chronoGroup.on("mousemove", trackFrame_mouseMove); // always track, but discard if not needed
+        var trackFrame_coords = {};
+        function trackFrame_keyDown() {
+            if (!axes.trackFrame_on && d3.event.ctrlKey) {
+                // Register mousemove is not already done
+            
+                d3.select("body").on('keyup.trackEnd',trackFrame_keyUp) // D3 callback
+                axes.trackFrame_on = true;
+                console.log('Started mousemove tracking in chronogram')
+                let E = d3.event;
+                var evt = new MouseEvent("mousemove",
+                                {
+                                    shiftKey: E.shiftKey,
+                                    altKey: E.altKey,
+                                    metaKey: E.metaKey,
+                                    ctrlKey: E.ctrlKey,
+                                    screenX: trackFrame_coords.screenX,
+                                    screenY: trackFrame_coords.screenY,
+                                    clientX: trackFrame_coords.clientX,
+                                    clientY: trackFrame_coords.clientY
+                                });
+                chronoGroup.node().dispatchEvent(evt)
+            }
         }
+        function trackFrame_keyUp() {
+            if (!d3.event.ctrlKey) {
+                axes.trackFrame_on = false;
+                d3.select("body").on('keyup.trackEnd',null) // D3 callback
+                //chronoGroup.on("mousemove", null);
+                console.log('Stopped mousemove tracking in chronogram')
+                $( axes ).trigger('previewframe:trackend') // jQuery callback
+            }
+        }
+        function trackFrame_mouseMove() {
+            var coords = d3.mouse(chronoGroup.node());
+            if (coords.length==2) {
+                // Save it to be able to trigger mouseMove when pressing a key
+                trackFrame_coords.screenX = d3.event.screenX;
+                trackFrame_coords.screenY = d3.event.screenY;
+                trackFrame_coords.clientX = d3.event.clientX;
+                trackFrame_coords.clientY = d3.event.clientY;
+                //console.log(trackFrame_coords)
+            }
+        
+            if (!d3.event.ctrlKey) {
+                //console.log('trackFrame_mouseMove: runaway call')
+                //chronoGroup.on("mousemove", null);
+                //axes.trackFrame_on = false;
+                return;
+            }
+            if (typeof axes.onClick == 'undefined') return;
+            if (d3.event.defaultPrevented) return;
+        
+            var frame = Math.round( xScale.invert(coords[0]) );
+        
+            let domain = axes.xScale.domain();
+            if (frame<domain[0] || frame>domain[1]) {
+                console.log("trackFrame_mouseMove: f="+frame+" out of bound. Ignoring.");
+                return;
+            }
+        
+            if (typeof glob_offset === 'undefined') glob_offset=0
+            //frame = Math.round(frame/40)*40+glob_offset
+        
+            var id = invertYScale( coords[1] )
     
-        if (logging.axesEvents)
-            console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
+            if (logging.axesEvents)
+                console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
     
-        // Trigger the callback, passing frame and id information
-        if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id, 'type': 'move'}))
-            console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
-    })
+            if (!axes.hadTrackEnd) {
+                d3.select("body").on('keyup.trackEnd', trackFrame_keyUp) 
+                axes.hadTrackEnd = true;
+                console.log('Started mousemove tracking')
+            }
+    
+            // Trigger the callback, passing frame and id information
+            if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id, 'type': 'move'}))
+                console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+        }
+    }
     
     return axes
     
