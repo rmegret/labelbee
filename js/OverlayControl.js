@@ -332,8 +332,9 @@ function updateRectFromObsGeometry(rect) {
     rect.setAngle(obs.angle)
     rect.setCoords()
 }
-function createRectsFromTracks() {
-    let F = getCurrentFrame()
+function createRectsFromTracks(F) {
+    if (typeof F === 'undefined')
+        F = getCurrentFrame()
     let ids = getValidIDsForFrame(F)
     if (logging.overlay)
         console.log("createRectsFromTracks: ",{frame:F,ids:ids})

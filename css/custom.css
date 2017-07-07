@@ -154,7 +154,7 @@ svg {
 
 .axis path, .axis line, .tagAxis path, .tagAxis line {
   fill: none;
-  stroke: #000;
+  stroke: #cdf;
 }
 
 /* Style for axis ticks */

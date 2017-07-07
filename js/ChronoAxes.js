@@ -609,51 +609,66 @@ function ChronoAxes(parent, videoinfo, options) {
     
     injectTrackFrame(chronoGroup);
     function injectTrackFrame(target) {
-        d3.select("body").on('keydown',trackFrame_keyDown) // D3 callback
-        chronoGroup.on("mousemove", trackFrame_mouseMove); // always track, but discard if not needed
-        var trackFrame_coords = {};
+        chronoGroup.on("mouseenter.trackFrame", trackFrame_mouseEnter);
+        chronoGroup.on("mouseleave.trackFrame", trackFrame_mouseLeave); 
+        var mouseCache = [undefined, undefined]
+        function trackFrame_mouseEnter() {
+            console.log('trackFrame_mouseEnter')
+            d3.select("body").on('keydown.trackFrame',trackFrame_keyDown)
+            chronoGroup.on("mousemove", trackFrame_mouseMove);
+            var coords = d3.mouse(chronoGroup.node());
+            mouseCache[0] = coords[0];
+            mouseCache[1] = coords[1];
+        }
+        function trackFrame_mouseLeave() {
+            console.log('trackFrame_mouseLeave')
+            d3.select("body").on('keydown.trackFrame',null) // callback off
+            //d3.select("body").on('keyup.trackFrame',null) // callback off
+            chronoGroup.on("mousemove", null);
+            $( axes ).trigger('previewframe:trackend') // jQuery callback
+        }
         function trackFrame_keyDown() {
-            if (!axes.trackFrame_on && d3.event.ctrlKey) {
+            if (d3.event.ctrlKey) {
                 // Register mousemove is not already done
             
-                d3.select("body").on('keyup.trackEnd',trackFrame_keyUp) // D3 callback
-                axes.trackFrame_on = true;
+                d3.select("body").on('keydown.trackFrame',null) // Callback off 
+                d3.select("body").on('keyup.trackFrame',trackFrame_keyUp) 
+
                 console.log('Started mousemove tracking in chronogram')
-                let E = d3.event;
-                var evt = new MouseEvent("mousemove",
-                                {
-                                    shiftKey: E.shiftKey,
-                                    altKey: E.altKey,
-                                    metaKey: E.metaKey,
-                                    ctrlKey: E.ctrlKey,
-                                    screenX: trackFrame_coords.screenX,
-                                    screenY: trackFrame_coords.screenY,
-                                    clientX: trackFrame_coords.clientX,
-                                    clientY: trackFrame_coords.clientY
-                                });
-                chronoGroup.node().dispatchEvent(evt)
+//                 let E = d3.event;
+//                 var evt = new MouseEvent("mousemove",
+//                                 {
+//                                     shiftKey: E.shiftKey,
+//                                     altKey: E.altKey,
+//                                     metaKey: E.metaKey,
+//                                     ctrlKey: E.ctrlKey,
+//                                     screenX: trackFrame_coords.screenX,
+//                                     screenY: trackFrame_coords.screenY,
+//                                     clientX: trackFrame_coords.clientX,
+//                                     clientY: trackFrame_coords.clientY, 
+//                                     target: E.target
+//                                 });
+//                 chronoGroup.node().dispatchEvent(evt)
+//                trackFrame_mouseMove()
+                  trackFrame_change()
             }
         }
         function trackFrame_keyUp() {
             if (!d3.event.ctrlKey) {
-                axes.trackFrame_on = false;
-                d3.select("body").on('keyup.trackEnd',null) // D3 callback
-                //chronoGroup.on("mousemove", null);
-                console.log('Stopped mousemove tracking in chronogram')
+                //axes.trackFrame_on = false;
+                
+                d3.select("body").on('keydown.trackFrame',trackFrame_keyDown) 
+                d3.select("body").on('keyup.trackFrame',null)
+                
                 $( axes ).trigger('previewframe:trackend') // jQuery callback
             }
         }
         function trackFrame_mouseMove() {
+    
             var coords = d3.mouse(chronoGroup.node());
-            if (coords.length==2) {
-                // Save it to be able to trigger mouseMove when pressing a key
-                trackFrame_coords.screenX = d3.event.screenX;
-                trackFrame_coords.screenY = d3.event.screenY;
-                trackFrame_coords.clientX = d3.event.clientX;
-                trackFrame_coords.clientY = d3.event.clientY;
-                //console.log(trackFrame_coords)
-            }
-        
+            mouseCache[0] = coords[0];
+            mouseCache[1] = coords[1];
+            
             if (!d3.event.ctrlKey) {
                 //console.log('trackFrame_mouseMove: runaway call')
                 //chronoGroup.on("mousemove", null);
@@ -662,7 +677,20 @@ function ChronoAxes(parent, videoinfo, options) {
             }
             if (typeof axes.onClick == 'undefined') return;
             if (d3.event.defaultPrevented) return;
-        
+            
+            trackFrame_change()
+        }
+        function trackFrame_change() {
+            var coords = mouseCache
+            if (coords[0]<axes.xScale.range()[0] ||
+                    coords[0]>axes.xScale.range()[1] ||
+                    coords[1]<axes.yScale.rangeExtent()[0] ||
+                    coords[1]>axes.yScale.rangeExtent()[1]) {
+                if (logging.axesEvents)
+                    console.log("trackFrame_mouseMove: outside of axes range, ignoring. coords=",coords);
+                return;                        
+            }
+              
             var frame = Math.round( xScale.invert(coords[0]) );
         
             let domain = axes.xScale.domain();
@@ -678,12 +706,6 @@ function ChronoAxes(parent, videoinfo, options) {
     
             if (logging.axesEvents)
                 console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
-    
-            if (!axes.hadTrackEnd) {
-                d3.select("body").on('keyup.trackEnd', trackFrame_keyUp) 
-                axes.hadTrackEnd = true;
-                console.log('Started mousemove tracking')
-            }
     
             // Trigger the callback, passing frame and id information
             if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id, 'type': 'move'}))

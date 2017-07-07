@@ -92,7 +92,8 @@ function initChrono() {
     $( videoControl ).on('frame:change', updateTimeMark)
     
     function updatePreviewTimeMark() {
-        axes.setTimeMark(videoControl.previewFrame);
+        if (videoControl.previewFrame != null)
+            axes.setTimeMark(videoControl.previewFrame);
     }
     function endPreview() {
         updateTimeMark();
