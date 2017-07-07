@@ -1123,13 +1123,15 @@ function scaleTrackWindow(factor) {
 }
 
 /* Filters */
+tagsHammingSampleFilter = function(tag) {return true}
 tagsSampleFilter = function(tag) {return true}
 tagsIntervalFilter = function(interval) {return true}
 tagsIDFilter = function(idinfo) {return true}
 function onTagsParametersChanged() {
     console.log('onTagsParametersChanged')
     // Callback when tags chronogram computation parameters have changed
-    tagsSampleFilter = Function("tag",$('#tagsSampleFilter')[0].value)
+    tagsSampleFilterCustom = Function("tag",$('#tagsSampleFilter')[0].value)
+    tagsSampleFilter = function(tag){return tagsHammingSampleFilter(tag)&&tagsSampleFilterCustom(tag)}
     
     let minLength = Number($('#tagsIntervalFilterMinLength').val())
     
@@ -1142,6 +1144,7 @@ function onTagsParametersChanged() {
                 'tagsIntervalFilter=',tagsIntervalFilter,
                 '\ntagsIDFilter=',tagsIDFilter)
     refreshChronogram()
+    videoControl.refresh()
 }
 function onTagsParametersSelectChanged(event) {
   $('#tagsIntervalFilter').val($('#tagsIntervalFilterSelect').val())
@@ -1149,19 +1152,19 @@ function onTagsParametersSelectChanged(event) {
 }
 function chronoFilter(mode) {
   if (mode=='H0') {
-      $('#tagsSampleFilter').val('return tag.hamming==0')
+      tagsHammingSampleFilter = function(tag) {return tag.hamming==0}
       onTagsParametersChanged()
   }
   if (mode=='H1') {
-      $('#tagsSampleFilter').val('return tag.hamming<=1')
+      tagsHammingSampleFilter = function(tag) {return tag.hamming<=1}
       onTagsParametersChanged()
   }
   if (mode=='H2') {
-      $('#tagsSampleFilter').val('return tag.hamming<=2')
+      tagsHammingSampleFilter = function(tag) {return tag.hamming<=2}
       onTagsParametersChanged()
   }
   if (mode=='Hall') {
-      $('#tagsSampleFilter').val('return true')
+      tagsHammingSampleFilter = function(tag) {return true}
       onTagsParametersChanged()
   }
 }
