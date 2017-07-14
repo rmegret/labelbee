@@ -18,6 +18,7 @@ function initVideoList() {
                   'GuraboTest/4_02_R_170511130000.mp4',
                   '2017-06-Gurabo/2_02_R_170609100000.mp4' ]
     videoListCurrentID = 0;
+    
     updateVideoList()
     updateVideoSelectbox()
     
@@ -31,6 +32,8 @@ function initVideoList() {
         'frameoffset':0
     };
     updateVideoInfoForm()
+    
+    videoListFromServer('data/videolist.csv')
 }
 function updateVideoList() {
     var data = videoList;
