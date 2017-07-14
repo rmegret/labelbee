@@ -18,8 +18,11 @@ function initChrono() {
 
     options = {useOrdinalScale: true}
     axes = new ChronoAxes(svg, videoinfo, options)
-    axes.onClick = onAxesClick         // Callback when the user clicks in axes
-    axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
+    //axes.onClick = onAxesClick         // Callback when the user clicks in axes
+    //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
+    
+    $( axes ).on('axes:clicked', onAxesClick)
+    $( axes ).on('axes:changed', onAxesChanged)
     
     // For some reason, svg does not have the correct size at the beginning,
     // trigger an asynchronous refresh
@@ -55,7 +58,8 @@ function initChrono() {
     }
     $( videoControl ).on('previewframe:change', updatePreviewTimeMark)
     $( axes ).on('previewframe:trackend', endPreview)
-
+    $( axes ).on('previewframe:trackmove', onAxesClick)
+    
     /* ## Init chronogram content ## */
     
     initActivities()     
@@ -196,13 +200,15 @@ function updateTimeMark() {
 
 /* Callbacks to react to changes in chronogram axes */
 function onAxesClick(event) {
+    console.log("event=",event)
+
     // User clicked in chronogram axes
     var frame = event.frame
     var id = event.id
     if (logging.axesEvents)
         console.log("onAxesClick: seeking to frame=",frame,"...");
  
-    if (event.type==="move") {
+    if (event.type == "previewframe:trackmove") {
         videoControl.seekFrame(frame, true)
         return;
     }

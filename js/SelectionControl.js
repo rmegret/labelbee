@@ -18,6 +18,18 @@ function initSelectionControl() {
         onActivityChanged(event);
       }
     });
+    
+    selectionControl = {}
+    // dummy object to define events (inspired by Fabric.js)
+    // - selection:created
+    // - selection:cleared
+    // - before:selection:cleared
+    //$( selectionControl ).trigger('selection:created')
+    
+//     $( selectionControl ).on('selection:created', updateChronoSelection)
+//     $( selectionControl ).on('selection:cleared', updateChronoSelection)
+//     $( selectionControl ).on('tagselection:created', updateChronoSelection)
+//     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
 }
 
 /* Update form rectangle data from activeObject */
@@ -134,6 +146,10 @@ function selectBeeByID(id) {
       updateForm(null)
       // defaultSelectedBee = undefined // Do not cancel default if not found
       defaultSelectedBee = id // Set default
+      if (id==null)
+          $( selectionControl ).trigger('tagselection:cleared')
+      else
+          $( selectionControl ).trigger('tagselection:created')
       axes.selectId(id)
       if (logging.selectionEvents)
          console.log('selectBeeByID: No rect found for id=',id);
@@ -166,15 +182,23 @@ function selectBee(rect) {
     if (flagShowZoom) {
         showZoom(rect)
     }
+    
+    $( selectionControl ).trigger('tagselection:created')
+    $( selectionControl ).trigger('selection:created')
 }
+
 
 // deselectBee: called when clicking out of a rectangle
 function deselectBee() {
+    $( selectionControl ).trigger('before:selection:cleared')
+
     //canvas1.deactivateAll().renderAll(); // Deselect rect
     canvas1.deactivateAllWithDispatch()
     updateForm(null)
     defaultSelectedBee = undefined // Do not keep default when explicit deselect
     updateDeleteButton()
+    
+    $( selectionControl ).trigger('selection:cleared')
 }
 // getSelectedID: return undefined or an id
 function getSelectedID() {

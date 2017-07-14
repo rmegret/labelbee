@@ -54,7 +54,13 @@ function ChronoAxes(parent, videoinfo, options) {
     axes.height = function() {
         return height // Return local private variable
     }
-
+    axes.top = function() {
+        return top
+    }
+    axes.left = function() {
+        return left
+    }
+    
     /* ### INTERNAL MODEL for the axes: scales */
     
     axes.videoinfo = videoinfo
@@ -337,7 +343,9 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("transform", "translate("+left+","+top+")")
     axes.chronoGroup = chronoGroup //  Public
     
-    chronoGroup.append("rect").attr('class','plotAreaBackground')
+    let plotBackground = chronoGroup.append("g").attr('class','plotBackground')
+    
+    plotBackground.append("rect").attr('class','plotAreaBackground')
         .attr("width", width)
         .attr("height", height)
         .style("fill", "#f0fcff")
@@ -431,11 +439,13 @@ function ChronoAxes(parent, videoinfo, options) {
              event.type==='yDomainChanged' || 
              event.type==='zoom_x' || 
              event.type==='resize')) {
-            if (!triggerEvent(axes.onAxesChanged, event))
-                console.log('WARNING in refreshAxes: callback not valid, onAxesChanged=',onAxesChanged)
-             } else {
-                 console.log('WARNING refreshAxes: onAxesChanged not called, as event not within predefined list. event=',event)
-             }
+             $(axes).trigger({type: 'axes:changed', sourceevent:event})
+            // if (!triggerEvent(axes.onAxesChanged, event))
+//                 console.log('WARNING in refreshAxes: callback not valid, onAxesChanged=',onAxesChanged)
+//              } else {
+//                  console.log('WARNING refreshAxes: onAxesChanged not called, as event not within predefined list. event=',event)
+//              }
+        }
     }
     axes.refreshAxes = refreshAxes
     
@@ -457,6 +467,18 @@ function ChronoAxes(parent, videoinfo, options) {
                    .filter(function(d) {return d==axes.selectedID})
                    .style('fill','blue')
                    .style('font-weight','bold')
+                   
+        axes.chronoGroup.selectAll(".plotBackground > .selection").remove()
+        if (axes.selectedID!=null) {
+            axes.chronoGroup.select(".plotBackground").append("rect")
+                .attr('class','selection')
+                .attr("x", 0)
+                .attr("width", axes.width())
+                .attr("y", axes.yScale(axes.selectedID))
+                .attr("height", axes.yScale.rangeBand())
+                .style("fill", "#ffffff")
+                .style("stroke", "purple")
+        }
     }
     axes.refreshIdSelection = refreshIdSelection
     axes.selectId=selectId
@@ -568,7 +590,8 @@ function ChronoAxes(parent, videoinfo, options) {
     axes.reinitZoom = reinitZoom
     
     // ## Click callback, can be modified by the user as axes.onClick=...
-    axes.onClick = undefined
+    //axes.onClick = undefined
+    // Replaced by jQuery event "mouse:down"
     
     function invertYScale(y) {
         var id 
@@ -591,8 +614,8 @@ function ChronoAxes(parent, videoinfo, options) {
         return id
     }
     
-    chronoGroup.on("click",function() {
-        if (typeof axes.onClick == 'undefined') return;
+    function onAxesClick() {
+        //if (typeof axes.onClick == 'undefined') return;
         if (d3.event.defaultPrevented) return;
         
         var coords = d3.mouse(this);
@@ -603,9 +626,11 @@ function ChronoAxes(parent, videoinfo, options) {
             console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
     
         // Trigger the callback, passing frame and id information
-        if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id}))
-            console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
-    })
+        // if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id}))
+        //             console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+        $(axes).trigger({'type': "axes:clicked", 'frame': frame, 'id': id, 'mouseevent': d3.event});
+    }
+    chronoGroup.on("click", onAxesClick)
     
     injectTrackFrame(chronoGroup);
     function injectTrackFrame(target) {
@@ -675,7 +700,7 @@ function ChronoAxes(parent, videoinfo, options) {
                 //axes.trackFrame_on = false;
                 return;
             }
-            if (typeof axes.onClick == 'undefined') return;
+            //if (typeof axes.onClick == 'undefined') return;
             if (d3.event.defaultPrevented) return;
             
             trackFrame_change()
@@ -708,8 +733,9 @@ function ChronoAxes(parent, videoinfo, options) {
                 console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
     
             // Trigger the callback, passing frame and id information
-            if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id, 'type': 'move'}))
-                console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+            // if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id, 'type': 'move'}))
+//                 console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+            $( axes ).trigger({'type': 'previewframe:trackmove', 'frame': frame, 'id': id, 'mouseevent': d3.event}) // jQuery callback
         }
     }
     
