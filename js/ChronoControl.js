@@ -1,51 +1,5 @@
 /*jshint esversion: 6, asi: true */
 
-function chronoAdjust(mode) {
-    let factor = 1.2
-    let mh = axes.margin.top+axes.margin.bottom
-    let mw = axes.margin.left+axes.margin.right
-    if (mode == 'H-') {
-        let h = ($('#chronoDiv').height()-mh)/factor+mh
-        if (h<100) h=100;
-        $('#chronoDiv').height(h)
-    }
-    if (mode == 'H=') {
-        adjustChronogramHeight(10)
-    }
-    if (mode == 'H+') {
-        let h = ($('#chronoDiv').height()-mh)*factor+mh
-        $('#chronoDiv').height(h)
-    }
-
-    if (mode == 'W-') {
-        let w = ($('#chronoDiv').width()-mw)/factor+mw
-        if (w<200) w=200;
-        $('#chronoDiv').width(w)
-    }
-    if (mode == 'W=') {
-        let w = $('#canvasresize').width()
-        if (w<200) w=200;
-        $('#chronoDiv').width(w)
-    }
-    if (mode == 'W+') {
-        let w = ($('#chronoDiv').width()-mw)*factor+mw
-        $('#chronoDiv').width(w)
-    }
-}
-
-function adjustChronogramHeight(itemHeight) {
-    if (itemHeight == null) {
-        itemHeight = 10
-    }
-
-    let mh = axes.margin.top+axes.margin.bottom
-    let domain = axes.ydomain()
-    let minheight = domain.length*itemHeight + mh
-    if (minheight < 100) minheight = 100;
-    //if ($('#chronoDiv').height() < minheight) {
-        $('#chronoDiv').height(minheight)
-    //}
-}
 
 // ###########################################################
 // CHRONOGRAM
@@ -109,6 +63,53 @@ function initChrono() {
     
     initVideoSpan()
     initTrackWindowSpan()
+}
+
+function chronoAdjust(mode) {
+    let factor = 1.2
+    let mh = axes.margin.top+axes.margin.bottom
+    let mw = axes.margin.left+axes.margin.right
+    if (mode == 'H-') {
+        let h = ($('#chronoDiv').height()-mh)/factor+mh
+        if (h<100) h=100;
+        $('#chronoDiv').height(h)
+    }
+    if (mode == 'H=') {
+        adjustChronogramHeight(10)
+    }
+    if (mode == 'H+') {
+        let h = ($('#chronoDiv').height()-mh)*factor+mh
+        $('#chronoDiv').height(h)
+    }
+
+    if (mode == 'W-') {
+        let w = ($('#chronoDiv').width()-mw)/factor+mw
+        if (w<200) w=200;
+        $('#chronoDiv').width(w)
+    }
+    if (mode == 'W=') {
+        let w = $('#canvasresize').width()
+        if (w<200) w=200;
+        $('#chronoDiv').width(w)
+    }
+    if (mode == 'W+') {
+        let w = ($('#chronoDiv').width()-mw)*factor+mw
+        $('#chronoDiv').width(w)
+    }
+}
+
+function adjustChronogramHeight(itemHeight) {
+    if (itemHeight == null) {
+        itemHeight = 10
+    }
+
+    let mh = axes.margin.top+axes.margin.bottom
+    let domain = axes.ydomain()
+    let minheight = domain.length*itemHeight + mh
+    if (minheight < 100) minheight = 100;
+    //if ($('#chronoDiv').height() < minheight) {
+        $('#chronoDiv').height(minheight)
+    //}
 }
 
 /* Synchronization between chronogram, video and chronogramData */
