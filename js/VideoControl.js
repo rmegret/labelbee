@@ -30,6 +30,8 @@ function VideoControl(videoTagId) {
     this.video = this.video2.video; // Same as $('#video')[0]
     this.video.onloadeddata = this.onVideoLoaded.bind(this);
     
+    this.previewVideoTimeScale = 1.0;
+    
     this.previewVideo = document.createElement('video');
     let videoControl = this;
     this.previewVideo.addEventListener('timeupdate', 
@@ -107,11 +109,13 @@ VideoControl.prototype.seekFrame = function(frame, useFastSeek) {
         
         // preview keeps 1 keyframe out of 40 frames
         // and is encoded at same speed as original (0.5fps=20fps/40)
-        //let t = Math.round((frame+Number(videoinfo.frameoffset))/40)*40/20
+        //let t = Math.round((frame+videoinfo.frameoffset)/40)*40/20
         
         // preview keeps 1 keyframe out of 40 frames
         // and is encoded at 20 fps
-        let t = Math.round((frame+Number(videoinfo.frameoffset))/40)/20
+        //let t = Math.round((frame+videoinfo.frameoffset)/40)/20
+        
+        let t = (frame+videoinfo.frameoffset)/videoinfo.videofps*this.previewVideoTimeScale;
         
         console.log('videoControl.seekFrame: FAST, f=',frame,' t=',t)
         this.previewVideo.currentTime =  t
@@ -344,6 +348,11 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     //this.loadPreviewVideo(videourl+'.preview.mp4');
     //this.loadPreviewVideo(videourl+'.scale08.mp4');
     this.loadPreviewVideo('data/GuraboTest/4_02_R_170511130000.avi.preview.mp4');
+}
+function onPreviewVideoInfoChanged() {
+    let name = $('#previewVideoName').val()
+    videoControl.previewVideoTimeScale = Number($('#previewVideoTimeScale').val())
+    videoControl.loadPreviewVideo('data/'+name)
 }
 
 VideoControl.prototype.onVideoSizeChanged = function() {

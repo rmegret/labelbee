@@ -193,7 +193,6 @@
             <div id='videoinfo' class='collapsible'> 
               <label>Video Info</label>
               <div>
-<!--                 <div class="btn btn-primary"> -->
                   <div class='subpanel'>
                       <label class="primary">Current Video</label>
                       <br>
@@ -206,52 +205,68 @@
                       </select> <!-- selectboxVideo -->  
                   </div>
                 
-                <div class='subpanel collapsible'>
-                  <label class="primary">Video List </label>
-                  <div>
-    <!--                 </div>  -->
-                      <table id='videoList'>
-                      </table>
+                  <div class='subpanel collapsible'>
+                    <label class="primary">Video List </label>
+                    <div>
+                        <table id='videoList'>
+                        </table>
+                    </div>
                   </div>
-                </div>
                 
-                <div class='subpanel collapsible'>
-                  <label class="primary">Time/image calibration </label>
-                  <div>
-                      Start Time:
-                      <input type="text" value="2016-07-15T09:59:59.360"  
-                             id="startTime" onchange="onStartTimeChanged(event)" size="25">
-                        <br>      
-                      Real FPS
-                      <input type="text" value="???" id="realfps"
-                       onchange="onFPSChanged(event)" size="4">&nbsp;Video FPS <input type="text" value="???" id="videofps"
-                       onchange="onVideoFPSChanged(event)"  size="4">
+                  <div class='subpanel collapsible'>
+                    <label class="primary">Time/image calibration </label>
+                    <div>
+                        Start Time:
+                        <input type="text" value="2016-07-15T09:59:59.360"  
+                               id="startTime" onchange="onStartTimeChanged(event)" size="25">
+                          <br>      
+                        Real FPS
+                        <input type="text" value="???" id="realfps"
+                         onchange="onFPSChanged(event)" size="4">&nbsp;Video FPS <input type="text" value="???" id="videofps"
+                         onchange="onVideoFPSChanged(event)"  size="4">
+                          <br>
+                          <input type="text" value="0" id="frameoffset"
+                         onchange="onFrameOffsetChanged(event)" size="3">
+                         <br>
+                        <div id="videoSize">-</div>
+                        <div id="canvasSize">-</div>
+                    </div>
+                  </div>
+                
+                  <div class='subpanel collapsible'>
+                    <label>Meta info </label>
+                    <div>
+                        Tags family: 
+                        <input type="text" value="-" id="videoTagsFamily"
+                         size="25" readonly="true">
                         <br>
-                        <input type="text" value="0" id="frameoffset"
-                       onchange="onFrameOffsetChanged(event)" size="3">
-                       <br>
-                      <div id="videoSize">-</div>
-                      <div id="canvasSize">-</div>
+                        Place: 
+                        <input type="text" value="-" id="videoPlace"
+                         size="25" readonly="true">
+                        <br>
+                        Comments: 
+                        <textarea id="videoComments"
+                         cols="25" rows="3" readonly="true">-</textarea>
+                    </div>
                   </div>
-                </div>
                 
-                <div class='subpanel collapsible'>
-                  <label>Meta info </label>
+              <div id='panel_preview' class='collapsible'> 
+                  <label>Preview</label>
                   <div>
-                      Tags family: 
-                      <input type="text" value="-" id="videoTagsFamily"
-                       size="25" readonly="true">
-                      <br>
-                      Place: 
-                      <input type="text" value="-" id="videoPlace"
-                       size="25" readonly="true">
-                      <br>
-                      Comments: 
-                      <textarea id="videoComments"
-                       cols="25" rows="3" readonly="true">-</textarea>
+                      <div class='subpanel'>
+                          <label class="primary">Preview Video</label>
+                          <br>
+                          Name <input type="text" value="-" id="previewVideoName"
+                           size="60" onchange="onPreviewVideoInfoChanged()">
+                           <br>
+                          TimeScale<input type="text" value="-" id="previewVideoTimeScale"
+                           size="10" onchange="onPreviewVideoInfoChanged()">
+                      </div>
+                                
                   </div>
-                </div>
-                
+              </div>
+
+            
               </div>
             </div> <!-- videoinfo -->            
             
