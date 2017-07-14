@@ -332,8 +332,9 @@ function updateRectFromObsGeometry(rect) {
     rect.setAngle(obs.angle)
     rect.setCoords()
 }
-function createRectsFromTracks() {
-    let F = getCurrentFrame()
+function createRectsFromTracks(F) {
+    if (typeof F === 'undefined')
+        F = getCurrentFrame()
     let ids = getValidIDsForFrame(F)
     if (logging.overlay)
         console.log("createRectsFromTracks: ",{frame:F,ids:ids})
@@ -917,6 +918,19 @@ function plotTags(ctx) {
     }
 }
 
+
+function plotTrackArrow(p0, p1, L) {
+    let u = {x:p1.x-p0.x, y:p1.y-p0.y}
+    let n = Math.sqrt(u.x*u.x+u.y*u.y)
+    u.x=u.x/n
+    u.y=u.y/n
+    ctx.beginPath();
+    ctx.moveTo(p1.x+L*(-u.x-0.6*u.y) ,p1.y+L*(-u.y+0.6*u.x))
+    ctx.lineTo(p1.x, p1.y)
+    ctx.lineTo(p1.x+L*(-u.x+0.6*u.y) ,p1.y+L*(-u.y-0.6*u.x))
+    ctx.stroke()
+}
+
 /* Tag tracks */
 function plotTagsTracks(ctx) {
     let F = getCurrentFrame()
@@ -981,14 +995,16 @@ function plotTagsTracks(ctx) {
                 else
                     ctx.setLineDash([2,2])
                 ctx.stroke();
+                ctx.setLineDash([])
+                plotTrackArrow(p0[tag.id], p1, 6*tProx(f)+1)
                 ctx.restore()
             }
             p0[tag.id] = {x:p1.x, y:p1.y}
             
             if (tag.hamming<1000)
-              plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
+              plotTag(ctx, tag, color, {"id":false, "radius": 2*tProx(f)+1})            
             else
-              plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
+              plotTag(ctx, tag, color, {"id":false, "radius": 2*tProx(f)+1})            
         }    
     }
     }
@@ -1042,11 +1058,13 @@ function plotTagsTracks(ctx) {
                     else
                         ctx.setLineDash([2,2])
                     ctx.stroke();
+                    ctx.setLineDash([])
+                    plotTrackArrow(p0[tag.id], p1, 6*tProx(f)+1)
                     ctx.restore()
                 }
                 p0[tag.id] = {x:p1.x, y:p1.y}
                 
-                plotTag(ctx, tag, color2, {"id":false, "radius": 3*tProx(f)+1})            
+                plotTag(ctx, tag, color2, {"id":false, "radius": 2*tProx(f)+1})            
             }    
         }
     }
@@ -1106,13 +1124,15 @@ function scaleTrackWindow(factor) {
 }
 
 /* Filters */
+tagsHammingSampleFilter = function(tag) {return true}
 tagsSampleFilter = function(tag) {return true}
 tagsIntervalFilter = function(interval) {return true}
 tagsIDFilter = function(idinfo) {return true}
 function onTagsParametersChanged() {
     console.log('onTagsParametersChanged')
     // Callback when tags chronogram computation parameters have changed
-    tagsSampleFilter = Function("tag",$('#tagsSampleFilter')[0].value)
+    tagsSampleFilterCustom = Function("tag",$('#tagsSampleFilter')[0].value)
+    tagsSampleFilter = function(tag){return tagsHammingSampleFilter(tag)&&tagsSampleFilterCustom(tag)}
     
     let minLength = Number($('#tagsIntervalFilterMinLength').val())
     
@@ -1125,6 +1145,7 @@ function onTagsParametersChanged() {
                 'tagsIntervalFilter=',tagsIntervalFilter,
                 '\ntagsIDFilter=',tagsIDFilter)
     refreshChronogram()
+    videoControl.refresh()
 }
 function onTagsParametersSelectChanged(event) {
   $('#tagsIntervalFilter').val($('#tagsIntervalFilterSelect').val())
@@ -1132,19 +1153,19 @@ function onTagsParametersSelectChanged(event) {
 }
 function chronoFilter(mode) {
   if (mode=='H0') {
-      $('#tagsSampleFilter').val('return tag.hamming==0')
+      tagsHammingSampleFilter = function(tag) {return tag.hamming==0}
       onTagsParametersChanged()
   }
   if (mode=='H1') {
-      $('#tagsSampleFilter').val('return tag.hamming<=1')
+      tagsHammingSampleFilter = function(tag) {return tag.hamming<=1}
       onTagsParametersChanged()
   }
   if (mode=='H2') {
-      $('#tagsSampleFilter').val('return tag.hamming<=2')
+      tagsHammingSampleFilter = function(tag) {return tag.hamming<=2}
       onTagsParametersChanged()
   }
   if (mode=='Hall') {
-      $('#tagsSampleFilter').val('return true')
+      tagsHammingSampleFilter = function(tag) {return true}
       onTagsParametersChanged()
   }
 }
