@@ -419,6 +419,8 @@ function ChronoAxes(parent, videoinfo, options) {
         return false // Error: invalid callback
     }
     function refreshAxes(event) {
+        if (logging.axesEvents)
+            console.log('axes.refreshAxes: event=',event)
         /* Redraw axes ticks. To be called when scales have changed */
         updateTDomain() // Update tScale based on xScale
 
@@ -439,7 +441,7 @@ function ChronoAxes(parent, videoinfo, options) {
              event.type==='yDomainChanged' || 
              event.type==='zoom_x' || 
              event.type==='resize')) {
-             $(axes).trigger({type: 'axes:changed', sourceevent:event})
+             $(axes).trigger({'type': 'axes:changed', 'sourceevent':event})
             // if (!triggerEvent(axes.onAxesChanged, event))
 //                 console.log('WARNING in refreshAxes: callback not valid, onAxesChanged=',onAxesChanged)
 //              } else {
@@ -603,7 +605,7 @@ function ChronoAxes(parent, videoinfo, options) {
              id = undefined
           else
              id = yScale.domain()[rank]
-          console.log("chronoGroup.onClick: rank=", rank)
+          //console.log("chronoGroup.onClick: rank=", rank)
         } else {
           rank = Math.round( yScale.invert(y) );
           if (rank<yScale.domain()[0] || rank> yScale.domain()[1])

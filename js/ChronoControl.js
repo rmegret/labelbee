@@ -20,13 +20,31 @@ function initChrono() {
     axes = new ChronoAxes(svg, videoinfo, options)
     //axes.onClick = onAxesClick         // Callback when the user clicks in axes
     //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
+
+    $( videoControl ).on('frame:changed', updateTimeMark)
+    $( videoControl ).on('previewframe:changed', updatePreviewTimeMark)
     
-    $( axes ).on('axes:clicked', onAxesClick)
-    $( axes ).on('axes:changed', onAxesChanged)
+    $(axes).on("axes:clicked", onAxesClick)
+    $(axes).on("axes:changed", onAxesChanged)
     
-    // For some reason, svg does not have the correct size at the beginning,
-    // trigger an asynchronous refresh
-    setTimeout(axes.refreshLayout, 50)
+    function endPreview() {
+        updateTimeMark();
+        
+        let stayHere = false
+        if (stayHere) {
+            // Stay at preview frame
+            videoControl.seekFrame(getCurrentFrame());
+        } else {
+            // Come back to initial frame before preview
+            videoControl.currentMode = 'video';
+            updateTimeMark();
+            videoControl.hardRefresh();
+        }
+    }
+    $( axes ).on('previewframe:trackmove', onAxesMoved)    
+    $( axes ).on('previewframe:trackend', endPreview)
+    
+    /* Resize events */
     
     // Make it resizable using jQuery-UI
     $("#chronoDiv").resizable({
@@ -45,21 +63,11 @@ function initChrono() {
     //         axes.refreshLayout()
     //         return false
     //       })
+    
+    // For some reason, svg does not have the correct size at the beginning,
+    // trigger an asynchronous refresh
+    setTimeout(axes.refreshLayout, 50)
 
-    $( videoControl ).on('frame:change', updateTimeMark)
-    
-    function updatePreviewTimeMark() {
-        if (videoControl.previewFrame != null)
-            axes.setTimeMark(videoControl.previewFrame);
-    }
-    function endPreview() {
-        updateTimeMark();
-        videoControl.hardRefresh();
-    }
-    $( videoControl ).on('previewframe:change', updatePreviewTimeMark)
-    $( axes ).on('previewframe:trackend', endPreview)
-    $( axes ).on('previewframe:trackmove', onAxesClick)
-    
     /* ## Init chronogram content ## */
     
     initActivities()     
@@ -192,26 +200,26 @@ function updateChronoYDomain() {
 }
 function updateTimeMark() {
     var frame = getCurrentFrame();
+    console.log('updateTimeMark: frame=',frame)
     if (typeof frame == "undefined") {
       frame = 0;
     }
     axes.setTimeMark(frame);
 }
+function updatePreviewTimeMark() {
+    updateTimeMark()
+//     if (videoControl.previewFrame != null)
+//         axes.setTimeMark(videoControl.previewFrame);
+}
+
 
 /* Callbacks to react to changes in chronogram axes */
 function onAxesClick(event) {
-    console.log("event=",event)
-
     // User clicked in chronogram axes
     var frame = event.frame
     var id = event.id
     if (logging.axesEvents)
         console.log("onAxesClick: seeking to frame=",frame,"...");
- 
-    if (event.type == "previewframe:trackmove") {
-        videoControl.seekFrame(frame, true)
-        return;
-    }
  
     defaultSelectedBee = id
     if (frame==getCurrentFrame()) {
@@ -226,6 +234,16 @@ function onAxesClick(event) {
         // external controller logic is supposed to call back updateTimeMark
         // to update the view
     }
+}
+function onAxesMoved(event) {
+    // User clicked in chronogram axes
+    var frame = event.frame
+    var id = event.id
+    if (logging.axesEvents)
+        console.log("onAxesMove: seeking to frame=",frame,"...");
+ 
+    //defaultSelectedBee = id // Do not change, keep same ID
+    videoControl.seekFrame(frame, true)
 }
 function onAxesChanged(event) {
     // User zoomed, scrolled or changed chronogram range or size */

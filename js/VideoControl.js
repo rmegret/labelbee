@@ -222,7 +222,7 @@ VideoControl.prototype.onFrameChanged = function(event) {
     
     // Trigger public event (used by ChronoControl to change 
     // trackWindow View and timeMark View)
-    $( this ).trigger('frame:change') 
+    $( this ).trigger('frame:changed') 
 }
 
 VideoControl.prototype.onPreviewFrameChanged = function(event) {
@@ -243,7 +243,7 @@ VideoControl.prototype.onPreviewFrameChanged = function(event) {
     selectBeeByID(defaultSelectedBee);
     refreshOverlay()
     
-    $( this ).trigger('previewframe:change')
+    $( this ).trigger('previewframe:changed')
 }
 
 VideoControl.prototype.hardRefresh = function() {
@@ -320,7 +320,11 @@ VideoControl.prototype.loadVideo = function(url, previewURL) {
     
     if (previewURL) {
         this.previewURL = previewURL;
+    } else {
+        previewURL = url+'.scale4.mp4'
+        this.previewURL = previewURL;
     }
+    $("#previewVideoName").val(this.previewURL)
 }
 VideoControl.prototype.loadPreviewVideo = function(previewURL) {
     function onPreviewVideoLoaded(event) {
@@ -329,7 +333,7 @@ VideoControl.prototype.loadPreviewVideo = function(previewURL) {
 
         console.log('onPreviewVideoLoaded: PREVIEW available. Use CTRL+mousemove in the chronogram. url=',event.target.src)
         
-        $('#previewVideoName').val(previewURL)
+        //$('#previewVideoName').val(previewURL)
     }
     function onPreviewVideoError(e) {
         //if (logging.videoEvents)
