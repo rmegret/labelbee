@@ -326,3 +326,22 @@ textarea {
     display: inline-block;
     margin: 2px 5px;
 }
+
+.btn-orange-toggle {
+    color: #666;
+    box-shadow:       inset 2px 2px 5px rgba(255,255,255,0.25);
+}
+.btn-green-toggle {
+    color: #666;
+    box-shadow:       inset 2px 2px 5px rgba(255,255,255,0.25);
+}
+.btn-orange-toggle.active {
+    color: black;
+    background-color: #f0ad4e;
+    box-shadow:       inset 2px 2px 5px rgba(0,0,0,0.25);
+}
+.btn-green-toggle.active {
+    color: black;
+    background-color: #6A6;
+    box-shadow:       inset 2px 2px 5px rgba(0,0,0,0.25);
+}

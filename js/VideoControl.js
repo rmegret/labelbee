@@ -314,6 +314,7 @@ VideoControl.prototype.loadVideo = function(url, previewURL) {
     if (logging.videoEvents)
         console.log('loadVideo: url=',url)
 
+    this.name = url;
     this.video.src = url;
     this.videoRawURL = url;
     // Update of display handled in callback onVideoLoaded
@@ -370,6 +371,8 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     this.loadPreviewVideo(this.previewURL);
     //this.loadPreviewVideo(videourl+'.scale08.mp4');
     //this.loadPreviewVideo('data/GuraboTest/4_02_R_170511130000.avi.preview.mp4');
+    
+    $( this ).trigger('video:loaded') 
 }
 function onPreviewVideoInfoChanged() {
     let name = $('#previewVideoName').val()
@@ -390,6 +393,13 @@ VideoControl.prototype.onVideoSizeChanged = function() {
     }    
         
     canvasSetVideoSize(w,h)
+}
+VideoControl.prototype.videoSize = function() {
+    return { left: 0,
+             top: 0,
+             right: this.video.videoWidth,
+             bottom: this.video.videoHeight
+            }
 }
 
 VideoControl.prototype.loadVideoInfo = function(infourl) {

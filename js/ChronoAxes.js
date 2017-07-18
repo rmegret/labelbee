@@ -107,12 +107,70 @@ function ChronoAxes(parent, videoinfo, options) {
         refreshAxes({'type': 'yDomainChanged','domain':domain})
         return axes // return itself to be able to chain commands
     }
+    
+    function xdomainFocus(domain) {
+        if (!arguments.length) return xScale.domain();
+        let oldT = zoom.translate()
+        let oldS = zoom.scale()
+        
+        // Get to basic zoom first to get original domain
+        zoom.translate([0, 0]) // [DX,DY]
+        zoom.scale(1)
+        let xdomain = xScale.domain();
+        let xrange = xScale.range();
+        
+        let x0 = domain[0], x1=domain[1];
+        
+        // Zoom out 10% to see around
+        let c = (x1+x0)/2;
+        x0 = (x0-c)*1.1+c
+        x1 = (x1-c)*1.1+c
+        
+        let S = (xdomain[1]-xdomain[0])/(x1-x0);
+        if (S>zoom.scaleExtent()[1]) {
+            S=zoom.scaleExtent()[1];
+            x0=c-0.5*(xdomain[1]-xdomain[0])/S;
+            x1=c+0.5*(xdomain[1]-xdomain[0])/S;
+        }
+        
+        let S0 = (xdomain[1]-xdomain[0])/(xrange[1]-xrange[0])
+        let T = -S*x0/S0
+        
+        zoom.translate([T, 0]) // [DX,DY]
+        zoom.scale(S)
+        
+        if (isNaN(xScale.domain()[0])) {
+            console.log('xdomainFocus: ERROR, failed to zoom X axis scale')
+            zoom.translate(oldT)
+            zoom.scale(oldS)
+            //xScale.domain(xdomain); // Reset
+        }
+        refreshAxes({'type': 'xDomainChanged','domain':domain})
+        return axes // return itself to be able to chain commands
+    }
+    function xdomainScale(scale, center) {
+        let xdomain = xScale.domain(); // Current domain
+        let x0 = xdomain[0], x1=xdomain[1];
+   
+        if (typeof center == 'undefined')
+            center = (x1+x0)/2;
+
+        x0 = (x0-center)/scale+center
+        x1 = (x1-center)/scale+center
+        
+        xdomainFocus([x0,x1])
+        
+        return axes // return itself to be able to chain commands
+    }
+    
     // axis scales exports
     axes.xScale=xScale   // Public, used by refreshTimeMark (could be closured)
     axes.yScale=yScale
     axes.tScale=tScale
     axes.xdomain = xdomain
     axes.ydomain = ydomain
+    axes.xdomainFocus = xdomainFocus
+    axes.xdomainScale = xdomainScale
     //axes.updateTDomain=updateTDomain  // Private
 
 

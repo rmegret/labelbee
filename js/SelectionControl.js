@@ -8,6 +8,11 @@ var undo = new Observation(0);
 
 // # Form and current bee control
 function initSelectionControl() {
+    selectionControl = {}
+    
+    $( selectionControl ).on('tagselection:created', updateChronoSelection)
+    $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
+
     $('#F').change(onActivityChanged);
     $('#P').change(onActivityChanged);
     $('#E').change(onActivityChanged);
@@ -19,7 +24,6 @@ function initSelectionControl() {
       }
     });
     
-    selectionControl = {}
     // dummy object to define events (inspired by Fabric.js)
     // - selection:created
     // - selection:cleared
@@ -139,7 +143,7 @@ function selectBeeByID(id) {
       canvas1.setActiveObject(rect);
       // TESTME: selectBee was commented
       selectBee(rect);
-      axes.selectId(id)
+      // Events triggered in selectBee
       return true
    } else {
       canvas1.deactivateAll().renderAll(); // Deselect rect if any
@@ -165,6 +169,8 @@ function selectBeeByIDandFrame(id,frame) {
         videoControl.refresh()
     }
 }
+
+
 
 // selectBee: called when clicking on a rectangle
 function selectBee(rect) {
@@ -198,6 +204,7 @@ function deselectBee() {
     defaultSelectedBee = undefined // Do not keep default when explicit deselect
     updateDeleteButton()
     
+    $( selectionControl ).trigger('tagselection:cleared')
     $( selectionControl ).trigger('selection:cleared')
 }
 // getSelectedID: return undefined or an id
