@@ -22,6 +22,11 @@ function OverlayControl(canvasTagId) {
     plotTrack_range_forward = trackWindow;
     $('#trackWindow').val(trackWindow)
 
+    flag_useROI=false
+    ROI = {left:175,top:30,right:2305,bottom:1240} // For Gurabo videos 5MP
+    $('#ROI').val([ROI.left,ROI.top,ROI.right,ROI.bottom].join(','))
+    //$(videoControl).on('video:loaded', updateROIFromVideo)
+
     showObs = true
     showObsTracks = true
     showObsChrono = true
@@ -287,6 +292,7 @@ function refreshOverlay() {
         if (showObsTracks) {
             plotTracks(ctx);
         }
+        plotROI()
         
         //plotBees(ctx1); // Not needed, identification done directly in BeeRect
         
@@ -1122,17 +1128,55 @@ function scaleTrackWindow(factor) {
     if (isNaN(L)) L=1;
     setTrackWindow(L)
 }
+function focusTrackWindow() {
+    // Actually a Chronogram method
+    let f = getCurrentFrame()
+    axes.xdomainFocus([f-trackWindow, f+trackWindow])
+}
+
+function updateROIFromVideo() {
+    let R = videoControl.videoSize()
+    $('#ROI').val([R.left,R.top,R.right,R.bottom].join(','))
+    ROIChanged()
+}
+function onROITextChanged() {
+    let roitext = $('#ROI').val()
+    let roi = roitext.split(',')
+    if (roi.length!=4) {
+        console.log('onROIChanged: ERROR, ROI should have 4 coordinates, left,top,right,bottom')
+        return;
+    }
+    ROI = {left: Number(roi[0]),
+           top: Number(roi[1]),
+           right: Number(roi[2]),
+           bottom: Number(roi[3])}
+    ROIChanged()
+}
+function onClickROI() {
+    flag_useROI = !flag_useROI;
+    if (flag_useROI) {
+        $('#useROI').addClass('active')
+    } else {
+        $('#useROI').removeClass('active')
+    }
+    ROIChanged()
+}
 
 /* Filters */
 tagsHammingSampleFilter = function(tag) {return true}
 tagsSampleFilter = function(tag) {return true}
 tagsIntervalFilter = function(interval) {return true}
 tagsIDFilter = function(idinfo) {return true}
+tagsSampleFilterROI = function(tag) {return true}
 function onTagsParametersChanged() {
     console.log('onTagsParametersChanged')
     // Callback when tags chronogram computation parameters have changed
     tagsSampleFilterCustom = Function("tag",$('#tagsSampleFilter')[0].value)
-    tagsSampleFilter = function(tag){return tagsHammingSampleFilter(tag)&&tagsSampleFilterCustom(tag)}
+    
+    tagsSampleFilter = function(tag){
+          return tagsHammingSampleFilter(tag)
+                 &&tagsSampleFilterCustom(tag)
+                 &&tagsSampleFilterROI(tag)}
     
     let minLength = Number($('#tagsIntervalFilterMinLength').val())
     
@@ -1175,6 +1219,48 @@ function onChronoParametersChanged() {
     showObsChrono = $('#showObsChrono')[0].checked
     console.log('onChronoParametersChanged:showTagsChrono\n=',showTagsChrono)
     refreshChronogram()
+}
+function ROIChanged() {
+    if (flag_useROI) {
+        tagsSampleFilterROI = function(tag) {
+            return (tag.c[0]>=ROI.left 
+                 && tag.c[0]<=ROI.right
+                 && tag.c[1]>=ROI.top
+                 && tag.c[1]<=ROI.bottom);
+        }
+    } else {
+        tagsSampleFilterROI = function(tag) {return true}
+    }
+    onTagsParametersChanged()
+    refreshChronogram()
+    videoControl.refresh();
+}
+function plotROI() {
+
+    let R = {left:ROI.left, top:ROI.top, 
+             width:ROI.right-ROI.left, 
+             height: ROI.bottom-ROI.top}
+    let R2 = videoToCanvasRect(R)
+
+    ctx.save()
+    ctx.beginPath();
+    ctx.rect(R2.left, R2.top, R2.width, R2.height);
+    ctx.strokeStyle = '#fff';
+    //ctx.setLineDash([4,4])
+    ctx.lineWidth = 1
+    ctx.stroke();
+    ctx.restore()
+    
+    ctx.save()
+    //ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillRect(0,0,canvas.width,R2.top);
+    ctx.fillRect(0,R2.top,R2.left,R2.height);
+    ctx.fillRect(R2.left+R2.width,R2.top,
+                 canvas.width-R2.left-R2.width,R2.height);
+    ctx.fillRect(0,R2.top+R2.height,
+                 canvas.width,canvas.height-R2.top-R2.height);
+    ctx.restore()
 }
 
 
@@ -1778,7 +1864,7 @@ function onMouseUp(option) {
 
 
 
-
+lastSelected = null
 function onObjectSelected(option) {
     if (logging.selectionEvents)
         console.log("onObjectSelected:", option)

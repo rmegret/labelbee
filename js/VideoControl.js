@@ -106,6 +106,7 @@ VideoControl.prototype.seekFrame = function(frame, useFastSeek) {
     this.startSeekTimer()
     if (useFastSeek) {
         this.previewFrame = frame;
+        this.currentMode = 'preview'
         
         // preview keeps 1 keyframe out of 40 frames
         // and is encoded at same speed as original (0.5fps=20fps/40)
@@ -120,6 +121,7 @@ VideoControl.prototype.seekFrame = function(frame, useFastSeek) {
         console.log('videoControl.seekFrame: FAST, f=',frame,' t=',t)
         this.previewVideo.currentTime =  t
     } else {
+        this.currentMode = 'video'
         this.video2.seekTo({'frame':frame+videoinfo.frameoffset})
     }
 }
@@ -154,7 +156,10 @@ VideoControl.prototype.forward4 = function() {
 
 // # Get current frame/time
 VideoControl.prototype.getCurrentFrame = function() {
-    return this.video2.get()-videoinfo.frameoffset;
+    if (this.currentMode == 'preview')
+        return this.previewFrame-videoinfo.frameoffset;
+    else
+        return this.video2.get()-videoinfo.frameoffset;
 }
 VideoControl.prototype.getCurrentVideoTime = function(format) {
     return this.video2.toMilliseconds()/1000.0
@@ -200,6 +205,8 @@ VideoControl.prototype.onFrameTextChanged = function() {
 
 // This callback is the only one that should handle frame changes. It is called automatically by video2
 VideoControl.prototype.onFrameChanged = function(event) {
+    this.currentMode = 'video'
+
     let Cframe = this.getCurrentFrame();
     
     if (this.seekTiming) {
@@ -215,11 +222,14 @@ VideoControl.prototype.onFrameChanged = function(event) {
     
     // Trigger public event (used by ChronoControl to change 
     // trackWindow View and timeMark View)
-    $( this ).trigger('frame:change') 
+    $( this ).trigger('frame:changed') 
 }
 
 VideoControl.prototype.onPreviewFrameChanged = function(event) {
     console.log('videoControl.onPreviewFrameChanged')
+    
+    this.currentMode = 'preview'
+    
     canvas1.clear();
     let previewScaleX = this.video.videoWidth/this.previewVideo.videoWidth;
     let previewScaleY = this.video.videoHeight/this.previewVideo.videoHeight;
@@ -233,7 +243,7 @@ VideoControl.prototype.onPreviewFrameChanged = function(event) {
     selectBeeByID(defaultSelectedBee);
     refreshOverlay()
     
-    $( this ).trigger('previewframe:change')
+    $( this ).trigger('previewframe:changed')
 }
 
 VideoControl.prototype.hardRefresh = function() {
@@ -300,13 +310,22 @@ VideoControl.prototype.refresh = function() {
     //refreshChronogram();
 }
 
-VideoControl.prototype.loadVideo = function(url) {
+VideoControl.prototype.loadVideo = function(url, previewURL) {
     if (logging.videoEvents)
         console.log('loadVideo: url=',url)
 
+    this.name = url;
     this.video.src = url;
     this.videoRawURL = url;
     // Update of display handled in callback onVideoLoaded
+    
+    if (previewURL) {
+        this.previewURL = previewURL;
+    } else {
+        previewURL = url+'.scale4.mp4'
+        this.previewURL = previewURL;
+    }
+    $("#previewVideoName").val(this.previewURL)
 }
 VideoControl.prototype.loadPreviewVideo = function(previewURL) {
     function onPreviewVideoLoaded(event) {
@@ -314,6 +333,8 @@ VideoControl.prototype.loadPreviewVideo = function(previewURL) {
             console.log('onPreviewVideoLoaded', event)
 
         console.log('onPreviewVideoLoaded: PREVIEW available. Use CTRL+mousemove in the chronogram. url=',event.target.src)
+        
+        //$('#previewVideoName').val(previewURL)
     }
     function onPreviewVideoError(e) {
         //if (logging.videoEvents)
@@ -321,6 +342,8 @@ VideoControl.prototype.loadPreviewVideo = function(previewURL) {
     }
     this.previewVideo.onerror=onPreviewVideoError
     this.previewVideo.onloadeddata=onPreviewVideoLoaded
+    
+    this.previewURL = previewURL;
 
     this.previewVideo.src = previewURL;
     if (logging.videoEvents)
@@ -345,9 +368,11 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     
     this.loadVideoInfo(videourl+'.info.json')
     
-    //this.loadPreviewVideo(videourl+'.preview.mp4');
+    this.loadPreviewVideo(this.previewURL);
     //this.loadPreviewVideo(videourl+'.scale08.mp4');
-    this.loadPreviewVideo('data/GuraboTest/4_02_R_170511130000.avi.preview.mp4');
+    //this.loadPreviewVideo('data/GuraboTest/4_02_R_170511130000.avi.preview.mp4');
+    
+    $( this ).trigger('video:loaded') 
 }
 function onPreviewVideoInfoChanged() {
     let name = $('#previewVideoName').val()
@@ -368,6 +393,13 @@ VideoControl.prototype.onVideoSizeChanged = function() {
     }    
         
     canvasSetVideoSize(w,h)
+}
+VideoControl.prototype.videoSize = function() {
+    return { left: 0,
+             top: 0,
+             right: this.video.videoWidth,
+             bottom: this.video.videoHeight
+            }
 }
 
 VideoControl.prototype.loadVideoInfo = function(infourl) {

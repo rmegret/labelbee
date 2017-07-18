@@ -8,6 +8,11 @@ var undo = new Observation(0);
 
 // # Form and current bee control
 function initSelectionControl() {
+    selectionControl = {}
+    
+    $( selectionControl ).on('tagselection:created', updateChronoSelection)
+    $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
+
     $('#F').change(onActivityChanged);
     $('#P').change(onActivityChanged);
     $('#E').change(onActivityChanged);
@@ -18,6 +23,17 @@ function initSelectionControl() {
         onActivityChanged(event);
       }
     });
+    
+    // dummy object to define events (inspired by Fabric.js)
+    // - selection:created
+    // - selection:cleared
+    // - before:selection:cleared
+    //$( selectionControl ).trigger('selection:created')
+    
+//     $( selectionControl ).on('selection:created', updateChronoSelection)
+//     $( selectionControl ).on('selection:cleared', updateChronoSelection)
+//     $( selectionControl ).on('tagselection:created', updateChronoSelection)
+//     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
 }
 
 /* Update form rectangle data from activeObject */
@@ -127,13 +143,17 @@ function selectBeeByID(id) {
       canvas1.setActiveObject(rect);
       // TESTME: selectBee was commented
       selectBee(rect);
-      axes.selectId(id)
+      // Events triggered in selectBee
       return true
    } else {
       canvas1.deactivateAll().renderAll(); // Deselect rect if any
       updateForm(null)
       // defaultSelectedBee = undefined // Do not cancel default if not found
       defaultSelectedBee = id // Set default
+      if (id==null)
+          $( selectionControl ).trigger('tagselection:cleared')
+      else
+          $( selectionControl ).trigger('tagselection:created')
       axes.selectId(id)
       if (logging.selectionEvents)
          console.log('selectBeeByID: No rect found for id=',id);
@@ -149,6 +169,8 @@ function selectBeeByIDandFrame(id,frame) {
         videoControl.refresh()
     }
 }
+
+
 
 // selectBee: called when clicking on a rectangle
 function selectBee(rect) {
@@ -166,15 +188,24 @@ function selectBee(rect) {
     if (flagShowZoom) {
         showZoom(rect)
     }
+    
+    $( selectionControl ).trigger('tagselection:created')
+    $( selectionControl ).trigger('selection:created')
 }
+
 
 // deselectBee: called when clicking out of a rectangle
 function deselectBee() {
+    $( selectionControl ).trigger('before:selection:cleared')
+
     //canvas1.deactivateAll().renderAll(); // Deselect rect
     canvas1.deactivateAllWithDispatch()
     updateForm(null)
     defaultSelectedBee = undefined // Do not keep default when explicit deselect
     updateDeleteButton()
+    
+    $( selectionControl ).trigger('tagselection:cleared')
+    $( selectionControl ).trigger('selection:cleared')
 }
 // getSelectedID: return undefined or an id
 function getSelectedID() {

@@ -42,6 +42,7 @@ function initVideoList() {
                   'videoGurabo/58_02_R_170604140000.mp4'
                    ]
     videoListCurrentID = 0;
+    
     updateVideoList()
     updateVideoSelectbox()
     
@@ -55,6 +56,8 @@ function initVideoList() {
         'frameoffset':0
     };
     updateVideoInfoForm()
+    
+    videoListFromServer('data/videolist.csv')
 }
 function updateVideoList() {
     var data = videoList;

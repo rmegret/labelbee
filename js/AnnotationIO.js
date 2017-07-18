@@ -220,7 +220,7 @@ function saveTagsToFile(event) {
 
 var serverURL = 'http://127.0.0.1:5000/';
 function jsonFromServer() {     
-    var path = window.prompt("Please enter path for Track JSON (server)","data/2017-06-Gurabo/Tracks_2_02_R_170609100000.json");
+    var path = window.prompt("Please enter path for Track JSON (server)","data/Gurabo/Tracks-C02_170624100000.json");
     if (path==null || path=="") {
         console.log('jsonFromServer: canceled')
         return;
@@ -243,7 +243,16 @@ function jsonFromServer() {
       )
 }
 function tagsFromServer() {     
-    var path = window.prompt("Please enter path for Tags JSON (server)","data/2017-06-Gurabo/tags_2_02_R_170609100000_0-72000.json");
+    //var path = "data/Gurabo/Tags-C02_170624100000.json" ;// Default
+    
+    var p = videoControl.name.split('/')
+    var q = p[p.length-1].split('.')
+    q[0]='Tags-'+q[0];
+    q[q.length-1]='json';
+    p[p.length-1]=q.join('.');
+    
+    var path = p.join('/'); // Default
+    path = window.prompt("Please enter path for Tags JSON (server)",path);
     if (path==null || path=="") {
         console.log('tagsFromServer: canceled')
         return;
@@ -265,6 +274,47 @@ function tagsFromServer() {
         }
       )
 }
+function videoListFromServer(path) {     
+    if (!path) {
+        var userpath = window.prompt("Please enter path for Video List (server)","data/Gurabo/videolist.csv");
+        if (userpath==null || userpath=="") {
+            console.log('videoListFromServer: canceled')
+            return;
+        }
+    
+        let path = userpath;
+    }
+    
+    console.log('videoListFromServer: loading path "'+path+'"...')  
+
+     $.ajax( path ,
+        function(data) {
+          console.log('videoListFromServer: loaded "'+path+'"')  
+        }
+      )
+      .done(function(data) {
+          console.log('videolist CSV content = ',data)
+          let array = $.csv.toArrays(data);
+          console.log('videolist converted to array: ',array)
+          videoList = []
+          for (let item of array) {
+              if (item.length==0) continue;
+              videoList.push(item[0]);
+              if (item[1] ) {
+                  $('#previewVideoName').val(item[1])
+                  $('#previewVideoTimeScale').val('1')
+              }
+          }
+          updateVideoList()
+          selectVideoByID(0)
+        }
+      )
+      .fail(function(data) {
+          console.log('videoListFromServer: ERROR loading "'+path+'"')  
+        }
+      )
+}
+
 function jsonToServer() {
   window.open(serverURL,'popUpWindow','height=500,width=400,left=100,top=100,resizable=yes,scrollbars=yes,toolbar=yes,menubar=no,location=no,directories=no, status=yes');
 }

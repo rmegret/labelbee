@@ -54,7 +54,13 @@ function ChronoAxes(parent, videoinfo, options) {
     axes.height = function() {
         return height // Return local private variable
     }
-
+    axes.top = function() {
+        return top
+    }
+    axes.left = function() {
+        return left
+    }
+    
     /* ### INTERNAL MODEL for the axes: scales */
     
     axes.videoinfo = videoinfo
@@ -101,12 +107,70 @@ function ChronoAxes(parent, videoinfo, options) {
         refreshAxes({'type': 'yDomainChanged','domain':domain})
         return axes // return itself to be able to chain commands
     }
+    
+    function xdomainFocus(domain) {
+        if (!arguments.length) return xScale.domain();
+        let oldT = zoom.translate()
+        let oldS = zoom.scale()
+        
+        // Get to basic zoom first to get original domain
+        zoom.translate([0, 0]) // [DX,DY]
+        zoom.scale(1)
+        let xdomain = xScale.domain();
+        let xrange = xScale.range();
+        
+        let x0 = domain[0], x1=domain[1];
+        
+        // Zoom out 10% to see around
+        let c = (x1+x0)/2;
+        x0 = (x0-c)*1.1+c
+        x1 = (x1-c)*1.1+c
+        
+        let S = (xdomain[1]-xdomain[0])/(x1-x0);
+        if (S>zoom.scaleExtent()[1]) {
+            S=zoom.scaleExtent()[1];
+            x0=c-0.5*(xdomain[1]-xdomain[0])/S;
+            x1=c+0.5*(xdomain[1]-xdomain[0])/S;
+        }
+        
+        let S0 = (xdomain[1]-xdomain[0])/(xrange[1]-xrange[0])
+        let T = -S*x0/S0
+        
+        zoom.translate([T, 0]) // [DX,DY]
+        zoom.scale(S)
+        
+        if (isNaN(xScale.domain()[0])) {
+            console.log('xdomainFocus: ERROR, failed to zoom X axis scale')
+            zoom.translate(oldT)
+            zoom.scale(oldS)
+            //xScale.domain(xdomain); // Reset
+        }
+        refreshAxes({'type': 'xDomainChanged','domain':domain})
+        return axes // return itself to be able to chain commands
+    }
+    function xdomainScale(scale, center) {
+        let xdomain = xScale.domain(); // Current domain
+        let x0 = xdomain[0], x1=xdomain[1];
+   
+        if (typeof center == 'undefined')
+            center = (x1+x0)/2;
+
+        x0 = (x0-center)/scale+center
+        x1 = (x1-center)/scale+center
+        
+        xdomainFocus([x0,x1])
+        
+        return axes // return itself to be able to chain commands
+    }
+    
     // axis scales exports
     axes.xScale=xScale   // Public, used by refreshTimeMark (could be closured)
     axes.yScale=yScale
     axes.tScale=tScale
     axes.xdomain = xdomain
     axes.ydomain = ydomain
+    axes.xdomainFocus = xdomainFocus
+    axes.xdomainScale = xdomainScale
     //axes.updateTDomain=updateTDomain  // Private
 
 
@@ -337,7 +401,9 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("transform", "translate("+left+","+top+")")
     axes.chronoGroup = chronoGroup //  Public
     
-    chronoGroup.append("rect").attr('class','plotAreaBackground')
+    let plotBackground = chronoGroup.append("g").attr('class','plotBackground')
+    
+    plotBackground.append("rect").attr('class','plotAreaBackground')
         .attr("width", width)
         .attr("height", height)
         .style("fill", "#f0fcff")
@@ -411,6 +477,8 @@ function ChronoAxes(parent, videoinfo, options) {
         return false // Error: invalid callback
     }
     function refreshAxes(event) {
+        if (logging.axesEvents)
+            console.log('axes.refreshAxes: event=',event)
         /* Redraw axes ticks. To be called when scales have changed */
         updateTDomain() // Update tScale based on xScale
 
@@ -431,11 +499,13 @@ function ChronoAxes(parent, videoinfo, options) {
              event.type==='yDomainChanged' || 
              event.type==='zoom_x' || 
              event.type==='resize')) {
-            if (!triggerEvent(axes.onAxesChanged, event))
-                console.log('WARNING in refreshAxes: callback not valid, onAxesChanged=',onAxesChanged)
-             } else {
-                 console.log('WARNING refreshAxes: onAxesChanged not called, as event not within predefined list. event=',event)
-             }
+             $(axes).trigger({'type': 'axes:changed', 'sourceevent':event})
+            // if (!triggerEvent(axes.onAxesChanged, event))
+//                 console.log('WARNING in refreshAxes: callback not valid, onAxesChanged=',onAxesChanged)
+//              } else {
+//                  console.log('WARNING refreshAxes: onAxesChanged not called, as event not within predefined list. event=',event)
+//              }
+        }
     }
     axes.refreshAxes = refreshAxes
     
@@ -457,6 +527,18 @@ function ChronoAxes(parent, videoinfo, options) {
                    .filter(function(d) {return d==axes.selectedID})
                    .style('fill','blue')
                    .style('font-weight','bold')
+                   
+        axes.chronoGroup.selectAll(".plotBackground > .selection").remove()
+        if (axes.selectedID!=null) {
+            axes.chronoGroup.select(".plotBackground").append("rect")
+                .attr('class','selection')
+                .attr("x", 0)
+                .attr("width", axes.width())
+                .attr("y", axes.yScale(axes.selectedID))
+                .attr("height", axes.yScale.rangeBand())
+                .style("fill", "#ffffff")
+                .style("stroke", "purple")
+        }
     }
     axes.refreshIdSelection = refreshIdSelection
     axes.selectId=selectId
@@ -568,7 +650,8 @@ function ChronoAxes(parent, videoinfo, options) {
     axes.reinitZoom = reinitZoom
     
     // ## Click callback, can be modified by the user as axes.onClick=...
-    axes.onClick = undefined
+    //axes.onClick = undefined
+    // Replaced by jQuery event "mouse:down"
     
     function invertYScale(y) {
         var id 
@@ -580,7 +663,7 @@ function ChronoAxes(parent, videoinfo, options) {
              id = undefined
           else
              id = yScale.domain()[rank]
-          console.log("chronoGroup.onClick: rank=", rank)
+          //console.log("chronoGroup.onClick: rank=", rank)
         } else {
           rank = Math.round( yScale.invert(y) );
           if (rank<yScale.domain()[0] || rank> yScale.domain()[1])
@@ -591,8 +674,8 @@ function ChronoAxes(parent, videoinfo, options) {
         return id
     }
     
-    chronoGroup.on("click",function() {
-        if (typeof axes.onClick == 'undefined') return;
+    function onAxesClick() {
+        //if (typeof axes.onClick == 'undefined') return;
         if (d3.event.defaultPrevented) return;
         
         var coords = d3.mouse(this);
@@ -603,9 +686,11 @@ function ChronoAxes(parent, videoinfo, options) {
             console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
     
         // Trigger the callback, passing frame and id information
-        if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id}))
-            console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
-    })
+        // if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id}))
+        //             console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+        $(axes).trigger({'type': "axes:clicked", 'frame': frame, 'id': id, 'mouseevent': d3.event});
+    }
+    chronoGroup.on("click", onAxesClick)
     
     injectTrackFrame(chronoGroup);
     function injectTrackFrame(target) {
@@ -675,7 +760,7 @@ function ChronoAxes(parent, videoinfo, options) {
                 //axes.trackFrame_on = false;
                 return;
             }
-            if (typeof axes.onClick == 'undefined') return;
+            //if (typeof axes.onClick == 'undefined') return;
             if (d3.event.defaultPrevented) return;
             
             trackFrame_change()
@@ -708,8 +793,9 @@ function ChronoAxes(parent, videoinfo, options) {
                 console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
     
             // Trigger the callback, passing frame and id information
-            if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id, 'type': 'move'}))
-                console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+            // if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id, 'type': 'move'}))
+//                 console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+            $( axes ).trigger({'type': 'previewframe:trackmove', 'frame': frame, 'id': id, 'mouseevent': d3.event}) // jQuery callback
         }
     }
     

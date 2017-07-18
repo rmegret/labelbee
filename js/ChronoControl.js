@@ -1,5 +1,93 @@
 /*jshint esversion: 6, asi: true */
 
+
+// ###########################################################
+// CHRONOGRAM
+
+function initChrono() {
+    // global variables
+    axes = undefined
+    chronogramData = []
+    tagsChronogramData = []
+    
+    restrictID = null
+    flag_restrictID = false
+    flag_excludeID = false
+
+    // SVG adjust to its parent #chronoDiv
+    var svg = d3.select("#svgVisualize")    
+    svg.attr("width", "100%").attr("height", "100%")
+
+    /* ## Build the axes (resizable) ## */
+
+    options = {useOrdinalScale: true}
+    axes = new ChronoAxes(svg, videoinfo, options)
+    //axes.onClick = onAxesClick         // Callback when the user clicks in axes
+    //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
+
+    $( videoControl ).on('frame:changed', updateTimeMark)
+    $( videoControl ).on('previewframe:changed', updatePreviewTimeMark)
+    
+    $(axes).on("axes:clicked", onAxesClick)
+    $(axes).on("axes:changed", onAxesChanged)
+    
+    // Events declared in selectionControl
+    //$( selectionControl ).on('tagselection:created', updateChronoSelection)
+    //$( selectionControl ).on('tagselection:cleared', updateChronoSelection)
+    
+    function endPreview() {
+        //updateTimeMark();
+        //updateTrackWindowSpan()
+        
+        let stayHere = false
+        if (stayHere) {
+            // Stay at preview frame
+            videoControl.seekFrame(getCurrentFrame());
+            // Update should be called by callbacks
+        } else {
+            // Come back to initial frame before preview
+            videoControl.currentMode = 'video';
+            updateTimeMark();
+            updateTrackWindowSpan()
+            videoControl.hardRefresh();
+        }
+    }
+    $( axes ).on('previewframe:trackmove', onAxesMoved)    
+    $( axes ).on('previewframe:trackend', endPreview)
+    
+    /* Resize events */
+    
+    // Make it resizable using jQuery-UI
+    $("#chronoDiv").resizable({
+      helper: "ui-resizable-helper",
+    });
+    // Detect #chronoDiv resize using ResizeSensor.js
+    // Note: cannot detect resize of SVG directly
+    new ResizeSensor($("#chronoDiv")[0], function() {
+       console.log('#chronoDiv resized');
+       axes.refreshLayout()
+    });
+    // Equivalent pure jQuery seems to have trouble 
+    // the size of chronoDiv seems to be defined after the callback is called
+    //     $("#chronoDiv").on("resize", function(event) {
+    //         console.log('#chronoDiv.onresize',event)
+    //         axes.refreshLayout()
+    //         return false
+    //       })
+    
+    // For some reason, svg does not have the correct size at the beginning,
+    // trigger an asynchronous refresh
+    setTimeout(axes.refreshLayout, 50)
+
+    /* ## Init chronogram content ## */
+    
+    initActivities()     
+    initTagIntervals()
+    
+    initVideoSpan()
+    initTrackWindowSpan()
+}
+
 function chronoAdjust(mode) {
     let factor = 1.2
     let mh = axes.margin.top+axes.margin.bottom
@@ -47,70 +135,6 @@ function adjustChronogramHeight(itemHeight) {
     //}
 }
 
-// ###########################################################
-// CHRONOGRAM
-
-function initChrono() {
-    // global variables
-    axes = undefined
-    chronogramData = []
-    tagsChronogramData = []
-
-    // SVG adjust to its parent #chronoDiv
-    var svg = d3.select("#svgVisualize")    
-    svg.attr("width", "100%").attr("height", "100%")
-
-    /* ## Build the axes (resizable) ## */
-
-    options = {useOrdinalScale: true}
-    axes = new ChronoAxes(svg, videoinfo, options)
-    axes.onClick = onAxesClick         // Callback when the user clicks in axes
-    axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
-    
-    // For some reason, svg does not have the correct size at the beginning,
-    // trigger an asynchronous refresh
-    setTimeout(axes.refreshLayout, 50)
-    
-    // Make it resizable using jQuery-UI
-    $("#chronoDiv").resizable({
-      helper: "ui-resizable-helper",
-    });
-    // Detect #chronoDiv resize using ResizeSensor.js
-    // Note: cannot detect resize of SVG directly
-    new ResizeSensor($("#chronoDiv")[0], function() {
-       console.log('#chronoDiv resized');
-       axes.refreshLayout()
-    });
-    // Equivalent pure jQuery seems to have trouble 
-    // the size of chronoDiv seems to be defined after the callback is called
-    //     $("#chronoDiv").on("resize", function(event) {
-    //         console.log('#chronoDiv.onresize',event)
-    //         axes.refreshLayout()
-    //         return false
-    //       })
-
-    $( videoControl ).on('frame:change', updateTimeMark)
-    
-    function updatePreviewTimeMark() {
-        if (videoControl.previewFrame != null)
-            axes.setTimeMark(videoControl.previewFrame);
-    }
-    function endPreview() {
-        updateTimeMark();
-        videoControl.hardRefresh();
-    }
-    $( videoControl ).on('previewframe:change', updatePreviewTimeMark)
-    $( axes ).on('previewframe:trackend', endPreview)
-
-    /* ## Init chronogram content ## */
-    
-    initActivities()     
-    initTagIntervals()
-    
-    initVideoSpan()
-    initTrackWindowSpan()
-}
-
 /* Synchronization between chronogram, video and chronogramData */
 function domainxFromVideo() {
     var domain
@@ -149,17 +173,26 @@ function validTagIdsDomain() {
     tagIntervals.forEach(function(d) {ids.add(d.id)})
     return [...ids] // Convert to array
 }
+function validAllTagIdsDomain() {
+    return sortIds(allTagsID)
+}
 
 
 /* Update chronogram axes properties */
 function updateChronoXDomainFromVideo() {
     axes.xdomain(domainxFromVideo())
 }
-function updateChronoYDomain() {
-    //var a = domainyFromChronogramData()
-    //var b = domainyFromTagData()
-    //axes.ydomain([Math.min(a[0],b[0]),Math.max(a[1],b[1])]) // Linear scale
-    
+function scaleTimeDomain(scale) {
+    let domain = axes.xdomain();
+    let f = getCurrentFrame();
+    if (f>=domain[0] && f<=domain[1]) { // If timemark visible
+        axes.xdomainScale(scale, f)  // Zoom in the timemark
+    } else {
+        axes.xdomainScale(scale) // Zoom in center
+    }
+}
+
+function sortIds(IDarray) {
     // Utility function to sort mixed numbers/alpha+number
     // Source: http://stackoverflow.com/a/4340448
     function parseItem (item) {
@@ -173,11 +206,25 @@ function updateChronoYDomain() {
         return comparison === 0 ? Number(numberA) - Number(numberB) : comparison;
     }
     
-    let domain = validIdsDomain()
-    let domainTags = validTagIdsDomain()
-    domainset = new Set([...domain, ...domainTags]) // Merge the sets
-    domain = [...domainset].sort(mixedCompare) // convert back to sorted array
+    return IDarray.sort(mixedCompare)
+}
+function validIdsChrono() {
+    let domainset = new Set([...validIdsDomain(), ...validTagIdsDomain()])
+    let domain = sortIds([...domainset]) // convert back to sorted array
+    return domain
+}
+function updateChronoYDomain() {
+    //var a = domainyFromChronogramData()
+    //var b = domainyFromTagData()
+    //axes.ydomain([Math.min(a[0],b[0]),Math.max(a[1],b[1])]) // Linear scale
     
+    var domain=[]
+    
+    if (false && flag_restrictID) {
+        domain = [restrictID];
+    } else {
+        domain = validIdsChrono()
+    }
     console.log('updateChronoYDomain: domain=',domain)
     
     axes.ydomain(domain)
@@ -187,10 +234,21 @@ function updateChronoYDomain() {
 }
 function updateTimeMark() {
     var frame = getCurrentFrame();
+    console.log('updateTimeMark: frame=',frame)
     if (typeof frame == "undefined") {
       frame = 0;
     }
     axes.setTimeMark(frame);
+}
+function updatePreviewTimeMark() {
+    updateTimeMark()
+//     if (videoControl.previewFrame != null)
+//         axes.setTimeMark(videoControl.previewFrame);
+}
+
+function updateChronoSelection() {
+    let id = defaultSelectedBee;
+    axes.selectId(id)
 }
 
 /* Callbacks to react to changes in chronogram axes */
@@ -200,11 +258,6 @@ function onAxesClick(event) {
     var id = event.id
     if (logging.axesEvents)
         console.log("onAxesClick: seeking to frame=",frame,"...");
- 
-    if (event.type==="move") {
-        videoControl.seekFrame(frame, true)
-        return;
-    }
  
     defaultSelectedBee = id
     if (frame==getCurrentFrame()) {
@@ -219,6 +272,16 @@ function onAxesClick(event) {
         // external controller logic is supposed to call back updateTimeMark
         // to update the view
     }
+}
+function onAxesMoved(event) {
+    // User clicked in chronogram axes
+    var frame = event.frame
+    var id = event.id
+    if (logging.axesEvents)
+        console.log("onAxesMove: seeking to frame=",frame,"...");
+ 
+    //defaultSelectedBee = id // Do not change, keep same ID
+    videoControl.seekFrame(frame, true)
 }
 function onAxesChanged(event) {
     // User zoomed, scrolled or changed chronogram range or size */
@@ -266,6 +329,82 @@ function findPreviousTagEvent(frame, id) {
     console.log(list)
     if (list.length==0) return undefined
     return list[0]
+}
+
+
+function click_restrictID() {
+    if ( $("#restrictIDButton").hasClass( "active" ) ) {
+        $("#restrictIDButton").removeClass("active")
+        //$("#restrictIDButton").addClass("btn-default")
+        //$("#restrictIDButton").removeClass("btn-success")
+        
+        flag_restrictID = false;
+    } else {
+        $("#restrictIDButton").addClass("active")      
+        //$("#restrictIDButton").removeClass("btn-default")
+        //$("#restrictIDButton").addClass("btn-success")
+        flag_restrictID = true;
+        
+        restrictID = defaultSelectedBee;
+        $("#restrictID").val(restrictID)
+    }
+    
+    refreshChronogram()
+}
+function onRestrictIDChanged() {
+    restrictID = $("#restrictID").val()
+    selectBeeByID(restrictID)
+    
+    refreshChronogram()
+}
+function click_excludeID() {
+    if ( $("#excludeIDButton").hasClass( "active" ) ) {
+        $("#excludeIDButton").removeClass("active")
+        //$("#excludeIDButton").addClass("btn-default")
+        //$("#excludeIDButton").removeClass("btn-warning")
+        flag_excludeID = false;
+    } else {
+        $("#excludeIDButton").addClass("active")      
+        //$("#excludeIDButton").removeClass("btn-default")
+        //$("#excludeIDButton").addClass("btn-warning")
+        flag_excludeID = true;
+    }    
+    refreshChronogram()
+}
+function onExcludeIDChanged() {
+    excludeID = $("#excludeID").val()
+    excludeIDArray = excludeID.split(',')
+    
+    refreshChronogram()
+}
+
+function onClickNextID() {
+    if (flag_restrictID) {
+        let domain = validAllTagIdsDomain()
+        if (domain.length==0) return;
+        let pos = $.inArray(restrictID,domain)
+        if (pos==-1)
+            restrictID = domain[0];
+        else
+            restrictID = domain[(pos+1)%domain.length];
+        
+        selectBeeByID(restrictID)
+        refreshChronogram()
+    }
+}
+function onClickPrevID() {
+    if (flag_restrictID) {
+        let domain = validAllTagIdsDomain()
+        if (domain.length==0) return;
+        let pos = $.inArray(restrictID,domain)
+        if (pos==-1)
+            restrictID = domain[domain.length-1];
+        else
+            restrictID = domain[(pos+domain.length-1)%domain.length];
+        
+        selectBeeByID(restrictID)
+        refreshChronogram()
+    }
 }
 
 /* Callback to react to change in chronogramData */
@@ -367,7 +506,9 @@ function initTrackWindowSpan() {
         .style("fill", "pink")
         .style("fill-opacity", "0.4")
         
-    $( videoControl ).on('frame:change', updateTrackWindowSpan)
+    $( videoControl ).on('frame:changed', updateTrackWindowSpan)
+    $( videoControl ).on('previewframe:changed', updateTrackWindowSpan)
+    $( axes ).on('previewframe:trackend', updateTrackWindowSpan)
     $( overlay ).on('trackWindow:change', updateTrackWindowSpan)
 }
 function updateTrackWindowSpan() {
@@ -500,6 +641,7 @@ function setTagGeom(selection) {
             else
                 return 'blue'
         })
+        //.attr("hidden", function(d) {return (typeof axes.yScale(d.id));})
 }
 function updateTagIntervals(onlyScaling) {
     // Redraw tag intervals
@@ -509,7 +651,7 @@ function updateTagIntervals(onlyScaling) {
       tagSel = axes.plotArea.selectAll(".tag").data(tagIntervals);
       tagSel.enter().call(insertTag)
       tagSel.exit().remove();
-      setTagGeom(tagSel)
+      tagSel.call(setTagGeom)
     }
 }
 function initTagIntervals() {
@@ -534,6 +676,13 @@ function refreshChronogram() {
     if (showObsChrono) {
         for (let F in Tracks) {
             for (let id in Tracks[F]) {
+            
+                if (flag_restrictID) {
+                    if (id!=restrictID) continue;
+                } else if (flag_excludeID) {
+                    if ($.inArray(String(id), excludeIDArray)>=0) continue;
+                }
+            
                 let chronoObs = {'x':F, 'y':id, 'Activity':""};
 
                 if (Tracks[F][id].bool_acts[1]) {
@@ -571,25 +720,41 @@ function refreshChronogram() {
     if (logging.chrono)
         console.log("refreshChronogram: convert tags to intervals...")
 
+    allTagsID = []
 
     tagIntervals = []
     if (showTagsChrono) {
+        allTagsID = new Set()
+    
         /* Transpose Tags data structure */
         ttags = []
+//         for (let F in Tags) {
+//             let tags = Tags[F].tags
+//             for (let i in tags) {
+//                 let id = Number(tags[i].id)
+//                 ttags[id]=[];
+//             }
+//         }
         for (let F in Tags) {
             let tags = Tags[F].tags
             for (let i in tags) {
                 let id = Number(tags[i].id)
-                ttags[id]=[];
-            }
-        }
-        for (let F in Tags) {
-            let tags = Tags[F].tags
-            for (let i in tags) {
-                let id = Number(tags[i].id)
+                
+                allTagsID.add(id)
+                
+                if (flag_restrictID) {
+                    if (id != restrictID) continue;
+                } else if (flag_excludeID) {
+                    if ($.inArray(String(id), excludeIDArray)>=0) continue;
+                }
+                
+                if (typeof ttags[id] === 'undefined')
+                    ttags[id]=[];
                 ttags[id][F]=tags[i];
             }
         }
+        
+        allTagsID = [...allTagsID]
     
         /* Convert to intervals */
         for (let id in ttags) {
