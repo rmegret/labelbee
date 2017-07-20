@@ -75,17 +75,22 @@
 
           <p>
             <!--Change to div-->
-            <button value="Previous minute" onclick="videoControl.rewind3()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-fast-backward"></span></button>
-            <button value="Previous second" onclick="videoControl.rewind2()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-backward"></span></button>
-            <button value="Previous frame" onclick="videoControl.rewind()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-step-backward"></span></button>
-            <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-backward"></span></button>
-            <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play"></span></button>
-            <button value="Next frame" onclick="videoControl.forward()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-step-forward"></span></button>
-            <button value="Next second" onclick="videoControl.forward2()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-forward"></span></button>
-            <button value="Next minute" onclick="videoControl.forward3()" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-fast-forward"></span></button>
-<!--             <input type="button" value="Submit info" onclick="submit_bee()" class="btn btn-info" style="position: inline"> -->
-            <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-info btn-sm" style="position: inline" id="deleteButton">
-            <button type="button" onclick="undoAction()" class="btn btn-info btn-sm" style="position: inline" id="undoButton">Undo</button>
+            
+            <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play icon-flipped"></span></button>
+            <input type="text" size="6" value="1" id="playRate" onchange="videoControl.playRateInputChanged()""></input>
+            <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-play"></span><span class="glyphicon glyphicon-pause"></span></button>
+            
+            <button value="Previous minute" onclick="videoControl.rewind(200)" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-fast-forward icon-flipped small"></span><br class="negmargin"><span class="small">10s</span></button>
+            <button value="Previous second" onclick="videoControl.rewind(20)" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-fast-forward icon-flipped small"></span><br class="negmargin"><span class="small">1s</span></button>
+            <button value="Previous frame" onclick="videoControl.rewind(1)" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-step-backward small"></span><br class="negmargin"><span class="small">1f</span></button>
+            
+            <button value="Next frame" onclick="videoControl.forward(1)" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-step-forward small"></span><br class="negmargin"><span class="small">1f</span></button>
+            <button value="Next second" onclick="videoControl.forward(20)" type="button" class="btn btn-info btn-sm small nopad"><span class="glyphicon glyphicon-fast-forward small"></span><br class="negmargin"><span class="small">1s</span></button>
+            <button value="Next minute" onclick="videoControl.forward(200)" type="button" class="btn btn-info btn-sm small nopad"><span class="glyphicon glyphicon-fast-forward small"></span><br class="negmargin"><span class="small">10s</span></button>
+
+
+            <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-info btn-xs" style="position: inline" id="deleteButton">
+            <button type="button" onclick="undoAction()" class="btn btn-info btn-xs" style="position: inline" id="undoButton">Undo</button>
 
           </p>
           <p>
@@ -105,7 +110,7 @@
               <label><input type="checkbox" value="" id="L">Departing</label>
             </div><br>
             <div class="textbox-inline">
-              <label>Labels: </label><input type="textbox" value="" class="resizedTextbox" id="labels" onchange="onLabelsChanged">
+              <label>Labels: </label><input type="textbox" value="" class="resizedTextbox" id="labels">
             <div class="textbox-inline">
               <label>Notes: </label><input type="textbox" value="" class="resizedTextbox" id="notes">
 <!--                    <label>Note: </label><textarea rows="1" cols="50" id="notes"></textarea>  -->
@@ -281,6 +286,7 @@
                           <br>
                           Name <input type="text" value="-" id="previewVideoName"
                            size="60" onchange="onPreviewVideoInfoChanged()">
+                          <div id="previewVideoStatus" class="btn btn-xs" title="Status of Preview Video" style="display:inline-block;">?</div>
                            <br>
                           TimeScale<input type="text" value="-" id="previewVideoTimeScale"
                            size="10" onchange="onPreviewVideoInfoChanged()">
@@ -344,10 +350,18 @@
                 <label><input type="checkbox" checked="false" id="checkboxShowZoom" onclick="clickShowZoom()">Zoom</label>
                 </div>
                 <div class="checkbox" style="display:inline">
+                
+              <input value="Z+" onclick="zoomApplyScale(2)" type="button" class="btn btn-info btn-xs" title="Zoom In" style="display=inline;">
+              <input value="Z=" onclick="zoomSetScale(1)" type="button" class="btn btn-info btn-xs" title="Reset Zoom" style="display=inline;">
+              <input value="Z-" onclick="zoomApplyScale(1/2)" type="button" class="btn btn-info btn-xs" title="Zoom Out" style="display=inline;">
+                
                 <label><input type="checkbox" checked="true" id="checkboxZoomShowOverlay" onclick="clickZoomShowOverlay()">with overlay</label>
                 </div>
                 <div id="zoomDiv">
                 <canvas id="zoom" width="200" height="200"></canvas>
+                </div>
+                <div id="tagImageDiv">
+                <img id="tagImage" width="200" height="200" class="pixelated"/>
                 </div>
               </div>
             </div>
@@ -474,8 +488,9 @@
   <div id="tagDetails">-</div>
   <br/>  <br/>  <br/>
   </div>
-  <script>
-  </script>
+
+<!--   <canvas id='videoCanvas' style="visible:false;"></canvas> -->
+
 </body>
 
 </html>

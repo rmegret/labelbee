@@ -6,6 +6,52 @@
 var defaultSelectedBee;
 var undo = new Observation(0);
 
+var labelMap = {
+    f:'fanning',
+    p:'pollen',
+    e:'entering',
+    d:'departing',
+    f:'fanning',
+    p:'pollen',
+    e:'entering',
+    d:'departing',
+    p:'pollen',
+    e:'entering',
+}
+
+function toLabelString(labelArray) {
+    
+}
+
+function getLabels(obs) {
+    let labelArray=[];
+    if (obs.bool_acts[0])
+        labelArray.push('fanning')
+    if (obs.bool_acts[1])
+        labelArray.push('pollen')
+    if (obs.bool_acts[2])
+        labelArray.push('entering')
+    if (obs.bool_acts[3])
+        labelArray.push('departing')
+    
+    return labelArray
+}
+function setLabels(obs, labelArray) {
+    obs.labels = toLabelString(labelArray);
+
+    let labelArray=[];
+    if (obs.bool_acts[0])
+        labelArray.push('fanning')
+    if (obs.bool_acts[1])
+        labelArray.push('pollen')
+    if (obs.bool_acts[2])
+        labelArray.push('entering')
+    if (obs.bool_acts[3])
+        labelArray.push('departing')
+    
+    return labelArray
+}
+
 // # Form and current bee control
 function initSelectionControl() {
     selectionControl = {}
@@ -18,6 +64,8 @@ function initSelectionControl() {
     $('#E').change(onActivityChanged);
     $('#L').change(onActivityChanged);
     
+    $('#labels').change(onLabelsChanged);
+      
     $("#notes").keydown(function(event){
       if (event.which == 13){
         onActivityChanged(event);
@@ -86,6 +134,8 @@ function updateForm(activeObject) {
             $('#notes').prop('value', '');
         else
             $('#notes').prop('value', obs.notes);
+            
+        $('#labels').val(getLabels(obs).join(','))
     }
 
 }
@@ -224,6 +274,9 @@ function getSelectedRect() {
 }
 function getCurrentTag() {
     return getTag(getCurrentFrame(), defaultSelectedBee)
+}
+function getCurrentID() {
+    return defaultSelectedBee
 }
 
 

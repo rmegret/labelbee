@@ -526,6 +526,30 @@ function updateObsActivityFromForm(obs) {
     if (logging.guiEvents)
         console.log("updateObsActivityFromForm: obs=", obs)
 }
+function setLabels(rect,labelsArray) {
+    let obs = rect.obs;
+    
+    obs.bool_acts[0]=false;
+    obs.bool_acts[1]=false;
+    obs.bool_acts[2]=false;
+    obs.bool_acts[3]=false;
+    obs.labels=labelsArray;
+    
+    for (label0 of labelsArray) {
+        let label=label0.toLowerCase();
+        if (label=='pollen' || label=='p') {
+            obs.bool_acts[1]=true;
+        } else if (label=='fanning' || label=='f') {
+            obs.bool_acts[0]=true;
+        } else if (label=='entering' || label=='e') {
+            obs.bool_acts[2]=true;
+        } else if (label=='departing' || label=='d') {
+            obs.bool_acts[3]=true;
+        }
+    }
+
+    updateForm(rect)
+}
 
 // ## Direct canvas drawing
 
@@ -929,11 +953,13 @@ function plotTrackArrow(p0, p1, L) {
     u.x=u.x/n
     u.y=u.y/n
     ctx.beginPath();
-    ctx.moveTo(p1.x+L*(-u.x-0.6*u.y) ,p1.y+L*(-u.y+0.6*u.x))
+    ctx.moveTo(p1.x+L*(-u.x-0.6*u.y), p1.y+L*(-u.y+0.6*u.x))
     ctx.lineTo(p1.x, p1.y)
-    ctx.lineTo(p1.x+L*(-u.x+0.6*u.y) ,p1.y+L*(-u.y-0.6*u.x))
+    ctx.lineTo(p1.x+L*(-u.x+0.6*u.y), p1.y+L*(-u.y-0.6*u.x))
     ctx.stroke()
 }
+
+
 
 /* Tag tracks */
 function plotTagsTracks(ctx) {
@@ -1959,6 +1985,17 @@ function onActivityChanged(event) {
     var activeObject = canvas1.getActiveObject()
     if (activeObject !== null) {
         updateRectObsActivity(activeObject)
+        automatic_sub()
+    }
+}
+function onLabelsChanged() {
+    let labels=$('#labels').val()
+    if (logging.guiEvents)
+        console.log("onLabelsChanged: labels=", labels)
+    let labelsArray = labels.split(',').map(function(L){return L.trim()})
+    var activeObject = canvas1.getActiveObject()
+    if (activeObject !== null) {
+        setLabels(activeObject,labelsArray)
         automatic_sub()
     }
 }

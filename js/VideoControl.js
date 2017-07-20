@@ -14,6 +14,7 @@ function VideoControl(videoTagId) {
     this.flagCopyVideoToCanvas = true;
     this.seekWallTime = 0;
     this.seekTiming = false
+    this.playbackRate = 1
     
     if (typeof videoTagId === 'undefined')
         videoTagId = 'video'; // Default HTML5 video tag to attach to
@@ -41,6 +42,20 @@ function VideoControl(videoTagId) {
 VideoControl.prototype = {} // Prepare for all VideoControl methods
 
 // ### Play/pause
+
+VideoControl.prototype.playRateInputChanged = function() {
+    let text = $('#playRate').val()
+    let a=text.split('/')
+    if (a.length==1) {
+        this.playbackRate = Number(text)
+    } else if (a.length==2) {
+        this.playbackRate = Number(a[0])/Number(a[1])
+    } else {
+        console.log('playRateInputChanged: ERROR, playRate format not recognized. playRate=',text)
+        return
+    }
+    this.video2.setPlaybackRate(this.playbackRate)
+}
 
 VideoControl.prototype.playPauseVideo = function(option) {
     if (logging.guiEvents) console.log('playPauseVideo()');
@@ -327,6 +342,38 @@ VideoControl.prototype.loadVideo = function(url, previewURL) {
         this.previewURL = previewURL;
     }
     $("#previewVideoName").val(this.previewURL)
+    
+    setPreviewVideoStatus('undefined')
+}
+function setPreviewVideoStatus(status) {
+    $("#previewVideoStatus").removeClass('undefined loading loaded infoloaded error')
+    switch (status) {
+        case 'undefined':
+          $("#previewVideoStatus").html('?')
+          $("#previewVideoStatus").addClass('undefined')
+          $("#previewVideoStatus").prop('title', 'undefined')
+          break;
+        case 'loading':
+          $("#previewVideoStatus").html('&mapstodown;')
+          $("#previewVideoStatus").addClass('loading')
+          $("#previewVideoStatus").prop('title', 'Loading preview video')
+          break;
+        case 'loaded':
+          $("#previewVideoStatus").html('&#10004;')
+          $("#previewVideoStatus").addClass('loaded')
+          $("#previewVideoStatus").prop('title', 'Preview video loaded successfully')
+          break;
+        case 'error':
+          $("#previewVideoStatus").html('&#10006;')
+          $("#previewVideoStatus").addClass('error')
+          $("#previewVideoStatus").prop('title', 'Error loading preview video')
+          break;
+        case 'infoloaded':
+          $("#previewVideoStatus").html('&#10004;&#10004;')
+          $("#previewVideoStatus").addClass('infoloaded')
+          $("#previewVideoStatus").prop('title', 'Preview video loaded with info')
+          break;
+    }
 }
 VideoControl.prototype.loadPreviewVideo = function(previewURL) {
     function onPreviewVideoLoaded(event) {
@@ -335,12 +382,15 @@ VideoControl.prototype.loadPreviewVideo = function(previewURL) {
 
         console.log('onPreviewVideoLoaded: PREVIEW available. Use CTRL+mousemove in the chronogram. url=',event.target.src)
         
+        setPreviewVideoStatus('loaded')
         //$('#previewVideoName').val(previewURL)
     }
     function onPreviewVideoError(e) {
         //if (logging.videoEvents)
             console.log('onPreviewVideoError: could not load preview video. previewURL=',previewURL)
+        setPreviewVideoStatus('error')
     }
+    setPreviewVideoStatus('loading')
     this.previewVideo.onerror=onPreviewVideoError
     this.previewVideo.onloadeddata=onPreviewVideoLoaded
     
@@ -375,7 +425,7 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     
     $( this ).trigger('video:loaded') 
 }
-function onPreviewVideoInfoChanged() {
+onPreviewVideoInfoChanged = function() {
     let name = $('#previewVideoName').val()
     videoControl.previewVideoTimeScale = Number($('#previewVideoTimeScale').val())
     videoControl.loadPreviewVideo('data/'+name)

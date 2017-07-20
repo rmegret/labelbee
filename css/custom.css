@@ -345,3 +345,37 @@ textarea {
     background-color: #6A6;
     box-shadow:       inset 2px 2px 5px rgba(0,0,0,0.25);
 }
+
+/* Disable interpolation for img */
+img.pixelated { 
+    image-rendering: optimizeSpeed;             /* STOP SMOOTHING, GIVE ME SPEED  */
+    image-rendering: -moz-crisp-edges;          /* Firefox                        */
+    image-rendering: -o-crisp-edges;            /* Opera                          */
+    image-rendering: -webkit-optimize-contrast; /* Chrome (and eventually Safari) */
+    image-rendering: pixelated; /* Chrome */
+    image-rendering: optimize-contrast;         /* CSS3 Proposed                  */
+    -ms-interpolation-mode: nearest-neighbor;   /* IE8+                           */
+}
+
+.icon-flipped {
+    transform: scaleX(-1);
+    -moz-transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+    -ms-transform: scaleX(-1);
+}
+
+#tagImage {
+    border: 1px black solid;
+    margin: 0px;
+    padding: 0px;
+}
+
+.nopad {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+.negmargin {
+display: block; /* makes it have a width */
+            content: ""; /* clears default height */
+            margin-top: -6px; /* change this to whatever height you want it */
+}
