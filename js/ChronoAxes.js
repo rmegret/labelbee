@@ -1,3 +1,5 @@
+//scale, displays
+
 
 function ChronoAxes(parent, videoinfo, options) {
     // Create by passing the SVG parent element as D3 selector

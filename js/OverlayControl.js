@@ -21,7 +21,7 @@ function OverlayControl(canvasTagId) {
 
     showObs = true
     showObsTracks = true
-    showObsChrono = false
+    showObsChrono = true
     showTags = true;
     showTagsTracks = false
     showSelectedTagsTracks = true

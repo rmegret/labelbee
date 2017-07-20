@@ -38,7 +38,7 @@ var logging = {
 function init() {
     // import * from "VideoList.js";
     initVideoSelection()
-    $('#selectboxVideo')[0].selectedIndex=6; // select long video
+    $('#selectboxVideo')[0].selectedIndex=8; // select long video
         
     // import * from "VideoNavigation";
     videoControl = new VideoControl('video') // Attach control to #video
