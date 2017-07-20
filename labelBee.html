@@ -105,6 +105,8 @@
               <label><input type="checkbox" value="" id="L">Departing</label>
             </div><br>
             <div class="textbox-inline">
+              <label>Labels: </label><input type="textbox" value="" class="resizedTextbox" id="labels" onchange="onLabelsChanged">
+            <div class="textbox-inline">
               <label>Notes: </label><input type="textbox" value="" class="resizedTextbox" id="notes">
 <!--                    <label>Note: </label><textarea rows="1" cols="50" id="notes"></textarea>  -->
             </div>
@@ -139,19 +141,6 @@
               </div>
               
               <div class='block'>
-              Tags:
-              <button value="H0" onclick="chronoFilter('H0')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming==0">H0</button>
-              <button value="H1" onclick="chronoFilter('H1')" type="button" class="btn btn-info  btn-xs" title="Show only tags with Hamming<=1">H1</button>
-              <button value="H2" onclick="chronoFilter('H2')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming<=2">H2</button>
-              <button value="H&infin;" onclick="chronoFilter('Hall')" type="button" class="btn btn-info btn-xs" title="Show all tags, including virtual ones">all</button>
-              &Delta;<input type="text" value="0" size="2" id="tagsIntervalFilterMinLength" onchange="onTagsParametersChanged(event)">
-              
-              ROI:<input type="text" value="0,0,w,h" size="10" id="ROI" onchange="onROITextChanged(event)" title="Region of Interest format left,top,right,bottom in video pixels">
-              <input id='useROI' value="Apply" onclick="onClickROI()" type="button" class="btn btn-orange-toggle btn-xs" title="Show/Hide ROI">
-              <input value="Reinit" onclick="updateROIFromVideo()" type="button" class="btn btn-default btn-xs" title="Reinit ROI from video">
-              </div>
-              
-              <div class='block'>
               Tracks:
               <button value="win-" onclick="scaleTrackWindow(0.5)" type="button" class="btn btn-info btn-xs" title="Reduce track window">win-</button>
               <button value="win+" onclick="scaleTrackWindow(2)" type="button" class="btn btn-info btn-xs" title="Extend track window">win+</button>
@@ -175,9 +164,17 @@
               </div>
               
               <div class='block'>
-              Selection:
+              Filter Tags:
+              <button value="H0" onclick="chronoFilter('H0')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming==0">H0</button>
+              <button value="H1" onclick="chronoFilter('H1')" type="button" class="btn btn-info  btn-xs" title="Show only tags with Hamming<=1">H1</button>
+              <button value="H2" onclick="chronoFilter('H2')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming<=2">H2</button>
+              <button value="H&infin;" onclick="chronoFilter('Hall')" type="button" class="btn btn-info btn-xs" title="Show all tags, including virtual ones">all</button>
+              &Delta;<input type="text" value="0" size="2" id="tagsIntervalFilterMinLength" onchange="onTagsParametersChanged(event)">
+              
               <input type="text" value="0" size="4" id="restrictID" onchange="onRestrictIDChanged(event)">
-              <button id="restrictIDButton" onclick="click_restrictID()" type="button" class="btn btn-green-toggle btn-xs" title="Show only tags with this ID">Only</button>
+              <button id="restrictIDButton" onclick="click_restrictID()" type="button" class="btn btn-green-toggle btn-xs" title="Show only tags with this ID">Restrict</button>
+              <button id="restrictIDfromSelectionButton" onclick="restrictIDFromSelection()" type="button" class="btn btn-default btn-xs" title="Restrict to only current Selection ID">fromSelection</button>
+              <button id="restrictIDFromWindowButton" onclick="restrictIDFromWindow()" type="button" class="btn btn-default btn-xs" title="Restrict to tags in current Window ID">fromWindow</button>
               
               <button id="prevIDButton" onclick="onClickPrevID()" type="button" class="btn btn-default btn-xs" title="Select Previous Bee">PrevID</button>
               <button id="nextIDButton" onclick="onClickNextID()" type="button" class="btn btn-default btn-xs" title="Select Next Bee">NextID</button>
@@ -313,9 +310,9 @@
 
                       <input id="save" onclick="saveToFile()" type="button" value="Save Tracks" class="btn btn-default btn-sm" >
                 
-                      <input id="saveCSV" onclick="saveToCSV()" type="button" value="Save Tracks (CSV)" class="btn btn-default btn-sm">
+                      <input id="saveCSV" onclick="saveToCSV()" type="button" value="Export Tracks (CSV)" class="btn btn-default btn-sm">
                       
-                      <input id="saveBBoxes" onclick="saveToBBoxes()" type="button" value="Save Tracks (BBox)" class="btn btn-default btn-sm" >
+                      <input id="saveBBoxes" onclick="saveToBBoxes()" type="button" value="Export Tracks (BBox)" class="btn btn-default btn-sm" >
                       
                   </div>
               </div>
@@ -380,7 +377,7 @@
                 <label>Parameters <span class="glyphicon glyphicon-wrench"></span></label>
                 <div>
                   <div class="checkbox">
-                    <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()">Show Obs</label>
+                    <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>Show Obs</label>
                   </div>
                   <div class="checkbox">
                     <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Obs Tracks</label>
@@ -398,8 +395,18 @@
                   <div class="checkbox">
                     <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">Show Tags Orientation</label>
                   </div>
+                  
+                  ROI:<input type="text" value="0,0,w,h" size="10" id="ROI" onchange="onROITextChanged(event)" title="Region of Interest format left,top,right,bottom in video pixels">
+                  <input id='useROI' value="Apply" onclick="onClickROI()" type="button" class="btn btn-orange-toggle btn-xs" title="Show/Hide ROI">
+                  <input value="Reinit" onclick="updateROIFromVideo()" type="button" class="btn btn-default btn-xs" title="Reinit ROI from video">
+                  
+                  <select id="selectboxTrackDir" name="selectboxTrackDir" onchange="onTrackDirChanged()" class="">
+                  <option value="Bidirectional" selected>Bidirectional</option>
+                  <option value="Forward">Forward</option>
+                  <option value="Backward">Backward</option>
+                  </select> <!-- selectboxVideo -->  
                   <div class="text">
-                  <label>Track window<input type="text" value="20" id="trackWindow" onchange="onTrackWindowChanged(event)"></label>
+                  <label>Track window<input type="text" value="5" id="trackWindow" onchange="onTrackWindowChanged(event)"></label>
                   </div>
                   <div class="text">
                   <label>Tags sample filter<input type="text" value="return true" id="tagsSampleFilter" onchange="onTagsParametersChanged(event)"></label>

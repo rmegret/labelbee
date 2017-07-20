@@ -118,7 +118,8 @@ VideoControl.prototype.seekFrame = function(frame, useFastSeek) {
         
         let t = (frame+videoinfo.frameoffset)/videoinfo.videofps*this.previewVideoTimeScale;
         
-        console.log('videoControl.seekFrame: FAST, f=',frame,' t=',t)
+        if (logging.frameEvents)
+            console.log('videoControl.seekFrame: FAST, f=',frame,' t=',t)
         this.previewVideo.currentTime =  t
     } else {
         this.currentMode = 'video'
@@ -454,6 +455,10 @@ VideoControl.prototype.onVideoInfoChanged = function() {
         
     updateChronoXDomainFromVideo()   // Should trigger chrono refresh
     //refreshChronogram()
+}
+
+VideoControl.prototype.maxframe = function() {
+    return Math.floor(videoinfo.duration*videoinfo.videofps)
 }
 
 // function onVideoReady(event) {

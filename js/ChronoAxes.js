@@ -341,11 +341,11 @@ function ChronoAxes(parent, videoinfo, options) {
               .attr("width",40).attr("height",height)
               .style("fill", "#fffff0")
         yAxisGroup.append("text").attr("class", "label")
-            .attr("transform", "rotate(-90, -30, "+(height/2)+")")
+            .attr("transform", "rotate(-90, -40, "+(height/2)+")")
             .attr("x", -40).attr("y", height/2)
             //.attr("dy", "1em")
-            .style("text-anchor", "middle")
-            .text("Bee ID");
+            .style("text-anchor", "bottom")
+            .text("ID");
         yAxisGroup.call(yAxis);
         return yAxisGroup
     }
@@ -698,7 +698,8 @@ function ChronoAxes(parent, videoinfo, options) {
         chronoGroup.on("mouseleave.trackFrame", trackFrame_mouseLeave); 
         var mouseCache = [undefined, undefined]
         function trackFrame_mouseEnter() {
-            console.log('trackFrame_mouseEnter')
+            if (logging.mouseMoveEvents)
+                console.log('trackFrame_mouseEnter')
             d3.select("body").on('keydown.trackFrame',trackFrame_keyDown)
             chronoGroup.on("mousemove", trackFrame_mouseMove);
             var coords = d3.mouse(chronoGroup.node());
@@ -706,7 +707,8 @@ function ChronoAxes(parent, videoinfo, options) {
             mouseCache[1] = coords[1];
         }
         function trackFrame_mouseLeave() {
-            console.log('trackFrame_mouseLeave')
+            if (logging.mouseMoveEvents)
+                console.log('trackFrame_mouseLeave')
             d3.select("body").on('keydown.trackFrame',null) // callback off
             //d3.select("body").on('keyup.trackFrame',null) // callback off
             chronoGroup.on("mousemove", null);
@@ -719,22 +721,9 @@ function ChronoAxes(parent, videoinfo, options) {
                 d3.select("body").on('keydown.trackFrame',null) // Callback off 
                 d3.select("body").on('keyup.trackFrame',trackFrame_keyUp) 
 
-                console.log('Started mousemove tracking in chronogram')
-//                 let E = d3.event;
-//                 var evt = new MouseEvent("mousemove",
-//                                 {
-//                                     shiftKey: E.shiftKey,
-//                                     altKey: E.altKey,
-//                                     metaKey: E.metaKey,
-//                                     ctrlKey: E.ctrlKey,
-//                                     screenX: trackFrame_coords.screenX,
-//                                     screenY: trackFrame_coords.screenY,
-//                                     clientX: trackFrame_coords.clientX,
-//                                     clientY: trackFrame_coords.clientY, 
-//                                     target: E.target
-//                                 });
-//                 chronoGroup.node().dispatchEvent(evt)
-//                trackFrame_mouseMove()
+                if (logging.mouseMoveEvents)
+                      console.log('Started mousemove tracking in chronogram')
+                      
                   trackFrame_change()
             }
         }
@@ -771,8 +760,8 @@ function ChronoAxes(parent, videoinfo, options) {
                     coords[0]>axes.xScale.range()[1] ||
                     coords[1]<axes.yScale.rangeExtent()[0] ||
                     coords[1]>axes.yScale.rangeExtent()[1]) {
-                if (logging.axesEvents)
-                    console.log("trackFrame_mouseMove: outside of axes range, ignoring. coords=",coords);
+                if (logging.mouseMoveEvents)
+                    console.log("trackFrame_change: outside of axes range, ignoring. coords=",coords);
                 return;                        
             }
               
@@ -780,7 +769,8 @@ function ChronoAxes(parent, videoinfo, options) {
         
             let domain = axes.xScale.domain();
             if (frame<domain[0] || frame>domain[1]) {
-                console.log("trackFrame_mouseMove: f="+frame+" out of bound. Ignoring.");
+                if (logging.mouseMoveEvents)
+                    console.log("trackFrame_change: f="+frame+" out of bound. Ignoring.");
                 return;
             }
         
@@ -789,12 +779,9 @@ function ChronoAxes(parent, videoinfo, options) {
         
             var id = invertYScale( coords[1] )
     
-            if (logging.axesEvents)
-                console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
+            if (logging.mouseMoveEvents)
+                console.log("trackFrame_change: frame=",frame," id=",id);
     
-            // Trigger the callback, passing frame and id information
-            // if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id, 'type': 'move'}))
-//                 console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
             $( axes ).trigger({'type': 'previewframe:trackmove', 'frame': frame, 'id': id, 'mouseevent': d3.event}) // jQuery callback
         }
     }

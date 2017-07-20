@@ -18,8 +18,8 @@ function OverlayControl(canvasTagId) {
 
     /* Obs and Tags plotting params */
     trackWindow = 200 // 10s
-    plotTrack_range_backward = trackWindow;
-    plotTrack_range_forward = trackWindow;
+    trackWindowBackward = trackWindow;
+    trackWindowForward = trackWindow;
     $('#trackWindow').val(trackWindow)
 
     flag_useROI=false
@@ -43,6 +43,9 @@ function OverlayControl(canvasTagId) {
     $('#showTagsOrientation').prop('checked',showTagsOrientation)
     $('#showTagsChrono').prop('checked',showTagsChrono)
     $('#showObsChrono').prop('checked',showObsChrono)
+    
+    trackDir="Bidirectional"
+    $('#selectboxTrackDir').val(trackDir)
 
     /* Overlay and selection */
 
@@ -667,21 +670,16 @@ function identifyBeeRect(ctx, rect, radius) {
 function plotTracks(ctx) {
     let F = getCurrentFrame()
 
-    let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1.2;
-    let fmin = F-plotTrack_range_backward;
-    let fmax = F+plotTrack_range_forward;
-    if (fmin<0) fmin=0;
-    //if (fmax>maxframe) fmax=maxframe;
-    
-    //let ids = getValidIDsForFrame(F)
-    let ids = getValidIDsForFrames([fmin,fmax])
+    let win = getWindow()
+    let fmin=win[0], fmax=win[1]
+    let ids = getValidIDsForFrames(win)
 
     setColor = function(f) {
         if (f<=F) {
-            color = "rgba(255,0,0,"+(1-Math.abs((f-F)/frange))+")"
+            color = "rgba(255,0,0,"+(1-Math.abs((f-F)/(fmin-F-1)))+")"
             //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
         } else {
-            color = "rgba(0,128,0,"+(1-Math.abs((f-F)/frange))+")"
+            color = "rgba(0,128,0,"+(1-Math.abs((f-F)/(fmax-F+1)))+")"
         }
         return color;
     }
@@ -940,11 +938,10 @@ function plotTrackArrow(p0, p1, L) {
 /* Tag tracks */
 function plotTagsTracks(ctx) {
     let F = getCurrentFrame()
-    let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1;
-    let fmin = F-plotTrack_range_backward;
-    let fmax = F+plotTrack_range_forward;
-    if (fmin<0) fmin=0;
-    //if (fmax>maxframe) fmax=maxframe;
+
+    let win = getWindow()
+    let fmin=win[0], fmax=win[1]
+    let frange=(F-fmin)>(fmax-F)?F-fmin:fmax-F;
 
     let tProx = function(f) {
         return (1-Math.abs((f-F)/frange))
@@ -957,7 +954,6 @@ function plotTagsTracks(ctx) {
             let T = tProx(f)
             if (f<=F) {
                 color = "rgba(255,0,0,"+T+")"
-                //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
             } else {
                 color = "rgba(0,0,255,"+T+")"
             }
@@ -995,6 +991,7 @@ function plotTagsTracks(ctx) {
                 ctx.beginPath();
                 ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
                 ctx.lineTo(p1.x,p1.y)
+                ctx.lineWidth = 2
                 ctx.strokeStyle = color;
                 if (tag.hamming<1000)
                     ctx.setLineDash([])
@@ -1006,11 +1003,12 @@ function plotTagsTracks(ctx) {
                 ctx.restore()
             }
             p0[tag.id] = {x:p1.x, y:p1.y}
-            
+
+// No need for tag with arrow plot if more than one point, let's keep it for the moment           
             if (tag.hamming<1000)
-              plotTag(ctx, tag, color, {"id":false, "radius": 2*tProx(f)+1})            
+              plotTag(ctx, tag, color, {"id":false, "radius": tProx(f)+1})            
             else
-              plotTag(ctx, tag, color, {"id":false, "radius": 2*tProx(f)+1})            
+              plotTag(ctx, tag, color, {"id":false, "radius": tProx(f)+1})            
         }    
     }
     }
@@ -1042,7 +1040,6 @@ function plotTagsTracks(ctx) {
             
                 //console.log(tag)
                 let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
-                
 
                 let T = tProx(f)
                 let S = tProxSigned(f)
@@ -1058,7 +1055,7 @@ function plotTagsTracks(ctx) {
                     ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
                     ctx.lineTo(p1.x,p1.y)
                     ctx.strokeStyle = color2
-                    ctx.lineWidth = T*2
+                    ctx.lineWidth = 2
                     if (tag.hamming<1000)
                         ctx.setLineDash([])
                     else
@@ -1070,7 +1067,8 @@ function plotTagsTracks(ctx) {
                 }
                 p0[tag.id] = {x:p1.x, y:p1.y}
                 
-                plotTag(ctx, tag, color2, {"id":false, "radius": 2*tProx(f)+1})            
+// No need for tag with arrow plot, except if only ont point    
+                plotTag(ctx, tag, color2, {"id":false, "radius": tProx(f)+1})            
             }    
         }
     }
@@ -1098,19 +1096,29 @@ function onShowTagsChanged() {
     // Callback when display parameters have changed
     showTags = $('#showTags')[0].checked
     showTagsOrientation = $('#showTagsOrientation')[0].checked
-    videoControl.onFrameChanged()
+    videoControl.refresh()
 }
 function onShowTagsTracksChanged() {
     showTagsTracks = $('#showTagsTracks')[0].checked
     showSelectedTagsTracks = $('#showSelectedTagsTracks')[0].checked
-    onFrameChanged.onFrameChanged()
+    videoControl.refresh()
 }
 function onTrackWindowChanged() {
     let range = Number($('#trackWindow')[0].value)
     console.log("onTrackWindowChanged range=",range)
     trackWindow = range
-    plotTrack_range_forward = range
-    plotTrack_range_backward = range
+    if (trackDir=='Bidirectional') {
+        trackWindowForward = range
+        trackWindowBackward = range
+    } else if (trackDir=='Forward') {
+        trackWindowForward = range
+        trackWindowBackward = 0
+    } else if (trackDir=='Backward') {
+        trackWindowForward = 0
+        trackWindowBackward = range
+    } else {
+      console.log('onTrackWindowChanged: ERROR, trackDir unknown trackDir=',trackDir)
+    }
     
     $(overlay).trigger('trackWindow:change')
     
@@ -1220,6 +1228,12 @@ function onChronoParametersChanged() {
     console.log('onChronoParametersChanged:showTagsChrono\n=',showTagsChrono)
     refreshChronogram()
 }
+function onTrackDirChanged() {
+    trackDir = $('#selectboxTrackDir').val()
+    console.log('onTrackDirChanged: trackDir=',trackDir)
+    onTrackWindowChanged()
+}
+
 function ROIChanged() {
     if (flag_useROI) {
         tagsSampleFilterROI = function(tag) {
@@ -1664,7 +1678,7 @@ function onMouseDown_selectMultiframe(option) {
 
     } else {
       if (showObsTracks) {
-          tmp = predictIdFromObsMultiframe([getCurrentFrame()-plotTrack_range_forward, getCurrentFrame()+plotTrack_range_forward], pt)
+          tmp = predictIdFromObsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
     
           if (tmp.id != null) {
             console.log('onMouseDown_selectMultiframe: found Obs id=',tmp.id, 'frame=', tmp.frame)
@@ -1673,7 +1687,7 @@ function onMouseDown_selectMultiframe(option) {
       }
     
       if (showTagsTracks || showSelectedTagsTracks) {
-          tmp = predictIdFromTagsMultiframe([getCurrentFrame()-plotTrack_range_forward, getCurrentFrame()+plotTrack_range_forward], pt)
+          tmp = predictIdFromTagsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
     
           if (tmp.id != null) {
             console.log('onMouseDown_selectMultiframe: found Tag id=',tmp.id, 'frame=', tmp.frame)

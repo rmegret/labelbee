@@ -11,6 +11,7 @@ function initChrono() {
     tagsChronogramData = []
     
     restrictID = null
+    restrictIDArray = []
     flag_restrictID = false
     flag_excludeID = false
 
@@ -88,21 +89,32 @@ function initChrono() {
     initTrackWindowSpan()
 }
 
+function getChronoItemHeight() {
+    let H = $('#chronoDiv').height()
+
+    let mh = axes.margin.top+axes.margin.bottom
+    let N = axes.ydomain().length
+    let itemHeight = (H-mh)/N
+    
+    return itemHeight
+}
 function chronoAdjust(mode) {
     let factor = 1.2
     let mh = axes.margin.top+axes.margin.bottom
     let mw = axes.margin.left+axes.margin.right
     if (mode == 'H-') {
-        let h = ($('#chronoDiv').height()-mh)/factor+mh
-        if (h<100) h=100;
-        $('#chronoDiv').height(h)
+//         let h = ($('#chronoDiv').height()-mh)/factor+mh
+//         if (h<100) h=100;
+//         $('#chronoDiv').height(h)
+        adjustChronogramHeight(getChronoItemHeight()/factor)
     }
     if (mode == 'H=') {
-        adjustChronogramHeight(10)
+        adjustChronogramHeight(12)
     }
     if (mode == 'H+') {
-        let h = ($('#chronoDiv').height()-mh)*factor+mh
-        $('#chronoDiv').height(h)
+//         let h = ($('#chronoDiv').height()-mh)*factor+mh
+//         $('#chronoDiv').height(h)
+        adjustChronogramHeight(getChronoItemHeight()*factor)
     }
 
     if (mode == 'W-') {
@@ -120,16 +132,15 @@ function chronoAdjust(mode) {
         $('#chronoDiv').width(w)
     }
 }
-
 function adjustChronogramHeight(itemHeight) {
     if (itemHeight == null) {
-        itemHeight = 10
+        itemHeight = 12
     }
 
     let mh = axes.margin.top+axes.margin.bottom
     let domain = axes.ydomain()
     let minheight = domain.length*itemHeight + mh
-    if (minheight < 100) minheight = 100;
+    //if (minheight < 100) minheight = 100;
     //if ($('#chronoDiv').height() < minheight) {
         $('#chronoDiv').height(minheight)
     //}
@@ -220,14 +231,21 @@ function updateChronoYDomain() {
     
     var domain=[]
     
-    if (false && flag_restrictID) {
-        domain = [restrictID];
+    if (flag_restrictID) {
+        domain = restrictIDArray;
     } else {
         domain = validIdsChrono()
     }
     console.log('updateChronoYDomain: domain=',domain)
     
+    //let oldN=axes.ydomain().length
+    //let N=domain.length
+    
+    let itemHeight = getChronoItemHeight()
+    
     axes.ydomain(domain)
+    
+    adjustChronogramHeight(itemHeight)
     
     //axes.ydomain(['0','1','2','3','10','12']) // Testing
     
@@ -332,6 +350,30 @@ function findPreviousTagEvent(frame, id) {
 }
 
 
+function restrictIDFromSelection() {
+    console.log('restrictIDFromSelection')
+    restrictID = String(defaultSelectedBee);
+    restrictIDArray=[restrictID]
+    $("#restrictID").val(restrictID)
+    
+    if (flag_restrictID)
+        refreshChronogram()
+}
+function restrictIDFromWindow() {
+    console.log('restrictIDFromWindow')
+    restrictID = [];
+    let win = getWindow()
+    let f1=win[0], f2=win[1];
+    restrictIDArray=flatTags
+            .filter(function(tag){return (tag.frame>=f1 && tag.frame<=f2)})
+            .map(function(tag){return String(tag.id)})
+    restrictIDArray = sortIds([...new Set(restrictIDArray)])
+    restrictID=restrictIDArray.join(',');
+    $("#restrictID").val(restrictID)
+    
+    if (flag_restrictID)
+        refreshChronogram()
+}
 function click_restrictID() {
     if ( $("#restrictIDButton").hasClass( "active" ) ) {
         $("#restrictIDButton").removeClass("active")
@@ -345,17 +387,19 @@ function click_restrictID() {
         //$("#restrictIDButton").addClass("btn-success")
         flag_restrictID = true;
         
-        restrictID = defaultSelectedBee;
-        $("#restrictID").val(restrictID)
+        //restrictID = defaultSelectedBee;
+        //$("#restrictID").val(restrictID)
     }
     
     refreshChronogram()
 }
 function onRestrictIDChanged() {
     restrictID = $("#restrictID").val()
-    selectBeeByID(restrictID)
+    restrictIDArray = restrictID.split(',')
     
-    refreshChronogram()
+    //selectBeeByID(restrictID)
+    if (flag_restrictID)
+        refreshChronogram()
 }
 function click_excludeID() {
     if ( $("#excludeIDButton").hasClass( "active" ) ) {
@@ -523,6 +567,16 @@ function updateTrackWindowSpan() {
              .attr("width", axes.xScale(fmax)-axes.xScale(fmin))
              .attr("height", 11);
 }
+function getWindow() {
+    let f = getCurrentFrame()
+    let fmin = f-trackWindowBackward
+    let fmax = f+trackWindowForward
+    
+    if (fmin<0) fmin=0;
+    if (fmax>videoControl.maxframe()) fmax=videoControl.maxframe();
+    
+    return [fmin, fmax]
+}
 
 
 
@@ -611,19 +665,23 @@ function insertTag(selection) {
         .call(setTagGeom)
 }
 function setTagGeom(selection) {
+    let H=axes.yScale.rangeBand();
+    function tagHeight(d) {
+        return H*(3-d.hammingavg)/3;
+    }
     selection
         .attr("x", function(d) {
             //return xScale(Number(d.frame) - 0.5);
             return axes.xScale(Number(d.begin));
         })
         .attr("y", function(d) {
-            return axes.yScale(Number(d.id));
+            return axes.yScale(Number(d.id))+H-tagHeight(d);
         })
         .attr("width", function(d) {
-            return axes.xScale(Number(d.end))-axes.xScale(Number(d.begin));
+            return axes.xScale(Number(d.end)+1)-axes.xScale(Number(d.begin));
         })
         .attr("height", function(d) {
-            return axes.yScale.rangeBand(); // Ordinal scale
+            return tagHeight(d); // Ordinal scale
         })
         .style("fill", function(d) {
             if (d.dir=="entering")
@@ -662,7 +720,26 @@ function initTagIntervals() {
 
 
 
-
+function getFlatTags(useFilter) {
+    let flatTags=[]
+    for (let F in Tags) {
+        let tags = Tags[F].tags
+        for (let i in tags) {
+            let id = Number(tags[i].id)
+            
+            if (useFilter) {
+                if (flag_restrictID) {
+                    if ($.inArray(String(id), restrictIDArray)<0) continue;
+                } else if (flag_excludeID) {
+                    if ($.inArray(String(id), excludeIDArray)>=0) continue;
+                }
+            }
+            
+            flatTags.push(tags[i])
+        }
+    }
+    return flatTags;
+}
 
 
 function refreshChronogram() {
@@ -678,7 +755,7 @@ function refreshChronogram() {
             for (let id in Tracks[F]) {
             
                 if (flag_restrictID) {
-                    if (id!=restrictID) continue;
+                    if ($.inArray(String(id), restrictIDArray)<0) continue;
                 } else if (flag_excludeID) {
                     if ($.inArray(String(id), excludeIDArray)>=0) continue;
                 }
@@ -720,6 +797,8 @@ function refreshChronogram() {
     if (logging.chrono)
         console.log("refreshChronogram: convert tags to intervals...")
 
+    flatTags = getFlatTags(false) // noFilter
+
     allTagsID = []
 
     tagIntervals = []
@@ -728,13 +807,6 @@ function refreshChronogram() {
     
         /* Transpose Tags data structure */
         ttags = []
-//         for (let F in Tags) {
-//             let tags = Tags[F].tags
-//             for (let i in tags) {
-//                 let id = Number(tags[i].id)
-//                 ttags[id]=[];
-//             }
-//         }
         for (let F in Tags) {
             let tags = Tags[F].tags
             for (let i in tags) {
@@ -743,7 +815,7 @@ function refreshChronogram() {
                 allTagsID.add(id)
                 
                 if (flag_restrictID) {
-                    if (id != restrictID) continue;
+                    if ($.inArray(String(id), restrictIDArray)<0) continue;
                 } else if (flag_excludeID) {
                     if ($.inArray(String(id), excludeIDArray)>=0) continue;
                 }
@@ -771,28 +843,33 @@ function refreshChronogram() {
             if (isActive) {
               let doPush = false
               if (activeInterval.end == f-1) {
-                activeInterval.end = f
+                // Extend active interval
+                activeInterval['end']  = f
+                activeInterval.hammingavg=activeInterval.hammingavg+tags.hamming;
               } else {
+                // Do not extend active interval
                 doPush = true
               }
               if (doPush) {
                 // Close previous 
-                activeInterval['end']++
+                //activeInterval['end']++
                 if (tagsIntervalFilter(activeInterval))
+                    activeInterval.hammingavg=activeInterval.hammingavg/(activeInterval['end'] -activeInterval['begin']+1)
                     tagIntervals.push(activeInterval)
                 // Open new one
-                activeInterval={'id':id,'begin':f,'end':f}
+                activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming}
               }
             } else {
               // Open new one
-              activeInterval={'id':id,'begin':f,'end':f}
+              activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming}
               isActive=true;
             }
           }
           // Close if active
           if (isActive)
-            activeInterval['end']++
+            //activeInterval['end']++
             if (tagsIntervalFilter(activeInterval))
+                activeInterval.hammingavg=activeInterval.hammingavg/(activeInterval['end']-activeInterval['begin']+1)
                 tagIntervals.push(activeInterval)
         }
     }
