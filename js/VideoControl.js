@@ -345,6 +345,30 @@ VideoControl.prototype.loadVideo = function(url, previewURL) {
     
     setPreviewVideoStatus('undefined')
 }
+VideoControl.prototype.onVideoLoaded = function(event) {
+    if (logging.videoEvents)
+        console.log('onVideoLoaded', event)
+        
+    console.log('onVideoLoaded: VIDEO loaded ',this.video.src)
+    
+    this.onVideoSizeChanged()
+    
+    videoinfo.duration = this.video.duration
+    videoinfo.name = this.video.src
+    
+    let name = videoinfo.name
+    $('#videoName').html(name)
+    
+    let videourl = this.videoRawURL;
+    
+    this.loadVideoInfo(videourl+'.info.json')
+    
+    this.loadPreviewVideo(this.previewURL);
+    tagsFromServer(undefined, true) // quiet
+    
+    $( this ).trigger('video:loaded') 
+}
+
 function setPreviewVideoStatus(status) {
     $("#previewVideoStatus").removeClass('undefined loading loaded infoloaded error')
     switch (status) {
@@ -399,31 +423,6 @@ VideoControl.prototype.loadPreviewVideo = function(previewURL) {
     this.previewVideo.src = previewURL;
     if (logging.videoEvents)
         console.log('loadPreviewVideo: previewURL=',previewURL)
-}
-
-VideoControl.prototype.onVideoLoaded = function(event) {
-    if (logging.videoEvents)
-        console.log('onVideoLoaded', event)
-        
-    console.log('onVideoLoaded: VIDEO loaded ',this.video.src)
-    
-    this.onVideoSizeChanged()
-    
-    videoinfo.duration = this.video.duration
-    videoinfo.name = this.video.src
-    
-    let name = videoinfo.name
-    $('#videoName').html(name)
-    
-    let videourl = this.videoRawURL;
-    
-    this.loadVideoInfo(videourl+'.info.json')
-    
-    this.loadPreviewVideo(this.previewURL);
-    //this.loadPreviewVideo(videourl+'.scale08.mp4');
-    //this.loadPreviewVideo('data/GuraboTest/4_02_R_170511130000.avi.preview.mp4');
-    
-    $( this ).trigger('video:loaded') 
 }
 onPreviewVideoInfoChanged = function() {
     let name = $('#previewVideoName').val()

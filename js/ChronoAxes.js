@@ -108,7 +108,7 @@ function ChronoAxes(parent, videoinfo, options) {
         return axes // return itself to be able to chain commands
     }
     
-    function xdomainFocus(domain) {
+    function xdomainFocus(domain, marginFactor) {
         if (!arguments.length) return xScale.domain();
         let oldT = zoom.translate()
         let oldS = zoom.scale()
@@ -121,10 +121,13 @@ function ChronoAxes(parent, videoinfo, options) {
         
         let x0 = domain[0], x1=domain[1];
         
+        if (typeof marginFactor == 'undefined')
+            marginFactor = 1.1;
+        
         // Zoom out 10% to see around
         let c = (x1+x0)/2;
-        x0 = (x0-c)*1.1+c
-        x1 = (x1-c)*1.1+c
+        x0 = (x0-c)*marginFactor+c
+        x1 = (x1-c)*marginFactor+c
         
         let S = (xdomain[1]-xdomain[0])/(x1-x0);
         if (S>zoom.scaleExtent()[1]) {
@@ -162,6 +165,19 @@ function ChronoAxes(parent, videoinfo, options) {
         
         return axes // return itself to be able to chain commands
     }
+    function xdomainCenter(frame) {
+        let xdomain = xScale.domain(); // Current domain
+        let x0 = xdomain[0], x1=xdomain[1];
+   
+        center = (x1+x0)/2;
+
+        x0 = x0-center+frame
+        x1 = x1-center+frame
+        
+        xdomainFocus([x0,x1],1.0)
+        
+        return axes // return itself to be able to chain commands
+    }
     
     // axis scales exports
     axes.xScale=xScale   // Public, used by refreshTimeMark (could be closured)
@@ -171,6 +187,7 @@ function ChronoAxes(parent, videoinfo, options) {
     axes.ydomain = ydomain
     axes.xdomainFocus = xdomainFocus
     axes.xdomainScale = xdomainScale
+    axes.xdomainCenter = xdomainCenter
     //axes.updateTDomain=updateTDomain  // Private
 
 
@@ -521,12 +538,14 @@ function ChronoAxes(parent, videoinfo, options) {
     function refreshIdSelection() {
     //axes.refreshIdSelection = function(){
         axes.chronoGroup.select('.y.axis').selectAll('.tick')
-                   .style('fill','black')
-                   .style('font-weight','normal')
+                   //.style('fill','black')
+                   //.style('font-weight','normal')
+                   .classed('selectedid',false)
         axes.chronoGroup.select('.y.axis').selectAll('.tick')
                    .filter(function(d) {return d==axes.selectedID})
-                   .style('fill','blue')
-                   .style('font-weight','bold')
+                   //.style('fill','blue')
+                   //.style('font-weight','bold')
+                   .classed('selectedid',true)
                    
         axes.chronoGroup.selectAll(".plotBackground > .selection").remove()
         if (axes.selectedID!=null) {
@@ -537,7 +556,8 @@ function ChronoAxes(parent, videoinfo, options) {
                 .attr("y", axes.yScale(axes.selectedID))
                 .attr("height", axes.yScale.rangeBand())
                 .style("fill", "#ffffff")
-                .style("stroke", "purple")
+                .style("stroke", "#008000")
+                .style("stroke-width", "2px")
         }
     }
     axes.refreshIdSelection = refreshIdSelection
@@ -617,7 +637,8 @@ function ChronoAxes(parent, videoinfo, options) {
             console.log('zoomed',d3.event)
         refreshAxes({'type': 'zoom_x', 'd3_event': d3.event})
         // Avoid scroll event to trigger normal scrolling in the browser
-        d3.event.sourceEvent.stopPropagation(); 
+        if (!!d3.event.sourceEvent)
+            d3.event.sourceEvent.stopPropagation(); 
     }
     var reinitZoom=function() {
         zoom.x(xScale)
@@ -691,6 +712,26 @@ function ChronoAxes(parent, videoinfo, options) {
         $(axes).trigger({'type': "axes:clicked", 'frame': frame, 'id': id, 'mouseevent': d3.event});
     }
     chronoGroup.on("click", onAxesClick)
+    
+    
+    function onAxesDblClick() {
+        //if (typeof axes.onClick == 'undefined') return;
+        if (d3.event.defaultPrevented) return;
+        
+        var coords = d3.mouse(this);
+        var frame = Math.round( xScale.invert(coords[0]) );
+        var id = invertYScale( coords[1] )
+    
+        if (logging.axesEvents)
+            console.log("onAxesDblClick: dblclick on frame=",frame," id=",id);
+    
+        // Trigger the callback, passing frame and id information
+        // if (!triggerEvent(axes.onClick, {'frame': frame, 'id': id}))
+        //             console.log('ERROR: callback ChronoAxes.onClick is invalid. onClick=',axes.onClick)
+        $(axes).trigger({'type': "axes:dblclick", 
+                         'frame': frame, 'id': id, 'mouseevent': d3.event});
+    }
+    chronoGroup.on("dblclick", onAxesDblClick)
     
     injectTrackFrame(chronoGroup);
     function injectTrackFrame(target) {

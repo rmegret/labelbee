@@ -93,6 +93,7 @@ function init() {
     
     selectVideoByID(6)
     //Will trigger videoControl.onVideoLoaded
+    onTrackWindowChanged() // to compute track window params
 }
 
 function printMessage(html, color) {

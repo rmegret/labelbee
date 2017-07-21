@@ -29,7 +29,14 @@ function initChrono() {
     $( videoControl ).on('frame:changed', updateTimeMark)
     $( videoControl ).on('previewframe:changed', updatePreviewTimeMark)
     
+    $( videoControl ).on('frame:changed',
+        function(){$(overlay).trigger('trackWindow:change')})
+    $( videoControl ).on('previewframe:changed',
+        function(){$(overlay).trigger('trackWindow:change')})
+        
+    
     $(axes).on("axes:clicked", onAxesClick)
+    $(axes).on("axes:dblclick", onAxesDblClick)
     $(axes).on("axes:changed", onAxesChanged)
     
     // Events declared in selectionControl
@@ -202,6 +209,16 @@ function scaleTimeDomain(scale) {
         axes.xdomainScale(scale) // Zoom in center
     }
 }
+function shiftTimeDomain(factor) {
+    let domain = axes.xdomain();
+    let f = getCurrentFrame();
+    let shift = Math.round(factor*(domain[1]-domain[0]))
+    axes.xdomainFocus([domain[0]+shift,domain[1]+shift])
+//     if (f>=domain[0] && f<=domain[1]) { // If timemark visible
+//         videoControl.seekFrame(f+shift);
+//     }
+}
+
 
 function sortIds(IDarray) {
     // Utility function to sort mixed numbers/alpha+number
@@ -291,6 +308,15 @@ function onAxesClick(event) {
         // to update the view
     }
 }
+function onAxesDblClick(event) {
+    // User double clicked in chronogram axes
+    var frame = event.frame
+    var id = event.id
+    if (logging.axesEvents)
+        console.log("onAxesDblClick: zooming chrono around frame=",frame,"...");
+ 
+    axes.xdomainFocus([frame-trackWindow*1.05,frame+trackWindow*1.05])
+}
 function onAxesMoved(event) {
     // User clicked in chronogram axes
     var frame = event.frame
@@ -309,6 +335,20 @@ function onAxesChanged(event) {
     updateChrono()
 }
 
+function gotoFirstEvent() {
+    let frame = videoControl.getCurrentFrame()
+    let id = defaultSelectedBee
+    console.log("id=",id)
+    let interval = findNextTagEvent(0, id)
+    videoControl.seekFrame(Number(interval.begin))
+}
+function gotoLastEvent() {
+    let frame = videoControl.getCurrentFrame()
+    let id = defaultSelectedBee
+    console.log("id=",id)
+    let interval = findPreviousTagEvent(videoControl.maxframe(), id)
+    videoControl.seekFrame(Number(interval.begin))
+}
 function gotoNextEvent() {
     let frame = videoControl.getCurrentFrame()
     let id = defaultSelectedBee
@@ -328,7 +368,6 @@ function findNextTagEvent(frame, id) {
     if (list.length==0) return undefined
     return list[0]
 }
-
 function gotoPreviousEvent() {
     let frame = videoControl.getCurrentFrame()
     let id = defaultSelectedBee
@@ -349,15 +388,55 @@ function findPreviousTagEvent(frame, id) {
     return list[0]
 }
 
+function onClickNextID() {
+    let domain = validAllTagIdsDomain()
+                  .map(function(d){return String(d);})
+    let N=domain.length
+    if (N==0) return;
+    
+    let id = String(getCurrentID())
+    let pos = $.inArray(id,domain)
+    let newID = (pos==-1) ? domain[0] : domain[(pos+1)%N];
+    selectBeeByID(newID)
+                        
+    setRestrictID(newID)
 
-function restrictIDFromSelection() {
-    console.log('restrictIDFromSelection')
-    restrictID = String(defaultSelectedBee);
-    restrictIDArray=[restrictID]
-    $("#restrictID").val(restrictID)
+    refreshChronogram()
+}
+function onClickPrevID() {
+    let domain = validAllTagIdsDomain()
+                  .map(function(d){return String(d);})
+    let N=domain.length
+    if (N==0) return;
+    
+    let id = String(getCurrentID())
+    let pos = $.inArray(id,domain)
+    let newID = (pos==-1) ? domain[N-1] : domain[(pos+N-1)%N];
+    selectBeeByID(newID)
+            
+    setRestrictID(newID)
+
+    refreshChronogram()
+}
+
+
+function setRestrictID(ids) {
+    console.log('setRestrictID')
+    restrictID = String(ids);
+    restrictIDArray=restrictID.split(',')
+                              .map(function(d){return d.trim()})
+                              .filter(function(d){return d!="";})
+    
+    update_restrictID_GUI()
     
     if (flag_restrictID)
         refreshChronogram()
+}
+function restrictIDFromSelection() {
+    console.log('restrictIDFromSelection')
+    
+    flag_restrictID = true
+    setRestrictID(defaultSelectedBee)    
 }
 function restrictIDFromWindow() {
     console.log('restrictIDFromWindow')
@@ -369,27 +448,25 @@ function restrictIDFromWindow() {
             .map(function(tag){return String(tag.id)})
     restrictIDArray = sortIds([...new Set(restrictIDArray)])
     restrictID=restrictIDArray.join(',');
-    $("#restrictID").val(restrictID)
+    
+    flag_restrictID = true
+    update_restrictID_GUI()
     
     if (flag_restrictID)
         refreshChronogram()
 }
-function click_restrictID() {
-    if ( $("#restrictIDButton").hasClass( "active" ) ) {
-        $("#restrictIDButton").removeClass("active")
-        //$("#restrictIDButton").addClass("btn-default")
-        //$("#restrictIDButton").removeClass("btn-success")
-        
-        flag_restrictID = false;
+function update_restrictID_GUI() {
+    if ( flag_restrictID ) {
+        $("#restrictIDButton").addClass("active")
     } else {
-        $("#restrictIDButton").addClass("active")      
-        //$("#restrictIDButton").removeClass("btn-default")
-        //$("#restrictIDButton").addClass("btn-success")
-        flag_restrictID = true;
-        
-        //restrictID = defaultSelectedBee;
-        //$("#restrictID").val(restrictID)
+        $("#restrictIDButton").removeClass("active")      
     }
+    $("#restrictID").val(restrictID)
+}
+function click_restrictID() {
+    flag_restrictID = !flag_restrictID;
+    
+    update_restrictID_GUI()
     
     refreshChronogram()
 }
@@ -422,34 +499,6 @@ function onExcludeIDChanged() {
     refreshChronogram()
 }
 
-function onClickNextID() {
-    if (flag_restrictID) {
-        let domain = validAllTagIdsDomain()
-        if (domain.length==0) return;
-        let pos = $.inArray(restrictID,domain)
-        if (pos==-1)
-            restrictID = domain[0];
-        else
-            restrictID = domain[(pos+1)%domain.length];
-        
-        selectBeeByID(restrictID)
-        refreshChronogram()
-    }
-}
-function onClickPrevID() {
-    if (flag_restrictID) {
-        let domain = validAllTagIdsDomain()
-        if (domain.length==0) return;
-        let pos = $.inArray(restrictID,domain)
-        if (pos==-1)
-            restrictID = domain[domain.length-1];
-        else
-            restrictID = domain[(pos+domain.length-1)%domain.length];
-        
-        selectBeeByID(restrictID)
-        refreshChronogram()
-    }
-}
 
 /* Callback to react to change in chronogramData */
 function drawChrono() {

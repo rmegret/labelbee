@@ -9,7 +9,7 @@ function OverlayControl(canvasTagId) {
     }
     
     // Events:
-    // overlay.on('trackWindow:change',...)
+    // overlayControl.on('trackWindow:change',...)
 
     if (typeof canvasTagId === 'undefined')
         canvasTagId = 'canvas'; // Default HTML5 canvas tag to attach to
@@ -44,7 +44,7 @@ function OverlayControl(canvasTagId) {
     $('#showTagsChrono').prop('checked',showTagsChrono)
     $('#showObsChrono').prop('checked',showObsChrono)
     
-    trackDir="Bidirectional"
+    trackDir="Backward"
     $('#selectboxTrackDir').val(trackDir)
 
     /* Overlay and selection */
@@ -67,6 +67,7 @@ function OverlayControl(canvasTagId) {
     canvas1.on('object:modified', onObjectModified); // After modification
     canvas1.on('object:selected', onObjectSelected); // After mousedown
     canvas1.on('selection:cleared', onObjectDeselected); // After mousedown out of existing rectangles
+    //canvas1.on('mouse:dblclick', onMouseDblClick);
 
     //$('#video').on('mouseDown', onMouseDown);    
     $('.upper-canvas').bind('contextmenu', onMouseDown2);
@@ -977,7 +978,9 @@ function plotTagsTracks(ctx) {
     let tProxSigned = function(f) {
         return ((f-F)/frange)
     }
-    let setColor = function(f) {
+    let setColor = function(f, alpha) {
+        if (alpha==null) alpha=1.0;
+        var color
         if (false) {
             let T = tProx(f)
             if (f<=F) {
@@ -986,7 +989,7 @@ function plotTagsTracks(ctx) {
                 color = "rgba(0,0,255,"+T+")"
             }
         } else {
-            let T = tProx(f)
+            let T = tProx(f)*alpha
             let S = tProxSigned(f)/2+0.5
             let r = Math.round(255*(1-S))
             let g = 0
@@ -1003,34 +1006,40 @@ function plotTagsTracks(ctx) {
         let tagsFrame = Tags[f]
         if (typeof(tagsFrame) === "undefined") continue;
         let tags = tagsFrame.tags
-        let color = setColor(f)
         for (let i in tags) {
             let tag = tags[i]
             
             if (!tagsSampleFilter(tag)) {
                     continue
                 }
+                
+            let color=setColor(f)          
             
             //console.log(tag)
             let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+            p1.frame = f
             
             if (typeof p0[tag.id] !== 'undefined') {
                 ctx.save()
                 ctx.beginPath();
                 ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
-                ctx.lineTo(p1.x,p1.y)
-                ctx.lineWidth = 2
-                ctx.strokeStyle = color;
-                if (tag.hamming<1000)
+                ctx.lineTo(p1.x,p1.y)  
+                if (tag.hamming<1000 && (Number(p1.frame)-Number(p0[tag.id].frame)<10)) {
                     ctx.setLineDash([])
-                else
-                    ctx.setLineDash([2,2])
+                    ctx.lineWidth=2
+                    color=setColor(f)          
+                } else {
+                    ctx.setLineDash([3,3])
+                    ctx.lineWidth=1
+                    color=setColor(f,0.5)
+                }
+                ctx.strokeStyle = color;
                 ctx.stroke();
                 ctx.setLineDash([])
                 plotTrackArrow(p0[tag.id], p1, 6*tProx(f)+1)
                 ctx.restore()
             }
-            p0[tag.id] = {x:p1.x, y:p1.y}
+            p0[tag.id] = {x:p1.x, y:p1.y, frame:p1.frame}
 
 // No need for tag with arrow plot if more than one point, let's keep it for the moment           
             if (tag.hamming<1000)
@@ -1042,15 +1051,37 @@ function plotTagsTracks(ctx) {
     }
     
     if (showSelectedTagsTracks) {
+    
     // Plot track of selected bee
     if (typeof defaultSelectedBee !== 'undefined') {
+    
+        let setColor2 = function(f, alpha) {
+            if (alpha==null) alpha=1.0;
+            var color
+            if (false) {
+                let T = tProx(f)
+                if (f<=F) {
+                    color = "rgba(255,255,0,"+T+")"
+                } else {
+                    color = "rgba(128,255,128,"+T+")"
+                }
+            } else {
+                let T = tProx(f)*alpha
+                let S = tProxSigned(f)/2+0.5
+                let r = Math.round(128+127*(1-S))
+                let g = 255
+                let b = Math.round(128*S)
+                color = "rgba("+r+","+g+","+b+","+T+")"
+            }
+            return color;
+        }
+    
         //console.log('defaultSelectedBee=',defaultSelectedBee)
         let p0 = []
         for (let f=fmin; f<=fmax; f++) {
             let tagsFrame = Tags[f]
             if (typeof(tagsFrame) === "undefined") continue;
             let tags = tagsFrame.tags
-            let color = setColor(f)
             
             let ii = -1
             for (let i in tags) {
@@ -1065,35 +1096,34 @@ function plotTagsTracks(ctx) {
                 if (!tagsSampleFilter(tag)) {
                         continue
                     }
+                    
+                let color2=setColor2(f)          
             
                 //console.log(tag)
                 let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
-
-                let T = tProx(f)
-                let S = tProxSigned(f)
-                let color2
-                if (S>0)
-                    color2 = "rgba(255,255,0,"+T+")";
-                else
-                    color2 = "rgba(128,255,128,"+T+")";
+                p1.frame = f
             
                 if (typeof p0[tag.id] !== 'undefined') {
                     ctx.save()
                     ctx.beginPath();
                     ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
-                    ctx.lineTo(p1.x,p1.y)
-                    ctx.strokeStyle = color2
-                    ctx.lineWidth = 2
-                    if (tag.hamming<1000)
+                    ctx.lineTo(p1.x,p1.y)  
+                    if (tag.hamming<1000 && (Number(p1.frame)-Number(p0[tag.id].frame)<10)) {
                         ctx.setLineDash([])
-                    else
-                        ctx.setLineDash([2,2])
+                        ctx.lineWidth=2
+                        color2=setColor2(f)          
+                    } else {
+                        ctx.setLineDash([3,3])
+                        ctx.lineWidth=1
+                        color2=setColor2(f,0.5)
+                    }
+                    ctx.strokeStyle = color2;
                     ctx.stroke();
                     ctx.setLineDash([])
                     plotTrackArrow(p0[tag.id], p1, 6*tProx(f)+1)
                     ctx.restore()
                 }
-                p0[tag.id] = {x:p1.x, y:p1.y}
+                p0[tag.id] = {x:p1.x, y:p1.y, frame:p1.frame}
                 
 // No need for tag with arrow plot, except if only ont point    
                 plotTag(ctx, tag, color2, {"id":false, "radius": tProx(f)+1})            
@@ -1164,10 +1194,62 @@ function scaleTrackWindow(factor) {
     if (isNaN(L)) L=1;
     setTrackWindow(L)
 }
+function shiftTrackWindow(factor) {
+    let L = Number($('#trackWindow').val())
+    let frame = getCurrentFrame()
+    console.log("shiftTrackWindow: factor=",factor,"with frame=",frame, "L=",L)
+    let newF = Math.round(frame+factor*L)
+    videoControl.seekFrame(newF)
+// Functionality offered by lockTrackWindow
+//     if (newF+L>axes.xdomain()[1])
+//       axes.xdomainFocus([newF+L-axes.xdomain()[1]+axes.xdomain()[0],newF+L],1.0)
+//     if (newF-L<axes.xdomain()[0])
+//       axes.xdomainFocus([newF-L,newF-L+axes.xdomain()[1]-axes.xdomain()[0]],1.0)
+}
+function onClickFocusVideo() {
+    console.log('onClickFocusVideo')
+    setFocusTrackWindow(false)
+    
+    updateChronoXDomainFromVideo()
+}
+function onClickFocusTrackWindow() {
+    console.log('onClickFocusTrackWindow')
+    setFocusTrackWindow(false)
+    
+    focusTrackWindow()
+    updateFocusTrackWindowButton()
+}
 function focusTrackWindow() {
     // Actually a Chronogram method
     let f = getCurrentFrame()
     axes.xdomainFocus([f-trackWindow, f+trackWindow])
+}
+function onDblClickFocusTrackWindow() {
+    console.log('onDblClickFocusTrackWindow')
+    // Actually a Chronogram method
+    let f = getCurrentFrame()
+    axes.xdomainFocus([f-trackWindow, f+trackWindow])
+    
+    setFocusTrackWindow(true)
+    
+    console.log('locked Focus on Window... lockFocusTrackWindow=',lockFocusTrackWindow)
+    updateFocusTrackWindowButton()
+}
+function setFocusTrackWindow(flag) {
+    lockFocusTrackWindow = flag
+    if (lockFocusTrackWindow)
+        $( overlay ).on('trackWindow:change', focusTrackWindow)
+    else
+        $( overlay ).off('trackWindow:change', focusTrackWindow)
+
+    updateFocusTrackWindowButton()
+}
+function updateFocusTrackWindowButton() {
+    if ( lockFocusTrackWindow ) {
+        $("#focusTrackWindow").addClass("active")
+    } else {
+        $("#focusTrackWindow").removeClass("active")      
+    }
 }
 
 function updateROIFromVideo() {
