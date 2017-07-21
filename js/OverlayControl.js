@@ -516,38 +516,40 @@ function updateRectObsActivity(activeObject) {
     updateObsActivityFromForm(obs)
 }
 function updateObsActivityFromForm(obs) {
-    // Update Observation attached to rectangle from Form information
-    obs.bool_acts[0] = $('#F').prop('checked');
-    obs.bool_acts[1] = $('#P').prop('checked');
-    obs.bool_acts[2] = $('#E').prop('checked');
-    obs.bool_acts[3] = $('#L').prop('checked');
-    obs.notes = $('#notes').prop('value')
+    // Update form --> obs.labels --> bool_acts
+
+//     obs.bool_acts[0] = $('#F').prop('checked');
+//     obs.bool_acts[1] = $('#P').prop('checked');
+//     obs.bool_acts[2] = $('#E').prop('checked');
+//     obs.bool_acts[3] = $('#L').prop('checked');
+// Moved to onLabelClicked. now, the truth about labels is obs.labels
+    
+    //obs.labels = cleanLabels($('#labels').val())
+    
+    obs.bool_acts[0]=hasLabel(obs,'fanning');
+    obs.bool_acts[1]=hasLabel(obs,'pollen');
+    obs.bool_acts[2]=hasLabel(obs,'entering');
+    obs.bool_acts[3]=hasLabel(obs,'departing');
+    
+    obs.notes = $('#notes').val()
     
     if (logging.guiEvents)
         console.log("updateObsActivityFromForm: obs=", obs)
 }
-function setLabels(rect,labelsArray) {
+function setLabels(rect,labels) {
     let obs = rect.obs;
     
-    obs.bool_acts[0]=false;
-    obs.bool_acts[1]=false;
-    obs.bool_acts[2]=false;
-    obs.bool_acts[3]=false;
-    obs.labels=labelsArray;
+    // Update labelsString --> obs.labels --> bool_acts --> form
     
-    for (label0 of labelsArray) {
-        let label=label0.toLowerCase();
-        if (label=='pollen' || label=='p') {
-            obs.bool_acts[1]=true;
-        } else if (label=='fanning' || label=='f') {
-            obs.bool_acts[0]=true;
-        } else if (label=='entering' || label=='e') {
-            obs.bool_acts[2]=true;
-        } else if (label=='departing' || label=='d') {
-            obs.bool_acts[3]=true;
-        }
-    }
-
+    let labelArray = toLabelArray(labels)
+    labels = toLabelString(labelArray)
+    obs.labels=labels;
+    
+    obs.bool_acts[0]=hasLabel(obs,'fanning');
+    obs.bool_acts[1]=hasLabel(obs,'pollen');
+    obs.bool_acts[2]=hasLabel(obs,'entering');
+    obs.bool_acts[3]=hasLabel(obs,'departing');
+    
     updateForm(rect)
 }
 
@@ -1979,6 +1981,37 @@ function onObjectModified(option) {
     }
 }
 
+
+function onLabelClicked(event) {
+    if (logging.guiEvents)
+        console.log("onLabelClicked: event=", event)
+    var activeObject = canvas1.getActiveObject()
+    if (activeObject !== null) {
+        let obs = activeObject.obs
+        
+        updateObsLabel(obs, 'fanning', 
+                       $('.labelcheckbox.fanning').prop('checked'))
+        updateObsLabel(obs, 'pollen', 
+                       $('.labelcheckbox.pollen').prop('checked'))
+        updateObsLabel(obs, 'entering', 
+                       $('.labelcheckbox.entering').prop('checked'))
+        updateObsLabel(obs, 'departing', 
+                       $('.labelcheckbox.departing').prop('checked'))
+
+        updateObsLabel(obs, 'falsealarm', 
+                       $('.labelcheckbox.falsealarm').prop('checked'))
+        updateObsLabel(obs, 'wrongid', 
+                       $('.labelcheckbox.wrongid').prop('checked'))
+        
+        console.log('onLabelClicked: obs.labels=',obs.labels)
+        
+        // Update the rest
+        updateRectObsActivity(activeObject)
+        automatic_sub()
+        
+        updateForm(activeObject)
+    }
+}
 function onActivityChanged(event) {
     if (logging.guiEvents)
         console.log("onActivityChanged: event=", event)
@@ -1992,10 +2025,9 @@ function onLabelsChanged() {
     let labels=$('#labels').val()
     if (logging.guiEvents)
         console.log("onLabelsChanged: labels=", labels)
-    let labelsArray = labels.split(',').map(function(L){return L.trim()})
     var activeObject = canvas1.getActiveObject()
     if (activeObject !== null) {
-        setLabels(activeObject,labelsArray)
+        setLabels(activeObject,labels)
         automatic_sub()
     }
 }

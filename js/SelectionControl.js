@@ -11,46 +11,118 @@ var labelMap = {
     p:'pollen',
     e:'entering',
     d:'departing',
-    f:'fanning',
-    p:'pollen',
-    e:'entering',
-    d:'departing',
-    p:'pollen',
-    e:'entering',
+    pollen:'pollen',
+    entering:'entering',
+    departing:'departing',
+    pollen:'pollen'
 }
 
+function normalizeLabel(label) {
+    return labelMap[label]==null?label:labelMap[label]
+}
 function toLabelString(labelArray) {
-    
+    return labelArray.map(function(d){return d.toLowerCase();})
+                     .map(function(d){return d.trim()})
+                     .filter(function(d){return d!="";})
+                     .map(normalizeLabel)
+                     .join(',')
+}
+function toLabelArray(labels) {
+    return labels.split(',')
+                 .map(function(d){return d.toLowerCase();})
+                 .map(function(d){return d.trim()})
+                 .filter(function(d){return d!="";})
+                 .map(normalizeLabel)
+}
+function cleanLabels(labels) {
+    return toLabelString(toLabelArray(labels))
+}
+
+function addLabel(labelArray, label) {
+    let k = $.inArray(label, labelArray)
+    if (k<0) {
+        labelArray.push(label)
+    }
+}
+function removeLabel(labelArray, label) {
+    let k = $.inArray(label, labelArray)
+    if (k>=0) {
+        labelArray.splice(k, 1);
+    }
+}
+function updateLabelArray(labelArray, label, active) {
+    let k = $.inArray(label, labelArray)
+    if (!active && k>=0) {
+        labelArray.splice(k, 1);
+    }
+    if (active && k<0) {
+        labelArray.push(label)
+    }
+}
+
+function updateObsLabel(obs, label, active) {
+    if (obs.labels == null) {
+        obs.labels = ''
+    }
+    let labelArray = toLabelArray(obs.labels)
+    let k = $.inArray(label, labelArray)
+    if (!active && k>=0) {
+        labelArray.splice(k, 1);
+    }
+    if (active && k<0) {
+        labelArray.push(label)
+    }
+    obs.labels = toLabelString(labelArray)
+}
+function hasLabel(obs, label) {
+    if (obs.labels == null) {
+        obs.labels = ''
+    }
+    let labelArray = toLabelArray(obs.labels)
+    let k = $.inArray(normalizeLabel(label), labelArray)
+    if (k>=0) return true
+    else return false
+}
+function updateLabelsFromBool(labels, bool_acts) {
+    let labelArray=toLabelArray(labels)
+    let add=[]
+    updateLabel(labelArray, 'fanning', bool_acts[0])
+    updateLabel(labelArray, 'pollen', bool_acts[1])
+    updateLabel(labelArray, 'entering', bool_acts[2])
+    updateLabel(labelArray, 'departing', bool_acts[3])
+    return toLabelString(labelArray)
 }
 
 function getLabels(obs) {
-    let labelArray=[];
-    if (obs.bool_acts[0])
-        labelArray.push('fanning')
-    if (obs.bool_acts[1])
-        labelArray.push('pollen')
-    if (obs.bool_acts[2])
-        labelArray.push('entering')
-    if (obs.bool_acts[3])
-        labelArray.push('departing')
-    
-    return labelArray
-}
-function setLabels(obs, labelArray) {
-    obs.labels = toLabelString(labelArray);
+    return toLabelArray(obs.labels)
 
-    let labelArray=[];
-    if (obs.bool_acts[0])
-        labelArray.push('fanning')
-    if (obs.bool_acts[1])
-        labelArray.push('pollen')
-    if (obs.bool_acts[2])
-        labelArray.push('entering')
-    if (obs.bool_acts[3])
-        labelArray.push('departing')
-    
-    return labelArray
+//     let labelArray=[];
+//     if (obs.bool_acts[0])
+//         labelArray.push('fanning')
+//     if (obs.bool_acts[1])
+//         labelArray.push('pollen')
+//     if (obs.bool_acts[2])
+//         labelArray.push('entering')
+//     if (obs.bool_acts[3])
+//         labelArray.push('departing')
+//     
+//     return labelArray
 }
+// function setLabels(obs, labelArray) {
+//     obs.labels = toLabelString(labelArray);
+// 
+//     let labelArray=[];
+//     if (obs.bool_acts[0])
+//         labelArray.push('fanning')
+//     if (obs.bool_acts[1])
+//         labelArray.push('pollen')
+//     if (obs.bool_acts[2])
+//         labelArray.push('entering')
+//     if (obs.bool_acts[3])
+//         labelArray.push('departing')
+//     
+//     return labelArray
+// }
 
 // # Form and current bee control
 function initSelectionControl() {
@@ -59,10 +131,7 @@ function initSelectionControl() {
     $( selectionControl ).on('tagselection:created', updateChronoSelection)
     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
 
-    $('#F').change(onActivityChanged);
-    $('#P').change(onActivityChanged);
-    $('#E').change(onActivityChanged);
-    $('#L').change(onActivityChanged);
+    $('.labelcheckbox').change(onLabelClicked);
     
     $('#labels').change(onLabelsChanged);
       
@@ -101,11 +170,10 @@ function updateForm(activeObject) {
         $('#CX').html("Center X: -")
         $('#CY').html("Center X: -")
         
-        $('#F').prop('checked', false);
-        $('#P').prop('checked', false);
-        $('#E').prop('checked', false);
-        $('#L').prop('checked', false);
+        $('.labelcheckbox').prop('checked', false);
+
         $('#notes').prop('value', '');
+        $('#labels').prop('value', '');
     } else {
         $('#I').val(activeObject.id)
         
@@ -126,10 +194,18 @@ function updateForm(activeObject) {
             return
         }
         
-        $('#F').prop('checked', obs.bool_acts[0]);
-        $('#P').prop('checked', obs.bool_acts[1]);
-        $('#E').prop('checked', obs.bool_acts[2]);
-        $('#L').prop('checked', obs.bool_acts[3]);
+//         $('#F').prop('checked', obs.bool_acts[0]);
+//         $('#P').prop('checked', obs.bool_acts[1]);
+//         $('#E').prop('checked', obs.bool_acts[2]);
+//         $('#L').prop('checked', obs.bool_acts[3]);
+        
+        $('.labelcheckbox.fanning').prop('checked', hasLabel(obs,'fanning'));
+        $('.labelcheckbox.pollen').prop('checked', hasLabel(obs,'pollen'));
+        $('.labelcheckbox.entering').prop('checked', hasLabel(obs,'entering'));
+        $('.labelcheckbox.exiting').prop('checked', hasLabel(obs,'exiting'));
+        $('.labelcheckbox.falsealarm').prop('checked', hasLabel(obs,'falsealarm'));
+        $('.labelcheckbox wrongid').prop('checked', hasLabel(obs,'wrongid'));
+                
         if (typeof obs.notes === 'undefined')
             $('#notes').prop('value', '');
         else

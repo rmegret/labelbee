@@ -135,6 +135,9 @@ function saveToBBoxes() {
 function setTracks(obj) {
     console.log('setTracks: changing Tracks data structure and refreshing...')
     Tracks = obj;
+    
+    //fixOldTracksFormat()
+    
     videoControl.onFrameChanged();
     refreshChronogram()
 }
