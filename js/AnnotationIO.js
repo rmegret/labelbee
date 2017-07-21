@@ -135,6 +135,9 @@ function saveToBBoxes() {
 function setTracks(obj) {
     console.log('setTracks: changing Tracks data structure and refreshing...')
     Tracks = obj;
+    
+    //fixOldTracksFormat()
+    
     videoControl.onFrameChanged();
     refreshChronogram()
 }
@@ -242,20 +245,24 @@ function jsonFromServer() {
         }
       )
 }
-function tagsFromServer() {     
+function tagsFromServer(path, quiet) {     
     //var path = "data/Gurabo/Tags-C02_170624100000.json" ;// Default
     
-    var p = videoControl.name.split('/')
-    var q = p[p.length-1].split('.')
-    q[0]='Tags-'+q[0];
-    q[q.length-1]='json';
-    p[p.length-1]=q.join('.');
+    if (path == null) {
+        var p = videoControl.name.split('/')
+        var q = p[p.length-1].split('.')
+        q[0]='Tags-'+q[0];
+        q[q.length-1]='json';
+        p[p.length-1]=q.join('.');
     
-    var path = p.join('/'); // Default
-    path = window.prompt("Please enter path for Tags JSON (server)",path);
-    if (path==null || path=="") {
-        console.log('tagsFromServer: canceled')
-        return;
+        var path = p.join('/'); // Default
+    }
+    if (!quiet) {
+        path = window.prompt("Please enter path for Tags JSON (server)",path);
+        if (path==null || path=="") {
+            console.log('tagsFromServer: canceled')
+            return;
+        }
     }
     
     console.log('tagsFromServer: loading path "'+path+'"...')  

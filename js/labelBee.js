@@ -13,7 +13,7 @@ var x, y, cx, cy, width, height;
 var logging = {
   "rects": false,
   "frameEvents": false,
-  "guiEvents": false,
+  "guiEvents": true,
   "submitEvents": false,
   "mouseEvents": false,
   "mouseMoveEvents": false,
@@ -59,7 +59,11 @@ function init() {
     // ## Control panel
     // import * from "SelectionControl.js"
     initSelectionControl()    
-
+    
+    $( selectionControl ).on('tagselection:created',refreshTagImage)
+    $( selectionControl ).on('selection:created',refreshTagImage)
+    $( selectionControl ).on('tagselection:cleared',refreshTagImage)
+    $( selectionControl ).on('selection:cleared',refreshTagImage)
 
     $( ".collapsible" ).accordion({
         collapsible: true,
@@ -89,6 +93,7 @@ function init() {
     
     selectVideoByID(6)
     //Will trigger videoControl.onVideoLoaded
+    onTrackWindowChanged() // to compute track window params
 }
 
 function printMessage(html, color) {

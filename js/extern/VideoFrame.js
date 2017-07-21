@@ -44,6 +44,8 @@ var VideoFrame = function(options) {
 	this.displayed = false
 	this.lastdisplayed = undefined
 	
+	this.playbackRate = 1
+	
 	let videoframe = this
 	this.frameChangedWrapper = function(event) {
 	  // Do not trigger callback twice for the same frame
@@ -136,7 +138,7 @@ VideoFrame.prototype = {
 			_video.frameChangedWrapper(event)
       			
 			return frame;
-		}, (tick ? tick : 1000 / _video.frameRate / 2));
+		}, (tick ? tick : 1000 / (_video.frameRate*_video.playbackRate) / 2));
 		if (_video.onListen) { _video.onListen({'target': _video}); }
 	},
 	/** Clears the current interval */
@@ -154,6 +156,9 @@ VideoFrame.prototype = {
 	fps : FrameRates,
 	setFrameRate : function(fr) {
 	    this.frameRate = fr;
+	},
+	setPlaybackRate : function(fr) {
+	    this.playbackRate = fr;
 	}
 };
 
@@ -350,7 +355,7 @@ VideoFrame.prototype.playBackwards = function(tick) {
 		  _video.displayed = false
 			_video.seekBackward();
 			return true;
-		}, (tick ? tick : 1000 / _video.frameRate));
+		}, (tick ? tick : 1000 / (_video.frameRate*_video.playbackRate)));
     this.listen('frame');
 };
 	
@@ -365,9 +370,10 @@ VideoFrame.prototype.playForwards = function(tick) {
         _video.displayed = false
         _video.seekForward();
         return true;
-      }, (tick ? tick : 1000 / _video.frameRate));
+      }, (tick ? tick : 1000 / (_video.frameRate*_video.playbackRate)));
 		} else {
 		  // More efficient than seeking for each frame
+		  this.video.playbackRate=this.playbackRate
 		  this.video.play()
 		}
     this.listen('frame');

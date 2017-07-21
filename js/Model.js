@@ -24,6 +24,8 @@ function Observation(ID) {
     this.angle = 0;
 
     this.bool_acts = [false, false, false, false]; //Should be kept numerical because Ram
+    this.notes=''
+    this.labels=''
 }
 
 function cloneObs(obs) {
@@ -52,6 +54,7 @@ function copyObs(obs, tmpObs) {
     obs.bool_acts[3] = tmpObs.bool_acts[3];
     obs.angle = tmpObs.angle;
     obs.notes = tmpObs.notes;
+    obs.labels = tmpObs.labels;
 }
 
 function getValidIDsForFrame(frame) {
