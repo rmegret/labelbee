@@ -411,20 +411,16 @@ function setGeomActivity(selection) {
         //.style("stroke", activityColor);
 }
 
-function initEnteringExiting(input){
+function initEntering(input){
     input.insert("rect")
     .attr("width", "1px")
-    .attr("class", function(d) {
-        if (d.activity="entering") return "enter";
-        else if (d.activity="exiting") return "exit"});
-    // .call(updateEnteringExitingAct)
+    .attr("class","enter");
+            // .call(updateEnteringAct)
 }
-
 //create rectangles for entering exiting activites
-function updateEnteringExiting(input) {
+function updateEntering(input) {
         input.attr("x", function(d) {
            if (d.activity="entering")return axes.xScale(Number(d.x1));
-           // else if (d.x1 != d.x2 && d.activity == "exiting") return axes.xScale(Number(d.x2));
         })
         .attr("y", function(d) {
 //             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
@@ -436,6 +432,13 @@ function updateEnteringExiting(input) {
             return axes.yScale.rangeBand();
         })
         .style("fill", "black");
+}
+
+//create exit visuals
+function initExiting(input){
+    input.insert("rect")
+         .attr("width", "1px")
+         .attr("class", "exit");
 }
 
 function updateExiting(input) {
@@ -453,7 +456,6 @@ function updateExiting(input) {
             return axes.yScale.rangeBand();
         })
         .style("fill", "orange");
-
 }
 
 function activityColor(d) {
@@ -506,9 +508,9 @@ function updateActivities(onlyScaling) {
       let insertEnter = axes.plotArea.selectAll(".enter")
       .data(allIntervals.filter(function (d){ return (d.Activity == "entering")}));
 
-        insertEnter.enter().call(initEnteringExiting);
+        insertEnter.enter().call(initEntering);
 
-        insertEnter.call(updateEnteringExiting);
+        insertEnter.call(updateEntering);
 
         insertEnter.exit().remove();
 
@@ -516,7 +518,7 @@ function updateActivities(onlyScaling) {
       let insertExit = axes.plotArea.selectAll(".exit")
       .data(allIntervals.filter(function (d){ return (d.Activity == "exiting")}));
 
-        insertExit.enter().call(initEnteringExiting);
+        insertExit.enter().call(initExiting);
 
         insertExit.call(updateExiting);
 
