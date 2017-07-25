@@ -155,12 +155,14 @@
               </div>
               
               <div class='block'>
-              <span class="small">TrackWindow:</span>
+              <span class="small">FocusInterval:</span>
               <button onclick="shiftTrackWindow(-0.75)" type="button" class="btn btn-window btn-xs" title="Reduce track window"><span class="glyphicon glyphicon-step-backward small"></span></button>
               <button onclick="shiftTrackWindow(0.75)" type="button" class="btn btn-window btn-xs" title="Extend track window"><span class="glyphicon glyphicon-step-forward small"></span></button>
               
               <button value="win-" onclick="scaleTrackWindow(0.5)" type="button" class="btn btn-window btn-xs" title="Reduce track window"><span class="glyphicon glyphicon-chevron-right small"></span>-<span class="glyphicon glyphicon-chevron-left small"></span></button>
               <button value="win+" onclick="scaleTrackWindow(2)" type="button" class="btn btn-window btn-xs" title="Extend track window"><span class="glyphicon glyphicon-chevron-left small"></span>+<span class="glyphicon glyphicon-chevron-right small"></span></button>
+              
+              <input id="focusTrackWindow" value="FocusView" onclick="onClickFocusTrackWindow()" ondblclick="onDblClickFocusTrackWindow()" type="button" class="btn btn-pink-toggle btn-xs" title="Focus on Track window">
               
               <button value="1s" onclick="setTrackWindow(20)" type="button" class="btn btn-default btn-xs" title="Track window = 1s">1s</button>
               <button value="10s" onclick="setTrackWindow(200)" type="button" class="btn btn-default btn-xs" title="Track window = 10s">10s</button>
@@ -168,38 +170,41 @@
               </div>
               
               <div class='block'>
-              <span class="small">ViewWindow:</span>
+              <span class="small">ChronogramView:</span>
               <div onclick="shiftTimeDomain(-0.5)"  class="btn btn-info btn-xs" title="Shift left"><span class="glyphicon glyphicon-step-backward small"></span></div>
               <div onclick="shiftTimeDomain(0.5)"  class="btn btn-info btn-xs" title="Shift right"><span class="glyphicon glyphicon-step-forward small"></span></div>
               
               <input value="Z+" onclick="scaleTimeDomain(2)" type="button" class="btn btn-info btn-xs" title="Zoom In time">
               <input value="Z-" onclick="scaleTimeDomain(1/2)" type="button" class="btn btn-info btn-xs" title="Zoom Out time">
               
-              <input id="focusTrackWindow" value="TrackWindow" onclick="onClickFocusTrackWindow()" ondblclick="onDblClickFocusTrackWindow()" type="button" class="btn btn-default btn-window-border btn-pink-toggle btn-xs" title="Focus on Track window">
               <input value="Video" onclick="onClickFocusVideo()" type="button" class="btn btn-default btn-video-border btn-xs" title="Reinit view">              
 
               </div>
               
               <div class='block'>
-              <span class="small">Events:</span>
-              <button onclick="gotoFirstEvent()" type="button" class="btn btn-default btn-xs" title="Go to first event"><span class="glyphicon  glyphicon-chevron-left small"></span> First</button>
+              <span class="small">Selected:</span>
+              <input type="text" value="" size="6" id="selectID" onchange="onSelectIDChanged(event)" class="small btn-green-border">
+              
+              <button id="prevIDButton" onclick="onClickPrevID()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Previous Bee">PrevID <span class="glyphicon glyphicon-arrow-up small"></span></button>
+              <button id="nextIDButton" onclick="onClickNextID()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID <span class="glyphicon glyphicon-arrow-down small"></span></button>
+<!--               <button id="nextIDFirstButton" onclick="onClickNextIDStart()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID-First <span class="glyphicon glyphicon-arrow-down small"></span><span class="glyphicon glyphicon- glyphicon-fast-forward icon-flipped small"></span></button> -->
+              <button id="autoEventButton" onclick="onAutoEventButtonClick()" type="button" class="btn btn-xs btn-green-toggle" title="Toggle Auto Seek Event Mode">AutoSeek <span class="glyphicon glyphicon-arrow-down small"></span><span class="glyphicon glyphicon-arrow-up small"></span></button>
+              
+              <button onclick="gotoFirstEvent()" type="button" class="btn btn-default btn-xs" title="Go to first event"><span class="glyphicon  glyphicon-fast-forward icon-flipped small"></span> First</button>
               <button onclick="gotoPreviousEvent()" type="button" class="btn btn-default btn-xs" title="Go to previous event"><span class="glyphicon glyphicon-step-backward small"></span> Prev</button>
               <button onclick="gotoNextEvent()" type="button" class="btn btn-default btn-xs" title="Go to next event">Next <span class="glyphicon glyphicon-step-forward small"></span></button>
-              <button onclick="gotoLastEvent()" type="button" class="btn btn-default btn-xs" title="Go to last event">Last <span class="glyphicon  glyphicon-chevron-right small"></span></button>
-              
-              <button id="prevIDButton" onclick="onClickPrevID()" type="button" class="btn btn-default btn-xs" title="Select Previous Bee">PrevID <span class="glyphicon glyphicon-arrow-up small"></span></button>
-              <button id="nextIDButton" onclick="onClickNextID()" type="button" class="btn btn-default btn-xs" title="Select Next Bee">NextID <span class="glyphicon glyphicon-arrow-down small"></span></button>
-              
+              <button onclick="gotoLastEvent()" type="button" class="btn btn-default btn-xs" title="Go to last event">Last <span class="glyphicon  glyphicon-fast-forward small"></span></button>
+                            
               </div>
               
               <div class='block'>
               <span class="small">IDs:</span>
-              <input type="text" value="0" size="15" id="restrictID" onchange="onRestrictIDChanged(event)" class='btn-restrict-toggle small'>
+              <input type="text" value="0" size="15" id="restrictID" onchange="onRestrictIDChanged(event)" class='btn-restrict-border small'>
               <button id="restrictIDButton" onclick="click_restrictID()" type="button" class="btn btn-restrict-toggle btn-xs" title="Show only tags with this ID">RestrictID</button>
-              <button id="restrictIDfromSelectionButton" onclick="restrictIDFromSelection()" type="button" class="btn btn-default btn-restrict-toggle btn-selection-text btn-xs" title="Restrict to only current Selection ID">R:Selection</button>
-              <button id="restrictIDFromWindowButton" onclick="restrictIDFromWindow()" type="button" class="btn btn-default btn-restrict-toggle btn-window-text btn-xs" title="Restrict to tags in current Window ID">R:Window</button>
+              <button id="restrictIDfromSelectionButton" onclick="restrictIDFromSelection()" type="button" class="btn btn-default btn-restrict-border btn-selection-text btn-xs" title="Restrict to only current Selection ID">R:Selection</button>
+              <button id="restrictIDFromWindowButton" onclick="restrictIDFromWindow()" type="button" class="btn btn-default btn-restrict-border btn-window-text btn-xs" title="Restrict to tags in current Window ID">R:Focus</button>
               
-              <input type="text" value="" size="15" id="excludeID" onchange="onExcludeIDChanged(event)" class="small btn-orange-toggle">
+              <input type="text" value="" size="15" id="excludeID" onchange="onExcludeIDChanged(event)" class="small btn-orange-border">
               <button id="excludeIDButton" onclick="click_excludeID()" type="button" class="btn btn-orange-toggle btn-xs" title="Exclude these IDs (comma separated list, no spaces)">ExcludeID</button>
               </div>
               

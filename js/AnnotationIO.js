@@ -7,6 +7,8 @@ function initAnnotationIO() {
     document.getElementById('load').addEventListener('change', loadFromFile);
     document.getElementById('loadtags')
             .addEventListener('change', loadTagsFromFile);
+            
+    ttags=[]
 }
 
 
@@ -189,6 +191,8 @@ function setTags(obj) {
     Tags = obj;
     
     tagsAddFrames(Tags)
+    
+    ttags = getTTags()
     
     refreshChronogram()
     adjustChronogramHeight()

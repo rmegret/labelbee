@@ -131,6 +131,8 @@ function initSelectionControl() {
     $( selectionControl ).on('tagselection:created', updateChronoSelection)
     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
 
+    $( selectionControl ).on('tagselection:created', updateSelectID)
+
     $('.labelcheckbox').change(onLabelClicked);
     
     $('#labels').change(onLabelsChanged);
@@ -151,6 +153,14 @@ function initSelectionControl() {
 //     $( selectionControl ).on('selection:cleared', updateChronoSelection)
 //     $( selectionControl ).on('tagselection:created', updateChronoSelection)
 //     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
+}
+
+function updateSelectID() {
+    $('#selectID').val(defaultSelectedBee)
+}
+function onSelectIDChanged() {
+    let id = $('#selectID').val().trim()
+    selectBeeByID(id)
 }
 
 /* Update form rectangle data from activeObject */

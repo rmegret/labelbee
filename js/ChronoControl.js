@@ -14,6 +14,7 @@ function initChrono() {
     restrictIDArray = []
     flag_restrictID = false
     flag_excludeID = false
+    flag_autoEventMode = false
 
     // SVG adjust to its parent #chronoDiv
     var svg = d3.select("#svgVisualize")    
@@ -340,6 +341,7 @@ function gotoFirstEvent() {
     let id = defaultSelectedBee
     console.log("id=",id)
     let interval = findNextTagEvent(0, id)
+    //nextSeekFocusWindow()
     videoControl.seekFrame(Number(interval.begin))
 }
 function gotoLastEvent() {
@@ -347,6 +349,7 @@ function gotoLastEvent() {
     let id = defaultSelectedBee
     console.log("id=",id)
     let interval = findPreviousTagEvent(videoControl.maxframe(), id)
+    //nextSeekFocusWindow()
     videoControl.seekFrame(Number(interval.begin))
 }
 function gotoNextEvent() {
@@ -354,8 +357,18 @@ function gotoNextEvent() {
     let id = defaultSelectedBee
     console.log("id=",id)
     let interval = findNextTagEvent(Number(frame), id)
+    
+    if (interval==null) {
+        if (flag_autoEventMode) {
+            onClickNextID()
+            return
+        } else
+          return;
+    }
+    
     console.log(interval)
     defaultSelectedBee = id
+    //nextSeekFocusWindow()
     videoControl.seekFrame(Number(interval.begin))
 }
 function findNextTagEvent(frame, id) {
@@ -368,13 +381,30 @@ function findNextTagEvent(frame, id) {
     if (list.length==0) return undefined
     return list[0]
 }
+function nextSeekFocusWindow() {
+    $( videoControl ).on('frame:changed',gotoEvent_seekCB)
+}
+function gotoEvent_seekCB() {
+    $( videoControl ).off('frame:changed',gotoEvent_seekCB)
+    focusTrackWindow()
+}
 function gotoPreviousEvent() {
     let frame = videoControl.getCurrentFrame()
     let id = defaultSelectedBee
     console.log("id=",id)
     let interval = findPreviousTagEvent(Number(frame), id)
+    
+    if (interval==null) {
+        if (flag_autoEventMode) {
+            onClickPrevID()
+            return
+        } else
+          return;
+    }
+    
     console.log(interval)
     defaultSelectedBee = id
+    //nextSeekFocusWindow()
     videoControl.seekFrame(Number(interval.end))
 }
 function findPreviousTagEvent(frame, id) {
@@ -400,6 +430,10 @@ function onClickNextID() {
     selectBeeByID(newID)
                         
     setRestrictID(newID)
+    
+    if (flag_autoEventMode) {
+        gotoFirstEvent()
+    }
 
     refreshChronogram()
 }
@@ -415,10 +449,44 @@ function onClickPrevID() {
     selectBeeByID(newID)
             
     setRestrictID(newID)
+    
+    if (flag_autoEventMode) {
+        gotoFirstEvent()
+    }
 
     refreshChronogram()
 }
+function onClickNextIDStart() {
+    let domain = validAllTagIdsDomain()
+                  .map(function(d){return String(d);})
+    let N=domain.length
+    if (N==0) return;
+    
+    let id = String(getCurrentID())
+    let pos = $.inArray(id,domain)
+    let newID = (pos==-1) ? domain[0] : domain[(pos+1)%N];
+    selectBeeByID(newID)
+                        
+    setRestrictID(newID)
 
+    gotoFirstEvent()
+
+    //refreshChronogram()
+}
+function onAutoEventButtonClick() {
+    flag_autoEventMode = !flag_autoEventMode;
+    
+    update_autoEventMode()
+    
+    refreshChronogram()
+}
+function update_autoEventMode() {
+    if ( flag_autoEventMode ) {
+        $("#autoEventButton").addClass("active")
+    } else {
+        $("#autoEventButton").removeClass("active")      
+    }
+}
 
 function setRestrictID(ids) {
     console.log('setRestrictID')
@@ -790,6 +858,32 @@ function getFlatTags(useFilter) {
     return flatTags;
 }
 
+function getTTags() {
+    allTagsID = new Set()
+
+    /* Transpose Tags data structure */
+    let ttags = []
+    for (let F in Tags) {
+        let tags = Tags[F].tags
+        for (let i in tags) {
+            let id = Number(tags[i].id)
+            
+            allTagsID.add(id)
+            
+            if (flag_restrictID) {
+                if ($.inArray(String(id), restrictIDArray)<0) continue;
+            } else if (flag_excludeID) {
+                if ($.inArray(String(id), excludeIDArray)>=0) continue;
+            }
+            
+            if (typeof ttags[id] === 'undefined')
+                ttags[id]=[];
+            ttags[id][F]=tags[i];
+        }
+    }
+    
+    return ttags;
+}
 
 function refreshChronogram() {
 
@@ -848,34 +942,14 @@ function refreshChronogram() {
 
     flatTags = getFlatTags(false) // noFilter
 
-    allTagsID = []
+    //allTagsID = []
+
+    ttags = getTTags()
+    
+    allTagsID = [...allTagsID]
 
     tagIntervals = []
     if (showTagsChrono) {
-        allTagsID = new Set()
-    
-        /* Transpose Tags data structure */
-        ttags = []
-        for (let F in Tags) {
-            let tags = Tags[F].tags
-            for (let i in tags) {
-                let id = Number(tags[i].id)
-                
-                allTagsID.add(id)
-                
-                if (flag_restrictID) {
-                    if ($.inArray(String(id), restrictIDArray)<0) continue;
-                } else if (flag_excludeID) {
-                    if ($.inArray(String(id), excludeIDArray)>=0) continue;
-                }
-                
-                if (typeof ttags[id] === 'undefined')
-                    ttags[id]=[];
-                ttags[id][F]=tags[i];
-            }
-        }
-        
-        allTagsID = [...allTagsID]
     
         /* Convert to intervals */
         for (let id in ttags) {

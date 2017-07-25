@@ -330,26 +330,39 @@ textarea {
 input[type=text] {
     border: 1px solid;
 }
-input[type=text].btn-restrict-toggle {
+input[type=text].btn-restrict-border {
     border-color: #6AA;
 }
-input[type=text].btn-orange-toggle {
+input[type=text].btn-orange-border {
     border-color: #ea7;
+}
+input[type=text].btn-green-border {
+    border-color: #6A6;
 }
 
 .btn-orange-toggle {
-    color: #666;
+    color: #c84;
     border-color: #ea7;
-    box-shadow:       inset 2px 2px 5px rgba(255,255,255,0.25);
+    background-color: #eee;
+    box-shadow:       inset -1px -1px 2px rgba(0,0,0,0.25);
 }
 .btn-green-toggle {
-    color: #666;
-    box-shadow:       inset 2px 2px 5px rgba(255,255,255,0.25);
+    color: #040;
+    border-color: #6A6;
+    background-color: #eee;
+    box-shadow:       inset -1px -1px 2px rgba(0,0,0,0.25);
 }
 .btn-restrict-toggle {
-    color: #666;
+    color: #488;
     border-color: #6AA;
-    box-shadow:       inset 2px 2px 5px rgba(255,255,255,0.25);
+    background-color: #eee;
+    box-shadow:       inset -1px -1px 2px rgba(0,0,0,0.25);
+}
+.btn-pink-toggle {
+    color: #844;
+    border-color: #c3959d;
+    background-color: #eee;
+    box-shadow:       inset -1px -1px 2px rgba(0,0,0,0.25);
 }
 .btn-orange-toggle.active {
     color: black;
