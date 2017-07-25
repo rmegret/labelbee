@@ -70,14 +70,26 @@ function onSelectboxVideoChanged() {
     let id = $('#selectboxVideo').prop("selectedIndex")
     selectVideoByID(id)
 }
+function prefillVideoFields() {
+    let tagfile = videoListTable[videoListCurrentID].tags
+    if (tagfile != null) {
+            videoTagURL = 'data/'+tagfile
+    } else {
+            videoTagURL = undefined
+    }
+}
 function selectVideoByID(id) {
     id = Number(id)
     if (id >= videoList.length || id<0) {
         throw ('selectVideobyID: invalid id, id='+id);
     }
     videoListCurrentID = id
-    let file = 'data/'+videoList[id]
+    
+    prefillVideoFields()
+    let file = 'data/'+videoList[videoListCurrentID]
+    
     updateVideoListSelection()
+    
     videoControl.loadVideo(file)
     
     // Change handled in callback onVideoLoaded

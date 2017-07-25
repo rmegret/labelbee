@@ -308,6 +308,7 @@ function videoListFromServer(path) {
           let array = $.csv.toArrays(data);
           console.log('videolist converted to array: ',array)
           videoList = []
+          videoListTable=[]
           for (let item of array) {
               if (item.length==0) continue;
               videoList.push(item[0]);
@@ -315,7 +316,10 @@ function videoListFromServer(path) {
                   $('#previewVideoName').val(item[1])
                   $('#previewVideoTimeScale').val('1')
               }
+              let tmp = {video:item[0], preview:item[1], tags:item[2]}
+              videoListTable.push(tmp)
           }
+
           updateVideoList()
           selectVideoByID(0)
         }

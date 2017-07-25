@@ -364,7 +364,7 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     this.loadVideoInfo(videourl+'.info.json')
     
     this.loadPreviewVideo(this.previewURL);
-    tagsFromServer(undefined, true) // quiet
+    tagsFromServer(videoTagURL, true) // quiet
     
     $( this ).trigger('video:loaded') 
 }
