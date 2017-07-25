@@ -488,7 +488,6 @@ function updatePollen(input){
         for (var i = 0; i < input.length; i++){ 
             if(input.length > 0){
         }
-
 }
 
 function activityColor(d) {
