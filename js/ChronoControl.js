@@ -337,7 +337,6 @@ function createIntervalList() {
 
             iArray = iArray.filter(function(i){
                     return chronogramData[i].Activity==a})
-            console.log("iArray: ", iArray)
 
             if (iArray.length == 0){
                 continue;
@@ -347,9 +346,7 @@ function createIntervalList() {
                 xValues[j]=chronogramData[iArray[j]].x;
             }
 
-            console.log("iArray 0: ", iArray[0])
             let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, Activity: chronogramData[iArray[0]].Activity };
-            console.log("Activity 2 OUT: ", chronogramData[iArray[0]].Activity  )
 
             for (var i = 1; i < xValues.length; i++) {
                 // console.log("Act temp interval IN: ", tempInterval[i].Activity);
@@ -437,7 +434,7 @@ function updateEntering(input) {
             //return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
             return axes.yScale.rangeBand();
         })
-        .style("fill", "black");
+        .style("fill", "green");
 }
 
 //create exit visuals
@@ -458,7 +455,7 @@ function updateExiting(input) {
         .attr("height", function(d) {
             return axes.yScale.rangeBand();
         })
-        .style("fill", "orange");
+        .style("fill", "red");
         
 }
 
@@ -474,25 +471,23 @@ function updatePollen(input){
             return axes.xScale(Number(d.x1));
         })
         .attr("y", function(d) {
-          return axes.yScale(d.y); // ordinal
+
+          return axes.yScale(Number(d.y)); // ordinal
         })
         .attr("width", function(d) {
-            if (d.x1 != d.x2) return axes.xScale(Number(d.x2)) - axes.xScale(d.x1); 
+           return axes.xScale(Number(d.x2)) - axes.xScale(d.x1); 
             //return 8
         })
         .attr("height", function(d) {
-            return axes.yScale.rangeBand();
+            return axes.yScale.rangeBand()/2;
         })
         .style("fill", "yellow");
         
-        for (var i = 0; i < input.length; i++){ 
-            if(input.length > 0){
-        }
 }
 
 function activityColor(d) {
         var color = "gray";
-        if (d.Activity == "pollenating")
+        if (d.Activity == "pollen")
             color = "#CFCF00";
         else if (d.Activity == "entering")
             color = "#FF0000";
@@ -508,7 +503,7 @@ function activityHeight(d) {
             h=4
         else if (d.Activity == "exiting")
             h=4
-        else if (d.Activity == "pollenating")
+        else if (d.Activity == "pollen")
             h=6
         else if (d.Activity == "fanning")
             h=6;
@@ -536,6 +531,17 @@ function updateActivities(onlyScaling) {
       activityRects.enter().call(insertActivities);
       activityRects.exit().remove();
 
+      //Object for pollen visuals
+      let insertPollen = axes.plotArea.selectAll(".pollen")
+      .data(allIntervals.filter(function (d){ return (d.Activity == "pollen")}));
+
+        insertPollen.enter().call(initPollen);
+
+        insertPollen.call(updatePollen);
+
+        insertPollen.exit().remove(); 
+    	}
+
       //Object to create enter visuals
       let insertEnter = axes.plotArea.selectAll(".enter")
       .data(allIntervals.filter(function (d){ return (d.Activity == "entering")}));
@@ -556,8 +562,7 @@ function updateActivities(onlyScaling) {
 
         insertExit.exit().remove();
 
-      
-    }
+
 
     //Call interval function to create new data structure
     createIntervalList();
@@ -575,14 +580,10 @@ function updateActivities(onlyScaling) {
     //Update circles
     circles
         .attr("cx", function(d) {
-           
-        return axes.xScale(Number(d.x1));
-            
+        	return axes.xScale(Number(d.x1));
         })
         .attr("cy", function(d) {
-              // return axes.yScale(Number(d.y))
-                return axes.yScale(Number(d.y)) + axes.yScale.rangeBand() / 2;
-
+            return axes.yScale(Number(d.y)) + axes.yScale.rangeBand() / 2;
         })
         .attr("r", 5) //shange radius
         // .style("fill", activityColor)
@@ -593,15 +594,12 @@ function updateActivities(onlyScaling) {
             var color = "black";
             // console.log("Bee Activity: ", d.Activity)
             if (d.Activity == "fanning") color = "#99CCFF";
-            else if (d.Activity == "pollenating") color = "#FFFF00";
+            else if (d.Activity == "pollen") color = "#FFFF00";
             else if (d.Activity == "entering") color = "#CC00FF";
             else if (d.Activity == "exiting") color = "#00CC99";
             // console.log("Bee Activity2: ", d.Activity)
             return color;
         });
-
-
-
 }
 function initActivities() {
     //chronogramData = []
