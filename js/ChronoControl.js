@@ -327,34 +327,42 @@ function createIntervalList() {
     }
     //initiliaze allIntervals to update data
     allIntervals = [];
-    for (var y in tempCoordinates) {
-        //console.log("Act chronogramData IN:", chronogramData[y].Activity)
-        
-        let xValues = [];
+    acts = ['','pollen','entering','exiting','fanning']
+    for (var a of acts) {
+        for (var y in tempCoordinates) {
+            
+            let xValues = [];
 
-        let iArray = tempCoordinates[y];
-        for (let j=0; j<iArray.length; j++) {
-            xValues[j]=chronogramData[iArray[j]].x;
-        }
+            let iArray = tempCoordinates[y];
 
-        let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, Activity: chronogramData[iArray[0]].Activity };
+            iArray = iArray.filter(function(i){
+                    return chronogramData[i].Activity==a})
+            console.log("iArray: ", iArray)
 
-        for (var i = 1; i < xValues.length; i++) {
-            // console.log("Act temp interval IN: ", tempInterval[i].Activity);
-            if (xValues[i] - xValues[i - 1] == 1) {
-                tempInterval.x2 = xValues[i]; //Extend the existing interval
-            } else {
-                allIntervals.push(tempInterval);
-                tempInterval = { x1: xValues[i], x2: xValues[i], y: y, Activity: chronogramData[iArray[i]].Activity }; // New interval
-
+            if (iArray.length == 0){
+                continue;
             }
-            // console.log("Act temp interval OUT: ", tempInterval.Activity);
-        }
-        // console.log("Act chronogramData OUT:", chronogramData[y].Activity)
-        
 
-        allIntervals.push(tempInterval);
-    }
+            for (let j=0; j<iArray.length; j++) {
+                xValues[j]=chronogramData[iArray[j]].x;
+            }
+
+            console.log("iArray 0: ", iArray[0])
+            let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, Activity: chronogramData[iArray[0]].Activity };
+            console.log("Activity 2 OUT: ", chronogramData[iArray[0]].Activity  )
+
+            for (var i = 1; i < xValues.length; i++) {
+                // console.log("Act temp interval IN: ", tempInterval[i].Activity);
+                if (xValues[i] - xValues[i - 1] == 1) {
+                    tempInterval.x2 = xValues[i]; //Extend the existing interval
+                } else {
+                    allIntervals.push(tempInterval);
+                    tempInterval = { x1: xValues[i], x2: xValues[i], y: y, Activity: chronogramData[iArray[i]].Activity }; // New interval
+                }
+            }
+            allIntervals.push(tempInterval);
+        }
+}
 
     return allIntervals;
 }
@@ -396,35 +404,29 @@ function setGeomActivity(selection) {
             if (d.x1 != d.x2) return axes.xScale(Number(d.x1));
         })
         .attr("y", function(d) {
-//             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
             if (d.x1 != d.x2) return axes.yScale(Number(d.y)); // ordinal
         })
         .attr("width", function(d) {
             if (d.x1 != d.x2) return axes.xScale(Number(d.x2)) - axes.xScale(d.x1); // Min 10 pixels
-            //return 8
         })
         .attr("height", function(d) {
-            //return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
             if (d.x1 != d.x2) return axes.yScale.rangeBand();
         })
         .style("fill", "gray");
         //.style("stroke", activityColor);
 }
 
-function initEnteringExiting(input){
+function initEntering(input){
     input.insert("rect")
     .attr("width", "1px")
-    .attr("class", function(d) {
-        if (d.activity="entering") return "enter";
-        else if (d.activity="exiting") return "exit"});
-    // .call(updateEnteringExitingAct)
+    .attr("class","enter");
+            // .call(updateEnteringAct)
 }
-
 //create rectangles for entering exiting activites
-function updateEnteringExiting(input) {
+function updateEntering(input) {
         input.attr("x", function(d) {
-           if (d.activity="entering")return axes.xScale(Number(d.x1));
-           // else if (d.x1 != d.x2 && d.activity == "exiting") return axes.xScale(Number(d.x2));
+           // if (d.activity="entering")
+            return axes.xScale(Number(d.x1));
         })
         .attr("y", function(d) {
 //             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
@@ -438,21 +440,54 @@ function updateEnteringExiting(input) {
         .style("fill", "black");
 }
 
+//create exit visuals
+function initExiting(input){
+    input.insert("rect")
+         .attr("width", "1px")
+         .attr("class", "exit");
+}
+
 function updateExiting(input) {
         input.attr("x", function(d) {
-           if (d.activity="exiting" && d.x1 != d.x2 )return axes.xScale(Number(d.x2));
-           // else if (d.x1 != d.x2 && d.activity == "exiting") return axes.xScale(Number(d.x2));
+            return axes.xScale(Number(d.x2));
         })
         .attr("y", function(d) {
-//             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
             return axes.yScale(d.y); // ordinal
         })
         .attr("width", "3px")
         .attr("height", function(d) {
-            //return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
             return axes.yScale.rangeBand();
         })
         .style("fill", "orange");
+        
+}
+
+//Create Pollen visuals
+function initPollen(input){
+    input.insert("rect")
+         .attr("width", "1px")
+         .attr("class", "pollen");
+}
+
+function updatePollen(input){
+        input.attr("x", function(d) {
+            return axes.xScale(Number(d.x1));
+        })
+        .attr("y", function(d) {
+          return axes.yScale(d.y); // ordinal
+        })
+        .attr("width", function(d) {
+            if (d.x1 != d.x2) return axes.xScale(Number(d.x2)) - axes.xScale(d.x1); 
+            //return 8
+        })
+        .attr("height", function(d) {
+            return axes.yScale.rangeBand();
+        })
+        .style("fill", "yellow");
+        
+        for (var i = 0; i < input.length; i++){ 
+            if(input.length > 0){
+        }
 
 }
 
@@ -489,7 +524,7 @@ function updateActivities(onlyScaling) {
     // Redraw activities
     if (onlyScaling) {
       // Lightweight update (reuse previous activityRects)
-      let activityRects = axes.plotArea.selectAll(".activity").data(chronogramData);
+      let activityRects = axes.plotArea.selectAll(".activity").data(allIntervals);
       activityRects.call(setGeomActivity)
     } else {
       // Full update
@@ -506,9 +541,9 @@ function updateActivities(onlyScaling) {
       let insertEnter = axes.plotArea.selectAll(".enter")
       .data(allIntervals.filter(function (d){ return (d.Activity == "entering")}));
 
-        insertEnter.enter().call(initEnteringExiting);
+        insertEnter.enter().call(initEntering);
 
-        insertEnter.call(updateEnteringExiting);
+        insertEnter.call(updateEntering);
 
         insertEnter.exit().remove();
 
@@ -516,7 +551,7 @@ function updateActivities(onlyScaling) {
       let insertExit = axes.plotArea.selectAll(".exit")
       .data(allIntervals.filter(function (d){ return (d.Activity == "exiting")}));
 
-        insertExit.enter().call(initEnteringExiting);
+        insertExit.enter().call(initExiting);
 
         insertExit.call(updateExiting);
 
@@ -531,24 +566,24 @@ function updateActivities(onlyScaling) {
      //create circles for one coordinate bees
     var chart = axes.chronoGroup;
         //Circles for solo bee iD
-    chart.selectAll("circle")
-        .data(allIntervals)
-        .enter()
-        .append("circle"); //Add circle chronoGroup
+    let circles =  chart.selectAll("circle")
+        .data(allIntervals.filter(function(d){
+            return d.x1 == d.x2;
+        }))
+    circles.enter().append("circle"); //Add circle chronoGroup
 
-    // //Update circles
-    chart
-        .selectAll("circle")
+    circles.exit().remove();
+    //Update circles
+    circles
         .attr("cx", function(d) {
-            if (d.x1 == d.x2) {
-                return axes.xScale(Number(d.x1));
-            }
+           
+        return axes.xScale(Number(d.x1));
+            
         })
         .attr("cy", function(d) {
               // return axes.yScale(Number(d.y))
-            if (d.x1 == d.x2) {
                 return axes.yScale(Number(d.y)) + axes.yScale.rangeBand() / 2;
-            }
+
         })
         .attr("r", 5) //shange radius
         // .style("fill", activityColor)
@@ -565,6 +600,7 @@ function updateActivities(onlyScaling) {
             // console.log("Bee Activity2: ", d.Activity)
             return color;
         });
+
 
 
 }
@@ -650,17 +686,26 @@ function refreshChronogram() {
             for (let id in Tracks[F]) {
                 let chronoObs = {'x':F, 'y':id, 'Activity':""};
 
-                if (Tracks[F][id].bool_acts[1]) {
-                    chronoObs.Activity = "pollenating";
-                } else if (Tracks[F][id].bool_acts[2]) {
-                    chronoObs.Activity = "entering";
-                } else if (Tracks[F][id].bool_acts[3]) {
-                    chronoObs.Activity = "exiting";
-                } else if (Tracks[F][id].bool_acts[0]) {
-                    chronoObs.Activity = "fanning";
+                let b=Tracks[F][id].bool_acts
+                
+                if (!b[0] && !b[1] && !b[2] && !b[3]) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':""});
+                }
+                if (b[1]) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"pollen"});
+                    //chronoObs.Activity = "pollenating";
+                }
+                if (b[2]) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering"});
+                }
+                if (b[3]) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"exiting"});
+                }
+                if (b[0]) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning"});
                 }
 
-                chronogramData.push(chronoObs);
+                // chronogramData.push(chronoObs);
             }
         }
     }
