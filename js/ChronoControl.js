@@ -6,8 +6,8 @@ function chronoAdjust(mode) {
     let factor = 1.2
     let mh = axes.margin.top+axes.margin.bottom
     let mw = axes.margin.left+axes.margin.right
-    if (mode == 'H-') {
-        let h = ($('#chronoDiv').height()-mh)/factor+mh
+    if (mode == 'H') {
+        let h = ($('#chronoDiv').height()mh)/factor+mh
         if (h<100) h=100;
         $('#chronoDiv').height(h)
     }
@@ -15,12 +15,12 @@ function chronoAdjust(mode) {
         adjustChronogramHeight(10)
     }
     if (mode == 'H+') {
-        let h = ($('#chronoDiv').height()-mh)*factor+mh
+        let h = ($('#chronoDiv').height()mh)*factor+mh
         $('#chronoDiv').height(h)
     }
 
-    if (mode == 'W-') {
-        let w = ($('#chronoDiv').width()-mw)/factor+mw
+    if (mode == 'W') {
+        let w = ($('#chronoDiv').width()mw)/factor+mw
         if (w<200) w=200;
         $('#chronoDiv').width(w)
     }
@@ -30,7 +30,7 @@ function chronoAdjust(mode) {
         $('#chronoDiv').width(w)
     }
     if (mode == 'W+') {
-        let w = ($('#chronoDiv').width()-mw)*factor+mw
+        let w = ($('#chronoDiv').width()mw)*factor+mw
         $('#chronoDiv').width(w)
     }
 }
@@ -73,9 +73,9 @@ function initChrono() {
     // trigger an asynchronous refresh
     setTimeout(axes.refreshLayout, 50)
     
-    // Make it resizable using jQuery-UI
+    // Make it resizable using jQueryUI
     $("#chronoDiv").resizable({
-      helper: "ui-resizable-helper",
+      helper: "uiresizablehelper",
     });
     // Detect #chronoDiv resize using ResizeSensor.js
     // Note: cannot detect resize of SVG directly
@@ -114,7 +114,7 @@ function domainxFromVideo() {
 function domainxFromChronogramData() {
     if (chronogramData.length === 0) return [0,1]
     var range = d3.extent(chronogramData, function(d) {return Number(d.x); })
-    return [range[0]-0.5, range[1]+0.5] // add some margin
+    return [range[0]0.5, range[1]+0.5] // add some margin
 }
 function domainyFromChronogramData() {
     if (chronogramData.length === 0) return [0,1]
@@ -152,14 +152,14 @@ function updateChronoYDomain() {
     // Utility function to sort mixed numbers/alpha+number
     // Source: http://stackoverflow.com/a/4340448
     function parseItem (item) {
-      const [, stringPart = '', numberPart = 0] = /(^[a-zA-Z]*)(\d*)$/.exec(item) || [];
+      const [, stringPart = '', numberPart = 0] = /(^[azAZ]*)(\d*)$/.exec(item) || [];
       return [stringPart, numberPart];
     }
     function mixedCompare(a,b) {
         const [stringA, numberA] = parseItem(a);
         const [stringB, numberB] = parseItem(b);
         const comparison = stringA.localeCompare(stringB);
-        return comparison === 0 ? Number(numberA) - Number(numberB) : comparison;
+        return comparison === 0 ? Number(numberA)  Number(numberB) : comparison;
     }
     
     let domain = validIdsDomain()
@@ -259,24 +259,24 @@ function initVideoSpan() {
     var chronoGroup = axes.chronoGroup
     videoSpan = chronoGroup
         .append("g").attr('id','videoSpan')
-        .attr("clip-path", "url(#videoSpanClipPath)")
+        .attr("clippath", "url(#videoSpanClipPath)")
     videoSpan.append("clipPath")
         .attr("id", "videoSpanClipPath") // give the clipPath an ID
         .append("rect")
-        .attr("x", 0).attr("y", -15)
+        .attr("x", 0).attr("y", 15)
         .attr("width", axes.width()).attr("height", 15)
     videoSpan.append("rect").attr('class','background')
-        .attr("x", 0).attr("y", -15)
+        .attr("x", 0).attr("y", 15)
         .attr("width", axes.width()).attr("height", 15)
-        .style("stroke-width", "1px")
+        .style("strokewidth", "1px")
         .style("fill", "#f0fff0")
     videoSpan.append("rect").attr('class','interval')
-        .attr("x", 0).attr("y", -15)
+        .attr("x", 0).attr("y", 15)
         .attr("width", 1).attr("height", 15) // Just init
         .style("stroke", "blue")
         .style("fill", "skyblue")
     videoSpan.append("text").attr('class','label')
-        .style("text-anchor", "start")
+        .style("textanchor", "start")
         .text("video name ?");
 }
 function updateVideoSpan() {
@@ -284,16 +284,16 @@ function updateVideoSpan() {
     //videoSpan.attr("transform",
     //               "translate("+(axes.margin.left)+","+(axes.margin.top)+")")
     videoSpan.selectAll('#videoSpanClipPath > rect')
-             .attr("width", axes.width()).attr("y", -15)
+             .attr("width", axes.width()).attr("y", 15)
     videoSpan.selectAll('.background')
-             .attr("x", 0).attr("y", -15)
+             .attr("x", 0).attr("y", 15)
              .attr("width", axes.width()).attr("height", 15)
     videoSpan.selectAll('.interval')
-             .attr("x", axes.xScale(0)).attr("y", -13)
-             .attr("width", axes.xScale(videoinfo.nframes+1)-axes.xScale(0))
+             .attr("x", axes.xScale(0)).attr("y", 13)
+             .attr("width", axes.xScale(videoinfo.nframes+1)axes.xScale(0))
              .attr("height", 11);
     videoSpan.selectAll('.label')
-             .attr("x", axes.xScale(0)+2).attr("y", -4)
+             .attr("x", axes.xScale(0)+2).attr("y", 4)
              .text(videoinfo.name.split('/').pop())
 }
 
@@ -327,42 +327,34 @@ function createIntervalList() {
     }
     //initiliaze allIntervals to update data
     allIntervals = [];
-    acts = ['','pollen','entering','exiting','fanning']
-    for (var a of acts) {
-        for (var y in tempCoordinates) {
-            
-            let xValues = [];
+    for (var y in tempCoordinates) {
+        //console.log("Act chronogramData IN:", chronogramData[y].Activity)
+        
+        let xValues = [];
 
-            let iArray = tempCoordinates[y];
-
-            iArray = iArray.filter(function(i){
-                    return chronogramData[i].Activity==a})
-            console.log("iArray: ", iArray)
-
-            if (iArray.length == 0){
-                continue;
-            }
-
-            for (let j=0; j<iArray.length; j++) {
-                xValues[j]=chronogramData[iArray[j]].x;
-            }
-
-            console.log("iArray 0: ", iArray[0])
-            let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, Activity: chronogramData[iArray[0]].Activity };
-            console.log("Activity 2 OUT: ", chronogramData[iArray[0]].Activity  )
-
-            for (var i = 1; i < xValues.length; i++) {
-                // console.log("Act temp interval IN: ", tempInterval[i].Activity);
-                if (xValues[i] - xValues[i - 1] == 1) {
-                    tempInterval.x2 = xValues[i]; //Extend the existing interval
-                } else {
-                    allIntervals.push(tempInterval);
-                    tempInterval = { x1: xValues[i], x2: xValues[i], y: y, Activity: chronogramData[iArray[i]].Activity }; // New interval
-                }
-            }
-            allIntervals.push(tempInterval);
+        let iArray = tempCoordinates[y];
+        for (let j=0; j<iArray.length; j++) {
+            xValues[j]=chronogramData[iArray[j]].x;
         }
-}
+
+        let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, Activity: chronogramData[iArray[0]].Activity };
+
+        for (var i = 1; i < xValues.length; i++) {
+            // console.log("Act temp interval IN: ", tempInterval[i].Activity);
+            if (xValues[i]  xValues[i  1] == 1) {
+                tempInterval.x2 = xValues[i]; //Extend the existing interval
+            } else {
+                allIntervals.push(tempInterval);
+                tempInterval = { x1: xValues[i], x2: xValues[i], y: y, Activity: chronogramData[iArray[i]].Activity }; // New interval
+
+            }
+            // console.log("Act temp interval OUT: ", tempInterval.Activity);
+        }
+        // console.log("Act chronogramData OUT:", chronogramData[y].Activity)
+        
+
+        allIntervals.push(tempInterval);
+    }
 
     return allIntervals;
 }
@@ -370,7 +362,7 @@ function createIntervalList() {
 //black orb rectangles are made here
 function insertActivities(selection) {
     selection.insert("rect")
-        .style("stroke-width", "1px")
+        .style("strokewidth", "1px")
         .attr("class", "activity")
         .call(setGeomActivity)
 }
@@ -384,11 +376,11 @@ function insertActivities(selection) {
 //             return axes.yScale(d.y) + 0.1*axes.yScale.rangeBand(); // ordinal
 //         })
 //         .attr("width", function(d) {
-//             return (Math.max( axes.xScale(Number(d.x) + 1) - axes.xScale(Number(d.x)), 3 )); // Min 10 pixels
+//             return (Math.max( axes.xScale(Number(d.x) + 1)  axes.xScale(Number(d.x)), 3 )); // Min 10 pixels
 //             //return 8
 //         })
 //         .attr("height", function(d) {
-//             //return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
+//             //return (yScale(Number(d.y) + 0.9)  yScale(Number(d.y) + 0.1));
 //             return activityHeight(d)
 //         })
 //         .style("fill", activityColor)
@@ -404,12 +396,15 @@ function setGeomActivity(selection) {
             if (d.x1 != d.x2) return axes.xScale(Number(d.x1));
         })
         .attr("y", function(d) {
+//             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
             if (d.x1 != d.x2) return axes.yScale(Number(d.y)); // ordinal
         })
         .attr("width", function(d) {
-            if (d.x1 != d.x2) return axes.xScale(Number(d.x2)) - axes.xScale(d.x1); // Min 10 pixels
+            if (d.x1 != d.x2) return axes.xScale(Number(d.x2))  axes.xScale(d.x1); // Min 10 pixels
+            //return 8
         })
         .attr("height", function(d) {
+            //return (yScale(Number(d.y) + 0.9)  yScale(Number(d.y) + 0.1));
             if (d.x1 != d.x2) return axes.yScale.rangeBand();
         })
         .style("fill", "gray");
@@ -425,8 +420,7 @@ function initEntering(input){
 //create rectangles for entering exiting activites
 function updateEntering(input) {
         input.attr("x", function(d) {
-           // if (d.activity="entering")
-            return axes.xScale(Number(d.x1));
+           if (d.activity="entering")return axes.xScale(Number(d.x1));
         })
         .attr("y", function(d) {
 //             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
@@ -434,7 +428,7 @@ function updateEntering(input) {
         })
         .attr("width", "3px")
         .attr("height", function(d) {
-            //return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
+            //return (yScale(Number(d.y) + 0.9)  yScale(Number(d.y) + 0.1));
             return axes.yScale.rangeBand();
         })
         .style("fill", "black");
@@ -449,45 +443,19 @@ function initExiting(input){
 
 function updateExiting(input) {
         input.attr("x", function(d) {
-            return axes.xScale(Number(d.x2));
+           if (d.activity="exiting" && d.x1 != d.x2 )return axes.xScale(Number(d.x2));
+           // else if (d.x1 != d.x2 && d.activity == "exiting") return axes.xScale(Number(d.x2));
         })
         .attr("y", function(d) {
+//             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
             return axes.yScale(d.y); // ordinal
         })
         .attr("width", "3px")
         .attr("height", function(d) {
+            //return (yScale(Number(d.y) + 0.9)  yScale(Number(d.y) + 0.1));
             return axes.yScale.rangeBand();
         })
         .style("fill", "orange");
-        
-}
-
-//Create Pollen visuals
-function initPollen(input){
-    input.insert("rect")
-         .attr("width", "1px")
-         .attr("class", "pollen");
-}
-
-function updatePollen(input){
-        input.attr("x", function(d) {
-            return axes.xScale(Number(d.x1));
-        })
-        .attr("y", function(d) {
-          return axes.yScale(d.y); // ordinal
-        })
-        .attr("width", function(d) {
-            if (d.x1 != d.x2) return axes.xScale(Number(d.x2)) - axes.xScale(d.x1); 
-            //return 8
-        })
-        .attr("height", function(d) {
-            return axes.yScale.rangeBand();
-        })
-        .style("fill", "yellow");
-        
-        for (var i = 0; i < input.length; i++){ 
-            if(input.length > 0){
-        }
 }
 
 function activityColor(d) {
@@ -523,7 +491,7 @@ function updateActivities(onlyScaling) {
     // Redraw activities
     if (onlyScaling) {
       // Lightweight update (reuse previous activityRects)
-      let activityRects = axes.plotArea.selectAll(".activity").data(allIntervals);
+      let activityRects = axes.plotArea.selectAll(".activity").data(chronogramData);
       activityRects.call(setGeomActivity)
     } else {
       // Full update
@@ -565,24 +533,24 @@ function updateActivities(onlyScaling) {
      //create circles for one coordinate bees
     var chart = axes.chronoGroup;
         //Circles for solo bee iD
-    let circles =  chart.selectAll("circle")
-        .data(allIntervals.filter(function(d){
-            return d.x1 == d.x2;
-        }))
-    circles.enter().append("circle"); //Add circle chronoGroup
+    chart.selectAll("circle")
+        .data(allIntervals)
+        .enter()
+        .append("circle"); //Add circle chronoGroup
 
-    circles.exit().remove();
-    //Update circles
-    circles
+    // //Update circles
+    chart
+        .selectAll("circle")
         .attr("cx", function(d) {
-           
-        return axes.xScale(Number(d.x1));
-            
+            if (d.x1 == d.x2) {
+                return axes.xScale(Number(d.x1));
+            }
         })
         .attr("cy", function(d) {
               // return axes.yScale(Number(d.y))
+            if (d.x1 == d.x2) {
                 return axes.yScale(Number(d.y)) + axes.yScale.rangeBand() / 2;
-
+            }
         })
         .attr("r", 5) //shange radius
         // .style("fill", activityColor)
@@ -601,7 +569,6 @@ function updateActivities(onlyScaling) {
         });
 
 
-
 }
 function initActivities() {
     //chronogramData = []
@@ -614,9 +581,9 @@ function insertTag(selection) {
     selection
         .insert("rect")
         .style("fill", "blue")
-        .style("fill-opacity", "0.2")
+        .style("fillopacity", "0.2")
         .style("stroke", "blue")
-        .style("stroke-width", "1px")
+        .style("strokewidth", "1px")
         //.attr("r",5)
         .attr("class","tag")
         .call(setTagGeom)
@@ -624,14 +591,14 @@ function insertTag(selection) {
 function setTagGeom(selection) {
     selection
         .attr("x", function(d) {
-            //return xScale(Number(d.frame) - 0.5);
+            //return xScale(Number(d.frame)  0.5);
             return axes.xScale(Number(d.begin));
         })
         .attr("y", function(d) {
             return axes.yScale(Number(d.id));
         })
         .attr("width", function(d) {
-            return axes.xScale(Number(d.end))-axes.xScale(Number(d.begin));
+            return axes.xScale(Number(d.end))axes.xScale(Number(d.begin));
         })
         .attr("height", function(d) {
             return axes.yScale.rangeBand(); // Ordinal scale
@@ -685,26 +652,17 @@ function refreshChronogram() {
             for (let id in Tracks[F]) {
                 let chronoObs = {'x':F, 'y':id, 'Activity':""};
 
-                let b=Tracks[F][id].bool_acts
-                
-                if (!b[0] && !b[1] && !b[2] && !b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':""});
-                }
-                if (b[1]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"pollen"});
-                    //chronoObs.Activity = "pollenating";
-                }
-                if (b[2]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering"});
-                }
-                if (b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"exiting"});
-                }
-                if (b[0]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning"});
+                if (Tracks[F][id].bool_acts[1]) {
+                    chronoObs.Activity = "pollenating";
+                } else if (Tracks[F][id].bool_acts[2]) {
+                    chronoObs.Activity = "entering";
+                } else if (Tracks[F][id].bool_acts[3]) {
+                    chronoObs.Activity = "exiting";
+                } else if (Tracks[F][id].bool_acts[0]) {
+                    chronoObs.Activity = "fanning";
                 }
 
-                // chronogramData.push(chronoObs);
+                chronogramData.push(chronoObs);
             }
         }
     }
@@ -763,7 +721,7 @@ function refreshChronogram() {
         
             if (isActive) {
               let doPush = false
-              if (activeInterval.end == f-1) {
+              if (activeInterval.end == f1) {
                 activeInterval.end = f
               } else {
                 doPush = true
@@ -826,11 +784,11 @@ function interpolateTags(maxgap) {
             let P1 = T1.p
             
             for (let j=f1+1; j<f2; j++) {
-                let a = (j-f1)/(f2-f1)
-                let cx = (1-a)*T1.c[0] + a*T2.c[0]
-                let cy = (1-a)*T1.c[1] + a*T2.c[1]
-                let dx = cx - T1.c[0]
-                let dy = cy - T1.c[1]
+                let a = (jf1)/(f2f1)
+                let cx = (1a)*T1.c[0] + a*T2.c[0]
+                let cy = (1a)*T1.c[1] + a*T2.c[1]
+                let dx = cx  T1.c[0]
+                let dy = cy  T1.c[1]
                 //cx = T1.c[0]
                 //cy = T1.c[1]
                 //dx = 0
@@ -864,9 +822,9 @@ function interpolateTags(maxgap) {
         
             if (isActive) {
               let doPush = false
-              if (activeInterval.end == f-1) {
+              if (activeInterval.end == f1) {
                 activeInterval.end = f
-              } else if (f - activeInterval.end < maxgap) {
+              } else if (f  activeInterval.end < maxgap) {
                   // Try to interpolate
                   
                   pushInterpolate(id,activeInterval.end,f)
@@ -912,4 +870,3 @@ function computeMotionDirection() {
         }
     }
     updateTagIntervals()
-}
