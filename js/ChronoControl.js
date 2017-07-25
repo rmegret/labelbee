@@ -427,9 +427,9 @@ function updateEntering(input) {
         })
         .attr("y", function(d) {
 //             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
-            return axes.yScale(d.y); // ordinal
+            return axes.yScale(Number(d.y));
         })
-        .attr("width", "3px")
+        .attr("width", "4px")
         .attr("height", function(d) {
             //return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
             return axes.yScale.rangeBand();
@@ -449,9 +449,9 @@ function updateExiting(input) {
             return axes.xScale(Number(d.x2));
         })
         .attr("y", function(d) {
-            return axes.yScale(d.y); // ordinal
+            return axes.yScale(Number(d.y)); // ordinal
         })
-        .attr("width", "3px")
+        .attr("width", "4px")
         .attr("height", function(d) {
             return axes.yScale.rangeBand();
         })
@@ -471,18 +471,38 @@ function updatePollen(input){
             return axes.xScale(Number(d.x1));
         })
         .attr("y", function(d) {
-
           return axes.yScale(Number(d.y)); // ordinal
         })
         .attr("width", function(d) {
-           return axes.xScale(Number(d.x2)) - axes.xScale(d.x1); 
-            //return 8
+           return axes.xScale(Number(d.x2)) - axes.xScale(d.x1);  
         })
         .attr("height", function(d) {
             return axes.yScale.rangeBand()/2;
         })
         .style("fill", "yellow");
-        
+}
+
+//Create Fanning visuals
+function initFanning(input){
+    input.insert("rect")
+         .attr("width", "1px")
+         .attr("class", "fanning");
+}
+
+function updateFanning(input){
+        input.attr("x", function(d) {
+            return axes.xScale(Number(d.x1));
+        })
+        .attr("y", function(d) {
+          return axes.yScale(Number(d.y)) + axes.yScale.rangeBand()/2;// ordinal ?????
+        })
+        .attr("width", function(d) {
+           return axes.xScale(Number(d.x2)) - axes.xScale(d.x1); 
+        })
+        .attr("height", function(d) {
+            return axes.yScale.rangeBand()/2;
+        })
+        .style("fill", "purple");
 }
 
 function activityColor(d) {
@@ -537,10 +557,21 @@ function updateActivities(onlyScaling) {
 
         insertPollen.enter().call(initPollen);
 
+        insertPollen.exit().remove(); 
+
         insertPollen.call(updatePollen);
 
-        insertPollen.exit().remove(); 
-    	}
+
+   	//Object for fanning visuals
+      let insertFanning = axes.plotArea.selectAll(".fanning")
+      .data(allIntervals.filter(function (d){ return (d.Activity == "fanning")}));
+
+        insertFanning.enter().call(initFanning);
+
+        insertFanning.exit().remove();
+
+        insertFanning.call(updateFanning);
+
 
       //Object to create enter visuals
       let insertEnter = axes.plotArea.selectAll(".enter")
@@ -548,9 +579,10 @@ function updateActivities(onlyScaling) {
 
         insertEnter.enter().call(initEntering);
 
+        insertEnter.exit().remove();
+
         insertEnter.call(updateEntering);
 
-        insertEnter.exit().remove();
 
     //Object for exit visuals
       let insertExit = axes.plotArea.selectAll(".exit")
@@ -558,11 +590,11 @@ function updateActivities(onlyScaling) {
 
         insertExit.enter().call(initExiting);
 
-        insertExit.call(updateExiting);
-
         insertExit.exit().remove();
 
+        insertExit.call(updateExiting);
 
+    	}
 
     //Call interval function to create new data structure
     createIntervalList();
