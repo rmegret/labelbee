@@ -9,6 +9,8 @@ var videoinfo;
 
 /* Video List */
 function initVideoList() {
+    videoListTable=[]
+
     videoList = [ 'testvideo.mp4',
                   'vlc1.mp4',
                   'vlc2.mp4',
@@ -71,6 +73,8 @@ function onSelectboxVideoChanged() {
     selectVideoByID(id)
 }
 function prefillVideoFields() {
+    if (videoListTable==null) return;
+    if (videoListTable[videoListCurrentID]==null) return;
     let tagfile = videoListTable[videoListCurrentID].tags
     if (tagfile != null) {
             videoTagURL = 'data/'+tagfile

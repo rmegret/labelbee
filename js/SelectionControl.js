@@ -132,8 +132,14 @@ function initSelectionControl() {
     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
 
     $( selectionControl ).on('tagselection:created', updateSelectID)
+    
+    $( selectionControl ).on('tagselection:created', updateFormButtons)
+    $( selectionControl ).on('tagselection:cleared', updateFormButtons)
+    $( selectionControl ).on('selection:created', updateFormButtons)
+    $( selectionControl ).on('selection:cleared', updateFormButtons)
 
     $('.labelcheckbox').change(onLabelClicked);
+    $('.labeltoggle').change(onLabelClicked);
     
     $('#labels').change(onLabelsChanged);
       
@@ -163,6 +169,19 @@ function onSelectIDChanged() {
     selectBeeByID(id)
 }
 
+function updateFormButtons() {
+    if (getCurrentID()==null) {
+        $('#newRectForCurrentTag').addClass('disabled')
+        $('#newRectForCurrentTag').removeClass('active')
+    } else if (getSelectedID()==null) {
+        $('#newRectForCurrentTag').removeClass('disabled')
+        $('#newRectForCurrentTag').removeClass('active')
+    } else {
+        $('#newRectForCurrentTag').addClass('disabled')
+        $('#newRectForCurrentTag').addClass('active')
+    }
+}
+
 /* Update form rectangle data from activeObject */
 /* CAUTION: use updateForm(null) for empty form */
 function updateForm(activeObject) {
@@ -184,6 +203,8 @@ function updateForm(activeObject) {
 
         $('#notes').prop('value', '');
         $('#labels').prop('value', '');
+        
+        $('.labeltoggle').toggleClass('active',false)
     } else {
         $('#I').val(activeObject.id)
         
@@ -222,6 +243,13 @@ function updateForm(activeObject) {
             $('#notes').prop('value', obs.notes);
             
         $('#labels').val(getLabels(obs).join(','))
+        
+        $('.labeltoggle.fanning').toggleClass('active',hasLabel(obs,'fanning'))
+        $('.labeltoggle.pollen').toggleClass('active',hasLabel(obs,'pollen'))
+        $('.labeltoggle.entering').toggleClass('active',hasLabel(obs,'entering'))
+        $('.labeltoggle.exiting').toggleClass('active',hasLabel(obs,'exiting'))
+        $('.labeltoggle.falsealarm').toggleClass('active',hasLabel(obs,'falsealarm'))
+        $('.labeltoggle.wrongid').toggleClass('active',hasLabel(obs,'wrongid'))
     }
 
 }

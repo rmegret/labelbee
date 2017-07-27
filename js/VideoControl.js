@@ -15,6 +15,7 @@ function VideoControl(videoTagId) {
     this.seekWallTime = 0;
     this.seekTiming = false
     this.playbackRate = 1
+    this.videoname = 'unknownVideo'
     
     if (typeof videoTagId === 'undefined')
         videoTagId = 'video'; // Default HTML5 video tag to attach to
@@ -334,6 +335,9 @@ VideoControl.prototype.loadVideo = function(url, previewURL) {
     this.video.src = url;
     this.videoRawURL = url;
     // Update of display handled in callback onVideoLoaded
+    
+    let tmp = url.split('/')
+    this.videoName = tmp[tmp.length-1].split('.')[0]
     
     if (previewURL) {
         this.previewURL = previewURL;

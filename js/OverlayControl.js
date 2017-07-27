@@ -833,6 +833,20 @@ function tagAngle(tag) {
     let angle = Math.atan2(up[0], -up[1])/Math.PI*180
     return angle
 }
+function tagSize(tag) {
+    if (typeof tag.p === 'undefined') return undefined
+    let p = tag.p;
+    let d = {x: p[0][0]-p[1][0], y: p[0][1]-p[1][1]}
+    let m = Math.sqrt(d.x*d.x+d.y*d.y)
+    d = {x: p[2][0]-p[1][0], y: p[2][1]-p[1][1]}
+    m += Math.sqrt(d.x*d.x+d.y*d.y)
+    d = {x: p[2][0]-p[3][0], y: p[2][1]-p[3][1]}
+    m += Math.sqrt(d.x*d.x+d.y*d.y)
+    d = {x: p[3][0]-p[0][0], y: p[3][1]-p[0][1]}
+    m += Math.sqrt(d.x*d.x+d.y*d.y)
+    m /= 4
+    return m
+}
 
 /* Basic drawing */
 function plotTag(ctx, tag, color, flags) {
@@ -1572,6 +1586,52 @@ function computeDefaultNewID() {
 var default_width = 40;
 var default_height = 40;
 
+function newRectForTag(tag) {
+    let angle = tagAngle(tag)
+    let pt = videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
+    if (typeof angle !== 'undefined') {
+        console.log("newObsForTag: found angle=",angle)
+        rect = addRect(tag.id, 
+               pt.x - default_width / 2, 
+               pt.y - default_height / 2,
+               default_width, default_height, "new", undefined, angle);
+    } else {
+        console.log("newObsForTag: angle not found")
+        rect = addRect(tag.id, 
+               pt.x - default_width / 2, 
+               pt.y - default_height / 2,
+               default_width, default_height, "new");
+    }
+    return rect
+}
+function newRectForCurrentTag() {
+    if ($('#newRectForCurrentTag').hasClass('disabled')) {
+        return;
+    }
+    let id = getCurrentID()
+    if (id==null) {
+        printMessage('No current tag selected','red')
+        return;
+    }
+    let tag = getCurrentTag()
+    if (tag==null) {
+        printMessage('Current tag not visible in this frame. Try Next or Prev event','red')
+        return;
+    }
+    let r=getSelectedRect()
+    if (r!=null) {
+        printMessage('Current tag already annotated','red')
+        return;
+    }
+    newRectForTag(tag)
+    
+    canvas1.setActiveObject(rect);
+    canvas1.renderAll();
+
+    //automatic_sub();
+    submit_bee();
+}
+
 /* Create new rect from prediction */
 function onMouseDown_predict(option) {
     var startX = option.e.offsetX, startY = option.e.offsetY;
@@ -1616,21 +1676,8 @@ function onMouseDown_predict(option) {
             // Only found tag
             if (logging.mouseEvents)
                 console.log("onMouseDown: copying rect from tag ", tag)
-          
-            let angle = tagAngle(tag)
-            if (typeof angle !== 'undefined') {
-                console.log("MouseDown: found angle=",angle)
-                rect = addRect(predictionTag.id, 
-                       pt.x - default_width / 2, 
-                       pt.y - default_height / 2,
-                       default_width, default_height, "new", undefined, angle);
-            } else {
-                console.log("MouseDown: angle not found")
-                rect = addRect(predictionTag.id, 
-                       pt.x - default_width / 2, 
-                       pt.y - default_height / 2,
-                       default_width, default_height, "new");
-            }
+            
+            rect = newRectForTag(tag)
         }
 
     } else if (prediction.obs) {
@@ -1792,6 +1839,8 @@ function onMouseDown_selectMultiframe(option) {
           console.log('onMouseDown_selectMultiframe: found id=',tmp.id)
           selectBeeByID(tmp.id)
           videoControl.refresh()
+      } else {
+          deselectBee()
       }
 
     } else {
@@ -1801,6 +1850,9 @@ function onMouseDown_selectMultiframe(option) {
           if (tmp.id != null) {
             console.log('onMouseDown_selectMultiframe: found Obs id=',tmp.id, 'frame=', tmp.frame)
             selectBeeByIDandFrame(tmp.id,tmp.frame)
+          } else {
+            deselectBee()
+            videoControl.refresh()
           }
       }
     
@@ -1810,6 +1862,9 @@ function onMouseDown_selectMultiframe(option) {
           if (tmp.id != null) {
             console.log('onMouseDown_selectMultiframe: found Tag id=',tmp.id, 'frame=', tmp.frame)
             selectBeeByIDandFrame(tmp.id,tmp.frame)
+          } else {
+            deselectBee()
+            videoControl.refresh()
           }
       }
     }
@@ -1859,6 +1914,8 @@ function onMouseDown_panning(option) {
 function onMouseDown(option) {
     if (logging.mouseEvents)
         console.log('onMouseDown: option=', option)
+    
+    videoControl.pause()
     
     printMessage("")
 
@@ -2072,6 +2129,34 @@ function onObjectModified(option) {
 }
 
 
+function onLabelToggled(event) {
+    if (logging.guiEvents)
+        console.log("onLabelToggled: event=", event)
+    var activeObject = canvas1.getActiveObject()
+    var target = event.target;
+    if (activeObject !== null) {
+        let obs = activeObject.obs
+        
+        $(target).toggleClass('activated', !$(target).hasClass('activated'))
+        
+        let labelList = ['fanning','pollen','entering','exiting',
+                'falsealarm','wrongid'];
+        
+        for (let theClass of labelList) {
+            if ($(target).hasClass(theClass)) {
+              updateObsLabel(obs, theClass, $(target).hasClass('activated'))
+            }
+        }
+        
+        console.log('onLabelToggled: obs.labels=',obs.labels)
+        
+        // Update the rest
+        updateRectObsActivity(activeObject)
+        automatic_sub()
+        
+        updateForm(activeObject)
+    }
+}
 function onLabelClicked(event) {
     if (logging.guiEvents)
         console.log("onLabelClicked: event=", event)

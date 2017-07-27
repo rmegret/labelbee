@@ -48,7 +48,23 @@ function saveCSVToFile(txt, filename) {
 function saveToFile() {
     console.log("savetoFile: exporting to JSON...")
 
-    saveObjToJsonFile(Tracks, 'Tracks.json')
+    function addZero(i) {
+        if (i < 10) {
+            i = "0" + i;
+        }
+        return i;
+    }
+
+    let D = new Date()
+    let timestamp = D.getFullYear()+addZero(D.getMonth())+addZero(D.getDay())+
+                   '_'+
+                   addZero(D.getHours())+addZero(D.getMinutes())+addZero(D.getSeconds());
+    //.toISOString()
+
+    let filename = videoControl.videoName +
+                   '-Tracks-'+timestamp+'.json'
+
+    saveObjToJsonFile(Tracks, filename)
 }
 
 function tracksToCSV(Tracks) {

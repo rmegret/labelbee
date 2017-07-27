@@ -294,6 +294,8 @@ function onAxesClick(event) {
     var id = event.id
     if (logging.axesEvents)
         console.log("onAxesClick: seeking to frame=",frame,"...");
+        
+    videoControl.pause()
  
     defaultSelectedBee = id
     if (frame==getCurrentFrame()) {
@@ -878,7 +880,7 @@ function getTTags() {
             
             if (typeof ttags[id] === 'undefined')
                 ttags[id]=[];
-            ttags[id][F]=tags[i];
+            ttags[String(id)][String(F)]=tags[i];
         }
     }
     
