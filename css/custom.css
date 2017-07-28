@@ -495,3 +495,7 @@ fieldset[disabled] .btn-window.focus {
   fill: #008000;
   font-weight: bold;
 }
+
+#alerttext {
+  min-width: 200px;
+}

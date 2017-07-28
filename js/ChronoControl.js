@@ -17,6 +17,8 @@ function initChrono() {
     flag_restrictID = false
     flag_excludeID = false
     flag_autoEventMode = false
+    mousewheelMode = false
+    onMousewheelModeToggled()
 
     // SVG adjust to its parent #chronoDiv
     var svg = d3.select("#svgVisualize")    
@@ -28,6 +30,10 @@ function initChrono() {
     axes = new ChronoAxes(svg, videoinfo, options)
     //axes.onClick = onAxesClick         // Callback when the user clicks in axes
     //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
+    
+    svgInterval = axes.chronoGroup.append("g");
+    svgMiddle = axes.chronoGroup.append("g");
+    svgTop = axes.chronoGroup.append("g");
 
     $( videoControl ).on('frame:changed', updateTimeMark)
     $( videoControl ).on('previewframe:changed', updatePreviewTimeMark)
@@ -97,6 +103,11 @@ function initChrono() {
     
     initVideoSpan()
     initTrackWindowSpan()
+}
+
+function onMousewheelModeToggled() {
+    mousewheelMode = $('#mousewheelMode').prop( "checked")
+    console.log('onMousewheelModeToggled: toggled mousewheelMode=',mousewheelMode)
 }
 
 function getChronoItemHeight() {
@@ -256,7 +267,8 @@ function updateChronoYDomain() {
     } else {
         domain = validIdsChrono()
     }
-    console.log('updateChronoYDomain: domain=',domain)
+    if (logging.axesEvents)
+        console.log('updateChronoYDomain: domain=',domain)
     
     //let oldN=axes.ydomain().length
     //let N=domain.length
@@ -272,7 +284,8 @@ function updateChronoYDomain() {
 }
 function updateTimeMark() {
     var frame = getCurrentFrame();
-    console.log('updateTimeMark: frame=',frame)
+    if (logging.frameEvents)
+        console.log('updateTimeMark: frame=',frame)
     if (typeof frame == "undefined") {
       frame = 0;
     }
@@ -289,14 +302,7 @@ function updateChronoSelection() {
     axes.selectId(id)
 }
 
-/* Callbacks to react to changes in chronogram axes */
-function onAxesClick(event) {
-    // User clicked in chronogram axes
-    var frame = event.frame
-    var id = event.id
-    if (logging.axesEvents)
-        console.log("onAxesClick: seeking to frame=",frame,"...");
-        
+function gotoEvent(frame, id) {
     videoControl.pause()
  
     defaultSelectedBee = id
@@ -312,6 +318,17 @@ function onAxesClick(event) {
         // external controller logic is supposed to call back updateTimeMark
         // to update the view
     }
+}
+
+/* Callbacks to react to changes in chronogram axes */
+function onAxesClick(event) {
+    // User clicked in chronogram axes
+    var frame = event.frame
+    var id = event.id
+    if (logging.axesEvents)
+        console.log("onAxesClick: seeking to frame=",frame,"...");
+
+    gotoEvent(frame, id)        
 }
 function onAxesDblClick(event) {
     // User double clicked in chronogram axes
@@ -747,7 +764,7 @@ function createIntervalList() {
             }
 
             for (let j=0; j<iArray.length; j++) {
-                xValues[j]=chronogramData[iArray[j]].x;
+                xValues[j]=Number(chronogramData[iArray[j]].x);
             }
 
             let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, Activity: chronogramData[iArray[0]].Activity };
@@ -763,9 +780,22 @@ function createIntervalList() {
             }
             allIntervals.push(tempInterval);
         }
+    }
+
+    rectIntervals = allIntervals.filter(function(d){
+      return d.x1 != d.x2;
+    });
+    circlesIntervals = allIntervals.filter(function(d){
+      return d.x1 == d.x2;
+    });
 }
 
-    return allIntervals;
+
+function onActivityClick(d) {
+    console.log("CLICK Activity d=",d);
+    d3.event.stopPropagation();
+    
+    gotoEvent(d.x1, d.y)   
 }
 
 //black orb rectangles are made here
@@ -773,6 +803,7 @@ function insertActivities(selection) {
     selection.insert("rect")
         .style("stroke-width", "1px")
         .attr("class", "activity")
+        .on('click',onActivityClick)
         .call(setGeomActivity)
 }
 // function setGeomActivity(selection) {
@@ -815,12 +846,27 @@ function setGeomActivity(selection) {
         })
         .style("fill", "gray");
         //.style("stroke", activityColor);
+        	//Add text to display annotation info 
+    selection.append("title").text(function(d) {
+      return (
+        "Bee ID: " +
+        d.y +
+        " Start Frame: " +
+        (d.x1) +
+        " End Frame: " +
+        (d.x2 + 1) +
+        " Activity: " +
+        d.Activity
+      );
+    });
+
 }
 
 function initEntering(input){
     input.insert("rect")
     .attr("width", "1px")
-    .attr("class","enter");
+    .attr("class","entering")
+    .on('click',onActivityClick)
             // .call(updateEnteringAct)
 }
 //create rectangles for entering exiting activites
@@ -842,7 +888,8 @@ function updateEntering(input) {
 function initLeaving(input){
     input.insert("rect")
          .attr("width", "1px")
-         .attr("class", "exit");
+         .attr("class", "leaving")
+         .on('click',onActivityClick)
 }
 
 function updateLeaving(input) {
@@ -864,7 +911,8 @@ function updateLeaving(input) {
 function initPollen(input){
     input.insert("rect")
          .attr("width", "1px")
-         .attr("class", "pollen");
+         .attr("class", "pollen")
+         .on('click',onActivityClick)
 }
 
 function updatePollen(input){
@@ -880,25 +928,26 @@ function updatePollen(input){
         .attr("height", function(d) {
             return axes.yScale.rangeBand()/2;
         })
-        .style("fill", "yellow");
+        .style("fill", "yellow")
 }
 
 //Create Fanning visuals
 function initFanning(input){
     input.insert("rect")
          .attr("width", "1px")
-         .attr("class", "fanning");
+         .attr("class", "fanning")
+         .on('click',onActivityClick)
 }
 
 function updateFanning(input){
         input.attr("x", function(d) {
-            return axes.xScale(Number(d.x1));
+            return axes.xScale(d.x1);
         })
         .attr("y", function(d) {
-          return axes.yScale(Number(d.y)) + axes.yScale.rangeBand()/2;// ordinal ?????
+          return axes.yScale(d.y) + axes.yScale.rangeBand()/2;
         })
         .attr("width", function(d) {
-           return axes.xScale(Number(d.x2)) - axes.xScale(d.x1); 
+           return axes.xScale(d.x2+1) - axes.xScale(d.x1); 
         })
         .attr("height", function(d) {
             return axes.yScale.rangeBand()/2;
@@ -942,18 +991,19 @@ function updateActivities(onlyScaling) {
       let activityRects = axes.plotArea.selectAll(".activity").data(allIntervals);
       activityRects.call(setGeomActivity)
     } else {
+      createIntervalList();
       // Full update
       //console.log('updateActivities')
       // let activityRects = axes.plotArea.selectAll(".activity").data(chronogramData)
       //     .call(setGeomActivity)
-      let activityRects = axes.plotArea.selectAll(".activity").data(allIntervals)
+      let activityRects = svgInterval.selectAll(".activity").data(allIntervals)
       
       activityRects.call(setGeomActivity)
       activityRects.enter().call(insertActivities);
       activityRects.exit().remove();
 
       //Object for pollen visuals
-      let insertPollen = axes.plotArea.selectAll(".pollen")
+      let insertPollen = svgTop.selectAll(".pollen")
       .data(allIntervals.filter(function (d){return (d.Activity=="pollen")}));
 
         insertPollen.enter().call(initPollen);
@@ -962,7 +1012,7 @@ function updateActivities(onlyScaling) {
 
 
    	//Object for fanning visuals
-      let insertFanning = axes.plotArea.selectAll(".fanning")
+      let insertFanning = svgTop.selectAll(".fanning")
       .data(allIntervals.filter(function (d){return (d.Activity=="fanning")}));
 
         insertFanning.enter().call(initFanning);
@@ -971,7 +1021,7 @@ function updateActivities(onlyScaling) {
 
 
       //Object to create enter visuals
-      let insertEnter = axes.plotArea.selectAll(".enter")
+      let insertEnter = svgTop.selectAll(".entering")
       .data(allIntervals.filter(function (d){return (d.Activity=="entering")}));
 
         insertEnter.enter().call(initEntering);
@@ -980,7 +1030,7 @@ function updateActivities(onlyScaling) {
 
 
     //Object for exit visuals
-      let insertLeaving = axes.plotArea.selectAll(".leaving")
+      let insertLeaving = svgTop.selectAll(".leaving")
       .data(allIntervals.filter(function (d){return (d.Activity=="leaving")}));
 
         insertLeaving.enter().call(initLeaving);
@@ -989,18 +1039,16 @@ function updateActivities(onlyScaling) {
 
     	}
 
-    //Call interval function to create new data structure
-    createIntervalList();
-
      //create circles for one coordinate bees
     var chart = axes.chronoGroup;
         //Circles for solo bee iD
     let circles =  chart.selectAll("circle")
-        .data(allIntervals.filter(function(d){
-            return d.x1 == d.x2;
-        }))
-    circles.enter().append("circle"); //Add circle chronoGroup
-
+                        .data(circlesIntervals)
+                        
+    circles.enter()
+        .append("circle")
+           .on('click',onActivityClick)
+        .append('title'); //Add circle chronoGroup
     circles.exit().remove();
     //Update circles
     circles
@@ -1024,7 +1072,12 @@ function updateActivities(onlyScaling) {
             else if (d.Activity == "leaving") color = "#00CC99";
             // console.log("Bee Activity2: ", d.Activity)
             return color;
-        });
+        })
+    .select('title').text(function(d) {
+        return (
+          "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity
+        );
+	});
 }
 function initActivities() {
     //chronogramData = []

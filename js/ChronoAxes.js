@@ -665,7 +665,10 @@ function ChronoAxes(parent, videoinfo, options) {
     // Need shift key to zoom 
     // (to avoid zooming when just scrolling across the page)
     injectEventFilter( chronoGroup.select(".zoomEventRect"), 
-          "wheel.zoom", function(event) {return event.shiftKey==true} )
+          "wheel.zoom", function(event) {
+              if (!mousewheelMode) return true
+              return event.shiftKey==true
+          } )
 
     axes.zoom = zoom  // Private
     axes.reinitZoom = reinitZoom

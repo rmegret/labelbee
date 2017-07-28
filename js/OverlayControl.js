@@ -414,7 +414,7 @@ function rotatedRectGeometry(rect) {
     
     rect.setCoords() // Compute coordinates
     var coords = rect.oCoords
-    console.log(rect)
+    //console.log(rect)
     geom.center={x: (coords.tl.x+coords.br.x)/2, y: (coords.tl.y+coords.br.y)/2}
     geom.tl={x: coords.tl.x, y: coords.tl.y}
     geom.br={x: coords.br.x, y: coords.br.y}
@@ -1235,8 +1235,12 @@ function onClickFocusTrackWindow() {
     
     setFocusTrackWindow(!lockFocusTrackWindow)
     
-    if (lockFocusTrackWindow)
+    if (lockFocusTrackWindow) {
+        //lastNonFocusWindow = axes.xdomain()
         focusTrackWindow()
+    } else {
+        //axes.xdomainFocus(lastNonFocusWindow, 1)
+    }
     //updateFocusTrackWindowButton()
 }
 function focusTrackWindow() {
@@ -1524,7 +1528,7 @@ function predictIdFromObsMultiframe(frameInterval, pt, mode) {
     return out;
 }
 
-predictIdClickRadius = 40
+predictIdClickRadius = 60
 function predictIdFromTags(frame, pt, mode) {
     var tmp = Tags[frame];
     if (tmp == null) return {id: undefined, tag: undefined, reason:'notFound'};
@@ -1623,12 +1627,11 @@ function newRectForCurrentTag() {
         printMessage('Current tag already annotated','red')
         return;
     }
-    newRectForTag(tag)
+    var rect = newRectForTag(tag)
     
     canvas1.setActiveObject(rect);
     canvas1.renderAll();
-
-    //automatic_sub();
+    
     submit_bee();
 }
 
@@ -1639,8 +1642,10 @@ function onMouseDown_predict(option) {
     let videoXY = canvasToVideoPoint(canvasXY)
     var rect;
     
-    if (logging.mouseEvents)
+    if (logging.mouseEvents) {
         console.log('onMouseDown: no object selected', option)
+        console.log('onMouseDown: currentID=', getCurrentID())
+    }
 
     // predictId takes video/obs coordinates units
     let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
@@ -1698,8 +1703,12 @@ function onMouseDown_predict(option) {
         if (logging.mouseEvents)
             console.log("onMouseDown: copied rect from ", obs)
     } else {
+        let id = getCurrentID()
+        if (id==null) {
+            id = prediction.id;
+        }
         // Did not find any tag nor rect
-        rect = addRect(prediction.id, startX - default_width / 2, startY - default_height / 2,
+        rect = addRect(id, startX - default_width / 2, startY - default_height / 2,
             default_width, default_height, "new");
         if (logging.mouseEvents)
             console.log("onMouseDown: did not find tag or event, created new rect with default size ", rect)
@@ -1934,16 +1943,12 @@ function onMouseDown(option) {
         if (logging.mouseEvents)
             console.log('onMouseDown: no object selected', option)
 
-        // Deselect current bee
-        //canvas1.deactivateAllWithDispatch()
-        deselectBee()
-
         if (option.e.shiftKey) {
             // If SHIFT down, try to copy prediction
             // or create box centered on click if none
             onMouseDown_predict(option)
         } else if (option.e.ctrlKey) {
-            // If CTRL key, draw the box directly. Try to predict ID using TopLeft corner
+            // If CTRL key, draw the box directly. Try to predict ID using TopLeft corner        
             onMouseDown_interactiveRect(option)
         } else if (option.e.altKey) {
             // If ALT key, do panning
@@ -2134,17 +2139,27 @@ function onLabelToggled(event) {
         console.log("onLabelToggled: event=", event)
     var activeObject = canvas1.getActiveObject()
     var target = event.target;
+    if (activeObject == null) {
+        newRectForCurrentTag()
+        activeObject = canvas1.getActiveObject()
+    }
     if (activeObject !== null) {
         let obs = activeObject.obs
         
-        $(target).toggleClass('activated', !$(target).hasClass('activated'))
+        let oldState = $(target).hasClass('active')
+        
+        console.log('oldState=',oldState)
+        let isOn = !oldState
+        
+        
+        $(target).toggleClass('active', isOn)
         
         let labelList = ['fanning','pollen','entering','leaving',
                 'falsealarm','wrongid'];
         
         for (let theClass of labelList) {
             if ($(target).hasClass(theClass)) {
-              updateObsLabel(obs, theClass, $(target).hasClass('activated'))
+              updateObsLabel(obs, theClass, isOn)
             }
         }
         

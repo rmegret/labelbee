@@ -98,9 +98,9 @@ function init() {
 
 function printMessage(html, color) {
     if (typeof color === 'undefined') color='black'
-    var alert1 = document.getElementById("alert");
-    alert1.style.color = color;
-    alert1.innerHTML = html
+
+    $('#alerttext').html(html)
+    $('#alerttext').css('color', color);
     
     if (html !== "")
         console.log("MESSAGE: %c"+html, "color:"+color)

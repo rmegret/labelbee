@@ -91,7 +91,6 @@
             <button value="Next second" onclick="videoControl.forward(20)" type="button" class="btn btn-info btn-sm small nopad"><span class="glyphicon glyphicon-fast-forward small"></span><br class="negmargin"><span class="small">1s</span></button>
             <button value="Next minute" onclick="videoControl.forward(200)" type="button" class="btn btn-info btn-sm small nopad"><span class="glyphicon glyphicon-fast-forward small"></span><br class="negmargin"><span class="small">10s</span></button>
 
-
             <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-info btn-xs" style="position: inline" id="deleteButton">
             <button type="button" onclick="undoAction()" class="btn btn-info btn-xs" style="position: inline" id="undoButton">Undo</button>
 
@@ -99,45 +98,27 @@
           <p>
           <div id="beeInfo" class="">
             <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button" class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
-            <b>Bee</b> ID <input type="text" size="6" value="" id="I" onkeypress="onKeyDown_IDEdit(event)""></input>
-<!--             <div display="inline-block"> -->
+            Change ID <input type="text" size="6" value="" id="I" onkeypress="onKeyDown_IDEdit(event)""></input>
+   
+            <div style="display:inline-block">
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle fanning" title="Toogle label">Fanning</button>
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle pollen" title="Toogle label">Pollen</button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle entering" title="Toogle label">Entering</button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle leaving" title="Toogle label">Leaving</button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle entering" title="Toogle label">Entering <span class="glyphicon glyphicon-arrow-up small"></span></button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle leaving" title="Toogle label">Leaving <span class="glyphicon glyphicon-arrow-down small"></span></button>
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle falsealarm" title="Toogle label">FalseAlarm</button>
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle wrongid" title="Toogle label">WrongID</button>
-            
-<!-- 
-            <div class="checkbox-inline">
-              <label><input type="checkbox" value="" id="F" class="labelcheckbox fanning">Fanning</label>
             </div>
-            <div class="checkbox-inline">
-              <label><input type="checkbox" value="" id="P" class="labelcheckbox pollen">Pollen</label>
-            </div>
-            <div class="checkbox-inline">
-              <label><input type="checkbox" value="" id="E" class="labelcheckbox entering">Entering</label>
-            </div>
-            <div class="checkbox-inline">
-              <label><input type="checkbox" value="" id="L" class="labelcheckbox departing">Departing</label>
-            </div>
-            <div class="checkbox-inline">
-              <label><input type="checkbox" value="" class="labelcheckbox falsealarm">FalseAlarm</label>
-            </div>       
-            <div class="checkbox-inline">
-              <label><input type="checkbox" value="" class="labelcheckbox wrongid">WrongID</label>
-            </div>
- -->
             
             <br>
             <div class="textbox-inline">
               <label>Labels: </label><input type="textbox" value="" class="resizedTextbox" id="labels">
-            <div class="textbox-inline">
               <label>Notes: </label><input type="textbox" value="" class="resizedTextbox" id="notes">
 <!--                    <label>Note: </label><textarea rows="1" cols="50" id="notes"></textarea>  -->
             </div>
 <!--             </div> -->
-            <p id="alert"></p>
+<!--             <br> -->
+
+            <p id="alerttext"></p>
           </div>
           </p>
           
@@ -422,6 +403,10 @@
             <div id='parameters' class='collapsible'>
                 <label>Parameters <span class="glyphicon glyphicon-wrench"></span></label>
                 <div>
+                  <div class="checkbox">
+                    <label><input type="checkbox" checked="false" id="mousewheelMode" onclick="onMousewheelModeToggled()" class='btn-sm'>Zoom in Chrono needs shift+mousewheel</label>
+                  </div>
+                  <hr>
                   <div class="checkbox">
                     <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>Show Obs</label>
                   </div>
