@@ -532,7 +532,7 @@ function updateObsActivityFromForm(obs) {
     obs.bool_acts[0]=hasLabel(obs,'fanning');
     obs.bool_acts[1]=hasLabel(obs,'pollen');
     obs.bool_acts[2]=hasLabel(obs,'entering');
-    obs.bool_acts[3]=hasLabel(obs,'departing');
+    obs.bool_acts[3]=hasLabel(obs,'leaving');
     
     obs.notes = $('#notes').val()
     
@@ -551,7 +551,7 @@ function setLabels(rect,labels) {
     obs.bool_acts[0]=hasLabel(obs,'fanning');
     obs.bool_acts[1]=hasLabel(obs,'pollen');
     obs.bool_acts[2]=hasLabel(obs,'entering');
-    obs.bool_acts[3]=hasLabel(obs,'departing');
+    obs.bool_acts[3]=hasLabel(obs,'leaving');
     
     updateForm(rect)
 }
@@ -2139,7 +2139,7 @@ function onLabelToggled(event) {
         
         $(target).toggleClass('activated', !$(target).hasClass('activated'))
         
-        let labelList = ['fanning','pollen','entering','exiting',
+        let labelList = ['fanning','pollen','entering','leaving',
                 'falsealarm','wrongid'];
         
         for (let theClass of labelList) {
@@ -2170,8 +2170,8 @@ function onLabelClicked(event) {
                        $('.labelcheckbox.pollen').prop('checked'))
         updateObsLabel(obs, 'entering', 
                        $('.labelcheckbox.entering').prop('checked'))
-        updateObsLabel(obs, 'departing', 
-                       $('.labelcheckbox.departing').prop('checked'))
+        updateObsLabel(obs, 'leaving', 
+                       $('.labelcheckbox.leaving').prop('checked'))
 
         updateObsLabel(obs, 'falsealarm', 
                        $('.labelcheckbox.falsealarm').prop('checked'))

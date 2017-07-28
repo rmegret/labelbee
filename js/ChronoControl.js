@@ -731,7 +731,7 @@ function activityColor(d) {
             color = "#CFCF00";
         else if (d.Activity == "entering")
             color = "#FF0000";
-        else if (d.Activity == "exiting")
+        else if (d.Activity == "leaving")
             color = "#0000FF";
         else if (d.Activity == "fanning")
             color = "#20FF20";
@@ -741,7 +741,7 @@ function activityHeight(d) {
         var h = 2
         if (d.Activity == "entering")
             h=4
-        else if (d.Activity == "exiting")
+        else if (d.Activity == "leaving")
             h=4
         else if (d.Activity == "pollenating")
             h=6
@@ -805,7 +805,7 @@ function setTagGeom(selection) {
         .style("fill", function(d) {
             if (d.dir=="entering")
                 return '#ffc0c0'
-            else if (d.dir=="exiting")
+            else if (d.dir=="leaving")
                 return '#c0c0ff'
             else
                 return 'blue'
@@ -813,7 +813,7 @@ function setTagGeom(selection) {
         .style("stroke", function(d) {
             if (d.dir=="entering")
                 return '#ffc0c0'
-            else if (d.dir=="exiting")
+            else if (d.dir=="leaving")
                 return '#c0c0ff'
             else
                 return 'blue'
@@ -912,7 +912,7 @@ function refreshChronogram() {
                 } else if (Tracks[F][id].bool_acts[2]) {
                     chronoObs.Activity = "entering";
                 } else if (Tracks[F][id].bool_acts[3]) {
-                    chronoObs.Activity = "exiting";
+                    chronoObs.Activity = "leaving";
                 } else if (Tracks[F][id].bool_acts[0]) {
                     chronoObs.Activity = "fanning";
                 }
@@ -1122,7 +1122,7 @@ function computeMotionDirection() {
             if (tag2.c[1] < tag1.c[1])
                 activeInterval.dir = 'entering'
             else if (tag2.c[1] > tag1.c[1])
-                activeInterval.dir = 'exiting'
+                activeInterval.dir = 'leaving'
         }
     }
     updateTagIntervals()

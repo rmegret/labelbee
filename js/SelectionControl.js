@@ -10,10 +10,12 @@ var labelMap = {
     f:'fanning',
     p:'pollen',
     e:'entering',
-    d:'departing',
+    d:'leaving',
+    l:'leaving',
     pollen:'pollen',
     entering:'entering',
-    departing:'departing',
+    leaving:'leaving',
+    departing:'leaving',
     pollen:'pollen'
 }
 
@@ -89,7 +91,7 @@ function updateLabelsFromBool(labels, bool_acts) {
     updateLabel(labelArray, 'fanning', bool_acts[0])
     updateLabel(labelArray, 'pollen', bool_acts[1])
     updateLabel(labelArray, 'entering', bool_acts[2])
-    updateLabel(labelArray, 'departing', bool_acts[3])
+    updateLabel(labelArray, 'leaving', bool_acts[3])
     return toLabelString(labelArray)
 }
 
@@ -233,7 +235,7 @@ function updateForm(activeObject) {
         $('.labelcheckbox.fanning').prop('checked', hasLabel(obs,'fanning'));
         $('.labelcheckbox.pollen').prop('checked', hasLabel(obs,'pollen'));
         $('.labelcheckbox.entering').prop('checked', hasLabel(obs,'entering'));
-        $('.labelcheckbox.exiting').prop('checked', hasLabel(obs,'exiting'));
+        $('.labelcheckbox.leaving').prop('checked', hasLabel(obs,'leaving'));
         $('.labelcheckbox.falsealarm').prop('checked', hasLabel(obs,'falsealarm'));
         $('.labelcheckbox wrongid').prop('checked', hasLabel(obs,'wrongid'));
                 
@@ -247,7 +249,7 @@ function updateForm(activeObject) {
         $('.labeltoggle.fanning').toggleClass('active',hasLabel(obs,'fanning'))
         $('.labeltoggle.pollen').toggleClass('active',hasLabel(obs,'pollen'))
         $('.labeltoggle.entering').toggleClass('active',hasLabel(obs,'entering'))
-        $('.labeltoggle.exiting').toggleClass('active',hasLabel(obs,'exiting'))
+        $('.labeltoggle.leaving').toggleClass('active',hasLabel(obs,'leaving'))
         $('.labeltoggle.falsealarm').toggleClass('active',hasLabel(obs,'falsealarm'))
         $('.labeltoggle.wrongid').toggleClass('active',hasLabel(obs,'wrongid'))
     }
