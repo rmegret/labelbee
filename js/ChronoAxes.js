@@ -621,10 +621,8 @@ function ChronoAxes(parent, videoinfo, options) {
 
     // ## Zooming (applies to the xScale object only)
     var zoom = d3.behavior.zoom()
-    zoom.x(xScale)  // horizontal zoom applies to xScale
-        /*.y(yScale)*/
-        .scaleExtent([1/24, 1000]) // Put limit in how far we can zoom in/out
-        .on("zoom", onZoom)
+    reinitZoom()
+    zoom.on("zoom", onZoom)
     //    chronoGroup.select(".plotAreaBackground").call(zoom)
     // Zoom behavior is applied to an invisible rect on top of the plotArea
     chronoGroup.append("rect").attr('class', 'zoomEventRect')
@@ -640,8 +638,10 @@ function ChronoAxes(parent, videoinfo, options) {
         if (!!d3.event.sourceEvent)
             d3.event.sourceEvent.stopPropagation(); 
     }
-    var reinitZoom=function() {
+    function reinitZoom() {
+        let d = xScale.domain()
         zoom.x(xScale)
+            .scaleExtent([1/24, (d[1]-d[0])/10]) // Put limit in how far we can zoom in/out
     }
     
     /* Monkey patch events from D3 selection */
