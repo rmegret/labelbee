@@ -499,3 +499,11 @@ fieldset[disabled] .btn-window.focus {
 #alerttext {
   min-width: 200px;
 }
+
+
+.obsTableRow {
+    border: 1px solid gray;
+}
+.obsTableRow:hover {
+    background-color: #e0e0ff;
+}

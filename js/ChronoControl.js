@@ -17,6 +17,7 @@ function initChrono() {
     flag_restrictID = false
     flag_excludeID = false
     flag_autoEventMode = false
+    flag_hideInvalid = false
     mousewheelMode = false
     onMousewheelModeToggled()
 
@@ -196,13 +197,30 @@ function domainyFromTagData() {
 function validIdsDomain() {
     if (chronogramData.length === 0) return []
     let ids = new Set()
-    chronogramData.forEach(function(d) {ids.add(d.y)})
+    if (flag_hideInvalid) {
+        chronogramData.forEach(function(d) {
+            let labs=d.labels.split(',')
+            if (labs.indexOf('wrongid')==-1
+                && labs.indexOf('falsealarm')==-1) 
+                ids.add(d.y)
+          })
+    } else {
+        chronogramData.forEach(function(d) {ids.add(d.y)})
+    }
     return [...ids] // Convert to array
 }
 function validTagIdsDomain() {
     if (tagIntervals.length === 0) return []
     let ids = new Set()
-    tagIntervals.forEach(function(d) {ids.add(d.id)})
+    if (flag_hideInvalid) {
+        tagIntervals.forEach(function(d) {
+            if (!containsLabel(d.labels,'wrongid') &&
+               !containsLabel(d.labels,'falsealarm')) 
+                ids.add(d.id)
+            })
+    } else {
+        tagIntervals.forEach(function(d) {ids.add(d.id)})
+    }
     return [...ids] // Convert to array
 }
 function validAllTagIdsDomain() {
@@ -588,6 +606,16 @@ function onExcludeIDChanged() {
     refreshChronogram()
 }
 
+function click_hideInvalid() {
+    if ( $("#hideInvalidButton").hasClass( "active" ) ) {
+        $("#hideInvalidButton").removeClass("active")
+        flag_hideInvalid= false;
+    } else {
+        $("#hideInvalidButton").addClass("active")      
+        flag_hideInvalid = true;
+    }    
+    refreshChronogram()
+}
 
 /* Callback to react to change in chronogramData */
 function drawChrono() {
@@ -800,32 +828,13 @@ function onActivityClick(d) {
 
 //black orb rectangles are made here
 function insertActivities(selection) {
+    //console.log('selection=',selection)
     selection.insert("rect")
+        .attr("class","activity")
         .style("stroke-width", "1px")
-        .attr("class", "activity")
         .on('click',onActivityClick)
         .call(setGeomActivity)
 }
-// function setGeomActivity(selection) {
-//     selection
-//         .attr("x", function(d) {
-//             return axes.xScale(Number(d.x1));
-//         })
-//         .attr("y", function(d) {
-// //             return axes.yScale(Number(d.y) + 0.1);  // for linear scale
-//             return axes.yScale(d.y) + 0.1*axes.yScale.rangeBand(); // ordinal
-//         })
-//         .attr("width", function(d) {
-//             return (Math.max( axes.xScale(Number(d.x) + 1) - axes.xScale(Number(d.x)), 3 )); // Min 10 pixels
-//             //return 8
-//         })
-//         .attr("height", function(d) {
-//             //return (yScale(Number(d.y) + 0.9) - yScale(Number(d.y) + 0.1));
-//             return activityHeight(d)
-//         })
-//         .style("fill", activityColor)
-//         .style("stroke", activityColor)
-// }
 
 //v2 of intervals 
 //Unlike the circles coordinates, the rectangles are being created here because if they're added 
@@ -842,12 +851,13 @@ function setGeomActivity(selection) {
             return axes.xScale(d.x2+1) - axes.xScale(d.x1);
         })
         .attr("height", function(d) {
-            return axes.yScale.rangeBand();
+            return axes.yScale.rangeBand()/2;
         })
         .style("fill", "gray");
         //.style("stroke", activityColor);
         	//Add text to display annotation info 
-    selection.append("title").text(function(d) {
+    selection.select("rect").selectAll("title").remove()
+    selection.select("rect").append("title").text(function(d) {
       return (
         "Bee ID: " +
         d.y +
@@ -879,7 +889,7 @@ function updateEntering(input) {
         })
         .attr("width", "4px")
         .attr("height", function(d) {
-            return axes.yScale.rangeBand();
+            return axes.yScale.rangeBand()/2;
         })
         .style("fill", "green");
 }
@@ -901,7 +911,7 @@ function updateLeaving(input) {
         })
         .attr("width", "4px")
         .attr("height", function(d) {
-            return axes.yScale.rangeBand();
+            return axes.yScale.rangeBand()/2;
         })
         .style("fill", "red");
         
@@ -982,6 +992,51 @@ function activityHeight(d) {
 
     allIntervals.x1 =  0;
     allIntervals.x2 = 0;
+    
+    
+function initObsSpan(selection) {
+    //console.log('selection=',selection)
+    selection.insert("rect")
+        .attr("class","obsspan")
+        .style("stroke-width", "1px")
+        //.on('click',onActivityClick)
+        .call(updateObsSpan)
+}
+function updateObsSpan(selection) {
+    selection
+        .attr("x", function(d) {
+            return axes.xScale(d.span.f1);
+        })
+        .attr("y", function(d) {
+            return axes.yScale(d.id)+axes.yScale.rangeBand()/2; // ordinal
+        })
+        .attr("width", function(d) {
+            return axes.xScale(d.span.f2+1) - axes.xScale(d.span.f1);
+        })
+        .attr("height", function(d) {
+            return axes.yScale.rangeBand()/2;
+        })
+        .style("fill", "none")
+        .style("stroke", "red");
+}
+function updateAlertCircle(selection) {
+    selection.exit().remove()
+    selection.enter().insert("circle")
+        .attr("class","alertcircle")
+        .style("fill", "none")
+        .style("stroke-width", "2px")
+        //.on('click',onActivityClick)
+        .call(updateObsSpan)
+    selection
+        .attr("cx", function(d) {
+            return axes.xScale(d.frame);
+        })
+        .attr("cy", function(d) {
+            return axes.yScale(d.id)+axes.yScale.rangeBand()/2; // ordinal
+        })
+        .attr("r", 7)
+        .style("stroke", "cyan");
+}
 
     //put circles and rects here
 function updateActivities(onlyScaling) {
@@ -996,11 +1051,25 @@ function updateActivities(onlyScaling) {
       //console.log('updateActivities')
       // let activityRects = axes.plotArea.selectAll(".activity").data(chronogramData)
       //     .call(setGeomActivity)
-      let activityRects = svgInterval.selectAll(".activity").data(allIntervals)
+      let activityRects = svgInterval.selectAll(".activity")
+                                     .data(allIntervals)
       
       activityRects.call(setGeomActivity)
       activityRects.enter().call(insertActivities);
       activityRects.exit().remove();
+
+
+
+      let spanRects = svgTop.selectAll(".obsspan")
+                   .data(flatTracks);
+      spanRects.enter().call(initObsSpan)
+      spanRects.exit().remove()
+      spanRects.call(updateObsSpan)
+
+      let alertCircle = axes.plotArea.selectAll(".alertcircle")
+                    .data(flatTracks.filter(d=>!!d.isredundant));
+      alertCircle.call(updateAlertCircle)
+
 
       //Object for pollen visuals
       let insertPollen = svgTop.selectAll(".pollen")
@@ -1042,11 +1111,11 @@ function updateActivities(onlyScaling) {
      //create circles for one coordinate bees
     var chart = axes.chronoGroup;
         //Circles for solo bee iD
-    let circles =  chart.selectAll("circle")
+    let circles =  chart.selectAll("circle.obs")
                         .data(circlesIntervals)
                         
     circles.enter()
-        .append("circle")
+        .append("circle").attr('class','obs')
            .on('click',onActivityClick)
         .append('title'); //Add circle chronoGroup
     circles.exit().remove();
@@ -1117,18 +1186,16 @@ function setTagGeom(selection) {
             return tagHeight(d); // Ordinal scale
         })
         .style("fill", function(d) {
-            if (d.dir=="entering")
+            if (d.labeling.entering) {
+                console.log('setTagGeom: found entering, d=',d)
                 return '#ffc0c0'
-            else if (d.dir=="leaving")
-                return '#c0c0ff'
-            else
+            } else {
                 return 'blue'
+            }
         })
         .style("stroke", function(d) {
-            if (d.dir=="entering")
+            if (d.labeling.entering)
                 return '#ffc0c0'
-            else if (d.dir=="leaving")
-                return '#c0c0ff'
             else
                 return 'blue'
         })
@@ -1202,6 +1269,78 @@ function getTTags() {
     return ttags;
 }
 
+var flatTracks = []
+function updateObsTable() {
+    flatTracksAll = []
+    for (let F in Tracks) {
+        for (let id in Tracks[F]) {
+                var obs = Tracks[F][id]
+            
+                if (flag_restrictID) {
+                    if ($.inArray(String(id), restrictIDArray)<0) continue;
+                } else if (flag_excludeID) {
+                    if ($.inArray(String(id), excludeIDArray)>=0) continue;
+                }
+            
+                let chronoObs = {'frame':F, 'id':id, 'labels':obs.labels};
+
+                flatTracksAll.push(chronoObs)
+
+        }
+    }
+    if (flag_hideInvalid) {
+        flatTracks = flatTracksAll.filter(function(d){
+                return (!containsLabel(d.labels,'falsealarm') &&
+                        !containsLabel(d.labels,'wrongid')    )
+            })
+    } else
+        flatTracks = flatTracksAll;
+    
+    d3.select('#obsTable').html("");
+    var table = d3.select('#obsTable').append('table');
+
+    function ƒ(name){ return function(d){return d[name]};}
+    
+    var columns = [
+          { head: 'ID', cl: 'id', html: ƒ('id') },
+          { head: 'Frame', cl: 'frame', html: ƒ('frame') },
+          { head: 'Labels', cl: 'labels', html: ƒ('labels') }
+      ];
+      
+    function onObsTableRowClick(d) {
+        console.log('onObsTableRowClick: d=',d)
+        gotoEvent(Number(d.frame), d.id)
+    }
+    
+    table.append('thead').append('tr')
+       .selectAll('th')
+       .data(columns).enter()
+       .append('th')
+       .attr('class', function(d){return d.cl})
+       .text(function(d){return d.head});
+       
+    table.append('tbody')
+       .selectAll('tr')
+       .data(flatTracks).enter()
+       .append('tr')
+       .classed('obsTableRow', true)
+       .on('click',onObsTableRowClick)
+       .selectAll('td')
+         .data(function(row, i) {
+             // evaluate column objects against the current row
+             return columns.map(function(c) {
+                 var cell = {};
+                 d3.keys(c).forEach(function(k) {
+                     cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                 });
+                 return cell;
+             });
+         }).enter()
+           .append('td')
+           .html(ƒ('html'))
+           .attr('class', ƒ('cl'));
+}
+
 
 function refreshChronogram() {
 
@@ -1214,11 +1353,17 @@ function refreshChronogram() {
     if (showObsChrono) {
         for (let F in Tracks) {
             for (let id in Tracks[F]) {
+                let obs=Tracks[F][id]
+                let labelArray = obs.labels.split(",")
             
                 if (flag_restrictID) {
                     if ($.inArray(String(id), restrictIDArray)<0) continue;
                 } else if (flag_excludeID) {
                     if ($.inArray(String(id), excludeIDArray)>=0) continue;
+                }
+                if (flag_hideInvalid) {
+                    if (hasLabel(obs,'falsealarm') ||
+                        hasLabel(obs,'wrongid')    ) continue;
                 }
             
                 let chronoObs = {'x':F, 'y':id, 'Activity':""};
@@ -1232,29 +1377,31 @@ function refreshChronogram() {
 //                 } else if (Tracks[F][id].bool_acts[0]) {
 //                     chronoObs.Activity = "fanning";
 
-                let b=Tracks[F][id].bool_acts
+                let b=obs.bool_acts
                 
                 if (!b[0] && !b[1] && !b[2] && !b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':""});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"", labels:obs.labels});
                 }
                 if (b[1]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"pollen"});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"pollen", labels:obs.labels});
                     //chronoObs.Activity = "pollenating";
                 }
                 if (b[2]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering"});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering", labels:obs.labels});
                 }
                 if (b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving"});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving", labels:obs.labels});
                 }
                 if (b[0]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning"});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning", labels:obs.labels});
                 }
 
                 // chronogramData.push(chronoObs);
             }
         }
     }
+    
+    updateObsTable()
   
     
 //  tagsData.length=0
@@ -1304,7 +1451,12 @@ function refreshChronogram() {
               if (activeInterval.end == f-1) {
                 // Extend active interval
                 activeInterval['end']  = f
-                activeInterval.hammingavg=activeInterval.hammingavg+tags.hamming;
+                
+                if (tags.hamming<1000)
+                      activeInterval.hammingavg=
+                           activeInterval.hammingavg+tags.hamming;
+                else 
+                      activeInterval.hammingavg=activeInterval.hammingavg+0
               } else {
                 // Do not extend active interval
                 doPush = true
@@ -1316,11 +1468,11 @@ function refreshChronogram() {
                     activeInterval.hammingavg=activeInterval.hammingavg/(activeInterval['end'] -activeInterval['begin']+1)
                     tagIntervals.push(activeInterval)
                 // Open new one
-                activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming}
+                activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming, labeling:{}}
               }
             } else {
               // Open new one
-              activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming}
+              activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming, labeling:{}}
               isActive=true;
             }
           }
@@ -1332,6 +1484,21 @@ function refreshChronogram() {
                 tagIntervals.push(activeInterval)
         }
     }
+    
+    updateTagsLabels()
+    
+    if (flag_hideInvalid) {
+    
+        let tagIntervals0 = tagIntervals;
+        tagIntervals=[]
+        
+        for (let interval of tagIntervals0) {
+            if (interval.labeling.falsealarm ||
+                interval.labeling.wrongid)   continue;
+            tagIntervals.push(interval)
+        }
+    }
+    tagIntervals0=[];
     
     if (logging.chrono)
         console.log("refreshChronogram: drawChrono()...")
