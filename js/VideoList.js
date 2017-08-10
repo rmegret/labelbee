@@ -8,7 +8,22 @@
 var videoinfo;
 
 /* Video List */
-function initVideoSelection() {
+function initVideoList() {
+    videoListTable=[]
+
+    videoList = [ 'testvideo.mp4',
+                  'vlc1.mp4',
+                  'vlc2.mp4',
+                  '1_02_R_170419141405.mp4',
+                  '1_02_R_170426151700_cleaned.mp4',
+                  '36_01_H_160715100000_copy.mp4',
+                  'GuraboTest/4_02_R_170511130000.mp4',
+                  '2017-06-Gurabo/2_02_R_170609100000.mp4' ]
+    videoListCurrentID = 0;
+    
+    updateVideoList()
+    updateVideoSelectbox()
+    
     videoinfo = {
         'name': 'No video loaded',
         'videofps': 20, // Should be equal to realfps (unless broken encoder)
@@ -20,18 +35,25 @@ function initVideoSelection() {
     };
     updateVideoInfoForm()
     
-    videoList = [ 'testvideo.mp4',
-                  'vlc1.mp4',
-                  'vlc2.mp4',
-                  '1_02_R_170419141405.mp4',
-                  '1_02_R_170426151700_cleaned.mp4',
-                  '36_01_H_160715100000_copy.mp4',
-                  'GuraboTest/4_02_R_170511130000.mp4',
-                  '2017-06-Gurabo/2_02_R_170609100000.mp4',
-                  '2_02_R_170609100000.mp4' ]
-    initVideoSelectbox()
+    videoListFromServer('data/videolist.csv')
 }
-function initVideoSelectbox() {
+function updateVideoList() {
+    var data = videoList;
+    
+    var html = "";
+    for (var i = 0; i < data.length; i++){
+        html +="<tr>"+
+                "<td><input type='button' data-arrayIndex='"+ i +"' onclick='selectVideoFromList(this)' class='btn btn-default btn-xs glyph-xs' value='"+(i+1)+"'></button>"+ "</td>"+
+                "<td>"+ data[i] + "</td>"+
+                "</tr>";
+    }
+    html += '<tr><td><button value="Add video to list" onclick="addVideoClick()" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus-sign"></span></button></td><td></td></tr>'
+    
+    $("#videoList").html(html);
+    
+    updateVideoSelectbox()
+}
+function updateVideoSelectbox() {
     var selectbox = $("#selectboxVideo")
     selectbox.find('option').remove()
 
@@ -39,19 +61,54 @@ function initVideoSelectbox() {
         selectbox.append("<option value='data/"+el+"'>"+el+"</option>");
     });
 }
-function selectVideo() {
-    let file = $('#selectboxVideo')[0].value
+function updateVideoListSelection() {
+    var id = videoListCurrentID;
+    $( "#videoList tr.selected" ).removeClass("selected")
+    $( "#videoList tr:nth-child("+(id+1)+")" ).addClass("selected") // jQuery index starts at 1
+    
+    $('#selectboxVideo').prop("selectedIndex", id);
+}
+function onSelectboxVideoChanged() {
+    let id = $('#selectboxVideo').prop("selectedIndex")
+    selectVideoByID(id)
+}
+function prefillVideoFields() {
+    if (videoListTable==null) return;
+    if (videoListTable[videoListCurrentID]==null) return;
+    let tagfile = videoListTable[videoListCurrentID].tags
+    if (tagfile != null) {
+            videoTagURL = 'data/'+tagfile
+    } else {
+            videoTagURL = undefined
+    }
+}
+function selectVideoByID(id) {
+    id = Number(id)
+    if (id >= videoList.length || id<0) {
+        throw ('selectVideobyID: invalid id, id='+id);
+    }
+    videoListCurrentID = id
+    
+    prefillVideoFields()
+    let file = 'data/'+videoList[videoListCurrentID]
+    
+    updateVideoListSelection()
+    
     videoControl.loadVideo(file)
     
     // Change handled in callback onVideoLoaded
+}
+function selectVideoFromList(target) {
+    var id = Number($(target).attr('data-arrayindex'));
+    console.log('selectVideoFromList: data-arrayindex=',id)
+    selectVideoByID(id)
 }
 
 /* Update Video List */
 function addVideoToList(videoname) {
     videoList.push(videoname)
-    initVideoSelectbox()
-    $('#selectboxVideo')[0].selectedIndex=videoList.length-1;
-    selectVideo()
+    updateVideoList()
+    selectVideoByID(videoList.length-1);
 }
 function addVideoClick() {
     var videoname = prompt("Add video to the list and select it:\n\nEnter video filename\ndata/ will be prefixed to its name", "vlc1.mp4");

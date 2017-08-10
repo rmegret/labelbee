@@ -34,6 +34,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  */
 var VideoFrame = function(options) {
 	if (this === window) { return new VideoFrame(options); }
+	var that=this;
+	
 	this.obj = options || {};
 	this.frameRate = this.obj.frameRate || 24;
 	this.video = document.getElementById(this.obj.id) || document.getElementsByTagName('video')[0];
@@ -44,16 +46,22 @@ var VideoFrame = function(options) {
 	this.displayed = false
 	this.lastdisplayed = undefined
 	
+	this.playbackRate = 1
+	
 	let videoframe = this
 	this.frameChangedWrapper = function(event) {
 	  // Do not trigger callback twice for the same frame
 	  let frame = videoframe.get();
-    if (frame == videoframe.lastdisplayed) return;
+	  if (frame != that.forceFrameChanged) {
+        if (frame == videoframe.lastdisplayed) return;
+    }
     videoframe.lastdisplayed = frame;
 	  videoframe.displayed = true
     
     if (videoframe.obj.callback) { videoframe.obj.callback(frame, event); }
 	}
+	// Set to frame to force frameChanged event in seekTo
+	this.forceFrameChanged = undefined; 
 	
 	// REMI: call callback on timeupdate instead of directly in seek, because seek sometime calls the callback too fast (image not yet updated)
 	this.video.addEventListener('timeupdate', this.frameChangedWrapper, false);
@@ -136,7 +144,7 @@ VideoFrame.prototype = {
 			_video.frameChangedWrapper(event)
       			
 			return frame;
-		}, (tick ? tick : 1000 / _video.frameRate / 2));
+		}, (tick ? tick : 1000 / (_video.frameRate*_video.playbackRate) / 2));
 		if (_video.onListen) { _video.onListen({'target': _video}); }
 	},
 	/** Clears the current interval */
@@ -154,6 +162,9 @@ VideoFrame.prototype = {
 	fps : FrameRates,
 	setFrameRate : function(fr) {
 	    this.frameRate = fr;
+	},
+	setPlaybackRate : function(fr) {
+	    this.playbackRate = fr;
 	}
 };
 
@@ -265,7 +276,7 @@ VideoFrame.prototype.toFrames = function(SMPTE) {
  * @param  {Number} frames - Number of frames to seek by.
  */
 VideoFrame.prototype.__seek = function(direction, frames) {
-	if (!this.video.paused) { this.video.pause(); }
+	if (!this.video.paused) { this.pause(); }
 	var frame = Number(this.get());
 	/** To seek forward in the video, we must add 0.00001 to the video runtime for proper interactivity */
 	this.video.currentTime = ((((direction === 'backward' ? (frame - frames) : (frame + frames))) / this.frameRate) + 0.00001);
@@ -331,6 +342,12 @@ VideoFrame.prototype.seekTo = function(config) {
 			break;
 	}
 
+  // Force frameChangedWrapper to generate event for that specific frame
+  // Due to async, some event may be triggered after we set currentTime,
+  // but before the actual currentTime frame is available
+  // which would waste the next lastdisplayed test on the wrong frame
+  this.forceFrameChanged = Math.round(seekTime * this.frameRate)
+
 	if (!isNaN(seekTime)) {
 	  if (option.fast)
 	    this.video.fastSeek(seekTime)
@@ -350,7 +367,7 @@ VideoFrame.prototype.playBackwards = function(tick) {
 		  _video.displayed = false
 			_video.seekBackward();
 			return true;
-		}, (tick ? tick : 1000 / _video.frameRate));
+		}, (tick ? tick : 1000 / (_video.frameRate*_video.playbackRate)));
     this.listen('frame');
 };
 	
@@ -365,9 +382,10 @@ VideoFrame.prototype.playForwards = function(tick) {
         _video.displayed = false
         _video.seekForward();
         return true;
-      }, (tick ? tick : 1000 / _video.frameRate));
+      }, (tick ? tick : 1000 / (_video.frameRate*_video.playbackRate)));
 		} else {
 		  // More efficient than seeking for each frame
+		  this.video.playbackRate=this.playbackRate
 		  this.video.play()
 		}
     this.listen('frame');
@@ -377,6 +395,7 @@ VideoFrame.prototype.pause = function() {
     this.stopListen()
     // NOTE: a seek may still be active. 
     // It will trigger the frameChangedWrapper even though listen is off
+    // Hence the test in frameChangedWrapper
 }
 
 VideoFrame.prototype.playingState = function() {

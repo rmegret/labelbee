@@ -24,6 +24,8 @@ function Observation(ID) {
     this.angle = 0;
 
     this.bool_acts = [false, false, false, false]; //Should be kept numerical because Ram
+    this.notes=''
+    this.labels=''
 }
 
 function cloneObs(obs) {
@@ -52,6 +54,7 @@ function copyObs(obs, tmpObs) {
     obs.bool_acts[3] = tmpObs.bool_acts[3];
     obs.angle = tmpObs.angle;
     obs.notes = tmpObs.notes;
+    obs.labels = tmpObs.labels;
 }
 
 function getValidIDsForFrame(frame) {
@@ -72,6 +75,19 @@ function getValidIDsForFrame(frame) {
     //console.log("getValidIDsForFrame: frame=",frame,",  Tracks[frame]=",trackf)
     //console.log("getValidIDsForFrame: ids=",ids)
     return ids;
+}
+function getValidIDsForFrames(interval) {
+    let fmin = interval[0];
+    let fmax = interval[1];
+    
+    var ids=new Set();
+    for (let f=fmin; f<=fmax; f++) {
+        let fids = getValidIDsForFrame(f);
+        for (let id of fids) {
+            ids.add(id);
+        }
+    }    
+    return [...ids.values()];
 }
 
 function obsDoesExist(frame, id) {
@@ -176,3 +192,5 @@ function getTags(frame, id) {
     //if (typeof value === "undefined") return undefined;
     //return value
 }
+
+

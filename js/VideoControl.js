@@ -14,6 +14,8 @@ function VideoControl(videoTagId) {
     this.flagCopyVideoToCanvas = true;
     this.seekWallTime = 0;
     this.seekTiming = false
+    this.playbackRate = 1
+    this.videoname = 'unknownVideo'
     
     if (typeof videoTagId === 'undefined')
         videoTagId = 'video'; // Default HTML5 video tag to attach to
@@ -29,11 +31,32 @@ function VideoControl(videoTagId) {
     
     this.video = this.video2.video; // Same as $('#video')[0]
     this.video.onloadeddata = this.onVideoLoaded.bind(this);
+    
+    this.previewVideoTimeScale = 1.0;
+    
+    this.previewVideo = document.createElement('video');
+    let videoControl = this;
+    this.previewVideo.addEventListener('timeupdate', 
+          function() {videoControl.onPreviewFrameChanged()}, false);
 }
 
 VideoControl.prototype = {} // Prepare for all VideoControl methods
 
 // ### Play/pause
+
+VideoControl.prototype.playRateInputChanged = function() {
+    let text = $('#playRate').val()
+    let a=text.split('/')
+    if (a.length==1) {
+        this.playbackRate = Number(text)
+    } else if (a.length==2) {
+        this.playbackRate = Number(a[0])/Number(a[1])
+    } else {
+        console.log('playRateInputChanged: ERROR, playRate format not recognized. playRate=',text)
+        return
+    }
+    this.video2.setPlaybackRate(this.playbackRate)
+}
 
 VideoControl.prototype.playPauseVideo = function(option) {
     if (logging.guiEvents) console.log('playPauseVideo()');
@@ -98,9 +121,24 @@ VideoControl.prototype.startSeekTimer = function() {
 VideoControl.prototype.seekFrame = function(frame, useFastSeek) {
     this.startSeekTimer()
     if (useFastSeek) {
-        this.video2.seekTo({'frame':frame+videoinfo.frameoffset, 
-                       'fast':true}) // Experimental, not actually faster
+        this.previewFrame = frame;
+        this.currentMode = 'preview'
+        
+        // preview keeps 1 keyframe out of 40 frames
+        // and is encoded at same speed as original (0.5fps=20fps/40)
+        //let t = Math.round((frame+videoinfo.frameoffset)/40)*40/20
+        
+        // preview keeps 1 keyframe out of 40 frames
+        // and is encoded at 20 fps
+        //let t = Math.round((frame+videoinfo.frameoffset)/40)/20
+        
+        let t = (frame+videoinfo.frameoffset)/videoinfo.videofps*this.previewVideoTimeScale;
+        
+        if (logging.frameEvents)
+            console.log('videoControl.seekFrame: FAST, f=',frame,' t=',t)
+        this.previewVideo.currentTime =  t
     } else {
+        this.currentMode = 'video'
         this.video2.seekTo({'frame':frame+videoinfo.frameoffset})
     }
 }
@@ -135,7 +173,10 @@ VideoControl.prototype.forward4 = function() {
 
 // # Get current frame/time
 VideoControl.prototype.getCurrentFrame = function() {
-    return this.video2.get()-videoinfo.frameoffset;
+    if (this.currentMode == 'preview')
+        return this.previewFrame-videoinfo.frameoffset;
+    else
+        return this.video2.get()-videoinfo.frameoffset;
 }
 VideoControl.prototype.getCurrentVideoTime = function(format) {
     return this.video2.toMilliseconds()/1000.0
@@ -181,6 +222,8 @@ VideoControl.prototype.onFrameTextChanged = function() {
 
 // This callback is the only one that should handle frame changes. It is called automatically by video2
 VideoControl.prototype.onFrameChanged = function(event) {
+    this.currentMode = 'video'
+
     let Cframe = this.getCurrentFrame();
     
     if (this.seekTiming) {
@@ -193,6 +236,31 @@ VideoControl.prototype.onFrameChanged = function(event) {
         console.log('frameChanged', Cframe)
 
     this.hardRefresh();
+    
+    // Trigger public event (used by ChronoControl to change 
+    // trackWindow View and timeMark View)
+    $( this ).trigger('frame:changed') 
+}
+
+VideoControl.prototype.onPreviewFrameChanged = function(event) {
+    console.log('videoControl.onPreviewFrameChanged')
+    
+    this.currentMode = 'preview'
+    
+    canvas1.clear();
+    let previewScaleX = this.video.videoWidth/this.previewVideo.videoWidth;
+    let previewScaleY = this.video.videoHeight/this.previewVideo.videoHeight;
+    ctx.drawImage(this.previewVideo, 
+                    canvasTransform[4]/previewScaleX, canvasTransform[5]/previewScaleY,
+                      canvasTransform[0]*canvas.width/previewScaleX, canvasTransform[3]*canvas.height/previewScaleY,
+                    0, 0, canvas.width, canvas.height);
+                    
+    canvas1.clear();
+    createRectsFromTracks(this.previewFrame)
+    selectBeeByID(defaultSelectedBee);
+    refreshOverlay()
+    
+    $( this ).trigger('previewframe:changed')
 }
 
 VideoControl.prototype.hardRefresh = function() {
@@ -232,7 +300,7 @@ VideoControl.prototype.hardRefresh = function() {
     
 }
 VideoControl.prototype.refresh = function() {
-    let video = $('#video')[0]
+    let video = this.video; // same as $('#video')[0]
     if (this.flagCopyVideoToCanvas) {
       // Copy video to canvas for fully synchronous display
       //ctx.drawImage(video, 0, 0, video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor);
@@ -254,28 +322,116 @@ VideoControl.prototype.refresh = function() {
     updateDeleteButton()
     updateUndoButton()
     
-    updateTimeMark()
+    //updateTimeMark() // Now handled through 'frameChanged' jQuery event
 
     //refreshChronogram();
 }
 
-VideoControl.prototype.loadVideo = function(url) {
-    this.video.src = url;
-    // Update of display handled in callback onVideoLoaded
-}
+VideoControl.prototype.loadVideo = function(url, previewURL) {
+    if (logging.videoEvents)
+        console.log('loadVideo: url=',url)
 
+    this.name = url;
+    this.video.src = url;
+    this.videoRawURL = url;
+    // Update of display handled in callback onVideoLoaded
+    
+    let tmp = url.split('/')
+    this.videoName = tmp[tmp.length-1].split('.')[0]
+    
+    if (previewURL) {
+        this.previewURL = previewURL;
+    } else {
+        previewURL = url+'.scale4.mp4'
+        this.previewURL = previewURL;
+    }
+    $("#previewVideoName").val(this.previewURL)
+    
+    setPreviewVideoStatus('undefined')
+}
 VideoControl.prototype.onVideoLoaded = function(event) {
     if (logging.videoEvents)
         console.log('onVideoLoaded', event)
+        
+    console.log('onVideoLoaded: VIDEO loaded ',this.video.src)
     
     this.onVideoSizeChanged()
     
     videoinfo.duration = this.video.duration
     videoinfo.name = this.video.src
     
-    let videourl = this.video.src;
-    let infourl = videourl+'.info.json'
-    this.loadVideoInfo(infourl)
+    let name = videoinfo.name
+    $('#videoName').html(name)
+    
+    let videourl = this.videoRawURL;
+    
+    this.loadVideoInfo(videourl+'.info.json')
+    
+    this.loadPreviewVideo(this.previewURL);
+    tagsFromServer(videoTagURL, true) // quiet
+    
+    $( this ).trigger('video:loaded') 
+}
+
+function setPreviewVideoStatus(status) {
+    $("#previewVideoStatus").removeClass('undefined loading loaded infoloaded error')
+    switch (status) {
+        case 'undefined':
+          $("#previewVideoStatus").html('?')
+          $("#previewVideoStatus").addClass('undefined')
+          $("#previewVideoStatus").prop('title', 'undefined')
+          break;
+        case 'loading':
+          $("#previewVideoStatus").html('&mapstodown;')
+          $("#previewVideoStatus").addClass('loading')
+          $("#previewVideoStatus").prop('title', 'Loading preview video')
+          break;
+        case 'loaded':
+          $("#previewVideoStatus").html('&#10004;')
+          $("#previewVideoStatus").addClass('loaded')
+          $("#previewVideoStatus").prop('title', 'Preview video loaded successfully')
+          break;
+        case 'error':
+          $("#previewVideoStatus").html('&#10006;')
+          $("#previewVideoStatus").addClass('error')
+          $("#previewVideoStatus").prop('title', 'Error loading preview video')
+          break;
+        case 'infoloaded':
+          $("#previewVideoStatus").html('&#10004;&#10004;')
+          $("#previewVideoStatus").addClass('infoloaded')
+          $("#previewVideoStatus").prop('title', 'Preview video loaded with info')
+          break;
+    }
+}
+VideoControl.prototype.loadPreviewVideo = function(previewURL) {
+    function onPreviewVideoLoaded(event) {
+        if (logging.videoEvents)
+            console.log('onPreviewVideoLoaded', event)
+
+        console.log('onPreviewVideoLoaded: PREVIEW available. Use CTRL+mousemove in the chronogram. url=',event.target.src)
+        
+        setPreviewVideoStatus('loaded')
+        //$('#previewVideoName').val(previewURL)
+    }
+    function onPreviewVideoError(e) {
+        //if (logging.videoEvents)
+            console.log('onPreviewVideoError: could not load preview video. previewURL=',previewURL)
+        setPreviewVideoStatus('error')
+    }
+    setPreviewVideoStatus('loading')
+    this.previewVideo.onerror=onPreviewVideoError
+    this.previewVideo.onloadeddata=onPreviewVideoLoaded
+    
+    this.previewURL = previewURL;
+
+    this.previewVideo.src = previewURL;
+    if (logging.videoEvents)
+        console.log('loadPreviewVideo: previewURL=',previewURL)
+}
+onPreviewVideoInfoChanged = function() {
+    let name = $('#previewVideoName').val()
+    videoControl.previewVideoTimeScale = Number($('#previewVideoTimeScale').val())
+    videoControl.loadPreviewVideo('data/'+name)
 }
 
 VideoControl.prototype.onVideoSizeChanged = function() {
@@ -291,6 +447,13 @@ VideoControl.prototype.onVideoSizeChanged = function() {
     }    
         
     canvasSetVideoSize(w,h)
+}
+VideoControl.prototype.videoSize = function() {
+    return { left: 0,
+             top: 0,
+             right: this.video.videoWidth,
+             bottom: this.video.videoHeight
+            }
 }
 
 VideoControl.prototype.loadVideoInfo = function(infourl) {
@@ -345,6 +508,10 @@ VideoControl.prototype.onVideoInfoChanged = function() {
         
     updateChronoXDomainFromVideo()   // Should trigger chrono refresh
     //refreshChronogram()
+}
+
+VideoControl.prototype.maxframe = function() {
+    return Math.floor(videoinfo.duration*videoinfo.videofps)
 }
 
 // function onVideoReady(event) {

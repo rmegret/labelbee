@@ -13,7 +13,7 @@ var x, y, cx, cy, width, height;
 var logging = {
   "rects": false,
   "frameEvents": false,
-  "guiEvents": false,
+  "guiEvents": true,
   "submitEvents": false,
   "mouseEvents": false,
   "mouseMoveEvents": false,
@@ -37,12 +37,10 @@ var logging = {
 /** Global init */
 function init() {
     // import * from "VideoList.js";
-    initVideoSelection()
-    $('#selectboxVideo')[0].selectedIndex=8; // select long video
+    initVideoList()
         
     // import * from "VideoNavigation";
     videoControl = new VideoControl('video') // Attach control to #video
-    
     // Polyfill to get a global getCurrentFrame
     getCurrentFrame = videoControl.getCurrentFrame.bind(videoControl)
 
@@ -61,7 +59,11 @@ function init() {
     // ## Control panel
     // import * from "SelectionControl.js"
     initSelectionControl()    
-
+    
+    $( selectionControl ).on('tagselection:created',refreshTagImage)
+    $( selectionControl ).on('selection:created',refreshTagImage)
+    $( selectionControl ).on('tagselection:cleared',refreshTagImage)
+    $( selectionControl ).on('selection:cleared',refreshTagImage)
 
     $( ".collapsible" ).accordion({
         collapsible: true,
@@ -87,15 +89,18 @@ function init() {
     
     //loadFromFile0('data/Tracks-demo.json')
     
-    //$('#video')[0].onloadeddata = onVideoLoaded;// Now handled by VideoControl
-    selectVideo(); // Get src from selectboxVideo
+    /* Set defaults */
+    
+    selectVideoByID(6)
+    //Will trigger videoControl.onVideoLoaded
+    onTrackWindowChanged() // to compute track window params
 }
 
 function printMessage(html, color) {
     if (typeof color === 'undefined') color='black'
-    var alert1 = document.getElementById("alert");
-    alert1.style.color = color;
-    alert1.innerHTML = html
+
+    $('#alerttext').html(html)
+    $('#alerttext').css('color', color);
     
     if (html !== "")
         console.log("MESSAGE: %c"+html, "color:"+color)

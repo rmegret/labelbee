@@ -6,18 +6,182 @@
 var defaultSelectedBee;
 var undo = new Observation(0);
 
+var labelMap = {
+    f:'fanning',
+    p:'pollen',
+    e:'entering',
+    d:'leaving',
+    l:'leaving',
+    pollen:'pollen',
+    entering:'entering',
+    leaving:'leaving',
+    departing:'leaving',
+    pollen:'pollen'
+}
+
+function normalizeLabel(label) {
+    return labelMap[label]==null?label:labelMap[label]
+}
+function toLabelString(labelArray) {
+    return labelArray.map(function(d){return d.toLowerCase();})
+                     .map(function(d){return d.trim()})
+                     .filter(function(d){return d!="";})
+                     .map(normalizeLabel)
+                     .join(',')
+}
+function toLabelArray(labels) {
+    return labels.split(',')
+                 .map(function(d){return d.toLowerCase();})
+                 .map(function(d){return d.trim()})
+                 .filter(function(d){return d!="";})
+                 .map(normalizeLabel)
+}
+function cleanLabels(labels) {
+    return toLabelString(toLabelArray(labels))
+}
+
+function addLabel(labelArray, label) {
+    let k = $.inArray(label, labelArray)
+    if (k<0) {
+        labelArray.push(label)
+    }
+}
+function removeLabel(labelArray, label) {
+    let k = $.inArray(label, labelArray)
+    if (k>=0) {
+        labelArray.splice(k, 1);
+    }
+}
+function updateLabelArray(labelArray, label, active) {
+    let k = $.inArray(label, labelArray)
+    if (!active && k>=0) {
+        labelArray.splice(k, 1);
+    }
+    if (active && k<0) {
+        labelArray.push(label)
+    }
+}
+
+function updateObsLabel(obs, label, active) {
+    if (obs.labels == null) {
+        obs.labels = ''
+    }
+    let labelArray = toLabelArray(obs.labels)
+    let k = $.inArray(label, labelArray)
+    if (!active && k>=0) {
+        labelArray.splice(k, 1);
+    }
+    if (active && k<0) {
+        labelArray.push(label)
+    }
+    obs.labels = toLabelString(labelArray)
+}
+function hasLabel(obs, label) {
+    if (obs.labels == null) {
+        obs.labels = ''
+    }
+    let labelArray = toLabelArray(obs.labels)
+    let k = $.inArray(normalizeLabel(label), labelArray)
+    if (k>=0) return true
+    else return false
+}
+function updateLabelsFromBool(labels, bool_acts) {
+    let labelArray=toLabelArray(labels)
+    let add=[]
+    updateLabel(labelArray, 'fanning', bool_acts[0])
+    updateLabel(labelArray, 'pollen', bool_acts[1])
+    updateLabel(labelArray, 'entering', bool_acts[2])
+    updateLabel(labelArray, 'leaving', bool_acts[3])
+    return toLabelString(labelArray)
+}
+
+function getLabels(obs) {
+    return toLabelArray(obs.labels)
+
+//     let labelArray=[];
+//     if (obs.bool_acts[0])
+//         labelArray.push('fanning')
+//     if (obs.bool_acts[1])
+//         labelArray.push('pollen')
+//     if (obs.bool_acts[2])
+//         labelArray.push('entering')
+//     if (obs.bool_acts[3])
+//         labelArray.push('departing')
+//     
+//     return labelArray
+}
+// function setLabels(obs, labelArray) {
+//     obs.labels = toLabelString(labelArray);
+// 
+//     let labelArray=[];
+//     if (obs.bool_acts[0])
+//         labelArray.push('fanning')
+//     if (obs.bool_acts[1])
+//         labelArray.push('pollen')
+//     if (obs.bool_acts[2])
+//         labelArray.push('entering')
+//     if (obs.bool_acts[3])
+//         labelArray.push('departing')
+//     
+//     return labelArray
+// }
+
 // # Form and current bee control
 function initSelectionControl() {
-    $('#F').change(onActivityChanged);
-    $('#P').change(onActivityChanged);
-    $('#E').change(onActivityChanged);
-    $('#L').change(onActivityChanged);
+    selectionControl = {}
     
+    $( selectionControl ).on('tagselection:created', updateChronoSelection)
+    $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
+
+    $( selectionControl ).on('tagselection:created', updateSelectID)
+    
+    $( selectionControl ).on('tagselection:created', updateFormButtons)
+    $( selectionControl ).on('tagselection:cleared', updateFormButtons)
+    $( selectionControl ).on('selection:created', updateFormButtons)
+    $( selectionControl ).on('selection:cleared', updateFormButtons)
+
+    $('.labelcheckbox').change(onLabelClicked);
+    $('.labeltoggle').change(onLabelClicked);
+    
+    $('#labels').change(onLabelsChanged);
+      
     $("#notes").keydown(function(event){
       if (event.which == 13){
         onActivityChanged(event);
       }
     });
+    
+    // dummy object to define events (inspired by Fabric.js)
+    // - selection:created
+    // - selection:cleared
+    // - before:selection:cleared
+    //$( selectionControl ).trigger('selection:created')
+    
+//     $( selectionControl ).on('selection:created', updateChronoSelection)
+//     $( selectionControl ).on('selection:cleared', updateChronoSelection)
+//     $( selectionControl ).on('tagselection:created', updateChronoSelection)
+//     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
+}
+
+function updateSelectID() {
+    $('#selectID').val(defaultSelectedBee)
+}
+function onSelectIDChanged() {
+    let id = $('#selectID').val().trim()
+    selectBeeByID(id)
+}
+
+function updateFormButtons() {
+    if (getCurrentID()==null) {
+        $('#newRectForCurrentTag').addClass('disabled')
+        $('#newRectForCurrentTag').removeClass('active')
+    } else if (getSelectedID()==null) {
+        $('#newRectForCurrentTag').removeClass('disabled')
+        $('#newRectForCurrentTag').removeClass('active')
+    } else {
+        $('#newRectForCurrentTag').addClass('disabled')
+        $('#newRectForCurrentTag').addClass('active')
+    }
 }
 
 /* Update form rectangle data from activeObject */
@@ -37,11 +201,12 @@ function updateForm(activeObject) {
         $('#CX').html("Center X: -")
         $('#CY').html("Center X: -")
         
-        $('#F').prop('checked', false);
-        $('#P').prop('checked', false);
-        $('#E').prop('checked', false);
-        $('#L').prop('checked', false);
+        $('.labelcheckbox').prop('checked', false);
+
         $('#notes').prop('value', '');
+        $('#labels').prop('value', '');
+        
+        $('.labeltoggle').toggleClass('active',false)
     } else {
         $('#I').val(activeObject.id)
         
@@ -62,14 +227,31 @@ function updateForm(activeObject) {
             return
         }
         
-        $('#F').prop('checked', obs.bool_acts[0]);
-        $('#P').prop('checked', obs.bool_acts[1]);
-        $('#E').prop('checked', obs.bool_acts[2]);
-        $('#L').prop('checked', obs.bool_acts[3]);
+//         $('#F').prop('checked', obs.bool_acts[0]);
+//         $('#P').prop('checked', obs.bool_acts[1]);
+//         $('#E').prop('checked', obs.bool_acts[2]);
+//         $('#L').prop('checked', obs.bool_acts[3]);
+        
+        $('.labelcheckbox.fanning').prop('checked', hasLabel(obs,'fanning'));
+        $('.labelcheckbox.pollen').prop('checked', hasLabel(obs,'pollen'));
+        $('.labelcheckbox.entering').prop('checked', hasLabel(obs,'entering'));
+        $('.labelcheckbox.leaving').prop('checked', hasLabel(obs,'leaving'));
+        $('.labelcheckbox.falsealarm').prop('checked', hasLabel(obs,'falsealarm'));
+        $('.labelcheckbox wrongid').prop('checked', hasLabel(obs,'wrongid'));
+                
         if (typeof obs.notes === 'undefined')
             $('#notes').prop('value', '');
         else
             $('#notes').prop('value', obs.notes);
+            
+        $('#labels').val(getLabels(obs).join(','))
+        
+        $('.labeltoggle.fanning').toggleClass('active',hasLabel(obs,'fanning'))
+        $('.labeltoggle.pollen').toggleClass('active',hasLabel(obs,'pollen'))
+        $('.labeltoggle.entering').toggleClass('active',hasLabel(obs,'entering'))
+        $('.labeltoggle.leaving').toggleClass('active',hasLabel(obs,'leaving'))
+        $('.labeltoggle.falsealarm').toggleClass('active',hasLabel(obs,'falsealarm'))
+        $('.labeltoggle.wrongid').toggleClass('active',hasLabel(obs,'wrongid'))
     }
 
 }
@@ -127,13 +309,17 @@ function selectBeeByID(id) {
       canvas1.setActiveObject(rect);
       // TESTME: selectBee was commented
       selectBee(rect);
-      axes.selectId(id)
+      // Events triggered in selectBee
       return true
    } else {
       canvas1.deactivateAll().renderAll(); // Deselect rect if any
       updateForm(null)
       // defaultSelectedBee = undefined // Do not cancel default if not found
       defaultSelectedBee = id // Set default
+      if (id==null)
+          $( selectionControl ).trigger('tagselection:cleared')
+      else
+          $( selectionControl ).trigger('tagselection:created')
       axes.selectId(id)
       if (logging.selectionEvents)
          console.log('selectBeeByID: No rect found for id=',id);
@@ -149,6 +335,8 @@ function selectBeeByIDandFrame(id,frame) {
         videoControl.refresh()
     }
 }
+
+
 
 // selectBee: called when clicking on a rectangle
 function selectBee(rect) {
@@ -166,15 +354,24 @@ function selectBee(rect) {
     if (flagShowZoom) {
         showZoom(rect)
     }
+    
+    $( selectionControl ).trigger('tagselection:created')
+    $( selectionControl ).trigger('selection:created')
 }
+
 
 // deselectBee: called when clicking out of a rectangle
 function deselectBee() {
+    $( selectionControl ).trigger('before:selection:cleared')
+
     //canvas1.deactivateAll().renderAll(); // Deselect rect
     canvas1.deactivateAllWithDispatch()
     updateForm(null)
     defaultSelectedBee = undefined // Do not keep default when explicit deselect
     updateDeleteButton()
+    
+    $( selectionControl ).trigger('tagselection:cleared')
+    $( selectionControl ).trigger('selection:cleared')
 }
 // getSelectedID: return undefined or an id
 function getSelectedID() {
@@ -193,6 +390,9 @@ function getSelectedRect() {
 }
 function getCurrentTag() {
     return getTag(getCurrentFrame(), defaultSelectedBee)
+}
+function getCurrentID() {
+    return defaultSelectedBee
 }
 
 

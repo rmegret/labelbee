@@ -7,35 +7,49 @@ function OverlayControl(canvasTagId) {
         console.log('ERROR: OverlayControl should be created with "new OverlayControl()"')
         return new OverlayControl(); 
     }
+    
+    // Events:
+    // overlayControl.on('trackWindow:change',...)
 
     if (typeof canvasTagId === 'undefined')
         canvasTagId = 'canvas'; // Default HTML5 canvas tag to attach to
     canvas = document.getElementById(canvasTagId);
     ctx = canvas.getContext('2d');
 
-    // Globals
-    transformFactor = 1.0;
-    canvasTform = [0, 0, 1]; // cx,cy,scale
-    plotTrack_range_backward = 5;
-    plotTrack_range_forward = 5;
+    /* Obs and Tags plotting params */
+    trackWindow = 200 // 10s
+    trackWindowBackward = trackWindow;
+    trackWindowForward = trackWindow;
+    $('#trackWindow').val(trackWindow)
+
+    flag_useROI=false
+    ROI = {left:175,top:30,right:2305,bottom:1240} // For Gurabo videos 5MP
+    $('#ROI').val([ROI.left,ROI.top,ROI.right,ROI.bottom].join(','))
+    //$(videoControl).on('video:loaded', updateROIFromVideo)
 
     showObs = true
     showObsTracks = true
     showObsChrono = true
     showTags = true;
-    showTagsTracks = false
+    showTagsTracks = true
     showSelectedTagsTracks = true
     showTagsOrientation = false
     showTagsChrono = true
-    $('#showObs')[0].checked=showObs
-    $('#showObsTracks')[0].checked=showObsTracks
-    $('#showTags')[0].checked=showTags
-    $('#showTagsTracks')[0].checked=showTagsTracks
-    $('#showSelectedTagsTracks')[0].checked=showTagsTracks
-    $('#showTagsOrientation')[0].checked=showTagsOrientation
-    $('#showTagsChrono')[0].checked=showTagsChrono
-    $('#showObsChrono')[0].checked=showObsChrono
+    $('#showObs').prop('checked',showObs)
+    $('#showObsTracks').prop('checked',showObsTracks)
+    $('#showTags').prop('checked',showTags)
+    $('#showTagsTracks').prop('checked',showTagsTracks)
+    $('#showSelectedTagsTracks').prop('checked',showTagsTracks)
+    $('#showTagsOrientation').prop('checked',showTagsOrientation)
+    $('#showTagsChrono').prop('checked',showTagsChrono)
+    $('#showObsChrono').prop('checked',showObsChrono)
+    
+    trackDir="Backward"
+    $('#selectboxTrackDir').val(trackDir)
+    
+    lockFocusTrackWindow=false
 
+    /* Overlay and selection */
 
     canvas1 = new fabric.Canvas('canvas1');
     ctx1 = $('#canvas1')[0].getContext('2d');
@@ -55,10 +69,13 @@ function OverlayControl(canvasTagId) {
     canvas1.on('object:modified', onObjectModified); // After modification
     canvas1.on('object:selected', onObjectSelected); // After mousedown
     canvas1.on('selection:cleared', onObjectDeselected); // After mousedown out of existing rectangles
+    //canvas1.on('mouse:dblclick', onMouseDblClick);
 
     //$('#video').on('mouseDown', onMouseDown);    
     $('.upper-canvas').bind('contextmenu', onMouseDown2);
     $('.upper-canvas').bind('wheel', onMouseWheel);
+
+    /* Canvas transform */
 
     $("#canvasresize").resizable({
       helper: "ui-resizable-helper",
@@ -66,6 +83,8 @@ function OverlayControl(canvasTagId) {
     });
     $("#canvasresize").on( "resizestop", refreshCanvasSize );
     //$("#canvasresize").on( "resize", refreshCanvasSize ); // Continuous (not working)
+    
+    transformFactor = 1.0;
     canvasTransform = [1,0, 0,1, 0,0]  // Global
     canvasTransformReference = {w:100, h:100} // Keep previous canvas size
 }
@@ -279,6 +298,7 @@ function refreshOverlay() {
         if (showObsTracks) {
             plotTracks(ctx);
         }
+        plotROI()
         
         //plotBees(ctx1); // Not needed, identification done directly in BeeRect
         
@@ -324,8 +344,9 @@ function updateRectFromObsGeometry(rect) {
     rect.setAngle(obs.angle)
     rect.setCoords()
 }
-function createRectsFromTracks() {
-    let F = getCurrentFrame()
+function createRectsFromTracks(F) {
+    if (typeof F === 'undefined')
+        F = getCurrentFrame()
     let ids = getValidIDsForFrame(F)
     if (logging.overlay)
         console.log("createRectsFromTracks: ",{frame:F,ids:ids})
@@ -393,7 +414,7 @@ function rotatedRectGeometry(rect) {
     
     rect.setCoords() // Compute coordinates
     var coords = rect.oCoords
-    console.log(rect)
+    //console.log(rect)
     geom.center={x: (coords.tl.x+coords.br.x)/2, y: (coords.tl.y+coords.br.y)/2}
     geom.tl={x: coords.tl.x, y: coords.tl.y}
     geom.br={x: coords.br.x, y: coords.br.y}
@@ -444,7 +465,8 @@ function addRect(id, startX, startY, width, height, status, inputObs, angle) {
         obs.y = videoRect.top
         obs.width = videoRect.width
         obs.height = videoRect.height
-        obs.angle = 0 
+        if (angle == null) angle = 0;
+        obs.angle = angle 
     } else if (status === "db") {
         obs = cloneObs(inputObs)
         if (typeof obs.angle === 'undefined') {
@@ -497,15 +519,41 @@ function updateRectObsActivity(activeObject) {
     updateObsActivityFromForm(obs)
 }
 function updateObsActivityFromForm(obs) {
-    // Update Observation attached to rectangle from Form information
-    obs.bool_acts[0] = $('#F').prop('checked');
-    obs.bool_acts[1] = $('#P').prop('checked');
-    obs.bool_acts[2] = $('#E').prop('checked');
-    obs.bool_acts[3] = $('#L').prop('checked');
-    obs.notes = $('#notes').prop('value')
+    // Update form --> obs.labels --> bool_acts
+
+//     obs.bool_acts[0] = $('#F').prop('checked');
+//     obs.bool_acts[1] = $('#P').prop('checked');
+//     obs.bool_acts[2] = $('#E').prop('checked');
+//     obs.bool_acts[3] = $('#L').prop('checked');
+// Moved to onLabelClicked. now, the truth about labels is obs.labels
+    
+    //obs.labels = cleanLabels($('#labels').val())
+    
+    obs.bool_acts[0]=hasLabel(obs,'fanning');
+    obs.bool_acts[1]=hasLabel(obs,'pollen');
+    obs.bool_acts[2]=hasLabel(obs,'entering');
+    obs.bool_acts[3]=hasLabel(obs,'leaving');
+    
+    obs.notes = $('#notes').val()
     
     if (logging.guiEvents)
         console.log("updateObsActivityFromForm: obs=", obs)
+}
+function setLabels(rect,labels) {
+    let obs = rect.obs;
+    
+    // Update labelsString --> obs.labels --> bool_acts --> form
+    
+    let labelArray = toLabelArray(labels)
+    labels = toLabelString(labelArray)
+    obs.labels=labels;
+    
+    obs.bool_acts[0]=hasLabel(obs,'fanning');
+    obs.bool_acts[1]=hasLabel(obs,'pollen');
+    obs.bool_acts[2]=hasLabel(obs,'entering');
+    obs.bool_acts[3]=hasLabel(obs,'leaving');
+    
+    updateForm(rect)
 }
 
 // ## Direct canvas drawing
@@ -650,20 +698,17 @@ function identifyBeeRect(ctx, rect, radius) {
 /* Obs tracks */
 function plotTracks(ctx) {
     let F = getCurrentFrame()
-    let ids = getValidIDsForFrame(F)
 
-    let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1.2;
-    let fmin = F-plotTrack_range_backward;
-    let fmax = F+plotTrack_range_forward;
-    if (fmin<0) fmin=0;
-    //if (fmax>maxframe) fmax=maxframe;
+    let win = getWindow()
+    let fmin=win[0], fmax=win[1]
+    let ids = getValidIDsForFrames(win)
 
     setColor = function(f) {
         if (f<=F) {
-            color = "rgba(255,0,0,"+(1-Math.abs((f-F)/frange))+")"
+            color = "rgba(255,0,0,"+(1-Math.abs((f-F)/(fmin-F-1)))+")"
             //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
         } else {
-            color = "rgba(0,128,0,"+(1-Math.abs((f-F)/frange))+")"
+            color = "rgba(0,128,0,"+(1-Math.abs((f-F)/(fmax-F+1)))+")"
         }
         return color;
     }
@@ -739,6 +784,7 @@ function plotTracks(ctx) {
     }
 }
 
+
 /* Options */
 var showObsTracks = false
 function onShowObsChanged() {
@@ -786,6 +832,20 @@ function tagAngle(tag) {
     if (typeof up === 'undefined') return undefined
     let angle = Math.atan2(up[0], -up[1])/Math.PI*180
     return angle
+}
+function tagSize(tag) {
+    if (typeof tag.p === 'undefined') return undefined
+    let p = tag.p;
+    let d = {x: p[0][0]-p[1][0], y: p[0][1]-p[1][1]}
+    let m = Math.sqrt(d.x*d.x+d.y*d.y)
+    d = {x: p[2][0]-p[1][0], y: p[2][1]-p[1][1]}
+    m += Math.sqrt(d.x*d.x+d.y*d.y)
+    d = {x: p[2][0]-p[3][0], y: p[2][1]-p[3][1]}
+    m += Math.sqrt(d.x*d.x+d.y*d.y)
+    d = {x: p[3][0]-p[0][0], y: p[3][1]-p[0][1]}
+    m += Math.sqrt(d.x*d.x+d.y*d.y)
+    m /= 4
+    return m
 }
 
 /* Basic drawing */
@@ -905,32 +965,47 @@ function plotTags(ctx) {
     }
 }
 
+
+function plotTrackArrow(p0, p1, L) {
+    let u = {x:p1.x-p0.x, y:p1.y-p0.y}
+    let n = Math.sqrt(u.x*u.x+u.y*u.y)
+    u.x=u.x/n
+    u.y=u.y/n
+    ctx.beginPath();
+    ctx.moveTo(p1.x+L*(-u.x-0.6*u.y), p1.y+L*(-u.y+0.6*u.x))
+    ctx.lineTo(p1.x, p1.y)
+    ctx.lineTo(p1.x+L*(-u.x+0.6*u.y), p1.y+L*(-u.y-0.6*u.x))
+    ctx.stroke()
+}
+
+
+
 /* Tag tracks */
 function plotTagsTracks(ctx) {
     let F = getCurrentFrame()
-    let frange = Math.max(plotTrack_range_backward,plotTrack_range_forward)*1;
-    let fmin = F-plotTrack_range_backward;
-    let fmax = F+plotTrack_range_forward;
-    if (fmin<0) fmin=0;
-    //if (fmax>maxframe) fmax=maxframe;
+
+    let win = getWindow()
+    let fmin=win[0], fmax=win[1]
+    let frange=(F-fmin)>(fmax-F)?F-fmin:fmax-F;
 
     let tProx = function(f) {
-        return (1-Math.abs((f-F)/frange))
+        return Math.max(0, 1-Math.abs((f-F)/frange))
     }
     let tProxSigned = function(f) {
-        return ((f-F)/frange)
+        return Math.max((f-F)/frange)
     }
-    let setColor = function(f) {
+    let setColor = function(f, alpha) {
+        if (alpha==null) alpha=1.0;
+        var color
         if (false) {
             let T = tProx(f)
             if (f<=F) {
                 color = "rgba(255,0,0,"+T+")"
-                //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
             } else {
                 color = "rgba(0,0,255,"+T+")"
             }
         } else {
-            let T = tProx(f)
+            let T = tProx(f)*alpha
             let S = tProxSigned(f)/2+0.5
             let r = Math.round(255*(1-S))
             let g = 0
@@ -942,55 +1017,89 @@ function plotTagsTracks(ctx) {
 
     if (showTagsTracks) {
     // Plot past and future tag positions
-    let p0 = []
-    for (let f=fmin; f<=fmax; f++) {
-        let tagsFrame = Tags[f]
-        if (typeof(tagsFrame) === "undefined") continue;
-        let tags = tagsFrame.tags
-        let color = setColor(f)
-        for (let i in tags) {
-            let tag = tags[i]
+    
+    for (var id in ttags) {
+        let tagline = ttags[id]
+        if (typeof(tagline) === "undefined") continue;
+                
+        let p0 = null
+        for (let fs in tagline) {
+            let f = Number(fs)
+            let tag = tagline[f]
             
             if (!tagsSampleFilter(tag)) {
                     continue
                 }
+                
+            let color=setColor(f)          
             
             //console.log(tag)
             let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+            p1.frame = f
             
-            if (typeof p0[tag.id] !== 'undefined') {
+            if (p0 != null) {
                 ctx.save()
                 ctx.beginPath();
-                ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
-                ctx.lineTo(p1.x,p1.y)
-                ctx.strokeStyle = color;
-                if (tag.hamming<1000)
+                ctx.moveTo(p0.x,p0.y)
+                ctx.lineTo(p1.x,p1.y)  
+                if (tag.hamming<1000 && (Number(p1.frame)-Number(p0.frame)<10)) {
                     ctx.setLineDash([])
-                else
-                    ctx.setLineDash([2,2])
+                    ctx.lineWidth=2
+                    color=setColor(f)          
+                } else {
+                    ctx.setLineDash([3,3])
+                    ctx.lineWidth=1
+                    color=setColor(f,0.5)
+                }
+                ctx.strokeStyle = color;
                 ctx.stroke();
+                ctx.setLineDash([])
+                plotTrackArrow(p0, p1, 6*tProx(f)+1)
                 ctx.restore()
             }
-            p0[tag.id] = {x:p1.x, y:p1.y}
-            
+            p0 = {x:p1.x, y:p1.y, frame:p1.frame}
+
             if (tag.hamming<1000)
-              plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
+              plotTag(ctx, tag, color, {"id":false, "radius": tProx(f)+1})            
             else
-              plotTag(ctx, tag, color, {"id":false, "radius": 3*tProx(f)+1})            
-        }    
+              plotTag(ctx, tag, color, {"id":false, "radius": tProx(f)+1})            
+        }
+    
     }
     }
     
     if (showSelectedTagsTracks) {
+    
     // Plot track of selected bee
     if (typeof defaultSelectedBee !== 'undefined') {
+    
+        let setColor2 = function(f, alpha) {
+            if (alpha==null) alpha=1.0;
+            var color
+            if (false) {
+                let T = tProx(f)
+                if (f<=F) {
+                    color = "rgba(255,255,0,"+T+")"
+                } else {
+                    color = "rgba(128,255,128,"+T+")"
+                }
+            } else {
+                let T = tProx(f)*alpha
+                let S = tProxSigned(f)/2+0.5
+                let r = Math.round(128+127*(1-S))
+                let g = 255
+                let b = Math.round(128*S)
+                color = "rgba("+r+","+g+","+b+","+T+")"
+            }
+            return color;
+        }
+    
         //console.log('defaultSelectedBee=',defaultSelectedBee)
         let p0 = []
         for (let f=fmin; f<=fmax; f++) {
             let tagsFrame = Tags[f]
             if (typeof(tagsFrame) === "undefined") continue;
             let tags = tagsFrame.tags
-            let color = setColor(f)
             
             let ii = -1
             for (let i in tags) {
@@ -1005,36 +1114,37 @@ function plotTagsTracks(ctx) {
                 if (!tagsSampleFilter(tag)) {
                         continue
                     }
+                    
+                let color2=setColor2(f)          
             
                 //console.log(tag)
                 let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
-                
-
-                let T = tProx(f)
-                let S = tProxSigned(f)
-                let color2
-                if (S>0)
-                    color2 = "rgba(255,255,0,"+T+")";
-                else
-                    color2 = "rgba(128,255,128,"+T+")";
+                p1.frame = f
             
                 if (typeof p0[tag.id] !== 'undefined') {
                     ctx.save()
                     ctx.beginPath();
                     ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
-                    ctx.lineTo(p1.x,p1.y)
-                    ctx.strokeStyle = color2
-                    ctx.lineWidth = T*2
-                    if (tag.hamming<1000)
+                    ctx.lineTo(p1.x,p1.y)  
+                    if (tag.hamming<1000 && (Number(p1.frame)-Number(p0[tag.id].frame)<10)) {
                         ctx.setLineDash([])
-                    else
-                        ctx.setLineDash([2,2])
+                        ctx.lineWidth=2
+                        color2=setColor2(f)          
+                    } else {
+                        ctx.setLineDash([3,3])
+                        ctx.lineWidth=1
+                        color2=setColor2(f,0.5)
+                    }
+                    ctx.strokeStyle = color2;
                     ctx.stroke();
+                    ctx.setLineDash([])
+                    plotTrackArrow(p0[tag.id], p1, 6*tProx(f)+1)
                     ctx.restore()
                 }
-                p0[tag.id] = {x:p1.x, y:p1.y}
+                p0[tag.id] = {x:p1.x, y:p1.y, frame:p1.frame}
                 
-                plotTag(ctx, tag, color2, {"id":false, "radius": 3*tProx(f)+1})            
+// No need for tag with arrow plot, except if only ont point    
+                plotTag(ctx, tag, color2, {"id":false, "radius": tProx(f)+1})            
             }    
         }
     }
@@ -1062,28 +1172,155 @@ function onShowTagsChanged() {
     // Callback when display parameters have changed
     showTags = $('#showTags')[0].checked
     showTagsOrientation = $('#showTagsOrientation')[0].checked
-    videoControl.onFrameChanged()
+    videoControl.refresh()
 }
 function onShowTagsTracksChanged() {
     showTagsTracks = $('#showTagsTracks')[0].checked
     showSelectedTagsTracks = $('#showSelectedTagsTracks')[0].checked
-    onFrameChanged.onFrameChanged()
+    videoControl.refresh()
 }
 function onTrackWindowChanged() {
     let range = Number($('#trackWindow')[0].value)
     console.log("onTrackWindowChanged range=",range)
-    plotTrack_range_forward = range
-    plotTrack_range_backward = range
+    trackWindow = range
+    if (trackDir=='Bidirectional') {
+        trackWindowForward = range
+        trackWindowBackward = range
+    } else if (trackDir=='Forward') {
+        trackWindowForward = range
+        trackWindowBackward = 0
+    } else if (trackDir=='Backward') {
+        trackWindowForward = 0
+        trackWindowBackward = range
+    } else {
+      console.log('onTrackWindowChanged: ERROR, trackDir unknown trackDir=',trackDir)
+    }
+    
+    $(overlay).trigger('trackWindow:change')
+    
+    videoControl.refresh();
+}
+function setTrackWindow(L) {
+    $('#trackWindow').val(L)
+    onTrackWindowChanged()
+}
+function scaleTrackWindow(factor) {
+    let L = Number($('#trackWindow').val())
+    console.log("scaleTrackWindow: factor=",factor,"with L=",L)
+    L = Math.ceil(L * Number(factor));
+    if (L<0) L=0;
+    if (isNaN(L)) L=1;
+    setTrackWindow(L)
+}
+function shiftTrackWindow(factor) {
+    let L = Number($('#trackWindow').val())
+    let frame = getCurrentFrame()
+    console.log("shiftTrackWindow: factor=",factor,"with frame=",frame, "L=",L)
+    let newF = Math.round(frame+factor*L)
+    videoControl.seekFrame(newF)
+// Functionality offered by lockTrackWindow
+//     if (newF+L>axes.xdomain()[1])
+//       axes.xdomainFocus([newF+L-axes.xdomain()[1]+axes.xdomain()[0],newF+L],1.0)
+//     if (newF-L<axes.xdomain()[0])
+//       axes.xdomainFocus([newF-L,newF-L+axes.xdomain()[1]-axes.xdomain()[0]],1.0)
+}
+function onClickFocusVideo() {
+    console.log('onClickFocusVideo')
+    setFocusTrackWindow(false)
+    
+    updateChronoXDomainFromVideo()
+}
+function onClickFocusTrackWindow() {
+    console.log('onClickFocusTrackWindow')
+    
+    setFocusTrackWindow(!lockFocusTrackWindow)
+    
+    if (lockFocusTrackWindow) {
+        //lastNonFocusWindow = axes.xdomain()
+        focusTrackWindow()
+    } else {
+        //axes.xdomainFocus(lastNonFocusWindow, 1)
+    }
+    //updateFocusTrackWindowButton()
+}
+function focusTrackWindow() {
+    // Actually a Chronogram method
+    let f = getCurrentFrame()
+    axes.xdomainFocus([f-trackWindow, f+trackWindow])
+}
+function onDblClickFocusTrackWindow() {
+    return; // Directly set on/off flag with single click
+    
+    console.log('onDblClickFocusTrackWindow')
+    // Actually a Chronogram method
+    let f = getCurrentFrame()
+    axes.xdomainFocus([f-trackWindow, f+trackWindow])
+    
+    setFocusTrackWindow(true)
+    
+    console.log('locked Focus on Window... lockFocusTrackWindow=',lockFocusTrackWindow)
+    updateFocusTrackWindowButton()
+}
+function setFocusTrackWindow(flag) {
+    lockFocusTrackWindow = flag
+    if (lockFocusTrackWindow)
+        $( overlay ).on('trackWindow:change', focusTrackWindow)
+    else
+        $( overlay ).off('trackWindow:change', focusTrackWindow)
+
+    updateFocusTrackWindowButton()
+}
+function updateFocusTrackWindowButton() {
+    if ( lockFocusTrackWindow ) {
+        $("#focusTrackWindow").addClass("active")
+    } else {
+        $("#focusTrackWindow").removeClass("active")      
+    }
+}
+
+function updateROIFromVideo() {
+    let R = videoControl.videoSize()
+    $('#ROI').val([R.left,R.top,R.right,R.bottom].join(','))
+    ROIChanged()
+}
+function onROITextChanged() {
+    let roitext = $('#ROI').val()
+    let roi = roitext.split(',')
+    if (roi.length!=4) {
+        console.log('onROIChanged: ERROR, ROI should have 4 coordinates, left,top,right,bottom')
+        return;
+    }
+    ROI = {left: Number(roi[0]),
+           top: Number(roi[1]),
+           right: Number(roi[2]),
+           bottom: Number(roi[3])}
+    ROIChanged()
+}
+function onClickROI() {
+    flag_useROI = !flag_useROI;
+    if (flag_useROI) {
+        $('#useROI').addClass('active')
+    } else {
+        $('#useROI').removeClass('active')
+    }
+    ROIChanged()
 }
 
 /* Filters */
+tagsHammingSampleFilter = function(tag) {return true}
 tagsSampleFilter = function(tag) {return true}
 tagsIntervalFilter = function(interval) {return true}
 tagsIDFilter = function(idinfo) {return true}
+tagsSampleFilterROI = function(tag) {return true}
 function onTagsParametersChanged() {
     console.log('onTagsParametersChanged')
     // Callback when tags chronogram computation parameters have changed
-    tagsSampleFilter = Function("tag",$('#tagsSampleFilter')[0].value)
+    tagsSampleFilterCustom = Function("tag",$('#tagsSampleFilter')[0].value)
+    
+    tagsSampleFilter = function(tag){
+          return tagsHammingSampleFilter(tag)
+                 &&tagsSampleFilterCustom(tag)
+                 &&tagsSampleFilterROI(tag)}
     
     let minLength = Number($('#tagsIntervalFilterMinLength').val())
     
@@ -1096,6 +1333,7 @@ function onTagsParametersChanged() {
                 'tagsIntervalFilter=',tagsIntervalFilter,
                 '\ntagsIDFilter=',tagsIDFilter)
     refreshChronogram()
+    videoControl.refresh()
 }
 function onTagsParametersSelectChanged(event) {
   $('#tagsIntervalFilter').val($('#tagsIntervalFilterSelect').val())
@@ -1103,19 +1341,19 @@ function onTagsParametersSelectChanged(event) {
 }
 function chronoFilter(mode) {
   if (mode=='H0') {
-      $('#tagsSampleFilter').val('return tag.hamming==0')
+      tagsHammingSampleFilter = function(tag) {return tag.hamming==0}
       onTagsParametersChanged()
   }
   if (mode=='H1') {
-      $('#tagsSampleFilter').val('return tag.hamming<=1')
+      tagsHammingSampleFilter = function(tag) {return tag.hamming<=1}
       onTagsParametersChanged()
   }
   if (mode=='H2') {
-      $('#tagsSampleFilter').val('return tag.hamming<=2')
+      tagsHammingSampleFilter = function(tag) {return tag.hamming<=2}
       onTagsParametersChanged()
   }
   if (mode=='Hall') {
-      $('#tagsSampleFilter').val('return true')
+      tagsHammingSampleFilter = function(tag) {return true}
       onTagsParametersChanged()
   }
 }
@@ -1125,6 +1363,54 @@ function onChronoParametersChanged() {
     showObsChrono = $('#showObsChrono')[0].checked
     console.log('onChronoParametersChanged:showTagsChrono\n=',showTagsChrono)
     refreshChronogram()
+}
+function onTrackDirChanged() {
+    trackDir = $('#selectboxTrackDir').val()
+    console.log('onTrackDirChanged: trackDir=',trackDir)
+    onTrackWindowChanged()
+}
+
+function ROIChanged() {
+    if (flag_useROI) {
+        tagsSampleFilterROI = function(tag) {
+            return (tag.c[0]>=ROI.left 
+                 && tag.c[0]<=ROI.right
+                 && tag.c[1]>=ROI.top
+                 && tag.c[1]<=ROI.bottom);
+        }
+    } else {
+        tagsSampleFilterROI = function(tag) {return true}
+    }
+    onTagsParametersChanged()
+    refreshChronogram()
+    videoControl.refresh();
+}
+function plotROI() {
+
+    let R = {left:ROI.left, top:ROI.top, 
+             width:ROI.right-ROI.left, 
+             height: ROI.bottom-ROI.top}
+    let R2 = videoToCanvasRect(R)
+
+    ctx.save()
+    ctx.beginPath();
+    ctx.rect(R2.left, R2.top, R2.width, R2.height);
+    ctx.strokeStyle = '#fff';
+    //ctx.setLineDash([4,4])
+    ctx.lineWidth = 1
+    ctx.stroke();
+    ctx.restore()
+    
+    ctx.save()
+    //ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillRect(0,0,canvas.width,R2.top);
+    ctx.fillRect(0,R2.top,R2.left,R2.height);
+    ctx.fillRect(R2.left+R2.width,R2.top,
+                 canvas.width-R2.left-R2.width,R2.height);
+    ctx.fillRect(0,R2.top+R2.height,
+                 canvas.width,canvas.height-R2.top-R2.height);
+    ctx.restore()
 }
 
 
@@ -1223,8 +1509,26 @@ function predictId(frame, rect, mode) {
         reason: 'default'
     };
 }
+function predictIdFromObsMultiframe(frameInterval, pt, mode) {
+    let out = {id: undefined, obs: undefined, reason:'notFound', d:Infinity, frame: undefined};
+    
+    for (let frame = frameInterval[0]; frame<=frameInterval[1]; frame++) {
+        let ids = getValidIDsForFrame(frame);
+        for (let id of ids) {
+            let obs = getObsHandle(frame, id, false);
+            var cx = obs.x + obs.width/2,
+                cy = obs.y + obs.height/2;
+            //console.log("id=",id,"obs=",obs)
+            let d = dist(pt.x, pt.y, cx, cy);
+            if (d < predictIdClickRadius && d < out.d) {
+                out = {id: id, obs: obs, reason:'distance', d:d, frame:frame};
+            }
+        }
+    }
+    return out;
+}
 
-predictIdClickRadius = 40
+predictIdClickRadius = 60
 function predictIdFromTags(frame, pt, mode) {
     var tmp = Tags[frame];
     if (tmp == null) return {id: undefined, tag: undefined, reason:'notFound'};
@@ -1286,19 +1590,69 @@ function computeDefaultNewID() {
 var default_width = 40;
 var default_height = 40;
 
+function newRectForTag(tag) {
+    let angle = tagAngle(tag)
+    let pt = videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
+    if (typeof angle !== 'undefined') {
+        console.log("newObsForTag: found angle=",angle)
+        rect = addRect(tag.id, 
+               pt.x - default_width / 2, 
+               pt.y - default_height / 2,
+               default_width, default_height, "new", undefined, angle);
+    } else {
+        console.log("newObsForTag: angle not found")
+        rect = addRect(tag.id, 
+               pt.x - default_width / 2, 
+               pt.y - default_height / 2,
+               default_width, default_height, "new");
+    }
+    return rect
+}
+function newRectForCurrentTag() {
+    if ($('#newRectForCurrentTag').hasClass('disabled')) {
+        return;
+    }
+    let id = getCurrentID()
+    if (id==null) {
+        printMessage('No current tag selected','red')
+        return;
+    }
+    let tag = getCurrentTag()
+    if (tag==null) {
+        printMessage('Current tag not visible in this frame. Try Next or Prev event','red')
+        return;
+    }
+    let r=getSelectedRect()
+    if (r!=null) {
+        printMessage('Current tag already annotated','red')
+        return;
+    }
+    var rect = newRectForTag(tag)
+    
+    canvas1.setActiveObject(rect);
+    canvas1.renderAll();
+    
+    submit_bee();
+}
+
 /* Create new rect from prediction */
 function onMouseDown_predict(option) {
-    var startY = option.e.offsetY, startX = option.e.offsetX;
-    let canvasXY = {x: startX, y: startX}
+    var startX = option.e.offsetX, startY = option.e.offsetY;
+    let canvasXY = {x: startX, y: startY}
     let videoXY = canvasToVideoPoint(canvasXY)
     var rect;
+    
+    if (logging.mouseEvents) {
+        console.log('onMouseDown: no object selected', option)
+        console.log('onMouseDown: currentID=', getCurrentID())
+    }
 
     // predictId takes video/obs coordinates units
     let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
     let predictionTag = predictIdFromTags(getCurrentFrame(), videoXY, "distance");
-    $("#I").val(prediction.id)
+    //$("#I").val(prediction.id)
   
-    if (logging.idPrediction) {
+    if (logging.mouseEvents) {
         console.log('onMouseDown: predictId         --> prediction=',prediction)
         console.log('onMouseDown: predictIdFromTags --> predictionTag=',predictionTag)
     }
@@ -1313,6 +1667,10 @@ function onMouseDown_predict(option) {
         if (prediction.obs && prediction.id==tag.id) {
             // If found a rect with same id as tag on adjacent frame
             let obs = prediction.obs;
+            
+            if (logging.mouseEvents)
+                console.log("onMouseDown: copying rect from tag ", tag, " and obs ",obs)
+            
             // Copy rectangle from source of prediction
             // addRect takes canvas coordinates units
             let r = obsToCanvasRect(obs)
@@ -1321,27 +1679,19 @@ function onMouseDown_predict(option) {
             rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
         } else {
             // Only found tag
-          
-            let angle = tagAngle(tag)
-            if (typeof angle !== 'undefined') {
-                console.log("MouseDown: found angle=",angle)
-                rect = addRect(predictionTag.id, 
-                       pt.x - default_width / 2, 
-                       pt.y - default_height / 2,
-                       default_width, default_height, "new", undefined, angle);
-            } else {
-                console.log("MouseDown: angle not found")
-                rect = addRect(predictionTag.id, 
-                       pt.x - default_width / 2, 
-                       pt.y - default_height / 2,
-                       default_width, default_height, "new");
-            }
+            if (logging.mouseEvents)
+                console.log("onMouseDown: copying rect from tag ", tag)
+            
+            rect = newRectForTag(tag)
         }
-        if (logging.mouseEvents)
-            console.log("onMouseDown: copied rect from tag ", tag)
+
     } else if (prediction.obs) {
         // Only found rect
         let obs = prediction.obs;
+        
+        if (logging.mouseEvents)
+            console.log("onMouseDown: prediction obs=", obs)
+        
         // Copy rectangle from source of prediction
         // addRect takes canvas coordinates units
         let r = obsToCanvasRect(obs)
@@ -1353,11 +1703,15 @@ function onMouseDown_predict(option) {
         if (logging.mouseEvents)
             console.log("onMouseDown: copied rect from ", obs)
     } else {
+        let id = getCurrentID()
+        if (id==null) {
+            id = prediction.id;
+        }
         // Did not find any tag nor rect
-        rect = addRect(prediction.id, startX - default_width / 2, startY - default_height / 2,
+        rect = addRect(id, startX - default_width / 2, startY - default_height / 2,
             default_width, default_height, "new");
         if (logging.mouseEvents)
-            console.log("onMouseDown: created new rect with default size ", rect)
+            console.log("onMouseDown: did not find tag or event, created new rect with default size ", rect)
     }
     rect.setCoords();
     canvas1.setActiveObject(rect);
@@ -1484,6 +1838,8 @@ function onMouseDown_selectMultiframe(option) {
     let ptCanvas = {x: option.e.offsetX, y: option.e.offsetY}
     let pt = canvasToVideoPoint(ptCanvas)
 
+    var tmp
+
     let clickMultiframe = true
     if (!clickMultiframe) {
       tmp = predictIdFromTags(getCurrentFrame(), pt)
@@ -1492,14 +1848,33 @@ function onMouseDown_selectMultiframe(option) {
           console.log('onMouseDown_selectMultiframe: found id=',tmp.id)
           selectBeeByID(tmp.id)
           videoControl.refresh()
+      } else {
+          deselectBee()
       }
 
     } else {
-      tmp = predictIdFromTagsMultiframe([getCurrentFrame()-plotTrack_range_forward, getCurrentFrame()+plotTrack_range_forward], pt)
+      if (showObsTracks) {
+          tmp = predictIdFromObsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
     
-      if (tmp.id != null) {
-        console.log('onMouseDown_selectMultiframe: found id=',tmp.id, 'frame=', tmp.frame)
-        selectBeeByIDandFrame(tmp.id,tmp.frame)
+          if (tmp.id != null) {
+            console.log('onMouseDown_selectMultiframe: found Obs id=',tmp.id, 'frame=', tmp.frame)
+            selectBeeByIDandFrame(tmp.id,tmp.frame)
+          } else {
+            deselectBee()
+            videoControl.refresh()
+          }
+      }
+    
+      if (showTagsTracks || showSelectedTagsTracks) {
+          tmp = predictIdFromTagsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
+    
+          if (tmp.id != null) {
+            console.log('onMouseDown_selectMultiframe: found Tag id=',tmp.id, 'frame=', tmp.frame)
+            selectBeeByIDandFrame(tmp.id,tmp.frame)
+          } else {
+            deselectBee()
+            videoControl.refresh()
+          }
       }
     }
     
@@ -1549,6 +1924,8 @@ function onMouseDown(option) {
     if (logging.mouseEvents)
         console.log('onMouseDown: option=', option)
     
+    videoControl.pause()
+    
     printMessage("")
 
     if (typeof option.target != "undefined") {
@@ -1563,19 +1940,15 @@ function onMouseDown(option) {
         }
     } else {
         // Clicked on the background
-        if (logging.addRect)
+        if (logging.mouseEvents)
             console.log('onMouseDown: no object selected', option)
-
-        // Deselect current bee
-        //canvas1.deactivateAllWithDispatch()
-        deselectBee()
 
         if (option.e.shiftKey) {
             // If SHIFT down, try to copy prediction
             // or create box centered on click if none
             onMouseDown_predict(option)
         } else if (option.e.ctrlKey) {
-            // If CTRL key, draw the box directly. Try to predict ID using TopLeft corner
+            // If CTRL key, draw the box directly. Try to predict ID using TopLeft corner        
             onMouseDown_interactiveRect(option)
         } else if (option.e.altKey) {
             // If ALT key, do panning
@@ -1685,7 +2058,7 @@ function onMouseUp(option) {
 
 
 
-
+lastSelected = null
 function onObjectSelected(option) {
     if (logging.selectionEvents)
         console.log("onObjectSelected:", option)
@@ -1760,12 +2133,91 @@ function onObjectModified(option) {
     }
 }
 
+
+function onLabelToggled(event) {
+    if (logging.guiEvents)
+        console.log("onLabelToggled: event=", event)
+    var activeObject = canvas1.getActiveObject()
+    var target = event.target;
+    if (activeObject == null) {
+        newRectForCurrentTag()
+        activeObject = canvas1.getActiveObject()
+    }
+    if (activeObject !== null) {
+        let obs = activeObject.obs
+        
+        let oldState = $(target).hasClass('active')
+        
+        console.log('oldState=',oldState)
+        let isOn = !oldState
+        
+        
+        $(target).toggleClass('active', isOn)
+        
+        let labelList = ['fanning','pollen','entering','leaving',
+                'falsealarm','wrongid'];
+        
+        for (let theClass of labelList) {
+            if ($(target).hasClass(theClass)) {
+              updateObsLabel(obs, theClass, isOn)
+            }
+        }
+        
+        console.log('onLabelToggled: obs.labels=',obs.labels)
+        
+        // Update the rest
+        updateRectObsActivity(activeObject)
+        automatic_sub()
+        
+        updateForm(activeObject)
+    }
+}
+function onLabelClicked(event) {
+    if (logging.guiEvents)
+        console.log("onLabelClicked: event=", event)
+    var activeObject = canvas1.getActiveObject()
+    if (activeObject !== null) {
+        let obs = activeObject.obs
+        
+        updateObsLabel(obs, 'fanning', 
+                       $('.labelcheckbox.fanning').prop('checked'))
+        updateObsLabel(obs, 'pollen', 
+                       $('.labelcheckbox.pollen').prop('checked'))
+        updateObsLabel(obs, 'entering', 
+                       $('.labelcheckbox.entering').prop('checked'))
+        updateObsLabel(obs, 'leaving', 
+                       $('.labelcheckbox.leaving').prop('checked'))
+
+        updateObsLabel(obs, 'falsealarm', 
+                       $('.labelcheckbox.falsealarm').prop('checked'))
+        updateObsLabel(obs, 'wrongid', 
+                       $('.labelcheckbox.wrongid').prop('checked'))
+        
+        console.log('onLabelClicked: obs.labels=',obs.labels)
+        
+        // Update the rest
+        updateRectObsActivity(activeObject)
+        automatic_sub()
+        
+        updateForm(activeObject)
+    }
+}
 function onActivityChanged(event) {
     if (logging.guiEvents)
         console.log("onActivityChanged: event=", event)
     var activeObject = canvas1.getActiveObject()
     if (activeObject !== null) {
         updateRectObsActivity(activeObject)
+        automatic_sub()
+    }
+}
+function onLabelsChanged() {
+    let labels=$('#labels').val()
+    if (logging.guiEvents)
+        console.log("onLabelsChanged: labels=", labels)
+    var activeObject = canvas1.getActiveObject()
+    if (activeObject !== null) {
+        setLabels(activeObject,labels)
         automatic_sub()
     }
 }
