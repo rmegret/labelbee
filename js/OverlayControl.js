@@ -2134,6 +2134,61 @@ function onObjectModified(option) {
 }
 
 
+function updateTagsLabels() {
+    for (let obs of flatTracksAll) {
+        let f = Number(obs.frame)
+        obs.span = {f1:f, f2:f}
+        obs.span.b1='obs'
+        obs.span.b2='obs'
+    }
+    for (let interval of tagIntervals) {
+        interval.labeling={
+            labeled:false,
+            entering:false,
+            falsealarm:false,
+            wrongid:false
+        }
+        for (let obs of flatTracksAll) {
+            if (obs.id != interval.id) continue;
+        
+            let f = Number(obs.frame)
+            let f1 = Number(interval['begin'])
+            let f2 = Number(interval['end'])
+            if (f>f1-20 && f<f2+20) {
+                interval.labeling.labeled = true
+                interval.labeling.entering = hasLabel(obs,'entering')
+                interval.labeling.falsealarm = hasLabel(obs,'falsealarm')
+                interval.labeling.wrongid = hasLabel(obs,'wrongid')
+                
+                if (f1<obs.span.f1) {
+                    obs.span.f1 = f1
+                    obs.span.b1='tag'
+                }
+                if (f2>obs.span.f2) {
+                    obs.span.f2 = f2
+                    obs.span.b2='tag'
+                }
+            }
+        }
+    }
+
+    // Find redundant Tracks    
+    for (let j in flatTracksAll) {
+        if (j==0) continue;
+        let i=j-1;
+        
+        let obs1=flatTracksAll[i]
+        let obs2=flatTracksAll[j]
+        
+        if (obs1.span.f2>=obs2.span.f1) {
+            obs2.isredundant = true
+        }
+    }
+
+    //activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming}
+}
+
+
 function onLabelToggled(event) {
     if (logging.guiEvents)
         console.log("onLabelToggled: event=", event)
@@ -2170,6 +2225,7 @@ function onLabelToggled(event) {
         automatic_sub()
         
         updateForm(activeObject)
+        refreshChronogram()
     }
 }
 function onLabelClicked(event) {

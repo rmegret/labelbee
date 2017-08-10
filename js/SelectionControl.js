@@ -80,11 +80,18 @@ function hasLabel(obs, label) {
     if (obs.labels == null) {
         obs.labels = ''
     }
-    let labelArray = toLabelArray(obs.labels)
+    return containsLabel(obs.labels,label)
+}
+function containsLabel(labels, label) {
+    if (labels == null) {
+        return false
+    }
+    let labelArray = toLabelArray(labels)
     let k = $.inArray(normalizeLabel(label), labelArray)
     if (k>=0) return true
     else return false
 }
+
 function updateLabelsFromBool(labels, bool_acts) {
     let labelArray=toLabelArray(labels)
     let add=[]

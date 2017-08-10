@@ -199,6 +199,7 @@
               
               <input type="text" value="" size="15" id="excludeID" onchange="onExcludeIDChanged(event)" class="small btn-orange-border">
               <button id="excludeIDButton" onclick="click_excludeID()" type="button" class="btn btn-orange-toggle btn-xs" title="Exclude these IDs (comma separated list, no spaces)">ExcludeID</button>
+              <button id="hideInvalidButton" onclick="click_hideInvalid()" type="button" class="btn btn-orange-toggle btn-xs" title="Hide  markings as falsealarm or wrongid and their tag detection)">Hide FalseAlarms/WrongID</button>
               </div>
               
 <!-- 
@@ -503,6 +504,15 @@
                 </div>
             </div>
             
+            <div id='labelingTab' class='collapsible'>
+                <label>Labeling <span class="glyphicon glyphicon-table"></span></label>
+                <div>
+
+                    <div id="obsTable">-</div>
+                    
+                </div>
+            </div>
+            
           </div> <!-- right-side -->
         </div>
     </td>
@@ -512,6 +522,7 @@
   <br/>
   <div id="tagDetails">-</div>
   <br/>  <br/>  <br/>
+    
   </div>
 
 <!--   <canvas id='videoCanvas' style="visible:false;"></canvas> -->

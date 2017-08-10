@@ -56,7 +56,7 @@ function saveToFile() {
     }
 
     let D = new Date()
-    let timestamp = D.getFullYear()+addZero(D.getMonth())+addZero(D.getDay())+
+    let timestamp = D.getFullYear()+addZero(D.getMonth()+1)+addZero(D.getDate())+
                    '_'+
                    addZero(D.getHours())+addZero(D.getMinutes())+addZero(D.getSeconds());
     //.toISOString()

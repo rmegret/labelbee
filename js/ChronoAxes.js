@@ -478,7 +478,7 @@ function ChronoAxes(parent, videoinfo, options) {
                    
         chronoGroup.select(".zoomEventRect")
                    .attr("width", width)         
-                   .attr("height", height);  
+                   .attr("height", height+margin.bottom);  
         
         refreshAxes({'type': 'resize'})
     }
@@ -627,7 +627,7 @@ function ChronoAxes(parent, videoinfo, options) {
     // Zoom behavior is applied to an invisible rect on top of the plotArea
     chronoGroup.append("rect").attr('class', 'zoomEventRect')
                .style("fill", "none")
-               .attr("width", width).attr("height", height)
+               .attr("width", width).attr("height", height+margin.bottom)
                .style("pointer-events", "all")
                .call(zoom)
     function onZoom() {
