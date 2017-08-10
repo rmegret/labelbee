@@ -116,7 +116,7 @@ function refreshZoom() {
             let pt = canvasToVideoPoint(geom.center)
             cx = pt.x
             cy = pt.y
-            angle = geom.angle
+            angle = geom.angle/180*Math.PI
         } else {
             cx = oldCX
             cy = oldCY
@@ -154,7 +154,7 @@ function refreshZoom() {
     if (zoomMode=='RT') {
       zoom_ctx.translate(+mw,+mh)
       zoom_ctx.scale(zoomScale,zoomScale)
-      zoom_ctx.rotate(-angle/180*Math.PI)
+      zoom_ctx.rotate(-angle)
       zoom_ctx.translate(-cx,-cy)
     } else {
       zoom_ctx.scale(zoomScale,zoomScale)
