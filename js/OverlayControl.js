@@ -44,7 +44,7 @@ function OverlayControl(canvasTagId) {
     $('#showTagsChrono').prop('checked',showTagsChrono)
     $('#showObsChrono').prop('checked',showObsChrono)
     
-    trackDir="Backward"
+    trackDir="Bidirectional"
     $('#selectboxTrackDir').val(trackDir)
     
     lockFocusTrackWindow=false
