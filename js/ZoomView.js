@@ -98,6 +98,7 @@ function plotArrow(ctx, p0, p1, L) {
 }
 
 var oldCX, oldCY, oldAngle;
+var zoomMode = 'RT'
 function refreshZoom() {
     let zw=400
     let zh=400
@@ -115,7 +116,7 @@ function refreshZoom() {
             let pt = canvasToVideoPoint(geom.center)
             cx = pt.x
             cy = pt.y
-            angle = geom.angle
+            angle = geom.angle/180*Math.PI
         } else {
             cx = oldCX
             cy = oldCY
@@ -150,10 +151,15 @@ function refreshZoom() {
 //     zoom_ctx.drawImage(video, 
 //        (cx - mw), (cy - mh), w, h,
 //         0,0,zh,zw);
-    zoom_ctx.translate(+mw,+mh)
-    zoom_ctx.scale(zoomScale,zoomScale)
-    zoom_ctx.rotate(-angle)
-    zoom_ctx.translate(-cx,-cy)
+    if (zoomMode=='RT') {
+      zoom_ctx.translate(+mw,+mh)
+      zoom_ctx.scale(zoomScale,zoomScale)
+      zoom_ctx.rotate(-angle)
+      zoom_ctx.translate(-cx,-cy)
+    } else {
+      zoom_ctx.scale(zoomScale,zoomScale)
+      zoom_ctx.setTransform(1,0, 0,1, -cx,-cy)
+    }
     zoom_ctx.drawImage(video,0,0) // Possible out of sync when playing
     //zoom_ctx.drawImage(videoCanvas,0,0)
     zoom_ctx.restore()

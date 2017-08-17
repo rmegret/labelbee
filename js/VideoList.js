@@ -35,7 +35,7 @@ function initVideoList() {
     };
     updateVideoInfoForm()
     
-    videoListFromServer('data/videolist.csv')
+    videoListFromServer('data/videolist.csv', 1)
 }
 function updateVideoList() {
     var data = videoList;

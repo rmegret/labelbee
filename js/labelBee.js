@@ -91,7 +91,7 @@ function init() {
     
     /* Set defaults */
     
-    selectVideoByID(6)
+    selectVideoByID(1)
     //Will trigger videoControl.onVideoLoaded
     onTrackWindowChanged() // to compute track window params
 }

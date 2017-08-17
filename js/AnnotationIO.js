@@ -301,7 +301,7 @@ function tagsFromServer(path, quiet) {
         }
       )
 }
-function videoListFromServer(path) {     
+function videoListFromServer(path, defaultvideoid) {     
     if (!path) {
         var userpath = window.prompt("Please enter path for Video List (server)","data/Gurabo/videolist.csv");
         if (userpath==null || userpath=="") {
@@ -337,7 +337,10 @@ function videoListFromServer(path) {
           }
 
           updateVideoList()
-          selectVideoByID(0)
+          if (defaultvideoid==null)
+              selectVideoByID(0)
+          else
+              selectVideoByID(defaultvideoid)
         }
       )
       .fail(function(data) {

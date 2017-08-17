@@ -44,7 +44,7 @@ function OverlayControl(canvasTagId) {
     $('#showTagsChrono').prop('checked',showTagsChrono)
     $('#showObsChrono').prop('checked',showObsChrono)
     
-    trackDir="Backward"
+    trackDir="Bidirectional"
     $('#selectboxTrackDir').val(trackDir)
     
     lockFocusTrackWindow=false
@@ -66,6 +66,7 @@ function OverlayControl(canvasTagId) {
     canvas1.on('mouse:up', onMouseUp);
     canvas1.on('object:moving', onObjectMoving); // During translation
     canvas1.on('object:scaling', onObjectMoving); // During scaling
+    canvas1.on('object:rotating', onObjectMoving); // During rotation
     canvas1.on('object:modified', onObjectModified); // After modification
     canvas1.on('object:selected', onObjectSelected); // After mousedown
     canvas1.on('selection:cleared', onObjectDeselected); // After mousedown out of existing rectangles
