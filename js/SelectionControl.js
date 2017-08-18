@@ -147,8 +147,8 @@ function initSelectionControl() {
     $( selectionControl ).on('selection:created', updateFormButtons)
     $( selectionControl ).on('selection:cleared', updateFormButtons)
 
-    $('.labelcheckbox').change(onLabelClicked);
-    $('.labeltoggle').change(onLabelClicked);
+    //$('.labelcheckbox').change(onLabelClicked);
+    $('.labeltoggle').change(onLabelToggled);
     
     $('#labels').change(onLabelsChanged);
       
@@ -208,7 +208,7 @@ function updateForm(activeObject) {
         $('#CX').html("Center X: -")
         $('#CY').html("Center X: -")
         
-        $('.labelcheckbox').prop('checked', false);
+        //$('.labelcheckbox').prop('checked', false);
 
         $('#notes').prop('value', '');
         $('#labels').prop('value', '');
@@ -239,12 +239,12 @@ function updateForm(activeObject) {
 //         $('#E').prop('checked', obs.bool_acts[2]);
 //         $('#L').prop('checked', obs.bool_acts[3]);
         
-        $('.labelcheckbox.fanning').prop('checked', hasLabel(obs,'fanning'));
-        $('.labelcheckbox.pollen').prop('checked', hasLabel(obs,'pollen'));
-        $('.labelcheckbox.entering').prop('checked', hasLabel(obs,'entering'));
-        $('.labelcheckbox.leaving').prop('checked', hasLabel(obs,'leaving'));
-        $('.labelcheckbox.falsealarm').prop('checked', hasLabel(obs,'falsealarm'));
-        $('.labelcheckbox wrongid').prop('checked', hasLabel(obs,'wrongid'));
+//         $('.labelcheckbox.fanning').prop('checked', hasLabel(obs,'fanning'));
+//         $('.labelcheckbox.pollen').prop('checked', hasLabel(obs,'pollen'));
+//         $('.labelcheckbox.entering').prop('checked', hasLabel(obs,'entering'));
+//         $('.labelcheckbox.leaving').prop('checked', hasLabel(obs,'leaving'));
+//         $('.labelcheckbox.falsealarm').prop('checked', hasLabel(obs,'falsealarm'));
+//         $('.labelcheckbox.wrongid').prop('checked', hasLabel(obs,'wrongid'));
                 
         if (typeof obs.notes === 'undefined')
             $('#notes').prop('value', '');
@@ -259,6 +259,7 @@ function updateForm(activeObject) {
         $('.labeltoggle.leaving').toggleClass('active',hasLabel(obs,'leaving'))
         $('.labeltoggle.falsealarm').toggleClass('active',hasLabel(obs,'falsealarm'))
         $('.labeltoggle.wrongid').toggleClass('active',hasLabel(obs,'wrongid'))
+        $('.labeltoggle.walking').toggleClass('active',hasLabel(obs,'walking'))
     }
 
 }
