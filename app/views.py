@@ -33,10 +33,10 @@ def user_page():
     
     
     try: 
-        os.makedirs("app/static/upload/"+str(current_user.id))
+        os.makedirs("app/upload/"+str(current_user.id))
     except: 
             pass
-    tracks = os.listdir('app/static/upload/'+ str(current_user.id))
+    tracks = os.listdir('app/upload/'+ str(current_user.id))
     string = "<HTML>"
 
     for i in tracks:
@@ -60,13 +60,13 @@ def login():
 def admin_page():
     return render_template('pages/admin_page.html')
 
-@app.route('/ajaxcalc',methods=['POST', 'GET'])
+@app.route('/savetojson',methods=['POST', 'GET'])
 @login_required
 def json_to_server():
     if request.method=='POST':
         data=request.get_json()
         print(data)
-        with open('app/static/upload/'+ str(current_user.id)+'/tracks'+str(datetime.utcnow())+'.json', 'w') as outfile:
+        with open('app/upload/'+ str(current_user.id)+'/tracks'+str(datetime.utcnow())+'.json', 'w') as outfile:
             json.dump(data, outfile)
         return ("ok")
     else:
@@ -75,14 +75,14 @@ def json_to_server():
 @app.route('/load_json/<item>', methods=['POST','GET'])
 @login_required
 def load_json(item):
-    print(os.path.isfile('app/static/upload/'+str(current_user.id)+'/'+item))
-    file = pd.read_json('app/static/upload/'+str(current_user.id)+'/'+item)
+    print(os.path.isfile('app/upload/'+str(current_user.id)+'/'+item))
+    file = pd.read_json('app/upload/'+str(current_user.id)+'/'+item)
     return file.to_json() 
 
 @app.route ('/tracks', methods =['GET'])
 @login_required
 def Track_list():
-    tracks = os.listdir('app/static/upload/'+ str(current_user.id))
+    tracks = os.listdir('app/upload/'+ str(current_user.id))
     string = "<HTML>"
 
     for i in tracks:
