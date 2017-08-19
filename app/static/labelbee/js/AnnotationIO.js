@@ -241,30 +241,58 @@ function saveTagsToFile(event) {
 
 // Server I/O
 
-var serverURL = 'http://127.0.0.1:5000/';
-function jsonFromServer() {     
-    var path = window.prompt("Please enter path for Track JSON (server)","data/Gurabo/Tracks-C02_170624100000.json");
-    if (path==null || path=="") {
-        console.log('jsonFromServer: canceled')
-        return;
-    }
-    
-    console.log('jsonFromServer: loading path "'+path+'"...')  
+function jsonFromServer(route){
 
-     $.getJSON( path ,
-        function(data) {
-          console.log('jsonFromServer: loaded "'+path+'"')  
-        }
-      )
-      .done(function(data) {
-          setTracks(data)
-        }
-      )
-      .fail(function(data) {
-          console.log('jsonFromServer: ERROR loading "'+path+'"')  
-        }
-      )
-}
+    console.log("loadFromFile: importing from JSON file ",event,"...")
+
+    console.log(route);
+
+    $.ajax({
+          url: '/' + route, //server url
+          type: 'GET',    //passing data as post method
+          contentType: 'application/json', // returning data as json
+          data:'',
+          success:function(json)
+          {
+
+
+            //alert("success");  //response from the server given as alert message
+
+            console.log('success: json=', json); 
+            Tracks= JSON.parse(json)[0];
+            onFrameChanged();
+
+            refreshChronogram();
+
+          }
+        
+        });
+  }
+
+// var serverURL = 'http://127.0.0.1:5000/';
+// function jsonFromServer() {     
+//     var path = window.prompt("Please enter path for Track JSON (server)","data/Gurabo/Tracks-C02_170624100000.json");
+//     if (path==null || path=="") {
+//         console.log('jsonFromServer: canceled')
+//         return;
+//     }
+    
+//     console.log('jsonFromServer: loading path "'+path+'"...')  
+
+//      $.getJSON( path ,
+//         function(data) {
+//           console.log('jsonFromServer: loaded "'+path+'"')  
+//         }
+//       )
+//       .done(function(data) {
+//           setTracks(data)
+//         }
+//       )
+//       .fail(function(data) {
+//           console.log('jsonFromServer: ERROR loading "'+path+'"')  
+//         }
+//       )
+// }
 function tagsFromServer(path, quiet) {     
     //var path = "data/Gurabo/Tags-C02_170624100000.json" ;// Default
     
@@ -350,5 +378,27 @@ function videoListFromServer(path, defaultvideoid) {
 }
 
 function jsonToServer() {
-  window.open(serverURL,'popUpWindow','height=500,width=400,left=100,top=100,resizable=yes,scrollbars=yes,toolbar=yes,menubar=no,location=no,directories=no, status=yes');
+
+    //$('#test').click(function(event) {
+    console.log("entrando")
+        /* Act on the event */
+        
+       $.ajax({
+          url: '/ajaxcalc', //server url
+          type: 'POST',    //passing data as post method
+          contentType: 'application/json', // returning data as json
+          data: JSON.stringify(Tracks),  //form values
+          success:function(json)
+          {
+            alert("success");  //response from the server given as alert message
+
+          }
+        
+        });
+
 }
+
+
+// function jsonToServer() {
+//   window.open(serverURL,'popUpWindow','height=500,width=400,left=100,top=100,resizable=yes,scrollbars=yes,toolbar=yes,menubar=no,location=no,directories=no, status=yes');
+// }
