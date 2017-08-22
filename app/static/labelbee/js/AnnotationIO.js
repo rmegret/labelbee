@@ -260,7 +260,7 @@ function jsonFromServer(route){
 
             console.log('success: json=', json); 
             Tracks= JSON.parse(json)[0];
-            onFrameChanged();
+            videoControl.onFrameChanged();
 
             refreshChronogram();
 
