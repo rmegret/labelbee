@@ -243,7 +243,7 @@ function saveTagsToFile(event) {
 
 var serverURL = 'http://127.0.0.1:5000/';
 function jsonFromServer() {     
-    var path = window.prompt("Please enter path for Track JSON (server)","data/Gurabo/Tracks-C02_170624100000.json");
+    var path = window.prompt("Please enter path for Track JSON (server)","app/data/Tracks-demo.json");
     if (path==null || path=="") {
         console.log('jsonFromServer: canceled')
         return;
@@ -303,7 +303,7 @@ function tagsFromServer(path, quiet) {
 }
 function videoListFromServer(path, defaultvideoid) {     
     if (!path) {
-        var userpath = window.prompt("Please enter path for Video List (server)","data/Gurabo/videolist.csv");
+        var userpath = window.prompt("Please enter path for Video List (server)","/static/data/videolist.csv");
         if (userpath==null || userpath=="") {
             console.log('videoListFromServer: canceled')
             return;

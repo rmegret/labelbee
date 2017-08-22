@@ -101,6 +101,10 @@ def loadtrack(user,filename):
 
 
 
+@app.route('/tracks') #path for 
+@login_required
+def Modal():
+    return 
 
 
 
@@ -126,3 +130,10 @@ def user_profile_page():
     # Process GET or invalid POST
     return render_template('pages/user_profile_page.html',
                            form=form)
+
+@app.route('/app/data/<vid_name>', methods=['GET','POST']) #path for 
+@login_required
+def vidview(vid_name):
+    print(vid_name)
+    # return '<video controls><source src="'+ vid_name + '" type="video/mp4"></video>'
+    return '<video src="g.mp4" autoplay poster="posterimage.jpg"></video>'
