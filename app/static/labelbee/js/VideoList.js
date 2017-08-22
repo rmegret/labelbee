@@ -35,7 +35,7 @@ function initVideoList() {
     };
     updateVideoInfoForm()
     
-    videoListFromServer('data/videolist.csv', 1)
+    videoListFromServer('static/data/videolist.csv', 1)
 }
 function updateVideoList() {
     var data = videoList;
@@ -90,7 +90,7 @@ function selectVideoByID(id) {
     videoListCurrentID = id
     
     prefillVideoFields()
-    let file = 'data/'+videoList[videoListCurrentID]
+    let file = 'static/data/'+videoList[videoListCurrentID]
     
     updateVideoListSelection()
     

@@ -331,7 +331,7 @@ function tagsFromServer(path, quiet) {
 }
 function videoListFromServer(path, defaultvideoid) {     
     if (!path) {
-        var userpath = window.prompt("Please enter path for Video List (server)","data/Gurabo/videolist.csv");
+        var userpath = window.prompt("Please enter path for Video List (server)","/static/data/videolist.csv");
         if (userpath==null || userpath=="") {
             console.log('videoListFromServer: canceled')
             return;
