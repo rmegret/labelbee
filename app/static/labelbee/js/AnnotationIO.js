@@ -384,7 +384,7 @@ function jsonToServer() {
         /* Act on the event */
         
        $.ajax({
-          url: '/ajaxcalc', //server url
+          url: '/savetojson', //server url
           type: 'POST',    //passing data as post method
           contentType: 'application/json', // returning data as json
           data: JSON.stringify(Tracks),  //form values
