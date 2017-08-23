@@ -1185,10 +1185,12 @@ function updateActivities(onlyScaling) {
 // var lineX = d3.time.scale().range([0, width]);
 // var lineY = d3.scale.linear().range([height, 0]);
 
+console.log(allIntervals)
+
 var lineFunction = d3.svg.line()
-              .x(function(d) {return axes.xScale(d.x);})
-              .y(function(d) {return axes.yScale(d.y);});
-              // .interpolate("linear");
+              .x(function(d) {return d.x;})
+              .y(function(d) {return d.y;})
+              .interpolate("linear");
 
 // var svgContainer = axes.chronoGroup.append("g");
 
@@ -1196,14 +1198,17 @@ var lineFunction = d3.svg.line()
 // lineY.domain([0, d3.max(allIntervals, function(d) { return Number(d.y)+5; })]);
 // console.log(allIntervals);
 //Append line to chronogram
-let path = chart.selectAll("path")
+let path = chart.selectAll(".cross")
                 .data(allIntervals);
     
-    path.enter()
-        .append("path");
+path.enter()
+    .append("path")
+    .attr('class','cross')
 
-path.selectAll("path")
-    .attr("d",function(d){lineFunction([{x:d.x1,y:d.y},{x:d.x1+10,y:d.y+10}])})
+path.attr("d",function(d){
+          var X=axes.xScale(Number(d.x1)), Y=axes.yScale(Number(d.y));
+          console.log(X,Y)
+          return lineFunction([{x:X,y:Y},{x:X+50,y:Y+50},{x:X-50,y:Y+50}])})
     .attr("stroke", "blue")
     .attr("stroke-width", 4)
     .attr("fill", "none");
