@@ -819,12 +819,12 @@ function createIntervalList() {
     //keep it or don't keep it 
     crosses = allIntervals.filter(function(d){
     var tempArray = d.labels.split(",");
-    if (tempArray.includes('falsealarm')){
-        return "falsealarm";
+    if (tempArray.includes('falsealarm')||tempArray.includes('wrongid')){
+        return true;
         }
-    else if(tempArray.includes('wrongid')){
-        return "wrongid";
-        }
+    // else if(tempArray.includes('wrongid')){
+    //     return true;
+    //     }
      });
 
 
