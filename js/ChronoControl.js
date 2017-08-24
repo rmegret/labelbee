@@ -28,7 +28,7 @@ function initChrono() {
     /* ## Build the axes (resizable) ## */
 
     options = {useOrdinalScale: true}
-    axes = new ChronoAxes(svg, videoinfo, options)
+    axes = new ChronoAxes(svg, videoinfo, options);
     //axes.onClick = onAxesClick         // Callback when the user clicks in axes
     //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
     
@@ -751,6 +751,8 @@ var tempCoordinates = {};
 //Final intervals and its BeeID
 allIntervals = [];
 
+var isWrongId = false;
+var isFalseAlarm = false;
 // pollen = false;
 
 //Get data from chronogramData and output allIntervals,
@@ -791,7 +793,7 @@ function createIntervalList() {
 
             var iData = chronogramData[iArray[0]]; 
             let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, 
-                Activity: iData.Activity, labels:obs.labels,pollen: iData.pollen };
+                Activity: iData.Activity, labels:iData.labels, pollen: iData.pollen };
 
             // let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, 
             //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
@@ -805,12 +807,26 @@ function createIntervalList() {
                 } else {
                     allIntervals.push(tempInterval);
                     tempInterval = { x1: xValues[i], x2: xValues[i], y: y, 
-                    Activity: iData.Activity,labels:obs.labels, pollen: iData.pollen}; // New interval
+                    Activity: iData.Activity,labels:iData
+                    .labels, pollen: iData.pollen}; // New interval
                 }
             }
             allIntervals.push(tempInterval);
         }
     }
+
+    //return true or false if you want to keep the interval(the cross?)
+    //keep it or don't keep it 
+    crosses = allIntervals.filter(function(d){
+    var tempArray = d.labels.split(",");
+    if (tempArray.includes('falsealarm')){
+        return "falsealarm";
+        }
+    else if(tempArray.includes('wrongid')){
+        return "wrongid";
+        }
+     });
+
 
     rectIntervals = allIntervals.filter(function(d){
       return d.x1 != d.x2;
@@ -819,13 +835,9 @@ function createIntervalList() {
       return d.x1 == d.x2;
     });
 
-    if (allIntervals.length > 1){
-        for (var i = 0; i < allIntervals.length; i++){
-            for (var j = 1; j < allIntervals.length; j++){
-            }
 
-        }
-    }
+
+
 }
 
 
@@ -882,10 +894,6 @@ function setGeomActivity(selection) {
 
 }
 
-//Create crosses for Wrong ID and False Alarm warnings:
-
-
-
 function initEntering(input){
     input.insert("rect")
     .attr("width", "1px")
@@ -928,7 +936,6 @@ function updateLeaving(input) {
             return axes.yScale.rangeBand()/2;
         })
         .style("fill", "red");
-        
 }
 
 //Create Pollen visuals
@@ -1016,6 +1023,7 @@ function initObsSpan(selection) {
         //.on('click',onActivityClick)
         .call(updateObsSpan)
 }
+
 function updateObsSpan(selection) {
     selection
         .attr("x", function(d) {
@@ -1033,6 +1041,7 @@ function updateObsSpan(selection) {
         .style("fill", "none")
         .style("stroke", "red");
 }
+
 function updateAlertCircle(selection) {
     selection.exit().remove()
     selection.enter().insert("circle")
@@ -1125,9 +1134,9 @@ function updateActivities(onlyScaling) {
     // console.log("Pollen is ", pollen)
 
     var chart = axes.chronoGroup;
-        //Circles for solo bee iD
+    
+    //Circles for solo bee iD
     let circles =  chart.selectAll("circle.obs")
-                        // .data(circlesIntervals)
                         .data(allIntervals);
                         
     circles.enter()
@@ -1144,16 +1153,12 @@ function updateActivities(onlyScaling) {
         .attr("cy", function(d) {
             return axes.yScale(Number(d.y)) + axes.yScale.rangeBand() / 2;
         })
-        .attr("r", 5) //shange radius
-        // .style("fill", activityColor)
-        // .style("stroke", activityColor);
+        .attr("r", 5) //change radius
         .style("stroke",  function(d){
             var color = "black";
             if (d.pollen){
-                //color = "ffe500";
                 color = "ffbb00";
             }
-
             return color;
         })
         .style("stroke-width",  function(d){
@@ -1180,42 +1185,50 @@ function updateActivities(onlyScaling) {
         );
     });
 
-//Create lines for false alarms and wrond id crosses
-// Set the ranges
-// var lineX = d3.time.scale().range([0, width]);
-// var lineY = d3.scale.linear().range([height, 0]);
-
-console.log(allIntervals)
+// console.log("Labels Arr", labelsArr);                      
 
 var lineFunction = d3.svg.line()
               .x(function(d) {return d.x;})
               .y(function(d) {return d.y;})
               .interpolate("linear");
 
-// var svgContainer = axes.chronoGroup.append("g");
+function crossFunction(x,y){
+    x = Number(x);
+    y = Number(y);
 
-// lineX.domain(d3.extent(allIntervals, function(d) { return d.x1; }));
-// lineY.domain([0, d3.max(allIntervals, function(d) { return Number(d.y)+5; })]);
-// console.log(allIntervals);
+    return "M"+(x-10)+","+(y-10)+"L"+(x+10)+","+(y+10)+"M"+(x+10)+","
+    +(y-10)+"L"+(x-10)+","+(y+10);
+}
+
 //Append line to chronogram
-let path = chart.selectAll(".cross")
-                .data(allIntervals);
-    
+let path = chart.selectAll(".crossLeft")
+                .data(crosses);
+//filter for labels, split it refreshChronogram so no need 
+
+
 path.enter()
     .append("path")
-    .attr('class','cross')
+    .attr('class','crossLeft');
 
 path.attr("d",function(d){
-          var X=axes.xScale(Number(d.x1)), Y=axes.yScale(Number(d.y));
-          console.log(X,Y)
-          return lineFunction([{x:X,y:Y},{x:X+50,y:Y+50},{x:X-50,y:Y+50}])})
-    .attr("stroke", "blue")
-    .attr("stroke-width", 4)
-    .attr("fill", "none");
+          var X=axes.xScale(Number(d.x1)), Y=axes.yScale(Number(d.y)) + axes.yScale.rangeBand()/2;
+          return crossFunction(X,Y)})
+    .attr("stroke", function(d){
 
+        var color = "black";
+        if(d.labels == "falsealarm")
+            color = "red";
+        else if(d.labels == "wrongid")
+            color = "blue";
+        return color;
+    })
+    .attr("stroke-width", 3)
+    .attr("fill", "none");
 path.exit().remove();
 
+
 }
+
 
 function initActivities() {
     //chronogramData = []
@@ -1286,8 +1299,6 @@ function initTagIntervals() {
     tagIntervals = []
     updateTagIntervals()
 }
-
-
 
 
 function getFlatTags(useFilter) {
@@ -1435,6 +1446,7 @@ function refreshChronogram() {
                     if (hasLabel(obs,'falsealarm') ||
                         hasLabel(obs,'wrongid')    ) continue;
                 }
+
             //Cleaning eventually
                 //let chronoObs = {'x':F, 'y':id, 'Activity':""};
 
