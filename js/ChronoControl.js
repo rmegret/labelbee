@@ -28,7 +28,7 @@ function initChrono() {
     /* ## Build the axes (resizable) ## */
 
     options = {useOrdinalScale: true}
-    axes = new ChronoAxes(svg, videoinfo, options)
+    axes = new ChronoAxes(svg, videoinfo, options);
     //axes.onClick = onAxesClick         // Callback when the user clicks in axes
     //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
     
@@ -751,13 +751,9 @@ var tempCoordinates = {};
 //Final intervals and its BeeID
 allIntervals = [];
 
-//For current interval
-var tempInterval = {
-    x1: 0,
-    x2: 0,
-    y: 0,
-    Activity: ""
-};
+var isWrongId = false;
+var isFalseAlarm = false;
+// pollen = false;
 
 //Get data from chronogramData and output allIntervals,
 function createIntervalList() {
@@ -795,20 +791,42 @@ function createIntervalList() {
                 xValues[j]=Number(chronogramData[iArray[j]].x);
             }
 
-            let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, Activity: chronogramData[iArray[0]].Activity };
+            var iData = chronogramData[iArray[0]]; 
+            let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, 
+                Activity: iData.Activity, labels:iData.labels, pollen: iData.pollen };
+
+            // let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, 
+            //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
 
             for (var i = 1; i < xValues.length; i++) {
+                iData = chronogramData[iArray[i]]; 
                 // console.log("Act temp interval IN: ", tempInterval[i].Activity);
                 if (xValues[i] - xValues[i - 1] == 1) {
                     tempInterval.x2 = xValues[i]; //Extend the existing interval
+                    tempInterval.pollen |= iData.pollen;
                 } else {
                     allIntervals.push(tempInterval);
-                    tempInterval = { x1: xValues[i], x2: xValues[i], y: y, Activity: chronogramData[iArray[i]].Activity }; // New interval
+                    tempInterval = { x1: xValues[i], x2: xValues[i], y: y, 
+                    Activity: iData.Activity,labels:iData
+                    .labels, pollen: iData.pollen}; // New interval
                 }
             }
             allIntervals.push(tempInterval);
         }
     }
+
+    //return true or false if you want to keep the interval(the cross?)
+    //keep it or don't keep it 
+    crosses = allIntervals.filter(function(d){
+    var tempArray = d.labels.split(",");
+    if (tempArray.includes('falsealarm')||tempArray.includes('wrongid')){
+        return true;
+        }
+    // else if(tempArray.includes('wrongid')){
+    //     return true;
+    //     }
+     });
+
 
     rectIntervals = allIntervals.filter(function(d){
       return d.x1 != d.x2;
@@ -816,6 +834,10 @@ function createIntervalList() {
     circlesIntervals = allIntervals.filter(function(d){
       return d.x1 == d.x2;
     });
+
+
+
+
 }
 
 
@@ -855,7 +877,7 @@ function setGeomActivity(selection) {
         })
         .style("fill", "gray");
         //.style("stroke", activityColor);
-        	//Add text to display annotation info 
+            //Add text to display annotation info 
     selection.select("rect").selectAll("title").remove()
     selection.select("rect").append("title").text(function(d) {
       return (
@@ -914,7 +936,6 @@ function updateLeaving(input) {
             return axes.yScale.rangeBand()/2;
         })
         .style("fill", "red");
-        
 }
 
 //Create Pollen visuals
@@ -1002,6 +1023,7 @@ function initObsSpan(selection) {
         //.on('click',onActivityClick)
         .call(updateObsSpan)
 }
+
 function updateObsSpan(selection) {
     selection
         .attr("x", function(d) {
@@ -1019,6 +1041,7 @@ function updateObsSpan(selection) {
         .style("fill", "none")
         .style("stroke", "red");
 }
+
 function updateAlertCircle(selection) {
     selection.exit().remove()
     selection.enter().insert("circle")
@@ -1080,7 +1103,7 @@ function updateActivities(onlyScaling) {
         insertPollen.call(updatePollen);
 
 
-   	//Object for fanning visuals
+    //Object for fanning visuals
       let insertFanning = svgTop.selectAll(".fanning")
       .data(allIntervals.filter(function (d){return (d.Activity=="fanning")}));
 
@@ -1106,31 +1129,45 @@ function updateActivities(onlyScaling) {
         insertLeaving.exit().remove();
         insertLeaving.call(updateLeaving);
 
-    	}
+        }
 
-     //create circles for one coordinate bees
+    // console.log("Pollen is ", pollen)
+
     var chart = axes.chronoGroup;
-        //Circles for solo bee iD
+    
+    //Circles for solo bee iD
     let circles =  chart.selectAll("circle.obs")
-                        .data(circlesIntervals)
+                        .data(allIntervals);
                         
     circles.enter()
-        .append("circle").attr('class','obs')
-           .on('click',onActivityClick)
+        .append("circle")
+        .attr('class','obs')
+        .on('click',onActivityClick)
         .append('title'); //Add circle chronoGroup
     circles.exit().remove();
     //Update circles
     circles
         .attr("cx", function(d) {
-        	return axes.xScale(Number(d.x1));
+            return axes.xScale(Number(d.x1));
         })
         .attr("cy", function(d) {
             return axes.yScale(Number(d.y)) + axes.yScale.rangeBand() / 2;
         })
-        .attr("r", 5) //shange radius
-        // .style("fill", activityColor)
-        // .style("stroke", activityColor);
-        .style("stroke", "black")
+        .attr("r", 5) //change radius
+        .style("stroke",  function(d){
+            var color = "black";
+            if (d.pollen){
+                color = "ffbb00";
+            }
+            return color;
+        })
+        .style("stroke-width",  function(d){
+            var width = 1;
+            if (d.pollen){
+                width = 3;
+            }
+            return width ;
+        })
         // .attr("fill", "black") //change color
         .style("fill", function(d) {
             var color = "black";
@@ -1146,8 +1183,53 @@ function updateActivities(onlyScaling) {
         return (
           "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity
         );
-	});
+    });
+
+// console.log("Labels Arr", labelsArr);                      
+
+var lineFunction = d3.svg.line()
+              .x(function(d) {return d.x;})
+              .y(function(d) {return d.y;})
+              .interpolate("linear");
+
+function crossFunction(x,y){
+    x = Number(x);
+    y = Number(y);
+
+    return "M"+(x-10)+","+(y-10)+"L"+(x+10)+","+(y+10)+"M"+(x+10)+","
+    +(y-10)+"L"+(x-10)+","+(y+10);
 }
+
+//Append line to chronogram
+let path = chart.selectAll(".crossLeft")
+                .data(crosses);
+//filter for labels, split it refreshChronogram so no need 
+
+
+path.enter()
+    .append("path")
+    .attr('class','crossLeft');
+
+path.attr("d",function(d){
+          var X=axes.xScale(Number(d.x1)), Y=axes.yScale(Number(d.y)) + axes.yScale.rangeBand()/2;
+          return crossFunction(X,Y)})
+    .attr("stroke", function(d){
+
+        var color = "black";
+        if(d.labels == "falsealarm")
+            color = "red";
+        else if(d.labels == "wrongid")
+            color = "blue";
+        return color;
+    })
+    .attr("stroke-width", 3)
+    .attr("fill", "none");
+path.exit().remove();
+
+
+}
+
+
 function initActivities() {
     //chronogramData = []
     chronogramData.length = 0
@@ -1219,8 +1301,6 @@ function initTagIntervals() {
 }
 
 
-
-
 function getFlatTags(useFilter) {
     let flatTags=[]
     for (let F in Tags) {
@@ -1274,8 +1354,9 @@ function updateObsTable() {
     flatTracksAll = []
     for (let F in Tracks) {
         for (let id in Tracks[F]) {
-                var obs = Tracks[F][id]
-            
+                // var obs = Tracks[F][id]
+                obs = Tracks[F][id]
+
                 if (flag_restrictID) {
                     if ($.inArray(String(id), restrictIDArray)<0) continue;
                 } else if (flag_excludeID) {
@@ -1365,8 +1446,9 @@ function refreshChronogram() {
                     if (hasLabel(obs,'falsealarm') ||
                         hasLabel(obs,'wrongid')    ) continue;
                 }
-            
-                let chronoObs = {'x':F, 'y':id, 'Activity':""};
+
+            //Cleaning eventually
+                //let chronoObs = {'x':F, 'y':id, 'Activity':""};
 
 //                 if (Tracks[F][id].bool_acts[1]) {
 //                     chronoObs.Activity = "pollenating";
@@ -1379,22 +1461,23 @@ function refreshChronogram() {
 
                 let b=obs.bool_acts
                 
-                if (!b[0] && !b[1] && !b[2] && !b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"", labels:obs.labels});
+                if (!b[0] && !b[2] && !b[3]) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"", labels:obs.labels, pollen:b[1]});
                 }
-                if (b[1]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"pollen", labels:obs.labels});
-                    //chronoObs.Activity = "pollenating";
-                }
+                // if (b[1]) {
+                //     chronogramData.push({'x':F, 'y':id, 'Activity':"pollen", labels:obs.labels});
+                //     //chronoObs.Activity = "pollenating";
+                // }
                 if (b[2]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering", labels:obs.labels});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering", labels:obs.labels, pollen:b[1]});
                 }
                 if (b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving", labels:obs.labels});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving", labels:obs.labels, pollen:b[1]});
                 }
                 if (b[0]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning", labels:obs.labels});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning", labels:obs.labels, pollen:b[1]});
                 }
+
 
                 // chronogramData.push(chronoObs);
             }

@@ -81,7 +81,7 @@ select{
     padding-right: 16px;
 }
 .ui-resizable-helper {
-	border: 2px dotted #F00;
+  border: 2px dotted #F00;
 }
 
 
@@ -238,18 +238,18 @@ button > p.multiline {
 
 }
 .subpanel.ui-accordion  .ui-accordion-header {
-	display: block;
-	cursor: pointer;
-	border: 1px red solid;
-	position: relative;
-	margin: 2px 0 0 0;
-	padding: .25em .25em .25em .35em;
-	font-size: 100%;
+  display: block;
+  cursor: pointer;
+  border: 1px red solid;
+  position: relative;
+  margin: 2px 0 0 0;
+  padding: .25em .25em .25em .35em;
+  font-size: 100%;
 }
 .subpanel.ui-accordion  .ui-accordion-content {
-/* 	padding: 1em 2.2em; */
-	border-top: 0;
-	overflow: auto;
+/*  padding: 1em 2.2em; */
+  border-top: 0;
+  overflow: auto;
 }
 .subpanel >
 .ui-state-active,
@@ -261,8 +261,8 @@ a.ui-button:active,
   border: 1px solid #808080;
 /*   background: #70b0f0; */
   background: #f6f6f6;
-	font-weight: normal;
-	color: black;
+  font-weight: normal;
+  color: black;
 }
 .subpanel > .ui-state-active .ui-icon {
   background-image: url(../js/extern/jquery-ui-1.12.1.custom/images/ui-icons_444444_256x240.png);
