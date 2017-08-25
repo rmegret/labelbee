@@ -1195,9 +1195,11 @@ var lineFunction = d3.svg.line()
 function crossFunction(x,y){
     x = Number(x);
     y = Number(y);
+    
+    var cs = 6 // crossSize
 
-    return "M"+(x-10)+","+(y-10)+"L"+(x+10)+","+(y+10)+"M"+(x+10)+","
-    +(y-10)+"L"+(x-10)+","+(y+10);
+    return "M"+(x-cs)+","+(y-cs)+"L"+(x+cs)+","+(y+cs)+"M"+(x+cs)+","
+    +(y-cs)+"L"+(x-cs)+","+(y+cs);
 }
 
 //Append line to chronogram
@@ -1222,7 +1224,7 @@ path.attr("d",function(d){
             color = "blue";
         return color;
     })
-    .attr("stroke-width", 3)
+    .attr("stroke-width", 2)
     .attr("fill", "none");
 path.exit().remove();
 
