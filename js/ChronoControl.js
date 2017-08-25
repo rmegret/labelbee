@@ -304,7 +304,7 @@ function updateTimeMark() {
     var frame = getCurrentFrame();
     if (logging.frameEvents)
         console.log('updateTimeMark: frame=',frame)
-    if (typeof frame == "undefined") {
+    if (isNaN(frame) || frame == null) {
       frame = 0;
     }
     axes.setTimeMark(frame);
