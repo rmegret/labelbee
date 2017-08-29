@@ -793,7 +793,7 @@ function createIntervalList() {
 
             var iData = chronogramData[iArray[0]]; 
             let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, 
-                Activity: iData.Activity, labels:iData.labels, pollen: iData.pollen };
+                Activity: iData.Activity, labels:iData.labels, pollen: iData.pollen, tag:iData.tag };
 
             // let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, 
             //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
@@ -808,7 +808,7 @@ function createIntervalList() {
                     allIntervals.push(tempInterval);
                     tempInterval = { x1: xValues[i], x2: xValues[i], y: y, 
                     Activity: iData.Activity,labels:iData
-                    .labels, pollen: iData.pollen}; // New interval
+                    .labels, pollen: iData.pollen, tag:iData.tag}; // New interval
                 }
             }
             allIntervals.push(tempInterval);
@@ -1187,22 +1187,15 @@ function updateActivities(onlyScaling) {
         // .on("mouseout", function(d){ tooltip.style("display", "none");});
 
         .select('title').text(function(d) {
-            var t;
-            var text;
 
-            if (Tags[d.x1] != undefined){
-                for(var i =0; i < Tags[d.x1].tags.length; i++){
-                    if(Tags[d.x1].tags[i].id == d.y){
-                        t = Tags[d.x1].tags[i]
-                        text = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity
-                        + " C: " +t.c[0] +" , "+ t.c[1] + " Hamming: " + t.hamming;
-                    }
-                } 
-            }
-            else{
+            var text = "";
+            if (d.tag != undefined){
+                text = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity 
+                + " Hamming: " + d.tag.hamming + " DM: " + d.tag.dm;
+            }else{
                 text = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity;
-            }  
-           // console.log("TESTING T ID: ", t.id);       
+            }
+    
         return text;
     });   
 
@@ -1386,7 +1379,6 @@ function updateObsTable() {
                 let chronoObs = {'frame':F, 'id':id, 'labels':obs.labels};
 
                 flatTracksAll.push(chronoObs)
-
         }
     }
     if (flag_hideInvalid) {
@@ -1450,6 +1442,20 @@ function refreshChronogram() {
     //Emptying the array so we won't have duplicates
     //for (var i = 0; i < chronogramData.length; i++)
     //    chronogramData.pop();
+
+    //check if id and frame are in tag object
+  
+    for (let F in Tracks) {
+        if(Tags[F] != undefined){
+            for (var i = 0; i < Tags[F].tags.length;i++){
+                let id = String(Tags[F].tags[i].id);
+                if( Tracks[F][id] != undefined ){
+                    Tracks[F][id].tag = Tags[F].tags[i]
+                }
+            }
+        }
+    }
+
     chronogramData.length = 0
     if (showObsChrono) {
         for (let F in Tracks) {
@@ -1482,20 +1488,20 @@ function refreshChronogram() {
                 let b=obs.bool_acts
                 
                 if (!b[0] && !b[2] && !b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"", labels:obs.labels, pollen:b[1]});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"", labels:obs.labels, pollen:b[1], tag: obs.tag});
                 }
                 // if (b[1]) {
                 //     chronogramData.push({'x':F, 'y':id, 'Activity':"pollen", labels:obs.labels});
                 //     //chronoObs.Activity = "pollenating";
                 // }
                 if (b[2]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering", labels:obs.labels, pollen:b[1]});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering", labels:obs.labels, pollen:b[1], tag: obs.tag});
                 }
                 if (b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving", labels:obs.labels, pollen:b[1]});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving", labels:obs.labels, pollen:b[1], tag: obs.tag});
                 }
                 if (b[0]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning", labels:obs.labels, pollen:b[1]});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning", labels:obs.labels, pollen:b[1], tag: obs.tag});
                 }
 
 
