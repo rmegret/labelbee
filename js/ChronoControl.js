@@ -822,9 +822,6 @@ function createIntervalList() {
     if (tempArray.includes('falsealarm')||tempArray.includes('wrongid')){
         return true;
         }
-    // else if(tempArray.includes('wrongid')){
-    //     return true;
-    //     }
      });
 
 
@@ -1138,7 +1135,11 @@ function updateActivities(onlyScaling) {
     //Circles for solo bee iD
     let circles =  chart.selectAll("circle.obs")
                         .data(allIntervals);
-                        
+
+    var tooltip = d3.selectAll("chart")
+                     .append("div")
+                     .attr("class","tooltip");
+
     circles.enter()
         .append("circle")
         .attr('class','obs')
@@ -1179,13 +1180,32 @@ function updateActivities(onlyScaling) {
             // console.log("Bee Activity2: ", d.Activity)
             return color;
         })
-    .select('title').text(function(d) {
-        return (
-          "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity
-        );
-    });
+        // .on("mouseover", function(d){
+        //     tooltip.style("display", "inline-block")
+        //            .html( "Bee id " + (d.y));
+        // })
+        // .on("mouseout", function(d){ tooltip.style("display", "none");});
 
-// console.log("Labels Arr", labelsArr);                      
+        .select('title').text(function(d) {
+            var t;
+            var text;
+
+            if (Tags[d.x1] != undefined){
+                for(var i =0; i < Tags[d.x1].tags.length; i++){
+                    if(Tags[d.x1].tags[i].id == d.y){
+                        t = Tags[d.x1].tags[i]
+                        text = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity
+                        + " C: " +t.c[0] +" , "+ t.c[1] + " Hamming: " + t.hamming;
+                    }
+                } 
+            }
+            else{
+                text = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity;
+            }  
+           // console.log("TESTING T ID: ", t.id);       
+        return text;
+    });   
+
 
 var lineFunction = d3.svg.line()
               .x(function(d) {return d.x;})
