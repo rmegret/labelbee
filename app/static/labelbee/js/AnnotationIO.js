@@ -239,6 +239,34 @@ function saveTagsToFile(event) {
 }
 
 
+
+
+function tracksfromServer(route){
+  var json = '';
+  $.ajax({
+    url:'/loadlist',
+    type: 'GET',
+    contentType: 'application/json',
+    data:json,
+    success:function(json){
+       //toto=json;
+      $('#list').html(json.data);
+      console.log(json)
+      Tracks= JSON.parse(json)[0];
+      videoControl.onFrameChanged();
+      refreshChronogram();
+
+      }
+  })
+
+  console.log(json);
+
+  var reader = new FileReader();
+  reader.onload = onReaderLoad;
+  reader.readAsText(json);
+
+}
+
 // Server I/O
 
 function jsonFromServer(route){
@@ -384,7 +412,7 @@ function jsonToServer() {
         /* Act on the event */
         
        $.ajax({
-          url: '/ajaxcalc', //server url
+          url: '/savetojson', //server url
           type: 'POST',    //passing data as post method
           contentType: 'application/json', // returning data as json
           data: JSON.stringify(Tracks),  //form values

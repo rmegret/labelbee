@@ -36,18 +36,18 @@ def user_page():
         os.makedirs("app/upload/"+str(current_user.id))
     except: 
             pass
-    tracks = os.listdir('app/upload/'+ str(current_user.id))
-    string = "<HTML>"
+    #tracks = os.listdir('app/upload/'+ str(current_user.id))
+    #string = "<HTML>"
 
-    for i in tracks:
-        print(url_for('loadtrack', user = str(current_user.id),filename = i))
-        string += "<a href =  " + str(url_for('loadtrack', user = str(current_user.id),filename = i)) + ">"+ i + "</a> <br>" 
+    #for i in tracks:
+        #print(url_for('loadtrack', user = str(current_user.id),filename = i))
+        #string += "<a href =  " + str(url_for('loadtrack', user = str(current_user.id),filename = i)) + ">"+ i + "</a> <br>" 
         #print (string)
-    print (string)
-    string += "</HTML>"
+    #print (string)
+    #string += "</HTML>"
 
     
-    return render_template('pages/user_page.html', tracks= tracks,userid= str(current_user.id))
+    return render_template('pages/user_page.html',userid= str(current_user.id))
 
 @app.route('/login')
 def login():
@@ -66,7 +66,7 @@ def json_to_server():
     if request.method=='POST':
         data=request.get_json()
         print(data)
-        with open('app/upload/'+ str(current_user.id)+'/tracks'+str(datetime.utcnow())+'.json', 'w') as outfile:
+        with open('app/static/upload/'+ str(current_user.id)+'/tracks'+str(datetime.utcnow())+'.json', 'w') as outfile:
             json.dump(data, outfile)
         return ("ok")
     else:
@@ -75,8 +75,8 @@ def json_to_server():
 @app.route('/load_json/<item>', methods=['POST','GET'])
 @login_required
 def load_json(item):
-    print(os.path.isfile('app/upload/'+str(current_user.id)+'/'+item))
-    file = pd.read_json('app/upload/'+str(current_user.id)+'/'+item)
+    print(os.path.isfile('app/static/upload/'+str(current_user.id)+'/'+item))
+    file = pd.read_json('app/static/upload/'+str(current_user.id)+'/'+item)
     return file.to_json() 
 
 @app.route ('/tracks', methods =['GET'])
@@ -98,15 +98,6 @@ def Track_list():
 @login_required
 def loadtrack(user,filename):
     return load_json(filename)
-
-
-
-@app.route('/tracks') #path for 
-@login_required
-def Modal():
-    return 
-
-
 
 @app.route('/pages/profile', methods=['GET', 'POST'])
 @login_required
@@ -131,9 +122,25 @@ def user_profile_page():
     return render_template('pages/user_profile_page.html',
                            form=form)
 
-@app.route('/app/data/<vid_name>', methods=['GET','POST']) #path for 
+
+#work done wednesday 
+@app.route('/loadlist', methods=['GET','POST'])
 @login_required
-def vidview(vid_name):
-    print(vid_name)
-    # return '<video controls><source src="'+ vid_name + '" type="video/mp4"></video>'
-    return '<video src="g.mp4" autoplay poster="posterimage.jpg"></video>'
+def modal_view(): 
+    tracks = os.listdir('app/static/upload/'+ str(current_user.id))
+    string = ""
+
+    for i in tracks:
+        print(url_for('loadtrack', user = str(current_user.id),filename = i))
+        string += "<a href = '" + str(url_for('loadtrack', user = str(current_user.id),filename = i)) + "'>"+ i + "</a> <br>" 
+    print (string)
+    
+    return jsonify( {'data': string})
+
+#@app.route('/loadlisttest', methods=['GET','POST'])
+#@login_required
+#def loadlist():
+
+    #tracks =  os.listdir('app/static/upload/'+ str(current_user.id))
+
+    #return jsonify(tracks)
