@@ -66,7 +66,7 @@ def json_to_server():
     if request.method=='POST':
         data=request.get_json()
         print(data)
-        with open('app/static/upload/'+ str(current_user.id)+'/tracks'+str(datetime.utcnow())+'.json', 'w') as outfile:
+        with open('app/static/upload/'+ str(current_user.id)+'/tracks'+str(datetime.utcnow()).replace(" ","")+'.json', 'w') as outfile:
             json.dump(data, outfile)
         return ("ok")
     else:
@@ -132,7 +132,10 @@ def modal_view():
 
     for i in tracks:
         print(url_for('loadtrack', user = str(current_user.id),filename = i))
-        string += "<a href = '" + str(url_for('loadtrack', user = str(current_user.id),filename = i)) + "'>"+ i + "</a> <br>" 
+        #string += "<button onclick ='" str(url_for('loadtrack', user = str(current_user.id),filename = i)) + "'>"+ i + "</button>" 
+        print(i.replace(" ","%"))
+        string += "<button onclick =" +"jsonFromServer('loadtrack/"+str(current_user.id) + "/"+str(i).replace(" ","") + "')>" + str(i)+" </button> <br>"
+
     print (string)
     
     return jsonify( {'data': string})
