@@ -15,6 +15,88 @@ import pandas as pd
 import numpy as np
 
 
+### Enable range requests 
+### https://blog.asgaard.co.uk/2012/08/03/http-206-partial-content-for-flask-python
+
+import mimetypes
+import re
+
+from flask import request, send_file, Response, safe_join, send_from_directory
+from werkzeug.exceptions import BadRequest, NotFound
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Accept-Ranges', 'bytes')
+    return response
+
+
+def send_from_directory_partial(directory, filename):
+    """ 
+        Simple wrapper around send_file which handles HTTP 206 Partial Content
+        (byte ranges)
+        TODO: handle all send_file args, mirror send_file's error handling
+        (if it has any)
+    """
+    range_header = request.headers.get('Range', None)
+        
+    path = safe_join(directory, filename)
+    
+    if not range_header: 
+        print('send_from_directory_partial: REQUEST "'+path+'" norange')
+        return send_from_directory(directory, path)
+    else:
+        print('send_from_directory_partial: REQUEST "'+path+'" range='+range_header)
+    
+    if not os.path.isabs(path):
+        path = os.path.join(app.root_path, path)
+    try:
+        if not os.path.isfile(path):
+            print('NotFound: '+path)
+            raise NotFound()
+    except (TypeError, ValueError):
+        raise BadRequest()
+    
+    print('send_from_directory_partial: MIME='+mimetypes.guess_type(path)[0])
+    
+    size = os.path.getsize(path)    
+    byte1, byte2 = 0, None
+    
+    m = re.search('(\d+)-(\d*)', range_header)
+    g = m.groups()
+    
+    if g[0]: byte1 = int(g[0])
+    if g[1]: byte2 = int(g[1])
+
+    length = size - byte1
+    if byte2 is not None:
+        length = byte2 - byte1 + 1
+        
+    maxlength = 8*1024*1024 # (8MB chunks)
+    if (length>maxlength):
+        length=maxlength
+    byte2 = byte1 + length - 1
+    
+    data = None
+    with open(path, 'rb') as f:
+        f.seek(byte1)
+        data = f.read(length)
+
+    rv = Response(data, 
+        206,
+        mimetype=mimetypes.guess_type(path)[0], 
+        direct_passthrough=True)
+    rv.headers.add('Content-Range', 'bytes {0}-{1}/{2}'.format(byte1, byte2, size))
+
+    print('send_from_directory_partial: SENT range={0}-{1}/{2}'.format(byte1,byte2,size))
+
+    return rv
+
+
+@app.route('/static/data/<path:path>')
+def send_data(path):
+    print('Handling file request PATH='+path)
+    return send_from_directory_partial('static/data/',path)
+
 
 # The Home page is accessible to anyone
 @app.route('/home')
