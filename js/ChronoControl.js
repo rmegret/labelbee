@@ -753,7 +753,6 @@ allIntervals = [];
 
 var isWrongId = false;
 var isFalseAlarm = false;
-// pollen = false;
 
 //Get data from chronogramData and output allIntervals,
 function createIntervalList() {
@@ -831,10 +830,6 @@ function createIntervalList() {
     circlesIntervals = allIntervals.filter(function(d){
       return d.x1 == d.x2;
     });
-
-
-
-
 }
 
 
@@ -1068,9 +1063,6 @@ function updateActivities(onlyScaling) {
     } else {
       createIntervalList();
       // Full update
-      //console.log('updateActivities')
-      // let activityRects = axes.plotArea.selectAll(".activity").data(chronogramData)
-      //     .call(setGeomActivity)
       let activityRects = svgInterval.selectAll(".activity")
                                      .data(allIntervals)
       
@@ -1128,17 +1120,21 @@ function updateActivities(onlyScaling) {
 
         }
 
-    // console.log("Pollen is ", pollen)
-
     var chart = axes.chronoGroup;
     
     //Circles for solo bee iD
     let circles =  chart.selectAll("circle.obs")
                         .data(allIntervals);
 
-    var tooltip = d3.selectAll("chart")
-                     .append("div")
-                     .attr("class","tooltip");
+    d3.select("body").selectAll(".tooltip").remove();
+
+    var tooltip = d3.select("body")
+                       .append("div")
+                       .style("z-index","10")
+
+                       .style("visibility", "hidden")
+                       .style("opacity", "1")
+                       .attr("class","tooltip");
 
     circles.enter()
         .append("circle")
@@ -1169,35 +1165,29 @@ function updateActivities(onlyScaling) {
             }
             return width ;
         })
-        // .attr("fill", "black") //change color
         .style("fill", function(d) {
             var color = "black";
-            // console.log("Bee Activity: ", d.Activity)
             if (d.Activity == "fanning") color = "#99CCFF";
             else if (d.Activity == "pollen") color = "#FFFF00";
             else if (d.Activity == "entering") color = "#CC00FF";
             else if (d.Activity == "leaving") color = "#00CC99";
-            // console.log("Bee Activity2: ", d.Activity)
             return color;
         })
-        // .on("mouseover", function(d){
-        //     tooltip.style("display", "inline-block")
-        //            .html( "Bee id " + (d.y));
-        // })
-        // .on("mouseout", function(d){ tooltip.style("display", "none");});
-
-        .select('title').text(function(d) {
-
-            var text = "";
+        // Display tooltip message
+        .on("mouseover", function(d){
+            var message = "";
             if (d.tag != undefined){
-                text = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity 
+                message = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity 
                 + " Hamming: " + d.tag.hamming + " DM: " + d.tag.dm;
             }else{
-                text = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity;
+                message = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity;
             }
-    
-        return text;
-    });   
+            tooltip.style("left",d3.event.pageX+ "px")
+                   .style("top",d3.event.pageY + "px")
+                   .style("visibility", "visible")
+                   .html(message);
+        })
+        .on("mouseout", function(d){ tooltip.style("visibility", "hidden");});
 
 
 var lineFunction = d3.svg.line()
