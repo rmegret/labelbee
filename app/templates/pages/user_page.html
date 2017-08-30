@@ -315,11 +315,16 @@
                   <label>Server storage</label>
                   <div>
                     <meta name="csrf-token" content="{{ csrf_token() }}">
-                     <button type="button" onclick="tracksfromServer()" ">Load JS</button>
+                    
+                    <input id="videoListFromServer" onclick="videoListFromServer()" type="button" value="Load Video List"  class="btn btn-secondary btn-sm">
+                    
+                    <input id="tagsFromServer" onclick="tagsFromServer()"  type="button" value="Load Tags" class="btn btn-primary btn-sm">
+  
+                    <br>
+                    
+                    <input type="button" onclick="tracksListFromServer()" class="btn btn-green-toggle btn-sm" data-toggle="modal" data-target="#myModal" value="Load Tracks (JSON)">
 
-                     <button type="button" onclick="tracksfromServer()" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">Load JSON</button>
-                      <div id = "dialog">
-                      </div>
+                    <input id="jsonToServer" onclick="jsonToServer()" type="button" value="Save Tracks (JSON)" class="btn btn-green-toggle btn-sm"></button>
 
 
               <!-- Modal  -->
@@ -348,15 +353,6 @@
                       </div>
                     </div>
                   </div>
-
-                    
-                    <input id="tagsFromServer" onclick="tagsFromServer()"  type="button" value="Load Tags" class="btn btn-primary btn-sm">
-                    
-                    <input id="videoListFromServer" onclick="videoListFromServer()" type="button" value="Load Video List"  class="btn btn-primary btn-sm">
-  
-                    <br>
-
-                    <input id="jsonToServer" onclick="jsonToServer()" type="button" value="Save Tracks" class="btn btn-basic btn-sm"></button>
 
                   </div>
               </div>

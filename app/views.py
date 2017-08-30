@@ -147,8 +147,11 @@ def admin_page():
 def json_to_server():
     if request.method=='POST':
         data=request.get_json()
-        print(data)
-        with open('app/static/upload/'+ str(current_user.id)+'/tracks'+str(datetime.utcnow()).replace(" ","")+'.json', 'w') as outfile:
+        timestamp=str(datetime.utcnow()).replace(" ","")
+        jsonfile='app/static/upload/'+ str(current_user.id)+'/tracks'+timestamp+'.json'
+        print('json_to_server: Saving JSON to file "{}":\njson={}'.format(jsonfile,data))
+
+        with open(jsonfile, 'w') as outfile:
             json.dump(data, outfile)
         return ("ok")
     else:
@@ -157,9 +160,14 @@ def json_to_server():
 @app.route('/load_json/<item>', methods=['POST','GET'])
 @login_required
 def load_json(item):
-    print(os.path.isfile('app/static/upload/'+str(current_user.id)+'/'+item))
-    file = pd.read_json('app/static/upload/'+str(current_user.id)+'/'+item)
-    return file.to_json() 
+    filename='app/static/upload/'+str(current_user.id)+'/'+item
+    print(os.path.isfile(filename))
+    #file = pd.read_json()
+    with open(filename, 'r') as f:
+        data = f.read()
+    
+    print('load_json: data={}'.format(data))
+    return data 
 
 @app.route ('/tracks', methods =['GET'])
 @login_required
@@ -179,15 +187,15 @@ def Track_list():
 @app.route ('/loadtrack/<user>/<filename>', methods = ['GET'])
 @login_required
 def loadtrack(user,filename):
-    return load_json(filename)
+    data=load_json(filename)
+    print('loadtrack: Sending JSON from file "{}":\njson={}'.format(filename,data))
+    return data
 
 @app.route('/pages/profile', methods=['GET', 'POST'])
 @login_required
 def user_profile_page():
     # Initialize form
     form = UserProfileForm(request.form, current_user)
-
-    
 
     # Process valid POST
     if request.method == 'POST' and form.validate():

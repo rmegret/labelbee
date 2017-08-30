@@ -241,59 +241,55 @@ function saveTagsToFile(event) {
 
 
 
-function tracksfromServer(route){
-  var json = '';
-  $.ajax({
-    url:'/loadlist',
-    type: 'GET',
-    contentType: 'application/json',
-    data:json,
-    success:function(json){
-       //toto=json;
-      $('#list').html(json.data);
-      console.log(json)
-      Tracks= JSON.parse(json)[0];
-      videoControl.onFrameChanged();
-      refreshChronogram();
-
-      }
-  })
-
-  console.log(json);
-
-  var reader = new FileReader();
-  reader.onload = onReaderLoad;
-  reader.readAsText(json);
-
-}
-
 // Server I/O
 
-function jsonFromServer(route){
+function tracksListFromServer(){
+  var route = '/loadlist'; // Hardcoded
+  
+  console.log("tracksListFromServer: importing Tracks List from URL '"+route+"'...")
 
-    console.log("loadFromFile: importing from JSON file ",event,"...")
+  $.ajax({
+    url:route,
+    type: 'GET',
+    contentType: 'application/json',
+    data:'',
+    success:function(json){
+      // Get the file list
+      // in HTML format (server generated)
+      // TODO: send the file list as json data instead of HTML
+      //       and convert into HTML client side
+      $('#list').html(json.data);
+      
+      console.log("tracksListFromServer: SUCESS\ntracksList=",json)
+      
+      // Nothing else to do here: 
+      // The modal #myModal is supposed to be open and filled with 
+      // links to each Track file
+      // Clicking on one of the link will trigger jsonFromServer()
+      }
+  })
+}
 
-    console.log(route);
+function jsonFromServer(link){
+    var route = '/'+link;
+
+    console.log("jsonFromServer: importing Tracks from URL '"+route+"'...")
 
     $.ajax({
-          url: '/' + route, //server url
+          url: route, //server url
           type: 'GET',    //passing data as post method
           contentType: 'application/json', // returning data as json
           data:'',
           success:function(json)
           {
-
-
             //alert("success");  //response from the server given as alert message
 
-            console.log('success: json=', json); 
-            Tracks= JSON.parse(json)[0];
+            console.log('jsonFromServer: SUCCESS\njson=', json); 
+            Tracks= JSON.parse(json);
             videoControl.onFrameChanged();
 
             refreshChronogram();
-
           }
-        
         });
   }
 
@@ -419,7 +415,6 @@ function jsonToServer() {
           success:function(json)
           {
             alert("success");  //response from the server given as alert message
-
           }
         
         });
