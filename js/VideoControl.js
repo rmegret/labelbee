@@ -31,6 +31,7 @@ function VideoControl(videoTagId) {
     
     this.video = this.video2.video; // Same as $('#video')[0]
     this.video.onloadeddata = this.onVideoLoaded.bind(this);
+    this.video.onerror = this.onVideoError.bind(this);
     
     this.previewVideoTimeScale = 1.0;
     
@@ -327,6 +328,26 @@ VideoControl.prototype.refresh = function() {
     //refreshChronogram();
 }
 
+statusInfo={}
+function statusRequest(type, info) {
+    var time=new Date();
+    var HMS=time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
+    statusInfo[type]={request:time,info:info}
+    
+    $(".status."+type).html(type+": Requested ["+HMS+"]")
+}
+function statusUpdate(type, success, info) {
+    var time=new Date();
+    statusInfo[type].done=time
+    statusInfo[type].info2=info
+    var elapsed = (time - statusInfo[type].request)/1000;
+    if (success) {
+        $(".status."+type).html(type+": Success [elapsed "+elapsed+"s]")
+    } else {
+        $(".status."+type).html(type+": FAILED [elapsed "+elapsed+"s]")
+    }
+}
+
 VideoControl.prototype.loadVideo = function(url, previewURL) {
     if (logging.videoEvents)
         console.log('loadVideo: url=',url)
@@ -348,12 +369,15 @@ VideoControl.prototype.loadVideo = function(url, previewURL) {
     $("#previewVideoName").val(this.previewURL)
     
     setPreviewVideoStatus('undefined')
+    
+    statusRequest('videoLoad', [])
 }
 VideoControl.prototype.onVideoLoaded = function(event) {
     if (logging.videoEvents)
         console.log('onVideoLoaded', event)
         
     console.log('onVideoLoaded: VIDEO loaded ',this.video.src)
+    statusUpdate('videoLoad', true, [])
     
     this.onVideoSizeChanged()
     
@@ -367,10 +391,19 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     
     this.loadVideoInfo(videourl+'.info.json')
     
+    statusRequest('videopreviewLoad', [])
     this.loadPreviewVideo(this.previewURL);
+    
+    statusRequest('tagsLoad', [])
     tagsFromServer(videoTagURL, true) // quiet
     
     $( this ).trigger('video:loaded') 
+}
+VideoControl.prototype.onVideoError = function(event) {
+    if (logging.videoEvents)
+        console.log('onVideoError', event)
+        
+    statusUpdate('videoLoad', false, [])
 }
 
 function setPreviewVideoStatus(status) {
@@ -412,11 +445,13 @@ VideoControl.prototype.loadPreviewVideo = function(previewURL) {
         
         setPreviewVideoStatus('loaded')
         //$('#previewVideoName').val(previewURL)
+        statusUpdate('videopreviewLoad', true, [])
     }
     function onPreviewVideoError(e) {
         //if (logging.videoEvents)
             console.log('onPreviewVideoError: could not load preview video. previewURL=',previewURL)
         setPreviewVideoStatus('error')
+        statusUpdate('videopreviewLoad', false, [])
     }
     setPreviewVideoStatus('loading')
     this.previewVideo.onerror=onPreviewVideoError
@@ -458,6 +493,7 @@ VideoControl.prototype.videoSize = function() {
 
 VideoControl.prototype.loadVideoInfo = function(infourl) {
     let videoControl = this;
+    statusRequest('videoinfoLoad', [])
     var jqxhr = $.getJSON( infourl, function(data) {
             if (logging.videoEvents)
                 console.log( "loadVideoInfo loaded" );
@@ -484,13 +520,14 @@ VideoControl.prototype.loadVideoInfo = function(infourl) {
             if (typeof videojsoninfo.comments !== 'undefined') {
               videoinfo.comments = videojsoninfo.comments
             }
-
+            statusUpdate('videoinfoLoad', true, [])
             //'starttime': '2016-07-15T09:59:59.360',
             //'duration': 1/20, // Duration in seconds
             //'nframes': 1
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
             console.log( "loadVideoInfo: could not load ",infourl,"\nerror='", textStatus, "', details='", errorThrown,"'\n  videoInfo unchanged")
+            statusUpdate('videoinfoLoad', false, [])
         })
         .complete(function() { 
             videoControl.onVideoInfoChanged()

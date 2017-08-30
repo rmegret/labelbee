@@ -2,4 +2,6 @@ data/
 perso/
 gitlog
 gitversion
+Icon
+__pycache__
 

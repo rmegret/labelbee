@@ -2210,7 +2210,7 @@ function onLabelToggled(event) {
         
         $(target).toggleClass('active', isOn)
         
-        let labelList = ['fanning','pollen','entering','leaving',
+        let labelList = ['fanning','pollen','entering','leaving','walking',
                 'falsealarm','wrongid'];
         
         for (let theClass of labelList) {
@@ -2229,36 +2229,38 @@ function onLabelToggled(event) {
         refreshChronogram()
     }
 }
-function onLabelClicked(event) {
-    if (logging.guiEvents)
-        console.log("onLabelClicked: event=", event)
-    var activeObject = canvas1.getActiveObject()
-    if (activeObject !== null) {
-        let obs = activeObject.obs
-        
-        updateObsLabel(obs, 'fanning', 
-                       $('.labelcheckbox.fanning').prop('checked'))
-        updateObsLabel(obs, 'pollen', 
-                       $('.labelcheckbox.pollen').prop('checked'))
-        updateObsLabel(obs, 'entering', 
-                       $('.labelcheckbox.entering').prop('checked'))
-        updateObsLabel(obs, 'leaving', 
-                       $('.labelcheckbox.leaving').prop('checked'))
-
-        updateObsLabel(obs, 'falsealarm', 
-                       $('.labelcheckbox.falsealarm').prop('checked'))
-        updateObsLabel(obs, 'wrongid', 
-                       $('.labelcheckbox.wrongid').prop('checked'))
-        
-        console.log('onLabelClicked: obs.labels=',obs.labels)
-        
-        // Update the rest
-        updateRectObsActivity(activeObject)
-        automatic_sub()
-        
-        updateForm(activeObject)
-    }
-}
+// function onLabelClicked(event) {
+//     if (logging.guiEvents)
+//         console.log("onLabelClicked: event=", event)
+//     var activeObject = canvas1.getActiveObject()
+//     if (activeObject !== null) {
+//         let obs = activeObject.obs
+//         
+//         updateObsLabel(obs, 'fanning', 
+//                        $('.labelcheckbox.fanning').prop('checked'))
+//         updateObsLabel(obs, 'pollen', 
+//                        $('.labelcheckbox.pollen').prop('checked'))
+//         updateObsLabel(obs, 'entering', 
+//                        $('.labelcheckbox.entering').prop('checked'))
+//         updateObsLabel(obs, 'leaving', 
+//                        $('.labelcheckbox.leaving').prop('checked'))
+//         updateObsLabel(obs, 'walking', 
+//                        $('.labelcheckbox.walking').prop('checked'))
+// 
+//         updateObsLabel(obs, 'falsealarm', 
+//                        $('.labelcheckbox.falsealarm').prop('checked'))
+//         updateObsLabel(obs, 'wrongid', 
+//                        $('.labelcheckbox.wrongid').prop('checked'))
+//         
+//         console.log('onLabelClicked: obs.labels=',obs.labels)
+//         
+//         // Update the rest
+//         updateRectObsActivity(activeObject)
+//         automatic_sub()
+//         
+//         updateForm(activeObject)
+//     }
+// }
 function onActivityChanged(event) {
     if (logging.guiEvents)
         console.log("onActivityChanged: event=", event)

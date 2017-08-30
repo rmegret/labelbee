@@ -286,18 +286,21 @@ function tagsFromServer(path, quiet) {
     }
     
     console.log('tagsFromServer: loading path "'+path+'"...')  
+    statusRequest('tagsLoad','')
 
      $.getJSON( path ,
         function(data) {
           console.log('tagsFromServer: loaded "'+path+'"')  
-        }
-      )
-      .done(function(data) {
-          setTags(data)
+          statusUpdate('tagsLoad',true,'')
         }
       )
       .fail(function(data) {
           console.log('tagsFromServer: ERROR loading "'+path+'"')  
+          statusUpdate('tagsLoad',false,'')
+        }
+      )
+      .done(function(data) {
+          setTags(data)
         }
       )
 }
@@ -313,7 +316,8 @@ function videoListFromServer(path, defaultvideoid) {
     }
     
     console.log('videoListFromServer: loading path "'+path+'"...')  
-
+    statusRequest('videolistLoad',true,'')
+          
      $.ajax( path ,
         function(data) {
           console.log('videoListFromServer: loaded "'+path+'"')  
@@ -341,10 +345,12 @@ function videoListFromServer(path, defaultvideoid) {
               selectVideoByID(0)
           else
               selectVideoByID(defaultvideoid)
+          statusUpdate('videolistLoad',true,'')
         }
       )
       .fail(function(data) {
           console.log('videoListFromServer: ERROR loading "'+path+'"')  
+          statusUpdate('videolistLoad',false,'')
         }
       )
 }
