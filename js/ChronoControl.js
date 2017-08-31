@@ -304,7 +304,7 @@ function updateTimeMark() {
     var frame = getCurrentFrame();
     if (logging.frameEvents)
         console.log('updateTimeMark: frame=',frame)
-    if (isNaN(frame) || frame == null) {
+    if (typeof frame == "undefined") {
       frame = 0;
     }
     axes.setTimeMark(frame);
@@ -1198,11 +1198,9 @@ var lineFunction = d3.svg.line()
 function crossFunction(x,y){
     x = Number(x);
     y = Number(y);
-    
-    var cs = 6 // crossSize
 
-    return "M"+(x-cs)+","+(y-cs)+"L"+(x+cs)+","+(y+cs)+"M"+(x+cs)+","
-    +(y-cs)+"L"+(x-cs)+","+(y+cs);
+    return "M"+(x-10)+","+(y-10)+"L"+(x+10)+","+(y+10)+"M"+(x+10)+","
+    +(y-10)+"L"+(x-10)+","+(y+10);
 }
 
 //Append line to chronogram
@@ -1224,10 +1222,10 @@ path.attr("d",function(d){
         if(d.labels == "falsealarm")
             color = "red";
         else if(d.labels == "wrongid")
-            color = "blue";
+            color = "#00bfff";
         return color;
     })
-    .attr("stroke-width", 2)
+    .attr("stroke-width", 3)
     .attr("fill", "none");
 path.exit().remove();
 
