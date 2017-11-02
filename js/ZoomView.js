@@ -2,10 +2,15 @@
 // ## Auxiliary display
 
 function initZoomView() {
-    $("#zoom").resizable({
+
+    zoomOverlay = new ZoomOverlay($("#zoomcanvas1"))
+    zoomOverlay.attach()
+    
+    $("#zoomresize").resizable({
       helper: "ui-resizable-helper",
       aspectRatio: 1   // Need to put a value even to update it later
     });
+    $("#zoomresize").on( "resizestop", refreshZoomSize );
     $("#tagImage").resizable({
       helper: "ui-resizable-helper",
       aspectRatio: 1   // Need to put a value even to update it later
@@ -18,7 +23,251 @@ function initZoomView() {
     tagImageRoot='data/tags/tag25h5inv/png'
     
     zoomScale = 1
+    
+    refreshZoomSize()
 }
+
+function refreshZoomSize(event, ui) {
+    // Refresh based on new video size or new canvas size
+    if (logging.canvasEvents) {
+        console.log('refreshZoomSize: event=',event)
+    }
+        
+    let wd = parseInt($("#zoomresize")[0].style.width)
+    let hd = wd
+        
+    wd=400
+    hd=400
+    
+    $("#zoomresize")[0].style.width = (wd+16).toString() + 'px'
+    $("#zoomresize")[0].style.height = hd.toString() + 'px'
+
+        
+    $("#zoom").width = wd
+    $("#zoom").height = hd
+    zoomOverlay.canvas1.setWidth(wd)
+    zoomOverlay.canvas1.setHeight(hd)
+        
+    zoomOverlay.redraw()
+}
+
+
+function ZoomOverlay(canvasElement) {
+    if (this === window) { 
+        console.log('ERROR: ZoomOverlay should be created with "new ZoomOverlay()"')
+        return new ZoomOverlay(canvasElement); 
+    }
+    this.selected = undefined
+    this.insertMode = false
+    this.points = []
+    this.canvasElement = canvasElement
+}
+
+ZoomOverlay.prototype = {}
+
+ZoomOverlay.prototype.attach = function() {
+    this.canvas1 = new fabric.Canvas(this.canvasElement[0]);
+    
+    // Caution: for this to work, the canvases must be enclosed in a 
+    // div with class ".canvaswrapper" to force alignment of all canvases
+    
+    this.canvas1.setWidth(this.canvasElement[0].width)
+    this.canvas1.setHeight(this.canvasElement[0].height)
+    
+    this.canvas1.selectionColor = "red";
+    this.canvas1.selectionBorderColor = "red";
+    this.canvas1.selection = false; // REMI: disable the blue selection
+        
+    this.canvas1.on('mouse:down', this.onMouseDown.bind(this));
+    //this.canvas1.on('mouse:up', onMouseUp);
+    //this.canvas1.on('object:moving', onObjectMoving); // During translation
+    //this.canvas1.on('object:scaling', onObjectMoving); // During scaling
+    //this.canvas1.on('object:rotating', onObjectMoving); // During rotation
+    this.canvas1.on('object:modified', this.onObjectModified.bind(this)); // After modification
+    this.canvas1.on('object:selected', this.onObjectSelected.bind(this)); // After mousedown
+    this.canvas1.on('selection:cleared', this.onObjectDeselected.bind(this)); // After mousedown out
+    //this.canvasElement.on('mousedown',  this.onMouseDown.bind(this))
+}
+ZoomOverlay.prototype.detach = function() {
+    this.canvas1.dispose()
+    //this.canvasElement.off('mousedown',  this.onMouseDown.bind(this))
+}
+
+ZoomOverlay.prototype.onMouseDown = function(option) {
+    console.log('ZoomOverlay.onMouseDown',option)
+    if (option.target) {
+        // Clicked on an existing object
+        //if (logging.mouseEvents)
+            console.log("onMouseDown: Clicked on object ", option.target)
+        // This is handled by event onObjectSelected()
+        return false;
+    } else {
+        // Clicked on the background
+        //if (logging.mouseEvents)
+            console.log('onMouseDown: no object selected', option)
+
+        let x = option.e.offsetX, y = option.e.offsetY;
+        
+        let zw=400
+        let zh=400
+        
+        //x += 200, y+= 200
+        
+        if (this.insertMode) {
+            this.newPoint(x,y, this.selected)
+        } else {
+            console.log('insertMode==false: skipping mousedown')
+        }
+        
+        var auto=true
+        if (auto) {
+            var labels = ['head','torso','abdomen']
+            var i = labels.findIndex((L)=>L==this.selected)
+            var nextLabel = labels[0]
+            if (i>=0) nextLabel=labels[(i+1)%labels.length]
+            console.log('current=',this.selected,' next=',nextLabel)
+            this.selectLabel(nextLabel)
+        }
+    }
+
+}
+ZoomOverlay.prototype.onObjectModified = function(evt) {
+    console.log('ZoomOverlay.onObjectModified',evt)
+    this.redraw()
+}
+// SELECTION
+ZoomOverlay.prototype.onObjectSelected = function(option) {
+    console.log('ZoomOverlay.onObjectSelected',option)
+    var target = option.target
+    this.selected = target.label
+    this.insertMode = false
+    this.selectLabel(target.label)
+}
+ZoomOverlay.prototype.onObjectDeselected = function(option) {
+    console.log('ZoomOverlay.onObjectDeselected',option)
+    this.selected = undefined
+    this.insertMode = false
+    this.selectLabel(undefined)
+}
+ZoomOverlay.prototype.selectLabel = function(label) {
+    if (label == this.selected) return;
+    if (!label) {
+        this.canvas1.deactivateAllWithDispatch()
+        this.selected = undefined
+        this.insertMode = false
+        $('.zoomlabel').toggleClass('active', false)
+    } else {
+        var i = this.points.findIndex((pt)=>pt.label==label)
+        if (i<0) {
+            this.canvas1.deactivateAllWithDispatch()
+            this.selected = label
+            this.insertMode = true
+        } else {
+            var pt = this.points[i]
+            this.canvas1.setActiveObject(pt.rect);
+            this.selected = label
+            this.insertMode = false
+        }
+        $('.zoomlabel').toggleClass('active', false)
+        $('.zoomlabel.'+label).toggleClass('active', true)
+    }
+    this.redraw()
+}
+
+
+fabric.PartRect = fabric.util.createClass(fabric.Rect, {
+    type: 'partrect',
+    
+    initialize: function (element, options) {
+        options = options || {};
+
+        this.callSuper('initialize', element, options);
+    },
+    
+    colors : {'head':'red', 'torso':'limegreen', 'abdomen':'blue'},
+    
+    _render: function (ctx) {
+            
+        var label = this.label
+        var color = this.colors[label];
+        if (!color) color='black'
+        this.stroke = color
+    
+        this.callSuper('_render', ctx);
+        
+        var radius = 4
+        //var x = this.left, y = this.top
+        var x = 0, y = 0 // Local coordinates
+        
+        console.log(label)
+        
+        ctx.save()
+        
+        ctx.font = "12px Arial";
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x, y - radius - 3);
+
+//         ctx.font = "12px Arial";
+//         ctx.fillStyle = color;
+//         ctx.textAlign = 'center';
+//         ctx.textBaseline = 'top';
+//         ctx.fillText('x', x, y + radius + 3);
+        
+        ctx.restore()
+
+    }
+});
+ZoomOverlay.prototype.newPoint = function(x,y,label) {
+    console.log('ZoomOverlay.newPoint(',x,y,label,')')
+    
+    var rect = new fabric.PartRect({
+        label: label,
+        top: y-3,
+        left: x-3,
+        width: 7,
+        height: 7,
+        fill: 'transparent',
+        stroke: 'blue',
+        strokewidth: 3,
+        hasRotatingPoint: false,
+        lockRotation: true,
+        hasControls: false,
+        hasBorder: false
+    });
+    rect.originX = 'center'
+    rect.originY = 'center'
+    this.canvas1.add(rect);
+    this.points.push({x:x,y:y,label:label,rect:rect})
+    
+    this.canvas1.setActiveObject(rect);
+    this.selected = label
+    this.insertMode = false
+    
+    this.redraw()
+}
+ZoomOverlay.prototype.redraw = function() {
+    //this.canvas1.backgroundColor = null;
+    refreshZoom()
+    this.canvas1.renderAll();
+}
+
+function onClickButtonPart(event) {
+    var target = event.target
+    
+    var label = undefined
+    
+    if ($(target).hasClass('head')) {
+        label = 'head'
+    } else if ($(target).hasClass('torso')) {
+        label = 'torso'
+    } else if ($(target).hasClass('abdomen')) {
+        label = 'abdomen'
+    }
+    zoomOverlay.selectLabel(label)
+}
+
+
 
 function clickZoomShowOverlay() {
     zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
