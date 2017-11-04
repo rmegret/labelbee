@@ -400,10 +400,31 @@
                 <div id='videozoom_parts' class='subpanel collapsible'> 
                   <label>Parts labeling</label>
                   <div>
+                    <input type="text" size="15" value="" class="resizedTextbox" title="Label for next point/Relabel current point" id="partLabel">
+                    <button onclick="onButtonClickAddRemovePartLabel(event,'+')" type="button" class="btn btn-success btn-xs" title="Add label to list">+</button>
+                    <button onclick="onButtonClickAddRemovePartLabel(event,'-')" type="button" class="btn btn-warning btn-xs" title="Remove label from list">-</button>
+<!--                     <button onclick="onButtonClickAddRemovePartLabel(event,'c')" type="button" class="btn btn-info btn-xs" title="Set label color">c</button> -->
+                    <button onclick="onButtonClickAddRemovePartLabel(event,'C')" type="button" class="btn btn-info btn-xs" title="Edit label list">...</button>
+                    
+                    <div id="dialog-form-labelList">
+                        <form style="width:100%; height:100%; box-sizing:border-box;">
+                        <div style="width:100%; height:100%; box-sizing:border-box;">
+                            <label for="labellist-json">JSON label list</label>
+                            <textarea name="labellist-json" id="labellist-json" class="text ui-widget-content ui-corner-all" style="width:100%; height:90%; box-sizing:border-box;">test</textarea>
+                        </div>
+                        </form>
+                    </div>
+
+                    <div class="zoomLabel labelButtons">
+                        <!-- To be filled up by zoomOverlay.refreshLabelButtons -->
+                    </div>
+                    
                     <button onclick="zoomOverlay.onToggleButtonAutoLabel(event)" type="button" class="btn btn-error btn-xs" title="Toggle AutoLabeling">Auto</button>
+<!-- 
                     <button onclick="zoomOverlay.onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel" data-label="head" title="Select part">Head (Tip)</button>
                     <button onclick="zoomOverlay.onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel"  data-label="torso" title="Select part">Torso (Center)</button>
                     <button onclick="zoomOverlay.onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel"  data-label="abdomen" title="Select part">Abdomen (Tip)</button>
+ -->
                     <button onclick="zoomOverlay.onClickButtonDeletePart(event)" type="button" class="btn btn-warning btn-xs" title="Delete part">Delete</button>
                   </div>
                 </div>

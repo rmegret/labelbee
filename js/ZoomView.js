@@ -23,9 +23,11 @@ function initZoomView() {
     
     tagImageRoot='data/tags/tag25h5inv/png'
     
-    
     //refreshZoomSize()
     zoomOverlay.setCanvasSize(200,200)
+    
+    zoomOverlay.initLabelListDialog()
+    zoomOverlay.refreshButtonListParts()
 }
 
 function refreshZoomSize(event, ui) {
@@ -61,6 +63,10 @@ function ZoomOverlay(canvas, canvasOverlay) {
     
     this.canvas1 = undefined
     this.attach()
+    this.labelList = new Map([['head','red'], 
+                      ['torso','limegreen'], 
+                      ['abdomen','blue'],
+                      ['__default', 'black']])
 }
 
 ZoomOverlay.prototype = {}
@@ -90,7 +96,9 @@ ZoomOverlay.prototype.attach = function() {
     this.canvas1.on('selection:cleared', this.onObjectDeselected.bind(this)); // After mousedown out
     //$(this.canvas).on('mousedown',  this.onMouseDown.bind(this))
     
-    $( selectionControl ).on('selection:created', this.syncFromTracks.bind(this))
+    $( selectionControl ).on('selection:created', 
+                             this.syncFromTracks.bind(this))
+    $('#partLabel').change(this.onPartLabelTextChanged.bind(this));
 }
 ZoomOverlay.prototype.detach = function() {
     this.canvas1.dispose()
@@ -132,7 +140,7 @@ ZoomOverlay.prototype.onMouseDown = function(option) {
         }
         
         if (this.autoLabel) {
-            var labels = ['head','torso','abdomen']
+            var labels = this.labelList.keys()//['head','torso','abdomen']
             var i = labels.findIndex((L)=>L==this.selected)
             let label
             if (i>=0) 
@@ -196,14 +204,16 @@ ZoomOverlay.prototype.onObjectSelected = function(option) {
     var target = option.target
     this.selected = target.label
     this.insertMode = false
-    this.selectLabel(target.label)
+    //this.selectLabel(target.label)
+    this.labelSelected(target.label)
 }
 ZoomOverlay.prototype.onObjectDeselected = function(option) {
     console.log('ZoomOverlay.onObjectDeselected',option)
     this.lastSelection = this.selected
     this.selected = undefined
     this.insertMode = false
-    this.selectLabel(undefined)
+    //this.selectLabel(undefined)
+    this.labelSelected(undefined)
 }
 ZoomOverlay.prototype.selectLabel = function(label) {
     if (label == this.selected) return;
@@ -211,7 +221,6 @@ ZoomOverlay.prototype.selectLabel = function(label) {
         this.canvas1.deactivateAllWithDispatch()
         this.selected = undefined
         this.insertMode = false
-        $('.zoomlabel').toggleClass('active', false)
     } else {
         var rect = this.findRectByLabel(label)
         if (!rect) {
@@ -223,10 +232,16 @@ ZoomOverlay.prototype.selectLabel = function(label) {
             this.selected = label
             this.insertMode = false
         }
-        $('.zoomlabel').toggleClass('active', false)
-        $('.zoomlabel[data-label='+label+']').toggleClass('active', true)
     }
+    this.labelSelected(label)
     this.redraw()
+}
+ZoomOverlay.prototype.labelSelected = function(label) {
+    $('.zoomlabel').toggleClass('active', false)
+    if (label) {
+        $('.zoomlabel[data-label="'+label+'"]').toggleClass('active', true)
+    }
+    $('#partLabel').val(label)
 }
 ZoomOverlay.prototype.findRectByLabel = function(label) {
     var rects = this.canvas1.getObjects()
@@ -259,8 +274,11 @@ ZoomOverlay.prototype.newPointInFrame = function(posFrame,label) {
         hasRotatingPoint: false,
         lockRotation: true,
         hasControls: false,
-        hasBorder: false,
-        posFrame: {x:posFrame.x,y:posFrame.y}
+        //hasBorder: false,
+        borderColor: 'yellow',
+        padding: 1,
+        posFrame: {x:posFrame.x,y:posFrame.y},
+        zoomOverlay: this
     });
     rect.originX = 'center'
     rect.originY = 'center'
@@ -350,6 +368,21 @@ ZoomOverlay.prototype.onObjectModified = function(evt) {
     this.updatePointFromFabric(rect)
     this.syncToTracks()
 }
+ZoomOverlay.prototype.onPartLabelTextChanged = function(evt) {
+    console.log('ZoomOverlay.onPartLabelTextChanged',evt)
+    var label = $(evt.target).val() // Same as #partLabel
+    if (label == this.selected) return;
+    var rect = this.canvas1.getActiveObject();
+    if (!rect) {
+        this.selectLabel(label)
+    } else {
+        rect.label = label
+    }
+    $('.zoomlabel').toggleClass('active', false)
+    $('.zoomlabel[data-label="'+label+'"]').toggleClass('active', true)
+    
+    this.redraw()
+}
 
 ZoomOverlay.prototype.syncToTracks = function() {
     console.log('ZoomOverlay.syncToTracks')
@@ -379,6 +412,113 @@ ZoomOverlay.prototype.syncFromTracks = function() {
     this.redraw()
 }
 
+// # LABEL LIST / BUTTONS
+
+function onButtonClickAddRemovePartLabel(evt, action) {
+    console.log('ZoomOverlay.onButtonClickAddRemoveLabel',evt,action)
+    var label = $("#partLabel").val()
+    if (action==='+') {
+        var c = 'black'
+        console.log('ZoomOverlay.onButtonClickAddRemoveLabel: new label '+label+' with default color '+c)
+        zoomOverlay.labelList.set(label,c)
+        zoomOverlay.refreshButtonListParts()
+        zoomOverlay.redraw()
+    }
+    if (action==='-') {
+        if (window.confirm("Are you sure you want to delete label '"+label+"' from the quick access list?")) {
+            delete zoomOverlay.labelList.get(label)
+            zoomOverlay.refreshButtonListParts()
+        }
+    }
+    if (action==='c') {
+        var currentColor = zoomOverlay.labelList.get(label)
+        if (!currentColor || currentColor=='') currentColor='black'
+
+        c = window.prompt("New color for label '"+label+"' (format 'red' or 'rgb(255,0,0)'",currentColor);
+        if (c == null || c == "") {
+            console.log('ZoomOverlay.onButtonClickAddRemoveLabel: color not changed')
+            return
+        } else {
+            //col = JSON.parse(c);
+            console.log('ZoomOverlay.onButtonClickAddRemoveLabel: label '+label+' has new color '+c)
+            zoomOverlay.labelList.set(label,c)
+            zoomOverlay.refreshButtonListParts()
+            zoomOverlay.redraw()
+        } 
+    }
+    if (action==='C') {
+        //var J = JSON.stringify(zoomOverlay.labelList,null, 4)
+        var jsontext = '['; var first=true;
+        for (var label of zoomOverlay.labelList.keys()) {
+            if (first) {jsontext+='\n    '; first=false}
+            else {jsontext+=',\n    '}
+            jsontext+=JSON.stringify([label,zoomOverlay.labelList.get(label)])
+        }
+        jsontext+='\n]'
+        
+        $("#labellist-json").val(jsontext)
+        
+        $("#dialog-form-labelList").dialog("open");
+    }
+}
+ZoomOverlay.prototype.initLabelListDialog = function() {
+    $("#dialog-form-labelList").dialog({
+        autoOpen: false,
+        modal: true,
+        buttons: {
+            "Ok": function() {
+                var jsontext = $("#labellist-json").val();
+                
+                console.log('labelList dialog. jsontext = ',jsontext)
+
+                var newContent = JSON.parse( jsontext )
+                zoomOverlay.labelList = new Map(newContent)
+                
+                console.log('zoomOverlay.labelList = ',zoomOverlay.labelList)
+                
+                $(this).dialog("close");
+                
+                zoomOverlay.refreshButtonListParts()
+                zoomOverlay.redraw()
+            },
+            "Cancel": function() {
+                $(this).dialog("close");
+            }
+        },
+        open: function(){
+            $("body").css("overflow", "hidden");
+        },
+        close: function(){
+            $("body").css("overflow", "auto");
+        }
+    });
+
+}
+ZoomOverlay.prototype.refreshButtonListParts = function() {
+    var that = this
+    var topDiv = $('div.zoomLabel.labelButtons')
+    
+    topDiv.empty()
+    for (var label of this.labelList.keys()) {
+        if (label=='__default') continue;
+        
+        var colorBlob = ""
+        var color = this.labelList.get(label)
+        if (color) {
+            colorBlob="<span style='color:"+color+";'>&#9673;</span>"
+        }
+        
+        $('<button/>', {
+        type: 'button',
+        "data-label": label,
+        class: "btn btn-default btn-xs",
+        title: "Toggle AutoLabeling",
+        click: function (event) { that.onClickButtonPart(event); },
+        html: colorBlob+label
+        }).appendTo(topDiv);
+    }
+}
+
 // # DRAWING
 
 fabric.PartRect = fabric.util.createClass(fabric.Rect, {
@@ -390,13 +530,16 @@ fabric.PartRect = fabric.util.createClass(fabric.Rect, {
         this.callSuper('initialize', element, options);
     },
     
-    colors : {'head':'red', 'torso':'limegreen', 'abdomen':'blue'},
+    _colormapping: function(label) {
+        var color = this.zoomOverlay.labelList.get(label);
+        if (!color) color=this.labelList.get('__default')
+        if (!color) color='black'
+        return color
+    },
     
     _render: function (ctx) {
-            
         var label = this.label
-        var color = this.colors[label];
-        if (!color) color='black'
+        var color = this._colormapping(label);
         this.stroke = color
     
         this.callSuper('_render', ctx);
