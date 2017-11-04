@@ -55,6 +55,7 @@ function copyObs(obs, tmpObs) {
     obs.angle = tmpObs.angle;
     obs.notes = tmpObs.notes;
     obs.labels = tmpObs.labels;
+    obs.parts = tmpObs.parts;
 }
 
 function getValidIDsForFrame(frame) {

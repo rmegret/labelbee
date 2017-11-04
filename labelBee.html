@@ -123,6 +123,8 @@
           </div>
           </p>
           
+          <!-- # VIDEO VIEW -->
+          
           <div id="canvasresize" class="ui-widget-content">
               <div class="canvaswrapper">
                 <video src="" id="video" style="width:400px; z-index: -1"></video>
@@ -130,8 +132,8 @@
                 <canvas id="canvas1" style="border: none; z-index: 3"></canvas>
               </div>
           </div>
-
-<!--           <video src="" id="video" style="display:none"></video> -->
+          
+          <!-- # VIDEO CONTROL -->
 
           <div>
               <div class='block'>
@@ -371,6 +373,8 @@
               </div>
             </div>
             
+            <!-- ## VIDEO ZOOM -->
+            
             <div id='videozoom' class='collapsible'> 
               <label>Zoom</label>
               <div>
@@ -389,16 +393,18 @@
                 <div id="zoomresize" class="ui-widget-content">
                     <div id="zoomDiv" class="canvaswrapper">
                     <canvas id="zoom"></canvas>
-                    <canvas id="zoomcanvas1" style="border: none; z-index: 3"></canvas>
+                    <canvas id="zoomOverlay" style="border: none; z-index: 3"></canvas>
                     </div>
                 </div>
                 
                 <div id='videozoom_parts' class='subpanel collapsible'> 
                   <label>Parts labeling</label>
                   <div>
-                    <button onclick="onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel head" title="Select part">Head (Tip)</button>
-                    <button onclick="onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel torso" title="Select part">Torso (Center)</button>
-                    <button onclick="onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel abdomen" title="Select part">Abdomen (Tip)</button>
+                    <button onclick="zoomOverlay.onToggleButtonAutoLabel(event)" type="button" class="btn btn-error btn-xs" title="Toggle AutoLabeling">Auto</button>
+                    <button onclick="zoomOverlay.onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel" data-label="head" title="Select part">Head (Tip)</button>
+                    <button onclick="zoomOverlay.onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel"  data-label="torso" title="Select part">Torso (Center)</button>
+                    <button onclick="zoomOverlay.onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel"  data-label="abdomen" title="Select part">Abdomen (Tip)</button>
+                    <button onclick="zoomOverlay.onClickButtonDeletePart(event)" type="button" class="btn btn-warning btn-xs" title="Delete part">Delete</button>
                   </div>
                 </div>
                 

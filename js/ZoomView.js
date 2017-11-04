@@ -3,14 +3,15 @@
 
 function initZoomView() {
 
-    zoomOverlay = new ZoomOverlay($("#zoomcanvas1"))
-    zoomOverlay.attach()
+    zoomOverlay = new ZoomOverlay($("#zoom")[0],$("#zoomOverlay")[0])
+    zoomScale = 1
     
     $("#zoomresize").resizable({
       helper: "ui-resizable-helper",
       aspectRatio: 1   // Need to put a value even to update it later
     });
     $("#zoomresize").on( "resizestop", refreshZoomSize );
+    
     $("#tagImage").resizable({
       helper: "ui-resizable-helper",
       aspectRatio: 1   // Need to put a value even to update it later
@@ -22,9 +23,9 @@ function initZoomView() {
     
     tagImageRoot='data/tags/tag25h5inv/png'
     
-    zoomScale = 1
     
-    refreshZoomSize()
+    //refreshZoomSize()
+    zoomOverlay.setCanvasSize(200,200)
 }
 
 function refreshZoomSize(event, ui) {
@@ -33,46 +34,47 @@ function refreshZoomSize(event, ui) {
         console.log('refreshZoomSize: event=',event)
     }
         
-    let wd = parseInt($("#zoomresize")[0].style.width)
+    let wd = parseInt($("#zoomresize")[0].style.width) - 16
     let hd = wd
         
-    wd=400
-    hd=400
-    
-    $("#zoomresize")[0].style.width = (wd+16).toString() + 'px'
-    $("#zoomresize")[0].style.height = hd.toString() + 'px'
-
+    zoomOverlay.setCanvasSize(wd,hd)
         
-    $("#zoom").width = wd
-    $("#zoom").height = hd
-    zoomOverlay.canvas1.setWidth(wd)
-    zoomOverlay.canvas1.setHeight(hd)
-        
-    zoomOverlay.redraw()
+    refreshZoom()
 }
 
 
-function ZoomOverlay(canvasElement) {
+function ZoomOverlay(canvas, canvasOverlay) {
     if (this === window) { 
         console.log('ERROR: ZoomOverlay should be created with "new ZoomOverlay()"')
-        return new ZoomOverlay(canvasElement); 
+        return new ZoomOverlay(canvas); 
     }
     this.selected = undefined
     this.insertMode = false
-    this.points = []
-    this.canvasElement = canvasElement
+    this.autoLabel = false
+    //this.points = []
+    this.canvas = canvas
+    this.canvasOverlay = canvasOverlay
+    this.centerFrame = {x:0,y:0}
+    this.centerCanvas = {x:200,y:200}
+    this.angle = 0  // radians
+    this.scale = 1
+    
+    this.canvas1 = undefined
+    this.attach()
 }
 
 ZoomOverlay.prototype = {}
 
+// # FABRIC.JS EVENT HANDLING
+
 ZoomOverlay.prototype.attach = function() {
-    this.canvas1 = new fabric.Canvas(this.canvasElement[0]);
+    this.canvas1 = new fabric.Canvas(this.canvasOverlay);
     
     // Caution: for this to work, the canvases must be enclosed in a 
     // div with class ".canvaswrapper" to force alignment of all canvases
     
-    this.canvas1.setWidth(this.canvasElement[0].width)
-    this.canvas1.setHeight(this.canvasElement[0].height)
+    this.canvas1.setWidth(this.canvas.width)
+    this.canvas1.setHeight(this.canvas.height)
     
     this.canvas1.selectionColor = "red";
     this.canvas1.selectionBorderColor = "red";
@@ -86,11 +88,14 @@ ZoomOverlay.prototype.attach = function() {
     this.canvas1.on('object:modified', this.onObjectModified.bind(this)); // After modification
     this.canvas1.on('object:selected', this.onObjectSelected.bind(this)); // After mousedown
     this.canvas1.on('selection:cleared', this.onObjectDeselected.bind(this)); // After mousedown out
-    //this.canvasElement.on('mousedown',  this.onMouseDown.bind(this))
+    //$(this.canvas).on('mousedown',  this.onMouseDown.bind(this))
+    
+    $( selectionControl ).on('selection:created', this.syncFromTracks.bind(this))
 }
 ZoomOverlay.prototype.detach = function() {
     this.canvas1.dispose()
-    //this.canvasElement.off('mousedown',  this.onMouseDown.bind(this))
+    this.canvas1 = undefined
+    //$(this.canvas).off('mousedown',  this.onMouseDown.bind(this))
 }
 
 ZoomOverlay.prototype.onMouseDown = function(option) {
@@ -108,34 +113,84 @@ ZoomOverlay.prototype.onMouseDown = function(option) {
 
         let x = option.e.offsetX, y = option.e.offsetY;
         
-        let zw=400
-        let zh=400
-        
-        //x += 200, y+= 200
-        
         if (this.insertMode) {
             this.newPoint(x,y, this.selected)
+            this.syncToTracks()
         } else {
-            console.log('insertMode==false: skipping mousedown')
+            if (this.autoLabel && this.lastSelection) {
+                var rect = this.findRectByLabel(this.lastSelection)
+                if (rect) {
+                    this.updatePoint(x,y, rect)
+                    this.syncToTracks()
+                } else {
+                    this.newPoint(x,y, this.lastSelection)
+                    this.syncToTracks()
+                }
+            } else {
+                console.log('insertMode==false: skipping mousedown')
+            }
         }
         
-        var auto=true
-        if (auto) {
+        if (this.autoLabel) {
             var labels = ['head','torso','abdomen']
             var i = labels.findIndex((L)=>L==this.selected)
-            var nextLabel = labels[0]
-            if (i>=0) nextLabel=labels[(i+1)%labels.length]
-            console.log('current=',this.selected,' next=',nextLabel)
-            this.selectLabel(nextLabel)
+            let label
+            if (i>=0) 
+                label = labels[(i+1)%labels.length]
+            else
+                label = labels[0]
+            console.log('previous=',this.selected,' current=',label)
+            
+            this.selectLabel(label)
         }
     }
-
-}
-ZoomOverlay.prototype.onObjectModified = function(evt) {
-    console.log('ZoomOverlay.onObjectModified',evt)
     this.redraw()
 }
-// SELECTION
+
+// # GEOMETRY 
+
+ZoomOverlay.prototype.setCanvasSize = function(w, h) {
+    this.width = w
+    this.height = h
+    this.canvas.width = w
+    this.canvas.height = h
+    this.canvas1.setWidth(w)
+    this.canvas1.setHeight(h)
+    $("#zoomresize")[0].style.width = (w+16).toString() + 'px'
+    $("#zoomresize")[0].style.height = h.toString() + 'px'
+}
+ZoomOverlay.prototype.setGeometry = function(cx, cy, angle, zx, zy, scale) {
+    this.centerFrame = {x:cx,y:cy}
+    this.centerCanvas = {x:zx,y:zy}
+    this.angle = angle
+    this.scale = scale
+}
+ZoomOverlay.prototype.canvas2frame = function(posCanvas) {
+    var posFrame = {
+            x: (   (posCanvas.x-this.centerCanvas.x) * Math.cos(this.angle) 
+                 - (posCanvas.y-this.centerCanvas.y) * Math.sin(this.angle) )
+                / this.scale 
+               + this.centerFrame.x,
+            y: (   (posCanvas.x-this.centerCanvas.x) * Math.sin(this.angle) 
+                 + (posCanvas.y-this.centerCanvas.y) * Math.cos(this.angle) )
+                / this.scale
+               + this.centerFrame.y}
+    return posFrame
+}
+ZoomOverlay.prototype.frame2canvas = function(posFrame) {
+    var posCanvas = {
+            x: (   (posFrame.x-this.centerFrame.x) * Math.cos(this.angle) 
+                 + (posFrame.y-this.centerFrame.y) * Math.sin(this.angle) )
+                * this.scale
+               + this.centerCanvas.x,
+            y: ( - (posFrame.x-this.centerFrame.x) * Math.sin(this.angle) 
+                 + (posFrame.y-this.centerFrame.y) * Math.cos(this.angle) )
+                * this.scale
+               + this.centerCanvas.y}
+    return posCanvas
+}
+
+// # SELECTION
 ZoomOverlay.prototype.onObjectSelected = function(option) {
     console.log('ZoomOverlay.onObjectSelected',option)
     var target = option.target
@@ -145,6 +200,7 @@ ZoomOverlay.prototype.onObjectSelected = function(option) {
 }
 ZoomOverlay.prototype.onObjectDeselected = function(option) {
     console.log('ZoomOverlay.onObjectDeselected',option)
+    this.lastSelection = this.selected
     this.selected = undefined
     this.insertMode = false
     this.selectLabel(undefined)
@@ -157,23 +213,173 @@ ZoomOverlay.prototype.selectLabel = function(label) {
         this.insertMode = false
         $('.zoomlabel').toggleClass('active', false)
     } else {
-        var i = this.points.findIndex((pt)=>pt.label==label)
-        if (i<0) {
+        var rect = this.findRectByLabel(label)
+        if (!rect) {
             this.canvas1.deactivateAllWithDispatch()
             this.selected = label
             this.insertMode = true
         } else {
-            var pt = this.points[i]
-            this.canvas1.setActiveObject(pt.rect);
+            this.canvas1.setActiveObject(rect);
             this.selected = label
             this.insertMode = false
         }
         $('.zoomlabel').toggleClass('active', false)
-        $('.zoomlabel.'+label).toggleClass('active', true)
+        $('.zoomlabel[data-label='+label+']').toggleClass('active', true)
+    }
+    this.redraw()
+}
+ZoomOverlay.prototype.findRectByLabel = function(label) {
+    var rects = this.canvas1.getObjects()
+    var id = rects.findIndex((rect)=>rect.label==label)
+    if (id>=0) {
+        return rects[id]
+    } else {
+        return undefined
+    }
+}
+
+// # INSERTION DELETION MODIFICATION
+
+ZoomOverlay.prototype.newPointInFrame = function(posFrame,label) {
+    console.log('ZoomOverlay.newPointInFrame(',posFrame,label,')')
+    
+    var posCanvas = this.frame2canvas(posFrame)
+    var x = posCanvas.x
+    var y = posCanvas.y
+    
+    var rect = new fabric.PartRect({
+        label: label,
+        top: y-3,
+        left: x-3,
+        width: 7,
+        height: 7,
+        fill: 'transparent',
+        stroke: 'blue',
+        strokewidth: 3,
+        hasRotatingPoint: false,
+        lockRotation: true,
+        hasControls: false,
+        hasBorder: false,
+        posFrame: {x:posFrame.x,y:posFrame.y}
+    });
+    rect.originX = 'center'
+    rect.originY = 'center'
+    this.canvas1.add(rect);
+    
+    //var posFrameCopy = {x:posFrame.x,y:posFrame.y}
+    //this.points.push({posFrame:posFrameCopy, label:label, rect:rect})
+                      
+    this.canvas1.setActiveObject(rect);
+    this.selected = label
+    this.insertMode = false
+    
+    //this.syncToTracks()
+    //this.redraw()
+}
+ZoomOverlay.prototype.newPoint = function(x,y,label) {
+    console.log('ZoomOverlay.newPoint(',x,y,label,')')
+    
+    var posFrame = this.canvas2frame({x:x,y:y})
+    
+    this.newPointInFrame(posFrame, label)
+}
+ZoomOverlay.prototype.updatePoint = function(x,y,rect) {
+    console.log('ZoomOverlay.updatePoint(',x,y,rect,')')
+    
+    if (!rect) {
+        console.log('ZoomOverlay.updatePoint: invalid rect = ',rect)
+        return
+    }
+
+    var posFrame = this.canvas2frame({x:x,y:y})
+    rect.posFrame.x = posFrame.x
+    rect.posFrame.y = posFrame.y
+    this.updatePointToFabric(rect)
+    //this.canvas1.setActiveObject(pt.rect);
+    
+    //this.syncToTracks()
+    //this.redraw()
+}
+ZoomOverlay.prototype.updatePointFromFabric = function(rect) {
+    console.log('ZoomOverlay.updatePointFromFabric(',rect,')')
+    
+    var x = rect.left + 3
+    var y = rect.top + 3
+    var posFrame = this.canvas2frame({x:x,y:y})
+    rect.posFrame.x = posFrame.x
+    rect.posFrame.y = posFrame.y
+    
+    //this.syncToTracks()
+    //this.redraw() // No need, as Fabric is supposed to have updated display
+}
+ZoomOverlay.prototype.updatePointToFabric = function(rect) {
+    console.log('ZoomOverlay.updatePointToFabric(',rect,')')
+    
+    let posCanvas = this.frame2canvas(rect.posFrame)
+    rect.setLeft( posCanvas.x - 3 )
+    rect.setTop( posCanvas.y - 3 )
+    rect.setCoords()
+    
+    //this.syncToTracks() // No need, if posFrame was modified, 
+                          // it should have been synced already
+    //this.redraw() // No, to avoid circular calls
+}
+ZoomOverlay.prototype.deletePoint = function(rect) {
+    console.log('ZoomOverlay.deletePoint(',rect,')')
+    
+//     var index = this.points.findIndex((P)=>P.rect===rect)
+//     if (index > -1) {
+//         this.points.splice(index, 1);
+//     }
+    
+    this.canvas1.remove(rect);
+    this.selected = undefined
+    this.insertMode = false
+    
+    this.syncToTracks()
+    this.redraw()
+}
+ZoomOverlay.prototype.deleteCurrentPoint = function() {
+    var rect = this.canvas1.getActiveObject();
+    this.deletePoint(rect)
+}
+
+ZoomOverlay.prototype.onObjectModified = function(evt) {
+    console.log('ZoomOverlay.onObjectModified',evt)
+    var rect = evt.target
+    this.updatePointFromFabric(rect)
+    this.syncToTracks()
+}
+
+ZoomOverlay.prototype.syncToTracks = function() {
+    console.log('ZoomOverlay.syncToTracks')
+    var activeObject = canvas1.getActiveObject() // Object of video frame
+    var obs = activeObject.obs
+    obs.parts = []
+    var rects = this.canvas1.getObjects()
+    for (let i in rects) {
+        let rect = rects[i]
+        let part = {
+            posFrame: Object.assign({}, rect.posFrame),
+            label: rect.label
+        }
+        obs.parts.push(part)
+    }
+    automatic_sub()
+}
+ZoomOverlay.prototype.syncFromTracks = function() {
+    console.log('ZoomOverlay.syncFromTracks')
+    var activeObject = canvas1.getActiveObject() // Object of video frame
+    var obs = activeObject.obs
+    this.canvas1.clear()
+    for (let i in obs.parts) {
+        let part = obs.parts[i]
+        this.newPointInFrame(part.posFrame, part.label);
     }
     this.redraw()
 }
 
+// # DRAWING
 
 fabric.PartRect = fabric.util.createClass(fabric.Rect, {
     type: 'partrect',
@@ -199,7 +405,7 @@ fabric.PartRect = fabric.util.createClass(fabric.Rect, {
         //var x = this.left, y = this.top
         var x = 0, y = 0 // Local coordinates
         
-        console.log(label)
+        //console.log(label)
         
         ctx.save()
         
@@ -218,54 +424,47 @@ fabric.PartRect = fabric.util.createClass(fabric.Rect, {
 
     }
 });
-ZoomOverlay.prototype.newPoint = function(x,y,label) {
-    console.log('ZoomOverlay.newPoint(',x,y,label,')')
-    
-    var rect = new fabric.PartRect({
-        label: label,
-        top: y-3,
-        left: x-3,
-        width: 7,
-        height: 7,
-        fill: 'transparent',
-        stroke: 'blue',
-        strokewidth: 3,
-        hasRotatingPoint: false,
-        lockRotation: true,
-        hasControls: false,
-        hasBorder: false
-    });
-    rect.originX = 'center'
-    rect.originY = 'center'
-    this.canvas1.add(rect);
-    this.points.push({x:x,y:y,label:label,rect:rect})
-    
-    this.canvas1.setActiveObject(rect);
-    this.selected = label
-    this.insertMode = false
-    
-    this.redraw()
-}
 ZoomOverlay.prototype.redraw = function() {
     //this.canvas1.backgroundColor = null;
-    refreshZoom()
+    //refreshZoom()
+    
+    console.log('ZoomOverlay.redraw:')
+//     for (var p of this.points) {
+//         //console.log('POINT: p=', p)
+//         let posCanvas = this.frame2canvas(p.posFrame)
+//         p.rect.setLeft( posCanvas.x - 3 )
+//         p.rect.setTop( posCanvas.y - 3 )
+//         p.rect.setCoords()
+//         
+//         console.log('  ',p)
+//     }
+    for (let r of this.canvas1.getObjects()) {
+        this.updatePointToFabric(r)
+    }
+    
+    this.canvas1.getContext('2d').clearRect(0,0,this.canvas1.width, this.canvas1.height)
     this.canvas1.renderAll();
 }
 
-function onClickButtonPart(event) {
+// # GUI CALLBACKS
+ZoomOverlay.prototype.onClickButtonPart = function(event) {
     var target = event.target
     
     var label = undefined
     
-    if ($(target).hasClass('head')) {
-        label = 'head'
-    } else if ($(target).hasClass('torso')) {
-        label = 'torso'
-    } else if ($(target).hasClass('abdomen')) {
-        label = 'abdomen'
-    }
-    zoomOverlay.selectLabel(label)
+    label = $(target).data('label')
+    this.selectLabel(label)
 }
+ZoomOverlay.prototype.onClickButtonDeletePart = function(event) {
+    this.deleteCurrentPoint()
+}
+ZoomOverlay.prototype.onToggleButtonAutoLabel = function(event) {
+    this.autoLabel = !this.autoLabel
+    console.log(event)
+    $(event.target).toggleClass('active', this.autoLabel)
+}
+
+
 
 
 
@@ -291,13 +490,13 @@ function showZoom(rect) {
     refreshZoom(defaultSelectedBee)
     return
 
-    let zw=400
-    let zh=400
+    let zw=zoomOverlay.width
+    let zh=zoomOverlay.height
 
     var zoom_canvas = $('#zoom')[0];
     var zoom_ctx = zoom_canvas.getContext('2d');
-    zoom_canvas.width=zw
-    zoom_canvas.height=zh
+    //zoom_canvas.width=zw
+    //zoom_canvas.height=zh
     zoom_ctx.clearRect(0, 0, zw,zh)
     let w = zw, h = zh
     let mw = w * 0.5,  mh = h * 0.5
@@ -349,8 +548,8 @@ function plotArrow(ctx, p0, p1, L) {
 var oldCX, oldCY, oldAngle;
 var zoomMode = 'RT'
 function refreshZoom() {
-    let zw=400
-    let zh=400
+    let zw=zoomOverlay.width
+    let zh=zoomOverlay.height
 
     if (logging.zoomTag)
         console.log('showZoomTag')
@@ -383,12 +582,14 @@ function refreshZoom() {
 
     var zoom_canvas = $('#zoom')[0];
     var zoom_ctx = zoom_canvas.getContext('2d');
-    zoom_canvas.width=zw
-    zoom_canvas.height=zh
+    //zoom_canvas.width=zw
+    //zoom_canvas.height=zh
     zoom_ctx.clearRect(0, 0, zw,zh)
     let w = zw, h = zh
     let mw = w * 0.5,  mh = h * 0.5
     let w2 = w + 2 * mw, h2 = h + 2 * mh
+    
+    zoomOverlay.setGeometry(cx, cy, angle, mw, mh, zoomScale)
     
     let video = $('#video')[0]
     
@@ -474,6 +675,8 @@ function refreshZoom() {
       zoom_ctx.restore()
       }
     }
+    
+    zoomOverlay.redraw()
 }
 
 function refreshTagImage() {

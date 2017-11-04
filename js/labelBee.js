@@ -53,12 +53,12 @@ function init() {
     // import * from "AnnotationIO.js"
     initAnnotationIO()
 
-    // import * from "ZoomView.js";
-    initZoomView()
-
     // ## Control panel
     // import * from "SelectionControl.js"
     initSelectionControl()    
+    
+    // import * from "ZoomView.js";
+    initZoomView()
     
     $( selectionControl ).on('tagselection:created',refreshTagImage)
     $( selectionControl ).on('selection:created',refreshTagImage)
