@@ -10,12 +10,13 @@ function initZoomView() {
       helper: "ui-resizable-helper",
       aspectRatio: 1   // Need to put a value even to update it later
     });
-    $("#zoomresize").on( "resizestop", refreshZoomSize );
+    $("#zoomresize").on( "resizestop", zoomOverlay.refreshZoomSize.bind(zoomOverlay) );
     
-    $("#tagImage").resizable({
+    $("#tagImageDiv").resizable({
       helper: "ui-resizable-helper",
-      aspectRatio: 1   // Need to put a value even to update it later
+      aspectRatio: 1,   // Need to put a value even to update it later
     });
+    
     zoomShowOverlay = false;
     $('#checkboxZoomShowOverlay').prop('checked', zoomShowOverlay);
     flagShowZoom = true;
@@ -30,20 +31,6 @@ function initZoomView() {
     zoomOverlay.refreshButtonListParts()
     
     flagShowParts = false
-}
-
-function refreshZoomSize(event, ui) {
-    // Refresh based on new video size or new canvas size
-    if (logging.canvasEvents) {
-        console.log('refreshZoomSize: event=',event)
-    }
-        
-    let wd = parseInt($("#zoomresize")[0].style.width) - 16
-    let hd = wd
-        
-    zoomOverlay.setCanvasSize(wd,hd)
-        
-    refreshZoom()
 }
 
 
@@ -71,9 +58,14 @@ function ZoomOverlay(canvas, canvasOverlay) {
                       ['torso','limegreen'], 
                       ['abdomen','blue'],
                       ['__default', 'black']])
+                      
+    // Manually bind methods
+    // https://www.smashingmagazine.com/2014/01/understanding-javascript-function-prototype-bind/
+    this.refreshZoomSize = this.refreshZoomSize.bind(this)
 }
 
 ZoomOverlay.prototype = {}
+
 
 // # FABRIC.JS EVENT HANDLING
 
@@ -149,15 +141,32 @@ ZoomOverlay.prototype.onMouseDown = function(option) {
 
 // # GEOMETRY 
 
+
+ZoomOverlay.prototype.refreshZoomSize = function(event, ui) {
+    // Refresh based on new video size or new canvas size
+    if (logging.canvasEvents) {
+        console.log('refreshZoomSize: event=',event)
+    }
+        
+    var borderThickness = 2
+    let wd = parseInt($("#zoomresize")[0].style.width) - 16 - borderThickness
+    let hd = wd - borderThickness
+        
+    this.setCanvasSize(wd,hd)
+        
+    refreshZoom()
+}
 ZoomOverlay.prototype.setCanvasSize = function(w, h) {
+    var borderThickness = 2
+
     this.width = w
     this.height = h
     this.canvas.width = w
     this.canvas.height = h
     this.canvas1.setWidth(w)
     this.canvas1.setHeight(h)
-    $("#zoomresize")[0].style.width = (w+16).toString() + 'px'
-    $("#zoomresize")[0].style.height = h.toString() + 'px'
+    $("#zoomresize")[0].style.width = (w+16+borderThickness).toString() + 'px'
+    $("#zoomresize")[0].style.height = (h+borderThickness).toString() + 'px'
 }
 ZoomOverlay.prototype.setGeometry = function(cx, cy, angle, zx, zy, scale) {
     this.centerFrame = {x:cx,y:cy}
@@ -478,7 +487,7 @@ function onButtonClickAddRemovePartLabel(evt, action) {
     }
     if (action==='-') {
         if (window.confirm("Are you sure you want to delete label '"+label+"' from the quick access list?")) {
-            delete zoomOverlay.labelList.get(label)
+            zoomOverlay.labelList.delete(label)
             zoomOverlay.refreshButtonListParts()
         }
     }

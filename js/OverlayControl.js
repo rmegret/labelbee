@@ -98,7 +98,7 @@ function canvasSetVideoSize(w,h) {
     if (true) {
       // Keep same canvas width as before, simply adjust aspect-ratio
       wd = canvas.width
-      hd = h*canvas.width/w
+      hd = Math.round(h*canvas.width/w)
     } else {
         // Automatic scaling to be smaller than 800pix
         while (wd>800) {
@@ -107,8 +107,10 @@ function canvasSetVideoSize(w,h) {
         }
     }
 
-    $("#canvasresize")[0].style.width = (wd+16).toString() + 'px'
-    $("#canvasresize")[0].style.height = hd.toString() + 'px'
+    var borderThickness = 2
+
+    $("#canvasresize")[0].style.width = (wd+16+borderThickness).toString() + 'px'
+    $("#canvasresize")[0].style.height = (hd+borderThickness).toString() + 'px'
     $("#canvasresize").resizable({
       helper: "ui-resizable-helper",
       aspectRatio: w / h
@@ -126,27 +128,35 @@ function refreshCanvasSize(event, ui) {
         
     // Internal canvas size adjusting utility
     // Ensures all canvas elements have same size
-    function resizeCanvas(w,h) {    
+    function resizeCanvas(wd,hd) {    
         if (logging.canvasEvents)
-            console.log('refreshCanvasSize.resizeCanvas: w=',w," h=",h)
+            console.log('refreshCanvasSize.resizeCanvas: wd=',wd," hd=",hd)
     
-        canvas.width = w
-        canvas.height = h
-        canvas1.setWidth(w)
-        canvas1.setHeight(h)
+        canvas.width = wd
+        canvas.height = hd
+        canvas1.setWidth(wd)
+        canvas1.setHeight(hd)
     
-        $("#video").width(w)
-        $("#video").height(h)
+        $("#video").width(wd)
+        $("#video").height(hd)
     
         var wrap = $('.canvaswrapper')[0]
-        wrap.style.width = w.toString() + 'px'
-        wrap.style.height = h.toString() + 'px'
+        wrap.style.width = wd.toString() + 'px'
+        wrap.style.height = hd.toString() + 'px'
+        
+        var borderThickness = 2
+        $("#canvasresize")[0].style.width = (wd+16+borderThickness).toString() + 'px'
+        $("#canvasresize")[0].style.height = (hd+borderThickness).toString() + 'px'
+
     }
         
     let video = $('#video')[0]
+    
+    var borderThickness = 4
+    
     // Assume width is in px to parse #canvasresize size
-    let wd = parseInt($("#canvasresize")[0].style.width)-16
-    let hd = video.videoHeight/video.videoWidth*wd
+    let hd = Math.round(parseInt($("#canvasresize")[0].style.height)-borderThickness)
+    let wd = Math.round(hd/video.videoHeight*video.videoWidth)
         
     resizeCanvas(wd,hd)
     

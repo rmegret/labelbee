@@ -71,6 +71,9 @@ function init() {
         heightStyle: "content",
         animate:false
     });
+    $( ".collapsible.default-active" ).accordion({
+        active: 0
+    });
 
     // ## Keyboard control
 

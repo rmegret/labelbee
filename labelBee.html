@@ -378,17 +378,25 @@
             <div id='videozoom' class='collapsible'> 
               <label>Zoom</label>
               <div>
-                <div class="checkbox" style="display:inline">
-                <label><input type="checkbox" checked="false" id="checkboxShowZoom" onclick="clickShowZoom()">Zoom</label>
+                                
+                <div class="float-right">
+                  <div id="tagImageDiv" style="width:50px; height:50px;" >
+                  <img id="tagImage" class="pixelated"/>
+                  </div>
                 </div>
+              
                 <div class="checkbox" style="display:inline">
-                
+                    <label><input type="checkbox" checked="false" id="checkboxShowZoom" onclick="clickShowZoom()">Zoom</label>
+                    <label><input type="checkbox" checked="true" id="checkboxZoomShowOverlay" onclick="clickZoomShowOverlay()">Overlay</label>
+                </div>
+
+                <div style="display:inline-block">
                   <input value="Z+" onclick="zoomApplyScale(2)" type="button" class="btn btn-info btn-xs" title="Zoom In" style="display=inline;">
                   <input value="Z=" onclick="zoomSetScale(1)" type="button" class="btn btn-info btn-xs" title="Reset Zoom" style="display=inline;">
                   <input value="Z-" onclick="zoomApplyScale(1/2)" type="button" class="btn btn-info btn-xs" title="Zoom Out" style="display=inline;">
-                
-                <label><input type="checkbox" checked="true" id="checkboxZoomShowOverlay" onclick="clickZoomShowOverlay()">with overlay</label>
                 </div>
+                
+                <div style="clear:both;"></div>
                 
                 <div id="zoomresize" class="ui-widget-content">
                     <div id="zoomDiv" class="canvaswrapper">
@@ -397,7 +405,7 @@
                     </div>
                 </div>
                 
-                <div id='videozoom_parts' class='subpanel collapsible'> 
+                <div id='videozoom_parts' class='subpanel collapsible default-active'> 
                   <label>Parts labeling</label>
                   <div>
                     <input type="text" size="15" value="" class="resizedTextbox" title="Label for next point/Relabel current point" id="partLabel">
@@ -416,24 +424,22 @@
                     </div>
 
                     <div class="zoomLabel labelButtons">
-                        <!-- To be filled up by zoomOverlay.refreshLabelButtons -->
+                        <!-- To be filled up by zoomOverlay.refreshLabelButtons 
+                        Example:
+                        <button onclick="zoomOverlay.onClickButtonPart(event)" 
+                        type="button" class="btn btn-default btn-xs zoomlabel" 
+                        data-label="head" title="Select part">head</button>
+                     -->
                     </div>
                     
-                    <button onclick="zoomOverlay.onToggleButtonAutoLabel(event)" type="button" class="btn btn-error btn-xs btn-green-toggle" title="Toggle AutoLabeling">Auto</button>
-<!-- 
-                    <button onclick="zoomOverlay.onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel" data-label="head" title="Select part">Head (Tip)</button>
-                    <button onclick="zoomOverlay.onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel"  data-label="torso" title="Select part">Torso (Center)</button>
-                    <button onclick="zoomOverlay.onClickButtonPart(event)" type="button" class="btn btn-default btn-xs zoomlabel"  data-label="abdomen" title="Select part">Abdomen (Tip)</button>
- -->
+                    <button onclick="zoomOverlay.onToggleButtonAutoLabel(event)" type="button" class="btn btn-green-toggle btn-xs" title="Toggle AutoLabeling">Auto</button>
+
                     <button onclick="zoomOverlay.onClickButtonDeletePart(event)" type="button" class="btn btn-warning btn-xs" title="Delete part">Delete</button>
+                    
                     <button onclick="zoomOverlay.onToggleButtonShowOnVideo(event)" type="button" class="btn btn-green-toggle btn-xs" title="Show/Hide parts on video canvas">Show on Video</button>
                   </div>
                 </div>
-                
-                <div id="tagImageDiv">
-                <img id="tagImage" width="200" height="200" class="pixelated"/>
-                </div>
-                
+                                
               </div>
             </div>
               
