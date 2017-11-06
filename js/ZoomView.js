@@ -461,9 +461,11 @@ ZoomOverlay.prototype.syncFromTracks = function() {
     var activeObject = canvas1.getActiveObject() // Object of video frame
     var obs = activeObject.obs
     this.canvas1.clear()
-    for (let i in obs.parts) {
-        let part = obs.parts[i]
-        this.newPointInFrame(part.posFrame, part.label);
+    if (obs.parts) {
+        for (let i in obs.parts) {
+            let part = obs.parts[i]
+            this.newPointInFrame(part.posFrame, part.label);
+        }
     }
     
     if (this.autoLabel) {
