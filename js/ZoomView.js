@@ -51,8 +51,10 @@ function ZoomOverlay(canvas, canvasOverlay) {
         return new ZoomOverlay(canvas); 
     }
     this.selected = undefined
+    this.lastRect = undefined
     this.insertMode = false
     this.autoLabel = false
+    this.autoLabelDone = false
     //this.points = []
     this.canvas = canvas
     this.canvasOverlay = canvasOverlay
@@ -125,13 +127,9 @@ ZoomOverlay.prototype.onMouseDown = function(option) {
             this.newPoint(x,y, this.selected)
             this.syncToTracks()
         } else {
-            if (this.autoLabel && this.lastSelection) {
-                var rect = this.findRectByLabel(this.lastSelection)
-                if (rect) {
-                    this.updatePoint(x,y, rect)
-                    this.syncToTracks()
-                } else {
-                    this.newPoint(x,y, this.lastSelection)
+            if (this.autoLabel && !this.autoLabelDone) {
+                if (this.lastRect) {
+                    this.updatePoint(x,y, this.lastRect)
                     this.syncToTracks()
                 }
             } else {
@@ -139,19 +137,11 @@ ZoomOverlay.prototype.onMouseDown = function(option) {
             }
         }
         
-        if (this.autoLabel) {
-            var labels = this.labelList.keys()//['head','torso','abdomen']
-            var i = labels.findIndex((L)=>L==this.selected)
-            let label
-            if (i>=0) 
-                label = labels[(i+1)%labels.length]
-            else
-                label = labels[0]
-            console.log('previous=',this.selected,' current=',label)
-            
-            this.selectLabel(label)
+        if (this.autoLabel && !this.autoLabelDone) {
+            this.selectNextLabel(this.selected)
         }
     }
+    this.lastRect = this.canvas1.getActiveObject()
     this.redraw()
 }
 
@@ -206,34 +196,45 @@ ZoomOverlay.prototype.onObjectSelected = function(option) {
     this.insertMode = false
     //this.selectLabel(target.label)
     this.labelSelected(target.label)
+    
+    // Workaround since onObjectDeselected gets called before onMouseDown
+    this.lastRect = this.canvas1.getActiveObject()
 }
 ZoomOverlay.prototype.onObjectDeselected = function(option) {
     console.log('ZoomOverlay.onObjectDeselected',option)
-    this.lastSelection = this.selected
     this.selected = undefined
     this.insertMode = false
-    //this.selectLabel(undefined)
+
+    // Workaround since onObjectDeselected gets called before onMouseDown
+    this.lastRect = this.canvas1.getActiveObject()
+
     this.labelSelected(undefined)
 }
 ZoomOverlay.prototype.selectLabel = function(label) {
-    if (label == this.selected) return;
+    if (label == this.selected) {
+        console.log('ZoomOverlay.selectLabel: unchanged label=',label)
+        return;
+    }
     if (!label) {
+        console.log('ZoomOverlay.selectLabel: deselect')
         this.canvas1.deactivateAllWithDispatch()
         this.selected = undefined
         this.insertMode = false
     } else {
         var rect = this.findRectByLabel(label)
         if (!rect) {
+            console.log('ZoomOverlay.selectLabel: select for insertion label=',label)
             this.canvas1.deactivateAllWithDispatch()
             this.selected = label
             this.insertMode = true
         } else {
+            console.log('ZoomOverlay.selectLabel: select for update label=',label)
             this.canvas1.setActiveObject(rect);
             this.selected = label
             this.insertMode = false
         }
     }
-    this.labelSelected(label)
+    this.labelSelected(label) 
     this.redraw()
 }
 ZoomOverlay.prototype.labelSelected = function(label) {
@@ -251,6 +252,40 @@ ZoomOverlay.prototype.findRectByLabel = function(label) {
     } else {
         return undefined
     }
+}
+ZoomOverlay.prototype.selectNextLabel = function(currentLabel) {
+    if (this.autoLabelDone) {
+        console.log('ZoomOverlay.selectNextLabel: autoLabelDone=true. Canceling.')
+        return;
+    }
+
+    /* Select next label without a rect */
+    var labels = [...this.labelList.keys()].filter((L)=>L!='__default')
+    if (labels.length==0) {
+        console.log('ZoomOverlay.selectNextLabel: empty label list. Canceled.')
+    }
+    var i = labels.indexOf(currentLabel)
+    console.log('ZoomOverlay.selectNextLabel: i=',i)
+    var j
+    if (i<0) {
+        j = 0
+    } else {
+        console.log('ZoomOverlay.selectNextLabel: labels.length=',labels.length)
+        j=(i+1)%labels.length
+        if (j==0) {
+            console.log('ZoomOverlay.selectNextLabel: no more label to choose from. Canceled.')
+            this.autoLabelDone = true
+            this.selectLabel(undefined)
+            return
+        }
+    }
+    console.log('ZoomOverlay.selectNextLabel: j=',j)
+    let label = labels[j]
+    this.selectLabel(label)
+}
+ZoomOverlay.prototype.startAutoLabel = function() {
+    this.autoLabelDone = false
+    this.selectNextLabel(undefined)
 }
 
 // # INSERTION DELETION MODIFICATION
@@ -387,6 +422,12 @@ ZoomOverlay.prototype.onPartLabelTextChanged = function(evt) {
 ZoomOverlay.prototype.syncToTracks = function() {
     console.log('ZoomOverlay.syncToTracks')
     var activeObject = canvas1.getActiveObject() // Object of video frame
+    
+    if (!activeObject) {
+        console.log('ZoomOverlay.syncToTracks: abort. activeObject=',activeObject)
+        return;
+    }
+    
     var obs = activeObject.obs
     obs.parts = []
     var rects = this.canvas1.getObjects()
@@ -409,6 +450,11 @@ ZoomOverlay.prototype.syncFromTracks = function() {
         let part = obs.parts[i]
         this.newPointInFrame(part.posFrame, part.label);
     }
+    
+    if (this.autoLabel) {
+        this.startAutoLabel()
+    }
+    
     this.redraw()
 }
 
@@ -511,10 +557,10 @@ ZoomOverlay.prototype.refreshButtonListParts = function() {
         $('<button/>', {
         type: 'button',
         "data-label": label,
-        class: "btn btn-default btn-xs",
-        title: "Toggle AutoLabeling",
+        class: "zoomlabel btn btn-default btn-xs",
+        title: "Toggle Label "+label,
         click: function (event) { that.onClickButtonPart(event); },
-        html: colorBlob+label
+        html: colorBlob+' '+label
         }).appendTo(topDiv);
     }
 }
@@ -532,7 +578,7 @@ fabric.PartRect = fabric.util.createClass(fabric.Rect, {
     
     _colormapping: function(label) {
         var color = this.zoomOverlay.labelList.get(label);
-        if (!color) color=this.labelList.get('__default')
+        if (!color) color=this.zoomOverlay.labelList.get('__default')
         if (!color) color='black'
         return color
     },
@@ -605,6 +651,10 @@ ZoomOverlay.prototype.onToggleButtonAutoLabel = function(event) {
     this.autoLabel = !this.autoLabel
     console.log(event)
     $(event.target).toggleClass('active', this.autoLabel)
+    
+    if (this.autoLabel) {
+        this.startAutoLabel()
+    }
 }
 
 
