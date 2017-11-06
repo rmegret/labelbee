@@ -444,7 +444,76 @@ fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
     _render: function (ctx) {
         this.callSuper('_render', ctx);
         
+        if (flagShowParts) {
+            this._drawParts(ctx)
+        }
+        
         identifyBeeRect(ctx, this, 5);
+    },
+    
+    _colormapping: function(label) {
+        var color = zoomOverlay.labelList.get(label);
+        if (!color) color=zoomOverlay.labelList.get('__default')
+        if (!color) color='black'
+        return color
+    },
+    
+    _frame2local: function(posFrame) {
+        let angle = this.angle/180*Math.PI
+        var posLocal = {
+                x: (   (posFrame.x-this.cx) * Math.cos(angle) 
+                     + (posFrame.y-this.cy) * Math.sin(angle) ),
+                y: ( - (posFrame.x-this.cx) * Math.sin(angle) 
+                     + (posFrame.y-this.cy) * Math.cos(angle) )}
+        return posLocal
+    },
+    
+    _drawParts: function (ctx) {
+        //console.log('BeeRect._drawParts')
+        var parts = this.obs.parts
+        if (!parts) return
+        
+        let geom = rotatedRectGeometry(this)
+        this.cx = geom.center.x
+        this.cy = geom.center.y
+
+        var radius = 4
+        var x = 0, y = 0 // Local coordinates
+
+        //console.log(label)
+
+        ctx.save()
+        
+        // Compensate local coordinates to go to canvas coordinates
+        ctx.rotate(-this.angle/180*Math.PI)
+        ctx.translate(-this.cx,-this.cy)
+        
+        //console.log(parts)
+        
+        for (var part of parts) {
+        
+            var canvasPos = videoToCanvasPoint(part.posFrame)
+            
+            var x = canvasPos.x
+            var y = canvasPos.y
+            
+            var label = part.label
+            var color = this._colormapping(label);
+            ctx.strokeStyle = color
+        
+            ctx.beginPath()
+            ctx.rect(x-3,y-3,7,7);
+            ctx.stroke()
+            
+            if (true) {
+                ctx.beginPath()
+                ctx.moveTo(this.cx,this.cy)
+                ctx.lineTo(x,y)
+                ctx.stroke()
+            }
+        }
+
+        ctx.restore()
     }
 });
 // Create a fabric rectangle at specific place, all units in canvas coordinates
@@ -815,7 +884,7 @@ function tagCorners(tag) {
     if (typeof tag.p === 'undefined') return undefined
     let ppt=[]
     for (let i of [0,1,2,3]) {
-          ppt[i] = videoToCanvasPoint({"x":tag.p[i][0], "y":tag.p[i][1]})
+        ppt[i] = videoToCanvasPoint({"x":tag.p[i][0], "y":tag.p[i][1]})
     }
     return ppt
 }

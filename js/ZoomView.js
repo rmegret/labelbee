@@ -28,6 +28,8 @@ function initZoomView() {
     
     zoomOverlay.initLabelListDialog()
     zoomOverlay.refreshButtonListParts()
+    
+    flagShowParts = false
 }
 
 function refreshZoomSize(event, ui) {
@@ -337,7 +339,8 @@ ZoomOverlay.prototype.newPoint = function(x,y,label) {
     this.newPointInFrame(posFrame, label)
 }
 ZoomOverlay.prototype.updatePoint = function(x,y,rect) {
-    console.log('ZoomOverlay.updatePoint(',x,y,rect,')')
+    if (logging.zoomOverlay)
+        console.log('ZoomOverlay.updatePoint(',x,y,rect,')')
     
     if (!rect) {
         console.log('ZoomOverlay.updatePoint: invalid rect = ',rect)
@@ -354,7 +357,8 @@ ZoomOverlay.prototype.updatePoint = function(x,y,rect) {
     //this.redraw()
 }
 ZoomOverlay.prototype.updatePointFromFabric = function(rect) {
-    console.log('ZoomOverlay.updatePointFromFabric(',rect,')')
+    if (logging.zoomOverlay)
+        console.log('ZoomOverlay.updatePointFromFabric(',rect,')')
     
     var x = rect.left + 3
     var y = rect.top + 3
@@ -366,7 +370,8 @@ ZoomOverlay.prototype.updatePointFromFabric = function(rect) {
     //this.redraw() // No need, as Fabric is supposed to have updated display
 }
 ZoomOverlay.prototype.updatePointToFabric = function(rect) {
-    console.log('ZoomOverlay.updatePointToFabric(',rect,')')
+    if (logging.zoomOverlay)
+        console.log('ZoomOverlay.updatePointToFabric(',rect,')')
     
     let posCanvas = this.frame2canvas(rect.posFrame)
     rect.setLeft( posCanvas.x - 3 )
@@ -378,7 +383,8 @@ ZoomOverlay.prototype.updatePointToFabric = function(rect) {
     //this.redraw() // No, to avoid circular calls
 }
 ZoomOverlay.prototype.deletePoint = function(rect) {
-    console.log('ZoomOverlay.deletePoint(',rect,')')
+    if (logging.zoomOverlay)
+        console.log('ZoomOverlay.deletePoint(',rect,')')
     
 //     var index = this.points.findIndex((P)=>P.rect===rect)
 //     if (index > -1) {
@@ -617,7 +623,8 @@ ZoomOverlay.prototype.redraw = function() {
     //this.canvas1.backgroundColor = null;
     //refreshZoom()
     
-    console.log('ZoomOverlay.redraw:')
+    if (logging.zoomOverlay)
+        console.log('ZoomOverlay.redraw:')
 //     for (var p of this.points) {
 //         //console.log('POINT: p=', p)
 //         let posCanvas = this.frame2canvas(p.posFrame)
@@ -656,6 +663,14 @@ ZoomOverlay.prototype.onToggleButtonAutoLabel = function(event) {
         this.startAutoLabel()
     }
 }
+ZoomOverlay.prototype.onToggleButtonShowOnVideo = function(event) {
+    flagShowParts=!flagShowParts
+
+    $(event.target).toggleClass('active', flagShowParts)
+    
+    videoControl.refresh()
+}
+
 
 
 
