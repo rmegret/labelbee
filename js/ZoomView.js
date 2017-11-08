@@ -55,8 +55,12 @@ function ZoomOverlay(canvas, canvasOverlay) {
     this.canvas1 = undefined
     this.attach()
     this.labelList = new Map([['head','red'], 
-                      ['torso','limegreen'], 
+                      ['thorax','limegreen'], 
                       ['abdomen','blue'],
+                      ['pollenL','rgb(255,224,0)'], // Left, port side
+                      ['pollenR','rgb(224,255,0)'], // Right, starboard side
+                      ['legL','rgb(255,0,128)'], // Left, port side
+                      ['legR','rgb(0,255,128)'], // Right, starboard side
                       ['__default', 'black']])
                       
     // Manually bind methods
@@ -95,11 +99,49 @@ ZoomOverlay.prototype.attach = function() {
     $( selectionControl ).on('selection:created', 
                              this.syncFromTracks.bind(this))
     $('#partLabel').change(this.onPartLabelTextChanged.bind(this));
+    
+    $('#videozoom').attr("tabindex","0")
+    $('#videozoom').on("keydown", this.onKeyDown.bind(this));
 }
 ZoomOverlay.prototype.detach = function() {
     this.canvas1.dispose()
     this.canvas1 = undefined
     //$(this.canvas).off('mousedown',  this.onMouseDown.bind(this))
+}
+
+
+
+ZoomOverlay.prototype.onKeyDown = function(e) {
+    if (logging.keyEvents)
+        console.log("ZoomOverlay.onKeyDown: e=",e)
+        
+    if (/textarea|select/i.test( e.target.nodeName ) || e.target.type === "text") {
+      if (logging.keyEvents)
+        console.log("onKeyDown: coming from text field. stopped event")
+      e.stopPropagation();
+      return;
+    }
+
+    if (e.key == "Delete" || e.key == 'd' || e.key == 'Backspace') {
+        this.deleteCurrentPoint();
+        e.preventDefault();
+        return
+    }
+    if (e.key == "r" && e.ctrlKey) {
+        this.redraw()
+        e.preventDefault();
+        return
+    }
+    if (e.key == "+") {
+        zoomApplyScale(Math.sqrt(2))
+        e.preventDefault();
+        return
+    }
+    if (e.key == "-") {
+        zoomApplyScale(Math.sqrt(1/2))
+        e.preventDefault();
+        return
+    }
 }
 
 ZoomOverlay.prototype.onMouseDown = function(option) {

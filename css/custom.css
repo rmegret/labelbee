@@ -25,6 +25,7 @@ td {
 select{
    box-sizing:border-box;
 } 
+ 
 
 .overlay {
   width: 100%; height:100%; 
@@ -248,10 +249,28 @@ button > p.multiline {
 /*     border: lightgray solid 1px; */
 }
 
+#left-side {
+    padding: 5px;
+}
+#left-side:focus {
+    outline: none;
+    box-shadow: 0 0 2px 1px #ffe070;
+}
 
-
+.ui-accordion:focus > .ui-accordion-content-active {
+    outline: none;
+    box-shadow: 0 0 2px 1px #ffe070;
+}
+.ui-accordion .ui-accordion-header.ui-state-focus {
+    outline: none;
+    box-shadow: 0 0 2px 1px #007fff;
+}
 .ui-accordion .ui-accordion-content {
     padding: 5px 5px;
+}
+.ui-accordion-header.ui-state-focus + .ui-accordion-content-active {
+    outline: none;
+    box-shadow: 0 0 2px 1px #007fff;
 }
 
 }
@@ -343,6 +362,33 @@ textarea {
 .block {
     display: inline-block;
     margin: 2px 5px;
+}
+.block-header {
+    display: inline-block;
+    vertical-align: middle;
+}
+.block.collapsed {
+  border: 1px solid #aaa;      
+  border-radius: 4px;    
+  padding: 1px; 
+  cursor: pointer;
+}
+.block:not(.collapsed) {
+  border: 1px solid #eee;      
+  border-radius: 4px;    
+  padding: 1px; 
+}
+.block-header:not(.collapsed) {
+  cursor: pointer;
+}
+.block-header > span.collapse-arrow:before {
+  content: "\25BE";
+  vertical-align: middle;
+  display: table-cell;
+  padding-bottom: 2px;
+}
+.block-header.collapsed > span.collapse-arrow:before {
+  content: "\25B8";
 }
 
 input[type=text] {
@@ -443,16 +489,42 @@ img.pixelated {
     background-image: url("");
 }
 
+
+.fwbut {
+    min-width: 25px;
+}
 .nopad {
     padding-top: 0px;
     padding-bottom: 0px;
 }
 .negmargin {
-display: block; /* makes it have a width */
-            content: ""; /* clears default height */
-            margin-top: -6px; /* change this to whatever height you want it */
+    display: block; /* makes it have a width */
+    content: ""; /* clears default height */
+    margin-top: -2px; /* change this to whatever height you want it */
 }
 
+.btn.x-small {
+    font-size: 10px;
+/*     line-height: 1.5; */
+/*     border: red 1px solid; */
+} 
+.btn.x-small > span.glyphicon {
+    font-size: 10px;
+/*     line-height: 0.8; */
+}
+.btn.fwbut1 {
+    background-color: hsla(194, 66%, 81%, 1);
+    border-color: hsla(194, 66%, 30%, 1);
+    color: hsla(194, 66%, 30%, 1);
+}
+.btn.fwbut2 {
+    background-color: hsla(194, 66%, 61%, 1);
+    border-color: hsla(194, 66%, 61%, 1);
+}
+.btn.fwbut3 {
+    background-color: hsla(194, 66%, 41%, 1);
+    border-color: hsla(194, 66%, 41%, 1);
+}
 
 
 
@@ -521,6 +593,7 @@ fieldset[disabled] .btn-window.focus {
 
 #alerttext {
   min-width: 200px;
+  display: inline;
 }
 
 
@@ -544,3 +617,10 @@ fieldset[disabled] .btn-window.focus {
   border-radius: 8px;           
   pointer-events: none;         
 }
+
+/* 
+:focus {
+  border: red 3px solid;
+}
+ */
+

@@ -69,18 +69,38 @@ function init() {
         collapsible: true,
         active: false,
         heightStyle: "content",
-        animate:false
+        animate:false,
+//         activate: function( event, ui ) { 
+//           // Disable focus on tab header
+//           var header = $("label.ui-accordion-header",event.target)
+//           console.log("header=",header); 
+//           header.removeAttr("tabindex");
+//         }
     });
     $( ".collapsible.default-active" ).accordion({
         active: 0
     });
+    //$('.collapsible>.ui-accordion-header').removeAttr("tabindex");
+
+    // Make button rows collapsible
+    $(".inline-collapsible > .block-header").prepend(
+        "<span class='glyphicon collapse-arrow'></span> ")
+    $(".inline-collapsible > .block-header").on("click",function (e) {
+        //console.log(e)
+        let header = $(e.currentTarget) //$(".block-header", $(e.currentTarget).parent())
+        let content = $(".block-content", header.parent())
+        content.toggle()
+        header.toggleClass("collapsed",content.is(":hidden"))
+        header.parent().toggleClass("collapsed",content.is(":hidden"))
+        console.log('DONE\n\n')
+      })
 
     // ## Keyboard control
 
     // REMI: use keyboard
-    $(window).on("keydown", onKeyDown);
-    //$('.upper-canvas').on("keydown", onKeyDown);
-    //$('.upper-canvas').focus();
+    //$(window).on("keydown", onKeyDown);
+    $('#left-side').attr("tabindex", "0")
+    $('#left-side').on("keydown", onKeyDown);
     
     // ## Misc init
 
@@ -168,6 +188,14 @@ function onKeyDown_IDEdit(event) {
 function onKeyDown(e) {
     if (logging.keyEvents)
         console.log("onKeyDown: e=",e)
+        
+    if (/textarea|select/i.test( e.target.nodeName ) || e.target.type === "text") {
+      if (logging.keyEvents)
+        console.log("onKeyDown: coming from text field. stopped event")
+      e.stopPropagation();
+      return;
+    }
+        
     if (e.target == document.getElementById("I")) {
         if (e.keyCode==32 || e.keyCode==188 || e.keyCode==190) {
           console.log("onKeyDown: detected keydown happened in textfield #I with keyCode for navigation shortcuts. Canceling it and showing a message.")

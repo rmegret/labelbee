@@ -75,6 +75,7 @@
     <table>
       <tr>
         <td>
+          <div id="left-side">
 
           <p>
             <!--Change to div-->
@@ -83,22 +84,23 @@
             <input type="text" size="6" value="1" id="playRate" onchange="videoControl.playRateInputChanged()""></input>
             <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-play"></span><span class="glyphicon glyphicon-pause"></span></button>
             
-            <button value="Previous minute" onclick="videoControl.rewind(200)" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-fast-forward icon-flipped small"></span><br class="negmargin"><span class="small">10s</span></button>
-            <button value="Previous second" onclick="videoControl.rewind(20)" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-fast-forward icon-flipped small"></span><br class="negmargin"><span class="small">1s</span></button>
-            <button value="Previous frame" onclick="videoControl.rewind(1)" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-step-backward small"></span><br class="negmargin"><span class="small">1f</span></button>
+            <button value="Previous minute" onclick="videoControl.rewind(200)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut3"><span class="glyphicon glyphicon-fast-forward icon-flipped"></span><br class="negmargin"><span>10s</span></button>
+            <button value="Previous second" onclick="videoControl.rewind(20)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fbut2"><span class="glyphicon glyphicon-fast-forward icon-flipped"></span><br class="negmargin"><span>1s</span></button>
+            <button value="Previous frame" onclick="videoControl.rewind(1)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut1"><span class="glyphicon glyphicon-step-backward"></span><br class="negmargin"><span>1f</span></button>
             
-            <button value="Next frame" onclick="videoControl.forward(1)" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-step-forward small"></span><br class="negmargin"><span class="small">1f</span></button>
-            <button value="Next second" onclick="videoControl.forward(20)" type="button" class="btn btn-info btn-sm small nopad"><span class="glyphicon glyphicon-fast-forward small"></span><br class="negmargin"><span class="small">1s</span></button>
-            <button value="Next minute" onclick="videoControl.forward(200)" type="button" class="btn btn-info btn-sm small nopad"><span class="glyphicon glyphicon-fast-forward small"></span><br class="negmargin"><span class="small">10s</span></button>
-
-            <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-info btn-xs" style="position: inline" id="deleteButton">
-            <button type="button" onclick="undoAction()" class="btn btn-info btn-xs" style="position: inline" id="undoButton">Undo</button>
+            <button value="Next frame" onclick="videoControl.forward(1)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut1"><span class="glyphicon glyphicon-step-forward"></span><br class="negmargin"><span>1f</span></button>
+            <button value="Next second" onclick="videoControl.forward(20)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut2"><span class="glyphicon glyphicon-fast-forward"></span><br class="negmargin"><span>1s</span></button>
+            <button value="Next minute" onclick="videoControl.forward(200)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut3"><span class="glyphicon glyphicon-fast-forward"></span><br class="negmargin"><span>10s</span></button>
 
           </p>
           <p>
           <div id="beeInfo" class="">
             <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button" class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
             Change ID <input type="text" size="6" value="" id="I" onkeypress="onKeyDown_IDEdit(event)""></input>
+            
+            <div id="alerttext"></div>
+            
+            <br>
    
             <div style="display:inline-block">
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle fanning" title="Toogle label">Fanning</button>
@@ -118,8 +120,6 @@
             </div>
 <!--             </div> -->
 <!--             <br> -->
-
-            <p id="alerttext"></p>
           </div>
           </p>
           
@@ -136,22 +136,10 @@
           <!-- # VIDEO CONTROL -->
 
           <div>
-              <div class='block'>
-              <span class="small">Height:</span>
-              <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram height">h-</button>
-              <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram height">h=</button>
-              <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram height">h+</button>
-              </div>
               
-              <div class='block'>
-              <span class="small">Width:</span>
-              <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram width">w-</button>
-              <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram width">w=</button>
-              <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram width">w+</button>
-              </div>
-              
-              <div class='block'>
-              <span class="small">FocusInterval:</span>
+              <div class='block inline-collapsible'>
+              <div class="block-header small">FocusInterval:</div>
+              <span class="block-content">
               <button onclick="shiftTrackWindow(-0.75)" type="button" class="btn btn-window btn-xs" title="Reduce track window"><span class="glyphicon glyphicon-step-backward small"></span></button>
               <button onclick="shiftTrackWindow(0.75)" type="button" class="btn btn-window btn-xs" title="Extend track window"><span class="glyphicon glyphicon-step-forward small"></span></button>
               
@@ -163,10 +151,12 @@
               <button value="1s" onclick="setTrackWindow(20)" type="button" class="btn btn-default btn-xs" title="Track window = 1s">1s</button>
               <button value="10s" onclick="setTrackWindow(200)" type="button" class="btn btn-default btn-xs" title="Track window = 10s">10s</button>
               <button value="1m" onclick="setTrackWindow(1200)" type="button" class="btn btn-default btn-xs" title="Track window = 1min">1m</button>
+              </span>
               </div>
               
-              <div class='block'>
-              <span class="small">ChronogramView:</span>
+              <div class='block inline-collapsible'>
+              <div class="block-header small">ChronogramView:</div>
+              <span class="block-content">
               <div onclick="shiftTimeDomain(-0.5)"  class="btn btn-info btn-xs" title="Shift left"><span class="glyphicon glyphicon-step-backward small"></span></div>
               <div onclick="shiftTimeDomain(0.5)"  class="btn btn-info btn-xs" title="Shift right"><span class="glyphicon glyphicon-step-forward small"></span></div>
               
@@ -174,27 +164,38 @@
               <input value="Z-" onclick="scaleTimeDomain(1/2)" type="button" class="btn btn-info btn-xs" title="Zoom Out time">
               
               <input value="Video" onclick="onClickFocusVideo()" type="button" class="btn btn-default btn-video-border btn-xs" title="Reinit view">              
-
+              </span>
               </div>
               
-              <div class='block'>
-              <span class="small">Selected:</span>
+              <div class='block inline-collapsible'>
+              <div class="block-header small">Selected:</div>
+              <span class="block-content">
               <input type="text" value="" size="6" id="selectID" onchange="onSelectIDChanged(event)" class="small btn-green-border">
               
               <button id="prevIDButton" onclick="onClickPrevID()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Previous Bee">PrevID <span class="glyphicon glyphicon-arrow-up small"></span></button>
               <button id="nextIDButton" onclick="onClickNextID()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID <span class="glyphicon glyphicon-arrow-down small"></span></button>
 <!--               <button id="nextIDFirstButton" onclick="onClickNextIDStart()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID-First <span class="glyphicon glyphicon-arrow-down small"></span><span class="glyphicon glyphicon- glyphicon-fast-forward icon-flipped small"></span></button> -->
+
+              <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-info btn-xs" style="position: inline" id="deleteButton">
+              <button type="button" onclick="undoAction()" class="btn btn-info btn-xs" style="position: inline" id="undoButton">Undo</button>
+              </span>
+              </div>
+              
+              <div class='block inline-collapsible'>
+              <div class="block-header small">Events:</div>              
+              <span class="block-content">
               <button id="autoEventButton" onclick="onAutoEventButtonClick()" type="button" class="btn btn-xs btn-green-toggle" title="Toggle Auto Seek Event Mode">AutoSeek <span class="glyphicon glyphicon-arrow-down small"></span><span class="glyphicon glyphicon-arrow-up small"></span></button>
               
               <button onclick="gotoFirstEvent()" type="button" class="btn btn-default btn-xs" title="Go to first event"><span class="glyphicon  glyphicon-fast-forward icon-flipped small"></span> First</button>
               <button onclick="gotoPreviousEvent()" type="button" class="btn btn-default btn-xs" title="Go to previous event"><span class="glyphicon glyphicon-step-backward small"></span> Prev</button>
               <button onclick="gotoNextEvent()" type="button" class="btn btn-default btn-xs" title="Go to next event">Next <span class="glyphicon glyphicon-step-forward small"></span></button>
               <button onclick="gotoLastEvent()" type="button" class="btn btn-default btn-xs" title="Go to last event">Last <span class="glyphicon  glyphicon-fast-forward small"></span></button>
-                            
+              </span>          
               </div>
               
-              <div class='block'>
-              <span class="small">IDs:</span>
+              <div class='block inline-collapsible'>
+              <div class="block-header small">Filter:</div>
+              <span class="block-content">
               <input type="text" value="0" size="15" id="restrictID" onchange="onRestrictIDChanged(event)" class='btn-restrict-border small'>
               <button id="restrictIDButton" onclick="click_restrictID()" type="button" class="btn btn-restrict-toggle btn-xs" title="Show only tags with this ID">RestrictID</button>
               <button id="restrictIDfromSelectionButton" onclick="restrictIDFromSelection()" type="button" class="btn btn-default btn-restrict-border btn-selection-text btn-xs" title="Restrict to only current Selection ID">R:Selection</button>
@@ -203,6 +204,7 @@
               <input type="text" value="" size="15" id="excludeID" onchange="onExcludeIDChanged(event)" class="small btn-orange-border">
               <button id="excludeIDButton" onclick="click_excludeID()" type="button" class="btn btn-orange-toggle btn-xs" title="Exclude these IDs (comma separated list, no spaces)">ExcludeID</button>
               <button id="hideInvalidButton" onclick="click_hideInvalid()" type="button" class="btn btn-orange-toggle btn-xs" title="Hide  markings as falsealarm or wrongid and their tag detection)">Hide FalseAlarms/WrongID</button>
+              </span>
               </div>
               
 <!-- 
@@ -211,11 +213,26 @@
               <button value="ghost" onclick="plotGhostImage()" type="button" class="btn btn-default btn-xs" title="Plot averaged image">Ghost</span></button>
               </div>
  -->
+ 
+               <div class='block inline-collapsible'>
+              <span class="block-header small">ChronoSize:</span>
+              <span class="block-content">
+              <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram height">h-</button>
+              <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram height">h=</button>
+              <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram height">h+</button>
+              &nbsp;
+              <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram width">w-</button>
+              <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram width">w=</button>
+              <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram width">w+</button>
+              <span>
+              </div>
 
               <div id="chronoDiv" class="ui-widget-content" 
                    width="400" height="200" style="padding-right: 16px;">
                   <svg id="svgVisualize" width="100%" height="100%"></svg>
               </div>
+          </div>
+
           </div>
 
         </td>
