@@ -187,6 +187,12 @@ VideoControl.prototype.getCurrentRealDate = function(format) {
     D = new Date(D.getTime()+this.video2.toMilliseconds()*videoinfo.videofps/videoinfo.realfps)
     return D
 }
+VideoControl.prototype.frameToTime = function(frame) {
+    var D = new Date(videoinfo.starttime)
+    var sec = (frame-videoinfo.frameoffset)/videoinfo.realfps
+    D = new Date(D.getTime()+sec*1000)
+    return D
+}
 
 
 // ## View

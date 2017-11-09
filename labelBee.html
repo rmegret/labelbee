@@ -97,6 +97,9 @@
           <div id="beeInfo" class="">
             <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button" class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
             Change ID <input type="text" size="6" value="" id="I" onkeypress="onKeyDown_IDEdit(event)""></input>
+            <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-warning btn-xs" style="position: inline" id="deleteButton">
+            <button type="button" onclick="undoAction()" class="btn btn-info btn-xs" style="position: inline" id="undoButton">Undo</button>
+
             
             <div id="alerttext"></div>
             
@@ -176,8 +179,6 @@
               <button id="nextIDButton" onclick="onClickNextID()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID <span class="glyphicon glyphicon-arrow-down small"></span></button>
 <!--               <button id="nextIDFirstButton" onclick="onClickNextIDStart()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID-First <span class="glyphicon glyphicon-arrow-down small"></span><span class="glyphicon glyphicon- glyphicon-fast-forward icon-flipped small"></span></button> -->
 
-              <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-info btn-xs" style="position: inline" id="deleteButton">
-              <button type="button" onclick="undoAction()" class="btn btn-info btn-xs" style="position: inline" id="undoButton">Undo</button>
               </span>
               </div>
               

@@ -443,13 +443,16 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("width", width)         
         .attr("height", height);
     var clippedArea = chronoGroup.insert("g")
+                      .attr("class","clipArea")
                       .attr("clip-path", "url(#plotAreaClipPath)")
-
-    // ## Content can be inserted in plotArea
-    // so that timeMark will always be on top
+    
+    var timeMarkLayer = clippedArea.append("g")
+        .attr("class", "timeMarkLayer")
+    insertTimeMark(timeMarkLayer)  // Show in front of background, but below rest of elements
+    
+    // ## Content can be inserted in plotArea, on top of timemark
+    
     plotArea = clippedArea.insert("g").attr("class","plotArea")
-  
-    insertTimeMark(clippedArea)  // Show on top of everything, but still clip it
   
     // Exports of the layout
     //axes.xAxisGroup = xAxisGroup //  Private
@@ -625,10 +628,12 @@ function ChronoAxes(parent, videoinfo, options) {
     zoom.on("zoom", onZoom)
     //    chronoGroup.select(".plotAreaBackground").call(zoom)
     // Zoom behavior is applied to an invisible rect on top of the plotArea
-    chronoGroup.append("rect").attr('class', 'zoomEventRect')
-               .style("fill", "none")
-               .attr("width", width).attr("height", height+margin.bottom)
-               .style("pointer-events", "all")
+    // chronoGroup.append("rect").attr('class', 'zoomEventRect')
+//                .style("fill", "none")
+//                .attr("width", width).attr("height", height+margin.bottom)
+//                //.style("pointer-events", "all")
+               //.call(zoom)
+    chronoGroup.style("pointer-events", "all")
                .call(zoom)
     function onZoom() {
         if (logging.axesEvents)
@@ -664,8 +669,11 @@ function ChronoAxes(parent, videoinfo, options) {
     }
     // Need shift key to zoom 
     // (to avoid zooming when just scrolling across the page)
-    injectEventFilter( chronoGroup.select(".zoomEventRect"), 
+    injectEventFilter( chronoGroup, 
           "wheel.zoom", function(event) {
+              //console.log('chronoGroup, ',event)
+              // Coordinates are not plotArea related (FIXME)
+              //if ((d3.event.x<0) || (d3.event.y<0) || (d3.event.x>width) || (d3.event.y>height)) return false
               if (!mousewheelMode) return true
               return event.shiftKey==true
           } )

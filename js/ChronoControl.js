@@ -32,9 +32,13 @@ function initChrono() {
     //axes.onClick = onAxesClick         // Callback when the user clicks in axes
     //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
     
-    svgInterval = axes.chronoGroup.append("g");
-    svgMiddle = axes.chronoGroup.append("g");
-    svgTop = axes.chronoGroup.append("g");
+//     svgInterval = axes.chronoGroup.append("g").attr('class', 'intervalLayer');
+//     svgMiddle = axes.chronoGroup.append("g").attr('class', 'middleLayer');
+//     svgTop = axes.chronoGroup.append("g").attr('class', 'topLayer');
+    svgTag = axes.plotArea.append("g").attr('class', 'tagLayer');
+    svgInterval = axes.plotArea.append("g").attr('class', 'intervalLayer');
+    svgTop = axes.plotArea.append("g").attr('class', 'topLayer');
+
 
     $( videoControl ).on('frame:changed', updateTimeMark)
     $( videoControl ).on('previewframe:changed', updatePreviewTimeMark)
@@ -1058,7 +1062,7 @@ function updateActivities(onlyScaling) {
     // Redraw activities
     if (onlyScaling) {
       // Lightweight update (reuse previous activityRects)
-      let activityRects = axes.plotArea.selectAll(".activity").data(allIntervals);
+      let activityRects = svgInterval.selectAll(".activity").data(allIntervals);
       activityRects.call(setGeomActivity)
     } else {
       createIntervalList();
@@ -1078,7 +1082,7 @@ function updateActivities(onlyScaling) {
       spanRects.exit().remove()
       spanRects.call(updateObsSpan)
 
-      let alertCircle = axes.plotArea.selectAll(".alertcircle")
+      let alertCircle = svgTop.selectAll(".alertcircle")
                     .data(flatTracks.filter(d=>!!d.isredundant));
       alertCircle.call(updateAlertCircle)
 
@@ -1120,7 +1124,7 @@ function updateActivities(onlyScaling) {
 
         }
 
-    var chart = axes.chronoGroup;
+    var chart = svgTop;
     
     //Circles for solo bee iD
     let circles =  chart.selectAll("circle.obs")
@@ -1131,7 +1135,6 @@ function updateActivities(onlyScaling) {
     var tooltip = d3.select("body")
                        .append("div")
                        .style("z-index","10")
-
                        .style("visibility", "hidden")
                        .style("opacity", "1")
                        .attr("class","tooltip");
@@ -1176,11 +1179,17 @@ function updateActivities(onlyScaling) {
         // Display tooltip message
         .on("mouseover", function(d){
             var message = "";
+            message += "BeeID=" + d.y + " Frame=" + d.x1
+                    + "<br>Time=" + format_HMS(videoControl.frameToTime(d.x1))
+                    + "<br><u>Annotation:</u>"+
+                     "<br>Labels=" + d.labels;
             if (d.tag != undefined){
-                message = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity 
-                + " Hamming: " + d.tag.hamming + " DM: " + d.tag.dm;
-            }else{
-                message = "Bee ID: " + d.y + " Frame: " + d.x1 + " Activity: " + d.Activity;
+                message += 
+                    "<br><u>Tag:</u>"+
+                    "<br>Hamming=" + d.tag.hamming + 
+                    "<br>DM=" + d.tag.dm;
+            } else {
+                message += "<br><u>Tag:</u><br><i>None</i>"
             }
             tooltip.style("left",d3.event.pageX+ "px")
                    .style("top",d3.event.pageY + "px")
@@ -1230,6 +1239,19 @@ path.attr("d",function(d){
 path.exit().remove();
 
 
+}
+
+function format_HMS(date, format) {
+    function pad(n) { return ("0"+n).substr(-2); }
+
+    var time = [date.getHours(), date.getMinutes(), date.getSeconds()]
+          .map(pad).join(":")
+          
+    if (format==="HMS.") {
+        time += "."+date.getMilliseconds();
+    }
+    
+    return time
 }
 
 
@@ -1284,6 +1306,40 @@ function setTagGeom(selection) {
             else
                 return 'blue'
         })
+        if (true) {
+
+    d3.select("body").selectAll(".tooltip2").remove();
+
+    var tooltip2 = d3.select("body")
+                       .append("div")
+                       .style("z-index","10")
+                       .style("visibility", "hidden")
+                       .style("opacity", "1")
+                       .attr("class","tooltip2");
+        
+        selection.style("z-index","1000")
+        .style("pointer-events", "all")
+        .on("wheel", function(){console.log('got wheeled')})
+        .on("mouseover", function(taginterval){
+            //console.log('mouseover: ',taginterval)
+            var message = "";
+            if (taginterval != undefined){
+                message += "BeeID=" + taginterval.id 
+                    + " Frame=" + taginterval.begin
+                    + "<br>Time=" + format_HMS(videoControl.frameToTime(taginterval.begin))
+                    + "<br><u>Tag:</u>"
+                    + "<br>HammingAvg=" + taginterval.hammingavg
+                    //+ "<br>DM=" + tag.dm;
+            } else {
+                message += "<u>Tag:</u><br><i>None</i>"
+            }
+            tooltip2.style("left",d3.event.pageX+ "px")
+                   .style("top",d3.event.pageY + "px")
+                   .style("visibility", "visible")
+                   .html(message);
+        })
+        .on("mouseout", function(d){ tooltip2.style("visibility", "hidden");});
+        }
         //.attr("hidden", function(d) {return (typeof axes.yScale(d.id));})
 }
 function updateTagIntervals(onlyScaling) {
@@ -1291,7 +1347,7 @@ function updateTagIntervals(onlyScaling) {
     if (onlyScaling) {
       setTagGeom(tagSel)
     } else {
-      tagSel = axes.plotArea.selectAll(".tag").data(tagIntervals);
+      tagSel = svgTag.selectAll(".tag").data(tagIntervals);
       tagSel.enter().call(insertTag)
       tagSel.exit().remove();
       tagSel.call(setTagGeom)
