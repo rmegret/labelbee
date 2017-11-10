@@ -360,7 +360,7 @@ function selectBee(rect) {
     updateForm(rect)
     
     if (flagShowZoom) {
-        showZoom(rect)
+        zoomOverlay.refreshZoom()
     }
     
     $( selectionControl ).trigger('tagselection:created')

@@ -2189,7 +2189,7 @@ function onObjectMoving(option) {
     //automatic_sub();
     
     if (flagShowZoom) {
-        showZoom(activeObject)
+        zoomOverlay.refreshZoom()
     }
 }
 
@@ -2209,7 +2209,7 @@ function onObjectModified(option) {
     automatic_sub();
     
     if (flagShowZoom) {
-        showZoom(activeObject)
+        zoomOverlay.refreshZoom()
     }
 }
 

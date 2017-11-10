@@ -4,7 +4,6 @@
 function initZoomView() {
 
     zoomOverlay = new ZoomOverlay($("#zoom")[0],$("#zoomOverlay")[0])
-    zoomScale = 1
     
     $("#zoomresize").resizable({
       helper: "ui-resizable-helper",
@@ -63,6 +62,9 @@ function ZoomOverlay(canvas, canvasOverlay) {
                       ['legR','rgb(0,255,128)'], // Right, starboard side
                       ['__default', 'black']])
                       
+    this.flagShowZoom = $('#checkboxShowZoom').is(':checked')
+    this.zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')                  
+    
     // Manually bind methods
     // https://www.smashingmagazine.com/2014/01/understanding-javascript-function-prototype-bind/
     this.refreshZoomSize = this.refreshZoomSize.bind(this)
@@ -133,12 +135,12 @@ ZoomOverlay.prototype.onKeyDown = function(e) {
         return
     }
     if (e.key == "+") {
-        zoomApplyScale(Math.sqrt(2))
+        this.zoomApplyScale(Math.sqrt(2))
         e.preventDefault();
         return
     }
     if (e.key == "-") {
-        zoomApplyScale(Math.sqrt(1/2))
+        this.zoomApplyScale(Math.sqrt(1/2))
         e.preventDefault();
         return
     }
@@ -209,6 +211,13 @@ ZoomOverlay.prototype.setCanvasSize = function(w, h) {
     this.canvas1.setHeight(h)
     $("#zoomresize")[0].style.width = (w+16+borderThickness).toString() + 'px'
     $("#zoomresize")[0].style.height = (h+borderThickness).toString() + 'px'
+}
+ZoomOverlay.prototype.setFrameGeometry = function(cx, cy, angle) {
+    this.centerFrame = {x:cx,y:cy}
+    this.angle = angle
+}
+ZoomOverlay.prototype.setCanvasGeometry = function(zx, zy) {
+    this.centerCanvas = {x:zx,y:zy}
 }
 ZoomOverlay.prototype.setGeometry = function(cx, cy, angle, zx, zy, scale) {
     this.centerFrame = {x:cx,y:cy}
@@ -725,95 +734,47 @@ ZoomOverlay.prototype.onToggleButtonShowOnVideo = function(event) {
 }
 
 
-
-
-
-
-function clickZoomShowOverlay() {
-    zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
+ZoomOverlay.prototype.clickZoomShowOverlay = function() {
+    this.zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
     if ($('#zoom').is(':visible')) {
-        showZoom(lastSelected)
+        this.refreshZoom()
     }
 }
-function clickShowZoom() {
-    flagShowZoom = $('#checkboxShowZoom').is(':checked')
-    updateShowZoom()
+ZoomOverlay.prototype.clickShowZoom = function() {
+    this.flagShowZoom = $('#checkboxShowZoom').is(':checked')
+    if (this.flagShowZoom)
+      this.refreshZoom()
 }
-function updateShowZoom() {
-    if (flagShowZoom) {
-        $('#zoomDiv').show()
-        showZoom(lastSelected)
-    } else {
-        $('#zoomDiv').hide()
+ZoomOverlay.prototype.updateShowZoom = function() {
+//     if (this.flagShowZoom) {
+//         $('#zoomresize').show()
+//         this.refreshZoom()
+//     } else {
+//         $('#zoomresize').hide()
+//     }
+}
+ZoomOverlay.prototype.zoomApplyScale = function(factor) {
+    this.scale *= factor;
+    if (isNaN(this.scale)) this.scale=1
+    this.refreshZoom()
+}
+ZoomOverlay.prototype.zoomSetScale = function(scale) {
+    this.scale = scale
+    this.refreshZoom()
+}
+
+ZoomOverlay.prototype.refreshZoom = function() {
+
+    if (!this.flagShowZoom) {
+        if (logging.zoomOverlay)
+            console.log('ZoomOverlay.refreshZoom: flagShowZoom==false. refresh canceled.')
+        return;
     }
-}
-function showZoom(rect) {
-    refreshZoom(defaultSelectedBee)
-    return
 
-    let zw=zoomOverlay.width
-    let zh=zoomOverlay.height
-
-    var zoom_canvas = $('#zoom')[0];
-    var zoom_ctx = zoom_canvas.getContext('2d');
-    //zoom_canvas.width=zw
-    //zoom_canvas.height=zh
-    zoom_ctx.clearRect(0, 0, zw,zh)
-    let w = zw, h = zh
-    let mw = w * 0.5,  mh = h * 0.5
-    let w2 = w + 2 * mw, h2 = h + 2 * mh
-    
-    let video = $('#video')[0]
-    zoom_ctx.drawImage(video, 
-       (rect.obs.cx - mw), (rect.obs.cy - mh), w, h,
-        0,0,zh,zw);
-    
-    zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
-    if (zoomShowOverlay) {
-      let activeObject = canvas1.getActiveObject()
-      let obs = activeObject.obs
-    
-      zoom_ctx.beginPath();
-      zoom_ctx.moveTo(mw,0)
-      zoom_ctx.lineTo(mw,zh)
-      zoom_ctx.moveTo(0,mh)
-      zoom_ctx.lineTo(zw,mh)
-      zoom_ctx.rect(mw+obs.x-obs.cx,mh+obs.y-obs.cy, obs.width,obs.height)
-      zoom_ctx.strokeStyle = 'blue'
-      zoom_ctx.stroke()        
-    }
-}
-function zoomApplyScale(factor) {
-    zoomScale *= factor;
-    if (isNaN(zoomScale)) zoomScale=1
-    updateShowZoom()
-}
-function zoomSetScale(scale) {
-    zoomScale = scale
-    updateShowZoom()
-}
-
-
-function plotArrow(ctx, p0, p1, L) {
-    let u = {x:p1.x-p0.x, y:p1.y-p0.y}
-    let n = Math.sqrt(u.x*u.x+u.y*u.y)
-    u.x=u.x/n
-    u.y=u.y/n
-    ctx.beginPath();
-    ctx.moveTo(p1.x+L*(-u.x-0.6*u.y), p1.y+L*(-u.y+0.6*u.x))
-    ctx.lineTo(p1.x, p1.y)
-    ctx.lineTo(p1.x+L*(-u.x+0.6*u.y), p1.y+L*(-u.y-0.6*u.x))
-    ctx.stroke()
-}
-
-var oldCX, oldCY, oldAngle;
-var zoomMode = 'RT'
-function refreshZoom() {
-    let zw=zoomOverlay.width
-    let zh=zoomOverlay.height
-
-    if (logging.zoomTag)
-        console.log('showZoomTag')
+    if (logging.zoomOverlay)
+        console.log('ZoomOverlay.refreshZoom')
+  
+    // Update Geometry Parameters
   
     let cx=0
     let cy=0
@@ -827,9 +788,9 @@ function refreshZoom() {
             cy = pt.y
             angle = geom.angle/180*Math.PI
         } else {
-            cx = oldCX
-            cy = oldCY
-            angle = oldAngle
+            cx = this.centerFrame.x
+            cy = this.centerFrame.y
+            angle = this.angle
         }
     } else {
         cx = tag.c[0]
@@ -837,107 +798,117 @@ function refreshZoom() {
         angle = tagAngle(tag)/180*Math.PI
     }
     
-    oldCX = cx
-    oldCY = cy
-    oldAngle = angle
+    this.setFrameGeometry(cx, cy, angle)
+
+    let zw=zoomOverlay.width
+    let zh=zoomOverlay.height
+
+    let w = zw, h = zh
+    let mw = w * 0.5,  mh = h * 0.5
+    
+    this.setCanvasGeometry(mw, mh)
+    
+    // Do drawing
 
     var zoom_canvas = $('#zoom')[0];
     var zoom_ctx = zoom_canvas.getContext('2d');
-    //zoom_canvas.width=zw
-    //zoom_canvas.height=zh
-    zoom_ctx.clearRect(0, 0, zw,zh)
-    let w = zw, h = zh
-    let mw = w * 0.5,  mh = h * 0.5
-    let w2 = w + 2 * mw, h2 = h + 2 * mh
-    
-    zoomOverlay.setGeometry(cx, cy, angle, mw, mh, zoomScale)
     
     let video = $('#video')[0]
     
+    let zoomScale = this.scale
+    
     zoom_ctx.save()
-//     zoom_ctx.translate(mw,mh)
-//     zoom_ctx.rotate(-angle)
-//     zoom_ctx.scale(zoomScale,zoomScale)
-//     zoom_ctx.translate(-mw,-mh)
-//     zoom_ctx.drawImage(video, 
-//        (cx - mw), (cy - mh), w, h,
-//         0,0,zh,zw);
-    if (zoomMode=='RT') {
-      zoom_ctx.translate(+mw,+mh)
-      zoom_ctx.scale(zoomScale,zoomScale)
-      zoom_ctx.rotate(-angle)
-      zoom_ctx.translate(-cx,-cy)
-    } else {
-      zoom_ctx.scale(zoomScale,zoomScale)
-      zoom_ctx.setTransform(1,0, 0,1, -cx,-cy)
-    }
-    zoom_ctx.drawImage(video,0,0) // Possible out of sync when playing
-    //zoom_ctx.drawImage(videoCanvas,0,0)
+    
+        zoom_ctx.setTransform(1,0, 0,1, 0,0)
+        zoom_ctx.clearRect(0, 0, zw,zh)
+
+        zoom_ctx.translate(+mw,+mh)
+        zoom_ctx.scale(zoomScale,zoomScale)
+        zoom_ctx.rotate(-angle)
+        zoom_ctx.translate(-cx,-cy)
+
+        zoom_ctx.drawImage(video,0,0) // Possibly out of sync when playing
+        
     zoom_ctx.restore()
     
-    zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
-    if (zoomShowOverlay) {
+    function plotArrow(ctx, p0, p1, L) {
+        let u = {x:p1.x-p0.x, y:p1.y-p0.y}
+        let n = Math.sqrt(u.x*u.x+u.y*u.y)
+        u.x=u.x/n
+        u.y=u.y/n
+        ctx.beginPath();
+        ctx.moveTo(p1.x+L*(-u.x-0.6*u.y), p1.y+L*(-u.y+0.6*u.x))
+        ctx.lineTo(p1.x, p1.y)
+        ctx.lineTo(p1.x+L*(-u.x+0.6*u.y), p1.y+L*(-u.y-0.6*u.x))
+        ctx.stroke()
+    }
+    
+    if (this.zoomShowOverlay) {
       if (tag != null) {
           zoom_ctx.save()
-          // Same transform as the image
-          zoom_ctx.translate(+mw,+mh)
-          zoom_ctx.scale(zoomScale,zoomScale)
-          zoom_ctx.rotate(-angle)
-          zoom_ctx.translate(-cx,-cy)
-          let p = tag.p;
           
-          // U shape of the tag (opening on the top)
-          zoom_ctx.moveTo(p[0][0],p[0][1])
-          zoom_ctx.lineTo(p[3][0],p[3][1])
-          zoom_ctx.lineTo(p[2][0],p[2][1])
-          zoom_ctx.lineTo(p[1][0],p[1][1])
-          zoom_ctx.strokeStyle = 'blue'
-          zoom_ctx.stroke()   
+              // Same transform as the image
+              zoom_ctx.setTransform(1,0, 0,1, 0,0)
+              zoom_ctx.translate(+mw,+mh)
+              zoom_ctx.scale(zoomScale,zoomScale)
+              zoom_ctx.rotate(-angle)
+              zoom_ctx.translate(-cx,-cy)
+              let p = tag.p;
           
-          let xa = (p[0][0]+p[1][0])/2
-          let ya = (p[0][1]+p[1][1])/2
-          let xb = (p[2][0]+p[3][0])/2
-          let yb = (p[2][1]+p[3][1])/2
-          let a0 = {x:xa+(xa-xb)*0.05,y:ya+(ya-yb)*0.05}
-          let a1 = {x:xa+(xa-xb)*0.8,y:ya+(ya-yb)*0.8}
-          plotArrow(zoom_ctx,a0, a1, 10)
-          zoom_ctx.beginPath();
-          zoom_ctx.moveTo(a0.x,a0.y)
-          zoom_ctx.lineTo(a1.x,a1.y)
-          zoom_ctx.stroke()
+              // U shape of the tag (opening on the top)
+              zoom_ctx.moveTo(p[0][0],p[0][1])
+              zoom_ctx.lineTo(p[3][0],p[3][1])
+              zoom_ctx.lineTo(p[2][0],p[2][1])
+              zoom_ctx.lineTo(p[1][0],p[1][1])
+              zoom_ctx.strokeStyle = 'blue'
+              zoom_ctx.stroke()   
           
-          let hh=2;
-          zoom_ctx.fillStyle = 'red'
-          zoom_ctx.fillRect(p[0][0]-hh,p[0][1]-hh,2*hh+1,2*hh+1)
-          zoom_ctx.fillStyle = 'green'
-          zoom_ctx.fillRect(p[1][0]-hh,p[1][1]-hh,2*hh+1,2*hh+1)
-          zoom_ctx.fillStyle = 'blue'
-          zoom_ctx.fillRect(p[2][0]-hh,p[2][1]-hh,2*hh+1,2*hh+1)
-          zoom_ctx.fillStyle = 'yellow'
-          zoom_ctx.fillRect(p[3][0]-hh,p[3][1]-hh,2*hh+1,2*hh+1)
+              let xa = (p[0][0]+p[1][0])/2
+              let ya = (p[0][1]+p[1][1])/2
+              let xb = (p[2][0]+p[3][0])/2
+              let yb = (p[2][1]+p[3][1])/2
+              let a0 = {x:xa+(xa-xb)*0.05,y:ya+(ya-yb)*0.05}
+              let a1 = {x:xa+(xa-xb)*0.8,y:ya+(ya-yb)*0.8}
+              plotArrow(zoom_ctx,a0, a1, 10)
+              zoom_ctx.beginPath();
+              zoom_ctx.moveTo(a0.x,a0.y)
+              zoom_ctx.lineTo(a1.x,a1.y)
+              zoom_ctx.stroke()
+          
+              let hh=2;
+              zoom_ctx.fillStyle = 'red'
+              zoom_ctx.fillRect(p[0][0]-hh,p[0][1]-hh,2*hh+1,2*hh+1)
+              zoom_ctx.fillStyle = 'green'
+              zoom_ctx.fillRect(p[1][0]-hh,p[1][1]-hh,2*hh+1,2*hh+1)
+              zoom_ctx.fillStyle = 'blue'
+              zoom_ctx.fillRect(p[2][0]-hh,p[2][1]-hh,2*hh+1,2*hh+1)
+              zoom_ctx.fillStyle = 'yellow'
+              zoom_ctx.fillRect(p[3][0]-hh,p[3][1]-hh,2*hh+1,2*hh+1)
           
           zoom_ctx.restore()
       } else {
-      zoom_ctx.save()
-      zoom_ctx.beginPath();
-      zoom_ctx.moveTo(mw,0)
-      zoom_ctx.lineTo(mw,zh)
-      zoom_ctx.moveTo(0,mh)
-      zoom_ctx.lineTo(zw,mh)
-      zoom_ctx.strokeStyle = 'blue'
-      zoom_ctx.stroke()   
+          zoom_ctx.save()
+          
+              zoom_ctx.beginPath();
+              zoom_ctx.moveTo(mw,0)
+              zoom_ctx.lineTo(mw,zh)
+              zoom_ctx.moveTo(0,mh)
+              zoom_ctx.lineTo(zw,mh)
+              zoom_ctx.strokeStyle = 'blue'
+              zoom_ctx.stroke()   
       
-      if (typeof tag !== 'undefined') {
-          zoom_ctx.beginPath();
-          zoom_ctx.rect(mw-3,mh-3,6,6)
-          zoom_ctx.fillStyle = 'yellow'
-          zoom_ctx.fill()   
-      }     
-      zoom_ctx.restore()
+              if (typeof tag !== 'undefined') {
+                  zoom_ctx.beginPath();
+                  zoom_ctx.rect(mw-3,mh-3,6,6)
+                  zoom_ctx.fillStyle = 'yellow'
+                  zoom_ctx.fill()   
+              }     
+              
+          zoom_ctx.restore()
       }
     }
     
-    zoomOverlay.redraw()
+    this.redraw()
 }
 
 function refreshTagImage() {

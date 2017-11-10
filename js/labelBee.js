@@ -256,11 +256,11 @@ function onKeyDown(e) {
                 return false;
             }
             break;
-        case 90: // Z (showZoom)
-            flagShowZoom = !flagShowZoom
-            $('#checkboxShowZoom').prop('checked',flagShowZoom)
-            updateShowZoom()
-            return false;
+//         case 90: // Z (showZoom)
+//             flagShowZoom = !flagShowZoom
+//             $('#checkboxShowZoom').prop('checked',flagShowZoom)
+//             updateShowZoom()
+//             return false;
         //case 83: // key S
         //    submit_bee();
         //    if (logging.keyEvents)
