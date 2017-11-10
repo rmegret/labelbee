@@ -454,7 +454,7 @@ fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
     _render: function (ctx) {
         this.callSuper('_render', ctx);
         
-        if (flagShowParts) {
+        if (zoomOverlay.flagShowParts) {
             this._drawParts(ctx)
         }
         
@@ -1933,29 +1933,30 @@ function onMouseDown_selectMultiframe(option) {
       }
 
     } else {
-      if (showObsTracks) {
-          tmp = predictIdFromObsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
+        let done = false
+        if (showObsTracks) {
+            tmp = predictIdFromObsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
     
-          if (tmp.id != null) {
-            console.log('onMouseDown_selectMultiframe: found Obs id=',tmp.id, 'frame=', tmp.frame)
-            selectBeeByIDandFrame(tmp.id,tmp.frame)
-          } else {
+            if (tmp.id != null) {
+              console.log('onMouseDown_selectMultiframe: found Obs id=',tmp.id, 'frame=', tmp.frame)
+              selectBeeByIDandFrame(tmp.id,tmp.frame)
+              done = true
+            }
+        }
+        if (!done && (showTagsTracks || showSelectedTagsTracks)) {
+            tmp = predictIdFromTagsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
+    
+            if (tmp.id != null) {
+              console.log('onMouseDown_selectMultiframe: found Tag id=',tmp.id, 'frame=', tmp.frame)
+              selectBeeByIDandFrame(tmp.id,tmp.frame)
+              done = true
+            }
+        }
+        if (!done) {
+            console.log('onMouseDown_selectMultiframe: not found Obs nor Tag')
             deselectBee()
             videoControl.refresh()
-          }
-      }
-    
-      if (showTagsTracks || showSelectedTagsTracks) {
-          tmp = predictIdFromTagsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
-    
-          if (tmp.id != null) {
-            console.log('onMouseDown_selectMultiframe: found Tag id=',tmp.id, 'frame=', tmp.frame)
-            selectBeeByIDandFrame(tmp.id,tmp.frame)
-          } else {
-            deselectBee()
-            videoControl.refresh()
-          }
-      }
+        }
     }
     
 }
@@ -2188,9 +2189,8 @@ function onObjectMoving(option) {
     updateForm(activeObject);
     //automatic_sub();
     
-    if (flagShowZoom) {
-        zoomOverlay.refreshZoom()
-    }
+    $(overlay).trigger('object:moving')
+    //zoomOverlay.selectionChanged()
 }
 
 function onObjectModified(option) {
@@ -2208,9 +2208,8 @@ function onObjectModified(option) {
     //showZoom(activeObject)
     automatic_sub();
     
-    if (flagShowZoom) {
-        zoomOverlay.refreshZoom()
-    }
+    $(overlay).trigger('object:modified')
+    //zoomOverlay.selectionChanged()
 }
 
 

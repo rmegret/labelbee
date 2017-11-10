@@ -336,9 +336,11 @@ function selectBeeByID(id) {
 }
 function selectBeeByIDandFrame(id,frame) {
     if (frame != getCurrentFrame()) {
+        deselectBee()
         defaultSelectedBee = id
         videoControl.seekFrame(frame)
     } else {
+        deselectBee()
         selectBeeByID(id)
         videoControl.refresh()
     }
@@ -358,10 +360,6 @@ function selectBee(rect) {
 
     // Update form from rect
     updateForm(rect)
-    
-    if (flagShowZoom) {
-        zoomOverlay.refreshZoom()
-    }
     
     $( selectionControl ).trigger('tagselection:created')
     $( selectionControl ).trigger('selection:created')

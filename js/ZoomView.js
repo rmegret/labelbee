@@ -5,31 +5,12 @@ function initZoomView() {
 
     zoomOverlay = new ZoomOverlay($("#zoom")[0],$("#zoomOverlay")[0])
     
-    $("#zoomresize").resizable({
-      helper: "ui-resizable-helper",
-      aspectRatio: 1   // Need to put a value even to update it later
-    });
-    $("#zoomresize").on( "resizestop", zoomOverlay.refreshZoomSize.bind(zoomOverlay) );
-    
-    $("#tagImageDiv").resizable({
-      helper: "ui-resizable-helper",
-      aspectRatio: 1,   // Need to put a value even to update it later
-    });
-    
-    zoomShowOverlay = false;
-    $('#checkboxZoomShowOverlay').prop('checked', zoomShowOverlay);
-    flagShowZoom = true;
-    $('#checkboxShowZoom').prop('checked', flagShowZoom);
-    
-    tagImageRoot='data/tags/tag25h5inv/png'
-    
-    //refreshZoomSize()
+    zoomOverlay.tagImageRoot='data/tags/tag25h5inv/png'
+        
     zoomOverlay.setCanvasSize(200,200)
     
     zoomOverlay.initLabelListDialog()
     zoomOverlay.refreshButtonListParts()
-    
-    flagShowParts = false
 }
 
 
@@ -38,6 +19,16 @@ function ZoomOverlay(canvas, canvasOverlay) {
         console.log('ERROR: ZoomOverlay should be created with "new ZoomOverlay()"')
         return new ZoomOverlay(canvas); 
     }
+    
+    // Manually bind all methods used as callbacks
+    // https://www.smashingmagazine.com/2014/01/understanding-javascript-function-prototype-bind/
+    this.refreshZoomSize = this.refreshZoomSize.bind(this)
+    this.selectionChanged = this.selectionChanged.bind(this)
+    this.onPartLabelTextChanged = this.onPartLabelTextChanged.bind(this)
+    this.onKeyDown = this.onKeyDown.bind(this)
+    
+    this.tagImageRoot='data/tags/tag25h5inv/png'
+    
     this.selected = undefined
     this.lastRect = undefined
     this.insertMode = false
@@ -52,7 +43,7 @@ function ZoomOverlay(canvas, canvasOverlay) {
     this.scale = 1
     
     this.canvas1 = undefined
-    this.attach()
+    this.attachFabric()
     this.labelList = new Map([['head','red'], 
                       ['thorax','limegreen'], 
                       ['abdomen','blue'],
@@ -61,21 +52,118 @@ function ZoomOverlay(canvas, canvasOverlay) {
                       ['legL','rgb(255,0,128)'], // Left, port side
                       ['legR','rgb(0,255,128)'], // Right, starboard side
                       ['__default', 'black']])
-                      
-    this.flagShowZoom = $('#checkboxShowZoom').is(':checked')
-    this.zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')                  
+                          
+    $("#zoomresize").resizable({
+      helper: "ui-resizable-helper",
+      aspectRatio: 1   // Need to put a value even to update it later
+    });
+    $("#zoomresize").on( "resizestop", this.refreshZoomSize ); // bind ok
     
-    // Manually bind methods
-    // https://www.smashingmagazine.com/2014/01/understanding-javascript-function-prototype-bind/
-    this.refreshZoomSize = this.refreshZoomSize.bind(this)
+    $("#tagImageDiv").resizable({
+      helper: "ui-resizable-helper",
+      aspectRatio: 1,   // Need to put a value even to update it later
+    });
+                          
+    this.zoomShowOverlay = false;
+    $('#checkboxZoomShowOverlay').prop('checked', this.zoomShowOverlay);
+    this.flagShowZoom = true;
+    $('#checkboxShowZoom').prop('checked', this.flagShowZoom);
+    this.flagShowParts = false
+    $('#buttonShowParts').toggleClass('active', this.flagShowParts)
+    
+    $('#partLabel').change(this.onPartLabelTextChanged); // bind ok
+    
+    $('#videozoom').attr("tabindex","0")
+    $('#videozoom').on("keydown", this.onKeyDown);
+    
+    //this.flagShowZoom = $('#checkboxShowZoom').is(':checked')
+    //this.zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')                  
 }
 
 ZoomOverlay.prototype = {}
 
+// # EXTERNAL EVENTS AND SYNC
+
+ZoomOverlay.prototype.selectionChanged = function() {
+    if (logging.zoomOverlay)
+        console.log('ZoomOverlay.selectionChanged')
+        
+    if (!this.flagShowZoom) {
+        if (logging.zoomOverlay)
+            console.log('ZoomOverlay.selectionChanged: flagShowZoom==false. Candeled')
+        return
+    }
+        
+    let id=getCurrentID()
+    if (typeof id === 'undefined') {
+        if (logging.zoomOverlay)
+            console.log('ZoomOverlay.selectionChanged: no current ID. Canceled.')
+        this.canvas1.clear()
+        return
+    }
+    
+    this.id = id;
+    
+    this.syncFromTracks()
+    
+    this.refreshTagImage()
+    this.refreshZoom()
+}
+ZoomOverlay.prototype.syncFromTracks = function() {
+    console.log('ZoomOverlay.syncFromTracks')
+    var activeObject = canvas1.getActiveObject() // Object of video frame
+    
+    if (!activeObject) {
+        console.log('ZoomOverlay.syncFromTracks: abort. activeObject=',activeObject)
+        this.canvas1.clear()
+        return;
+    }
+    
+    var obs = activeObject.obs
+    
+    this.canvas1.clear()
+    if (obs.parts) {
+        for (let i in obs.parts) {
+            let part = obs.parts[i]
+            this.newPointInFrame(part.posFrame, part.label);
+        }
+    }
+    
+    if (this.autoLabel) {
+        this.startAutoLabel()
+    }
+    
+    this.refreshZoom()
+}
+ZoomOverlay.prototype.syncToTracks = function() {
+    console.log('ZoomOverlay.syncToTracks')
+    var activeObject = canvas1.getActiveObject() // Object of video frame
+    
+    if (!activeObject) {
+        console.log('ZoomOverlay.syncToTracks: abort. activeObject=',activeObject)
+        this.canvas1.clear() // Clean up, we missed something
+        return;
+    }
+    
+    var obs = activeObject.obs
+    
+    obs.parts = []
+    var rects = this.canvas1.getObjects()
+    for (let i in rects) {
+        let rect = rects[i]
+        let part = {
+            posFrame: Object.assign({}, rect.posFrame),
+            label: rect.label
+        }
+        obs.parts.push(part)
+    }
+    automatic_sub()
+}
+// See also ZoomOverlay.prototype.onToggleButtonShowOnVideo
 
 // # FABRIC.JS EVENT HANDLING
 
-ZoomOverlay.prototype.attach = function() {
+ZoomOverlay.prototype.attachFabric = function() {
     this.canvas1 = new fabric.Canvas(this.canvasOverlay);
     
     // Caution: for this to work, the canvases must be enclosed in a 
@@ -89,61 +177,14 @@ ZoomOverlay.prototype.attach = function() {
     this.canvas1.selection = false; // REMI: disable the blue selection
         
     this.canvas1.on('mouse:down', this.onMouseDown.bind(this));
-    //this.canvas1.on('mouse:up', onMouseUp);
-    //this.canvas1.on('object:moving', onObjectMoving); // During translation
-    //this.canvas1.on('object:scaling', onObjectMoving); // During scaling
-    //this.canvas1.on('object:rotating', onObjectMoving); // During rotation
     this.canvas1.on('object:modified', this.onObjectModified.bind(this)); // After modification
     this.canvas1.on('object:selected', this.onObjectSelected.bind(this)); // After mousedown
     this.canvas1.on('selection:cleared', this.onObjectDeselected.bind(this)); // After mousedown out
-    //$(this.canvas).on('mousedown',  this.onMouseDown.bind(this))
-    
-    $( selectionControl ).on('selection:created', 
-                             this.syncFromTracks.bind(this))
-    $('#partLabel').change(this.onPartLabelTextChanged.bind(this));
-    
-    $('#videozoom').attr("tabindex","0")
-    $('#videozoom').on("keydown", this.onKeyDown.bind(this));
 }
-ZoomOverlay.prototype.detach = function() {
+ZoomOverlay.prototype.detachFabric = function() {
     this.canvas1.dispose()
     this.canvas1 = undefined
     //$(this.canvas).off('mousedown',  this.onMouseDown.bind(this))
-}
-
-
-
-ZoomOverlay.prototype.onKeyDown = function(e) {
-    if (logging.keyEvents)
-        console.log("ZoomOverlay.onKeyDown: e=",e)
-        
-    if (/textarea|select/i.test( e.target.nodeName ) || e.target.type === "text") {
-      if (logging.keyEvents)
-        console.log("onKeyDown: coming from text field. stopped event")
-      e.stopPropagation();
-      return;
-    }
-
-    if (e.key == "Delete" || e.key == 'd' || e.key == 'Backspace') {
-        this.deleteCurrentPoint();
-        e.preventDefault();
-        return
-    }
-    if (e.key == "r" && e.ctrlKey) {
-        this.redraw()
-        e.preventDefault();
-        return
-    }
-    if (e.key == "+") {
-        this.zoomApplyScale(Math.sqrt(2))
-        e.preventDefault();
-        return
-    }
-    if (e.key == "-") {
-        this.zoomApplyScale(Math.sqrt(1/2))
-        e.preventDefault();
-        return
-    }
 }
 
 ZoomOverlay.prototype.onMouseDown = function(option) {
@@ -182,9 +223,112 @@ ZoomOverlay.prototype.onMouseDown = function(option) {
     this.lastRect = this.canvas1.getActiveObject()
     this.redraw()
 }
+ZoomOverlay.prototype.onObjectModified = function(evt) {
+    console.log('ZoomOverlay.onObjectModified',evt)
+    var rect = evt.target
+    this.updatePointFromFabric(rect)
+    this.syncToTracks()
+}
+
+// # GUI CALLBACKS
+
+ZoomOverlay.prototype.onKeyDown = function(e) {
+    if (logging.keyEvents)
+        console.log("ZoomOverlay.onKeyDown: e=",e)
+        
+    if (/textarea|select/i.test( e.target.nodeName ) || e.target.type === "text") {
+      if (logging.keyEvents)
+        console.log("onKeyDown: coming from text field. stopped event")
+      e.stopPropagation();
+      return;
+    }
+
+    if (e.key == "Delete" || e.key == 'd' || e.key == 'Backspace') {
+        this.deleteCurrentPoint();
+        e.preventDefault();
+        return
+    }
+    if (e.key == "r" && e.ctrlKey) {
+        this.redraw()
+        e.preventDefault();
+        return
+    }
+    if (e.key == "+") {
+        this.zoomApplyScale(Math.sqrt(2))
+        e.preventDefault();
+        return
+    }
+    if (e.key == "-") {
+        this.zoomApplyScale(Math.sqrt(1/2))
+        e.preventDefault();
+        return
+    }
+}
+ZoomOverlay.prototype.onPartLabelTextChanged = function(evt) {
+    console.log('ZoomOverlay.onPartLabelTextChanged',evt)
+    var label = $(evt.target).val() // Same as #partLabel
+    if (label == this.selected) return;
+    var rect = this.canvas1.getActiveObject();
+    if (!rect) {
+        this.selectLabel(label)
+    } else {
+        rect.label = label
+    }
+    $('.zoomlabel').toggleClass('active', false)
+    $('.zoomlabel[data-label="'+label+'"]').toggleClass('active', true)
+    
+    this.redraw()
+}
+ZoomOverlay.prototype.onClickButtonPart = function(event) {
+    var target = event.target
+    
+    var label = undefined
+    
+    label = $(target).data('label')
+    this.selectLabel(label)
+}
+ZoomOverlay.prototype.onClickButtonDeletePart = function(event) {
+    this.deleteCurrentPoint()
+}
+ZoomOverlay.prototype.onToggleButtonAutoLabel = function(event) {
+    this.autoLabel = !this.autoLabel
+    console.log(event)
+    $(event.target).toggleClass('active', this.autoLabel)
+    
+    if (this.autoLabel) {
+        this.startAutoLabel()
+    }
+}
+ZoomOverlay.prototype.onToggleButtonShowOnVideo = function(event) {
+    this.flagShowParts=!this.flagShowParts
+
+    $("#buttonShowParts").toggleClass('active', this.flagShowParts)
+    
+    videoControl.refresh()
+}
+ZoomOverlay.prototype.clickZoomShowOverlay = function() {
+    this.zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
+    if ($('#zoom').is(':visible')) {
+        this.refreshZoom()
+    }
+}
+ZoomOverlay.prototype.clickShowZoom = function() {
+    this.flagShowZoom = $('#checkboxShowZoom').is(':checked')
+    if (this.flagShowZoom) {
+      this.syncFromTracks()
+    }
+}
+ZoomOverlay.prototype.zoomApplyScale = function(factor) {
+    this.scale *= factor;
+    if (isNaN(this.scale)) this.scale=1
+    this.refreshZoom()
+}
+ZoomOverlay.prototype.zoomSetScale = function(scale) {
+    this.scale = scale
+    this.refreshZoom()
+}
 
 // # GEOMETRY 
-
 
 ZoomOverlay.prototype.refreshZoomSize = function(event, ui) {
     // Refresh based on new video size or new canvas size
@@ -198,7 +342,7 @@ ZoomOverlay.prototype.refreshZoomSize = function(event, ui) {
         
     this.setCanvasSize(wd,hd)
         
-    refreshZoom()
+    this.refreshZoom()
 }
 ZoomOverlay.prototype.setCanvasSize = function(w, h) {
     var borderThickness = 2
@@ -250,7 +394,8 @@ ZoomOverlay.prototype.frame2canvas = function(posFrame) {
     return posCanvas
 }
 
-// # SELECTION
+// # PART SELECTION
+
 ZoomOverlay.prototype.onObjectSelected = function(option) {
     console.log('ZoomOverlay.onObjectSelected',option)
     var target = option.target
@@ -350,7 +495,7 @@ ZoomOverlay.prototype.startAutoLabel = function() {
     this.selectNextLabel(undefined)
 }
 
-// # INSERTION DELETION MODIFICATION
+// # PART INSERTION DELETION MODIFICATION
 
 ZoomOverlay.prototype.newPointInFrame = function(posFrame,label) {
     console.log('ZoomOverlay.newPointInFrame(',posFrame,label,')')
@@ -359,7 +504,7 @@ ZoomOverlay.prototype.newPointInFrame = function(posFrame,label) {
     var x = posCanvas.x
     var y = posCanvas.y
     
-    var rect = new fabric.PartRect({
+    var rect = new this.FabricPartRect({
         label: label,
         top: y-3,
         left: x-3,
@@ -461,69 +606,6 @@ ZoomOverlay.prototype.deletePoint = function(rect) {
 ZoomOverlay.prototype.deleteCurrentPoint = function() {
     var rect = this.canvas1.getActiveObject();
     this.deletePoint(rect)
-}
-
-ZoomOverlay.prototype.onObjectModified = function(evt) {
-    console.log('ZoomOverlay.onObjectModified',evt)
-    var rect = evt.target
-    this.updatePointFromFabric(rect)
-    this.syncToTracks()
-}
-ZoomOverlay.prototype.onPartLabelTextChanged = function(evt) {
-    console.log('ZoomOverlay.onPartLabelTextChanged',evt)
-    var label = $(evt.target).val() // Same as #partLabel
-    if (label == this.selected) return;
-    var rect = this.canvas1.getActiveObject();
-    if (!rect) {
-        this.selectLabel(label)
-    } else {
-        rect.label = label
-    }
-    $('.zoomlabel').toggleClass('active', false)
-    $('.zoomlabel[data-label="'+label+'"]').toggleClass('active', true)
-    
-    this.redraw()
-}
-
-ZoomOverlay.prototype.syncToTracks = function() {
-    console.log('ZoomOverlay.syncToTracks')
-    var activeObject = canvas1.getActiveObject() // Object of video frame
-    
-    if (!activeObject) {
-        console.log('ZoomOverlay.syncToTracks: abort. activeObject=',activeObject)
-        return;
-    }
-    
-    var obs = activeObject.obs
-    obs.parts = []
-    var rects = this.canvas1.getObjects()
-    for (let i in rects) {
-        let rect = rects[i]
-        let part = {
-            posFrame: Object.assign({}, rect.posFrame),
-            label: rect.label
-        }
-        obs.parts.push(part)
-    }
-    automatic_sub()
-}
-ZoomOverlay.prototype.syncFromTracks = function() {
-    console.log('ZoomOverlay.syncFromTracks')
-    var activeObject = canvas1.getActiveObject() // Object of video frame
-    var obs = activeObject.obs
-    this.canvas1.clear()
-    if (obs.parts) {
-        for (let i in obs.parts) {
-            let part = obs.parts[i]
-            this.newPointInFrame(part.posFrame, part.label);
-        }
-    }
-    
-    if (this.autoLabel) {
-        this.startAutoLabel()
-    }
-    
-    this.redraw()
 }
 
 // # LABEL LIST / BUTTONS
@@ -635,7 +717,7 @@ ZoomOverlay.prototype.refreshButtonListParts = function() {
 
 // # DRAWING
 
-fabric.PartRect = fabric.util.createClass(fabric.Rect, {
+ZoomOverlay.prototype.FabricPartRect = fabric.util.createClass(fabric.Rect, {
     type: 'partrect',
     
     initialize: function (element, options) {
@@ -702,65 +784,6 @@ ZoomOverlay.prototype.redraw = function() {
     
     this.canvas1.getContext('2d').clearRect(0,0,this.canvas1.width, this.canvas1.height)
     this.canvas1.renderAll();
-}
-
-// # GUI CALLBACKS
-ZoomOverlay.prototype.onClickButtonPart = function(event) {
-    var target = event.target
-    
-    var label = undefined
-    
-    label = $(target).data('label')
-    this.selectLabel(label)
-}
-ZoomOverlay.prototype.onClickButtonDeletePart = function(event) {
-    this.deleteCurrentPoint()
-}
-ZoomOverlay.prototype.onToggleButtonAutoLabel = function(event) {
-    this.autoLabel = !this.autoLabel
-    console.log(event)
-    $(event.target).toggleClass('active', this.autoLabel)
-    
-    if (this.autoLabel) {
-        this.startAutoLabel()
-    }
-}
-ZoomOverlay.prototype.onToggleButtonShowOnVideo = function(event) {
-    flagShowParts=!flagShowParts
-
-    $(event.target).toggleClass('active', flagShowParts)
-    
-    videoControl.refresh()
-}
-
-
-ZoomOverlay.prototype.clickZoomShowOverlay = function() {
-    this.zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
-    if ($('#zoom').is(':visible')) {
-        this.refreshZoom()
-    }
-}
-ZoomOverlay.prototype.clickShowZoom = function() {
-    this.flagShowZoom = $('#checkboxShowZoom').is(':checked')
-    if (this.flagShowZoom)
-      this.refreshZoom()
-}
-ZoomOverlay.prototype.updateShowZoom = function() {
-//     if (this.flagShowZoom) {
-//         $('#zoomresize').show()
-//         this.refreshZoom()
-//     } else {
-//         $('#zoomresize').hide()
-//     }
-}
-ZoomOverlay.prototype.zoomApplyScale = function(factor) {
-    this.scale *= factor;
-    if (isNaN(this.scale)) this.scale=1
-    this.refreshZoom()
-}
-ZoomOverlay.prototype.zoomSetScale = function(scale) {
-    this.scale = scale
-    this.refreshZoom()
 }
 
 ZoomOverlay.prototype.refreshZoom = function() {
@@ -869,7 +892,7 @@ ZoomOverlay.prototype.refreshZoom = function() {
               let yb = (p[2][1]+p[3][1])/2
               let a0 = {x:xa+(xa-xb)*0.05,y:ya+(ya-yb)*0.05}
               let a1 = {x:xa+(xa-xb)*0.8,y:ya+(ya-yb)*0.8}
-              plotArrow(zoom_ctx,a0, a1, 10)
+              plotArrow(zoom_ctx, a0, a1, 10)
               zoom_ctx.beginPath();
               zoom_ctx.moveTo(a0.x,a0.y)
               zoom_ctx.lineTo(a1.x,a1.y)
@@ -910,24 +933,20 @@ ZoomOverlay.prototype.refreshZoom = function() {
     
     this.redraw()
 }
-
-function refreshTagImage() {
+ZoomOverlay.prototype.refreshTagImage = function() {
     if (logging.zoomTag)
-        console.log('refreshTagImage')
+        console.log('ZoomOverlay.refreshTagImage')
   
-    let id=getCurrentID()
-    if (typeof id === 'undefined') {
-        return
-    }
+    let id = this.id;
   
     let padding = 4
-  
     let paddedID = String(id);
     let N=paddedID.length
     for (var i=0; i<padding-N; i++)
         paddedID='0'+paddedID;
 
-    $('#tagImage').attr('src',tagImageRoot+'/keyed'+paddedID+'.png')
+    $('#tagImage').attr('src',this.tagImageRoot+'/keyed'+paddedID+'.png')
     
 }
+
 

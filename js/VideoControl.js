@@ -322,9 +322,7 @@ VideoControl.prototype.refresh = function() {
     }
     refreshOverlay()
     
-    if (flagShowZoom) {
-        zoomOverlay.refreshZoom()
-    }
+    zoomOverlay.refreshZoom()
     
     updateDeleteButton()
     updateUndoButton()

@@ -60,10 +60,17 @@ function init() {
     // import * from "ZoomView.js";
     initZoomView()
     
-    $( selectionControl ).on('tagselection:created',refreshTagImage)
-    $( selectionControl ).on('selection:created',refreshTagImage)
-    $( selectionControl ).on('tagselection:cleared',refreshTagImage)
-    $( selectionControl ).on('selection:cleared',refreshTagImage)
+    // Note: zoomOverlay.selectionChanged is already bound
+    $(selectionControl).on({
+        'tagselection:created': zoomOverlay.selectionChanged, 
+        'selection:created':    zoomOverlay.selectionChanged,
+        'tagselection:cleared': zoomOverlay.selectionChanged,
+        'selection:cleared':    zoomOverlay.selectionChanged
+      })
+    $(overlay).on({
+        'object:moving':   zoomOverlay.selectionChanged,
+        'object:modified': zoomOverlay.selectionChanged
+      })
 
     $( ".collapsible" ).accordion({
         collapsible: true,
@@ -256,11 +263,6 @@ function onKeyDown(e) {
                 return false;
             }
             break;
-//         case 90: // Z (showZoom)
-//             flagShowZoom = !flagShowZoom
-//             $('#checkboxShowZoom').prop('checked',flagShowZoom)
-//             updateShowZoom()
-//             return false;
         //case 83: // key S
         //    submit_bee();
         //    if (logging.keyEvents)
