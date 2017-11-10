@@ -610,7 +610,7 @@ ZoomOverlay.prototype.deleteCurrentPoint = function() {
 
 // # LABEL LIST / BUTTONS
 
-function onButtonClickAddRemovePartLabel(evt, action) {
+ZoomOverlay.prototype.onButtonClickAddRemovePartLabel = function(evt, action) {
     console.log('ZoomOverlay.onButtonClickAddRemoveLabel',evt,action)
     var label = $("#partLabel").val()
     if (action==='+') {
