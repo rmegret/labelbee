@@ -1,0 +1,21 @@
+{
+    "tags": {
+        "allowUnknownTags": false
+    },
+    "source": {
+        "includePattern": ".+\\.js(doc)?$",
+        "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "plugins": [],
+    "templates": {
+        "cleverLinks": true,
+        "monospaceLinks": false,
+        "theme": "flatly"
+    },
+    "opts": {
+        "encoding": "utf8",
+        "lenient": false,
+        "sort": false
+    }
+}
+

@@ -13,7 +13,11 @@ function initZoomView() {
     zoomOverlay.refreshButtonListParts()
 }
 
-
+/**
+ * Class to handle the zoom widget
+ * @class
+ * @constructor
+ */
 function ZoomOverlay(canvas, canvasOverlay) {
     if (this === window) { 
         console.log('ERROR: ZoomOverlay should be created with "new ZoomOverlay()"')
@@ -84,6 +88,9 @@ ZoomOverlay.prototype = {}
 
 // # EXTERNAL EVENTS AND SYNC
 
+/**
+ * @memberof ZoomOverlay
+ */
 ZoomOverlay.prototype.selectionChanged = function() {
     if (logging.zoomOverlay)
         console.log('ZoomOverlay.selectionChanged')
@@ -109,6 +116,9 @@ ZoomOverlay.prototype.selectionChanged = function() {
     this.refreshTagImage()
     this.refreshZoom()
 }
+/**
+ * @memberof ZoomOverlay
+ */
 ZoomOverlay.prototype.syncFromTracks = function() {
     console.log('ZoomOverlay.syncFromTracks')
     var activeObject = canvas1.getActiveObject() // Object of video frame
@@ -135,6 +145,9 @@ ZoomOverlay.prototype.syncFromTracks = function() {
     
     this.refreshZoom()
 }
+/**
+ * @memberof ZoomOverlay
+ */
 ZoomOverlay.prototype.syncToTracks = function() {
     console.log('ZoomOverlay.syncToTracks')
     var activeObject = canvas1.getActiveObject() // Object of video frame
@@ -163,6 +176,9 @@ ZoomOverlay.prototype.syncToTracks = function() {
 
 // # FABRIC.JS EVENT HANDLING
 
+/**
+ * @memberof ZoomOverlay
+ */
 ZoomOverlay.prototype.attachFabric = function() {
     this.canvas1 = new fabric.Canvas(this.canvasOverlay);
     
@@ -181,12 +197,20 @@ ZoomOverlay.prototype.attachFabric = function() {
     this.canvas1.on('object:selected', this.onObjectSelected.bind(this)); // After mousedown
     this.canvas1.on('selection:cleared', this.onObjectDeselected.bind(this)); // After mousedown out
 }
+/**
+ * @memberof ZoomOverlay
+ * @category 
+ */
 ZoomOverlay.prototype.detachFabric = function() {
     this.canvas1.dispose()
     this.canvas1 = undefined
     //$(this.canvas).off('mousedown',  this.onMouseDown.bind(this))
 }
 
+/**
+ * @memberof ZoomOverlay
+ * @param option {jQuery.Event} MouseDown event
+ */
 ZoomOverlay.prototype.onMouseDown = function(option) {
     console.log('ZoomOverlay.onMouseDown',option)
     if (option.target) {
