@@ -1483,19 +1483,13 @@ function updateObsTable() {
 
 function refreshChronogram() {
 
-    //Deleting everything on the svg so we can recreate the updated chart
-    //d3.selectAll("svg > *").remove();
-    //Emptying the array so we won't have duplicates
-    //for (var i = 0; i < chronogramData.length; i++)
-    //    chronogramData.pop();
-
     //check if id and frame are in tag object
   
     for (let F in Tracks) {
-        if(Tags[F] != undefined){
+        if (Tags[F] != undefined){
             for (var i = 0; i < Tags[F].tags.length;i++){
                 let id = String(Tags[F].tags[i].id);
-                if( Tracks[F][id] != undefined ){
+                if (Tracks[F] && Tracks[F][id]) {
                     Tracks[F][id].tag = Tags[F].tags[i]
                 }
             }
