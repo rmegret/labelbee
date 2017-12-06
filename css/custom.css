@@ -604,6 +604,10 @@ fieldset[disabled] .btn-window.focus {
     background-color: #e0e0ff;
 }
 
+.crossLeft {
+  pointer-events: none;
+}
+
 /* Tooltip */
 .tooltip {   
   position: absolute;           

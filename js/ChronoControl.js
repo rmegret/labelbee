@@ -1221,6 +1221,8 @@ let path = chart.selectAll(".crossLeft")
 path.enter()
     .append("path")
     .attr('class','crossLeft');
+    // Caution: check CSS property pointer-events:
+    // crossLeft does not receive mouse events
 
 path.attr("d",function(d){
           var X=axes.xScale(Number(d.x1)), Y=axes.yScale(Number(d.y)) + axes.yScale.rangeBand()/2;
@@ -1329,7 +1331,7 @@ function setTagGeom(selection) {
                     + "<br>Time=" + format_HMS(videoControl.frameToTime(taginterval.begin))
                     + "<br><u>Tag:</u>"
                     + "<br>HammingAvg=" + taginterval.hammingavg
-                    //+ "<br>DM=" + tag.dm;
+                    + "<br>DM=" + taginterval.dmavg;
             } else {
                 message += "<u>Tag:</u><br><i>None</i>"
             }
@@ -1604,6 +1606,8 @@ function refreshChronogram() {
                 if (tags.hamming<1000)
                       activeInterval.hammingavg=
                            activeInterval.hammingavg+tags.hamming;
+                      activeInterval.dmavg=
+                           activeInterval.dmavg+tags.dm;
                 else 
                       activeInterval.hammingavg=activeInterval.hammingavg+0
               } else {
@@ -1613,9 +1617,12 @@ function refreshChronogram() {
               if (doPush) {
                 // Close previous 
                 //activeInterval['end']++
-                if (tagsIntervalFilter(activeInterval))
-                    activeInterval.hammingavg=activeInterval.hammingavg/(activeInterval['end'] -activeInterval['begin']+1)
+                if (tagsIntervalFilter(activeInterval)) {
+                    let len = (activeInterval['end'] -activeInterval['begin']+1)
+                    activeInterval.hammingavg=activeInterval.hammingavg/len
+                    activeInterval.dmavg=activeInterval.dmavg/len
                     tagIntervals.push(activeInterval)
+                }
                 // Open new one
                 activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming, labeling:{}}
               }
@@ -1628,9 +1635,12 @@ function refreshChronogram() {
           // Close if active
           if (isActive)
             //activeInterval['end']++
-            if (tagsIntervalFilter(activeInterval))
-                activeInterval.hammingavg=activeInterval.hammingavg/(activeInterval['end']-activeInterval['begin']+1)
+            if (tagsIntervalFilter(activeInterval)) {
+                let len = (activeInterval['end'] -activeInterval['begin']+1)
+                activeInterval.hammingavg=activeInterval.hammingavg/len
+                activeInterval.dmavg=activeInterval.dmavg/len
                 tagIntervals.push(activeInterval)
+            }
         }
     }
     
