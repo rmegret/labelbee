@@ -1625,11 +1625,13 @@ function refreshChronogram() {
                     tagIntervals.push(activeInterval)
                 }
                 // Open new one
-                activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming, labeling:{}}
+                activeInterval={'id':id,'begin':f,'end':f,
+                  'hammingavg':tags.hamming, 'dmavg':tags.dm, labeling:{}}
               }
             } else {
               // Open new one
-              activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming, labeling:{}}
+              activeInterval={'id':id,'begin':f,'end':f,
+                  'hammingavg':tags.hamming, 'dmavg':tags.dm, labeling:{}}
               isActive=true;
             }
           }
