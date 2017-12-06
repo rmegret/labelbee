@@ -188,16 +188,18 @@ function domainxFromChronogramData() {
     var range = d3.extent(chronogramData, function(d) {return Number(d.x); })
     return [range[0]-0.5, range[1]+0.5] // add some margin
 }
-function domainyFromChronogramData() {
-    if (chronogramData.length === 0) return [0,1]
-    var range = d3.extent(chronogramData, function(d) {return Number(d.y); })
-    return [range[0], range[1]+1.0] // Add 1.0 for the height of the interval
-}
-function domainyFromTagData() {
-    if (tagIntervals.length === 0) return [0,1]
-    var range = d3.extent(tagIntervals, function(d) {return Number(d.id); })
-    return [range[0], range[1]+1.0] // Add 1.0 for the height of the interval
-}
+// Obsolete: replaced by categorical domain
+// function domainyFromChronogramData() {
+//     if (chronogramData.length === 0) return [0,1]
+//     var range = d3.extent(chronogramData, function(d) {return Number(d.y); })
+//     return [range[0], range[1]+1.0] // Add 1.0 for the height of the interval
+// }
+// function domainyFromTagData() {
+//     if (tagIntervals.length === 0) return [0,1]
+//     var range = d3.extent(tagIntervals, function(d) {return Number(d.id); })
+//     visibleTagsID = range
+//     return [range[0], range[1]+1.0] // Add 1.0 for the height of the interval
+// }
 function validIdsDomain() {
     if (chronogramData.length === 0) return []
     let ids = new Set()
@@ -229,6 +231,9 @@ function validTagIdsDomain() {
 }
 function validAllTagIdsDomain() {
     return sortIds(allTagsID)
+}
+function validVisibleTagIdsDomain() {
+    return sortIds(axes.ydomain())
 }
 
 
@@ -462,7 +467,9 @@ function findPreviousTagEvent(frame, id) {
 }
 
 function onClickNextID() {
-    let domain = validAllTagIdsDomain()
+    //let domain = validAllTagIdsDomain()
+    //              .map(function(d){return String(d);})
+    let domain = validVisibleTagIdsDomain()
                   .map(function(d){return String(d);})
     let N=domain.length
     if (N==0) return;
