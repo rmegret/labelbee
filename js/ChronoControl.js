@@ -1603,13 +1603,14 @@ function refreshChronogram() {
                 // Extend active interval
                 activeInterval['end']  = f
                 
-                if (tags.hamming<1000)
+                if (tags.hamming<1000) {
                       activeInterval.hammingavg=
                            activeInterval.hammingavg+tags.hamming;
                       activeInterval.dmavg=
                            activeInterval.dmavg+tags.dm;
-                else 
+                } else {
                       activeInterval.hammingavg=activeInterval.hammingavg+0
+                }
               } else {
                 // Do not extend active interval
                 doPush = true
