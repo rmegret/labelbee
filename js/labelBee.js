@@ -101,6 +101,11 @@ function init() {
         header.parent().toggleClass("collapsed",content.is(":hidden"))
         console.log('DONE\n\n')
       })
+      
+    $( ".sortable" ).sortable({
+      connectWith: ".sortable"
+    });
+    $( ".sortable" ).disableSelection();
 
     // ## Keyboard control
 
