@@ -1387,6 +1387,7 @@ function onClickROI() {
 }
 
 /* Filters */
+tagsDMSampleFilter = function(tag) {return true}
 tagsHammingSampleFilter = function(tag) {return true}
 tagsSampleFilter = function(tag) {return true}
 tagsIntervalFilter = function(interval) {return true}
@@ -1397,8 +1398,16 @@ function onTagsParametersChanged() {
     // Callback when tags chronogram computation parameters have changed
     tagsSampleFilterCustom = Function("tag",$('#tagsSampleFilter')[0].value)
     
+    let minDM = Number($('#tagsMinDM').val())
+    if (minDM>0) {
+        tagsDMSampleFilter = function(tag) {return (!tagsHaveDM)||tag.dm>=minDM}
+    } else {
+        tagsDMSampleFilter = function(tag) {return true}
+    }
+    
     tagsSampleFilter = function(tag){
           return tagsHammingSampleFilter(tag)
+                 &&tagsDMSampleFilter(tag)
                  &&tagsSampleFilterCustom(tag)
                  &&tagsSampleFilterROI(tag)}
     

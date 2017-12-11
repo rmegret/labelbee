@@ -210,6 +210,19 @@ function setTags(obj) {
     
     ttags = getTTags()
     
+    // Check if Tags data structure support the DM field
+    tagsHaveDM = false
+    if (!jQuery.isEmptyObject(Tags)) {
+        let tags0 = Tags[Object.keys(Tags)[0]].tags
+        if (tags0.length>0) {
+            tagsHaveDM = ('dm' in tags0[0])
+        }
+    }
+    // Disable DM field if not there
+    $('.requireDM').prop('disabled', !tagsHaveDM); 
+    $('.requireDM').toggleClass('disabled', !tagsHaveDM); 
+
+    
     refreshChronogram()
     adjustChronogramHeight()
     videoControl.onFrameChanged();

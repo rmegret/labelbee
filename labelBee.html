@@ -485,68 +485,102 @@
             <div id='parameters' class='collapsible'>
                 <label>Parameters <span class="glyphicon glyphicon-wrench"></span></label>
                 <div>
-                  <div class="checkbox">
-                    <label><input type="checkbox" checked="false" id="mousewheelMode" onclick="onMousewheelModeToggled()" class='btn-sm'>Zoom in Chrono needs shift+mousewheel</label>
-                  </div>
-                  <hr>
-                  <div class="checkbox">
-                    <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>Show Obs</label>
-                  </div>
-                  <div class="checkbox">
-                    <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Obs Tracks</label>
-                  </div>
-                  <hr>
-                  <div class="checkbox">
-                    <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">Show Tags</label>
-                  </div>
-                  <div class="checkbox">
-                    <label><input type="checkbox" checked="true" id="showTagsTracks" onclick="onShowTagsTracksChanged()">Show Tags Tracks</label>
-                  </div>
-                  <div class="checkbox">
-                    <label><input type="checkbox" checked="true" id="showSelectedTagsTracks" onclick="onShowTagsTracksChanged()">Show Selected Track</label>
-                  </div>
-                  <div class="checkbox">
-                    <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">Show Tags Orientation</label>
-                  </div>
-                  <br>
-                  <div class="text">
-                  Track window<input type="text" value="5" size="6" id="trackWindow" onchange="onTrackWindowChanged(event)">
-                  </div>                 
-                  <select id="selectboxTrackDir" name="selectboxTrackDir" onchange="onTrackDirChanged()" class="" style="display:inline-block;">
-                  <option value="Bidirectional" selected>Bidirectional</option>
-                  <option value="Forward">Forward</option>
-                  <option value="Backward">Backward</option>
-                  </select> <!-- selectboxVideo -->  
-                  <br>
-                                Filter Tags:
-              <button value="H0" onclick="chronoFilter('H0')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming==0">H0</button>
-              <button value="H1" onclick="chronoFilter('H1')" type="button" class="btn btn-info  btn-xs" title="Show only tags with Hamming<=1">H1</button>
-              <button value="H2" onclick="chronoFilter('H2')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming<=2">H2</button>
-              <button value="H&infin;" onclick="chronoFilter('Hall')" type="button" class="btn btn-info btn-xs" title="Show all tags, including virtual ones">all</button>
-              &Delta;<input type="text" value="0" size="2" id="tagsIntervalFilterMinLength" onchange="onTagsParametersChanged(event)">
-              
-              ROI:<input type="text" value="0,0,w,h" size="10" id="ROI" onchange="onROITextChanged(event)" title="Region of Interest format left,top,right,bottom in video pixels">
-                  <input id='useROI' value="Apply" onclick="onClickROI()" type="button" class="btn btn-orange-toggle btn-xs" title="Show/Hide ROI">
-                  <input value="Reinit" onclick="updateROIFromVideo()" type="button" class="btn btn-default btn-xs" title="Reinit ROI from video">
+                    <div class="checkbox">
+                      <label><input type="checkbox" checked="false" id="mousewheelMode" onclick="onMousewheelModeToggled()" class='btn-sm'>Zoom in Chrono needs shift+mousewheel</label>
+                    </div>
+                    
+                    <div class='subpanel collapsible'>
+                      <label>Show/Hide</label>
+                      <div>
+                          <label>Overlay:</label>
+                          <div class="checkbox">
+                            <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>Show Obs</label>
+                          </div>
+                          <div class="checkbox">
+                            <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Obs Tracks</label>
+                          </div>
+                          <div class="checkbox">
+                            <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">Show Tags</label>
+                          </div>
+                          <div class="checkbox">
+                            <label><input type="checkbox" checked="true" id="showTagsTracks" onclick="onShowTagsTracksChanged()">Show Tags Tracks</label>
+                          </div>
+                          <div class="checkbox">
+                            <label><input type="checkbox" checked="true" id="showSelectedTagsTracks" onclick="onShowTagsTracksChanged()">Show Selected Track</label>
+                          </div>
+                          <div class="checkbox">
+                            <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">Show Tags Orientation</label>
+                          </div>
+                          <div class="inline-block">
+                              Track window
                   
-                  <div class="text">
-                  <label>Tags sample filter<input type="text" value="return true" id="tagsSampleFilter" onchange="onTagsParametersChanged(event)"></label>
-                  </div>
-                  <br>
-                  <div class="text">
-                  <label>Tags interval filter<input type="text" value="return true" id="tagsIntervalFilter" onchange="onTagsParametersChanged(event)"></label>
-                  </div>
-                  <br>
-                  <div class="text">
-                  <label>Tags ID filter<input type="text" value="return true" id="tagsIDFilter" onchange="onTagsParametersChanged(event)"></label>
-                  </div>
-                  <hr>
-                  <div class="checkbox">
-                    <label><input type="checkbox" checked="true" id="showObsChrono" onclick="onChronoParametersChanged()"/>Show Obs Chrono</label>
-                  </div>
-                  <div class="checkbox">
-                    <label><input type="checkbox" checked="true" id="showTagsChrono" onclick="onChronoParametersChanged()"/>Show Tags Chrono</label>
-                  </div>
+                              <input type="text" value="5" size="6" id="trackWindow" onchange="onTrackWindowChanged(event)">             
+                  
+                              <select id="selectboxTrackDir" name="selectboxTrackDir" onchange="onTrackDirChanged()" class="" style="display:inline-block;">
+                              <option value="Bidirectional" selected>Bidirectional</option>
+                              <option value="Forward">Forward</option>
+                              <option value="Backward">Backward</option>
+                              </select> <!-- selectboxVideo -->  
+                          </div>
+                          <hr>
+                          <label>Chronogram:</label>
+                          <div class="checkbox">
+                                <label><input type="checkbox" checked="true" id="showObsChrono" onclick="onChronoParametersChanged()"/>Show Obs</label>
+                          </div>
+                          <div class="checkbox">
+                              <label><input type="checkbox" checked="true" id="showTagsChrono" onclick="onChronoParametersChanged()"/>Show Tags</label>
+                        </div>
+
+                      </div>
+                    </div>
+                  
+                  
+                    <div class='subpanel collapsible'>
+                      <label>Tag filtering</label>
+                      <div>
+                  
+                        <div class="inline-block">
+                            Hamming:
+                            <div class="inline-block">
+                            <button value="H0" onclick="chronoFilter('H0')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming==0">H0</button>
+                            <button value="H1" onclick="chronoFilter('H1')" type="button" class="btn btn-info  btn-xs" title="Show only tags with Hamming<=1">H1</button>
+                            <button value="H2" onclick="chronoFilter('H2')" type="button" class="btn btn-info btn-xs" title="Show only tags with Hamming<=2">H2</button>
+                            <button value="H&infin;" onclick="chronoFilter('Hall')" type="button" class="btn btn-info btn-xs" title="Show all tags, including virtual ones">all</button>
+                            </div>
+                        </div>
+              
+                        <div class="inline-block">
+                            &Delta;<input type="text" value="0" size="2" id="tagsIntervalFilterMinLength" onchange="onTagsParametersChanged(event)">
+                        </div>
+              
+                        <div class="requireDM inline-block">
+                            DM min<input type="text" value="20" size="2" id="tagsMinDM" onchange="onTagsParametersChanged(event)" class="requireDM">
+                        </div>
+              
+                        <div class="inline-block">
+                            ROI:
+                  
+                            <input type="text" value="0,0,w,h" size="16" id="ROI" onchange="onROITextChanged(event)" title="Region of Interest format left,top,right,bottom in video pixels">
+                            <input id='useROI' value="Apply" onclick="onClickROI()" type="button" class="btn btn-orange-toggle btn-xs" title="Show/Hide ROI">
+                            <input value="Reinit" onclick="updateROIFromVideo()" type="button" class="btn btn-default btn-xs" title="Reinit ROI from video">
+                        </div>
+                  
+                        <div class="inline-block">
+                            Tags sample filter:
+                            <input type="text" value="return true" id="tagsSampleFilter" onchange="onTagsParametersChanged(event)">
+                        </div>
+                        <div class="text">
+                            Tags interval filter:
+                            <input type="text" value="return true" id="tagsIntervalFilter" onchange="onTagsParametersChanged(event)">
+                        </div>
+                        <div class="text">
+                            Tags ID filter:
+                            <input type="text" value="return true" id="tagsIDFilter" onchange="onTagsParametersChanged(event)">
+                        </div>
+                    
+                      </div>
+                    </div>
+                  
                 </div>
             </div>
             

@@ -596,6 +596,16 @@ fieldset[disabled] .btn-window.focus {
   display: inline;
 }
 
+.inline-block {
+ display: inline-block;
+}
+
+div.disabled {
+  color: gray;
+}
+input:disabled {
+  color: gray;
+}
 
 .obsTableRow {
     border: 1px solid gray;
