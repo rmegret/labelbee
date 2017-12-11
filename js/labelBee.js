@@ -103,7 +103,8 @@ function init() {
       })
       
     $( ".sortable" ).sortable({
-      connectWith: ".sortable"
+      connectWith: ".sortable",
+      handle: "label, .block-header"
     });
     $( ".sortable" ).disableSelection();
 
