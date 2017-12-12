@@ -88,6 +88,8 @@ function OverlayControl(canvasTagId) {
     transformFactor = 1.0;
     canvasTransform = [1,0, 0,1, 0,0]  // Global
     canvasTransformReference = {w:100, h:100} // Keep previous canvas size
+    
+    refreshTagsParameters()
 }
 
 
@@ -1393,9 +1395,10 @@ tagsSampleFilter = function(tag) {return true}
 tagsIntervalFilter = function(interval) {return true}
 tagsIDFilter = function(idinfo) {return true}
 tagsSampleFilterROI = function(tag) {return true}
-function onTagsParametersChanged() {
-    console.log('onTagsParametersChanged')
-    // Callback when tags chronogram computation parameters have changed
+function refreshTagsParameters() {
+    console.log('refreshTagsParameters')
+    // Reread tag parameters from GUI
+    
     tagsSampleFilterCustom = Function("tag",$('#tagsSampleFilter')[0].value)
     
     let minDM = Number($('#tagsMinDM').val())
@@ -1418,9 +1421,15 @@ function onTagsParametersChanged() {
       return (interval.end-interval.begin>=minLength) && fun(interval)
     }
     tagsIDFilter = Function("idinfo",$('#tagsIDFilter')[0].value)
-    console.log('onTagsParametersChanged:\ntagsSampleFilter=',tagsSampleFilter,
-                'tagsIntervalFilter=',tagsIntervalFilter,
+    console.log('refreshTagsParameters:',
+                '\ntagsSampleFilter=',tagsSampleFilter,
+                '\ntagsIntervalFilter=',tagsIntervalFilter,
                 '\ntagsIDFilter=',tagsIDFilter)
+}
+function onTagsParametersChanged() {
+    console.log('onTagsParametersChanged')
+    // Callback when tags chronogram computation parameters have changed
+    refreshTagsParameters()
     refreshChronogram()
     videoControl.refresh()
 }
