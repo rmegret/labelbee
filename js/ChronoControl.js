@@ -1179,8 +1179,8 @@ function updateActivities(onlyScaling) {
             var color = "black";
             if (d.Activity == "fanning") color = "#99CCFF";
             else if (d.Activity == "pollen") color = "#FFFF00";
-            else if (d.Activity == "entering") color = "#CC00FF";
-            else if (d.Activity == "leaving") color = "#00CC99";
+            else if (d.Activity == "entering") color = "#FFC0C0";
+            else if (d.Activity == "leaving") color = "#C0FFC0";
             return color;
         })
         // Display tooltip message
@@ -1283,6 +1283,7 @@ function insertTag(selection) {
         .call(setTagGeom)
 }
 function setTagGeom(selection) {
+    // Tag interval
     let H=axes.yScale.rangeBand();
     function tagHeight(d) {
         return H*(3-d.hammingavg)/3;
@@ -1303,15 +1304,20 @@ function setTagGeom(selection) {
         })
         .style("fill", function(d) {
             if (d.labeling.entering) {
-                console.log('setTagGeom: found entering, d=',d)
-                return '#ffc0c0'
+                //console.log('setTagGeom: found entering, d=',d)
+                return '#ff00c0'
+            } else if (d.labeling.leaving) {
+                //console.log('setTagGeom: found entering, d=',d)
+                return '#00ef00'
             } else {
                 return 'blue'
             }
         })
         .style("stroke", function(d) {
             if (d.labeling.entering)
-                return '#ffc0c0'
+                return '#ff00c0'
+            else if (d.labeling.leaving)
+                return '#00e000'
             else
                 return 'blue'
         })
@@ -1379,7 +1385,8 @@ function getFlatTags(useFilter) {
             if (useFilter) {
                 if (flag_restrictID) {
                     if ($.inArray(String(id), restrictIDArray)<0) continue;
-                } else if (flag_excludeID) {
+                }
+                if (flag_excludeID) {
                     if ($.inArray(String(id), excludeIDArray)>=0) continue;
                 }
             }
@@ -1404,7 +1411,8 @@ function getTTags() {
             
             if (flag_restrictID) {
                 if ($.inArray(String(id), restrictIDArray)<0) continue;
-            } else if (flag_excludeID) {
+            }
+            if (flag_excludeID) {
                 if ($.inArray(String(id), excludeIDArray)>=0) continue;
             }
             
@@ -1427,7 +1435,8 @@ function updateObsTable() {
 
                 if (flag_restrictID) {
                     if ($.inArray(String(id), restrictIDArray)<0) continue;
-                } else if (flag_excludeID) {
+                }
+                if (flag_excludeID) {
                     if ($.inArray(String(id), excludeIDArray)>=0) continue;
                 }
             
@@ -1514,7 +1523,8 @@ function refreshChronogram() {
             
                 if (flag_restrictID) {
                     if ($.inArray(String(id), restrictIDArray)<0) continue;
-                } else if (flag_excludeID) {
+                } 
+                if (flag_excludeID) {
                     if ($.inArray(String(id), excludeIDArray)>=0) continue;
                 }
                 if (flag_hideInvalid) {
