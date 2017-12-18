@@ -204,7 +204,36 @@ function tagsAddFrames(Tags) {
 
 function setTags(obj) {
     console.log('setTags: changing Tags data structure and refreshing...')
+    
+    var info
+    if ('info' in obj) {
+        // New tag format v2 with metainfo
+        
+        // obj['info']
+        info = obj['info']
+        
+        if (info['type'] != "tags-multiframe") {
+            console.log('onTagsReaderLoad: ABORTED, unsupported file format. info["type"]='+info['type'])
+            return
+        }
+        
+        // obj['data'].tags[tag_id_in_frame]
+        obj = obj['data']
+    } else {
+        // Old format v1: Tags JSON directly stored in the json
+        // obj[frame].tags[tag_id_in_frame]
+        
+        // Just use obj directly
+        
+        // Create dummy info header
+        info = {
+            "type": "tags-multiframe",
+            "source": "Converted from Tags v1"
+          }
+    }
+    
     Tags = obj;
+    TagsInfo = info
     
     tagsAddFrames(Tags)
     
@@ -221,7 +250,6 @@ function setTags(obj) {
     // Disable DM field if not there
     $('.requireDM').prop('disabled', !tagsHaveDM); 
     $('.requireDM').toggleClass('disabled', !tagsHaveDM); 
-
     
     refreshChronogram()
     adjustChronogramHeight()
@@ -247,6 +275,15 @@ function loadTagsFromFile(event) {
 
 function saveTagsToFile(event) {
     console.log("saveTagsToFile: exporting to JSON...")
+
+    obj = {
+        "info": {
+            "type": "tags-multiframe",
+            "data-format": "root.data[frame].tags[id_in_frame]"
+            //"source": "Exported from labelbee on "+Date()
+        },
+        "data": Tags
+    }
 
     saveObjToJsonFile(Tags, 'Tags.json')
 }
