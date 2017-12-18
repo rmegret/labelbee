@@ -17,8 +17,12 @@ canvas {
 }
 
 
-td {
+.main-table > tbody > tr > td {
     padding-right: 40px;
+    vertical-align: top;
+}
+
+td.top-align {
     vertical-align: top;
 }
 
@@ -594,6 +598,13 @@ fieldset[disabled] .btn-window.focus {
 #alerttext {
   min-width: 200px;
   display: inline;
+}
+
+#tagImageDiv {
+  vertical-align: baseline;
+}
+#extractedTagImageDiv {
+  vertical-align: baseline;
 }
 
 .inline-block {

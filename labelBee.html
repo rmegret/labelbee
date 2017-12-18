@@ -30,6 +30,8 @@
   <script type="text/javascript" src="js/extern/marcj-css-element-queries-134443d/src/ResizeSensor.js"></script>
   <script type="text/javascript" src="js/extern/jquery.csv.js"></script>
   
+  <script type="text/javascript" src="js/extern/perspective-transform/perspective-transform.js"></script>
+  
   <script type="text/javascript" src="js/Model.js"></script>
   <script type="text/javascript" src="js/VideoList.js"></script>
   <script type="text/javascript" src="js/VideoControl.js"></script>
@@ -72,7 +74,7 @@
 
   <div class="container main">
   
-    <table>
+    <table class="main-table">
       <tr>
         <td>
           <div id="left-side">
@@ -396,12 +398,6 @@
             <div id='videozoom' class='collapsible'> 
               <label>Zoom</label>
               <div>
-                                
-                <div class="float-right">
-                  <div id="tagImageDiv" style="width:50px; height:50px;" >
-                  <img id="tagImage" class="pixelated"/>
-                  </div>
-                </div>
               
                 <div class="checkbox" style="display:inline">
                     <label><input type="checkbox" checked="false" id="checkboxShowZoom" onclick="zoomOverlay.clickShowZoom()">Update</label>
@@ -416,12 +412,34 @@
                 
                 <div style="clear:both;"></div>
                 
+                <table>
+                <tr>
+                <td>
                 <div id="zoomresize" class="ui-widget-content">
                     <div id="zoomDiv" class="canvaswrapper">
                     <canvas id="zoom"></canvas>
                     <canvas id="zoomOverlay" style="border: none; z-index: 3"></canvas>
                     </div>
                 </div>
+                </td><td class="top-align">
+                <div>
+                  <div>
+                    <div class="inline-block">ID</div><br>
+                    <div id="tagImageDiv" style="width:50px; height:50px;" class="inline-block" >
+                    <img id="tagImage" class="pixelated"/>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="inline-block">Video</div><br>
+                    <div id="extractedTagImageDiv" style="width:50px; height:50px; border: 1px solid red;" class="inline-block">
+                    <canvas id="zoomExtractedTagCanvas" width="90px" height="90px" style="width:100%; height:100%;" class="pixelated"></canvas>
+                    <canvas id="zoomExtractedTagCanvas2" width="90px" height="90px" style="width:100%; height:100%;" class="pixelated"></canvas>
+                    </div>
+                  </div>
+                </div>
+                </td>
+                <tr>
+                </table>
                 
                 <div id='videozoom_parts' class='subpanel collapsible default-active'> 
                   <label>Parts labeling</label>

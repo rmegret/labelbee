@@ -4,6 +4,7 @@
 function initZoomView() {
 
     zoomOverlay = new ZoomOverlay($("#zoom")[0],$("#zoomOverlay")[0])
+    zoomOverlay.canvasExtract = $("zoomExtractedTagCanvas")
     
     zoomOverlay.tagImageRoot='data/tags/tag25h5inv/png'
         
@@ -32,6 +33,7 @@ function ZoomOverlay(canvas, canvasOverlay) {
     this.onKeyDown = this.onKeyDown.bind(this)
     
     this.tagImageRoot='data/tags/tag25h5inv/png'
+    this.canvasExtract=undefined
     
     this.selected = undefined
     this.lastRect = undefined
@@ -64,6 +66,10 @@ function ZoomOverlay(canvas, canvasOverlay) {
     $("#zoomresize").on( "resizestop", this.refreshZoomSize ); // bind ok
     
     $("#tagImageDiv").resizable({
+      helper: "ui-resizable-helper",
+      aspectRatio: 1,   // Need to put a value even to update it later
+    });
+    $("#extractedTagImageDiv").resizable({
       helper: "ui-resizable-helper",
       aspectRatio: 1,   // Need to put a value even to update it later
     });
@@ -808,6 +814,111 @@ ZoomOverlay.prototype.redraw = function() {
     
     this.canvas1.getContext('2d').clearRect(0,0,this.canvas1.width, this.canvas1.height)
     this.canvas1.renderAll();
+    
+}
+
+ZoomOverlay.prototype.updateTagView = function(tag) {
+    if (!tag) return
+    if (!tag.p) return
+    
+    var cx = tag.c[0]
+    var cy = tag.c[1]
+    
+    // Need some trickery: first copy part of video in tmp canvas 
+    // before transforming
+            
+    var S2=90
+    var zoomScale = 1
+    var mw=S2/2, mh=S2/2
+    
+    var tmpCanvas2 = $('#zoomExtractedTagCanvas2')[0];
+    var ctx2 = tmpCanvas2.getContext('2d');
+    tmpCanvas2.width = S2
+    tmpCanvas2.height = S2
+    
+    let video = $('#video')[0]
+    
+    ctx2.save()
+    
+        ctx2.setTransform(1,0, 0,1, 0,0)
+        ctx2.clearRect(0, 0, S2,S2)
+
+        ctx2.translate(+mw,+mh)
+        //ctx2.scale(zoomScale,zoomScale)
+        ctx2.translate(-cx,-cy)
+
+        ctx2.drawImage(video,0,0) // Possibly out of sync when playing
+        
+    ctx2.restore()
+    
+    var dx = mw-cx, dy = mh-cy
+    
+    src_pts = [tag.p[0][0]+dx,tag.p[0][1]+dy, tag.p[1][0]+dx,tag.p[1][1]+dy,
+                   tag.p[2][0]+dx,tag.p[2][1]+dy, tag.p[3][0]+dx,tag.p[3][1]+dy]
+    
+    /* Now, let's warp it to the final canvas */
+    
+    let S = 9*3
+    
+    var tmpCanvas = $('#zoomExtractedTagCanvas')[0];
+    var ctx = tmpCanvas.getContext('2d');
+    tmpCanvas.width = S
+    tmpCanvas.height = S
+
+    var data2 = ctx2.getImageData(0, 0, S2, S2).data;
+    var imageData = ctx.getImageData(0, 0, S, S)
+    var data=imageData.data
+    
+    let dst_pts = [0,0, S,0, S,S, 0,S]
+    var perspT = PerspT(src_pts, dst_pts);
+        
+    // TODO: Should probably use some GL library such as
+    // https://github.com/evanw/glfx.js instead of doing it manually
+    var nearest = false
+    if (nearest) {
+        for (var y=0; y<S; y++) {
+            for (var x=0; x<S; x++) {
+                var dstPt = perspT.transformInverse(x,y);
+                let x2=Math.round(dstPt[0]), y2=Math.round(dstPt[1])
+                data[(x+y*S)*4] = data2[(x2+y2*S2)*4]
+                data[(x+y*S)*4+1] = data2[(x2+y2*S2)*4+1]
+                data[(x+y*S)*4+2] = data2[(x2+y2*S2)*4+2]
+                data[(x+y*S)*4+3] = 255
+            }
+        }
+    } else {
+        for (var y=0; y<S; y++) {
+            for (var x=0; x<S; x++) {
+                var dstPt = perspT.transformInverse(x,y);
+                let x2=Math.round(dstPt[0]), y2=Math.round(dstPt[1])
+                let a=dstPt[0]-x2, b=dstPt[1]-y2
+                data[(x+y*S)*4] =   (1-a)*((1-b)*data2[(x2+y2*S2)*4]
+                                            + b *data2[(x2+(y2+1)*S2)*4])
+                                    +  a *((1-b)*data2[((x2+1)+y2*S2)*4]
+                                            + b *data2[((x2+1)+(y2+1)*S2)*4])
+                data[(x+y*S)*4+1] = (1-a)*((1-b)*data2[(x2+y2*S2)*4+1]
+                                            + b *data2[(x2+(y2+1)*S2)*4+1])
+                                    +  a *((1-b)*data2[((x2+1)+y2*S2)*4+1]
+                                            + b *data2[((x2+1)+(y2+1)*S2)*4+1])
+                data[(x+y*S)*4+2] = (1-a)*((1-b)*data2[(x2+y2*S2)*4+2]
+                                            + b *data2[(x2+(y2+1)*S2)*4+2])
+                                    +  a *((1-b)*data2[((x2+1)+y2*S2)*4+2]
+                                            + b *data2[((x2+1)+(y2+1)*S2)*4+2])
+                data[(x+y*S)*4+3] = 255
+            }
+        }
+    }
+    ctx.putImageData(imageData, 0, 0)
+    
+    /* Add overlay of tag position */
+    ctx2.setTransform(1,0, 0,1, 0,0)
+    ctx2.beginPath()
+    ctx2.moveTo(src_pts[0],src_pts[1])
+    ctx2.lineTo(src_pts[6],src_pts[7])
+    ctx2.lineTo(src_pts[4],src_pts[5])
+    ctx2.lineTo(src_pts[2],src_pts[3])
+    ctx2.strokeStyle='red'
+    ctx2.stroke()
 }
 
 ZoomOverlay.prototype.refreshZoom = function() {
@@ -846,6 +957,8 @@ ZoomOverlay.prototype.refreshZoom = function() {
     }
     
     this.setFrameGeometry(cx, cy, angle)
+
+    this.updateTagView(tag)
 
     let zw=zoomOverlay.width
     let zh=zoomOverlay.height
