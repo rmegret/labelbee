@@ -1389,6 +1389,7 @@ function onClickROI() {
 }
 
 /* Filters */
+tagsRGBSampleFilter = function(tag) {return true}
 tagsDMSampleFilter = function(tag) {return true}
 tagsHammingSampleFilter = function(tag) {return true}
 tagsSampleFilter = function(tag) {return true}
@@ -1408,11 +1409,28 @@ function refreshTagsParameters() {
         tagsDMSampleFilter = function(tag) {return true}
     }
     
+    let useRGBfilter = $('#tagsUseRgbFilter').hasClass('active')
+    if (useRGBfilter) {
+        tagsRGBSampleFilter = function(tag) {
+              let rgb_mean = tag.rgb_mean
+              if (!rgb_mean) return true
+              let y=0.299*rgb_mean[0]+0.587*rgb_mean[1]+0.1114*rgb_mean[2]
+              let CB=(rgb_mean[2]-y)/y
+              let CR=(rgb_mean[0]-y)/y
+              return CB-CR < 0.35
+          }
+          $('#tagsUseRgbFilter').addClass('active')
+    } else {
+        tagsRGBSampleFilter = function(tag) {return true}
+        $('#tagsUseRgbFilter').removeClass('active')
+    }
+    
     tagsSampleFilter = function(tag){
           return tagsHammingSampleFilter(tag)
+                 &&tagsSampleFilterROI(tag)
                  &&tagsDMSampleFilter(tag)
-                 &&tagsSampleFilterCustom(tag)
-                 &&tagsSampleFilterROI(tag)}
+                 &&tagsRGBSampleFilter(tag)
+                 &&tagsSampleFilterCustom(tag)}
     
     let minLength = Number($('#tagsIntervalFilterMinLength').val())
     
@@ -1452,6 +1470,10 @@ function chronoFilter(mode) {
   }
   if (mode=='Hall') {
       tagsHammingSampleFilter = function(tag) {return true}
+      onTagsParametersChanged()
+  }
+  if (mode=='RGB') {
+      $('#tagsUseRgbFilter').toggleClass('active')
       onTagsParametersChanged()
   }
 }
