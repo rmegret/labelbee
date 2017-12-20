@@ -921,6 +921,10 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
     ctx2.stroke()
 }
 
+ZoomOverlay.prototype.updateDistractors = function(tag) {
+    
+}
+
 ZoomOverlay.prototype.refreshZoom = function() {
 
     if (!this.flagShowZoom) {

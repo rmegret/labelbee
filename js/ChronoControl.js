@@ -20,6 +20,9 @@ function initChrono() {
     flag_hideInvalid = false
     mousewheelMode = false
     onMousewheelModeToggled()
+    
+    eventSeekMode = 'tag'
+    updateEventSeekMode()
 
     // SVG adjust to its parent #chronoDiv
     var svg = d3.select("#svgVisualize")    
@@ -384,6 +387,25 @@ function onAxesChanged(event) {
     updateChrono()
 }
 
+function updateEventSeekMode() {
+    if (eventSeekMode=='tag') {
+        $(".eventSeekMode").removeClass('active')
+        $(".eventSeekMode-tag").addClass('active')   
+    }
+    if (eventSeekMode=='freetag') {
+        $(".eventSeekMode").removeClass('active')
+        $(".eventSeekMode-freetag").addClass('active')        
+    }
+    if (eventSeekMode=='obs') {
+        $(".eventSeekMode").removeClass('active')
+        $(".eventSeekMode-obs").addClass('active')        
+    }
+}
+function eventSeekModeClicked(mode) {
+    eventSeekMode=mode
+    updateEventSeekMode()
+}
+
 function gotoFirstEvent() {
     let frame = videoControl.getCurrentFrame()
     let id = defaultSelectedBee
@@ -404,27 +426,85 @@ function gotoNextEvent() {
     let frame = videoControl.getCurrentFrame()
     let id = defaultSelectedBee
     console.log("id=",id)
-    let interval = findNextTagEvent(Number(frame), id)
     
-    if (interval==null) {
-        if (flag_autoEventMode) {
-            onClickNextID()
-            return
-        } else
-          return;
+    if (eventSeekMode == 'tag') {
+        let interval = findNextTagEvent(Number(frame), id)
+    
+        if (interval==null) {
+            if (flag_autoEventMode) {
+                onClickNextID()
+                return
+            } else
+              return;
+        }
+    
+        console.log(interval)
+        defaultSelectedBee = id
+        //nextSeekFocusWindow()
+        videoControl.seekFrame(Number(interval.begin))
+    } else if (eventSeekMode == 'freetag') {
+        let interval = findNextFreeTagEvent(Number(frame), id)
+        console.log('goto interval=',interval)
+        if (interval==null) {
+              return;
+        }
+        if (interval.id != id) {
+            if (!flag_autoEventMode) {
+                console.log('not same id. aborted')
+                return
+            }
+        }
+        defaultSelectedBee = interval.id
+        videoControl.seekFrame(Number(interval.begin))
+    } else if (eventSeekMode == 'obs') {
+        let obs = findNextObsEvent(Number(frame), id)
+    
+        if (!obs) {
+            if (flag_autoEventMode) {
+                onClickNextID()
+                return
+            } else
+              return;
+        }
+    
+        console.log(obs)
+        defaultSelectedBee = id
+        //nextSeekFocusWindow()
+        videoControl.seekFrame(Number(obs.frame))
     }
-    
-    console.log(interval)
-    defaultSelectedBee = id
-    //nextSeekFocusWindow()
-    videoControl.seekFrame(Number(interval.begin))
 }
 function findNextTagEvent(frame, id) {
     let list = tagIntervals.filter(
-          function(element) {return element.id==id && Number(element.begin)>frame}
+          function(element) {return element.id==id && ((element.id==id && Number(element.begin)>frame) || (Number(element.id)>Number(id)))}
         ).sort(
-          function(a,b) {return Number(a.begin)-Number(b.begin)}
+          function(a,b) {
+              let d=Number(a.id)-Number(b.id)
+              if (d==0) return Number(a.begin)-Number(b.begin)
+              else return d}
         )
+    console.log(list)
+    if (list.length==0) return undefined
+    return list[0]
+}
+function findNextFreeTagEvent(frame, id) {
+    let list = tagIntervals.filter(
+          function(element) {return !element.labeling.labeled && ((element.id==id && Number(element.begin)>frame) || (Number(element.id)>Number(id)))}
+        ).sort(
+          function(a,b) {
+              let d=Number(a.id)-Number(b.id)
+              if (d==0) return Number(a.begin)-Number(b.begin)
+              else return d}
+        )
+    console.log(list)
+    if (list.length==0) return undefined
+    return list[0]
+}
+function findNextObsEvent(frame, id) {
+    let obsList = flatTracksValidGroupById[id]
+    if (!obsList) return undefined
+    let list = obsList.filter(
+          function(element) {return Number(element.frame)>frame}
+        ) // already sorted by frame
     console.log(list)
     if (list.length==0) return undefined
     return list[0]
@@ -440,30 +520,86 @@ function gotoPreviousEvent() {
     let frame = videoControl.getCurrentFrame()
     let id = defaultSelectedBee
     console.log("id=",id)
-    let interval = findPreviousTagEvent(Number(frame), id)
+    if (eventSeekMode == 'tag') {
+        let interval = findPreviousTagEvent(Number(frame), id)
+        console.log('goto interval=',interval)
+        if (interval==null) {
+              return;
+        }
+        if (interval.id != id) {
+            if (!flag_autoEventMode) {
+                console.log('not same id. aborted')
+                return
+            }
+        }
+        defaultSelectedBee = interval.id
+        videoControl.seekFrame(Number(interval.begin))
+    } else if (eventSeekMode == 'freetag') {
+        let interval = findPreviousFreeTagEvent(Number(frame), id)
+        console.log('goto interval=',interval)
+        if (interval==null) {
+              return;
+        }
+        if (interval.id != id) {
+            if (!flag_autoEventMode) {
+                console.log('not same id. aborted')
+                return
+            }
+        }
+        defaultSelectedBee = interval.id
+        videoControl.seekFrame(Number(interval.begin))
+    } else if (eventSeekMode == 'obs') {
+        let obs = findPreviousObsEvent(Number(frame), id)
     
-    if (interval==null) {
-        if (flag_autoEventMode) {
-            onClickPrevID()
-            return
-        } else
-          return;
+        if (!obs) {
+            if (flag_autoEventMode) {
+                onClickPrevID(true)
+                return
+            } else
+              return;
+        }
+    
+        console.log(obs)
+        defaultSelectedBee = id
+        //nextSeekFocusWindow()
+        videoControl.seekFrame(Number(obs.frame))
     }
-    
-    console.log(interval)
-    defaultSelectedBee = id
-    //nextSeekFocusWindow()
-    videoControl.seekFrame(Number(interval.end))
 }
 function findPreviousTagEvent(frame, id) {
     let list = tagIntervals.filter(
-          function(element) {return element.id==id && Number(element.end)<frame}
+          function(element) {return (element.id==id && Number(element.begin)<frame) || (Number(element.id)<Number(id))}
         ).sort(
-          function(a,b) {return Number(b.end)-Number(a.end)}
+          function(a,b) {
+              let d=Number(a.id)-Number(b.id)
+              if (d==0) return -(Number(a.begin)-Number(b.begin))
+              else return -d}
         )
     console.log(list)
     if (list.length==0) return undefined
     return list[0]
+}
+function findPreviousFreeTagEvent(frame, id) {
+    let list = tagIntervals.filter(
+          function(element) {return !element.labeling.labeled && ((element.id==id && Number(element.begin)<frame) || (Number(element.id)<Number(id)))}
+        ).sort(
+          function(a,b) {
+              let d=Number(a.id)-Number(b.id)
+              if (d==0) return -(Number(a.begin)-Number(b.begin))
+              else return -d}
+        )
+    console.log(list)
+    if (list.length==0) return undefined
+    return list[0]
+}
+function findPreviousObsEvent(frame, id) {
+    let obsList = flatTracksValidGroupById[id]
+    if (!obsList) return undefined
+    let list = obsList.filter(
+          function(element) {return Number(element.frame)<frame}
+        ) // already sorted by frame
+    console.log(list)
+    if (list.length==0) return undefined
+    return list[list.length-1]
 }
 
 function onClickNextID() {
@@ -487,8 +623,8 @@ function onClickNextID() {
 
     refreshChronogram()
 }
-function onClickPrevID() {
-    let domain = validAllTagIdsDomain()
+function onClickPrevID(gotoLast) {
+    let domain = validVisibleTagIdsDomain()
                   .map(function(d){return String(d);})
     let N=domain.length
     if (N==0) return;
@@ -501,13 +637,17 @@ function onClickPrevID() {
     setRestrictID(newID)
     
     if (flag_autoEventMode) {
-        gotoFirstEvent()
+        if (gotoLast) {
+            gotoLastEvent()
+        } else {
+            gotoFirstEvent()
+        }
     }
 
     refreshChronogram()
 }
 function onClickNextIDStart() {
-    let domain = validAllTagIdsDomain()
+    let domain = validVisibleTagIdsDomain()
                   .map(function(d){return String(d);})
     let N=domain.length
     if (N==0) return;
@@ -803,7 +943,7 @@ function createIntervalList() {
 
             var iData = chronogramData[iArray[0]]; 
             let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, 
-                Activity: iData.Activity, labels:iData.labels, pollen: iData.pollen, tag:iData.tag };
+                Activity: iData.Activity, labels:iData.labels, pollen: iData.pollen, tag:iData.tag, obs:iData.obs };
 
             // let tempInterval = { x1: xValues[0], x2: xValues[0], y: y, 
             //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
@@ -818,7 +958,7 @@ function createIntervalList() {
                     allIntervals.push(tempInterval);
                     tempInterval = { x1: xValues[i], x2: xValues[i], y: y, 
                     Activity: iData.Activity,labels:iData
-                    .labels, pollen: iData.pollen, tag:iData.tag}; // New interval
+                    .labels, pollen: iData.pollen, tag:iData.tag, obs:iData.obs}; // New interval
                 }
             }
             allIntervals.push(tempInterval);
@@ -846,7 +986,8 @@ function createIntervalList() {
 
 function onActivityClick(d) {
     console.log("CLICK Activity d=",d);
-    d3.event.stopPropagation();
+    // Prevent default chronogram click to go to the correct frame
+    d3.event.stopPropagation(); 
     
     gotoEvent(d.x1, d.y)   
 }
@@ -1270,6 +1411,13 @@ function initActivities() {
     updateActivities()
 }
 
+function onTagClick(tagInterval) {
+    console.log("CLICK Tag tagInterval=",tagInterval);
+    // Prevent default chronogram click to go to the correct frame
+    d3.event.stopPropagation();
+    
+    gotoEvent(Number(tagInterval.begin), tagInterval.id)   
+}
 
 function insertTag(selection) {
     selection
@@ -1280,6 +1428,7 @@ function insertTag(selection) {
         .style("stroke-width", "1px")
         //.attr("r",5)
         .attr("class","tag")
+        .on('click',onTagClick)
         .call(setTagGeom)
 }
 function setTagGeom(selection) {
@@ -1427,6 +1576,7 @@ function getTTags() {
 
 var flatTracks = []
 function updateObsTable() {
+    // All obs sorted by frame,id
     flatTracksAll = []
     for (let F in Tracks) {
         for (let id in Tracks[F]) {
@@ -1440,18 +1590,28 @@ function updateObsTable() {
                     if ($.inArray(String(id), excludeIDArray)>=0) continue;
                 }
             
-                let chronoObs = {'frame':F, 'id':id, 'labels':obs.labels};
+                let chronoObs = {'frame':F, 'id':id, 'labels':obs.labels, 'obs':obs};
 
                 flatTracksAll.push(chronoObs)
         }
     }
-    if (flag_hideInvalid) {
-        flatTracks = flatTracksAll.filter(function(d){
+    flatTracksValid = flatTracksAll.filter(function(d){
                 return (!containsLabel(d.labels,'falsealarm') &&
                         !containsLabel(d.labels,'wrongid')    )
             })
-    } else
+    var groupBy = function(array, key) {
+      return array.reduce(function(groups, x) {
+        (groups[x[key]] =  groups[x[key]] || []).push(x);
+        return groups;
+      }, {});
+    }; // Keep order of frames
+    flatTracksValidGroupById = groupBy(flatTracksValid, 'id') 
+    
+    if (flag_hideInvalid) {
+        flatTracks = flatTracksValid;
+    } else {
         flatTracks = flatTracksAll;
+    }
     
     d3.select('#obsTable').html("");
     var table = d3.select('#obsTable').append('table');
@@ -1496,6 +1656,48 @@ function updateObsTable() {
            .append('td')
            .html(ƒ('html'))
            .attr('class', ƒ('cl'));
+}
+
+function modifyCurrentObsSpan(mode) {
+    let r = getSelectedRect()
+    if (!r) return;
+    
+    let frame = r.obs.frame
+    let id = r.obs.ID
+    
+    let obs=Tracks[frame][id]
+    
+    let tracks = flatTracksAll.filter(
+              function(element) {return element.obs == obs}
+              //{return (element.obs.frame==obs.frame && element.obs.ID==obs.ID)}
+          )
+    if (tracks.length==0) return
+    
+    let track=tracks[0]
+    
+    if (! ('span' in obs)) {
+        obs.span = {'f1':track.span.f1, 'f2':track.span.f2}
+    }
+    if (mode=='copy') {
+        return
+    }
+    if (mode=='extendleft') {
+        obs.span.f1 = obs.span.f1-10
+        if (obs.span.f1<0) obs.span.f1=0
+    }
+    if (mode=='extendright') {
+        obs.span.f2 = obs.span.f2+10
+    }
+    if (mode=='restrictleft') {
+        obs.span.f1 = obs.span.f1+10
+        if (obs.span.f1>obs.frame) obs.span.f1=obs.frame
+    }
+    if (mode=='restrictright') {
+        obs.span.f2 = obs.span.f2-10
+        if (obs.span.f2<obs.frame) obs.span.f2=obs.frame
+    }
+    updateTagsLabels()
+    drawChrono()
 }
 
 
@@ -1547,20 +1749,20 @@ function refreshChronogram() {
                 let b=obs.bool_acts
                 
                 if (!b[0] && !b[2] && !b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"", labels:obs.labels, pollen:b[1], tag: obs.tag});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"", labels:obs.labels, pollen:b[1], tag: obs.tag, obs: obs});
                 }
                 // if (b[1]) {
                 //     chronogramData.push({'x':F, 'y':id, 'Activity':"pollen", labels:obs.labels});
                 //     //chronoObs.Activity = "pollenating";
                 // }
                 if (b[2]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering", labels:obs.labels, pollen:b[1], tag: obs.tag});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering", labels:obs.labels, pollen:b[1], tag: obs.tag, obs: obs});
                 }
                 if (b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving", labels:obs.labels, pollen:b[1], tag: obs.tag});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving", labels:obs.labels, pollen:b[1], tag: obs.tag, obs: obs});
                 }
                 if (b[0]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning", labels:obs.labels, pollen:b[1], tag: obs.tag});
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning", labels:obs.labels, pollen:b[1], tag: obs.tag, obs: obs});
                 }
 
 

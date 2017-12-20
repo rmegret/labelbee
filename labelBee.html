@@ -179,8 +179,12 @@
               
               <button id="prevIDButton" onclick="onClickPrevID()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Previous Bee">PrevID <span class="glyphicon glyphicon-arrow-up small"></span></button>
               <button id="nextIDButton" onclick="onClickNextID()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID <span class="glyphicon glyphicon-arrow-down small"></span></button>
-<!--               <button id="nextIDFirstButton" onclick="onClickNextIDStart()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID-First <span class="glyphicon glyphicon-arrow-down small"></span><span class="glyphicon glyphicon- glyphicon-fast-forward icon-flipped small"></span></button> -->
-
+              
+              <button onclick="modifyCurrentObsSpan('extendleft')" type="button" class="btn btn-obs-expand btn-xs" title="Extend annotation left"> <span class="glyphicon glyphicon-chevron-left small"></span>+</button>
+              <button onclick="modifyCurrentObsSpan('restrictleft')" type="button" class="btn btn-obs-expand btn-xs" title="Restrict annotation left"> <span class="glyphicon glyphicon-chevron-right small"></span>-</button>
+              <span class='small blue-text'>-span-</span>
+              <button onclick="modifyCurrentObsSpan('restrictright')" type="button" class="btn btn-obs-expand btn-xs" title="Restrict annotation right">-<span class="glyphicon glyphicon-chevron-left small"></span></button>
+              <button onclick="modifyCurrentObsSpan('extendright')" type="button" class="btn btn-obs-expand btn-xs" title="Extend annotation right">+<span class="glyphicon glyphicon-chevron-right small"></span></button>
               </span>
               </div>
               
@@ -188,6 +192,10 @@
               <div class="block-header small">Events:</div>              
               <span class="block-content">
               <button id="autoEventButton" onclick="onAutoEventButtonClick()" type="button" class="btn btn-xs btn-green-toggle" title="Toggle Auto Seek Event Mode">AutoSeek <span class="glyphicon glyphicon-arrow-down small"></span><span class="glyphicon glyphicon-arrow-up small"></span></button>
+              <button onclick="eventSeekModeClicked('tag')" type="button" class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-tag" title="Tag mode">Tag</button>
+              <button onclick="eventSeekModeClicked('freetag')" type="button" class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-freetag" title="Free tag mode">UnlabeledTag</button>
+              <button onclick="eventSeekModeClicked('obs')" type="button" class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-obs" title="Obs mode">Obs</button>
+              
               
               <button onclick="gotoFirstEvent()" type="button" class="btn btn-default btn-xs" title="Go to first event"><span class="glyphicon  glyphicon-fast-forward icon-flipped small"></span> First</button>
               <button onclick="gotoPreviousEvent()" type="button" class="btn btn-default btn-xs" title="Go to previous event"><span class="glyphicon glyphicon-step-backward small"></span> Prev</button>
@@ -441,6 +449,13 @@
                 <tr>
                 </table>
                 
+                <div id='videozoom_distractors' class='subpanel collapsible default-active'> 
+                  <label>Distractors</label>
+                  <div>
+                    
+                  </div>
+                </div>
+                
                 <div id='videozoom_parts' class='subpanel collapsible default-active'> 
                   <label>Parts labeling</label>
                   <div>
@@ -576,16 +591,17 @@
                         </div>
                         
                         <div class="requireRGB inline-block">
-                            RGB:<input type="button" id="tagsUseRgbFilter" onclick="chronoFilter('RGB')" class="btn btn-xs requireRGB btn-orange-toggle active" title="Show only tags with Hamming==0" value="No blue"/>
+                            RGB:
+                            <input type="button" id="tagsUseRgbFilter" onclick="chronoFilter('RGB')" class="btn btn-xs requireRGB btn-orange-toggle active" title="Show only tags with no blue background" value="No blue"/>
+                            <input type="button" id="tagsUseRgbFilterContrast" onclick="chronoFilter('RGB_contrast')" class="btn btn-xs requireRGB btn-orange-toggle disabled" title="Show only tags with high contrast" value="High contrast"/>
                         </div>
-                        
                         
               
                         <div class="inline-block">
                             ROI:
                   
                             <input type="text" value="0,0,w,h" size="16" id="ROI" onchange="onROITextChanged(event)" title="Region of Interest format left,top,right,bottom in video pixels">
-                            <input id='useROI' value="Apply" onclick="onClickROI()" type="button" class="btn btn-orange-toggle btn-xs" title="Show/Hide ROI">
+                            <input id='useROI' value="Apply" onclick="onClickROI()" type="button" class="btn btn-orange-toggle btn-xs active" title="Show/Hide ROI">
                             <input value="Reinit" onclick="updateROIFromVideo()" type="button" class="btn btn-default btn-xs" title="Reinit ROI from video">
                         </div>
                   

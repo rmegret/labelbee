@@ -2253,12 +2253,19 @@ function onObjectModified(option) {
 }
 
 
+
 function updateTagsLabels() {
     for (let obs of flatTracksAll) {
-        let f = Number(obs.frame)
-        obs.span = {f1:f, f2:f}
-        obs.span.b1='obs'
-        obs.span.b2='obs'
+        if ('span' in obs.obs) {
+          obs.span = {f1:Number(obs.obs.span.f1), f2:Number(obs.obs.span.f2)}
+          obs.span.b1='manual'
+          obs.span.b2='manual'
+        } else {
+          let f = Number(obs.frame)
+          obs.span = {f1:f, f2:f}
+          obs.span.b1='obs'
+          obs.span.b2='obs'
+        }
     }
     for (let interval of tagIntervals) {
         interval.labeling={
@@ -2273,34 +2280,47 @@ function updateTagsLabels() {
             let f = Number(obs.frame)
             let f1 = Number(interval['begin'])
             let f2 = Number(interval['end'])
-            if (f>f1-20 && f<f2+20) {
-                interval.labeling.labeled = true
-                interval.labeling.entering = hasLabel(obs,'entering')
-                interval.labeling.falsealarm = hasLabel(obs,'falsealarm')
-                interval.labeling.wrongid = hasLabel(obs,'wrongid')
+            
+            if (obs.span.b1!='manual') {
+                if (f>f1-20 && f<f2+20) {
+                    interval.labeling.labeled = true
+                    interval.labeling.entering = hasLabel(obs,'entering')
+                    interval.labeling.falsealarm = hasLabel(obs,'falsealarm')
+                    interval.labeling.wrongid = hasLabel(obs,'wrongid')
                 
-                if (f1<obs.span.f1) {
-                    obs.span.f1 = f1
-                    obs.span.b1='tag'
+                    if (f1<obs.span.f1) {
+                        obs.span.f1 = f1
+                        obs.span.b1='tag'
+                    }
+                    if (f2>obs.span.f2) {
+                        obs.span.f2 = f2
+                        obs.span.b2='tag'
+                    }
                 }
-                if (f2>obs.span.f2) {
-                    obs.span.f2 = f2
-                    obs.span.b2='tag'
+            } else {
+                if (obs.span.f2>=f1 && obs.span.f1<=f2) {
+                    interval.labeling.labeled = true
+                    interval.labeling.entering = hasLabel(obs,'entering')
+                    interval.labeling.falsealarm = hasLabel(obs,'falsealarm')
+                    interval.labeling.wrongid = hasLabel(obs,'wrongid')             
                 }
             }
         }
     }
 
-    // Find redundant Tracks    
-    for (let j in flatTracksAll) {
-        if (j==0) continue;
-        let i=j-1;
+    // Find redundant Tracks   
+    for (let id in flatTracksValidGroupById) { 
+        obs_for_id = flatTracksValidGroupById[id]
+        for (let j in obs_for_id) {
+            if (j==0) continue;
+            let i=j-1;
         
-        let obs1=flatTracksAll[i]
-        let obs2=flatTracksAll[j]
+            let obs1=obs_for_id[i]
+            let obs2=obs_for_id[j]
         
-        if (obs1.span.f2>=obs2.span.f1) {
-            obs2.isredundant = true
+            if (obs1.span.f2>=obs2.span.f1) {
+                obs2.isredundant = true
+            }
         }
     }
 

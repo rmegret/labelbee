@@ -420,6 +420,12 @@ input[type=text].btn-green-border {
     background-color: #eee;
     box-shadow:       inset -1px -1px 2px rgba(0,0,0,0.25);
 }
+.btn-blue-toggle {
+    color: #488;
+    border-color: #6AA;
+    background-color: #eee;
+    box-shadow:       inset -1px -1px 2px rgba(0,0,0,0.25);
+}
 .btn-restrict-toggle {
     color: #488;
     border-color: #6AA;
@@ -442,6 +448,11 @@ input[type=text].btn-green-border {
     background-color: #6A6;
     box-shadow:       inset 2px 2px 5px rgba(0,0,0,0.25);
 }
+.btn-blue-toggle.active {
+    color: black;
+    background-color: #6AA;
+    box-shadow:       inset 2px 2px 5px rgba(0,0,0,0.25);
+}
 .btn-restrict-toggle.active {
     color: black;
     background-color: #6AA;
@@ -451,6 +462,10 @@ input[type=text].btn-green-border {
     color: black;
     background-color: #F88;
     box-shadow:       inset 2px 2px 5px rgba(0,0,0,0.25);
+}
+
+.blue-text {
+    color: #488;
 }
 
 
@@ -530,6 +545,12 @@ img.pixelated {
     border-color: hsla(194, 66%, 41%, 1);
 }
 
+
+.btn-obs-expand {
+  color: #000;
+  background-color: #ece8ff;
+  border-color: #c3c1c7;
+}
 
 
 .btn-window {
