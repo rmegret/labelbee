@@ -13,7 +13,7 @@ var x, y, cx, cy, width, height;
 var logging = {
   "rects": false,
   "frameEvents": false,
-  "guiEvents": true,
+  "guiEvents": false,
   "submitEvents": false,
   "mouseEvents": false,
   "mouseMoveEvents": false,
@@ -25,7 +25,8 @@ var logging = {
   "canvasEvents": false,
   "idPrediction": false,
   "axesEvents": false,
-  "zoomTag": false
+  "zoomTag": false,
+  "zoomOverlay": false
 };
 
 

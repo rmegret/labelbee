@@ -150,6 +150,15 @@ function saveToBBoxes() {
     saveCSVToFile(txt, "BBoxes.csv")
 }
 
+function eraseTracks() {
+    var r = confirm("Are you sure you want to ERASE all manual annotations (Tracks)?");
+    if (r == true) {
+        console.log('ERASING all Tracks...')
+        setTracks([])
+    } else {
+        console.log('User CANCELED Erase Tracks ...')
+    }
+}
 function setTracks(obj) {
     console.log('setTracks: changing Tracks data structure and refreshing...')
     Tracks = obj;
