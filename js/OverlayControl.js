@@ -22,10 +22,17 @@ function OverlayControl(canvasTagId) {
     trackWindowForward = trackWindow;
     $('#trackWindow').val(trackWindow)
 
-    flag_useROI=false
+    flag_useROI=true
     ROI = {left:175,top:30,right:2305,bottom:1240} // For Gurabo videos 5MP
     $('#ROI').val([ROI.left,ROI.top,ROI.right,ROI.bottom].join(','))
     //$(videoControl).on('video:loaded', updateROIFromVideo)
+    $('#useROI').toggleClass('active', flag_useROI);
+
+    flag_useExcludeRects=true
+    excludeRects = [{"cx":335,"cy":75,"w":50,"h":50},{"cx":2165,"cy":80,"w":50,"h":50},{"cx":320,"cy":1034,"w":50,"h":50},{"cx":2130,"cy":1080,"w":50,"h":50}]
+    initExcludeRectsDialog()
+    $('#useExcludeRects').toggleClass('active', flag_useExcludeRects);
+    excludeRectSelection=-1
 
     showObs = true
     showObsTracks = true
@@ -312,6 +319,7 @@ function refreshOverlay() {
             plotTracks(ctx);
         }
         plotROI()
+        plotExcludeRects()
         
         //plotBees(ctx1); // Not needed, identification done directly in BeeRect
         
@@ -1379,13 +1387,91 @@ function onROITextChanged() {
     ROIChanged()
 }
 function onClickROI() {
-    flag_useROI = !flag_useROI;
-    if (flag_useROI) {
-        $('#useROI').addClass('active')
-    } else {
-        $('#useROI').removeClass('active')
-    }
+    $('#useROI').toggleClass('active')
+    flag_useROI = $('#useROI').hasClass('active')
     ROIChanged()
+}
+function onClickExcludeRects() {
+    $('#useExcludeRects').toggleClass('active')
+    flag_useExcludeRects = $('#useExcludeRects').hasClass('active');
+    excludeRectsChanged()
+}
+function onClickExcludeRectParams() {
+    openExcludeRectsDialog()
+}
+function onClickExcludeRectAdd() {
+    let R = getSelectedRect()
+    if (!R) return
+    
+    let obs=R.obs
+    excludeRects.push({cx:obs.x+obs.width/2,cy:obs.y+obs.height/2,
+                       w:obs.width,h:obs.height})
+    deleteSelected()
+    excludeRectsChanged()
+}
+function onClickExcludeRectDelete() {
+    let i = excludeRectSelection
+    if (!(i>=0)) return
+    
+    excludeRects.splice(i,1)
+    excludeRectSelection = -1
+    excludeRectsChanged()
+}
+function onClickExcludeRectNext() {
+    let n = excludeRects.length
+    if (n==0) {
+        excludeRectSelection=-1
+        return
+    }
+    
+    excludeRectSelection = excludeRectSelection+1
+    if (excludeRectSelection>=n) excludeRectSelection=-1
+    excludeRectsChanged()
+}
+function plotExcludeRects() {
+    if (!flag_useExcludeRects) return;
+    //console.log('plotExcludeRects')
+    for (let r of excludeRects) {
+      let R = {left:r.cx-r.w/2, top:r.cy-r.h/2, 
+               width:r.w, 
+               height:r.h}
+      let R2 = videoToCanvasRect(R)
+
+      //console.log("r=",r, " R=",R, " R2=",R2)
+
+      ctx.save()
+      ctx.beginPath();
+      ctx.rect(R2.left, R2.top, R2.width, R2.height);
+      ctx.strokeStyle = '#fd0';
+      //ctx.setLineDash([4,4])
+      ctx.lineWidth = 1
+      ctx.stroke();
+      ctx.restore()
+    
+      ctx.save()
+      //ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      ctx.fillStyle = 'rgba(255,200,100,0.5)';
+      ctx.fillRect(R2.left, R2.top, R2.width, R2.height);
+      ctx.restore()
+    }
+    
+    if (excludeRectSelection>=0) {
+      r = excludeRects[excludeRectSelection]
+      let R = {left:r.cx-r.w/2, top:r.cy-r.h/2, 
+               width:r.w, 
+               height:r.h}
+      let R2 = videoToCanvasRect(R)
+      
+      ctx.save()
+      ctx.beginPath();
+      ctx.rect(R2.left, R2.top, R2.width, R2.height);
+      ctx.strokeStyle = '#fff';
+      //ctx.setLineDash([4,4])
+      ctx.lineWidth = 2
+      ctx.stroke();
+      ctx.restore()
+    }
+    
 }
 
 /* Filters */
@@ -1396,6 +1482,7 @@ tagsSampleFilter = function(tag) {return true}
 tagsIntervalFilter = function(interval) {return true}
 tagsIDFilter = function(idinfo) {return true}
 tagsSampleFilterROI = function(tag) {return true}
+tagsSampleFilterExcludeRects = function(tag) {return true}
 function refreshTagsParameters() {
     console.log('refreshTagsParameters')
     // Reread tag parameters from GUI
@@ -1428,6 +1515,7 @@ function refreshTagsParameters() {
     tagsSampleFilter = function(tag){
           return tagsHammingSampleFilter(tag)
                  &&tagsSampleFilterROI(tag)
+                 &&tagsSampleFilterExcludeRects(tag)
                  &&tagsDMSampleFilter(tag)
                  &&tagsRGBSampleFilter(tag)
                  &&tagsSampleFilterCustom(tag)}
@@ -1490,6 +1578,68 @@ function onTrackDirChanged() {
     onTrackWindowChanged()
 }
 
+
+function excludeRectsChanged() {
+    if (flag_useExcludeRects) {
+        tagsSampleFilterExcludeRects = function(tag) {
+            for (let r of excludeRects) {
+                //console.log(tag,r)
+                let dx=Math.abs(tag.c[0]-r.cx)
+                let dy=Math.abs(tag.c[1]-r.cy)
+                if ( dx < r.w/2 ) return false
+                if ( dy < r.h/2 ) return false
+            }
+            return true
+        }
+    } else {
+        tagsSampleFilterExcludeRects = function(tag) {return true}
+    }
+    $('#excludeRectDeleteButton').toggleClass('disabled', !(excludeRectSelection>=0))
+    onTagsParametersChanged()
+    refreshChronogram()
+    videoControl.refresh();
+}
+openExcludeRectsDialog = function() {
+    var jsontext = JSON.stringify(excludeRects ,null, 4)
+  
+    $("#excludeRects-json").val(jsontext)
+  
+    $("#dialog-form-excludeRects").dialog("open");
+}
+initExcludeRectsDialog = function() {
+    $("#dialog-form-excludeRects").dialog({
+        autoOpen: false,
+        modal: true,
+        buttons: {
+            "Ok": function() {
+                var jsontext = $("#excludeRects-json").val();
+                
+                if (logging.zoomOverlay)
+                    console.log('excludeRects dialog. jsontext = ',jsontext)
+
+                excludeRects = JSON.parse( jsontext )
+                
+                if (logging.zoomOverlay)
+                    console.log('excludeRects = ',excludeRects)
+                
+                $(this).dialog("close");
+                
+                excludeRectsChanged();
+            },
+            "Cancel": function() {
+                $(this).dialog("close");
+            }
+        },
+        open: function(){
+            $("body").css("overflow", "hidden");
+        },
+        close: function(){
+            $("body").css("overflow", "auto");
+        }
+    });
+
+}
+
 function ROIChanged() {
     if (flag_useROI) {
         tagsSampleFilterROI = function(tag) {
@@ -1506,6 +1656,7 @@ function ROIChanged() {
     videoControl.refresh();
 }
 function plotROI() {
+    if (!flag_useROI) return;
 
     let R = {left:ROI.left, top:ROI.top, 
              width:ROI.right-ROI.left, 

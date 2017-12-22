@@ -606,6 +606,24 @@
                             <input id='useROI' value="Apply" onclick="onClickROI()" type="button" class="btn btn-orange-toggle btn-xs active" title="Show/Hide ROI">
                             <input value="Reinit" onclick="updateROIFromVideo()" type="button" class="btn btn-default btn-xs" title="Reinit ROI from video">
                         </div>
+                        
+                        <div class="inline-block">
+                            ExcludeRegions:
+                            <button onclick="onClickExcludeRectParams()" type="button" class="btn btn-info btn-xs" title="Edit exclude rects">...</button>
+                            <input id='useExcludeRects' value="ExcludeRects" onclick="onClickExcludeRects()" type="button" class="btn btn-orange-toggle btn-xs active" title="Show/Hide Tags in Exclusion Region">
+                            <button onclick="onClickExcludeRectAdd()" type="button" class="btn btn-success btn-xs" title="Add current Obs to exclude rects">+</button>
+                            <button onclick="onClickExcludeRectNext()" type="button" class="btn btn-info btn-xs" title="Highlight next exclude rects">&#x21AA</button>
+                            <button id="excludeRectDeleteButton" onclick="onClickExcludeRectDelete()" type="button" class="btn btn-red btn-xs disabled" title="Delete currently highlighted exclude rects">-</button>
+                        </div>
+                        
+                        <div id="dialog-form-excludeRects">
+                            <form style="width:100%; height:100%; box-sizing:border-box;">
+                            <div style="width:100%; height:100%; box-sizing:border-box;">
+                                <label for="excludeRects-json">excludeRects</label>
+                                <textarea name="excludeRects-json" id="excludeRects-json" class="text ui-widget-content ui-corner-all" style="width:100%; height:90%; box-sizing:border-box;">test</textarea>
+                            </div>
+                            </form>
+                        </div>
                   
                         <div class="inline-block">
                             Tags sample filter:
