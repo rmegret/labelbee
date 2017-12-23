@@ -20,6 +20,10 @@ function initVideoList() {
                   'GuraboTest/4_02_R_170511130000.mp4',
                   '2017-06-Gurabo/2_02_R_170609100000.mp4',
                   '2_02_R_170609100000.mp4' ]
+    videoListTable = []
+    for (let videoname of videoList) {
+        videoListTable.push(videonameToTable(videoname))
+    }
     videoListCurrentID = 0;
     
     updateVideoList()
@@ -38,14 +42,62 @@ function initVideoList() {
     
     videoListFromServer('data/videolist.csv', 1)
 }
+
+function checkVideoList() {
+    console.log('checkVideoList')
+    let count = videoListTable.length
+    for (var i = 0; i < videoListTable.length; i++){
+        let videoname = videoListTable[i].video
+        let url = videonameToURL(videoname)
+        
+        let itemToUpdate = videoListTable[i]
+        itemToUpdate.checked = undefined
+        
+        fetch(url, {
+            method: "head",
+            mode: "no-cors"
+        })
+        .then(function(response) {
+            if (response.status == 200) {
+                itemToUpdate.checked = true
+                count--
+                //if (count==0) {
+                    updateVideoList()
+                //}
+            } else {
+                itemToUpdate.checked = false
+                count--
+                //if (count==0) {
+                    updateVideoList()
+                //}
+            }
+        })
+        .catch(function(error) {
+            count--
+            //if (count==0) {
+                updateVideoList()
+            //}
+        });
+    }
+}
+
 function updateVideoList() {
-    var data = videoList;
+    //var data = videoList;
     
     var html = "";
-    for (var i = 0; i < data.length; i++){
+    for (var i = 0; i < videoListTable.length; i++){
+        let checkStr = "?"
+        if (typeof videoListTable[i].checked != 'undefined') {
+            if (videoListTable[i].checked) 
+                checkStr = "&#x2713;"
+            else
+                checkStr = "&times;"
+        }
+    
         html +="<tr>"+
                 "<td><input type='button' data-arrayIndex='"+ i +"' onclick='selectVideoFromList(this)' class='btn btn-default btn-xs glyph-xs' value='"+(i+1)+"'></button>"+ "</td>"+
-                "<td>"+ data[i] + "</td>"+
+                "<td>"+ videoListTable[i].video + "</td>"+
+                "<td>"+ checkStr + "</td>"+
                 "</tr>";
     }
     html += '<tr><td><button value="Add video to list" onclick="addVideoClick()" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus-sign"></span></button></td><td></td></tr>'
@@ -58,8 +110,8 @@ function updateVideoSelectbox() {
     var selectbox = $("#selectboxVideo")
     selectbox.find('option').remove()
 
-    $.each(videoList, function (i, el) {
-        selectbox.append("<option value='data/"+el+"'>"+el+"</option>");
+    $.each(videoListTable, function (i, el) {
+        selectbox.append("<option value='data/"+el.video+"'>"+el.video+"</option>");
     });
 }
 function updateVideoListSelection() {
@@ -83,19 +135,22 @@ function prefillVideoFields() {
             videoTagURL = undefined
     }
 }
+function videonameToURL(videoname) {
+    return 'data/'+videoname
+}
 function selectVideoByID(id) {
     id = Number(id)
-    if (id >= videoList.length || id<0) {
+    if (id >= videoListTable.length || id<0) {
         throw ('selectVideobyID: invalid id, id='+id);
     }
     videoListCurrentID = id
     
     prefillVideoFields()
-    let file = 'data/'+videoList[videoListCurrentID]
-    
     updateVideoListSelection()
     
-    videoControl.loadVideo(file)
+    let url = videonameToURL(videoListTable[videoListCurrentID].video)
+    
+    videoControl.loadVideo(url)
     
     // Change handled in callback onVideoLoaded
 }
@@ -105,9 +160,19 @@ function selectVideoFromList(target) {
     selectVideoByID(id)
 }
 
+function videonameToTable(videoname) {
+    let path = videoname.split('/')
+    let name = path[path.length-1].replace(/\.[^/.]+$/, "")
+    path[path.length-1] = 'Tags-'+name
+    let tagname = path.join("/")
+    return {video:videoname, 
+            preview:videoname+'preview.mp4',
+            tags:tagname}
+}
+
 /* Update Video List */
 function addVideoToList(videoname) {
-    videoList.push(videoname)
+    videoListTable.push(videonameToTable(videoname))
     updateVideoList()
     selectVideoByID(videoList.length-1);
 }
