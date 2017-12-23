@@ -58,9 +58,12 @@ function checkVideoList() {
         
         fetch(url, {
             method: "head",
+            credentials: 'same-origin',
             mode: "no-cors"
         })
         .then(function(response) {
+            if (logging.videoList)
+                console.log('fetch(',url,') =>', response)
             if (response.status == 200) {
                 itemToUpdate.checked = true
                 count--
@@ -76,6 +79,8 @@ function checkVideoList() {
             }
         })
         .catch(function(error) {
+            if (logging.videoList)
+                console.log('fetch(',url,') =>', error)
             count--
             //if (count==0) {
                 updateVideoList()
