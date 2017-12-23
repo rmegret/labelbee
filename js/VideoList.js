@@ -43,19 +43,10 @@ function initVideoList() {
     videoListFromServer('data/videolist.csv', 1)
 }
 
-function checkVideoList() {
-    console.log('checkVideoList')
-    let count = videoListTable.length
-    for (var i = 0; i < videoListTable.length; i++){
-        let videoname = videoListTable[i].video
-        let url = videonameToURL(videoname)
-        
-        let itemToUpdate = videoListTable[i]
-        itemToUpdate.checked = undefined
-        
-        if (logging.videoList)
-            console.log('Checking ',url)
-        
+function checkURL(url) {
+    if (logging.videoList)
+        console.log('Checking ',url)
+    return new Promise((resolve, reject)=>{
         fetch(url, {
             method: "head",
             credentials: 'same-origin',
@@ -65,47 +56,76 @@ function checkVideoList() {
             if (logging.videoList)
                 console.log('fetch(',url,') =>', response)
             if (response.status == 200) {
-                itemToUpdate.checked = true
-                count--
-                //if (count==0) {
-                    updateVideoList()
-                //}
+                resolve()
             } else {
-                itemToUpdate.checked = false
-                count--
-                //if (count==0) {
-                    updateVideoList()
-                //}
+                reject()
             }
         })
         .catch(function(error) {
             if (logging.videoList)
                 console.log('fetch(',url,') =>', error)
-            count--
-            //if (count==0) {
-                updateVideoList()
-            //}
+            reject()
         });
+    })
+}
+
+function checkVideoList() {
+    console.log('checkVideoList')
+    let count = videoListTable.length
+    for (var i = 0; i < videoListTable.length; i++){
+        let itemToUpdate = videoListTable[i]
+        
+        let videoname = videoListTable[i].video
+        itemToUpdate.checked = "requested"
+        let url = videonameToURL(videoname)
+        checkURL(url)
+        .then( function() {itemToUpdate.checked = true;} )
+        .catch( function() {itemToUpdate.checked = false;} )
+        .finally( function() {updateVideoList();} )
+        
+        let tagname = videoListTable[i].tags
+        itemToUpdate.tagsChecked = "requested"
+        let urlTag = videonameToURL(tagname)
+        checkURL(urlTag)
+        .then( function() {itemToUpdate.tagsChecked = true;} )
+        .catch( function() {itemToUpdate.tagsChecked = false;} )
+        .finally( function() {updateVideoList();} )
     }
+}
+
+function htmlCheckmark(flag) {
+    let checkStr = "<span class='gray'>?</span>"
+    if (typeof flag != 'undefined') {
+        if (flag == 'requested') 
+            checkStr = "<span>&#x231a;</span>"
+        else if (flag)
+            checkStr = "<span class='green'>&#x2713;</span>"
+        else
+            checkStr = "<span class='red'>&times;</span>"
+    }
+    return checkStr
 }
 
 function updateVideoList() {
     //var data = videoList;
     
     var html = "";
+    html +="<tr>"+
+                "<td>#</td>"+
+                "<td>video</td>"+
+                "<td>mp4</td>"+
+                "<td>tags</td>"+
+                "</tr>\n";
+                
     for (var i = 0; i < videoListTable.length; i++){
-        let checkStr = "?"
-        if (typeof videoListTable[i].checked != 'undefined') {
-            if (videoListTable[i].checked) 
-                checkStr = "&#x2713;"
-            else
-                checkStr = "&times;"
-        }
+        let checkStr = htmlCheckmark(videoListTable[i].checked)
+        let tagCheckStr = htmlCheckmark(videoListTable[i].tagsChecked)
     
         html +="<tr>"+
                 "<td><input type='button' data-arrayIndex='"+ i +"' onclick='selectVideoFromList(this)' class='btn btn-default btn-xs glyph-xs' value='"+(i+1)+"'></button>"+ "</td>"+
                 "<td>"+ videoListTable[i].video + "</td>"+
                 "<td>"+ checkStr + "</td>"+
+                "<td>"+ tagCheckStr + "</td>"+
                 "</tr>";
     }
     html += '<tr><td><button value="Add video to list" onclick="addVideoClick()" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus-sign"></span></button></td><td></td></tr>'
@@ -113,6 +133,7 @@ function updateVideoList() {
     $("#videoList").html(html);
     
     updateVideoSelectbox()
+    updateVideoListSelection()
 }
 function updateVideoSelectbox() {
     var selectbox = $("#selectboxVideo")
@@ -125,7 +146,7 @@ function updateVideoSelectbox() {
 function updateVideoListSelection() {
     var id = videoListCurrentID;
     $( "#videoList tr.selected" ).removeClass("selected")
-    $( "#videoList tr:nth-child("+(id+1)+")" ).addClass("selected") // jQuery index starts at 1
+    $( "#videoList tr:nth-child("+(id+2)+")" ).addClass("selected") // jQuery index starts at 1 + 1 row for table headers
     
     $('#selectboxVideo').prop("selectedIndex", id);
 }

@@ -27,7 +27,7 @@ var logging = {
   "axesEvents": false,
   "zoomTag": false,
   "zoomOverlay": false,
-  "videoList": true
+  "videoList": false
 };
 
 

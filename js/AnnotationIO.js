@@ -356,6 +356,7 @@ function tagsFromServer(path, quiet) {
       .fail(function(data) {
           console.log('tagsFromServer: ERROR loading "'+path+'"')  
           statusUpdate('tagsLoad',false,'')
+          setTags([])
         }
       )
       .done(function(data) {

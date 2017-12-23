@@ -335,20 +335,32 @@ VideoControl.prototype.refresh = function() {
 statusInfo={}
 function statusRequest(type, info) {
     var time=new Date();
-    var HMS=time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds()
+    function pad(n,k) {
+        var s = String(n);
+        while (s.length < (k || 2)) {s = "0" + s;}
+        return s;
+      }
+    var _hours = time.getHours()
+    var _minutes = time.getMinutes()
+    var _seconds = time.getSeconds()
+    var HMS = pad(_hours) + ':' + pad(_minutes) + ':' + pad(_seconds)
     statusInfo[type]={request:time,info:info}
     
-    $(".status."+type).html(type+": Requested ["+HMS+"]")
+    //$(".status."+type).html(type+": Requested ["+HMS+"]")
+    $(".status."+type).html("<td>"+type+"</td><td class='tdspacing'>"+htmlCheckmark('requested')+"</td><td class='col_elapsed'>[@ "+HMS+"]</td>")
 }
 function statusUpdate(type, success, info) {
     var time=new Date();
     statusInfo[type].done=time
     statusInfo[type].info2=info
     var elapsed = (time - statusInfo[type].request)/1000;
+    
     if (success) {
-        $(".status."+type).html(type+": Success [elapsed "+elapsed+"s]")
+        //$(".status."+type).html(type+": Success [elapsed "+elapsed+"s]")
+        $(".status."+type).html("<td>"+type+"</td><td class='tdspacing'>"+htmlCheckmark(true)+"</td><td class='col_elapsed' >[took  "+elapsed+"s]</td>")
     } else {
-        $(".status."+type).html(type+": FAILED [elapsed "+elapsed+"s]")
+        //$(".status."+type).html(type+": FAILED [elapsed "+elapsed+"s]")
+        $(".status."+type).html("<td>"+type+"</td><td class='tdspacing'>"+htmlCheckmark(true)+"</td><td class='col_elapsed'></td>")
     }
 }
 

@@ -281,6 +281,7 @@
                   <div class='subpanel collapsible'>
                     <label class="primary">Video List </label>
                     <div>
+                        <div class="float-right"><input onclick="checkVideoList()" type="button" value="Check"  class="btn btn-primary btn-xs"/></div>
                         <table id='videoList'>
                         </table>
                     </div>
@@ -390,13 +391,15 @@
               <div class='subpanel collapsible'>
                   <label>I/O Status</label>
                   <div>
-
-                      <div class="status videolistLoad"></div>
-                      <div class="status videoLoad"></div>
-                      <div class="status videoinfoLoad"></div>
-                      <div class="status videopreviewLoad"></div>
-                      <div class="status tagsLoad"></div>
-
+                      <table>
+                      <tbody>
+                      <tr class="status videolistLoad"></tr>
+                      <tr class="status videoLoad"></tr>
+                      <tr class="status videoinfoLoad"></tr>
+                      <tr class="status videopreviewLoad"></tr>
+                      <tr class="status tagsLoad"></tr>
+                      </tbody>
+                      </table>
                   </div>
               </div>
               

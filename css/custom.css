@@ -362,6 +362,23 @@ textarea {
 .glyph-xs {
     font-size: 10px;
 }
+td.tdspacing {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+td.col_elapsed {
+    min-width: 8em;
+}
+
+.red {
+    color: red;
+}
+.green {
+    color: green;
+}
+.gray {
+    color: gray;
+}
 
 .block {
     display: inline-block;
