@@ -53,6 +53,9 @@ function checkVideoList() {
         let itemToUpdate = videoListTable[i]
         itemToUpdate.checked = undefined
         
+        if (logging.videoList)
+            console.log('Checking ',url)
+        
         fetch(url, {
             method: "head",
             mode: "no-cors"

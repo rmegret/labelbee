@@ -26,7 +26,8 @@ var logging = {
   "idPrediction": false,
   "axesEvents": false,
   "zoomTag": false,
-  "zoomOverlay": false
+  "zoomOverlay": false,
+  "videoList": true
 };
 
 
