@@ -7,6 +7,7 @@ function initZoomView() {
     zoomOverlay.canvasExtract = $("zoomExtractedTagCanvas")
     
     zoomOverlay.tagImageRoot='data/tags/tag25h5inv/png'
+    zoomOverlay.loadTagHammingMatrix()
         
     zoomOverlay.setCanvasSize(200,200)
     
@@ -65,29 +66,35 @@ function ZoomOverlay(canvas, canvasOverlay) {
     });
     $("#zoomresize").on( "resizestop", this.refreshZoomSize ); // bind ok
     
-    $("#tagImageDiv").resizable({
+//     $("#tagImageDiv").resizable({
+//       helper: "ui-resizable-helper",
+//       aspectRatio: 1,   // Need to put a value even to update it later
+//     });
+    $("#zoomTagCanvas").resizable({
       helper: "ui-resizable-helper",
       aspectRatio: 1,   // Need to put a value even to update it later
     });
-    $("#extractedTagImageDiv").resizable({
-      helper: "ui-resizable-helper",
-      aspectRatio: 1,   // Need to put a value even to update it later
-    });
+//     $("#extractedTagImageDiv").resizable({
+//       helper: "ui-resizable-helper",
+//       aspectRatio: 1,   // Need to put a value even to update it later
+//     });
+    $('#tagImage').on('load',x=>this.refreshTagImage())
                           
-    this.zoomShowOverlay = false;
-    $('#checkboxZoomShowOverlay').prop('checked', this.zoomShowOverlay);
+    this.flagShowOverlay = false;
+    $('#checkboxZoomShowOverlay').prop('checked', this.flagShowOverlay);
+    this.flagShowGrid = true
+    $('#buttonZoomShowGrid').toggleClass('active', this.flagShowGrid)
     this.flagShowZoom = true;
     $('#checkboxShowZoom').prop('checked', this.flagShowZoom);
     this.flagShowParts = false
-    $('#buttonShowParts').toggleClass('active', this.flagShowParts)
+    $('#buttonZoomShowParts').toggleClass('active', this.flagShowParts)
+    this.flagShowDistractors = false
+    $('#checkboxZoomShowDistractors').toggleClass('active', this.flagShowDistractors)
     
     $('#partLabel').change(this.onPartLabelTextChanged); // bind ok
     
     $('#videozoom').attr("tabindex","0")
-    $('#videozoom').on("keydown", this.onKeyDown);
-    
-    //this.flagShowZoom = $('#checkboxShowZoom').is(':checked')
-    //this.zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')                  
+    $('#videozoom').on("keydown", this.onKeyDown);               
 }
 
 ZoomOverlay.prototype = {}
@@ -119,8 +126,9 @@ ZoomOverlay.prototype.selectionChanged = function() {
     
     this.syncFromTracks()
     
-    this.refreshTagImage()
+    this.loadTagImage()
     this.refreshZoom()
+    this.refreshInfo()
 }
 /**
  * @memberof ZoomOverlay
@@ -344,16 +352,24 @@ ZoomOverlay.prototype.onToggleButtonShowOnVideo = function(event) {
     
     videoControl.refresh()
 }
-ZoomOverlay.prototype.clickZoomShowOverlay = function() {
-    this.zoomShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
-    if ($('#zoom').is(':visible')) {
-        this.refreshZoom()
-    }
+ZoomOverlay.prototype.clickShowOverlay = function() {
+    this.flagShowOverlay = $('#checkboxZoomShowOverlay').is(':checked')
+    this.refreshZoom()
+}
+ZoomOverlay.prototype.clickToggleGrid = function() {
+    this.flagShowGrid = $('#checkboxZoomToggleGrid').is(':checked')
+    this.refreshZoom()
 }
 ZoomOverlay.prototype.clickShowZoom = function() {
     this.flagShowZoom = $('#checkboxShowZoom').is(':checked')
     if (this.flagShowZoom) {
       this.syncFromTracks()
+    }
+}
+ZoomOverlay.prototype.clickShowDistractors = function() {
+    this.flagShowDistractors = $('#checkboxZoomShowDistractors').is(':checked')
+    if (this.flagShowDistractors) {
+      this.refreshZoom()
     }
 }
 ZoomOverlay.prototype.zoomApplyScale = function(factor) {
@@ -844,7 +860,34 @@ ZoomOverlay.prototype.redraw = function() {
     
 }
 
+function drawPixelated(img,context,x,y, sx,sy){
+  if (!zoom) zoom=4; if (!x) x=0; if (!y) y=0;
+  var ctx = drawPixelated.ctx
+  if (!ctx){
+    ctx = document.createElement('canvas').getContext('2d');
+    drawPixelated.ctx=ctx
+  }
+  ctx.width  = img.width;
+  ctx.height = img.height;
+  ctx.drawImage(img,0,0);
+  idata = ctx.getImageData(0,0,img.width,img.height).data;
+  for (var x2=0;x2<img.width;++x2){
+    for (var y2=0;y2<img.height;++y2){
+      var i=(y2*img.width+x2)*4;
+      var r=idata[i  ];
+      var g=idata[i+1];
+      var b=idata[i+2];
+      var a=idata[i+3];
+      context.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
+      context.fillRect(x+x2*sx, y+y2*sy, sx, sy);
+    }
+  }
+};
+
 ZoomOverlay.prototype.updateTagView = function(tag) {
+    if (this.flagShowDistractors)
+        this.updateDistractors()
+
     if (!tag) return
     if (!tag.p) return
     
@@ -885,7 +928,10 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
     
     /* Now, let's warp it to the final canvas */
     
-    let S = 9*3
+    let npix = 7 // codepix+2 margin
+    
+    let pixsize=30
+    let S = npix*pixsize
     
     var tmpCanvas = $('#zoomExtractedTagCanvas')[0];
     var ctx = tmpCanvas.getContext('2d');
@@ -938,6 +984,8 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
     ctx.putImageData(imageData, 0, 0)
     
     /* Add overlay of tag position */
+    
+    
     ctx2.setTransform(1,0, 0,1, 0,0)
     ctx2.beginPath()
     ctx2.moveTo(src_pts[0],src_pts[1])
@@ -946,23 +994,152 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
     ctx2.lineTo(src_pts[2],src_pts[3])
     ctx2.strokeStyle='red'
     ctx2.stroke()
+
+    
+    /* Add overlay of tag grid */
+    if (this.flagShowGrid) {
+        let step = S/npix;
+    
+        ctx.save()
+        ctx.setTransform(1,0, 0,1, 0,0)
+        ctx.beginPath()
+        for (let i=0; i<9; i++) {
+            ctx.moveTo(0, step*i)
+            ctx.lineTo(S, step*i)
+            ctx.moveTo(step*i,0)
+            ctx.lineTo(step*i,S)
+        }
+        ctx.strokeStyle='red'
+        ctx.stroke()
+        ctx.beginPath()
+        for (let i=0; i<9; i++) {
+            for (let j=0; j<9; j++) {
+                let x = step*(i+0.5), y=step*(j+0.5)
+                ctx.moveTo(x-1,y)
+                ctx.lineTo(x+1,y)
+                ctx.moveTo(x,y-1)
+                ctx.lineTo(x,y+1)
+            }
+        }
+        ctx.strokeStyle='blue'
+        ctx.stroke()
+        ctx.restore()
+    }
+
+    if ($('#tagImage')[0].complete) {
+        var tmpCanvas = $('#zoomTagCanvas')[0];
+        var ctx = tmpCanvas.getContext('2d');
+        tmpCanvas.width = S
+        tmpCanvas.height = S
+
+        drawPixelated($('#tagImage')[0],ctx, 0,0,pixsize,pixsize);
+
+        /* Add overlay of tag grid */
+        if (this.flagShowGrid) {
+            let step = S/npix;
+    
+            ctx.save()
+            ctx.setTransform(1,0, 0,1, 0,0)
+            ctx.beginPath()
+            for (let i=0; i<9; i++) {
+                ctx.moveTo(0, step*i)
+                ctx.lineTo(S, step*i)
+                ctx.moveTo(step*i,0)
+                ctx.lineTo(step*i,S)
+            }
+            ctx.strokeStyle='red'
+            ctx.stroke()
+            ctx.beginPath()
+            for (let i=0; i<9; i++) {
+                for (let j=0; j<9; j++) {
+                    let x = step*(i+0.5), y=step*(j+0.5)
+                    ctx.moveTo(x-1,y)
+                    ctx.lineTo(x+1,y)
+                    ctx.moveTo(x,y-1)
+                    ctx.lineTo(x,y+1)
+                }
+            }
+            ctx.strokeStyle='blue'
+            ctx.stroke()
+            ctx.restore()
+        }
+    }
 }
 
-ZoomOverlay.prototype.updateDistractors = function(tag) {
+
+ZoomOverlay.prototype.loadTagHammingMatrix = function() {
+    let path = 'data/tags/tag25h5inv/tag25h5_hamming_matrix_5-6.json'
+
+
+    console.log('loadTagHammingMatrix: loading path "'+path+'"...')  
+    //statusRequest('hammingMatrix',true,'')
     
+    this.hammingMatrix = undefined
+    
+    let zoomOverlay = this
+      
+     $.getJSON( path ,
+        function(data) {
+          console.log('loadTagHammingMatrix: loaded "'+path+'"')  
+        }
+      )
+      .done(function(data) {
+          console.log('loadTagHammingMatrix = ',data)
+          
+          zoomOverlay.hammingMatrix = data
+        }
+      )
+      .fail(function(data) {
+          console.log('loadTagHammingMatrix: ERROR loading "'+path+'"')  
+          //statusUpdate('videolistLoad',false,'')
+        }
+      )
+
+    
+}
+
+ZoomOverlay.prototype.updateDistractors = function() {
+    
+    $('#zoomDistractors').html('')
+    
+    let tag = getCurrentTag()
+    if (!tag) return;
+    
+    let zoomOverlay = this
+    let tagid = tag.id
+    
+    console.log('tagid=',tagid)
+    
+    if (!zoomOverlay.hammingMatrix) return
+    
+    let hammingLists = zoomOverlay.hammingMatrix[tag.id]
+    
+    let S = ''
+    for (let H in hammingLists) {
+        let ids = hammingLists[H]
+        for (let id of ids) {
+            console.log('Distractor ',id,' hamming=',H)
+            
+            let url = this.tagImgURL(String(id))
+            
+            S+='<div class="alternateTag">'+id+'<br><img class="alternateTag pixelated" src="'+url+'"/></div>'
+        }
+    }
+    
+    $('#zoomDistractors').html(S)
 }
 
 ZoomOverlay.prototype.refreshZoom = function() {
 
-    if (!this.flagShowZoom) {
+    if (!this.flagShowZoom || !$('#zoom').is(':visible')) {
         if (logging.zoomOverlay)
-            console.log('ZoomOverlay.refreshZoom: flagShowZoom==false. refresh canceled.')
+            console.log('ZoomOverlay.refreshZoom: zoom not visible or not activated. refresh canceled.')
         return;
     }
 
     if (logging.zoomOverlay)
         console.log('ZoomOverlay.refreshZoom')
-  
+          
     // Update Geometry Parameters
   
     let cx=0
@@ -1034,7 +1211,7 @@ ZoomOverlay.prototype.refreshZoom = function() {
         ctx.stroke()
     }
     
-    if (this.zoomShowOverlay) {
+    if (this.flagShowOverlay) {
       if (tag != null) {
           zoom_ctx.save()
           
@@ -1102,19 +1279,38 @@ ZoomOverlay.prototype.refreshZoom = function() {
     this.redraw()
 }
 ZoomOverlay.prototype.refreshTagImage = function() {
+    this.refreshZoom(); // Lazy
+}
+ZoomOverlay.prototype.loadTagImage = function() {
     if (logging.zoomTag)
-        console.log('ZoomOverlay.refreshTagImage')
+        console.log('ZoomOverlay.loadTagImage')
   
-    let id = this.id;
+    $('.tagImageID').html("ID="+String(this.id))
   
+    let url = this.tagImgURL(this.id)
+
+    $('#tagImage').attr('src',url) 
+}
+ZoomOverlay.prototype.tagImgURL = function(id) {
+
     let padding = 4
     let paddedID = String(id);
     let N=paddedID.length
     for (var i=0; i<padding-N; i++)
         paddedID='0'+paddedID;
 
-    $('#tagImage').attr('src',this.tagImageRoot+'/keyed'+paddedID+'.png')
-    
+    let url = this.tagImageRoot+'/keyed'+paddedID+'.png'
+
+    return url
 }
-
-
+ZoomOverlay.prototype.refreshInfo = function() {
+    let tag=getCurrentTag()
+    
+    if (tag) {
+        $('#zoomInfo').html(
+            'id='+tag.id+' H='+tag.hamming+' dm='+tag.dm        
+        )
+    } else {
+        $('#zoomInfo').html('')
+    }
+}
