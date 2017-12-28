@@ -70,10 +70,16 @@ function ZoomOverlay(canvas, canvasOverlay) {
 //       helper: "ui-resizable-helper",
 //       aspectRatio: 1,   // Need to put a value even to update it later
 //     });
-    $("#zoomTagCanvas").resizable({
-      helper: "ui-resizable-helper",
+//     $("#zoomTagCanvas").resizable({
+//       helper: "ui-resizable-helper",
+//       aspectRatio: 1,   // Need to put a value even to update it later
+//     });
+    $(".tagresizable").resizable({
+      //helper: "ui-resizable-helper",
       aspectRatio: 1,   // Need to put a value even to update it later
+      alsoResize: ".alsotagresizable"
     });
+    
 //     $("#extractedTagImageDiv").resizable({
 //       helper: "ui-resizable-helper",
 //       aspectRatio: 1,   // Need to put a value even to update it later
