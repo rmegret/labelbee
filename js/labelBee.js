@@ -59,21 +59,8 @@ function init() {
     // import * from "SelectionControl.js"
     initSelectionControl()    
     
-    // import * from "ZoomView.js";
-    initZoomView()
     
-    // Note: zoomOverlay.selectionChanged is already bound
-    $(selectionControl).on({
-        'tagselection:created': zoomOverlay.selectionChanged, 
-        'selection:created':    zoomOverlay.selectionChanged,
-        'tagselection:cleared': zoomOverlay.selectionChanged,
-        'selection:cleared':    zoomOverlay.selectionChanged
-      })
-    $(overlay).on({
-        'object:moving':   zoomOverlay.selectionChanged,
-        'object:modified': zoomOverlay.selectionChanged
-      })
-
+    // Need collapsible before ZoomView
     $( ".collapsible" ).accordion({
         collapsible: true,
         active: false,
@@ -109,6 +96,23 @@ function init() {
       handle: "> label, > .block-header"
     });
     $( ".sortable" ).disableSelection();
+    
+    
+    // import * from "ZoomView.js";
+    initZoomView()
+    
+    // Note: zoomOverlay.selectionChanged is already bound
+    $(selectionControl).on({
+        'tagselection:created': zoomOverlay.selectionChanged, 
+        'selection:created':    zoomOverlay.selectionChanged,
+        'tagselection:cleared': zoomOverlay.selectionChanged,
+        'selection:cleared':    zoomOverlay.selectionChanged
+      })
+    $(overlay).on({
+        'object:moving':   zoomOverlay.selectionChanged,
+        'object:modified': zoomOverlay.selectionChanged
+      })
+
 
     // ## Keyboard control
 

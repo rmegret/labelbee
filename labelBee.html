@@ -416,7 +416,7 @@
                     <label><input type="checkbox" checked="false" id="checkboxShowZoom" onclick="zoomOverlay.clickShowZoom()">Update</label>
                     <label><input type="checkbox" checked="true" id="checkboxZoomShowOverlay" onclick="zoomOverlay.clickShowOverlay()">Overlay</label>
                     <label><input type="checkbox" checked="true" id="checkboxZoomToggleGrid" onclick="zoomOverlay.clickToggleGrid()">Grid</label>
-                    <label><input type="checkbox" checked="true" id="checkboxZoomShowDistractors" onclick="zoomOverlay.clickShowDistractors()">Alternate Tags</label>
+<!--                     <label><input type="checkbox" checked="true" id="checkboxZoomShowDistractors" onclick="zoomOverlay.clickShowDistractors()">Alternate Tags</label> -->
                 </div>
 
                 <div style="display:inline-block">
@@ -440,14 +440,14 @@
                 </div>
                 </td><td class="top-align">
                 <div>
-                  <div>
+                  <div class='tagdivresizable'>
                     <div class="inline-block tagImageID">ID</div><br>
                     <div id="tagImageDiv" style="width:50px; height:50px;" class="inline-block hidden" >
                     <img id="tagImage" class="pixelated"/>
                     </div>
-                    <canvas id="zoomTagCanvas" width="90px" height="90px" style="width:100%; height:100%;" class="pixelated tagresizable"></canvas>
-                    <canvas id="zoomExtractedTagCanvas" width="90px" height="90px" style="width:100%; height:100%;" class="pixelated alsotagresizable"></canvas>
-                    <canvas id="zoomExtractedTagCanvas2" width="90px" height="90px" style="width:100%; height:100%;" class="pixelated alsotagresizable"></canvas>
+                    <canvas id="zoomTagCanvas" width="90px" height="90px" class="pixelated tagresizable"></canvas>
+                    <canvas id="zoomExtractedTagCanvas" width="90px" height="90px" class="pixelated tagresizable"></canvas>
+                    <canvas id="zoomExtractedTagCanvas2" width="90px" height="90px" class="pixelated tagresizable"></canvas>
                   </div>
                 </div>
                 </td>

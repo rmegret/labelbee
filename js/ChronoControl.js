@@ -1705,6 +1705,7 @@ function refreshChronogram() {
 
     //check if id and frame are in tag object
   
+    // Augment Tracks with tag id if same (frame,id) exist for both
     for (let F in Tracks) {
         if (Tags[F] != undefined){
             for (var i = 0; i < Tags[F].tags.length;i++){
@@ -1716,6 +1717,9 @@ function refreshChronogram() {
         }
     }
 
+    // Tracks => chronogramData
+    // chronogramData[flatID].x, .y, .Activity, .labels, .pollen
+    // .tag, .obs 
     chronogramData.length = 0
     if (showObsChrono) {
         for (let F in Tracks) {
@@ -1801,6 +1805,7 @@ function refreshChronogram() {
     
     allTagsID = [...allTagsID]
 
+    // ttags => tagIntervals
     tagIntervals = []
     if (showTagsChrono) {
     
@@ -1866,20 +1871,28 @@ function refreshChronogram() {
         }
     }
     
+    // Augment tags with tracks labels
     updateTagsLabels()
     
+    // Filter tagIntervals
     if (flag_hideInvalid) {
-    
-        let tagIntervals0 = tagIntervals;
-        tagIntervals=[]
-        
-        for (let interval of tagIntervals0) {
-            if (interval.labeling.falsealarm ||
-                interval.labeling.wrongid)   continue;
-            tagIntervals.push(interval)
-        }
+        tagIntervals = tagIntervals.filter(
+              interval=>!(interval.labeling.falsealarm ||
+                    interval.labeling.wrongid)
+            )
     }
-    tagIntervals0=[];
+//     if (flag_hideInvalid) {
+//     
+//         let tagIntervals0 = tagIntervals;
+//         tagIntervals=[]
+//         
+//         for (let interval of tagIntervals0) {
+//             if (interval.labeling.falsealarm ||
+//                 interval.labeling.wrongid)   continue;
+//             tagIntervals.push(interval)
+//         }
+//     }
+//     tagIntervals0=[];
     
     if (logging.chrono)
         console.log("refreshChronogram: drawChrono()...")

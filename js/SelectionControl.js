@@ -401,6 +401,26 @@ function getCurrentID() {
     return defaultSelectedBee
 }
 
+function getIdsInFocus() {
+    let F = getCurrentFrame()
+
+    let win = getWindow()
+    let fmin=win[0], fmax=win[1]
+    let frange=(F-fmin)>(fmax-F)?F-fmin:fmax-F;
+    
+    ids = new Set()
+    for (let f=fmin; f<=fmax; f++) {
+        let tagsFrame = Tags[f]
+        if (typeof(tagsFrame) === "undefined") continue;
+        let tags = tagsFrame.tags
+        
+        for (let i in tags) {
+            ids.add(String(tags[i].id))
+        }
+    }
+    return [...ids]
+}
+
 
 /* Deleting bees and undo stack */
 

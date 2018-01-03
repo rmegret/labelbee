@@ -26,6 +26,8 @@ function ZoomOverlay(canvas, canvasOverlay) {
         return new ZoomOverlay(canvas); 
     }
     
+    let zoomOverlay = this;
+    
     // Manually bind all methods used as callbacks
     // https://www.smashingmagazine.com/2014/01/understanding-javascript-function-prototype-bind/
     this.refreshZoomSize = this.refreshZoomSize.bind(this)
@@ -66,6 +68,9 @@ function ZoomOverlay(canvas, canvasOverlay) {
     });
     $("#zoomresize").on( "resizestop", this.refreshZoomSize ); // bind ok
     
+//     $(".tagdivresizable").resizable({
+//         helper: "ui-resizable-helper"
+//       })
 //     $("#tagImageDiv").resizable({
 //       helper: "ui-resizable-helper",
 //       aspectRatio: 1,   // Need to put a value even to update it later
@@ -76,9 +81,12 @@ function ZoomOverlay(canvas, canvasOverlay) {
 //     });
     $(".tagresizable").resizable({
       //helper: "ui-resizable-helper",
-      aspectRatio: 1,   // Need to put a value even to update it later
-      alsoResize: ".alsotagresizable"
+      aspectRatio: 1,
+      //alsoResize: ".alsotagresizable"
     });
+//     $(".alsotagresizable").resizable(
+//         {aspectRatio: 1}
+//     );
     
 //     $("#extractedTagImageDiv").resizable({
 //       helper: "ui-resizable-helper",
@@ -95,12 +103,22 @@ function ZoomOverlay(canvas, canvasOverlay) {
     this.flagShowParts = false
     $('#buttonZoomShowParts').toggleClass('active', this.flagShowParts)
     this.flagShowDistractors = false
-    $('#checkboxZoomShowDistractors').toggleClass('active', this.flagShowDistractors)
+    //$('#checkboxZoomShowDistractors').toggleClass('active', this.flagShowDistractors)
+    this.flagShowAlternateHamming = false
+    this.flagShowAlternateFocus = true
+    $('#videozoom_distractors').accordion('option','active',this.flagShowDistractors)
     
     $('#partLabel').change(this.onPartLabelTextChanged); // bind ok
     
     $('#videozoom').attr("tabindex","0")
-    $('#videozoom').on("keydown", this.onKeyDown);               
+    $('#videozoom').on("keydown", this.onKeyDown);   
+
+    $( "#videozoom_distractors" ).on( "accordionactivate", 
+        function( event, ui ) {
+            //console.log(event,ui)
+            zoomOverlay.flagShowDistractors = ($('#videozoom_distractors').accordion('option','active')!==false);
+            zoomOverlay.updateDistractors()
+        } );            
 }
 
 ZoomOverlay.prototype = {}
@@ -372,12 +390,14 @@ ZoomOverlay.prototype.clickShowZoom = function() {
       this.syncFromTracks()
     }
 }
-ZoomOverlay.prototype.clickShowDistractors = function() {
-    this.flagShowDistractors = $('#checkboxZoomShowDistractors').is(':checked')
-    if (this.flagShowDistractors) {
-      this.refreshZoom()
-    }
-}
+// ZoomOverlay.prototype.clickShowDistractors = function() {
+//     this.flagShowDistractors = $('#checkboxZoomShowDistractors').is(':checked')
+//     if (this.flagShowDistractors) {
+//       this.refreshZoom()
+//     } else {
+//       this.deleteDistractors()
+//     }
+// }
 ZoomOverlay.prototype.zoomApplyScale = function(factor) {
     this.scale *= factor;
     if (isNaN(this.scale)) this.scale=1
@@ -891,8 +911,7 @@ function drawPixelated(img,context,x,y, sx,sy){
 };
 
 ZoomOverlay.prototype.updateTagView = function(tag) {
-    if (this.flagShowDistractors)
-        this.updateDistractors()
+    this.updateDistractors()
 
     if (!tag) return
     if (!tag.p) return
@@ -1104,9 +1123,20 @@ ZoomOverlay.prototype.loadTagHammingMatrix = function() {
     
 }
 
+ZoomOverlay.prototype.deleteDistractors = function() {
+    
+    $('#zoomDistractors').html('')
+
+}
 ZoomOverlay.prototype.updateDistractors = function() {
     
     $('#zoomDistractors').html('')
+    
+    //this.flagShowDistractors = 
+    //   $('#videozoom_distractors').collapsible( "option", "collapsed" );
+    
+    if (!this.flagShowDistractors)
+        return;
     
     let tag = getCurrentTag()
     if (!tag) return;
@@ -1116,23 +1146,66 @@ ZoomOverlay.prototype.updateDistractors = function() {
     
     console.log('tagid=',tagid)
     
-    if (!zoomOverlay.hammingMatrix) return
-    
-    let hammingLists = zoomOverlay.hammingMatrix[tag.id]
-    
     let S = ''
-    for (let H in hammingLists) {
-        let ids = hammingLists[H]
+        
+    // Alternate tags based on hamming similarity
+    if (zoomOverlay.flagShowAlternateHamming && !!zoomOverlay.hammingMatrix) {
+    
+        let hammingLists = zoomOverlay.hammingMatrix[tag.id]
+    
+        for (let H in hammingLists) {
+            S+='  H'+H+':  '
+            let ids = hammingLists[H]
+            for (let id of ids) {
+                console.log('Distractor ',id,' hamming=',H)
+            
+                let url = this.tagImgURL(String(id))
+            
+                S+='<div class="alternateTag">'+id+'<br><img class="alternateTag pixelated" src="'+url+'" onclick="zoomOverlay.onClickAlternateTag('+id+')"/></div>'
+            }
+        }
+    
+    }
+    
+    // Alternate tags based on FocusView
+    if (zoomOverlay.flagShowAlternateFocus) {
+        let ids = getIdsInFocus()
+        S+='  Focus:  '
         for (let id of ids) {
-            console.log('Distractor ',id,' hamming=',H)
-            
+            console.log('Distractor ',id)
+        
             let url = this.tagImgURL(String(id))
-            
-            S+='<div class="alternateTag">'+id+'<br><img class="alternateTag pixelated" src="'+url+'"/></div>'
+        
+            S+='<div class="alternateTag">'+id+'<br><img class="alternateTag pixelated" src="'+url+'" onclick="zoomOverlay.onClickAlternateTag('+id+')"/></div>'
         }
     }
     
     $('#zoomDistractors').html(S)
+}
+ZoomOverlay.prototype.onClickAlternateTag = function(id) {
+    console.log('ZoomOverlay.onClickAlternateTag('+id+')')
+    
+    if (logging.guiEvents)
+        console.log("ZoomOverlay.onClickAlternateTag(id): id=", event)
+    var activeObject = canvas1.getActiveObject()
+
+    if (activeObject == null) {
+        newRectForCurrentTag()
+        activeObject = canvas1.getActiveObject()
+    }
+    if (activeObject !== null) {
+        let obs = activeObject.obs
+        
+        updateObsLabel(obs, "wrongid", true)
+        obs.newid = id
+        
+        // Update the rest
+        updateRectObsActivity(activeObject)
+        automatic_sub()
+        
+        updateForm(activeObject)
+        refreshChronogram()
+    }
 }
 
 ZoomOverlay.prototype.refreshZoom = function() {
