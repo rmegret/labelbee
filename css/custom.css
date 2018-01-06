@@ -122,6 +122,43 @@ div.float-right {
   cursor: pointer;
 }
 
+.plotAreaBackground {
+  cursor: crosshair;
+  pointer-events:all;
+}
+
+#videoSpan .interval,.label {
+  cursor: crosshair;
+  pointer-events:all;
+}
+
+.y.axis .bgRect {
+  cursor: crosshair;
+  pointer-events:all;
+}
+.y.axis .tick text {
+  cursor: crosshair;
+  pointer-events:none;
+}
+
+.x.axis .bgRect {
+  cursor: crosshair;
+  pointer-events:all;
+}
+.x.axis .tick text {
+  cursor: crosshair;
+  pointer-events:none;
+}
+
+.t.axis .bgRect {
+  cursor: crosshair;
+  pointer-events:all;
+}
+.t.axis .tick text {
+  cursor: crosshair;
+  pointer-events:none;
+}
+
 .axis text
 {
     font-family: 'Arial';

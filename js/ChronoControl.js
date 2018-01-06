@@ -38,11 +38,11 @@ function initChrono() {
 //     svgInterval = axes.chronoGroup.append("g").attr('class', 'intervalLayer');
 //     svgMiddle = axes.chronoGroup.append("g").attr('class', 'middleLayer');
 //     svgTop = axes.chronoGroup.append("g").attr('class', 'topLayer');
+    svgSpanRects = axes.plotArea.append("g").attr('class', 'spanRectLayer');
     svgTag = axes.plotArea.append("g").attr('class', 'tagLayer');
     svgInterval = axes.plotArea.append("g").attr('class', 'intervalLayer');
     svgTop = axes.plotArea.append("g").attr('class', 'topLayer');
-
-
+    
     $( videoControl ).on('frame:changed', updateTimeMark)
     $( videoControl ).on('previewframe:changed', updatePreviewTimeMark)
     
@@ -334,6 +334,8 @@ function updateChronoSelection() {
 
 function gotoEvent(frame, id) {
     videoControl.pause()
+    
+    frame = Number(frame)
  
     defaultSelectedBee = id
     if (frame==getCurrentFrame()) {
@@ -964,17 +966,23 @@ function createIntervalList() {
             allIntervals.push(tempInterval);
         }
     }
-
-    //return true or false if you want to keep the interval(the cross?)
-    //keep it or don't keep it 
-    crosses = allIntervals.filter(function(d){
-    var tempArray = d.labels.split(",");
-    if (tempArray.includes('falsealarm')||tempArray.includes('wrongid')){
-        return true;
+        
+    // Pass extra data from chronogramData to allInterval
+    for (let interval of allIntervals) {
+        var tempArray = interval.labels.split(",");
+        if (tempArray.includes('wrongid')) {
+            interval.wrongid=true
+            interval.newid=interval.obs.newid
         }
-     });
+    }
 
-
+    // Subsets of allIntervals
+    crosses = allIntervals.filter(function(d){
+        var tempArray = d.labels.split(",");
+        if (tempArray.includes('falsealarm')||tempArray.includes('wrongid')){
+            return true;
+        }
+        });
     rectIntervals = allIntervals.filter(function(d){
       return d.x1 != d.x2;
     });
@@ -990,6 +998,13 @@ function onActivityClick(d) {
     d3.event.stopPropagation(); 
     
     gotoEvent(d.x1, d.y)   
+}
+function onObsSpanClick(obsspan) {
+    console.log("CLICK ObsSpan obsspan=",obsspan);
+    // Prevent default chronogram click to go to the correct frame
+    d3.event.stopPropagation(); 
+    
+    gotoEvent(obsspan.frame, obsspan.id)   
 }
 
 //black orb rectangles are made here
@@ -1164,7 +1179,7 @@ function initObsSpan(selection) {
     selection.insert("rect")
         .attr("class","obsspan")
         .style("stroke-width", "1px")
-        //.on('click',onActivityClick)
+        //.on('click',onObsSpanClick)
         .call(updateObsSpan)
 }
 
@@ -1174,16 +1189,51 @@ function updateObsSpan(selection) {
             return axes.xScale(d.span.f1);
         })
         .attr("y", function(d) {
-            return axes.yScale(d.id)+axes.yScale.rangeBand()/2; // ordinal
+            return axes.yScale(d.id); // ordinal
+            //axes.yScale(d.id)+axes.yScale.rangeBand()/2; // ordinal
         })
         .attr("width", function(d) {
             return axes.xScale(d.span.f2+1) - axes.xScale(d.span.f1);
         })
         .attr("height", function(d) {
-            return axes.yScale.rangeBand()/2;
+            return axes.yScale.rangeBand();//axes.yScale.rangeBand()/2;
         })
         .style("fill", "none")
-        .style("stroke", "red");
+        .style("stroke", "red")
+        .style("pointer-events", "all")
+        // Display tooltip message
+        .on('click',onObsSpanClick)
+        .on("mouseover", function(obsspan){
+            var d = obsspan.obs;
+            
+            var message = "";
+            message += "BeeID=" + d.ID + " Frame=" + d.frame
+                    + "<br>Time=" + format_HMS(videoControl.frameToTime(d.frame))
+                    + "<br><u>Annotation:</u>"+
+                     "<br>Labels=" + d.labels;
+            if (d.wrongid) {
+                message += '<br>newid='+d.newid
+            }
+            if (d.tag != undefined){
+                message += 
+                    "<br><u>Tag:</u>"+
+                    "<br>Hamming=" + d.tag.hamming + 
+                    "<br>DM=" + d.tag.dm;
+            } else {
+                message += "<br><u>Tag:</u><br><i>None</i>"
+            }
+            
+            var tooltip = d3.select("body").selectAll(".tooltip")
+            tooltip.style("left",d3.event.pageX + "px")
+                   .style("top",d3.event.pageY + "px")
+                   .style("visibility", "visible")
+                   .html(message);
+        })
+        .on("mouseout", function(d){ 
+            var tooltip = d3.select("body").selectAll(".tooltip")
+            tooltip.style("visibility", "hidden");
+          });
+
 }
 
 function updateAlertCircle(selection) {
@@ -1224,7 +1274,7 @@ function updateActivities(onlyScaling) {
 
 
 
-      let spanRects = svgTop.selectAll(".obsspan")
+      let spanRects = svgSpanRects.selectAll(".obsspan")
                    .data(flatTracks);
       spanRects.enter().call(initObsSpan)
       spanRects.exit().remove()
@@ -1331,6 +1381,9 @@ function updateActivities(onlyScaling) {
                     + "<br>Time=" + format_HMS(videoControl.frameToTime(d.x1))
                     + "<br><u>Annotation:</u>"+
                      "<br>Labels=" + d.labels;
+            if (d.wrongid) {
+                message += '<br>newid='+d.newid
+            }
             if (d.tag != undefined){
                 message += 
                     "<br><u>Tag:</u>"+
@@ -1451,24 +1504,32 @@ function setTagGeom(selection) {
         .attr("height", function(d) {
             return tagHeight(d); // Ordinal scale
         })
-        .style("fill", function(d) {
-            if (d.labeling.entering) {
+        .style("fill", function(interval) {
+            if (interval.virtual)
+                return "white"
+            if (interval.labeling.entering) {
                 //console.log('setTagGeom: found entering, d=',d)
                 return '#ff00c0'
-            } else if (d.labeling.leaving) {
+            } else if (interval.labeling.leaving) {
                 //console.log('setTagGeom: found entering, d=',d)
                 return '#00ef00'
             } else {
                 return 'blue'
             }
         })
-        .style("stroke", function(d) {
-            if (d.labeling.entering)
+        .style("stroke", function(interval) {
+            if (interval.labeling.entering)
                 return '#ff00c0'
-            else if (d.labeling.leaving)
+            else if (interval.labeling.leaving)
                 return '#00e000'
             else
                 return 'blue'
+        })
+        .style("fill-opacity", function(interval) {
+            if (interval.virtual)
+                return "0.1"
+            else
+                return "0.2"
         })
         if (true) {
 
@@ -1487,7 +1548,7 @@ function setTagGeom(selection) {
         .on("mouseover", function(taginterval){
             //console.log('mouseover: ',taginterval)
             var message = "";
-            if (taginterval != undefined){
+            if (taginterval){
                 message += "BeeID=" + taginterval.id 
                     + " Frame=" + taginterval.begin
                     + "<br>Time=" + format_HMS(videoControl.frameToTime(taginterval.begin))
@@ -1501,8 +1562,21 @@ function setTagGeom(selection) {
                    .style("top",d3.event.pageY + "px")
                    .style("visibility", "visible")
                    .html(message);
+//             // Highlight source tag for wrongid annotations
+//             if (taginterval && typeof taginterval.oldid != 'undefined') {
+//                 message += '<br>virtualtag: oldid='+taginterval.oldid
+//                     selection
+//                     .filter(d=>(d.id==taginterval.oldid) && (d.begin==taginterval.begin))
+//                     .style("fill","green")
+//                     .style("stroke","green")
+//             }
         })
-        .on("mouseout", function(d){ tooltip2.style("visibility", "hidden");});
+        .on("mouseout", function(taginterval){ 
+            tooltip2.style("visibility", "hidden");
+//             setTagGeom(selection
+//                     .filter(d=>(d.id==taginterval.oldid) && (d.begin==taginterval.begin))
+//             )
+          });
         }
         //.attr("hidden", function(d) {return (typeof axes.yScale(d.id));})
 }
@@ -1872,6 +1946,7 @@ function refreshChronogram() {
     }
     
     // Augment tags with tracks labels
+    // Also generate virtual tag intervals for wrongid annotations
     updateTagsLabels()
     
     // Filter tagIntervals

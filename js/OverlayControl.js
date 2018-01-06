@@ -2406,18 +2406,19 @@ function onObjectModified(option) {
 
 
 function updateTagsLabels() {
-    for (let obs of flatTracksAll) {
-        if ('span' in obs.obs) {
-          obs.span = {f1:Number(obs.obs.span.f1), f2:Number(obs.obs.span.f2)}
-          obs.span.b1='manual'
-          obs.span.b2='manual'
+    for (let ann of flatTracksAll) {
+        if ('span' in ann.obs) {
+          ann.span = {f1:Number(ann.obs.span.f1), f2:Number(ann.obs.span.f2)}
+          ann.span.b1='manual'
+          ann.span.b2='manual'
         } else {
-          let f = Number(obs.frame)
-          obs.span = {f1:f, f2:f}
-          obs.span.b1='obs'
-          obs.span.b2='obs'
+          let f = Number(ann.frame)
+          ann.span = {f1:f, f2:f}
+          ann.span.b1='obs'
+          ann.span.b2='obs'
         }
     }
+    let tagIntervalsVirtual=[]
     for (let interval of tagIntervals) {
         interval.labeling={
             labeled:false,
@@ -2425,39 +2426,60 @@ function updateTagsLabels() {
             falsealarm:false,
             wrongid:false
         }
-        for (let obs of flatTracksAll) {
-            if (obs.id != interval.id) continue;
+
+        for (let ann of flatTracksAll) {
+            if (ann.id != interval.id) continue;
         
-            let f = Number(obs.frame)
+            let f = Number(ann.frame)
             let f1 = Number(interval['begin'])
             let f2 = Number(interval['end'])
             
-            if (obs.span.b1!='manual') {
+            if (ann.span.b1!='manual') {
                 if (f>f1-20 && f<f2+20) {
                     interval.labeling.labeled = true
-                    interval.labeling.entering = hasLabel(obs,'entering')
-                    interval.labeling.falsealarm = hasLabel(obs,'falsealarm')
-                    interval.labeling.wrongid = hasLabel(obs,'wrongid')
+                    interval.labeling.entering = hasLabel(ann,'entering')
+                    interval.labeling.falsealarm = hasLabel(ann,'falsealarm')
+                    interval.labeling.wrongid = hasLabel(ann,'wrongid')
                 
-                    if (f1<obs.span.f1) {
-                        obs.span.f1 = f1
-                        obs.span.b1='tag'
+                    if (hasLabel(ann,'wrongid')) {
+                        interval.newid=ann.obs.newid;
+                        console.log('ann=',ann,'=>',interval)
                     }
-                    if (f2>obs.span.f2) {
-                        obs.span.f2 = f2
-                        obs.span.b2='tag'
+                
+                    if (f1<ann.span.f1) {
+                        ann.span.f1 = f1
+                        ann.span.b1='tag'
+                    }
+                    if (f2>ann.span.f2) {
+                        ann.span.f2 = f2
+                        ann.span.b2='tag'
                     }
                 }
             } else {
-                if (obs.span.f2>=f1 && obs.span.f1<=f2) {
+                if (ann.span.f2>=f1 && ann.span.f1<=f2) {
                     interval.labeling.labeled = true
-                    interval.labeling.entering = hasLabel(obs,'entering')
-                    interval.labeling.falsealarm = hasLabel(obs,'falsealarm')
-                    interval.labeling.wrongid = hasLabel(obs,'wrongid')             
+                    interval.labeling.entering = hasLabel(ann,'entering')
+                    interval.labeling.falsealarm = hasLabel(ann,'falsealarm')
+                    interval.labeling.wrongid = hasLabel(ann,'wrongid')   
+                    
+                    if (hasLabel(ann,'wrongid')) {
+                        interval.newid=ann.obs.newid;
+                        console.log('ann=',ann,'=>',interval)
+                    }          
                 }
             }
         }
+        if (interval.labeling.wrongid) {
+            let intervalV = Object.assign({},interval)
+            intervalV.oldid=intervalV.id
+            intervalV.id=intervalV.newid
+            intervalV.wrongid=false
+            intervalV.virtual=true
+            console.log(interval,'=>',intervalV)
+            tagIntervalsVirtual.push(intervalV)
+        }
     }
+    tagIntervals = tagIntervals.concat(tagIntervalsVirtual)
 
     // Find redundant Tracks   
     for (let id in flatTracksValidGroupById) { 

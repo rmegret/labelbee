@@ -38,8 +38,8 @@ function copyObs(obs, tmpObs) {
     obs.ID = tmpObs.ID;
     obs.time = tmpObs.time;
     obs.frame = tmpObs.frame;
-    obs.x = tmpObs.x;
     
+    obs.x = tmpObs.x;
     obs.y = tmpObs.y;
     obs.cx = tmpObs.cx;
     obs.cy = tmpObs.cy;
@@ -56,6 +56,7 @@ function copyObs(obs, tmpObs) {
     obs.notes = tmpObs.notes;
     obs.labels = tmpObs.labels;
     obs.parts = tmpObs.parts;
+    obs.newid = tmpObs.newid; // in case of wrongid
 }
 
 function getValidIDsForFrame(frame) {

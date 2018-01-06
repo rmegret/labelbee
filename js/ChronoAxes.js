@@ -709,10 +709,22 @@ function ChronoAxes(parent, videoinfo, options) {
     function onAxesClick() {
         //if (typeof axes.onClick == 'undefined') return;
         if (d3.event.defaultPrevented) return;
-        
+    
         var coords = d3.mouse(this);
-        var frame = Math.round( xScale.invert(coords[0]) );
-        var id = invertYScale( coords[1] )
+        
+        var frame, id
+        if (coords[0]>=0) {
+            frame = Math.round( xScale.invert(coords[0]) );
+        } else {
+            // Clicked on the left of frame: in the ID ticks
+            frame = axes.timeMark.frame; // Use current frame
+        }
+        if (coords[1]<0) {
+            // Clicked on the top or botton of frame: in the frame ticks
+            id = axes.selectedID
+        } else {
+            id = invertYScale( coords[1] )
+        }
     
         if (logging.axesEvents)
             console.log("Triggering ChronoAxes.onClick: click on frame=",frame," id=",id);
