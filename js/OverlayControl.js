@@ -2441,7 +2441,7 @@ function updateTagsLabels() {
                     interval.labeling.falsealarm = hasLabel(ann,'falsealarm')
                     interval.labeling.wrongid = hasLabel(ann,'wrongid')
                 
-                    if (hasLabel(ann,'wrongid')) {
+                    if (hasLabel(ann,'wrongid') && (ann.obs.newid != null)) {
                         interval.newid=ann.obs.newid;
                         console.log('ann=',ann,'=>',interval)
                     }
@@ -2462,14 +2462,14 @@ function updateTagsLabels() {
                     interval.labeling.falsealarm = hasLabel(ann,'falsealarm')
                     interval.labeling.wrongid = hasLabel(ann,'wrongid')   
                     
-                    if (hasLabel(ann,'wrongid')) {
+                    if (hasLabel(ann,'wrongid') && (ann.obs.newid != null)) {
                         interval.newid=ann.obs.newid;
                         console.log('ann=',ann,'=>',interval)
                     }          
                 }
             }
         }
-        if (interval.labeling.wrongid) {
+        if (interval.labeling.wrongid && (interval.newid != null)) {
             let intervalV = Object.assign({},interval)
             intervalV.oldid=intervalV.id
             intervalV.id=intervalV.newid
