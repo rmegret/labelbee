@@ -248,6 +248,8 @@ function tracksListFromServer(){
   
   console.log("tracksListFromServer: importing Tracks List from URL '"+route+"'...")
 
+  $('#loadTracksFromServerDialog .modal-body').html('<div>Loading Tracks file list from server. Please wait...</div>');
+
   $.ajax({
     url:route,
     type: 'GET',
@@ -258,13 +260,13 @@ function tracksListFromServer(){
       // in HTML format (server generated)
       // TODO: send the file list as json data instead of HTML
       //       and convert into HTML client side
-      $('#list').html(json.data);
+      $('#loadTracksFromServerDialog .modal-body').html(json.data);
       
       console.log("tracksListFromServer: SUCESS\ntracksList=",json)
       
       // Nothing else to do here: 
-      // The modal #myModal is supposed to be open and filled with 
-      // links to each Track file
+      // The modal #loadTracksFromServerDialog is supposed to be open 
+      // and filled with links to each Track file
       // Clicking on one of the link will trigger jsonFromServer()
       }
   })
@@ -403,21 +405,20 @@ function videoListFromServer(path, defaultvideoid) {
 
 function jsonToServer() {
 
-    //$('#test').click(function(event) {
-    console.log("entrando")
-        /* Act on the event */
+    console.log("jsonToServer")
         
-       $.ajax({
-          url: '/savetojson', //server url
-          type: 'POST',    //passing data as post method
-          contentType: 'application/json', // returning data as json
-          data: JSON.stringify(Tracks),  //form values
-          success:function(json)
-          {
-            alert("success");  //response from the server given as alert message
-          }
-        
-        });
+    $.ajax({
+        url: '/savetojson', //server url
+        type: 'POST',    //passing data as post method
+        contentType: 'application/json', // returning data as json
+        data: JSON.stringify(Tracks),  //form values
+        success: function(json) {
+          alert("Save JSON to server: Success "+json);  //response from the server given as alert message
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          alert("Save JSON to server: Error "+textStatus);
+        }
+    });
 
 }
 
