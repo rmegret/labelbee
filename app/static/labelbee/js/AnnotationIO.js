@@ -243,8 +243,10 @@ function saveTagsToFile(event) {
 
 // Server I/O
 
+/* REST API Tracks files */
+
 function tracksListFromServer(){
-  var route = '/loadlist'; // Hardcoded
+  var route = '/rest/events/'; // Hardcoded
   
   console.log("tracksListFromServer: importing Tracks List from URL '"+route+"'...")
 
@@ -272,8 +274,7 @@ function tracksListFromServer(){
   })
 }
 
-function jsonFromServer(link){
-    var route = '/'+link;
+function jsonFromServer(route){
 
     console.log("jsonFromServer: importing Tracks from URL '"+route+"'...")
 
@@ -294,6 +295,27 @@ function jsonFromServer(link){
           }
         });
   }
+  
+  
+function jsonToServer() {
+
+    console.log("jsonToServer")
+        
+    $.ajax({
+        url: '/rest/events/', //server url
+        type: 'POST',    //passing data as post method
+        contentType: 'application/json', // returning data as json
+        data: JSON.stringify(Tracks),  //form values
+        success: function(json) {
+          alert("Save JSON to server: Success "+json);  //response from the server given as alert message
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          alert("Save JSON to server: Error "+textStatus);
+        }
+    });
+
+}
+
 
 // var serverURL = 'http://127.0.0.1:5000/';
 // function jsonFromServer() {     
@@ -402,29 +424,3 @@ function videoListFromServer(path, defaultvideoid) {
         }
       )
 }
-
-function jsonToServer() {
-
-    console.log("jsonToServer")
-        
-    $.ajax({
-        url: '/savetojson', //server url
-        type: 'POST',    //passing data as post method
-        contentType: 'application/json', // returning data as json
-        data: JSON.stringify(Tracks),  //form values
-        success: function(json) {
-          alert("Save JSON to server: Success "+json);  //response from the server given as alert message
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-          alert("Save JSON to server: Error "+textStatus);
-        }
-    });
-
-}
-
-
-// function jsonToServer() {
-//   window.open(serverURL,'popUpWindow','height=500,width=400,left=100,top=100,resizable=yes,scrollbars=yes,toolbar=yes,menubar=no,location=no,directories=no, status=yes');
-// }
-
-// crazy functions

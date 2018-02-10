@@ -175,37 +175,70 @@ def login():
 def admin_page():
     return render_template('pages/admin_page.html')
 
-@app.route('/savetojson',methods=['POST', 'GET'])
+
+# REST API for events: /rest/events/
+# GET list, POST new item, GET item
+
+# LIST
+@app.route('/rest/events/', methods=['GET'])
 @login_required
-def json_to_server():
-    if request.method=='POST':
-        data = request.get_json()
-        timestamp = str(datetime.utcnow()).replace(" ","")
-        jsonfile = upload_dir + str(current_user.id)+'/tracks'+timestamp+'.json'
-        print('json_to_server: Saving JSON to file "{}":\njson={}'.format(jsonfile,data))
+def events_get_list(): 
+    tracks = os.listdir('app/static/upload/'+ str(current_user.id))
+    string = ""
+
+    for i in tracks:
+        uri = url_for('loadtrack', user = str(current_user.id), trackfile = i)
+        print(uri)
+        #string += "<button onclick ='" str(url_for('loadtrack', user = str(current_user.id),filename = i)) + "'>"+ i + "</button>" 
+        print(i.replace(" ","%"))
+        string += '<button onclick="jsonFromServer('+"'"+uri+"'"+')">' + str(i)+'</button> <br>'
+
+    print (string)
+    
+    return jsonify( {'data': string})
+
+# CREATE ITEM
+@app.route('/rest/events/',methods=['POST'])
+@login_required
+def events_post():
+    data = request.get_json()
+    timestamp = str(datetime.utcnow()).replace(" ","")
+    
+    path = str(current_user.id)+'/tracks'+timestamp+'.json'
+    
+    jsonfile = upload_dir + path
+    uri = "/rest/events/" + path
+    
+    print('json_to_server: Saving JSON to file "{}" (uri={}):\njson={}'.format(jsonfile,uri,data))
 
 #         try: 
 #             os.makedirs(upload_dir+str(current_user.id))
 #         except: 
 #             pass
 
-        with open(jsonfile, 'w') as outfile:
-            json.dump(data, outfile)
-        return ("ok")
-    else:
-        return ("error")
-#This function loads the json stored in app/static/upload/
-@app.route('/load_json/<item>', methods=['POST','GET'])
+    with open(jsonfile, 'w') as outfile:
+        json.dump(data, outfile)
+        
+    return uri
+
+# RETRIEVE ITEM    
+@app.route ('/rest/events/<user>/<trackfile>', methods = ['GET'])
 @login_required
-def load_json(item):
-    filename='app/static/upload/'+str(current_user.id)+'/'+item
+def loadtrack(user,trackfile):
+    filename='app/static/upload/'+user+'/'+trackfile
     print(os.path.isfile(filename))
-    #file = pd.read_json()
+
     with open(filename, 'r') as f:
         data = f.read()
     
-    print('load_json: data={}'.format(data))
-    return data 
+    print('loadtrack: Sending JSON from file "{}":\njson={}'.format(filename,data))
+    return data
+    
+@app.route('/rest/events/self/<trackfile>', methods=['GET'])
+@login_required
+def load_json(trackfile):
+    return loadtrack(str(current_user.id),trackfile)
+
 
 @app.route ('/tracks', methods =['GET'])
 @login_required
@@ -222,12 +255,7 @@ def Track_list():
 
     return string
 
-@app.route ('/loadtrack/<user>/<filename>', methods = ['GET'])
-@login_required
-def loadtrack(user,filename):
-    data=load_json(filename)
-    print('loadtrack: Sending JSON from file "{}":\njson={}'.format(filename,data))
-    return data
+
 
 @app.route('/pages/profile', methods=['GET', 'POST'])
 @login_required
@@ -249,29 +277,3 @@ def user_profile_page():
     # Process GET or invalid POST
     return render_template('pages/user_profile_page.html',
                            form=form)
-
-
-#work done wednesday 
-@app.route('/loadlist', methods=['GET','POST'])
-@login_required
-def modal_view(): 
-    tracks = os.listdir('app/static/upload/'+ str(current_user.id))
-    string = ""
-
-    for i in tracks:
-        print(url_for('loadtrack', user = str(current_user.id),filename = i))
-        #string += "<button onclick ='" str(url_for('loadtrack', user = str(current_user.id),filename = i)) + "'>"+ i + "</button>" 
-        print(i.replace(" ","%"))
-        string += "<button onclick =" +"jsonFromServer('loadtrack/"+str(current_user.id) + "/"+str(i).replace(" ","") + "')>" + str(i)+" </button> <br>"
-
-    print (string)
-    
-    return jsonify( {'data': string})
-
-#@app.route('/loadlisttest', methods=['GET','POST'])
-#@login_required
-#def loadlist():
-
-    #tracks =  os.listdir('app/static/upload/'+ str(current_user.id))
-
-    #return jsonify(tracks)
