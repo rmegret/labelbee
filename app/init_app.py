@@ -11,7 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_user import UserManager, SQLAlchemyAdapter
 from flask_wtf.csrf import CsrfProtect
 
-app = Flask(__name__)           # The WSGI compliant web application object
+app = Flask(__name__, static_url_path='')           # The WSGI compliant web application object
 db = SQLAlchemy()               # Setup Flask-SQLAlchemy
 manager = Manager(app)          # Setup Flask-Script
 

@@ -35,7 +35,7 @@ function initVideoList() {
     };
     updateVideoInfoForm()
     
-    videoListFromServer('static/data/videolist.csv', 1)
+    videoListFromServer('/data/videolist.csv', 1)
 }
 function updateVideoList() {
     var data = videoList;
@@ -58,7 +58,7 @@ function updateVideoSelectbox() {
     selectbox.find('option').remove()
 
     $.each(videoList, function (i, el) {
-        selectbox.append("<option value='data/"+el+"'>"+el+"</option>");
+        selectbox.append("<option value='/data/"+el+"'>"+el+"</option>");
     });
 }
 function updateVideoListSelection() {
@@ -77,7 +77,7 @@ function prefillVideoFields() {
     if (videoListTable[videoListCurrentID]==null) return;
     let tagfile = videoListTable[videoListCurrentID].tags
     if (tagfile != null) {
-            videoTagURL = 'data/'+tagfile
+            videoTagURL = '/data/'+tagfile
     } else {
             videoTagURL = undefined
     }
@@ -90,7 +90,7 @@ function selectVideoByID(id) {
     videoListCurrentID = id
     
     prefillVideoFields()
-    let file = 'static/data/'+videoList[videoListCurrentID]
+    let file = '/data/'+videoList[videoListCurrentID]
     
     updateVideoListSelection()
     
@@ -111,7 +111,7 @@ function addVideoToList(videoname) {
     selectVideoByID(videoList.length-1);
 }
 function addVideoClick() {
-    var videoname = prompt("Add video to the list and select it:\n\nEnter video filename\ndata/ will be prefixed to its name", "vlc1.mp4");
+    var videoname = prompt("Add video to the list and select it:\n\nEnter video filename\n/data/ will be prefixed to its name", "vlc1.mp4");
 
     if (videoname == null || videoname == "") {
         console.log('addVideoClick: no video name entered')

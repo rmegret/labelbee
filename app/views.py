@@ -15,6 +15,9 @@ import pandas as pd
 import numpy as np
 
 
+upload_dir = "app/static/upload/"
+
+
 ### Enable range requests 
 ### https://blog.asgaard.co.uk/2012/08/03/http-206-partial-content-for-flask-python
 
@@ -29,6 +32,24 @@ def after_request(response):
     response.headers.add('Accept-Ranges', 'bytes')
     return response
 
+def dir_listing(path):
+    BASE_DIR = ''
+
+    # Joining the base and the requested path
+    abs_path = os.path.join(BASE_DIR, path)
+
+    # Return 404 if path doesn't exist
+    if not os.path.exists(abs_path):
+        return abort(404)
+
+    # Check if path is a file and serve
+    if os.path.isfile(abs_path):
+        return abort(406)
+        #return send_file(abs_path)
+
+    # Show directory contents
+    files = os.listdir(abs_path)
+    return render_template('pages/files.html', files=files)
 
 def send_from_directory_partial(directory, filename):
     """ 
@@ -37,24 +58,31 @@ def send_from_directory_partial(directory, filename):
         TODO: handle all send_file args, mirror send_file's error handling
         (if it has any)
     """
-    range_header = request.headers.get('Range', None)
-        
+    
     path = safe_join(directory, filename)
-    
-    if not range_header: 
-        print('send_from_directory_partial: REQUEST "'+path+'" norange')
-        return send_from_directory(directory, path)
-    else:
-        print('send_from_directory_partial: REQUEST "'+path+'" range='+range_header)
-    
     if not os.path.isabs(path):
         path = os.path.join(app.root_path, path)
+        
+    print('send_from_directory_partial: looking for path="'+path+'"...')
+
     try:
-        if not os.path.isfile(path):
+        if os.path.isdir(path):
+            print('Found directory '+path)
+            return dir_listing(path)
+        elif not os.path.isfile(path):
             print('NotFound: '+path)
             raise NotFound()
     except (TypeError, ValueError):
         raise BadRequest()
+    
+    range_header = request.headers.get('Range', None)
+    if not range_header: 
+        print('send_from_directory_partial: REQUEST "'+filename+'" norange')
+        print('  send_from_directory: '+directory+','+filename+'"')
+        return send_from_directory(directory, filename)
+    else:
+        print('send_from_directory_partial: REQUEST "'+filename+'" range='+range_header)
+    
     
     print('send_from_directory_partial: MIME='+mimetypes.guess_type(path)[0])
     
@@ -92,8 +120,14 @@ def send_from_directory_partial(directory, filename):
     return rv
 
 
-@app.route('/static/data/<path:path>')
+@app.route('/data/<path:path>')
 def send_data(path):
+    print('Handling file request PATH='+path)
+    return send_from_directory_partial('static/data/',path)
+
+@app.route('/data')
+def send_data_():
+    path=''
     print('Handling file request PATH='+path)
     return send_from_directory_partial('static/data/',path)
 
@@ -113,11 +147,10 @@ def home():
 @login_required  # Limits access to authenticated users
 def user_page():
     
-    
     try: 
-        os.makedirs("app/upload/"+str(current_user.id))
+        os.makedirs(upload_dir+str(current_user.id))
     except: 
-            pass
+        pass
     #tracks = os.listdir('app/upload/'+ str(current_user.id))
     #string = "<HTML>"
 
@@ -146,10 +179,15 @@ def admin_page():
 @login_required
 def json_to_server():
     if request.method=='POST':
-        data=request.get_json()
-        timestamp=str(datetime.utcnow()).replace(" ","")
-        jsonfile='app/static/upload/'+ str(current_user.id)+'/tracks'+timestamp+'.json'
+        data = request.get_json()
+        timestamp = str(datetime.utcnow()).replace(" ","")
+        jsonfile = upload_dir + str(current_user.id)+'/tracks'+timestamp+'.json'
         print('json_to_server: Saving JSON to file "{}":\njson={}'.format(jsonfile,data))
+
+#         try: 
+#             os.makedirs(upload_dir+str(current_user.id))
+#         except: 
+#             pass
 
         with open(jsonfile, 'w') as outfile:
             json.dump(data, outfile)
@@ -195,7 +233,7 @@ def loadtrack(user,filename):
 @login_required
 def user_profile_page():
     # Initialize form
-    form = UserProfileForm(request.form, current_user)
+    form = UserProfileForm(obj=current_user)
 
     # Process valid POST
     if request.method == 'POST' and form.validate():
