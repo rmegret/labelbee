@@ -256,20 +256,26 @@ function tracksListFromServer(){
     url:route,
     type: 'GET',
     contentType: 'application/json',
-    data:'',
+    data:{format:'json'},
     success:function(json){
-      // Get the file list
-      // in HTML format (server generated)
-      // TODO: send the file list as json data instead of HTML
-      //       and convert into HTML client side
-      $('#loadTracksFromServerDialog .modal-body').html(json.data);
-      
-      console.log("tracksListFromServer: SUCESS\ntracksList=",json)
+      // Get the file list in JSON format
+
+      console.log("tracksListFromServer: SUCCESS\ntracksList=",json)
+
+      let html = ""
+      for (let item of json) {
+            html += '<button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+      }
+      $('#loadTracksFromServerDialog .modal-body').html(html);
       
       // Nothing else to do here: 
       // The modal #loadTracksFromServerDialog is supposed to be open 
       // and filled with links to each Track file
       // Clicking on one of the link will trigger jsonFromServer()
+      },
+    error:function(jqXHR, textStatus, errorThrown) {
+          console.log("tracksListFromServer: ERROR",jqXHR, textStatus, errorThrown)
+          $('#loadTracksFromServerDialog .modal-body').html("Error loading Tracks list from URL '" + route + "': " + errorThrown + "<br>" + jqXHR.responseText);
       }
   })
 }

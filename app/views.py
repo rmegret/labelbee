@@ -184,18 +184,35 @@ def admin_page():
 @login_required
 def events_get_list(): 
     tracks = os.listdir('app/static/upload/'+ str(current_user.id))
-    string = ""
-
-    for i in tracks:
-        uri = url_for('loadtrack', user = str(current_user.id), trackfile = i)
-        print(uri)
-        #string += "<button onclick ='" str(url_for('loadtrack', user = str(current_user.id),filename = i)) + "'>"+ i + "</button>" 
-        print(i.replace(" ","%"))
-        string += '<button onclick="jsonFromServer('+"'"+uri+"'"+')">' + str(i)+'</button> <br>'
-
-    print (string)
     
-    return jsonify( {'data': string})
+    print('args=',request.args)
+    print('form=',request.form)
+    
+    format = request.args.get('format', 'html')
+    
+    print('format=',format)
+
+    uri_list = [
+            { 'filename' : file,
+              'uri': url_for('loadtrack', 
+                        user = str(current_user.id), trackfile = file)
+            } 
+            for file in tracks
+        ]
+
+    if (format=='html'):
+        string= ""
+        for item in uri_list:
+            string += '<button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+        print (string)
+        result = {'data': string}
+    elif (format=='json'):
+        result = uri_list
+    else:
+        #abort('/rest/events GET: unrecognized format "{}"'.format(format))
+        raise BadRequest('/rest/events GET: unrecognized format "{}"'.format(format))
+    
+    return jsonify( result )
 
 # CREATE ITEM
 @app.route('/rest/events/',methods=['POST'])
