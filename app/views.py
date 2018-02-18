@@ -25,7 +25,7 @@ import mimetypes
 import re
 
 from flask import request, send_file, Response, safe_join, send_from_directory
-from werkzeug.exceptions import BadRequest, NotFound
+from werkzeug.exceptions import BadRequest, NotFound, Forbidden
 
 @app.after_request
 def after_request(response):
@@ -146,27 +146,45 @@ def home():
 @app.route('/user')
 @login_required  # Limits access to authenticated users
 def user_page():
+        
+    return render_template('pages/user_page.html',userid= str(current_user.id))
+
+# The User page is accessible to authenticated users (users that have logged in)
+@app.route('/labelbee/gui')
+@login_required  # Limits access to authenticated users
+def labelbee_user_page():
     
     try: 
         os.makedirs(upload_dir+str(current_user.id))
     except: 
         pass
-    #tracks = os.listdir('app/upload/'+ str(current_user.id))
-    #string = "<HTML>"
-
-    #for i in tracks:
-        #print(url_for('loadtrack', user = str(current_user.id),filename = i))
-        #string += "<a href =  " + str(url_for('loadtrack', user = str(current_user.id),filename = i)) + ">"+ i + "</a> <br>" 
-        #print (string)
-    #print (string)
-    #string += "</HTML>"
-
     
-    return render_template('pages/user_page.html',userid= str(current_user.id))
+    return render_template('pages/labelbee_page.html',userid= str(current_user.id))
+
+
+@app.route('/rest/auth/whoami')
+def whoami():
+    if (current_user.is_authenticated):
+      return jsonify({
+                "is_authenticated": current_user.is_authenticated,
+                "first_name": current_user.first_name,
+                "email": current_user.email
+                      } )
+    else:
+      return jsonify({
+                "is_authenticated": current_user.is_authenticated
+                })
+    
 
 @app.route('/login')
 def login():
     return render_template('pages/login.html')
+
+@app.route('/ajaxlogin', methods=['POST'])
+def ajaxlogin():
+    user = request.args.get('user')
+    login_user(user)
+    return "TEST"
 
 
 # The Admin page is accessible to users with the 'admin' role
@@ -181,16 +199,13 @@ def admin_page():
 
 # LIST
 @app.route('/rest/events/', methods=['GET'])
-@login_required
 def events_get_list(): 
+    if (not current_user.is_authenticated):
+        raise Forbidden('/rest/events GET: login required !')
+
     tracks = os.listdir('app/static/upload/'+ str(current_user.id))
     
-    print('args=',request.args)
-    print('form=',request.form)
-    
     format = request.args.get('format', 'html')
-    
-    print('format=',format)
 
     uri_list = [
             { 'filename' : file,
@@ -216,8 +231,10 @@ def events_get_list():
 
 # CREATE ITEM
 @app.route('/rest/events/',methods=['POST'])
-@login_required
 def events_post():
+    if (not current_user.is_authenticated):
+        raise Forbidden('/rest/events GET: login required !')
+        
     data = request.get_json()
     timestamp = str(datetime.utcnow()).replace(" ","")
     
@@ -240,8 +257,10 @@ def events_post():
 
 # RETRIEVE ITEM    
 @app.route ('/rest/events/<user>/<trackfile>', methods = ['GET'])
-@login_required
 def loadtrack(user,trackfile):
+    if (not current_user.is_authenticated):
+        raise Forbidden('/rest/events GET: login required !')
+        
     filename='app/static/upload/'+user+'/'+trackfile
     print(os.path.isfile(filename))
 
@@ -252,25 +271,13 @@ def loadtrack(user,trackfile):
     return data
     
 @app.route('/rest/events/self/<trackfile>', methods=['GET'])
-@login_required
 def load_json(trackfile):
+    if (not current_user.is_authenticated):
+        raise Forbidden('/rest/events GET: login required !')
+        
     return loadtrack(str(current_user.id),trackfile)
 
 
-@app.route ('/tracks', methods =['GET'])
-@login_required
-def Track_list():
-    tracks = os.listdir('app/upload/'+ str(current_user.id))
-    string = "<HTML>"
-
-    for i in tracks:
-        print(url_for('loadtrack', user = str(current_user.id),filename = i))
-        string += "<a href =  " + str(url_for('loadtrack', user = str(current_user.id),filename = i)) + ">"+ i + "</a> <br>" 
-        #print (string)
-    print (string)
-    string += "</HTML>"
-
-    return string
 
 
 

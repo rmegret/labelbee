@@ -11,6 +11,10 @@ To view the User page, you must
 <a href="{{ url_for('user.login') }}">Sign in</a> or
 <a href="{{ url_for('user.register') }}">Register</a>.
 </p>
+{% else %}
+<p>You are currently logged as 
+<span style="font-family: monospace; border: solid gray 1px; padding: 3px;">{{current_user.first_name or current_user.user_auth.username}}</span>
+</p>
 {% endif %}
 
 <p>

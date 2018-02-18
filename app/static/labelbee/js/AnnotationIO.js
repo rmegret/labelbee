@@ -12,6 +12,34 @@ function initAnnotationIO() {
 }
 
 
+function whoami() {
+
+     $.getJSON( '/rest/auth/whoami' ,
+        function(data) {
+          console.log('whoami: data=',data)  
+        }
+      )
+      .done(function(data) {
+          //$('#whoami').html(JSON.stringify(data))
+          if (data.is_authenticated) {
+              $('#whoami').html('Logged in as "'+data.first_name+'"')
+              $('.require-server').toggleClass('disabled',false)
+          } else {
+              $('#whoami').html('Not logged in')
+              $('.require-server').toggleClass('disabled',true)
+          }
+          
+        }
+      )
+      .fail(function(data) {
+          console.log('whoami: ERROR',data)  
+          $('#whoami').html('No connection to server storage')
+          $('.require-server').toggleClass('disabled',true)
+        }
+      )
+    
+}
+
 // ## Annotations control
 
 function saveBlobToFile(blob, filename) {
@@ -298,17 +326,22 @@ function jsonFromServer(route){
             videoControl.onFrameChanged();
 
             refreshChronogram();
-          }
+          },
+          error:function(jqXHR, textStatus, errorThrown) {
+            console.log("jsonFromServer('+route+'): ERROR",jqXHR, textStatus, errorThrown)
+            alert("Load JSON from server: Error "+jqXHR + textStatus + errorThrown);
+      }
         });
   }
   
   
 function jsonToServer() {
+    var route = '/rest/events/';
 
     console.log("jsonToServer")
         
     $.ajax({
-        url: '/rest/events/', //server url
+        url: route, //server url
         type: 'POST',    //passing data as post method
         contentType: 'application/json', // returning data as json
         data: JSON.stringify(Tracks),  //form values
@@ -316,7 +349,8 @@ function jsonToServer() {
           alert("Save JSON to server: Success "+json);  //response from the server given as alert message
         },
         error: function(jqXHR, textStatus, errorThrown) {
-          alert("Save JSON to server: Error "+textStatus);
+          console.log("jsonToServer('+route+'): ERROR",jqXHR, textStatus, errorThrown)
+          alert("Save JSON to server: Error "+jqXHR + textStatus + errorThrown);
         }
     });
 
