@@ -9,10 +9,11 @@ from flask_user import current_user, login_required, roles_accepted
 from app.init_app import app, db
 import os 
 from datetime import datetime
-from app.models import UserProfileForm
+from app.models import UserProfileForm, User
 import json
 import pandas as pd
 import numpy as np
+import re
 
 
 upload_dir = "app/static/upload/"
@@ -138,8 +139,8 @@ def home_page():
     return render_template('pages/home_page.html')
 
 @app.route('/')
-def home():
-    return render_template('pages/home.html')
+def about():
+    return render_template('pages/about.html')
 
 
 # The User page is accessible to authenticated users (users that have logged in)
@@ -151,15 +152,18 @@ def user_page():
 
 # The User page is accessible to authenticated users (users that have logged in)
 @app.route('/labelbee/gui')
-@login_required  # Limits access to authenticated users
+#@login_required  # Limits access to authenticated users
 def labelbee_user_page():
     
-    try: 
-        os.makedirs(upload_dir+str(current_user.id))
-    except: 
-        pass
+    if (current_user.is_authenticated):
+        try: 
+            os.makedirs(upload_dir+str(current_user.id))
+        except: 
+            pass
     
-    return render_template('pages/labelbee_page.html',userid= str(current_user.id))
+        return render_template('pages/labelbee_page.html',userid= str(current_user.id))
+    else:
+        return render_template('pages/labelbee_page.html',userid='anonymous')
 
 
 @app.route('/rest/auth/whoami')
@@ -168,7 +172,9 @@ def whoami():
       return jsonify({
                 "is_authenticated": current_user.is_authenticated,
                 "first_name": current_user.first_name,
-                "email": current_user.email
+                "last_name": current_user.last_name,
+                "email": current_user.email,
+                "id": current_user.id
                       } )
     else:
       return jsonify({
@@ -197,23 +203,55 @@ def admin_page():
 # REST API for events: /rest/events/
 # GET list, POST new item, GET item
 
+def parse_trackfilename(filename):
+  m = re.search( r'(?P<video>C\d\d_\d{12})-(?P<timestamp>\d{12})', filename)
+  if (m is None):
+      return {'video':'unknown','timestamp':'unknown'}
+  print('parse-trackfilename',m.groupdict())
+  return m.groupdict()
+
 # LIST
 @app.route('/rest/events/', methods=['GET'])
 def events_get_list(): 
     if (not current_user.is_authenticated):
         raise Forbidden('/rest/events GET: login required !')
 
-    tracks = os.listdir('app/static/upload/'+ str(current_user.id))
-    
     format = request.args.get('format', 'html')
+    video = request.args.get('video')
 
-    uri_list = [
-            { 'filename' : file,
-              'uri': url_for('loadtrack', 
-                        user = str(current_user.id), trackfile = file)
-            } 
-            for file in tracks
-        ]
+    user_ids = os.listdir('app/static/upload/')
+    #user_ids = [str(current_user.id))]
+    
+    uri_list = []
+    for user_id in user_ids:
+        if (not os.path.isdir('app/static/upload/'+user_id)):
+            continue
+        tracks = os.listdir('app/static/upload/'+ user_id)
+        print('user_id=',user_id)
+        user = User.query.filter_by(id=int(user_id)).first()
+        print('user=',user)
+        print('user.id=',user.id)
+        print('user.first_name=',user.first_name)
+        print('user.email=',user.email)
+        for file in tracks:
+            if file.split('.')[-1] != 'json': continue
+            parsedfilename = parse_trackfilename(file)
+            
+            if (video is not None):
+                if (parsedfilename.get('video') != video):
+                    continue
+            
+            uri_list.append( {
+                      'filename' : file,
+                      'uri': url_for('loadtrack', 
+                                user = user.id, trackfile = file),
+                      'user_id': user.id,
+                      'user_name': user.first_name+' '+user.last_name,
+                      'user_email': user.email,
+                      'timestamp': parsedfilename.get('timestamp'),
+                      'video': parsedfilename.get('video')
+                    } )
+    uri_list = sorted(uri_list, key=lambda item: item['timestamp'])
 
     if (format=='html'):
         string= ""
@@ -235,10 +273,18 @@ def events_post():
     if (not current_user.is_authenticated):
         raise Forbidden('/rest/events GET: login required !')
         
-    data = request.get_json()
-    timestamp = str(datetime.utcnow()).replace(" ","")
+    obj = request.get_json()
+    #timestamp = str(datetime.utcnow()).replace(" ","")
+    timestamp = datetime.now().strftime('%y%m%d%H%M%S')
     
-    path = str(current_user.id)+'/tracks'+timestamp+'.json'
+    #print(obj)
+    
+    data = obj.get('data')
+    video = obj.get('video', 'C00_000000000000')
+    
+    #path = str(current_user.id)+'/tracks'+timestamp+'.json'
+    path = (str(current_user.id)+'/'
+            +'{video}-{timestamp}.json'.format(video=video,timestamp=timestamp))
     
     jsonfile = upload_dir + path
     uri = "/rest/events/" + path

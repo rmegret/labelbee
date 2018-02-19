@@ -1,24 +1,34 @@
-{% extends "common/page_base.html" %}  {# common/page_base.html extends layout.html #}
+<!doctype html>
+<html>
 
-{% block content %}
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link href="css/bootstrap.css" rel="stylesheet" type="text/css">
+  <meta name="description" content="labelBee video annotation system">
+  <meta name="author" content="Rémi Mégret">
+
+  <link rel="icon" type="image/png" href="images/BeeTrackerlogo.png">
+
+  <title>LabelBee</title>
 
   <script src="js/extern/jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
   <script src="js/extern/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
-  <link href="js/extern/jquery-ui-1.12.1.custom/jquery-ui.css" rel="stylesheet" type="text/css">
+  <link href="js/extern/jquery-ui-1.12.1.custom/jquery-ui.css" rel="stylesheet">
+
+  <link href="css/bootstrap.css" rel="stylesheet">
 
  <!--  <script type="text/javascript" src="js/extern/jquery.js"></script> -->
   <script type="text/javascript" src="js/extern/bootstrap.js"></script>
   <script type="text/javascript" src="js/extern/VideoFrame.js"></script>
-  <script type="text/javascript" src="js/extern/fabric/dist/fabric.js"></script>
   
-  <script type="text/javascript" src="js/extern/D3/d3.min.js"></script>
+  <script type="text/javascript" src="js/extern/fabric/dist/fabric.js"></script>
+<!--   <script type="text/javascript" src="js/extern/fabric.canvasex.js"></script> -->
+  
+  <script type="text/javascript" src="js/extern/D3/d3.js"></script>
   <script type="text/javascript" src="js/extern/marcj-css-element-queries-134443d/src/ResizeSensor.js"></script>
   <script type="text/javascript" src="js/extern/jquery.csv.js"></script>
-  
-  <script type="text/javascript" src="js/labelBee.js"></script>
-
   
   <script type="text/javascript" src="js/Model.js"></script>
   <script type="text/javascript" src="js/VideoList.js"></script>
@@ -31,22 +41,62 @@
   <script type="text/javascript" src="js/ZoomView.js"></script>
   <script type="text/javascript" src="js/labelBee.js"></script>
   
+  <link href="css/custom.css" rel="stylesheet">
+</head>
 
-  <link href="css/custom.css" rel="stylesheet" type="text/css">
+<body onload="init()">
+<!--   <nav class="navbar navbar-inverse navbar-fixed-top"> -->
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
 
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false"
+          aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
 
-<script type="text/javascript">
-  document.body.onload = init
-</script>
+        <a class="navbar-brand" href="#"><img style="display:inline-block" src="images/BeeTrackerlogo.png" width="25px" height="25px"> labelBee</a>
+      </div>
+      <div id="navbar" class="collapse navbar-collapse">
+<!-- 
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#help">Help</a></li>
+        </ul>
+ -->
+        <ul class="nav navbar-nav navbar-right">
+            <li title="You need to quit labelbee before loging-in/out"><a><span id="whoami">-</span></a></li>
+            <li><a href="/home"><span class="glyphicon glyphicon-log-out"></span> Quit labelbee</a></li>
+        </ul>
+      </div>
+      <!--/.nav-collapse -->
+    </div>
+  </nav>
 
-
-<!-- <h1>User page</h1> -->
-
-<!-- <p>This page is accessible to authenticated user (users that have signed in).</p> -->
-
-<!--   <div class="container main"> -->
-<div>
-
+  <div class="container main">
+  
+  <!-- Modal  -->
+    <div class="modal fade" id="mainAlertDialog" role="dialog">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Alert</h4>
+          </div>
+          <div class="modal-body alert alert-warning" >
+                <!-- To be filled up by AJAX request -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
     <table>
       <tr>
         <td>
@@ -198,15 +248,14 @@
             
             <div id='userpanel' class='collapsible'>
               <label>User/Display</label>
-              <div>
-                <div id="whoami">-</div>
+              <div>                
                 <label for="logout" value="Logout" class="btn btn-primary btn-sm">Log out</label>
                 <input type="button" style="display:none" id="logout" onclick="alert('not implemented')">
               
                 <label for="fullscreen" value="Fullscreen" class="btn btn-primary btn-sm">Fullscreen</label>
                 <input type="button" value="Fullscreen" style="display:none" id="fullscreen" onclick="toggleFullScreen()">
                 
-                <input type="button" value="Whoami?" onclick="whoami()">
+                <input type="button" value="Refresh user info" onclick="whoami()" class="btn-primary btn-xs">
               </div>
             </div>
             
@@ -318,16 +367,18 @@
                   <label>Server storage</label>
                   <div>
                     <meta name="csrf-token" content="{{ csrf_token() }}">
-                    
-                    <input id="videoListFromServer" onclick="videoListFromServer()" type="button" value="Load Video List"  class="btn btn-secondary btn-sm">
+
+                    <input id="jsonFromServer" onclick="jsonFromServer()" type="button" value="Load Tracks"  class="btn btn-primary btn-sm">
                     
                     <input id="tagsFromServer" onclick="tagsFromServer()"  type="button" value="Load Tags" class="btn btn-primary btn-sm">
+                    
+                    <input id="videoListFromServer" onclick="videoListFromServer()" type="button" value="Load Video List"  class="btn btn-primary btn-sm">
   
                     <br>
                     
-                    <input type="button" onclick="tracksListFromServer()" class="btn btn-green-toggle btn-sm" data-toggle="modal" data-target="#loadTracksFromServerDialog" value="Load Tracks (JSON)">
+                    <input type="button" onclick="tracksListFromServer()" class="btn btn-green-toggle btn-sm require-server" data-toggle="modal" data-target="#loadTracksFromServerDialog" value="Load Tracks (JSON)">
 
-                    <input id="jsonToServer" onclick="jsonToServer()" type="button" value="Save Tracks (JSON)" class="btn btn-green-toggle btn-sm"></button>
+                    <input id="jsonToServer" onclick="jsonToServer()" type="button" value="Save Tracks (JSON)" class="btn btn-green-toggle btn-sm require-server"></button>
 
 
               <!-- Modal  -->
@@ -521,8 +572,8 @@
   <br/>  <br/>  <br/>
     
   </div>
-  
-  
+
+
 <script type="text/javascript">
 var csrftoken = $('meta[name=csrf-token]').attr('content')
 
@@ -535,4 +586,7 @@ $.ajaxSetup({
 })
 </script>
 
-{% endblock %}
+
+</body>
+
+</html>

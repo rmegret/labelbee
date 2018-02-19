@@ -284,15 +284,52 @@ function tracksListFromServer(){
     url:route,
     type: 'GET',
     contentType: 'application/json',
-    data:{format:'json'},
+    //data:{format:'json'}, // Without 'video', list all videos
+    data:{format:'json', video:videoControl.videoName},
     success:function(json){
       // Get the file list in JSON format
 
       console.log("tracksListFromServer: SUCCESS\ntracksList=",json)
 
       let html = ""
-      for (let item of json) {
-            html += '<button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+      if (false) {
+          for (let item of json) {
+                html += '<button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+          }
+      } else {
+          html+="<table><thead>"
+              +"<th>Link</th>"
+              +"<th>Video</th>"
+              +"<th>Owner</th>"
+              +"<th>Created on</th>"
+              +"</thead><tbody>"
+          function boldize(text, flag) {
+              if (flag) {
+                  return '<b>'+text+'</b>'
+              } else
+                  return text
+          }
+          function formattimestamp(timestamp) {
+              if (timestamp.length==12) {
+                return "20"+timestamp.slice(0,2)+"-"
+                       +timestamp.slice(2,4)+"-"+timestamp.slice(4,6)
+                       +' '
+                       +timestamp.slice(6,8)+':'
+                       +timestamp.slice(8,10)+':'
+                       +timestamp.slice(10,12)
+              } else 
+                return timestamp
+          }
+          for (let item of json) {
+                html += ( '<tr>'
+                +'<td><button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button></td>'
+                +'<td>'+boldize(item['video'],
+                                item['video']==videoControl.videoName)+'</td>'
+                +'<td>'+item['user_name']+' ('+item['user_id']+')</td>'
+                +'<td>'+formattimestamp(item['timestamp'])+'</td>'
+                +'</tr>' )
+          }
+          html+="</tbody></table>"
       }
       $('#loadTracksFromServerDialog .modal-body').html(html);
       
@@ -301,10 +338,8 @@ function tracksListFromServer(){
       // and filled with links to each Track file
       // Clicking on one of the link will trigger jsonFromServer()
       },
-    error:function(jqXHR, textStatus, errorThrown) {
-          console.log("tracksListFromServer: ERROR",jqXHR, textStatus, errorThrown)
-          $('#loadTracksFromServerDialog .modal-body').html("Error loading Tracks list from URL '" + route + "': " + errorThrown + "<br>" + jqXHR.responseText);
-      }
+    error: showAjaxError('ERROR in jsonFromServer', 
+                          function() {$('#loadTracksFromServerDialog').modal('hide')})
   })
 }
 
@@ -327,13 +362,30 @@ function jsonFromServer(route){
 
             refreshChronogram();
           },
-          error:function(jqXHR, textStatus, errorThrown) {
-            console.log("jsonFromServer('+route+'): ERROR",jqXHR, textStatus, errorThrown)
-            alert("Load JSON from server: Error "+jqXHR + textStatus + errorThrown);
-      }
+          error: showAjaxError('ERROR in jsonFromServer')
         });
   }
   
+  
+function mainAlert(text) {
+    $('#mainAlertDialog .modal-body').html(text)
+    $('#mainAlertDialog').modal('show')
+}
+
+function showAjaxError(title, prehook) {
+    var callback = function(jqXHR, textStatus, errorThrown) {
+        console.log('AJAX ERROR: '+title, jqXHR, textStatus, errorThrown, jqXHR.responseText)
+        if (prehook) {
+            prehook(jqXHR, textStatus, errorThrown)
+        }
+        mainAlert(title 
+                  //+'<br>Status: '+ textStatus
+                  //+'<br>Error: '+ errorThrown
+                  +'<br>'+ jqXHR.responseText
+)
+    }
+    return callback
+}
   
 function jsonToServer() {
     var route = '/rest/events/';
@@ -344,14 +396,11 @@ function jsonToServer() {
         url: route, //server url
         type: 'POST',    //passing data as post method
         contentType: 'application/json', // returning data as json
-        data: JSON.stringify(Tracks),  //form values
+        data: JSON.stringify({'video':videoControl.videoName,'data':Tracks}),  //form values
         success: function(json) {
           alert("Save JSON to server: Success "+json);  //response from the server given as alert message
         },
-        error: function(jqXHR, textStatus, errorThrown) {
-          console.log("jsonToServer('+route+'): ERROR",jqXHR, textStatus, errorThrown)
-          alert("Save JSON to server: Error "+jqXHR + textStatus + errorThrown);
-        }
+        error: showAjaxError('ERROR in jsonToServer')
     });
 
 }
