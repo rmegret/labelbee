@@ -126,7 +126,7 @@ def send_data(path):
     print('Handling file request PATH='+path)
     return send_from_directory_partial('static/data/',path)
 
-@app.route('/data')
+@app.route('/data/')
 def send_data_():
     path=''
     print('Handling file request PATH='+path)
@@ -134,13 +134,13 @@ def send_data_():
 
 
 # The Home page is accessible to anyone
-@app.route('/home')
+@app.route('/')
 def home_page():
     return render_template('pages/home_page.html')
 
-@app.route('/')
-def about():
-    return render_template('pages/about.html')
+#@app.route('/')
+#def about():
+#    return render_template('pages/about.html')
 
 
 # The User page is accessible to authenticated users (users that have logged in)
@@ -182,15 +182,15 @@ def whoami():
                 })
     
 
-@app.route('/login')
-def login():
-    return render_template('pages/login.html')
+#@app.route('/login')
+#def login():
+#    return render_template('pages/login.html')
 
 @app.route('/ajaxlogin', methods=['POST'])
 def ajaxlogin():
     user = request.args.get('user')
-    login_user(user)
-    return "TEST"
+    #login_user(user)
+    raise BadRequest("Ajax login not implemented")
 
 
 # The Admin page is accessible to users with the 'admin' role

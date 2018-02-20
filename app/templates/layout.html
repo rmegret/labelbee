@@ -21,9 +21,9 @@
         <!-- Application specific CSS-->
         <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
         
-  <script src="/static/labelbee/js/extern/jquery-ui-1.12.1.custom/external/jquery/jquery.js"></script>
-  <script src="/static/labelbee/js/extern/jquery-ui-1.12.1.custom/jquery-ui.js"></script>
-  <link href="/static/labelbee/js/extern/jquery-ui-1.12.1.custom/jquery-ui.css" rel="stylesheet" type="text/css">
+        <!-- Bootstrap JS -->
+        <script src="{{ url_for('static', filename='bootstrap/js/jquery.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
 
         
     </head>
@@ -43,8 +43,7 @@
             </div>
         </div>
         <div class="with-margins">
-            <a href="{{ url_for('about') }}">About</a>
-            &nbsp; | &nbsp; <a href="{{ url_for('home_page') }}">Home</a>
+            <a href="{{ url_for('home_page') }}">Home</a>
             &nbsp; | &nbsp; <a href="{{ url_for('user_page') }}">User</a>
             &nbsp; | &nbsp; <a href="{{ url_for('admin_page') }}">Admin</a>
         </div>
@@ -75,15 +74,10 @@
         <br/>
         <hr class="no-margins"/>
         <div id="footer-div" class="clearfix with-margins">
-            <div class="pull-left">{{ user_manager.app_name }} v1.0</div>
-            <div class="pull-right">&copy; 2014 MyCorp</div>
+            <div class="pull-left">{{ user_manager.app_name }} v3.0</div>
+            <div class="pull-right">&copy; 2016-2018 University of Puerto Rico</div>
         </div>
 
-        <!-- Bootstrap JS -->
-<!-- 
-        <script src="{{ url_for('static', filename='bootstrap/js/jquery.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
- -->
 
         <!-- Optional Google Analytics: change UA-XXXXX-X to be your site's ID.
         <script>
