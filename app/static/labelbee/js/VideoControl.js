@@ -482,7 +482,7 @@ VideoControl.prototype.loadPreviewVideo = function(previewURL) {
 onPreviewVideoInfoChanged = function() {
     let name = $('#previewVideoName').val()
     videoControl.previewVideoTimeScale = Number($('#previewVideoTimeScale').val())
-    videoControl.loadPreviewVideo('data/'+name)
+    videoControl.loadPreviewVideo('/data/'+name)
 }
 
 VideoControl.prototype.onVideoSizeChanged = function() {

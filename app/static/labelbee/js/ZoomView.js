@@ -6,7 +6,7 @@ function initZoomView() {
     zoomOverlay = new ZoomOverlay($("#zoom")[0],$("#zoomOverlay")[0])
     zoomOverlay.canvasExtract = $("zoomExtractedTagCanvas")
     
-    zoomOverlay.tagImageRoot='data/tags/tag25h5inv/png'
+    zoomOverlay.tagImageRoot='/data/tags/tag25h5inv/png'
     zoomOverlay.loadTagHammingMatrix()
         
     zoomOverlay.setCanvasSize(200,200)
@@ -35,7 +35,7 @@ function ZoomOverlay(canvas, canvasOverlay) {
     this.onPartLabelTextChanged = this.onPartLabelTextChanged.bind(this)
     this.onKeyDown = this.onKeyDown.bind(this)
     
-    this.tagImageRoot='data/tags/tag25h5inv/png'
+    this.tagImageRoot='/data/tags/tag25h5inv/png'
     this.canvasExtract=undefined
     
     this.selected = undefined
@@ -1093,7 +1093,7 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
 
 
 ZoomOverlay.prototype.loadTagHammingMatrix = function() {
-    let path = 'data/tags/tag25h5inv/tag25h5_hamming_matrix_5-6.json'
+    let path = '/data/tags/tag25h5inv/tag25h5_hamming_matrix_5-6.json'
 
 
     console.log('loadTagHammingMatrix: loading path "'+path+'"...')  

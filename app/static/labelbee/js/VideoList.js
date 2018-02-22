@@ -165,7 +165,7 @@ function prefillVideoFields() {
     }
 }
 function videonameToURL(videoname) {
-    return 'data/'+videoname
+    return '/data/'+videoname
 }
 function selectVideoByID(id) {
     id = Number(id)

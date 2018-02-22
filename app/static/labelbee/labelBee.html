@@ -71,8 +71,8 @@
         </ul>
  -->
         <ul class="nav navbar-nav navbar-right">
-            <li><a><span id="whoami">-</span></a></li>
-            <li><a href="/user"><span class="glyphicon glyphicon-log-out"></span> Quit labelbee</a></li>
+            <li title="You need to quit labelbee before loging-in/out"><a><span id="whoami">-</span></a></li>
+            <li><a href="/"><span class="glyphicon glyphicon-log-out"></span> Quit labelbee</a></li>
         </ul>
       </div>
       <!--/.nav-collapse -->
@@ -80,6 +80,24 @@
   </nav>
 
   <div class="container main">
+  
+  <!-- Modal  -->
+    <div class="modal fade" id="mainAlertDialog" role="dialog">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Alert</h4>
+          </div>
+          <div class="modal-body alert alert-warning" >
+                <!-- To be filled up by AJAX request -->
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
   
     <table class="main-table">
       <tr>
@@ -132,6 +150,8 @@
             </div>
 <!--             </div> -->
 <!--             <br> -->
+
+            <p id="alerttext"></p>
           </div>
           </p>
           
