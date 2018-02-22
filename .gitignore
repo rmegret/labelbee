@@ -5,4 +5,5 @@ gitversion
 Icon
 __pycache__
 jsdoc/
+*.pyc
 

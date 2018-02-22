@@ -12,6 +12,34 @@ function initAnnotationIO() {
 }
 
 
+function whoami() {
+
+     $.getJSON( '/rest/auth/whoami' ,
+        function(data) {
+          console.log('whoami: data=',data)  
+        }
+      )
+      .done(function(data) {
+          //$('#whoami').html(JSON.stringify(data))
+          if (data.is_authenticated) {
+              $('#whoami').html('Logged in as "'+data.first_name+'"')
+              $('.require-server').toggleClass('disabled',false)
+          } else {
+              $('#whoami').html('Not logged in')
+              $('.require-server').toggleClass('disabled',true)
+          }
+          
+        }
+      )
+      .fail(function(data) {
+          console.log('whoami: ERROR',data)  
+          $('#whoami').html('No connection to server storage')
+          $('.require-server').toggleClass('disabled',true)
+        }
+      )
+    
+}
+
 // ## Annotations control
 
 function saveBlobToFile(blob, filename) {
@@ -298,32 +326,145 @@ function saveTagsToFile(event) {
 }
 
 
+
+
 // Server I/O
 
-var serverURL = 'http://127.0.0.1:5000/';
-function jsonFromServer() {     
-    var path = window.prompt("Please enter path for Track JSON (server)","data/Gurabo/Tracks-C02_170624100000.json");
-    if (path==null || path=="") {
-        console.log('jsonFromServer: canceled')
-        return;
-    }
-    
-    console.log('jsonFromServer: loading path "'+path+'"...')  
+/* REST API Tracks files */
 
-     $.getJSON( path ,
-        function(data) {
-          console.log('jsonFromServer: loaded "'+path+'"')  
-        }
-      )
-      .done(function(data) {
-          setTracks(data)
-        }
-      )
-      .fail(function(data) {
-          console.log('jsonFromServer: ERROR loading "'+path+'"')  
-        }
-      )
+function tracksListFromServer(){
+  var route = '/rest/events/'; // Hardcoded
+  
+  console.log("tracksListFromServer: importing Tracks List from URL '"+route+"'...")
+
+  $('#loadTracksFromServerDialog .modal-body').html('<div>Loading Tracks file list from server. Please wait...</div>');
+
+  $.ajax({
+    url:route,
+    type: 'GET',
+    contentType: 'application/json',
+    //data:{format:'json'}, // Without 'video', list all videos
+    data:{format:'json', video:videoControl.videoName},
+    success:function(json){
+      // Get the file list in JSON format
+
+      console.log("tracksListFromServer: SUCCESS\ntracksList=",json)
+
+      let html = ""
+      if (false) {
+          for (let item of json) {
+                html += '<button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+          }
+      } else {
+          html+="<table><thead>"
+              +"<th>Link</th>"
+              +"<th>Video</th>"
+              +"<th>Owner</th>"
+              +"<th>Created on</th>"
+              +"</thead><tbody>"
+          function boldize(text, flag) {
+              if (flag) {
+                  return '<b>'+text+'</b>'
+              } else
+                  return text
+          }
+          function formattimestamp(timestamp) {
+              if (timestamp.length==12) {
+                return "20"+timestamp.slice(0,2)+"-"
+                       +timestamp.slice(2,4)+"-"+timestamp.slice(4,6)
+                       +' '
+                       +timestamp.slice(6,8)+':'
+                       +timestamp.slice(8,10)+':'
+                       +timestamp.slice(10,12)
+              } else 
+                return timestamp
+          }
+          for (let item of json) {
+                html += ( '<tr>'
+                +'<td><button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button></td>'
+                +'<td>'+boldize(item['video'],
+                                item['video']==videoControl.videoName)+'</td>'
+                +'<td>'+item['user_name']+' ('+item['user_id']+')</td>'
+                +'<td>'+formattimestamp(item['timestamp'])+'</td>'
+                +'</tr>' )
+          }
+          html+="</tbody></table>"
+      }
+      $('#loadTracksFromServerDialog .modal-body').html(html);
+      
+      // Nothing else to do here: 
+      // The modal #loadTracksFromServerDialog is supposed to be open 
+      // and filled with links to each Track file
+      // Clicking on one of the link will trigger jsonFromServer()
+      },
+    error: showAjaxError('ERROR in jsonFromServer', 
+                          function() {$('#loadTracksFromServerDialog').modal('hide')})
+  })
 }
+
+function jsonFromServer(route){
+
+    console.log("jsonFromServer: importing Tracks from URL '"+route+"'...")
+
+    $.ajax({
+          url: route, //server url
+          type: 'GET',    //passing data as post method
+          contentType: 'application/json', // returning data as json
+          data:'',
+          success:function(json)
+          {
+            //alert("success");  //response from the server given as alert message
+
+            console.log('jsonFromServer: SUCCESS\njson=', json); 
+            Tracks= JSON.parse(json);
+            videoControl.onFrameChanged();
+
+            refreshChronogram();
+          },
+          error: showAjaxError('ERROR in jsonFromServer')
+        });
+  }
+  
+  
+function mainAlert(text) {
+    $('#mainAlertDialog .modal-body').html(text)
+    $('#mainAlertDialog').modal('show')
+}
+
+function showAjaxError(title, prehook) {
+    var callback = function(jqXHR, textStatus, errorThrown) {
+        console.log('AJAX ERROR: '+title, jqXHR, textStatus, errorThrown, jqXHR.responseText)
+        if (prehook) {
+            prehook(jqXHR, textStatus, errorThrown)
+        }
+        mainAlert(title 
+                  //+'<br>Status: '+ textStatus
+                  //+'<br>Error: '+ errorThrown
+                  +'<br>'+ jqXHR.responseText
+)
+    }
+    return callback
+}
+  
+function jsonToServer() {
+    var route = '/rest/events/';
+
+    console.log("jsonToServer")
+        
+    $.ajax({
+        url: route, //server url
+        type: 'POST',    //passing data as post method
+        contentType: 'application/json', // returning data as json
+        data: JSON.stringify({'video':videoControl.videoName,'data':Tracks}),  //form values
+        success: function(json) {
+          alert("Save JSON to server: Success "+json);  //response from the server given as alert message
+        },
+        error: showAjaxError('ERROR in jsonToServer')
+    });
+
+}
+
+
 function tagsFromServer(path, quiet) {     
     //var path = "data/Gurabo/Tags-C02_170624100000.json" ;// Default
     
@@ -366,7 +507,7 @@ function tagsFromServer(path, quiet) {
 }
 function videoListFromServer(path, defaultvideoid) {     
     if (!path) {
-        var userpath = window.prompt("Please enter path for Video List (server)","data/Gurabo/videolist.csv");
+        var userpath = window.prompt("Please enter path for Video List (server)","/data/videolist.csv");
         if (userpath==null || userpath=="") {
             console.log('videoListFromServer: canceled')
             return;
@@ -413,10 +554,4 @@ function videoListFromServer(path, defaultvideoid) {
           statusUpdate('videolistLoad',false,'')
         }
       )
-}
-
-
-
-function jsonToServer() {
-  window.open(serverURL,'popUpWindow','height=500,width=400,left=100,top=100,resizable=yes,scrollbars=yes,toolbar=yes,menubar=no,location=no,directories=no, status=yes');
 }

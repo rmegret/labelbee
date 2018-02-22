@@ -11,7 +11,7 @@ var videoinfo;
 function initVideoList() {
     videoListTable=[]
 
-    videoList = [ 'testvideo.mp4',
+    videoList = [ 'DefaultList', 'testvideo.mp4',
                   'vlc1.mp4',
                   'vlc2.mp4',
                   '1_02_R_170419141405.mp4',
@@ -40,7 +40,7 @@ function initVideoList() {
     };
     updateVideoInfoForm()
     
-    videoListFromServer('data/videolist.csv', 1)
+    videoListFromServer('/data/videolist.csv', 1)
 }
 
 function checkURL(url) {
@@ -159,7 +159,7 @@ function prefillVideoFields() {
     if (videoListTable[videoListCurrentID]==null) return;
     let tagfile = videoListTable[videoListCurrentID].tags
     if (tagfile != null) {
-            videoTagURL = 'data/'+tagfile
+            videoTagURL = '/data/'+tagfile
     } else {
             videoTagURL = undefined
     }
@@ -206,7 +206,7 @@ function addVideoToList(videoname) {
     selectVideoByID(videoList.length-1);
 }
 function addVideoClick() {
-    var videoname = prompt("Add video to the list and select it:\n\nEnter video filename\ndata/ will be prefixed to its name", "vlc1.mp4");
+    var videoname = prompt("Add video to the list and select it:\n\nEnter video filename\n/data/ will be prefixed to its name", "vlc1.mp4");
 
     if (videoname == null || videoname == "") {
         console.log('addVideoClick: no video name entered')

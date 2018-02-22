@@ -31,6 +31,14 @@ select{
 } 
  
 
+.modal-body {
+	overflow: scroll;
+}
+.modal-body > table {
+	border: solid gray 2px;
+	width: max-content;
+}
+
 .overlay {
   width: 100%; height:100%; 
   position: absolute;   z-index: 100;

@@ -1349,7 +1349,7 @@ function updateActivities(onlyScaling) {
             return axes.xScale(Number(d.x1));
         })
         .attr("cy", function(d) {
-            return axes.yScale(Number(d.y)) + axes.yScale.rangeBand() / 2;
+            return axes.yScale(d.y) + axes.yScale.rangeBand() / 2;
         })
         .attr("r", 5) //change radius
         .style("stroke",  function(d){
@@ -1496,7 +1496,7 @@ function setTagGeom(selection) {
             return axes.xScale(Number(d.begin));
         })
         .attr("y", function(d) {
-            return axes.yScale(Number(d.id))+H-tagHeight(d);
+            return axes.yScale(d.id)+H-tagHeight(d);
         })
         .attr("width", function(d) {
             return axes.xScale(Number(d.end)+1)-axes.xScale(Number(d.begin));

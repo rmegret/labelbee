@@ -136,6 +136,16 @@ function init() {
     selectVideoByID(1)
     //Will trigger videoControl.onVideoLoaded
     onTrackWindowChanged() // to compute track window params
+    
+    whoami() // Refresh user status
+    
+    window.onbeforeunload = function (e) {
+        console.log('Leaving...')
+        var confirmationMessage = 'If you leave this page, all unsaved annotations will be lost. Are you sure?';
+
+        (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+        return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
+    };
 }
 
 function printMessage(html, color) {
