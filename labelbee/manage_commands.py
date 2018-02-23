@@ -6,8 +6,8 @@
 
 import datetime
 
-from app.init_app import app, db, manager
-from app.models import User, Role
+from labelbee.init_app import app, db, manager
+from labelbee.models import User, Role
 import xlrd
 import pandas as pd
 

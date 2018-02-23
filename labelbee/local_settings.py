@@ -13,7 +13,7 @@ DEBUG = True
 SECRET_KEY = 'This is an UNSECURE Secret. CHANGE THIS for production environments.'
 
 # SQLAlchemy settings
-SQLALCHEMY_DATABASE_URI = 'sqlite:///../app.sqlite'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///private/app.sqlite'
 
 # Flask-Mail settings (use local server)
 MAIL_SERVER = 'localhost'

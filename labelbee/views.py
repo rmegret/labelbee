@@ -3,20 +3,25 @@
 # Authors: Ling Thio <ling.thio@gmail.com>
 
 
-from flask import redirect, render_template, render_template_string, Blueprint,jsonify
+from flask import redirect, Blueprint
+from flask import render_template, render_template_string, Markup, jsonify
 from flask import request, url_for
 from flask_user import current_user, login_required, roles_accepted
-from app.init_app import app, db
+
 import os 
 from datetime import datetime
-from app.models import UserProfileForm, User
 import json
 import pandas as pd
 import numpy as np
 import re
 
+from labelbee.init_app import app, db
+from labelbee.models import UserProfileForm, User
 
-upload_dir = "app/static/upload/"
+
+
+
+upload_dir = "labelbee/static/upload/"
 
 
 ### Enable range requests 
@@ -198,6 +203,28 @@ def ajaxlogin():
 @roles_accepted('admin')  # Limits access to users with the 'admin' role
 def admin_page():
     return render_template('pages/admin_page.html')
+
+
+@app.route('/admin/version')
+def version_page():
+    import subprocess
+    import shlex
+    label = subprocess.check_output("git describe".split()).strip().decode()
+    log = subprocess.check_output("git log -n 5".split()).strip().decode()
+    hash = subprocess.check_output(shlex.split("git log --pretty=format:'%H' -n 1")).strip().decode()
+    date = subprocess.check_output(shlex.split("git log --pretty=format:'%ci (%cr)' -n 1")).strip().decode()
+    branch = subprocess.check_output("git rev-parse --abbrev-ref HEAD".split()).strip().decode()
+    details = subprocess.check_output("git status".split()).strip().decode()
+
+    text='<h3>Labelbee WebApp version information</h3>'
+    text += ('\n<h4>Current version</h4>\nBranch: <pre>'+branch+'</pre>'
+              +'Commit date: <pre>'+date+'</pre>'
+              +'Commit hash: <pre>'+hash+'</pre>')
+    text += '\n<h4>Log (5 last commits)</h4>\n<pre>'+log+'</pre>'
+    text += '\n<h4>Details status</h4>\n<pre>'+details+'</pre>'
+    return render_template('pages/version_page.html',    
+                           webapp_version=Markup(text))
+
 
 
 # REST API for events: /rest/events/

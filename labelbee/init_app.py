@@ -2,6 +2,7 @@
 #
 # Authors: Ling Thio <ling.thio@gmail.com>
 
+#import logging
 from datetime import datetime
 from flask import Flask
 from flask_mail import Mail
@@ -11,21 +12,28 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_user import UserManager, SQLAlchemyAdapter
 from flask_wtf.csrf import CsrfProtect
 
+print('debug a')
+
 app = Flask(__name__, static_url_path='')           # The WSGI compliant web application object
 db = SQLAlchemy()               # Setup Flask-SQLAlchemy
 manager = Manager(app)          # Setup Flask-Script
 
+#import app.views
+
 # Initialize Flask Application
 def init_app(app, extra_config_settings={}):
+
+    print('init_app', app, extra_config_settings)
+
     # Read common settings from 'app/settings.py'
-    app.config.from_object('app.settings')
+    app.config.from_object('labelbee.settings')
 
     # Read environment-specific settings from 'app/local_settings.py'
     try:
-        app.config.from_object('app.local_settings')
+        app.config.from_object('labelbee.local_settings')
     except ImportError:
-        print("The configuration file 'app/local_settings.py' does not exist.\n"+
-              "Please copy app/local_settings_example.py to app/local_settings.py\n"+
+        print("The configuration file 'labelbee/local_settings.py' does not exist.\n"+
+              "Please copy labelbee/local_settings_example.py to labelbee/local_settings.py\n"+
               "and customize its settings before you continue.")
         exit()
 
@@ -59,16 +67,21 @@ def init_app(app, extra_config_settings={}):
     init_email_error_handler(app)
 
     # Setup Flask-User to handle user account related forms
-    from app.models import User, MyRegisterForm
-    from app.views import user_profile_page
+    from labelbee.models import User, MyRegisterForm
+    from labelbee.views import user_profile_page
 
-    db_adapter = SQLAlchemyAdapter(db, User)  # Setup the SQLAlchemy DB Adapter
+    try:
+        db_adapter = SQLAlchemyAdapter(db, User)  # Setup the SQLAlchemy DB Adapter
+    except Exception as e:
+        raise Exception('ERROR connecting to the User database') from e
     user_manager = UserManager(db_adapter, app,  # Init Flask-User and bind to app
                                register_form=MyRegisterForm,  # using a custom register form with UserProfile fields
                                user_profile_view_function=user_profile_page,
     )
 
-    import app.manage_commands
+    import labelbee.manage_commands
+    
+    #print(app.logger)
 
 
 def init_email_error_handler(app):
