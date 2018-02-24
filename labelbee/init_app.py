@@ -10,20 +10,16 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import UserManager, SQLAlchemyAdapter
-from flask_wtf.csrf import CsrfProtect
-
-print('debug a')
+from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__, static_url_path='')           # The WSGI compliant web application object
 db = SQLAlchemy()               # Setup Flask-SQLAlchemy
 manager = Manager(app)          # Setup Flask-Script
 
-#import app.views
-
 # Initialize Flask Application
 def init_app(app, extra_config_settings={}):
 
-    print('init_app', app, extra_config_settings)
+    print('init_app: app=', app, '\nextra_config_settings=',extra_config_settings)
 
     # Read common settings from 'app/settings.py'
     app.config.from_object('labelbee.settings')
@@ -53,7 +49,7 @@ def init_app(app, extra_config_settings={}):
     mail = Mail(app)
 
     # Setup WTForms CsrfProtect
-    CsrfProtect(app)
+    CSRFProtect(app)
 
     # Define bootstrap_is_hidden_field for flask-bootstrap's bootstrap_wtf.html
     from wtforms.fields import HiddenField
