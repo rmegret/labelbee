@@ -21,7 +21,7 @@ def init_db():
     add_students()
 
 def add_students():
-    archivo = 'private/usuarios.xlsx'
+    archivo = 'labelbee/private/usuarios.xlsx'
     libro = xlrd.open_workbook(archivo)
     xlsx = pd.read_excel(libro, engine='xlrd')
     student_role = find_or_create_role('student', u'student')

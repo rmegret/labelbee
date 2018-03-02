@@ -62,15 +62,23 @@ def user_profile_page():
 #@login_required  # Limits access to authenticated users
 def labelbee_user_page():
     
+    
+    print('SCRIPT_NAME=',request.environ.get('SCRIPT_NAME'))
+    
+    http_script_name='/demo/'
+    
+    print('labelbee_user_page launched with http_script_name=',http_script_name)
+    
     if (current_user.is_authenticated):
         try: 
             os.makedirs(upload_dir+str(current_user.id))
         except: 
+            print('labelbee_user_page: could not create upload dir')
             pass
     
-        return render_template('pages/labelbee_page.html',userid= str(current_user.id))
+        return render_template('pages/labelbee_page.html',userid= str(current_user.id), http_script_name=http_script_name)
     else:
-        return render_template('pages/labelbee_page.html',userid='anonymous')
+        return render_template('pages/labelbee_page.html',userid='anonymous', http_script_name=http_script_name)
 
 
 # The Admin page is accessible to users with the 'admin' role
@@ -163,7 +171,7 @@ def parse_trackfilename(filename):
   m = re.search( r'(?P<video>C\d\d_\d{12})-(?P<timestamp>\d{12})', filename)
   if (m is None):
       return {'video':'unknown','timestamp':'unknown'}
-  print('parse-trackfilename',m.groupdict())
+  #print('parse-trackfilename',m.groupdict())
   return m.groupdict()
 
 # LIST
@@ -175,14 +183,14 @@ def events_get_list():
     format = request.args.get('format', 'html')
     video = request.args.get('video')
 
-    user_ids = os.listdir('app/static/upload/')
+    user_ids = os.listdir('labelbee/static/upload/')
     #user_ids = [str(current_user.id))]
     
     uri_list = []
     for user_id in user_ids:
-        if (not os.path.isdir('app/static/upload/'+user_id)):
+        if (not os.path.isdir('labelbee/static/upload/'+user_id)):
             continue
-        tracks = os.listdir('app/static/upload/'+ user_id)
+        tracks = os.listdir('labelbee/static/upload/'+ user_id)
         print('user_id=',user_id)
         user = User.query.filter_by(id=int(user_id)).first()
         print('user=',user)
@@ -213,7 +221,7 @@ def events_get_list():
         string= ""
         for item in uri_list:
             string += '<button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
-        print (string)
+        #print (string)
         result = {'data': string}
     elif (format=='json'):
         result = uri_list
@@ -263,13 +271,14 @@ def loadtrack(user,trackfile):
     if (not current_user.is_authenticated):
         raise Forbidden('/rest/events GET: login required !')
         
-    filename='app/static/upload/'+user+'/'+trackfile
-    print(os.path.isfile(filename))
+    filename='labelbee/static/upload/'+user+'/'+trackfile
+    #print(os.path.isfile(filename))
 
     with open(filename, 'r') as f:
         data = f.read()
     
-    print('loadtrack: Sending JSON from file "{}":\njson={}'.format(filename,data))
+    #print('loadtrack: Sending JSON from file "{}":\njson={}'.format(filename,data))
+    print('loadtrack: Sending JSON from file "{}"'.format(filename))
     return data
     
 @app.route('/rest/events/self/<trackfile>', methods=['GET'])

@@ -72,7 +72,7 @@
  -->
         <ul class="nav navbar-nav navbar-right">
             <li title="You need to quit labelbee before loging-in/out"><a><span id="whoami">-</span></a></li>
-            <li><a href="/"><span class="glyphicon glyphicon-log-out"></span> Quit labelbee</a></li>
+            <li><a href="{{url_for('home_page')}}"><span class="glyphicon glyphicon-log-out"></span> Quit labelbee</a></li>
         </ul>
       </div>
       <!--/.nav-collapse -->
@@ -775,6 +775,8 @@ $.ajaxSetup({
         }
     }
 })
+
+var http_script_name = '{{ http_script_name }}';
 </script>
 
 
