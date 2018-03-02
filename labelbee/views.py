@@ -62,10 +62,9 @@ def user_profile_page():
 #@login_required  # Limits access to authenticated users
 def labelbee_user_page():
     
+    #print('SCRIPT_NAME=',request.environ.get('SCRIPT_NAME'))
     
-    print('SCRIPT_NAME=',request.environ.get('SCRIPT_NAME'))
-    
-    http_script_name='/demo/'
+    http_script_name = request.environ.get('SCRIPT_NAME')
     
     print('labelbee_user_page launched with http_script_name=',http_script_name)
     
