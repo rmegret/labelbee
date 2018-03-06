@@ -510,7 +510,7 @@ VideoControl.prototype.videoSize = function() {
 VideoControl.prototype.loadVideoInfo = function(infourl) {
     let videoControl = this;
     statusRequest('videoinfoLoad', [])
-    var jqxhr = $.getJSON( infourl, function(data) {
+    var jqxhr = $.getJSON( url_for(infourl), function(data) {
             if (logging.videoEvents)
                 console.log( "loadVideoInfo loaded" );
             console.log('videojsoninfo = ',data)    

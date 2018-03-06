@@ -14,7 +14,7 @@ function initAnnotationIO() {
 
 function whoami() {
 
-     $.getJSON( '/rest/auth/whoami' ,
+     $.getJSON( url_for('/rest/auth/whoami') ,
         function(data) {
           console.log('whoami: data=',data)  
         }
@@ -340,7 +340,7 @@ function tracksListFromServer(){
   $('#loadTracksFromServerDialog .modal-body').html('<div>Loading Tracks file list from server. Please wait...</div>');
 
   $.ajax({
-    url:route,
+    url: url_for(route),
     type: 'GET',
     contentType: 'application/json',
     //data:{format:'json'}, // Without 'video', list all videos
@@ -407,7 +407,7 @@ function jsonFromServer(route){
     console.log("jsonFromServer: importing Tracks from URL '"+route+"'...")
 
     $.ajax({
-          url: route, //server url
+          url: url_for(route), //server url
           type: 'GET',    //passing data as post method
           contentType: 'application/json', // returning data as json
           data:'',
@@ -452,7 +452,7 @@ function jsonToServer() {
     console.log("jsonToServer")
         
     $.ajax({
-        url: route, //server url
+        url: url_for(route), //server url
         type: 'POST',    //passing data as post method
         contentType: 'application/json', // returning data as json
         data: JSON.stringify({'video':videoControl.videoName,'data':Tracks}),  //form values
@@ -488,7 +488,7 @@ function tagsFromServer(path, quiet) {
     console.log('tagsFromServer: loading path "'+path+'"...')  
     statusRequest('tagsLoad','')
 
-     $.getJSON( path ,
+     $.getJSON( url_for(path) ,
         function(data) {
           console.log('tagsFromServer: loaded "'+path+'"')  
           statusUpdate('tagsLoad',true,'')
@@ -513,13 +513,13 @@ function videoListFromServer(path, defaultvideoid) {
             return;
         }
     
-        let path = userpath;
+        path = userpath;
     }
     
     console.log('videoListFromServer: loading path "'+path+'"...')  
     statusRequest('videolistLoad',true,'')
           
-     $.ajax( path ,
+     $.ajax( url_for(path) ,
         function(data) {
           console.log('videoListFromServer: loaded "'+path+'"')  
         }

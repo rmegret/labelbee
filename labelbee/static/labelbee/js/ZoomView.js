@@ -6,7 +6,7 @@ function initZoomView() {
     zoomOverlay = new ZoomOverlay($("#zoom")[0],$("#zoomOverlay")[0])
     zoomOverlay.canvasExtract = $("zoomExtractedTagCanvas")
     
-    zoomOverlay.tagImageRoot='/data/tags/tag25h5inv/png'
+    zoomOverlay.tagImageRoot= '/data/tags/tag25h5inv/png'
     zoomOverlay.loadTagHammingMatrix()
         
     zoomOverlay.setCanvasSize(200,200)
@@ -893,20 +893,22 @@ function drawPixelated(img,context,x,y, sx,sy){
     ctx = document.createElement('canvas').getContext('2d');
     drawPixelated.ctx=ctx
   }
-  ctx.width  = img.width;
-  ctx.height = img.height;
-  ctx.drawImage(img,0,0);
-  idata = ctx.getImageData(0,0,img.width,img.height).data;
-  for (var x2=0;x2<img.width;++x2){
-    for (var y2=0;y2<img.height;++y2){
-      var i=(y2*img.width+x2)*4;
-      var r=idata[i  ];
-      var g=idata[i+1];
-      var b=idata[i+2];
-      var a=idata[i+3];
-      context.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
-      context.fillRect(x+x2*sx, y+y2*sy, sx, sy);
-    }
+  if (img.complete && img.width>0) {
+      ctx.width  = img.width;
+      ctx.height = img.height;
+      ctx.drawImage(img,0,0);
+      idata = ctx.getImageData(0,0,img.width,img.height).data;
+      for (var x2=0;x2<img.width;++x2){
+        for (var y2=0;y2<img.height;++y2){
+          var i=(y2*img.width+x2)*4;
+          var r=idata[i  ];
+          var g=idata[i+1];
+          var b=idata[i+2];
+          var a=idata[i+3];
+          context.fillStyle = "rgba("+r+","+g+","+b+","+(a/255)+")";
+          context.fillRect(x+x2*sx, y+y2*sy, sx, sy);
+        }
+      }
   }
 };
 
@@ -1103,7 +1105,7 @@ ZoomOverlay.prototype.loadTagHammingMatrix = function() {
     
     let zoomOverlay = this
       
-     $.getJSON( path ,
+     $.getJSON( url_for(path) ,
         function(data) {
           console.log('loadTagHammingMatrix: loaded "'+path+'"')  
         }
@@ -1378,7 +1380,7 @@ ZoomOverlay.prototype.tagImgURL = function(id) {
     for (var i=0; i<padding-N; i++)
         paddedID='0'+paddedID;
 
-    let url = this.tagImageRoot+'/keyed'+paddedID+'.png'
+    let url = url_for(this.tagImageRoot+'/keyed'+paddedID+'.png')
 
     return url
 }

@@ -159,13 +159,13 @@ function prefillVideoFields() {
     if (videoListTable[videoListCurrentID]==null) return;
     let tagfile = videoListTable[videoListCurrentID].tags
     if (tagfile != null) {
-            videoTagURL = '/data/'+tagfile
+            videoTagURL = url_for('/data/'+tagfile)
     } else {
             videoTagURL = undefined
     }
 }
 function videonameToURL(videoname) {
-    return '/data/'+videoname
+    return url_for('/data/'+videoname)
 }
 function selectVideoByID(id) {
     id = Number(id)
