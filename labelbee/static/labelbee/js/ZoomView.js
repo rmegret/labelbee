@@ -56,6 +56,8 @@ function ZoomOverlay(canvas, canvasOverlay) {
     this.labelList = new Map([['head','red'], 
                       ['thorax','limegreen'], 
                       ['abdomen','blue'],
+                      ['antL','rgb(255,0,128)'], // Left, port side
+                      ['antR','rgb(0,255,128)'], // Right, starboard side
                       ['pollenL','rgb(255,224,0)'], // Left, port side
                       ['pollenR','rgb(224,255,0)'], // Right, starboard side
                       ['legL','rgb(255,0,128)'], // Left, port side

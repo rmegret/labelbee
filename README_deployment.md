@@ -1,38 +1,75 @@
-# MEMO routing for labelbee webapp
+# MEMO deployment of labelbee webapp
 
-Overview of 
+Overview
 ------------
 
-Client <---> httpd <---> gunicorn <--> flask app
+### Server config
 
-Apache `httpd` Web Server serves on `http://labelbee.hpcf.upr.edu:80/webapp`. It serves the heavy static files directly, and routes the dynamic content to flask through a reverse proxy.
+```
+Client <---> https <---> gunicorn (flask app)
 
-`gunicorn` provides the WSGI HTTP server that serves the flask app at `127.0.0.1:5000`. It launches the app through `manage.py`.
+httpd serves at:    https://bigdbee.hpcf.upr.edu:80/webapp/
+gunicorn serves at: http://127.0.0.1:8080/
+```
 
-Some difficulties arise as we want to serve the flask app on a subdomain, need to rewrite all URL and links with the prefix `webapp`. This is done in:
+Apache `httpd` Web Server serves on `http://labelbee.hpcf.upr.edu:80/webapp/` (the final slash is required). It serves the heavy static files directly, and routes the dynamic content to gunicorn/flask through a reverse proxy. 
 
-- Flask by using `ReverseProxied` addon that reads the change from HTTP headers
-- JS by calling `url_for(local_path)` that uses global variable `http_script_name` set by Flask
+`gunicorn` provides the WSGI HTTP server that serves the flask app at `127.0.0.1:8080`. It launches the app through `manage.py`.
+
+### Start/Stop services
+
+`httpd` is started automatically by Sys-V `init.d` service:
+
+```
+sudo apachectl start
+sudo apachectl stop
+sudo apachectl restart
+sudo apachectl configtest
+```
+
+`gunicorn` runs as user `flaskuser`. It can be started and stopped with custom scripts (still alpha quality):
+
+```
+sudo -u flaskuser /var/www/flask/gunicorn_start.sh
+sudo -u flaskuser /var/www/flask/gunicorn_stop.sh
+```
+
+`postfix` mail server installed to let flask send email for user registration and password recovery. 
+[How To Install Postfix](https://www.digitalocean.com/community/tutorials/how-to-install-postfix-on-centos-6)
+
 
 WebApp routing
 ----------------
 
+### Note 
+
+All routes are relative to the webapp subdomain prefix. For instance, if the app is served in subdomain `/webapp/`, route `/user` actually corresponds to client visible URL `https://labelbee.hpcf.upr.edu:80/webapp/user` proxied to local `http://127.0.0.1:8080/user`.
+
+If we want to serve the flask app on a subdomain, the whole webapp need to rewrite all URL and links with the prefix. This is done in:
+
+- Flask by using `ReverseProxied` addon that reads the change from HTTP headers
+- JS by calling `url_for(local_path)` that uses global variable `http_script_name` set by Flask. If run outside of flask, `http_script_name` defaults to `/`.
+
+### Route overview
+
 | Route     | Description    |
 | --------- | --- |
-| **>> Pages** | **Flask page**
+| **Pages** | **Flask page**
 | /               | Home page |
 | /user           | Page for logged in users |
 | /admin          | Page for administration | |
 | /labelbee/gui   | single page WebApp |
-| **>> REST API** | **Flask GET/POST**
+| |
+| **REST API** | **Flask GET/POST**
 | /rest/*         | REST API for the WebApp |
-| **>> Static**   | **Static content**
+| |
+| **Static**   | **Static content**
 | /labelbee/* (js,css,fonts,images)    | Flask: /static/labelbee/* |
 | /* (bootstrap, upload, css, data)    | Flask: /static/*
 | /data     | Apache: external data folder for video and tags |
 | /upload   | Apache: /static/upload  |
 
-REST API:
+### REST API
 
 | Method    | URL    | Arguments | Description |
 | --------- | --- | ------ | ----- |
