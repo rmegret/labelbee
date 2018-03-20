@@ -407,7 +407,7 @@ function jsonFromServer(url){
     console.log("jsonFromServer: importing Tracks from URL '"+url+"'...")
 
     $.ajax({
-          url: url_for(url), //server url
+          url: url, //server url
           type: 'GET',    //passing data as post method
           contentType: 'application/json', // returning data as json
           data:'',
