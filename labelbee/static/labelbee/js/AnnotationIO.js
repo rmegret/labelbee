@@ -402,12 +402,12 @@ function tracksListFromServer(){
   })
 }
 
-function jsonFromServer(route){
+function jsonFromServer(url){
 
-    console.log("jsonFromServer: importing Tracks from URL '"+route+"'...")
+    console.log("jsonFromServer: importing Tracks from URL '"+url+"'...")
 
     $.ajax({
-          url: url_for(route), //server url
+          url: url_for(url), //server url
           type: 'GET',    //passing data as post method
           contentType: 'application/json', // returning data as json
           data:'',
@@ -438,8 +438,8 @@ function showAjaxError(title, prehook) {
             prehook(jqXHR, textStatus, errorThrown)
         }
         mainAlert(title 
-                  //+'<br>Status: '+ textStatus
-                  //+'<br>Error: '+ errorThrown
+                  +'<br>Status: '+ textStatus
+                  +'<br>Error: '+ errorThrown
                   +'<br>'+ jqXHR.responseText
 )
     }
