@@ -168,10 +168,19 @@ def whoami():
 
 def parse_trackfilename(filename):
   m = re.search( r'(?P<video>C\d\d_\d{12})-(?P<timestamp>\d{12})', filename)
-  if (m is None):
-      return {'video':'unknown','timestamp':'unknown'}
-  #print('parse-trackfilename',m.groupdict())
-  return m.groupdict()
+  if (m is not None):
+      return m.groupdict()
+      
+  m = re.search( r'(?P<video>C\d\d_\d{12})-Tracks-20(?P<timestamp1>\d{6})_(?P<timestamp2>\d{6}) - (?P<name>.*)\.json', filename)
+  if (m is not None):
+      if (m.get('timestamp1') is not None):
+          ts = m.get('timestamp1')+m.get('timestamp2')
+      else:
+          ts = None
+      return {'video':m.get('video'),'timestamp':ts,
+              'name':m.get('name')}
+  
+  return {'video':'unknown','timestamp':'unknown'}
 
 # LIST
 @app.route('/rest/events/', methods=['GET'])
