@@ -16,7 +16,8 @@ var labelMap = {
     entering:'entering',
     leaving:'leaving',
     departing:'leaving',
-    pollen:'pollen'
+    pollen:'pollen',
+    expulsion:'expulsion'
 }
 
 function normalizeLabel(label) {
@@ -260,6 +261,7 @@ function updateForm(activeObject) {
         $('.labeltoggle.falsealarm').toggleClass('active',hasLabel(obs,'falsealarm'))
         $('.labeltoggle.wrongid').toggleClass('active',hasLabel(obs,'wrongid'))
         $('.labeltoggle.walking').toggleClass('active',hasLabel(obs,'walking'))
+        $('.labeltoggle.expulsion').toggleClass('active',hasLabel(obs,'expulsion'))
     }
 
 }

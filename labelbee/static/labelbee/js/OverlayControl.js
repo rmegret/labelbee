@@ -2521,16 +2521,18 @@ function onLabelToggled(event) {
         
         $(target).toggleClass('active', isOn)
         
-        let labelList = ['fanning','pollen','entering','leaving','walking',
+        let labelList = ['fanning','pollen','entering','leaving','walking','expulsion',
                 'falsealarm','wrongid'];
         
-        for (let theClass of labelList) {
-            if ($(target).hasClass(theClass)) {
-              updateObsLabel(obs, theClass, isOn)
-            }
-        }
+//         for (let theClass of labelList) {
+//             if ($(target).hasClass(theClass)) {
+//               updateObsLabel(obs, theClass, isOn)
+//             }
+//         }
+        let theClass = $(target).attr('thelabel')
+        updateObsLabel(obs, theClass, isOn)
         
-        console.log('onLabelToggled: obs.labels=',obs.labels)
+        console.log('onLabelToggled: thelabel=',theClass,'isOn=',isOn,'obs.labels=',obs.labels)
         
         // Update the rest
         updateRectObsActivity(activeObject)

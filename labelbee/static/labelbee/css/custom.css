@@ -424,6 +424,9 @@ td.col_elapsed {
 .gray {
     color: gray;
 }
+.blue {
+    color: blue;
+}
 
 .block {
     display: inline-block;

@@ -1544,7 +1544,7 @@ function setTagGeom(selection) {
         
         selection.style("z-index","1000")
         .style("pointer-events", "all")
-        .on("wheel", function(){console.log('got wheeled')})
+        //.on("wheel", function(){console.log('got wheeled')})
         .on("mouseover", function(taginterval){
             //console.log('mouseover: ',taginterval)
             var message = "";
