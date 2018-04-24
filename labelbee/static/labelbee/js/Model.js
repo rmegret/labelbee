@@ -58,6 +58,9 @@ function copyObs(obs, tmpObs) {
     obs.parts = tmpObs.parts;
     obs.newid = tmpObs.newid; // in case of wrongid
 }
+function hasParts(obs) {
+    return (!!obs.parts && obs.parts.length>0)
+}
 
 function getValidIDsForFrame(frame) {
     // Return an Iterator to Tracks[frame]

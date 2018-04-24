@@ -20,6 +20,7 @@ function initChrono() {
     flag_hideInvalid = false
     mousewheelMode = false
     onMousewheelModeToggled()
+    flag_showPartsEvents = false;
     
     eventSeekMode = 'tag'
     updateEventSeekMode()
@@ -116,6 +117,27 @@ function initChrono() {
 function onMousewheelModeToggled() {
     mousewheelMode = $('#mousewheelMode').prop( "checked")
     console.log('onMousewheelModeToggled: toggled mousewheelMode=',mousewheelMode)
+}
+
+function onToggleButtonShowOnChrono(event) {
+    let target = $(event.target)
+    if (target[0].type=='checkbox'){
+        console.log('Toggled checkbox',target)
+        flag_showPartsEvents = target.prop('checked')
+        // checkbox toggle automatically before triggering event
+    } else { // Assume button or passive element
+        console.log('Toggled button',target)
+        flag_showPartsEvents = target.hasClass('active')
+        flag_showPartsEvents=!flag_showPartsEvents
+    }
+
+    updateButtonShowOnChrono()
+
+    refreshChronogram()
+}
+function updateButtonShowOnChrono(event) {
+    $("button.buttonShowPartsOnChrono").toggleClass('active', flag_showPartsEvents)
+    $("input.buttonShowPartsOnChrono").prop('checked',flag_showPartsEvents)
 }
 
 function getChronoItemHeight() {
@@ -989,6 +1011,9 @@ function createIntervalList() {
     circlesIntervals = allIntervals.filter(function(d){
       return d.x1 == d.x2;
     });
+    partsIntervals = allIntervals.filter(function(d){
+      return hasParts(d.obs);
+    });
 }
 
 
@@ -1440,6 +1465,49 @@ path.attr("d",function(d){
     .attr("stroke-width", 3)
     .attr("fill", "none");
 path.exit().remove();
+
+
+
+function squareFunction(x,y){
+    x = Number(x);
+    y = Number(y);
+
+    return "M"+(x-10)+","+(y-10)+"L"+(x+10)+","+(y+10)+"M"+(x+10)+","
+    +(y-10)+"L"+(x-10)+","+(y+10);
+}
+
+
+
+if (flag_showPartsEvents) {
+//Append line to chronogram
+let parts = chart.selectAll(".partsAvailable")
+                .data(partsIntervals);
+//filter for labels, split it refreshChronogram so no need 
+parts.enter()
+    .append("rect")
+    .attr('class','partsAvailable');
+    // Caution: check CSS property pointer-events:
+    // partsAvailable does not receive mouse events
+
+parts.attr("x", function(d) {
+            return axes.xScale(Number(d.x1)) - axes.yScale.rangeBand()/2;
+        })
+        .attr("y", function(d) {
+            return axes.yScale(d.y);
+        })
+        .attr("width", axes.yScale.rangeBand())
+        .attr("height", axes.yScale.rangeBand())
+    .attr("stroke", function(d){
+        var color = "black";
+        return color;
+    })
+    .attr("stroke-width", 1)
+    .attr("fill", "none");
+parts.exit().remove();
+} else {
+    chart.selectAll(".partsAvailable").remove();
+}
+
 
 
 }

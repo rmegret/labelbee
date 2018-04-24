@@ -745,6 +745,9 @@ input:disabled {
 .crossLeft {
   pointer-events: none;
 }
+.partsAvailable {
+  pointer-events: none;
+}
 
 /* Tooltip */
 .tooltip {   
