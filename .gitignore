@@ -6,4 +6,8 @@ Icon
 __pycache__
 jsdoc/
 *.pyc
+labelbee/static/upload/*
+labelbee/private/app.sqlite
+labelbee/static/data
+.htpasswd
 
