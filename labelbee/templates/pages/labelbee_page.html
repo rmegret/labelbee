@@ -555,6 +555,7 @@
                     <button onclick="zoomOverlay.onClickButtonDeletePart(event)" type="button" class="btn btn-warning btn-xs" title="Delete part">Delete</button>
                     
                     <button id="buttonShowParts" onclick="zoomOverlay.onToggleButtonShowOnVideo(event)" type="button" class="btn btn-green-toggle btn-xs" title="Show/Hide parts on video canvas">Show on Video</button>
+                    <button onclick="onToggleButtonShowOnChrono(event)" type="button" class="buttonShowPartsOnChrono btn btn-green-toggle btn-xs" title="Show/Hide events with parts">Show on Chrono</button>
                   </div>
                 </div>
                                 
@@ -599,6 +600,9 @@
                           <div class="checkbox">
                             <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Obs Tracks</label>
                           </div>
+                          <div class="checkbox">
+                            <label><input type="checkbox" checked="false" class="buttonShowPartsOnChrono" onclick="onToggleButtonShowOnChrono(event)">Highlight events with parts</label>
+                          </div>                          
                           <div class="checkbox">
                             <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">Show Tags</label>
                           </div>
