@@ -16,6 +16,13 @@ Apache `httpd` Web Server serves on `http://labelbee.hpcf.upr.edu:80/webapp/` (t
 
 `gunicorn` provides the WSGI HTTP server that serves the flask app at `127.0.0.1:8080`. It launches the app through `manage.py`.
 
+The static files are are served directly by `httpd` from `/var/www/flask/labelbee/labelbee/static/data`. This directory contains some symbolic links:
+
+```
+/var/www/flask/labelbee/labelbee/static/data -> /var/www/html/demo/data
+/var/www/html/demo/data/videos -> /videos
+```
+
 ### Start/Stop services
 
 `httpd` is started automatically by Sys-V `init.d` service:
