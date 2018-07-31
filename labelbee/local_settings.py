@@ -12,6 +12,8 @@ DEBUG = True
 #     python -c "import os; print repr(os.urandom(24));"
 SECRET_KEY = 'This is an UNSECURE Secret. CHANGE THIS for production environments.'
 
+WTF_CSRF_TIME_LIMIT = None
+
 # SQLAlchemy settings
 SQLALCHEMY_DATABASE_URI = 'sqlite:///private/app.sqlite'
 

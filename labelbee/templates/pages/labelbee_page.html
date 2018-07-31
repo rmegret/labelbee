@@ -396,18 +396,18 @@
                       <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm" tabindex=0>Load Tags</label>
                       <input id="loadtags" type="file" style="display:none" >
                 
-                      <label for="load" value="Load Tracks" class="btn btn-primary btn-sm" tabindex=0>Load Tracks</label>
+                      <label for="load" value="Load Events" class="btn btn-primary btn-sm" tabindex=0>Load Events</label>
                       <input id="load" type="file" style="display:none">
                       
-                      <input id="erase" onclick="eraseTracks()" type="button" value="Erase Tracks..." class="btn btn-warning btn-sm" >
+                      <input id="erase" onclick="eraseTracks()" type="button" value="Erase Events..." class="btn btn-warning btn-sm" >
 
                       <br>
 
-                      <input id="save" onclick="saveToFile()" type="button" value="Save Tracks" class="btn btn-default btn-sm" >
+                      <input id="save" onclick="saveToFile()" type="button" value="Save Events" class="btn btn-default btn-sm" >
                 
-                      <input id="saveCSV" onclick="saveToCSV()" type="button" value="Export Tracks (CSV)" class="btn btn-default btn-sm">
+                      <input id="saveCSV" onclick="saveToCSV()" type="button" value="Export Events (CSV)" class="btn btn-default btn-sm">
                       
-                      <input id="saveBBoxes" onclick="saveToBBoxes()" type="button" value="Export Tracks (BBox)" class="btn btn-default btn-sm" >
+                      <input id="saveBBoxes" onclick="saveToBBoxes()" type="button" value="Export Events (BBox)" class="btn btn-default btn-sm" >
                       
                   </div>
               </div>
@@ -416,7 +416,7 @@
                   <div>
                     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-                    <input id="jsonFromServer" onclick="jsonFromServer()" type="button" value="Load Tracks"  class="btn btn-primary btn-sm">
+                    <input id="jsonFromServer" onclick="jsonFromServer()" type="button" value="Load Events"  class="btn btn-primary btn-sm">
                     
                     <input id="tagsFromServer" onclick="tagsFromServer()"  type="button" value="Load Tags" class="btn btn-primary btn-sm">
                     
@@ -424,9 +424,9 @@
   
                     <br>
                     
-                    <input type="button" onclick="tracksListFromServer()" class="btn btn-green-toggle btn-sm require-server" data-toggle="modal" data-target="#loadTracksFromServerDialog" value="Load Tracks (JSON)">
+                    <input type="button" onclick="tracksListFromServer()" class="btn btn-green-toggle btn-sm require-server" data-toggle="modal" data-target="#loadTracksFromServerDialog" value="Load Events (JSON)">
 
-                    <input id="jsonToServer" onclick="jsonToServer()" type="button" value="Save Tracks (JSON)" class="btn btn-green-toggle btn-sm require-server"></button>
+                    <input id="jsonToServer" onclick="jsonToServer()" type="button" value="Save Events (JSON)" class="btn btn-green-toggle btn-sm require-server"></button>
 
 
               <!-- Modal  -->
@@ -435,7 +435,7 @@
                       <div class="modal-content">
                         <div class="modal-header">
                           <button type="button" class="close" data-dismiss="modal">&times;</button>
-                          <h4 class="modal-title">Tracks Files</h4>
+                          <h4 class="modal-title">Events Files</h4>
                         </div>
                         <div class="modal-body" >
                               <!-- To be filled up by AJAX request -->
@@ -595,10 +595,10 @@
                       <div>
                           <label>Overlay:</label>
                           <div class="checkbox">
-                            <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>Show Obs</label>
+                            <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>Show Events/Obs</label>
                           </div>
                           <div class="checkbox">
-                            <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Obs Tracks</label>
+                            <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Events/Obs Tracks</label>
                           </div>
                           <div class="checkbox">
                             <label><input type="checkbox" checked="false" class="buttonShowPartsOnChrono" onclick="onToggleButtonShowOnChrono(event)">Highlight events with parts</label>
