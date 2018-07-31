@@ -524,7 +524,12 @@ function findNextFreeTagEvent(frame, id) {
     return list[0]
 }
 function findNextObsEvent(frame, id) {
-    let obsList = flatTracksValidGroupById[id]
+    let obsList = []
+    if (flag_hideInvalid) {
+        obsList = flatTracksValidGroupById[id]
+    } else {
+        obsList = flatTracksAllGroudById[id]
+    }
     if (!obsList) return undefined
     let list = obsList.filter(
           function(element) {return Number(element.frame)>frame}
@@ -1747,6 +1752,7 @@ function updateObsTable() {
         return groups;
       }, {});
     }; // Keep order of frames
+    flatTracksAllGroupById = groupBy(flatTracksAll, 'id') 
     flatTracksValidGroupById = groupBy(flatTracksValid, 'id') 
     
     if (flag_hideInvalid) {
