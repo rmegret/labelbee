@@ -2164,3 +2164,41 @@ function computeMotionDirection() {
     }
     updateTagIntervals()
 }
+
+function cleanObsoleteEventsCB() {
+  var r = confirm("CAUTION !!!! Operation cannot be undone. Please confirm: Delete all obsolete events, i.e. no associated tag or low DM or inside excludeRects. ");
+  if (r == true) {
+      console.log('cleanObsoleteEvents')
+      cleanObsoleteEvents();
+  } else {
+      console.log('cleanObsoleteEvents canceled')
+  }
+}
+
+function cleanObsoleteEvents() {
+
+  for (let F in Tracks) {
+    for (let id in Tracks[F]) {
+      let obs=Tracks[F][id]
+      
+      if ((hasLabel(obs,'falsealarm') ||
+           hasLabel(obs,'wrongid'))) {
+        if (!obs.tag) {
+          console.log('No tag: Delete Tracks['+F+']['+id+'] = ',obs)
+          delete Tracks[F][id]
+        } else {
+          if (obs.tag.dm<20) {
+            console.log('low DM: Delete Tracks['+F+']['+id+'] = ',obs)
+            delete Tracks[F][id]
+          }
+          if (!tagsSampleFilterExcludeRects(obs.tag)) {
+            console.log('excludeRect: Delete Tracks['+F+']['+id+'] = ',obs)
+            delete Tracks[F][id]
+          }
+        }
+      }
+    }
+  }
+  refreshChronogram()
+  
+}
