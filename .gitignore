@@ -10,4 +10,5 @@ labelbee/static/upload/*
 labelbee/private/app.sqlite
 labelbee/static/data
 .htpasswd
+labelbee/local_settings.py
 
