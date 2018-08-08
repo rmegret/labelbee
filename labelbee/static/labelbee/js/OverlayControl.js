@@ -1586,8 +1586,7 @@ function excludeRectsChanged() {
                 //console.log(tag,r)
                 let dx=Math.abs(tag.c[0]-r.cx)
                 let dy=Math.abs(tag.c[1]-r.cy)
-                if ( dx < r.w/2 ) return false
-                if ( dy < r.h/2 ) return false
+                if (( dx < r.w/2 ) && ( dy < r.h/2 )) return false
             }
             return true
         }
