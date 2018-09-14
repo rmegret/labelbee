@@ -44,6 +44,15 @@ sudo -u flaskuser /var/www/flask/gunicorn_stop.sh
 `postfix` mail server installed to let flask send email for user registration and password recovery. 
 [How To Install Postfix](https://www.digitalocean.com/community/tutorials/how-to-install-postfix-on-centos-6)
 
+### Dev server
+
+First configure flask, then launch python
+```
+sudo /opt/local/sbin/apachectl start
+flask_activate
+gunicorn -b 127.0.0.1:5000 manage:app
+```
+
 
 WebApp routing
 ----------------
