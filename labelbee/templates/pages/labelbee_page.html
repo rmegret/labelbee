@@ -393,21 +393,25 @@
               <div class='subpanel collapsible'>
                   <label>Local storage</label>
                   <div>
+                      <label>Tags:</label>
+                      
                       <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm" tabindex=0>Load Tags</label>
                       <input id="loadtags" type="file" style="display:none" >
-                
+                                      
+                      <input id="eraseTags" onclick="eraseTags()" type="button" value="Erase Tags..." class="btn btn-warning btn-xs" >
+                                      
+                      <label>Events (Tracks):</label>
+                      
                       <label for="load" value="Load Events" class="btn btn-primary btn-sm" tabindex=0>Load Events</label>
                       <input id="load" type="file" style="display:none">
                       
-                      <input id="erase" onclick="eraseTracks()" type="button" value="Erase Events..." class="btn btn-warning btn-sm" >
+                      <input id="erase" onclick="eraseTracks()" type="button" value="Erase Events..." class="btn btn-warning btn-xs" >
 
-                      <br>
-
-                      <input id="save" onclick="saveToFile()" type="button" value="Save Events" class="btn btn-default btn-sm" >
+                      <input id="save" onclick="saveToFile()" type="button" value="Save Events" class="btn btn-default btn-xs" >
                 
-                      <input id="saveCSV" onclick="saveToCSV()" type="button" value="Export Events (CSV)" class="btn btn-default btn-sm">
+                      <input id="saveCSV" onclick="saveToCSV()" type="button" value="Export Events (CSV)" class="btn btn-default btn-xs">
                       
-                      <input id="saveBBoxes" onclick="saveToBBoxes()" type="button" value="Export Events (BBox)" class="btn btn-default btn-sm" >
+                      <input id="saveBBoxes" onclick="saveToBBoxes()" type="button" value="Export Events (BBox)" class="btn btn-default btn-xs" >
                       
                   </div>
               </div>

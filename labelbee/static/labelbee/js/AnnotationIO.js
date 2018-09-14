@@ -223,6 +223,18 @@ function loadFromFile(event) {
     reader.readAsText(fileToRead);
 }
 
+
+function eraseTags() {
+    var r = confirm("Are you sure you want to ERASE all Tags?");
+    if (r == true) {
+        console.log('ERASING all Tags...')
+        setTags({})
+    } else {
+        console.log('User CANCELED Erase Tags ...')
+    }
+}
+
+/* Augment tag items with frame field */
 function tagsAddFrames(Tags) {
       for (let f in Tags) {
         let tagsFrame = Tags[f].tags
@@ -232,13 +244,10 @@ function tagsAddFrames(Tags) {
             let tag = tagsFrame[i]
             if (tag == null) continue;
             
-            tag.frame=Number(f)          
+            tag.frame=Number(f)
         }    
     }
 }
-
-
-
 function setTags(obj) {
     console.log('setTags: changing Tags data structure and refreshing...')
     
@@ -250,7 +259,7 @@ function setTags(obj) {
         info = obj['info']
         
         if (info['type'] != "tags-multiframe") {
-            console.log('onTagsReaderLoad: ABORTED, unsupported file format. info["type"]='+info['type'])
+            console.log('setTags: ABORTED, unsupported file format. info["type"]='+info['type'])
             return
         }
         
@@ -258,7 +267,19 @@ function setTags(obj) {
         obj = obj['data']
     } else {
         // Old format v1: Tags JSON directly stored in the json
+        // obj is an object
         // obj[frame].tags[tag_id_in_frame]
+        
+        console.log('setTags: Tags JSON v1, dictionary of frames')
+        if (typeof(obj) != 'object') {
+            console.log('setTags: ABORTED, unsupported file format. typeof(obj) is "'+typeof(obj)+'", should be "object"')
+            return
+        }
+        if ((!Object.keys(Tags).every(v => /^(0|[1-9]\d*)$/.test(v)))
+           &(!Object.keys(Tags).every(v => Number.isInteger(v)))) {
+            console.log('setTags: ABORTED, unsupported file format. All keys should be positive integers (frame ids).')
+            return
+        }
         
         // Just use obj directly
         
