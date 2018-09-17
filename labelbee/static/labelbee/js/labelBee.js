@@ -136,7 +136,7 @@ function init() {
     defaultSelectedBee = undefined;
     lastSelected = null; // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
     
-    //loadFromFile0('data/Tracks-demo.json')
+    //loadEventsFromFile0('data/Tracks-demo.json')
     
     /* Set defaults */
     

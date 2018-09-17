@@ -1886,39 +1886,28 @@ function refreshChronogram() {
                         hasLabel(obs,'wrongid')    ) continue;
                 }
 
-            //Cleaning eventually
-                //let chronoObs = {'x':F, 'y':id, 'Activity':""};
-
-//                 if (Tracks[F][id].bool_acts[1]) {
-//                     chronoObs.Activity = "pollenating";
-//                 } else if (Tracks[F][id].bool_acts[2]) {
-//                     chronoObs.Activity = "entering";
-//                 } else if (Tracks[F][id].bool_acts[3]) {
-//                     chronoObs.Activity = "leaving";
-//                 } else if (Tracks[F][id].bool_acts[0]) {
-//                     chronoObs.Activity = "fanning";
-
                 let b=obs.bool_acts
+                let b0 = b[0]
+                let b1 = b[1]
+                let b2 = b[2]
+                let b3 = b[3]
+//                 let b0 = hasLabel(obs,'fanning')
+//                 let b1 = hasLabel(obs,'pollen')
+//                 let b2 = hasLabel(obs,'entering')
+//                 let b3 = hasLabel(obs,'leaving')
                 
-                if (!b[0] && !b[2] && !b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"", labels:obs.labels, pollen:b[1], tag: obs.tag, obs: obs});
+                if (!b0 && !b2 && !b3) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"", labels:obs.labels, pollen:b1, tag: obs.tag, obs: obs});
                 }
-                // if (b[1]) {
-                //     chronogramData.push({'x':F, 'y':id, 'Activity':"pollen", labels:obs.labels});
-                //     //chronoObs.Activity = "pollenating";
-                // }
-                if (b[2]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering", labels:obs.labels, pollen:b[1], tag: obs.tag, obs: obs});
+                if (b2) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"entering", labels:obs.labels, pollen:b1, tag: obs.tag, obs: obs});
                 }
-                if (b[3]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving", labels:obs.labels, pollen:b[1], tag: obs.tag, obs: obs});
+                if (b3) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"leaving", labels:obs.labels, pollen:b1, tag: obs.tag, obs: obs});
                 }
-                if (b[0]) {
-                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning", labels:obs.labels, pollen:b[1], tag: obs.tag, obs: obs});
+                if (b0) {
+                    chronogramData.push({'x':F, 'y':id, 'Activity':"fanning", labels:obs.labels, pollen:b1, tag: obs.tag, obs: obs});
                 }
-
-
-                // chronogramData.push(chronoObs);
             }
         }
     }

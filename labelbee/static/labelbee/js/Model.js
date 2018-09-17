@@ -19,8 +19,8 @@ function Observation(ID) {
     this.cy = 0;
     this.width = 0;
     this.height = 0;
-    this.marked = false;
-    this.permanent = false;
+    //this.marked = false;
+    //this.permanent = false;
     this.angle = 0;
 
     this.bool_acts = [false, false, false, false]; //Should be kept numerical because Ram
@@ -45,8 +45,8 @@ function copyObs(obs, tmpObs) {
     obs.cy = tmpObs.cy;
     obs.width = tmpObs.width
     obs.height = tmpObs.height
-    obs.marked = tmpObs.marked;
-    obs.permanent = tmpObs.permanent;
+    //obs.marked = tmpObs.marked;
+    //obs.permanent = tmpObs.permanent;
     obs.bool_acts = []
     obs.bool_acts[0] = tmpObs.bool_acts[0];
     obs.bool_acts[1] = tmpObs.bool_acts[1];

@@ -4,7 +4,8 @@
 // INPUT/OUTPUT
 
 function initAnnotationIO() {
-    document.getElementById('load').addEventListener('change', loadFromFile);
+    document.getElementById('load')
+            .addEventListener('change', loadEventsFromFile);
     document.getElementById('loadtags')
             .addEventListener('change', loadTagsFromFile);
             
@@ -73,8 +74,105 @@ function saveCSVToFile(txt, filename) {
     saveBlobToFile(blob, filename)
 }
 
-function saveToFile() {
-    console.log("savetoFile: exporting to JSON...")
+function convertTracksToV1() {
+    let obj = []
+
+    let nitems = 0
+
+    for (let f in Tracks) {
+        let frameItem = Tracks[f]
+        if (frameItem == null) continue;
+        
+        console.log('saveEventsToFile: frame '+f)
+        
+        let frameItem1 = {}
+        obj[Number(f)] = frameItem1;
+
+        for (let i in frameItem) {
+            let evt = frameItem[i]
+            if (evt == null) continue;
+
+            console.log('saveEventsToFile: frame '+f+'  id '+evt.ID)
+            
+            let evt1 = Object.assign(evt)
+            //delete evt1.ID
+            //delete evt1.bool_acts
+            delete evt1.marked
+            delete evt1.permanent
+            evt1.cx = evt1.x+evt1.width/2
+            evt1.cy = evt1.y+evt1.height/2
+            
+            evt1.x = Math.round(evt1.x*1000)/1000
+            evt1.y = Math.round(evt1.y*1000)/1000
+            evt1.width = Math.round(evt1.width*1000)/1000
+            evt1.height = Math.round(evt1.height*1000)/1000
+            evt1.cx = Math.round(evt1.cx*1000)/1000
+            evt1.cy = Math.round(evt1.cy*1000)/1000
+        
+            frameItem1[String(i)] = evt1
+            
+            nitems++
+        }
+    }
+    
+    console.log('convertTracksToV1: converted '+nitems+' items')
+    
+    return obj
+}
+function convertTracksToV2() {
+    let obj = {'info': TracksInfo, 'data':{}}
+    
+    obj.info.formatnote = 'Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !'
+    
+    if (!obj.info.history) obj.info.history = []
+    obj.info.history.push("Saved using labelbee on "+Date())
+    
+    let nitems = 0
+    
+    for (let f in Tracks) {
+        let frameItem = Tracks[f]
+        if (frameItem == null) continue;
+        
+        console.log('saveEventsToFile: frame '+f)
+        
+        let frameItem1 = []
+        obj.data[String(f)] = frameItem1;
+
+        for (let i in frameItem) {
+            let evt = frameItem[i]
+            if (evt == null) continue;
+
+            console.log('saveEventsToFile: frame '+f+'  id '+evt.ID)
+            
+            let evt1 = Object.assign({'id': String(i)}, evt)
+            delete evt1.ID
+            delete evt1.bool_acts
+            delete evt1.marked
+            delete evt1.permanent
+            evt1.cx = evt1.x+evt1.width/2
+            evt1.cy = evt1.y+evt1.height/2
+            
+            evt1.x = Math.round(evt1.x*1000)/1000
+            evt1.y = Math.round(evt1.y*1000)/1000
+            evt1.width = Math.round(evt1.width*1000)/1000
+            evt1.height = Math.round(evt1.height*1000)/1000
+            evt1.cx = Math.round(evt1.cx*1000)/1000
+            evt1.cy = Math.round(evt1.cy*1000)/1000
+        
+            frameItem1.push( evt1 )
+            
+            nitems++
+        }
+    }
+    
+    console.log('convertTracksToV2: converted '+nitems+' items')
+    
+    return obj
+}
+function saveEventsToFile(format) {
+    console.log("saveEventsToFile: exporting to JSON...")
+
+    if (!format) {format='v2'}
 
     function addZero(i) {
         if (i < 10) {
@@ -92,7 +190,16 @@ function saveToFile() {
     let filename = videoControl.videoName +
                    '-Tracks-'+timestamp+'.json'
 
-    saveObjToJsonFile(Tracks, filename)
+    let obj = null
+    if (format == 'v1')
+        obj = convertTracksToV1()
+    else if (format == 'v2')
+        obj = convertTracksToV2()
+    if (obj == null) {
+        console.log('saveEventsToFile: error while preparing data, Aborted.')
+    }
+
+    saveObjToJsonFile(obj, filename)
 }
 
 function tracksToCSV(Tracks) {
@@ -121,8 +228,8 @@ function tracksToCSV(Tracks) {
     return csv
 }
 
-function saveToCSV() {
-    console.log("savetoFile: exporting to CSV...")
+function saveEventsToCSV() {
+    console.log("saveEventsToCSV: exporting to CSV...")
 
     var txt = tracksToCSV(Tracks);
 
@@ -169,8 +276,8 @@ function tracksToBBoxes2(Tracks) {
     return csv
 }
 
-function saveToBBoxes() {
-    console.log("saveToBBoxes: exporting bounding boxes to CSV...")
+function saveEventsToBBoxes() {
+    console.log("saveEventsToBBoxes: exporting bounding boxes to CSV...")
     console.log("with simple format: frame, left, top, right, bottom, pollen")
 
     var txt = tracksToBBoxes2(Tracks);
@@ -178,7 +285,7 @@ function saveToBBoxes() {
     saveCSVToFile(txt, "BBoxes.csv")
 }
 
-function eraseTracks() {
+function eraseEvents() {
     var r = confirm("Are you sure you want to ERASE all manual annotations (Tracks)?");
     if (r == true) {
         console.log('ERASING all Tracks...')
@@ -187,11 +294,113 @@ function eraseTracks() {
         console.log('User CANCELED Erase Tracks ...')
     }
 }
+function sanitizeEvents(obj) {
+    var info
+    var data
+    if ('info' in obj) {
+        // New events format v2 with metainfo
+        
+        // obj['info']
+        info = obj['info']
+        
+        if (info['type'] != "events-multiframe") {
+            console.log('sanitizeEvents: ABORTED, unsupported file format. info["type"]='+info['type'])
+            return
+        }
+        
+        // obj['data'].tags[tag_id_in_frame]
+        data0 = obj['data']
+        
+        // New format more complex (store each frame as array of evts,
+        // instead of dict of evts: allow duplicate ids, 
+        // which current interface does not support)
+        // for the moment, downgrade to simpler format
+        
+        hasDuplicateEntries = false
+        
+        data = {}
+        for (let f in data0) {
+            let frameItem0 = data0[f]
+            if (frameItem0 == null) continue;
+            
+            let frameItem = {}
+            data[String(f)] = frameItem;
+
+            for (let i in frameItem0) {
+                let evt0 = frameItem0[i]
+                if (evt0 == null) continue;
+                
+                let evt = Object.assign({'ID': String(evt0.id)}, evt0)
+                delete evt.id
+                
+                evt.bool_acts = [
+                      hasLabel(evt,'fanning'),
+                      hasLabel(evt,'pollen'),
+                      hasLabel(evt,'entering'),
+                      hasLabel(evt,'leaving')
+                  ]
+            
+                if (frameItem[String(evt0.id)] == null) {
+                    frameItem[String(evt0.id)] = evt
+                } else {
+                    console.log('sanitizeEvents: WARNING duplicate entry data['+f+']['+evt0.id+'] ignored.')
+                    hasDuplicateEntries = true
+                }
+            }
+        }
+        
+        if (hasDuplicateEntries) {
+            alert('WARNING: Events file was loaded, but it has duplicate entries. Current version of software deleted redundant events.')
+        }
+        
+    } else {
+        // Old format v1: Tracks JSON directly stored in the json
+        // obj is an array
+        // obj[frame][bee_id]
+        
+        // Create dummy info header
+        info = {
+            "type": "events-multiframe",
+            "source": "Converted from Tracks v1"
+          }
+        
+        console.log('sanitizeEvents: Tracks JSON v1')
+        if (typeof(obj) == 'array') {
+            console.log('sanitizeEvents: got an array, converting to object')
+            data = obj.reduce(function(acc, cur, i) {
+              acc[i] = cur;
+              return acc;
+            }, {});
+            info.source = "Converted from Tracks v1 array"
+        } else if (typeof(obj) == 'object') {
+          console.log('sanitizeEvents: got an object, use directly')
+          data = obj;
+          info.source = "Converted from Tracks v1 object"
+        } else {
+          console.log('sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys.')
+          return
+        }
+        if ((!Object.keys(data).every(v => /^(0|[1-9]\d*)$/.test(v)))
+           &(!Object.keys(data).every(v => Number.isInteger(v)))) {
+            console.log('sanitizeEvents: ABORTED, unsupported file format. All keys should be positive integers (frame ids).')
+            return
+        }
+    }
+    
+    return {'info':info, 'data':data}
+}
 function setTracks(obj) {
     console.log('setTracks: changing Tracks data structure and refreshing...')
-    Tracks = obj;
     
-    //fixOldTracksFormat()
+    var evts = sanitizeEvents(obj);
+    
+    if (!evts) {
+      console.log('setTracks: ABORTED, wrong format.')
+      return;
+    }
+    
+    Tracks = evts.data;
+    TracksInfo = evts.info;
     
     videoControl.onFrameChanged();
     refreshChronogram()
@@ -203,7 +412,7 @@ function onReaderLoad(event) {
     
     setTracks(obj);
 }
-function loadFromFile0(fileToRead) {
+function loadEventsFromFile0(fileToRead) {
     console.log("loadFromFile0: importing from JSON...")
 
     $.get(fileToRead, function(data) {
@@ -213,8 +422,8 @@ function loadFromFile0(fileToRead) {
     });
 
 }
-function loadFromFile(event) {
-    console.log("loadFromFile: importing from JSON...")
+function loadEventsFromFile(event) {
+    console.log("loadEventsFromFile: importing from JSON...")
 
     fileToRead = event.target.files[0]
 

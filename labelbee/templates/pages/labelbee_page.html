@@ -393,25 +393,33 @@
               <div class='subpanel collapsible'>
                   <label>Local storage</label>
                   <div>
+                      <div>
                       <label>Tags:</label>
+                      <br>
                       
-                      <label for="loadtags" value="Load Tags" class="btn btn-primary btn-sm" tabindex=0>Load Tags</label>
+                      <label for="loadtags" value="Load Tags" class="btn btn-primary btn-xs" tabindex=0>Load Tags</label>
                       <input id="loadtags" type="file" style="display:none" >
                                       
                       <input id="eraseTags" onclick="eraseTags()" type="button" value="Erase Tags..." class="btn btn-warning btn-xs" >
-                                      
-                      <label>Events (Tracks):</label>
+                      </div>
                       
-                      <label for="load" value="Load Events" class="btn btn-primary btn-sm" tabindex=0>Load Events</label>
+                      <div>
+                      <label>Events (Tracks):</label>
+                      <br>
+                      
+                      <label for="load" value="Load Events" class="btn btn-primary btn-xs" tabindex=0>Load Events</label>
                       <input id="load" type="file" style="display:none">
                       
-                      <input id="erase" onclick="eraseTracks()" type="button" value="Erase Events..." class="btn btn-warning btn-xs" >
-
-                      <input id="save" onclick="saveToFile()" type="button" value="Save Events" class="btn btn-default btn-xs" >
-                
-                      <input id="saveCSV" onclick="saveToCSV()" type="button" value="Export Events (CSV)" class="btn btn-default btn-xs">
+                      <input id="erase" onclick="eraseEvents()" type="button" value="Erase Events..." class="btn btn-warning btn-xs" >
                       
-                      <input id="saveBBoxes" onclick="saveToBBoxes()" type="button" value="Export Events (BBox)" class="btn btn-default btn-xs" >
+                      <input id="save" onclick="saveEventsToFile('v1')" type="button" value="Save Events" class="btn btn-success btn-xs" title="Save to old JSON format (2017-2018)">
+                      
+                      <input id="save" onclick="saveEventsToFile('v2')" type="button" value="Save Events (v2)" class="btn btn-default btn-xs" title="Save to new JSON format (Oct 2018)">
+                
+                      <input id="saveCSV" onclick="saveEventsToCSV()" type="button" value="Export Events (CSV)" class="btn btn-default btn-xs">
+                      
+                      <input id="saveBBoxes" onclick="saveEventsToBBoxes()" type="button" value="Export Events (BBox)" class="btn btn-default btn-xs" >
+                      </div>
                       
                   </div>
               </div>
