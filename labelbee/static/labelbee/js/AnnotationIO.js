@@ -583,7 +583,7 @@ function tracksListFromServer(){
       let html = ""
       if (false) {
           for (let item of json) {
-                html += '<button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+                html += '<button onclick="eventsFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
           }
       } else {
           html+="<table><thead>"
@@ -611,7 +611,7 @@ function tracksListFromServer(){
           }
           for (let item of json) {
                 html += ( '<tr>'
-                +'<td><button onclick="jsonFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button></td>'
+                +'<td><button onclick="eventsFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button></td>'
                 +'<td>'+boldize(item['video'],
                                 item['video']==videoControl.videoName)+'</td>'
                 +'<td>'+item['user_name']+' ('+item['user_id']+')</td>'
@@ -625,16 +625,16 @@ function tracksListFromServer(){
       // Nothing else to do here: 
       // The modal #loadTracksFromServerDialog is supposed to be open 
       // and filled with links to each Track file
-      // Clicking on one of the link will trigger jsonFromServer()
+      // Clicking on one of the link will trigger eventsFromServer()
       },
-    error: showAjaxError('ERROR in jsonFromServer', 
+    error: showAjaxError('ERROR in eventsFromServer', 
                           function() {$('#loadTracksFromServerDialog').modal('hide')})
   })
 }
 
-function jsonFromServer(url){
+function eventsFromServer(url){
 
-    console.log("jsonFromServer: importing Tracks from URL '"+url+"'...")
+    console.log("eventsFromServer: importing Tracks from URL '"+url+"'...")
 
     $.ajax({
           url: url, //server url
@@ -645,13 +645,18 @@ function jsonFromServer(url){
           {
             //alert("success");  //response from the server given as alert message
 
-            console.log('jsonFromServer: SUCCESS\njson=', json); 
-            Tracks= JSON.parse(json);
+            console.log('eventsFromServer: SUCCESS\njson=', json); 
+            let obj = JSON.parse(json);
+            
+            setTracks(obj)
+            
             videoControl.onFrameChanged();
 
             refreshChronogram();
+            
+            $('#loadTracksFromServerDialog').modal('hide');
           },
-          error: showAjaxError('ERROR in jsonFromServer')
+          error: showAjaxError('ERROR in eventsFromServer')
         });
   }
   
@@ -676,20 +681,32 @@ function showAjaxError(title, prehook) {
     return callback
 }
   
-function jsonToServer() {
+function eventsToServer(format) {
     var route = '/rest/events/';
 
-    console.log("jsonToServer")
+    console.log("eventsToServer")
+    
+    if (!format) {
+        format = 'v1';
+    }
+    
+    let data
+    if (format=='v2') {
+        data = convertTracksToV2()
+    } else {
+        data = convertTracksToV1()
+    }
         
     $.ajax({
         url: url_for(route), //server url
         type: 'POST',    //passing data as post method
         contentType: 'application/json', // returning data as json
-        data: JSON.stringify({'video':videoControl.videoName,'data':Tracks}),  //form values
+        data: JSON.stringify({'video':videoControl.videoName,
+                              'data':data}),  //form values
         success: function(json) {
-          alert("Save JSON to server: Success "+json);  //response from the server given as alert message
+          alert("Save Events JSON ("+format+") to server: Success "+json);  //response from the server given as alert message
         },
-        error: showAjaxError('ERROR in jsonToServer')
+        error: showAjaxError('ERROR in eventsToServer')
     });
 
 }

@@ -397,22 +397,22 @@
                       <label>Tags:</label>
                       <br>
                       
-                      <label for="loadtags" value="Load Tags" class="btn btn-primary btn-xs" tabindex=0>Load Tags</label>
+                      <label for="loadtags" value="Load Tags" class="btn btn-default btn-xs" tabindex=0>Load Tags</label>
                       <input id="loadtags" type="file" style="display:none" >
                                       
-                      <input id="eraseTags" onclick="eraseTags()" type="button" value="Erase Tags..." class="btn btn-warning btn-xs" >
+                      <input id="eraseTags" onclick="eraseTags()" type="button" value="Erase Tags..." class="btn btn-orange btn-xs" >
                       </div>
                       
                       <div>
                       <label>Events (Tracks):</label>
                       <br>
                       
-                      <label for="load" value="Load Events" class="btn btn-primary btn-xs" tabindex=0>Load Events</label>
+                      <label for="load" value="Load Events" class="btn btn-primary btn-sm" tabindex=0>Load Events</label>
                       <input id="load" type="file" style="display:none">
                       
-                      <input id="erase" onclick="eraseEvents()" type="button" value="Erase Events..." class="btn btn-warning btn-xs" >
+                      <input id="erase" onclick="eraseEvents()" type="button" value="Erase Events..." class="btn btn-orange btn-xs" >
                       
-                      <input id="save" onclick="saveEventsToFile('v1')" type="button" value="Save Events" class="btn btn-success btn-xs" title="Save to old JSON format (2017-2018)">
+                      <input id="save" onclick="saveEventsToFile('v1')" type="button" value="Save Events (JSON)" class="btn btn-success btn-sm" title="Save to old JSON format (2017-2018)">
                       
                       <input id="save" onclick="saveEventsToFile('v2')" type="button" value="Save Events (v2)" class="btn btn-default btn-xs" title="Save to new JSON format (Oct 2018)">
                 
@@ -428,18 +428,17 @@
                   <div>
                     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-                    <input id="jsonFromServer" onclick="jsonFromServer()" type="button" value="Load Events"  class="btn btn-primary btn-sm">
-                    
-                    <input id="tagsFromServer" onclick="tagsFromServer()"  type="button" value="Load Tags" class="btn btn-primary btn-sm">
-                    
-                    <input id="videoListFromServer" onclick="videoListFromServer()" type="button" value="Load Video List"  class="btn btn-primary btn-sm">
-  
+                    <input id="videoListFromServer" onclick="videoListFromServer()" type="button" value="Load Video List"  class="btn btn-default btn-xs">
+
+                    <input id="tagsFromServer" onclick="tagsFromServer()"  type="button" value="Load Tags" class="btn btn-default btn-xs">
+                      
                     <br>
                     
-                    <input type="button" onclick="tracksListFromServer()" class="btn btn-green-toggle btn-sm require-server" data-toggle="modal" data-target="#loadTracksFromServerDialog" value="Load Events (JSON)">
+                    <input type="button" onclick="tracksListFromServer()" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#loadTracksFromServerDialog" value="Load Events">
 
-                    <input id="jsonToServer" onclick="jsonToServer()" type="button" value="Save Events (JSON)" class="btn btn-green-toggle btn-sm require-server"></button>
+                    <input id="eventsToServer" onclick="eventsToServer('v1')" type="button" value="Save Events (JSON)" class="btn btn-success btn-sm require-server"></button>
 
+                    <input id="eventsToServerV2" onclick="eventsToServer('v2')" type="button" value="Save Events (V2)" class="btn btn-green-toggle btn-xs require-server"></button>
 
               <!-- Modal  -->
                   <div class="modal fade" id="loadTracksFromServerDialog" role="dialog">

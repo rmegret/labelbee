@@ -90,14 +90,16 @@ def admin_page():
 def version_page():
     import subprocess
     import shlex
-    label = subprocess.check_output("git describe".split()).strip().decode()
+    pwd = subprocess.check_output("pwd".split()).strip().decode()
+    label = subprocess.check_output("git describe --always".split()).strip().decode()
     log = subprocess.check_output("git log -n 5".split()).strip().decode()
     hash = subprocess.check_output(shlex.split("git log --pretty=format:'%H' -n 1")).strip().decode()
     date = subprocess.check_output(shlex.split("git log --pretty=format:'%ci (%cr)' -n 1")).strip().decode()
     branch = subprocess.check_output("git rev-parse --abbrev-ref HEAD".split()).strip().decode()
     details = subprocess.check_output("git status".split()).strip().decode()
 
-    text='<h3>Labelbee WebApp version information</h3>'
+    text = '<h3>Labelbee WebApp version information:</h3>'
+    text += ('\n<pre>pwd="'+pwd+'"</pre>')
     text += ('\n<h4>Current version</h4>\nBranch: <pre>'+branch+'</pre>'
               +'Commit date: <pre>'+date+'</pre>'
               +'Commit hash: <pre>'+hash+'</pre>')

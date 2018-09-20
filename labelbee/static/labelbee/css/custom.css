@@ -533,6 +533,10 @@ input[type=text].btn-green-border {
     color: #488;
 }
 
+.btn-orange {
+    color: #c84;
+    border-color: #ea7;
+}
 
 .btn-window-border {
   border-color: #c3959d;
