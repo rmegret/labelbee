@@ -781,6 +781,13 @@ input:disabled {
   margin: 2px;
 }
 
+.glyphicon.glyphicon-pollen:before {
+    content: "\2741";
+    font-size: 1.3em;
+    color:yellow;
+    text-shadow: 0 0 1px #ff0, 0 0 2px #000, 0 0 3px #000;
+}
+
 /* 
 :focus {
   border: red 3px solid;

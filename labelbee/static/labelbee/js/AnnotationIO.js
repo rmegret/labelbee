@@ -343,7 +343,7 @@ function sanitizeEvents(obj) {
                 if (frameItem[String(evt0.id)] == null) {
                     frameItem[String(evt0.id)] = evt
                 } else {
-                    console.log('sanitizeEvents: WARNING duplicate entry data['+f+']['+evt0.id+'] ignored.')
+                    console.log('sanitizeEvents: WARNING duplicate entry: data['+f+']['+i+'] with id='+evt0.id+' ignored.')
                     hasDuplicateEntries = true
                 }
             }
