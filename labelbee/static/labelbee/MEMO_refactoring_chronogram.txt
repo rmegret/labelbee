@@ -1,0 +1,64 @@
+Tags[frame].tags[k]
+Tracks[frame][id]
+chronogramData[m]
+
+refreshChronogram
+    augmentTracks() // Tracks <= Tags
+    flattenTracks() // chronogramData <- Tracks
+      // split labels
+      // filter: restrictID, excludeID, invalid
+      // separate activities: none, entering, leaving, fanning
+    updateObsTable()
+      // flatTracksAll
+      // flatTracksValid
+      // flatTracksAllGroupById
+      // flatTracksValidGroupById
+      // flatTracks
+      // Update #obsTable (150ms)
+    getFlatTags
+      // flatTags without filter
+    getTTags
+      // ttags[id][frame] (transposed Tags structure)
+      //  => need to transform to object
+      // allTagsID
+    tagIntervals
+      // ttags -> tagIntervals
+  
+  
+videoControl.onFrameChanged
+    videoControl.hardRefresh
+    $(videoControl).trigger('frame:changed')
+    
+videoControl frame:changed
+    updateTimeMark
+    overlay trackWindow:change
+    if nextSeekFocusWindow  obsolete?
+       gotoEvent_seekCB
+    
+overlay trackWindow:change
+    if lockFocusTrackWindow
+        focusTrackWindow
+        
+videoControl.hardRefresh
+    clear canvas
+    createRectsFromTracks
+    selectBeeByID
+    videoControl.refresh
+        if flagCopyVideoToCanvas
+            copy video to canvas
+        refreshOverlay
+        zoomOverlay.refreshZoom()
+        
+        
+refreshOverlay
+    refreshRectFromObs
+    renderAll
+    
+    plotTracks
+    
+    plotROI    
+    plotExcludeRects
+    
+    plotTagsTracks
+    plotTags
+    

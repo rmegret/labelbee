@@ -795,6 +795,15 @@ function plotTracks(ctx) {
 
     setColor = function(f) {
         if (f<=F) {
+            color = "rgba(255,0,128,"+(1-Math.abs((f-F)/(fmin-F-1)))+")"
+            //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
+        } else {
+            color = "rgba(0,128,128,"+(1-Math.abs((f-F)/(fmax-F+1)))+")"
+        }
+        return color;
+    }
+    setColorS = function(f) {
+        if (f<=F) {
             color = "rgba(255,0,0,"+(1-Math.abs((f-F)/(fmin-F-1)))+")"
             //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
         } else {
@@ -804,6 +813,7 @@ function plotTracks(ctx) {
     }
 
     for (let id of ids) { // For each valid bee ID, create a track for it
+        let isSelected = isCurrentSelection(id)
         let obs = getObsHandle(fmin, id, false)
         let x=undefined, y=undefined, z=0;
         if (!!obs) {
@@ -835,7 +845,11 @@ function plotTracks(ctx) {
                 ctx.setLineDash([])
             else
                 ctx.setLineDash([10,10])
-            ctx.strokeStyle = setColor(f);
+            if (isSelected) {
+                ctx.strokeStyle = setColorS(f);
+            } else {
+                ctx.strokeStyle = setColor(f);
+            }
             ctx.stroke();
             ctx.strokeStyle = "none"
             ctx.setLineDash([])
@@ -857,7 +871,11 @@ function plotTracks(ctx) {
 //                 color = "red"
 //             else
 //                 color = "green"
-            color = setColor(f);
+            if (isSelected) {
+                color = setColorS(f);
+            } else {
+                color = setColor(f);
+            }
                 
             radius = 3;
             paintDot(ctx, {'x':x, 'y':y}, radius, color, id)    

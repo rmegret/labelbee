@@ -119,7 +119,10 @@ function init() {
         'object:moving':   zoomOverlay.selectionChanged,
         'object:modified': zoomOverlay.selectionChanged
       })
-
+    $(selectionControl).on({
+        'selection:created':    ()=>{videoControl.refresh()},
+        'selection:cleared':    ()=>{videoControl.refresh()}
+      })
 
     // ## Keyboard control
 
