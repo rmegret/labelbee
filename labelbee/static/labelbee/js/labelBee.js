@@ -31,9 +31,6 @@ var logging = {
 };
 
 
-http_script_name='/' // Default
-
-
 // ######################################################################
 // INITITALIZATION
 
@@ -41,9 +38,12 @@ http_script_name='/' // Default
 /** Global init */
 function init() {
 
-    // if (!http_script_name) {
-//         http_script_name='/'
-//     }
+     // Parameter passed through HTML Jinja template
+     if (http_script_name_0) {
+        http_script_name = http_script_name_0
+     } else {
+        http_script_name = '/'
+     }
 
     // import * from "VideoList.js";
     initVideoList()
