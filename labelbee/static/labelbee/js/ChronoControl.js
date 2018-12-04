@@ -416,7 +416,7 @@ function onAxesDblClick(event) {
     if (logging.axesEvents)
         console.log("onAxesDblClick: zooming chrono around frame=",frame,"...");
  
-    axes.xdomainFocus([frame-trackWindow*1.05,frame+trackWindow*1.05])
+    axes.xdomainFocus([frame-trackWindowBackward*1.05,frame+trackWindowForward*1.05])
 }
 function onAxesMoved(event) {
     // User clicked in chronogram axes
@@ -932,8 +932,8 @@ function updateTrackWindowSpan() {
     trackWindowSpan.selectAll('#trackWindowSpanClipPath > rect')
              .attr("width", axes.width()).attr("y", -15)
     let f = getCurrentFrame()
-    let fmin = f-trackWindow
-    let fmax = f+trackWindow
+    let fmin = f-trackWindowBackward
+    let fmax = f+trackWindowForward
     trackWindowSpan.selectAll('.interval')
              .attr("x", axes.xScale(fmin)).attr("y", -13)
              .attr("width", axes.xScale(fmax)-axes.xScale(fmin))

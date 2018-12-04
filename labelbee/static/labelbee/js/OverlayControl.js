@@ -1135,6 +1135,7 @@ function plotTagsTracks(ctx) {
             let f = Number(fs)
             let tag = tagline[f]
             
+            if ((f<fmin) || (f>fmax)) continue
             if (!tagsSampleFilter(tag)) {
                     continue
                 }
@@ -1354,7 +1355,7 @@ function onClickFocusTrackWindow() {
 function focusTrackWindow() {
     // Actually a Chronogram method
     let f = getCurrentFrame()
-    axes.xdomainFocus([f-trackWindow, f+trackWindow])
+    axes.xdomainFocus([f-trackWindowBackward, f+trackWindowForward])
 }
 function onDblClickFocusTrackWindow() {
     return; // Directly set on/off flag with single click
@@ -1362,7 +1363,7 @@ function onDblClickFocusTrackWindow() {
     console.log('onDblClickFocusTrackWindow')
     // Actually a Chronogram method
     let f = getCurrentFrame()
-    axes.xdomainFocus([f-trackWindow, f+trackWindow])
+    axes.xdomainFocus([f-trackWindowBackward, f+trackWindowForward])
     
     setFocusTrackWindow(true)
     
