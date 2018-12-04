@@ -426,6 +426,11 @@ function loadEventsFromFile(event) {
     console.log("loadEventsFromFile: importing from JSON...")
 
     fileToRead = event.target.files[0]
+    
+    if (!fileToRead) {
+        console.log("loadEventsFromFile: Canceled importation, no file provided.")
+        return;
+    }
 
     var reader = new FileReader();
     reader.onload = onReaderLoad;
