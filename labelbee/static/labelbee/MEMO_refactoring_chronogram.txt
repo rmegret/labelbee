@@ -62,3 +62,21 @@ refreshOverlay
     plotTagsTracks
     plotTags
     
+    
+plotTracks
+    getValidIDsForFrames
+    for id
+        for frame
+            getObsHandle(f, id, ...)
+            
+drawChrono called by:
+    modifyCurrentObsSpan
+    refreshChronogram
+            
+updateChrono called by:
+    onAxesChanged
+    drawChrono
+           
+updateChrono
+    updateActivities 
+        createIntervalList

@@ -613,9 +613,6 @@
                             <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Events/Obs Tracks</label>
                           </div>
                           <div class="checkbox">
-                            <label><input type="checkbox" checked="false" class="buttonShowPartsOnChrono" onclick="onToggleButtonShowOnChrono(event)">Highlight events with parts</label>
-                          </div>                          
-                          <div class="checkbox">
                             <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">Show Tags</label>
                           </div>
                           <div class="checkbox">
@@ -641,8 +638,14 @@
                           <hr>
                           <label>Chronogram:</label>
                           <div class="checkbox">
-                                <label><input type="checkbox" checked="true" id="showObsChrono" onclick="onChronoParametersChanged()"/>Show Obs</label>
+                                <label><input type="checkbox" checked="true" id="showObsChrono" onclick="onChronoParametersChanged()"/>Show Events</label>
                           </div>
+                          <div class="checkbox">
+                            <label><input type="checkbox" checked="false" class="button_showIndividualEvents" onclick="onToggleButton_showIndividualEvents(event)">Show Individual Events</label>
+                          </div>
+                          <div class="checkbox">
+                            <label><input type="checkbox" checked="false" class="button_showPartsOnChrono" onclick="onToggleButton_showPartsOnChrono(event)">Highlight events with parts</label>
+                          </div>                          
                           <div class="checkbox">
                               <label><input type="checkbox" checked="true" id="showTagsChrono" onclick="onChronoParametersChanged()"/>Show Tags</label>
                         </div>

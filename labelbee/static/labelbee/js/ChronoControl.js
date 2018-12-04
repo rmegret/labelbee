@@ -18,9 +18,14 @@ function initChrono() {
     flag_excludeID = false
     flag_autoEventMode = false
     flag_hideInvalid = false
+    
+    flag_showPartsOnChrono = false
+    flag_showIndividualEvents = true
+    updateButtons_showPartsOnChrono()
+    updateButtons_showIndividualEvents()
+    
     mousewheelMode = false
     onMousewheelModeToggled()
-    flag_showPartsEvents = false;
     
     eventSeekMode = 'tag'
     updateEventSeekMode()
@@ -119,25 +124,45 @@ function onMousewheelModeToggled() {
     console.log('onMousewheelModeToggled: toggled mousewheelMode=',mousewheelMode)
 }
 
-function onToggleButtonShowOnChrono(event) {
+// Simplify handling of input and button behaviors in one function
+function toggledNewState(event) {
     let target = $(event.target)
+    var flag
     if (target[0].type=='checkbox'){
-        console.log('Toggled checkbox',target)
-        flag_showPartsEvents = target.prop('checked')
+        console.log('Toggled checkbox ',target)
+        flag = target.prop('checked') // Set flag
         // checkbox toggle automatically before triggering event
     } else { // Assume button or passive element
-        console.log('Toggled button',target)
-        flag_showPartsEvents = target.hasClass('active')
-        flag_showPartsEvents=!flag_showPartsEvents
+        console.log('Toggled button ',target)
+        flag = !target.hasClass('active') // Toggle
+        target.toggleClass('active', flag) // Manually toggle the button
     }
+    return flag;
+}
+function updateButtons(classname, flag) {
+    $("button."+classname).toggleClass('active', flag)
+    $("input."+classname).prop('checked',flag)
+}
 
-    updateButtonShowOnChrono()
+// Need simpler binding framework over here !
+function onToggleButton_showPartsOnChrono(event) {
+    flag_showPartsOnChrono = toggledNewState(event)
+    updateButtons_showPartsOnChrono()
 
     refreshChronogram()
 }
-function updateButtonShowOnChrono(event) {
-    $("button.buttonShowPartsOnChrono").toggleClass('active', flag_showPartsEvents)
-    $("input.buttonShowPartsOnChrono").prop('checked',flag_showPartsEvents)
+function updateButtons_showPartsOnChrono(event) {
+    updateButtons('button_showPartsOnChrono', flag_showPartsOnChrono)
+}
+
+function onToggleButton_showIndividualEvents(event) {
+    flag_showIndividualEvents = toggledNewState(event)
+    updateButtons_showIndividualEvents();
+    
+    refreshChronogram()
+}
+function updateButtons_showIndividualEvents(event) {
+    updateButtons('button_showIndividualEvents', flag_showIndividualEvents)
 }
 
 function getChronoItemHeight() {
@@ -1233,6 +1258,7 @@ function updateObsSpan(selection) {
         .style("pointer-events", "all")
         // Display tooltip message
         .on('click',onObsSpanClick)
+        /*
         .on("mouseover", function(obsspan){
             var d = obsspan.obs;
             
@@ -1263,6 +1289,7 @@ function updateObsSpan(selection) {
             var tooltip = d3.select("body").selectAll(".tooltip")
             tooltip.style("visibility", "hidden");
           });
+          */
 
 }
 
@@ -1294,6 +1321,7 @@ function updateActivities(onlyScaling) {
       activityRects.call(setGeomActivity)
     } else {
       createIntervalList();
+      
       // Full update
       let activityRects = svgInterval.selectAll(".activity")
                                      .data(allIntervals)
@@ -1302,17 +1330,25 @@ function updateActivities(onlyScaling) {
       activityRects.enter().call(insertActivities);
       activityRects.exit().remove();
 
+      if (flag_showIndividualEvents) {
+          let spanRects = svgSpanRects.selectAll(".obsspan")
+                       .data(flatTracks);
+          spanRects.enter().call(initObsSpan)
+          spanRects.exit().remove()
+          spanRects.call(updateObsSpan)
 
-
-      let spanRects = svgSpanRects.selectAll(".obsspan")
-                   .data(flatTracks);
-      spanRects.enter().call(initObsSpan)
-      spanRects.exit().remove()
-      spanRects.call(updateObsSpan)
-
-      let alertCircle = svgTop.selectAll(".alertcircle")
-                    .data(flatTracks.filter(d=>!!d.isredundant));
-      alertCircle.call(updateAlertCircle)
+          let alertCircle = svgTop.selectAll(".alertcircle")
+                        .data(flatTracks.filter(d=>!!d.isredundant));
+          alertCircle.call(updateAlertCircle)
+      } else {
+          let spanRects = svgSpanRects.selectAll(".obsspan")
+                           .data([]);
+          spanRects.exit().remove()
+          
+          let alertCircle = svgTop.selectAll(".alertcircle")
+                        .data([]);
+          alertCircle.call(updateAlertCircle)
+      }
 
 
       //Object for pollen visuals
@@ -1483,7 +1519,7 @@ function squareFunction(x,y){
 
 
 
-if (flag_showPartsEvents) {
+if (flag_showPartsOnChrono) {
 //Append line to chronogram
 let parts = chart.selectAll(".partsAvailable")
                 .data(partsIntervals);
@@ -1748,6 +1784,7 @@ function updateObsTable() {
             })
     var groupBy = function(array, key) {
       return array.reduce(function(groups, x) {
+        // Appends x to groups[x[key]]
         (groups[x[key]] =  groups[x[key]] || []).push(x);
         return groups;
       }, {});
@@ -1761,49 +1798,52 @@ function updateObsTable() {
         flatTracks = flatTracksAll;
     }
     
-    d3.select('#obsTable').html("");
-    var table = d3.select('#obsTable').append('table');
+    showObsTable = !$("#labelingTab > .ui-accordion-header").hasClass("ui-accordion-header-collapsed")
+    if (showObsTable) {
+        d3.select('#obsTable').html("");
+        var table = d3.select('#obsTable').append('table');
 
-    function ƒ(name){ return function(d){return d[name]};}
+        function ƒ(name){ return function(d){return d[name]};}
     
-    var columns = [
-          { head: 'ID', cl: 'id', html: ƒ('id') },
-          { head: 'Frame', cl: 'frame', html: ƒ('frame') },
-          { head: 'Labels', cl: 'labels', html: ƒ('labels') }
-      ];
+        var columns = [
+              { head: 'ID', cl: 'id', html: ƒ('id') },
+              { head: 'Frame', cl: 'frame', html: ƒ('frame') },
+              { head: 'Labels', cl: 'labels', html: ƒ('labels') }
+          ];
       
-    function onObsTableRowClick(d) {
-        console.log('onObsTableRowClick: d=',d)
-        gotoEvent(Number(d.frame), d.id)
-    }
+        function onObsTableRowClick(d) {
+            console.log('onObsTableRowClick: d=',d)
+            gotoEvent(Number(d.frame), d.id)
+        }
     
-    table.append('thead').append('tr')
-       .selectAll('th')
-       .data(columns).enter()
-       .append('th')
-       .attr('class', function(d){return d.cl})
-       .text(function(d){return d.head});
+        table.append('thead').append('tr')
+           .selectAll('th')
+           .data(columns).enter()
+           .append('th')
+           .attr('class', function(d){return d.cl})
+           .text(function(d){return d.head});
        
-    table.append('tbody')
-       .selectAll('tr')
-       .data(flatTracks).enter()
-       .append('tr')
-       .classed('obsTableRow', true)
-       .on('click',onObsTableRowClick)
-       .selectAll('td')
-         .data(function(row, i) {
-             // evaluate column objects against the current row
-             return columns.map(function(c) {
-                 var cell = {};
-                 d3.keys(c).forEach(function(k) {
-                     cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+        table.append('tbody')
+           .selectAll('tr')
+           .data(flatTracks).enter()
+           .append('tr')
+           .classed('obsTableRow', true)
+           .on('click',onObsTableRowClick)
+           .selectAll('td')
+             .data(function(row, i) {
+                 // evaluate column objects against the current row
+                 return columns.map(function(c) {
+                     var cell = {};
+                     d3.keys(c).forEach(function(k) {
+                         cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                     });
+                     return cell;
                  });
-                 return cell;
-             });
-         }).enter()
-           .append('td')
-           .html(ƒ('html'))
-           .attr('class', ƒ('cl'));
+             }).enter()
+               .append('td')
+               .html(ƒ('html'))
+               .attr('class', ƒ('cl'));
+    }
 }
 
 function modifyCurrentObsSpan(mode) {
