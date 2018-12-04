@@ -254,15 +254,15 @@ VideoControl.prototype.onPreviewFrameChanged = function(event) {
     
     this.currentMode = 'preview'
     
-    canvas1.clear();
+    //overlay.canvas1.clear();
     let previewScaleX = this.video.videoWidth/this.previewVideo.videoWidth;
     let previewScaleY = this.video.videoHeight/this.previewVideo.videoHeight;
-    ctx.drawImage(this.previewVideo, 
+    overlay.ctx.drawImage(this.previewVideo, 
                     canvasTransform[4]/previewScaleX, canvasTransform[5]/previewScaleY,
                       canvasTransform[0]*canvas.width/previewScaleX, canvasTransform[3]*canvas.height/previewScaleY,
                     0, 0, canvas.width, canvas.height);
                     
-    canvas1.clear();
+    overlay.canvas1.clear();
     createRectsFromTracks(this.previewFrame)
     selectBeeByID(defaultSelectedBee);
     refreshOverlay()
@@ -297,7 +297,7 @@ VideoControl.prototype.hardRefresh = function() {
 
     printMessage("")
 
-    canvas1.clear();
+    overlay.canvas1.clear();
     createRectsFromTracks()
 
     selectBeeByID(defaultSelectedBee);
@@ -311,14 +311,14 @@ VideoControl.prototype.refresh = function() {
     if (this.flagCopyVideoToCanvas) {
       // Copy video to canvas for fully synchronous display
       //ctx.drawImage(video, 0, 0, video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor);
-      ctx.drawImage(video, 
+      overlay.ctx.drawImage(video, 
                     canvasTransform[4], canvasTransform[5],
-                      canvasTransform[0]*canvas.width, canvasTransform[3]*canvas.height,
-                    0, 0, canvas.width, canvas.height);
+                      canvasTransform[0]*overlay.canvas.width, canvasTransform[3]*overlay.canvas.height,
+                    0, 0, overlay.canvas.width, overlay.canvas.height);
     } else {
       // Rely on video under canvas. More efficient (one copy less), but
       // may have some time discrepency between video and overlay
-      ctx.clearRect(0,0,video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor)
+      overlay.ctx.clearRect(0,0,video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor)
     }
     refreshOverlay()
     

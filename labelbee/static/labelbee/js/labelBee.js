@@ -213,7 +213,7 @@ function onKeyDown_IDEdit(event) {
         let fieldID = document.getElementById("I");
         let new_id = fieldID.value
 
-        let activeObject = canvas1.getActiveObject()
+        let activeObject = overlay.getActiveObject()
         if (activeObject.status === "new") {
             activeObject.id = new_id
             printMessage("ID changed + submitted", "green")

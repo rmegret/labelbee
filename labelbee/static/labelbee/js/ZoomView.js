@@ -162,7 +162,7 @@ ZoomOverlay.prototype.selectionChanged = function() {
 ZoomOverlay.prototype.syncFromTracks = function() {
     if (logging.zoomOverlay)
         console.log('ZoomOverlay.syncFromTracks')
-    var activeObject = canvas1.getActiveObject() // Object of video frame
+    var activeObject = overlay.getActiveObject() // Object of video frame
     
     if (!activeObject) {
         if (logging.zoomOverlay)
@@ -193,7 +193,7 @@ ZoomOverlay.prototype.syncFromTracks = function() {
 ZoomOverlay.prototype.syncToTracks = function() {
     if (logging.zoomOverlay)
         console.log('ZoomOverlay.syncToTracks')
-    var activeObject = canvas1.getActiveObject() // Object of video frame
+    var activeObject = overlay.getActiveObject() // Object of video frame
     
     if (!activeObject) {
         if (logging.zoomOverlay)
@@ -1191,12 +1191,13 @@ ZoomOverlay.prototype.onClickAlternateTag = function(id) {
     
     if (logging.guiEvents)
         console.log("ZoomOverlay.onClickAlternateTag(id): id=", event)
-    var activeObject = canvas1.getActiveObject()
-
+    
+    var activeObject = overlay.getActiveObject()
     if (activeObject == null) {
         newRectForCurrentTag()
-        activeObject = canvas1.getActiveObject()
+        activeObject = overlay.getActiveObject()
     }
+    
     if (activeObject !== null) {
         let obs = activeObject.obs
         

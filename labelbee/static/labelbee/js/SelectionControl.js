@@ -6,135 +6,8 @@
 var defaultSelectedBee;
 var undo = new Observation(0);
 
-var labelMap = {
-    f:'fanning',
-    p:'pollen',
-    e:'entering',
-    d:'leaving',
-    l:'leaving',
-    pollen:'pollen',
-    entering:'entering',
-    leaving:'leaving',
-    departing:'leaving',
-    pollen:'pollen',
-    expulsion:'expulsion'
-}
+/* Form and current bee control */
 
-function normalizeLabel(label) {
-    return labelMap[label]==null?label:labelMap[label]
-}
-function toLabelString(labelArray) {
-    return labelArray.map(function(d){return d.toLowerCase();})
-                     .map(function(d){return d.trim()})
-                     .filter(function(d){return d!="";})
-                     .map(normalizeLabel)
-                     .join(',')
-}
-function toLabelArray(labels) {
-    return labels.split(',')
-                 .map(function(d){return d.toLowerCase();})
-                 .map(function(d){return d.trim()})
-                 .filter(function(d){return d!="";})
-                 .map(normalizeLabel)
-}
-function cleanLabels(labels) {
-    return toLabelString(toLabelArray(labels))
-}
-
-function addLabel(labelArray, label) {
-    let k = $.inArray(label, labelArray)
-    if (k<0) {
-        labelArray.push(label)
-    }
-}
-function removeLabel(labelArray, label) {
-    let k = $.inArray(label, labelArray)
-    if (k>=0) {
-        labelArray.splice(k, 1);
-    }
-}
-function updateLabelArray(labelArray, label, active) {
-    let k = $.inArray(label, labelArray)
-    if (!active && k>=0) {
-        labelArray.splice(k, 1);
-    }
-    if (active && k<0) {
-        labelArray.push(label)
-    }
-}
-
-function updateObsLabel(obs, label, active) {
-    if (obs.labels == null) {
-        obs.labels = ''
-    }
-    let labelArray = toLabelArray(obs.labels)
-    let k = $.inArray(label, labelArray)
-    if (!active && k>=0) {
-        labelArray.splice(k, 1);
-    }
-    if (active && k<0) {
-        labelArray.push(label)
-    }
-    obs.labels = toLabelString(labelArray)
-}
-function hasLabel(obs, label) {
-    if (obs.labels == null) {
-        obs.labels = ''
-    }
-    return containsLabel(obs.labels,label)
-}
-function containsLabel(labels, label) {
-    if (labels == null) {
-        return false
-    }
-    let labelArray = toLabelArray(labels)
-    let k = $.inArray(normalizeLabel(label), labelArray)
-    if (k>=0) return true
-    else return false
-}
-
-function updateLabelsFromBool(labels, bool_acts) {
-    let labelArray=toLabelArray(labels)
-    let add=[]
-    updateLabel(labelArray, 'fanning', bool_acts[0])
-    updateLabel(labelArray, 'pollen', bool_acts[1])
-    updateLabel(labelArray, 'entering', bool_acts[2])
-    updateLabel(labelArray, 'leaving', bool_acts[3])
-    return toLabelString(labelArray)
-}
-
-function getLabels(obs) {
-    return toLabelArray(obs.labels)
-
-//     let labelArray=[];
-//     if (obs.bool_acts[0])
-//         labelArray.push('fanning')
-//     if (obs.bool_acts[1])
-//         labelArray.push('pollen')
-//     if (obs.bool_acts[2])
-//         labelArray.push('entering')
-//     if (obs.bool_acts[3])
-//         labelArray.push('departing')
-//     
-//     return labelArray
-}
-// function setLabels(obs, labelArray) {
-//     obs.labels = toLabelString(labelArray);
-// 
-//     let labelArray=[];
-//     if (obs.bool_acts[0])
-//         labelArray.push('fanning')
-//     if (obs.bool_acts[1])
-//         labelArray.push('pollen')
-//     if (obs.bool_acts[2])
-//         labelArray.push('entering')
-//     if (obs.bool_acts[3])
-//         labelArray.push('departing')
-//     
-//     return labelArray
-// }
-
-// # Form and current bee control
 function initSelectionControl() {
     selectionControl = {}
     
@@ -267,7 +140,7 @@ function updateForm(activeObject) {
 }
 
 function submit_bee() {
-    var activeObject = canvas1.getActiveObject();
+    var activeObject = overlay.getActiveObject();
     if (activeObject === null) {
         printMessage("No bee selected", "red")
         return false;
@@ -298,7 +171,7 @@ function submit_bee() {
 }
 
 function automatic_sub() {
-    var activeObject = canvas1.getActiveObject();
+    var activeObject = overlay.getActiveObject();
     if (activeObject.status == "db") {
         submit_bee()
     } else {
@@ -308,6 +181,8 @@ function automatic_sub() {
     }
 }
 
+/* Selection */
+
 tagSelection=undefined
 function selectBeeByID(id) {
    tagSelection = id 
@@ -316,13 +191,13 @@ function selectBeeByID(id) {
       if (logging.selectionEvents)
          console.log('selectBeeByID: trying to select id=',id);
       //canvas1.setActiveObject(canvas1.item(id));
-      canvas1.setActiveObject(rect);
+      overlay.setActiveObject(rect);
       // TESTME: selectBee was commented
       selectBee(rect);
       // Events triggered in selectBee
       return true
    } else {
-      canvas1.deactivateAll().renderAll(); // Deselect rect if any
+      overlay.canvas1.deactivateAll().renderAll(); // Deselect rect if any
       updateForm(null)
       // defaultSelectedBee = undefined // Do not cancel default if not found
       defaultSelectedBee = id // Set default
@@ -373,7 +248,7 @@ function deselectBee() {
     $( selectionControl ).trigger('before:selection:cleared')
 
     //canvas1.deactivateAll().renderAll(); // Deselect rect
-    canvas1.deactivateAllWithDispatch()
+    overlay.canvas1.deactivateAllWithDispatch()
     updateForm(null)
     defaultSelectedBee = undefined // Do not keep default when explicit deselect
     updateDeleteButton()
@@ -384,7 +259,7 @@ function deselectBee() {
 // getSelectedID: return undefined or an id
 function getSelectedID() {
     // Truth on selected bee ID comes from Fabric.js canvas
-    var activeObject = canvas1.getActiveObject();
+    var activeObject = overlay.getActiveObject();
     if (activeObject === null) {
         return undefined
     } else {
@@ -394,7 +269,7 @@ function getSelectedID() {
 // getSelectedRect: return null or a Fabric.js rect
 function getSelectedRect() {
     // Truth on selected bee ID comes from Fabric.js canvas
-    return canvas1.getActiveObject();
+    return overlay.getActiveObject();
 }
 function getCurrentTag() {
     return getTag(getCurrentFrame(), defaultSelectedBee)
@@ -424,17 +299,15 @@ function getIdsInFocus() {
 }
 
 
-/* Deleting bees and undo stack */
-
-// CONTROL
+/* Deleting bees  */
 
 function deleteSelected() { 
     //Deletes selected rectangle(s)/observation when remove bee is pressed
-    var activeObject = canvas1.getActiveObject()
-    var activeGroup = canvas1.getActiveGroup()
+    var activeObject = overlay.getActiveObject()
+    var activeGroup = overlay.canvas1.getActiveGroup()
 
     if (activeObject) {
-        canvas1.remove(activeObject);
+        overlay.canvas1.remove(activeObject);
         console.log("deleteObjects ",activeObject.id);
         if (obsDoesExist(getCurrentFrame(), activeObject.id)) {
             obs = cloneObs(Tracks[getCurrentFrame()][activeObject.id])
@@ -463,7 +336,7 @@ function undoAction() {
             storeObs(obs);
             rect = addRectFromObs(obs)
             console.log("rect=",rect)
-            canvas1.setActiveObject(rect)
+            overlay.setActiveObject(rect)
             //submit_bee()
             selectBee(rect)
         }
@@ -473,14 +346,14 @@ function undoAction() {
     }
 }
 function updateDeleteButton() {
-    if (canvas1.getActiveObject() === null) {
+    if (overlay.getActiveObject() === null) {
         $('#deleteButton').addClass('disabled')
     } else {
         $('#deleteButton').removeClass('disabled')
     }
 }
 
-// MODEL
+/* Undo stack */
 
 var undoStack = []
 function undoPush(action, info) {
@@ -536,4 +409,170 @@ function updateUndoButton() {
   } else {
       $('#undoButton').val("Undo?")
   }
+}
+
+
+/* Labels Control */
+
+var labelMap = {
+    f:'fanning',
+    p:'pollen',
+    e:'entering',
+    d:'leaving',
+    l:'leaving',
+    pollen:'pollen',
+    entering:'entering',
+    leaving:'leaving',
+    departing:'leaving',
+    pollen:'pollen',
+    expulsion:'expulsion'
+}
+
+function normalizeLabel(label) {
+    return labelMap[label]==null?label:labelMap[label]
+}
+function toLabelString(labelArray) {
+    return labelArray.map(function(d){return d.toLowerCase();})
+                     .map(function(d){return d.trim()})
+                     .filter(function(d){return d!="";})
+                     .map(normalizeLabel)
+                     .join(',')
+}
+function toLabelArray(labels) {
+    return labels.split(',')
+                 .map(function(d){return d.toLowerCase();})
+                 .map(function(d){return d.trim()})
+                 .filter(function(d){return d!="";})
+                 .map(normalizeLabel)
+}
+function cleanLabels(labels) {
+    return toLabelString(toLabelArray(labels))
+}
+
+function addLabel(labelArray, label) {
+    let k = $.inArray(label, labelArray)
+    if (k<0) {
+        labelArray.push(label)
+    }
+}
+function removeLabel(labelArray, label) {
+    let k = $.inArray(label, labelArray)
+    if (k>=0) {
+        labelArray.splice(k, 1);
+    }
+}
+function updateLabelArray(labelArray, label, active) {
+    let k = $.inArray(label, labelArray)
+    if (!active && k>=0) {
+        labelArray.splice(k, 1);
+    }
+    if (active && k<0) {
+        labelArray.push(label)
+    }
+}
+
+function updateObsLabel(obs, label, active) {
+    if (obs.labels == null) {
+        obs.labels = ''
+    }
+    let labelArray = toLabelArray(obs.labels)
+    let k = $.inArray(label, labelArray)
+    if (!active && k>=0) {
+        labelArray.splice(k, 1);
+    }
+    if (active && k<0) {
+        labelArray.push(label)
+    }
+    obs.labels = toLabelString(labelArray)
+}
+function hasLabel(obs, label) {
+    if (obs.labels == null) {
+        obs.labels = ''
+    }
+    return containsLabel(obs.labels,label)
+}
+function containsLabel(labels, label) {
+    if (labels == null) {
+        return false
+    }
+    let labelArray = toLabelArray(labels)
+    let k = $.inArray(normalizeLabel(label), labelArray)
+    if (k>=0) return true
+    else return false
+}
+
+function updateLabelsFromBool(labels, bool_acts) {
+    let labelArray=toLabelArray(labels)
+    let add=[]
+    updateLabel(labelArray, 'fanning', bool_acts[0])
+    updateLabel(labelArray, 'pollen', bool_acts[1])
+    updateLabel(labelArray, 'entering', bool_acts[2])
+    updateLabel(labelArray, 'leaving', bool_acts[3])
+    return toLabelString(labelArray)
+}
+
+function getLabels(obs) {
+    return toLabelArray(obs.labels)
+}
+
+/* Labels GUI */
+
+// If labels changed from buttons
+function onLabelToggled(event) {
+    if (logging.guiEvents)
+        console.log("onLabelToggled: event=", event)
+    var activeObject = overlay.getActiveObject()
+    var target = event.target;
+    if (activeObject == null) {
+        newRectForCurrentTag()
+        activeObject = overlay.getActiveObject()
+    }
+    if (activeObject !== null) {
+        let obs = activeObject.obs
+        
+        let oldState = $(target).hasClass('active')
+        
+        console.log('oldState=',oldState)
+        let isOn = !oldState
+        
+        
+        $(target).toggleClass('active', isOn)
+        
+        let labelList = ['fanning','pollen','entering','leaving','walking','expulsion',
+                'falsealarm','wrongid'];
+        
+        let theClass = $(target).attr('thelabel')
+        updateObsLabel(obs, theClass, isOn)
+        
+        console.log('onLabelToggled: thelabel=',theClass,'isOn=',isOn,'obs.labels=',obs.labels)
+        
+        // Update the rest
+        updateRectObsActivity(activeObject)
+        automatic_sub()
+        
+        updateForm(activeObject)
+        refreshChronogram()
+    }
+}
+
+// If labels changed from pressing return ?
+function onActivityChanged(event) {
+    if (logging.guiEvents)
+        console.log("onActivityChanged: event=", event)
+    var activeObject = overlay.getActiveObject()
+    if (activeObject !== null) {
+        updateRectObsActivity(activeObject)
+        automatic_sub()
+    }
+}
+// If labels textarea changed
+function onLabelsChanged() {
+    let labels=$('#labels').val()
+    if (logging.guiEvents)
+        console.log("onLabelsChanged: labels=", labels)
+    var activeObject = overlay.getActiveObject()
+    if (activeObject !== null) {
+        setLabels(activeObject,labels)
+        automatic_sub()
+    }
 }

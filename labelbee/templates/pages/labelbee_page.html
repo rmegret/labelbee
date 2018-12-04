@@ -180,7 +180,7 @@
               <button value="win-" onclick="scaleTrackWindow(0.5)" type="button" class="btn btn-window btn-xs" title="Reduce track window"><span class="glyphicon glyphicon-chevron-right small"></span>-<span class="glyphicon glyphicon-chevron-left small"></span></button>
               <button value="win+" onclick="scaleTrackWindow(2)" type="button" class="btn btn-window btn-xs" title="Extend track window"><span class="glyphicon glyphicon-chevron-left small"></span>+<span class="glyphicon glyphicon-chevron-right small"></span></button>
               
-              <input id="focusTrackWindow" value="FocusView" onclick="onClickFocusTrackWindow()" ondblclick="onDblClickFocusTrackWindow()" type="button" class="btn btn-pink-toggle btn-xs" title="Focus on Track window">
+              <input id="focusTrackWindow" value="FocusView" onclick="onClickFocusTrackWindow()" type="button" class="btn btn-pink-toggle btn-xs" title="Focus on Track window">
               
               <button value="1s" onclick="setTrackWindow(20)" type="button" class="btn btn-default btn-xs" title="Track window = 1s">1s</button>
               <button value="10s" onclick="setTrackWindow(200)" type="button" class="btn btn-default btn-xs" title="Track window = 10s">10s</button>
@@ -629,7 +629,7 @@
                   
                               <input type="text" value="5" size="6" id="trackWindow" onchange="onTrackWindowChanged(event)">             
                   
-                              <select id="selectboxTrackDir" name="selectboxTrackDir" onchange="onTrackDirChanged()" class="" style="display:inline-block;">
+                              <select id="selectboxTrackDir" name="selectboxTrackDir" onchange="onTrackWindowChanged(event)" class="" style="display:inline-block;">
                               <option value="Bidirectional" selected>Bidirectional</option>
                               <option value="Forward">Forward</option>
                               <option value="Backward">Backward</option>

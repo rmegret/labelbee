@@ -4,18 +4,26 @@
 
 function OverlayControl(canvasTagId) {
     if (this === window) { 
-        console.log('ERROR: OverlayControl should be created with "new OverlayControl()"')
+        console.log('ERROR: OverlayControl should be created with "new OverlayControl()". Fixing that for you.')
         return new OverlayControl(); 
     }
+    
+    var overlay = this; // Standard name for simpler search in code
     
     // Events:
     // overlayControl.on('trackWindow:change',...)
 
     if (typeof canvasTagId === 'undefined')
         canvasTagId = 'canvas'; // Default HTML5 canvas tag to attach to
-    canvas = document.getElementById(canvasTagId);
-    ctx = canvas.getContext('2d');
+    overlay.canvas = document.getElementById(canvasTagId);
+    overlay.ctx = overlay.canvas.getContext('2d');
 
+    overlay.trackWindow = {
+        range: 200,
+        direction: 'Bidirectional',
+        forward: 200,
+        backward: 200
+    }
     /* Obs and Tags plotting params */
     trackWindow = 200 // 10s
     trackWindowBackward = trackWindow;
@@ -58,10 +66,9 @@ function OverlayControl(canvasTagId) {
 
     /* Overlay and selection */
 
-    canvas1 = new fabric.Canvas('canvas1');
-    ctx1 = $('#canvas1')[0].getContext('2d');
+    let canvas1 = new fabric.Canvas('canvas1');
     
-    this.canvas1 = canvas1;
+    overlay.canvas1 = canvas1;
 
     canvas1.selectionColor = "red";
     canvas1.selectionBorderColor = "red";
@@ -98,7 +105,15 @@ function OverlayControl(canvasTagId) {
     
     refreshTagsParameters()
 }
+OverlayControl.prototype = {}
 
+
+OverlayControl.prototype.getActiveObject = function() {
+    return this.canvas1.getActiveObject()
+}
+OverlayControl.prototype.setActiveObject = function(rect) {
+    return this.canvas1.setActiveObject(rect)
+}
 
 function canvasSetVideoSize(w,h) {
     // Resize canvas to have same aspect-ratio as video
@@ -106,8 +121,8 @@ function canvasSetVideoSize(w,h) {
     var wd=w,hd=h
     if (true) {
       // Keep same canvas width as before, simply adjust aspect-ratio
-      wd = canvas.width
-      hd = Math.round(h*canvas.width/w)
+      wd = overlay.canvas.width
+      hd = Math.round(h*overlay.canvas.width/w)
     } else {
         // Automatic scaling to be smaller than 800pix
         while (wd>800) {
@@ -141,10 +156,10 @@ function refreshCanvasSize(event, ui) {
         if (logging.canvasEvents)
             console.log('refreshCanvasSize.resizeCanvas: wd=',wd," hd=",hd)
     
-        canvas.width = wd
-        canvas.height = hd
-        canvas1.setWidth(wd)
-        canvas1.setHeight(hd)
+        overlay.canvas.width = wd
+        overlay.canvas.height = hd
+        overlay.canvas1.setWidth(wd)
+        overlay.canvas1.setHeight(hd)
     
         $("#video").width(wd)
         $("#video").height(hd)
@@ -174,11 +189,11 @@ function refreshCanvasSize(event, ui) {
 
 
     // Change transform to keep same image content, just scaled    
-    var scaling = canvasTransformReference.w/canvas.width
+    var scaling = canvasTransformReference.w/overlay.canvas.width
     var center = [canvasTransformReference.w/2, canvasTransformReference.h/2] 
-    var center2 = [canvas.width/2, canvas.height/2]
-    canvasTransformReference.w = canvas.width
-    canvasTransformReference.h = canvas.height
+    var center2 = [overlay.canvas.width/2, overlay.canvas.height/2]
+    canvasTransformReference.w = overlay.canvas.width
+    canvasTransformReference.h = overlay.canvas.height
     
     canvasTransformScale(scaling, center, center2)
     
@@ -186,18 +201,16 @@ function refreshCanvasSize(event, ui) {
     // Instead, we scale everything manually
     //var ctx=canvas.getContext("2d");
     //ctx.transform(...canvasTransform);
-    //var ctx1=canvas1.getContext("2d");
-    //ctx1.transform(...canvasTransform);
         
     videoControl.refresh() // Already done in canvasTransformScale()
 }
 
 function canvasTransformInternalReset() {
     let video = $('#video')[0]
-    transformFactor = video.videoWidth / canvas.width;
+    transformFactor = video.videoWidth / overlay.canvas.width;
     canvasTransformSet([transformFactor,0, 0,transformFactor, 0,0])
-    canvasTransformReference.w = canvas.width
-    canvasTransformReference.h = canvas.height
+    canvasTransformReference.w = overlay.canvas.width
+    canvasTransformReference.h = overlay.canvas.height
 }
 function canvasTransformReset() {
     canvasTransformInternalReset()
@@ -213,8 +226,8 @@ function canvasTransformSet(array) {
 }
 function canvasTransform_Fix() {
     let video = $('#video')[0]
-    let w1 = canvas.width
-    let h1 = canvas.height
+    let w1 = overlay.canvas.width
+    let h1 = overlay.canvas.height
     let w2 = video.videoWidth
     let h2 = video.videoHeight
     
@@ -311,27 +324,25 @@ function videoToCanvasRect(rect) {
 // ## Fabric.js rects vs observations
 
 function refreshOverlay() {
-    if (canvas1) {
+    if (overlay.canvas1) {
         refreshRectFromObs()
-        canvas1.renderAll(); // Clear and render all rectangles
+        overlay.canvas1.renderAll(); // Clear and render all rectangles
         
         if (showObsTracks) {
-            plotTracks(ctx);
+            plotTracks(overlay.ctx);
         }
-        plotROI()
-        plotExcludeRects()
-        
-        //plotBees(ctx1); // Not needed, identification done directly in BeeRect
+        plotROI(overlay.ctx)
+        plotExcludeRects(overlay.ctx)
         
         if (showTagsTracks || showSelectedTagsTracks)
-            plotTagsTracks(ctx)
+            plotTagsTracks(overlay.ctx)
         else if (showTags)
-            plotTags(ctx)
+            plotTags(overlay.ctx)
     }
 }
 
 function refreshRectFromObs() {
-    let rectList = canvas1.getObjects()
+    let rectList = overlay.canvas1.getObjects()
     //if (logging.overlay)
     //    console.log("refreshRectFromObs: updating ",rectList.length," rect(s)")
     for (let rect of rectList) {
@@ -420,7 +431,7 @@ function addRectFromObs(inputObs, status) {
     updateRectFromObsGeometry(rect)
     
     //rect.setControlVisible('mtr', false)  // Remove rotation handle
-    canvas1.add(rect);
+    overlay.canvas1.add(rect);
     
     if (logging.addRect)
         console.log("addRectFromObs: added rect=",rect);
@@ -573,7 +584,7 @@ function addRect(id, startX, startY, width, height, status, inputObs, angle) {
 // Try to find a fabric rectangle with a given id
 function findRect(id) {
 
-    var rects = canvas1.getObjects();
+    var rects = overlay.canvas1.getObjects();
     if (rects) {
         var r;
         for (var i = 0; i < rects.length; i++) {
@@ -1074,7 +1085,7 @@ function plotTags(ctx) {
 }
 
 
-function plotTrackArrow(p0, p1, L) {
+function plotTrackArrow(ctx, p0, p1, L) {
     let u = {x:p1.x-p0.x, y:p1.y-p0.y}
     let n = Math.sqrt(u.x*u.x+u.y*u.y)
     u.x=u.x/n
@@ -1163,7 +1174,7 @@ function plotTagsTracks(ctx) {
                 ctx.strokeStyle = color;
                 ctx.stroke();
                 ctx.setLineDash([])
-                plotTrackArrow(p0, p1, 6*tProx(f)+1)
+                plotTrackArrow(ctx, p0, p1, 6*tProx(f)+1)
                 ctx.restore()
             }
             p0 = {x:p1.x, y:p1.y, frame:p1.frame}
@@ -1247,7 +1258,7 @@ function plotTagsTracks(ctx) {
                     ctx.strokeStyle = color2;
                     ctx.stroke();
                     ctx.setLineDash([])
-                    plotTrackArrow(p0[tag.id], p1, 6*tProx(f)+1)
+                    plotTrackArrow(ctx, p0[tag.id], p1, 6*tProx(f)+1)
                     ctx.restore()
                 }
                 p0[tag.id] = {x:p1.x, y:p1.y, frame:p1.frame}
@@ -1288,19 +1299,27 @@ function onShowTagsTracksChanged() {
     showSelectedTagsTracks = $('#showSelectedTagsTracks')[0].checked
     videoControl.refresh()
 }
-function onTrackWindowChanged() {
+
+/* Track Window */
+function onTrackWindowChanged(event) {
     let range = Number($('#trackWindow')[0].value)
-    console.log("onTrackWindowChanged range=",range)
-    trackWindow = range
+    overlay.trackWindow.range = range
+    
+    let trackDir = $('#selectboxTrackDir').val()
+    overlay.trackWindow.direction=trackDir
+
+    console.log("onTrackWindowChanged range=",range," direction=",trackDir)
+    
+    let trackDir = overlay.trackWindow.direction
     if (trackDir=='Bidirectional') {
-        trackWindowForward = range
-        trackWindowBackward = range
+        overlay.trackWindow.forward = range
+        overlay.trackWindow.backward = range
     } else if (trackDir=='Forward') {
-        trackWindowForward = range
-        trackWindowBackward = 0
+        overlay.trackWindow.forward = range
+        overlay.trackWindow.backward = 0
     } else if (trackDir=='Backward') {
-        trackWindowForward = 0
-        trackWindowBackward = range
+        overlay.trackWindow.forward = 0
+        overlay.trackWindow.backward = range
     } else {
       console.log('onTrackWindowChanged: ERROR, trackDir unknown trackDir=',trackDir)
     }
@@ -1327,12 +1346,11 @@ function shiftTrackWindow(factor) {
     console.log("shiftTrackWindow: factor=",factor,"with frame=",frame, "L=",L)
     let newF = Math.round(frame+factor*L)
     videoControl.seekFrame(newF)
-// Functionality offered by lockTrackWindow
-//     if (newF+L>axes.xdomain()[1])
-//       axes.xdomainFocus([newF+L-axes.xdomain()[1]+axes.xdomain()[0],newF+L],1.0)
-//     if (newF-L<axes.xdomain()[0])
-//       axes.xdomainFocus([newF-L,newF-L+axes.xdomain()[1]-axes.xdomain()[0]],1.0)
+    // changeFrame generates trackWindow:change
 }
+
+/* FocusTrackWindow */
+// UI
 function onClickFocusVideo() {
     console.log('onClickFocusVideo')
     setFocusTrackWindow(false)
@@ -1345,30 +1363,21 @@ function onClickFocusTrackWindow() {
     setFocusTrackWindow(!lockFocusTrackWindow)
     
     if (lockFocusTrackWindow) {
-        //lastNonFocusWindow = axes.xdomain()
         focusTrackWindow()
-    } else {
-        //axes.xdomainFocus(lastNonFocusWindow, 1)
     }
-    //updateFocusTrackWindowButton()
 }
+function updateFocusTrackWindowButton() {
+    if ( lockFocusTrackWindow ) {
+        $("#focusTrackWindow").addClass("active")
+    } else {
+        $("#focusTrackWindow").removeClass("active")      
+    }
+}
+// Control
 function focusTrackWindow() {
     // Actually a Chronogram method
     let f = getCurrentFrame()
     axes.xdomainFocus([f-trackWindowBackward, f+trackWindowForward])
-}
-function onDblClickFocusTrackWindow() {
-    return; // Directly set on/off flag with single click
-    
-    console.log('onDblClickFocusTrackWindow')
-    // Actually a Chronogram method
-    let f = getCurrentFrame()
-    axes.xdomainFocus([f-trackWindowBackward, f+trackWindowForward])
-    
-    setFocusTrackWindow(true)
-    
-    console.log('locked Focus on Window... lockFocusTrackWindow=',lockFocusTrackWindow)
-    updateFocusTrackWindowButton()
 }
 function setFocusTrackWindow(flag) {
     lockFocusTrackWindow = flag
@@ -1379,14 +1388,31 @@ function setFocusTrackWindow(flag) {
 
     updateFocusTrackWindowButton()
 }
-function updateFocusTrackWindowButton() {
-    if ( lockFocusTrackWindow ) {
-        $("#focusTrackWindow").addClass("active")
-    } else {
-        $("#focusTrackWindow").removeClass("active")      
-    }
-}
 
+/* ROI GUI */
+// On/Off
+function onClickROI() {
+    $('#useROI').toggleClass('active')
+    flag_useROI = $('#useROI').hasClass('active')
+    ROIChanged()
+}
+// Change Callback
+function ROIChanged() {
+    if (flag_useROI) {
+        tagsSampleFilterROI = function(tag) {
+            return (tag.c[0]>=ROI.left 
+                 && tag.c[0]<=ROI.right
+                 && tag.c[1]>=ROI.top
+                 && tag.c[1]<=ROI.bottom);
+        }
+    } else {
+        tagsSampleFilterROI = function(tag) {return true}
+    }
+    onTagsParametersChanged()
+    refreshChronogram()
+    videoControl.refresh();
+}
+// Edit
 function updateROIFromVideo() {
     let R = videoControl.videoSize()
     $('#ROI').val([R.left,R.top,R.right,R.bottom].join(','))
@@ -1405,19 +1431,64 @@ function onROITextChanged() {
            bottom: Number(roi[3])}
     ROIChanged()
 }
-function onClickROI() {
-    $('#useROI').toggleClass('active')
-    flag_useROI = $('#useROI').hasClass('active')
-    ROIChanged()
+// Plot
+function plotROI(ctx) {
+    if (!flag_useROI) return;
+
+    let R = {left:ROI.left, top:ROI.top, 
+             width:ROI.right-ROI.left, 
+             height: ROI.bottom-ROI.top}
+    let R2 = videoToCanvasRect(R)
+
+    ctx.save()
+    ctx.beginPath();
+    ctx.rect(R2.left, R2.top, R2.width, R2.height);
+    ctx.strokeStyle = '#fff';
+    //ctx.setLineDash([4,4])
+    ctx.lineWidth = 1
+    ctx.stroke();
+    ctx.restore()
+    
+    ctx.save()
+    //ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillRect(0,0,overlay.canvas.width,R2.top);
+    ctx.fillRect(0,R2.top,R2.left,R2.height);
+    ctx.fillRect(R2.left+R2.width,R2.top,
+                 overlay.canvas.width-R2.left-R2.width,R2.height);
+    ctx.fillRect(0,R2.top+R2.height,
+                 overlay.canvas.width,overlay.canvas.height-R2.top-R2.height);
+    ctx.restore()
 }
+
+/* Exclude Rects GUI */
+// On/Off
 function onClickExcludeRects() {
     $('#useExcludeRects').toggleClass('active')
     flag_useExcludeRects = $('#useExcludeRects').hasClass('active');
     excludeRectsChanged()
 }
-function onClickExcludeRectParams() {
-    openExcludeRectsDialog()
+// Change callback
+function excludeRectsChanged() {
+    if (flag_useExcludeRects) {
+        tagsSampleFilterExcludeRects = function(tag) {
+            for (let r of excludeRects) {
+                //console.log(tag,r)
+                let dx=Math.abs(tag.c[0]-r.cx)
+                let dy=Math.abs(tag.c[1]-r.cy)
+                if (( dx < r.w/2 ) && ( dy < r.h/2 )) return false
+            }
+            return true
+        }
+    } else {
+        tagsSampleFilterExcludeRects = function(tag) {return true}
+    }
+    $('#excludeRectDeleteButton').toggleClass('disabled', !(excludeRectSelection>=0))
+    onTagsParametersChanged()
+    refreshChronogram()
+    videoControl.refresh();
 }
+// Direct edition
 function onClickExcludeRectAdd() {
     let R = getSelectedRect()
     if (!R) return
@@ -1447,7 +1518,52 @@ function onClickExcludeRectNext() {
     if (excludeRectSelection>=n) excludeRectSelection=-1
     excludeRectsChanged()
 }
-function plotExcludeRects() {
+// Advanced Dialog
+function onClickExcludeRectParams() {
+    openExcludeRectsDialog()
+}
+openExcludeRectsDialog = function() {
+    var jsontext = JSON.stringify(excludeRects ,null, 4)
+  
+    $("#excludeRects-json").val(jsontext)
+  
+    $("#dialog-form-excludeRects").dialog("open");
+}
+initExcludeRectsDialog = function() {
+    $("#dialog-form-excludeRects").dialog({
+        autoOpen: false,
+        modal: true,
+        buttons: {
+            "Ok": function() {
+                var jsontext = $("#excludeRects-json").val();
+                
+                if (logging.zoomOverlay)
+                    console.log('excludeRects dialog. jsontext = ',jsontext)
+
+                excludeRects = JSON.parse( jsontext )
+                
+                if (logging.zoomOverlay)
+                    console.log('excludeRects = ',excludeRects)
+                
+                $(this).dialog("close");
+                
+                excludeRectsChanged();
+            },
+            "Cancel": function() {
+                $(this).dialog("close");
+            }
+        },
+        open: function(){
+            $("body").css("overflow", "hidden");
+        },
+        close: function(){
+            $("body").css("overflow", "auto");
+        }
+    });
+
+}
+// Plot
+function plotExcludeRects(ctx) {
     if (!flag_useExcludeRects) return;
     //console.log('plotExcludeRects')
     for (let r of excludeRects) {
@@ -1490,7 +1606,6 @@ function plotExcludeRects() {
       ctx.stroke();
       ctx.restore()
     }
-    
 }
 
 /* Filters */
@@ -1590,116 +1705,6 @@ function onChronoParametersChanged() {
     showObsChrono = $('#showObsChrono')[0].checked
     console.log('onChronoParametersChanged:showTagsChrono\n=',showTagsChrono)
     refreshChronogram()
-}
-function onTrackDirChanged() {
-    trackDir = $('#selectboxTrackDir').val()
-    console.log('onTrackDirChanged: trackDir=',trackDir)
-    onTrackWindowChanged()
-}
-
-
-function excludeRectsChanged() {
-    if (flag_useExcludeRects) {
-        tagsSampleFilterExcludeRects = function(tag) {
-            for (let r of excludeRects) {
-                //console.log(tag,r)
-                let dx=Math.abs(tag.c[0]-r.cx)
-                let dy=Math.abs(tag.c[1]-r.cy)
-                if (( dx < r.w/2 ) && ( dy < r.h/2 )) return false
-            }
-            return true
-        }
-    } else {
-        tagsSampleFilterExcludeRects = function(tag) {return true}
-    }
-    $('#excludeRectDeleteButton').toggleClass('disabled', !(excludeRectSelection>=0))
-    onTagsParametersChanged()
-    refreshChronogram()
-    videoControl.refresh();
-}
-openExcludeRectsDialog = function() {
-    var jsontext = JSON.stringify(excludeRects ,null, 4)
-  
-    $("#excludeRects-json").val(jsontext)
-  
-    $("#dialog-form-excludeRects").dialog("open");
-}
-initExcludeRectsDialog = function() {
-    $("#dialog-form-excludeRects").dialog({
-        autoOpen: false,
-        modal: true,
-        buttons: {
-            "Ok": function() {
-                var jsontext = $("#excludeRects-json").val();
-                
-                if (logging.zoomOverlay)
-                    console.log('excludeRects dialog. jsontext = ',jsontext)
-
-                excludeRects = JSON.parse( jsontext )
-                
-                if (logging.zoomOverlay)
-                    console.log('excludeRects = ',excludeRects)
-                
-                $(this).dialog("close");
-                
-                excludeRectsChanged();
-            },
-            "Cancel": function() {
-                $(this).dialog("close");
-            }
-        },
-        open: function(){
-            $("body").css("overflow", "hidden");
-        },
-        close: function(){
-            $("body").css("overflow", "auto");
-        }
-    });
-
-}
-
-function ROIChanged() {
-    if (flag_useROI) {
-        tagsSampleFilterROI = function(tag) {
-            return (tag.c[0]>=ROI.left 
-                 && tag.c[0]<=ROI.right
-                 && tag.c[1]>=ROI.top
-                 && tag.c[1]<=ROI.bottom);
-        }
-    } else {
-        tagsSampleFilterROI = function(tag) {return true}
-    }
-    onTagsParametersChanged()
-    refreshChronogram()
-    videoControl.refresh();
-}
-function plotROI() {
-    if (!flag_useROI) return;
-
-    let R = {left:ROI.left, top:ROI.top, 
-             width:ROI.right-ROI.left, 
-             height: ROI.bottom-ROI.top}
-    let R2 = videoToCanvasRect(R)
-
-    ctx.save()
-    ctx.beginPath();
-    ctx.rect(R2.left, R2.top, R2.width, R2.height);
-    ctx.strokeStyle = '#fff';
-    //ctx.setLineDash([4,4])
-    ctx.lineWidth = 1
-    ctx.stroke();
-    ctx.restore()
-    
-    ctx.save()
-    //ctx.fillStyle = 'rgba(0,0,0,0.75)';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillRect(0,0,canvas.width,R2.top);
-    ctx.fillRect(0,R2.top,R2.left,R2.height);
-    ctx.fillRect(R2.left+R2.width,R2.top,
-                 canvas.width-R2.left-R2.width,R2.height);
-    ctx.fillRect(0,R2.top+R2.height,
-                 canvas.width,canvas.height-R2.top-R2.height);
-    ctx.restore()
 }
 
 
@@ -1918,8 +1923,8 @@ function newRectForCurrentTag() {
     }
     var rect = newRectForTag(tag)
     
-    canvas1.setActiveObject(rect);
-    canvas1.renderAll();
+    overlay.canvas1.setActiveObject(rect);
+    overlay.canvas1.renderAll();
     
     submit_bee();
 }
@@ -2003,13 +2008,13 @@ function onMouseDown_predict(option) {
             console.log("onMouseDown: did not find tag or event, created new rect with default size ", rect)
     }
     rect.setCoords();
-    canvas1.setActiveObject(rect);
-    canvas1.renderAll();
+    overlay.canvas1.setActiveObject(rect);
+    overlay.canvas1.renderAll();
 
     //automatic_sub();
     submit_bee();
     // Fire mouse:down again, this time with the created target
-    canvas1.fire("mouse:down", {
+    overlay.canvas1.fire("mouse:down", {
         target: rect,
         e: option.e
     })
@@ -2035,7 +2040,7 @@ function onMouseDown_interactiveRect(option) {
 
     var center = rect.getCenterPoint()
     rect.hasControls = false; // Do not show controls when creating
-    canvas1.setActiveObject(rect);
+    overlay.canvas1.setActiveObject(rect);
     //canvas1.renderAll();
 
     var onMouseMove_interactiveRect = function(option) {
@@ -2072,26 +2077,26 @@ function onMouseDown_interactiveRect(option) {
         }
         rect.setCoords();
         //canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
-        canvas1.renderAll(); // Refresh rectangles drawing
+        overlay.canvas1.renderAll(); // Refresh rectangles drawing
 
         updateForm(rect);
     }
     var onMouseUp_interactiveRect = function(e) {
         if (logging.mouseEvents)
             console.log("onMouseUp_interactiveRect: e=", e);
-        canvas1.off('mouse:move', onMouseMove_interactiveRect);
-        canvas1.off('mouse:up', onMouseUp_interactiveRect);
+        overlay.canvas1.off('mouse:move', onMouseMove_interactiveRect);
+        overlay.canvas1.off('mouse:up', onMouseUp_interactiveRect);
 
         var activeObject = rect;
         if (logging.mouseEvents)
-            console.log('onMouseUp_interactiveRect: rect=', rect, 'active=', canvas1.getActiveObject())
+            console.log('onMouseUp_interactiveRect: rect=', rect, 'active=', overlay.canvas1.getActiveObject())
         if (activeObject.validated) {
             fixRectSizeAfterScaling(activeObject) // Fix negative width or height
             updateRectObsGeometry(activeObject) // Copy geometry to obs
                 //canvas1.deactivateAll()
             rect.hasControls = true; // Reactivate controls when created
-            canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
-            canvas1.renderAll();
+            overlay.canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
+            overlay.canvas1.renderAll();
 
             // Update default size to latest rectangle created
             default_width = activeObject.width;
@@ -2104,8 +2109,8 @@ function onMouseDown_interactiveRect(option) {
             printMessage("Press enter to validate ID", "green")
         } else {
             // Not enough drag to define a new rectangle
-            canvas1.deactivateAll()
-            canvas1.remove(activeObject);
+            overlay.canvas1.deactivateAll()
+            overlay.canvas1.remove(activeObject);
             //canvas1.renderAll();
             //$("#I").val("no selection")
             if (logging.mouseEvents)
@@ -2115,8 +2120,8 @@ function onMouseDown_interactiveRect(option) {
         videoControl.refresh();
     }
 
-    canvas1.on('mouse:up', onMouseUp_interactiveRect);
-    canvas1.on('mouse:move', onMouseMove_interactiveRect);
+    overlay.canvas1.on('mouse:up', onMouseUp_interactiveRect);
+    overlay.canvas1.on('mouse:move', onMouseMove_interactiveRect);
     return rect;
 }
 
@@ -2200,14 +2205,14 @@ function onMouseDown_panning(option) {
     var onMouseUp_panning = function(e) {
         if (logging.mouseEvents)
             console.log("onMouseUp_panning: e=", e);
-        canvas1.off('mouse:move', onMouseMove_panning);
-        canvas1.off('mouse:up', onMouseUp_panning);
+        overlay.canvas1.off('mouse:move', onMouseMove_panning);
+        overlay.canvas1.off('mouse:up', onMouseUp_panning);
 
         videoControl.refresh();
     }
 
-    canvas1.on('mouse:up', onMouseUp_panning);
-    canvas1.on('mouse:move', onMouseMove_panning);
+    overlay.canvas1.on('mouse:up', onMouseUp_panning);
+    overlay.canvas1.on('mouse:move', onMouseMove_panning);
 }
 
 function onMouseDown(option) {
@@ -2354,8 +2359,8 @@ function onObjectSelected(option) {
         console.log("onObjectSelected:", option)
     //var activeObject = canvas1.getActiveObject();
     if (typeof option.target.id != "undefined") {
-        if (option.target.id != canvas1.getActiveObject().id) {
-            console.log('ERROR in onObjectSelected: option.target.id != canvas1.getActiveObject().id', option.target.id, canvas1.getActiveObject().id)
+        if (option.target.id != overlay.getActiveObject().id) {
+            console.log('ERROR in onObjectSelected: option.target.id != canvas1.getActiveObject().id', option.target.id, overlay.getActiveObject().id)
         }
         selectBee(option.target)
         lastSelected = option.target
@@ -2373,7 +2378,7 @@ function onObjectDeselected(option) {
                 console.log('onObjectDeselected: removing non submitted lastSelected=', lastSelected)
 
             // Remove tmp rect as soon as it becomes inactive
-            canvas1.remove(lastSelected);
+            overlay.canvas1.remove(lastSelected);
             lastSelected = null
             videoControl.refresh()
         }
@@ -2421,7 +2426,7 @@ function onObjectModified(option) {
     //zoomOverlay.selectionChanged()
 }
 
-
+/* Augment tags with labels */
 
 function updateTagsLabels() {
     for (let ann of flatTracksAll) {
@@ -2514,101 +2519,6 @@ function updateTagsLabels() {
             }
         }
     }
-
-    //activeInterval={'id':id,'begin':f,'end':f,'hammingavg':tags.hamming}
 }
 
-
-function onLabelToggled(event) {
-    if (logging.guiEvents)
-        console.log("onLabelToggled: event=", event)
-    var activeObject = canvas1.getActiveObject()
-    var target = event.target;
-    if (activeObject == null) {
-        newRectForCurrentTag()
-        activeObject = canvas1.getActiveObject()
-    }
-    if (activeObject !== null) {
-        let obs = activeObject.obs
-        
-        let oldState = $(target).hasClass('active')
-        
-        console.log('oldState=',oldState)
-        let isOn = !oldState
-        
-        
-        $(target).toggleClass('active', isOn)
-        
-        let labelList = ['fanning','pollen','entering','leaving','walking','expulsion',
-                'falsealarm','wrongid'];
-        
-//         for (let theClass of labelList) {
-//             if ($(target).hasClass(theClass)) {
-//               updateObsLabel(obs, theClass, isOn)
-//             }
-//         }
-        let theClass = $(target).attr('thelabel')
-        updateObsLabel(obs, theClass, isOn)
-        
-        console.log('onLabelToggled: thelabel=',theClass,'isOn=',isOn,'obs.labels=',obs.labels)
-        
-        // Update the rest
-        updateRectObsActivity(activeObject)
-        automatic_sub()
-        
-        updateForm(activeObject)
-        refreshChronogram()
-    }
-}
-// function onLabelClicked(event) {
-//     if (logging.guiEvents)
-//         console.log("onLabelClicked: event=", event)
-//     var activeObject = canvas1.getActiveObject()
-//     if (activeObject !== null) {
-//         let obs = activeObject.obs
-//         
-//         updateObsLabel(obs, 'fanning', 
-//                        $('.labelcheckbox.fanning').prop('checked'))
-//         updateObsLabel(obs, 'pollen', 
-//                        $('.labelcheckbox.pollen').prop('checked'))
-//         updateObsLabel(obs, 'entering', 
-//                        $('.labelcheckbox.entering').prop('checked'))
-//         updateObsLabel(obs, 'leaving', 
-//                        $('.labelcheckbox.leaving').prop('checked'))
-//         updateObsLabel(obs, 'walking', 
-//                        $('.labelcheckbox.walking').prop('checked'))
-// 
-//         updateObsLabel(obs, 'falsealarm', 
-//                        $('.labelcheckbox.falsealarm').prop('checked'))
-//         updateObsLabel(obs, 'wrongid', 
-//                        $('.labelcheckbox.wrongid').prop('checked'))
-//         
-//         console.log('onLabelClicked: obs.labels=',obs.labels)
-//         
-//         // Update the rest
-//         updateRectObsActivity(activeObject)
-//         automatic_sub()
-//         
-//         updateForm(activeObject)
-//     }
-// }
-function onActivityChanged(event) {
-    if (logging.guiEvents)
-        console.log("onActivityChanged: event=", event)
-    var activeObject = canvas1.getActiveObject()
-    if (activeObject !== null) {
-        updateRectObsActivity(activeObject)
-        automatic_sub()
-    }
-}
-function onLabelsChanged() {
-    let labels=$('#labels').val()
-    if (logging.guiEvents)
-        console.log("onLabelsChanged: labels=", labels)
-    var activeObject = canvas1.getActiveObject()
-    if (activeObject !== null) {
-        setLabels(activeObject,labels)
-        automatic_sub()
-    }
-}
 
