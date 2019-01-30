@@ -69,6 +69,7 @@ plotTracks
         for frame
             getObsHandle(f, id, ...)
             
+            
 drawChrono called by:
     modifyCurrentObsSpan
     refreshChronogram
@@ -80,3 +81,4 @@ updateChrono called by:
 updateChrono
     updateActivities 
         createIntervalList
+

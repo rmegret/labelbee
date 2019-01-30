@@ -1,0 +1,15 @@
+{
+   "target_dir": ["labelbee-comments"],	
+   "match_files": ["^((?!~).)*.(js)$"],
+   "backup" : false,
+   "private" : false,
+   "favor_generated" : true,
+   "tags": {
+        "function":{
+          "name":{},
+          "desc":{"value":"Description"},
+          "params":{},
+          "rtrn":{"default":"undefined"}
+        }
+	}
+}

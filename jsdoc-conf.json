@@ -1,21 +1,28 @@
 {
-    "tags": {
-        "allowUnknownTags": false
+    "opts": {
+        "template": "templates/default",  // same as -t templates/default
+        "encoding": "utf8",               // same as -e utf8
+        "destination": "./jsdoc/",          // same as -d ./out/
+        "recurse": true,                  // same as -r
+        "lenient": false,
+        "sort": false
     },
+    "tags": {
+        "allowUnknownTags": true
+    },
+    "recurseDepth": 10,
     "source": {
+        "include": ["./labelbee-comments"],
+        "exclude": ["./labelbee-comments/static/labelbee/js/extern",
+                    "./labelbee-comments/static/bootstrap"],
         "includePattern": ".+\\.js(doc)?$",
-        "excludePattern": "(^|\\/|\\\\)_"
+        "excludePattern": "(^|\\/|\\\\)_|^.*/data/.*$"
     },
     "plugins": [],
     "templates": {
         "cleverLinks": true,
         "monospaceLinks": false,
         "theme": "flatly"
-    },
-    "opts": {
-        "encoding": "utf8",
-        "lenient": false,
-        "sort": false
     }
 }
 

@@ -1,0 +1,7 @@
+{
+  "source": "./labelbee-comments",
+  "destination": "./esdoc",
+  "plugins": [
+    {"name": "esdoc-standard-plugin"}
+  ]
+}
