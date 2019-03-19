@@ -18,6 +18,7 @@ function VideoControl(videoTagId) {
         videosize:changed
     */
     
+    this.isValidVideo = false
     this.flagCopyVideoToCanvas = true;
     this.seekWallTime = 0;
     this.seekTiming = false
@@ -287,7 +288,7 @@ VideoControl.prototype.onPreviewFrameChanged = function(event) {
     $( this ).trigger('previewframe:changed')
 }
 
-VideoControl.prototype.updateVideoInfoForm = function() {
+VideoControl.prototype.updateVideoControlForm = function() {
     function toLocaleISOString(date) {
         // Polyfill to get local ISO instead of UTC http://stackoverflow.com/questions/14941615/how-to-convert-isostring-to-local-isostring-in-javascript
         function pad(n) { return ("0"+n).substr(-2); }
@@ -319,7 +320,15 @@ VideoControl.prototype.hardRefresh = function() {
     if (logging.frameEvents)
         console.log('hardRefresh', this.currentFrame)
         
-    this.updateVideoInfoForm()
+    if (!this.isValidVideo) {
+        if (logging.frameEvents)
+            console.log('hardRefresh canceled, no valid video')
+        overlay.canvas1.clear();
+        this.refresh()
+        return
+    }
+        
+    this.updateVideoControlForm()
 
     overlay.canvas1.clear();
     createRectsFromTracks()
@@ -333,6 +342,25 @@ VideoControl.prototype.refresh = function() {
 
     let w = overlay.canvas.width
     let h = overlay.canvas.height
+
+    if (!this.isValidVideo) {
+        if (logging.frameEvents)
+            console.log('refresh canceled, no valid video')
+        overlay.ctx.save()
+        overlay.ctx.setTransform(1,0, 0,1, 0,0)
+        overlay.ctx.fillStyle = '#DDD'
+        overlay.ctx.fillRect(0, 0, w, h);
+        overlay.canvas1.clear();
+        overlay.ctx.fillStyle = '#00F'
+        overlay.ctx.font = "12px Verdana";
+        overlay.ctx.textAlign = "center";
+        overlay.ctx.textBaseline = "middle"; 
+        var lineHeight = overlay.ctx.measureText("M").width * 1.2;
+        overlay.ctx.fillText("Could not load video", w/2, h/2);
+        overlay.ctx.fillText(this.video.src, w/2, h/2+lineHeight);
+        overlay.ctx.restore()
+        return
+    }
 
     if (this.currentMode == 'video') {
         let video = this.video; // same as $('#video')[0]
@@ -373,6 +401,7 @@ VideoControl.prototype.refresh = function() {
 
 
 
+
 VideoControl.prototype.loadVideo = function(url, previewURL) {
     if (logging.videoEvents)
         console.log('loadVideo: url=',url)
@@ -404,6 +433,8 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     console.log('onVideoLoaded: VIDEO loaded ',this.video.src)
     statusWidget.statusUpdate('videoLoad', true, [])
     
+    this.isValidVideo = true;
+    
     this.onVideoSizeChanged()
     
     videoinfo.duration = this.video.duration
@@ -421,12 +452,21 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     tagsFromServer(videoinfo.tags.videoTagURL, true) // quiet
     
     $( this ).trigger('video:loaded') 
+    
+    this.hardRefresh()
 }
 VideoControl.prototype.onVideoError = function(event) {
     if (logging.videoEvents)
         console.log('onVideoError', event)
+    console.log('onVideoError: could not load ',this.video.src)
         
     statusWidget.statusUpdate('videoLoad', false, [])
+    
+    this.isValidVideo = false;
+    
+    this.onVideoSizeChanged()
+    
+    this.hardRefresh()
 }
 
 VideoControl.prototype.setPreviewVideoStatus = function(status) {
@@ -543,11 +583,15 @@ VideoControl.prototype.loadPreviewVideoInfo = function(infoURL) {
 
 VideoControl.prototype.onVideoSizeChanged = function() {
     /* Video size */
-    
+
     var w,h
-    
-    w = this.video.videoWidth
-    h = this.video.videoHeight
+    if (this.isValidVideo) {    
+        w = this.video.videoWidth
+        h = this.video.videoHeight
+    } else {
+        w = 600
+        h = 400
+    }
     
     if (logging.videoEvents) {
         console.log("videoSizeChanged: w=",w," h=",h)
@@ -557,12 +601,24 @@ VideoControl.prototype.onVideoSizeChanged = function() {
     overlay.canvasSetVideoSize(w,h)
 }
 VideoControl.prototype.videoSize = function() {
-    return { left: 0,
-             top: 0,
-             right: this.video.videoWidth,
-             bottom: this.video.videoHeight
-            }
+    if (this.isValidVideo) {    
+        return { left: 0,
+                 top: 0,
+                 right: this.video.videoWidth,
+                 bottom: this.video.videoHeight
+                }
+    } else {
+        return { left: 0,
+                 top: 0,
+                 right: 600,
+                 bottom: 400
+                }
+    }
 }
+
+
+
+
 
 VideoControl.prototype.loadVideoInfo = function(infourl) {
     let videoControl = this;
@@ -619,7 +675,7 @@ VideoControl.prototype.onVideoInfoChanged = function() {
     videoinfo.nframes = Math.floor(videoinfo.duration*videoinfo.videofps)
     this.video2.frameRate = videoinfo.videofps
         
-    updateVideoInfoForm()
+    videoManager.updateVideoInfoForm()
         
     updateChronoXDomainFromVideo()   // Should trigger chrono refresh
     //refreshChronogram()
@@ -629,9 +685,4 @@ VideoControl.prototype.maxframe = function() {
     return Math.floor(videoinfo.duration*videoinfo.videofps)
 }
 
-// function onVideoReady(event) {
-//     video.oncanplay = undefined
-//     if (logging.videoEvents)
-//         console.log('videoReady', event)
-//     videoControl.rewind()
-// }
+

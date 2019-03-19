@@ -313,7 +313,7 @@
                       Frame <input type="text" value="-" id="currentFrame" onchange="videoControl.onFrameTextChanged(event)" size="6">
                       <div id="vidTime">Video Time:</div>
                       <div id="realTime">Real Time:</div>
-                      <select id="selectboxVideo" name="video" onchange="onSelectboxVideoChanged()" class="">
+                      <select id="selectboxVideo" name="video" onchange="videoManager.onSelectboxVideoChanged()" class="">
                           <option value="data/undefined.mp4" selected>Not yet initialized</option>
                       </select> <!-- selectboxVideo -->  
                   </div>
@@ -321,7 +321,7 @@
                   <div class='subpanel collapsible'>
                     <label class="primary">Video List </label>
                     <div>
-                        <div class="float-right"><input onclick="checkVideoList()" type="button" value="Check"  class="btn btn-primary btn-xs"/></div>
+                        <div class="float-right"><input onclick="videoManager.checkVideoList()" type="button" value="Check"  class="btn btn-primary btn-xs"/></div>
                         <table id='videoList'>
                         </table>
                     </div>

@@ -315,7 +315,7 @@
                       Frame <input type="text" value="-" id="currentFrame" onchange="videoControl.onFrameTextChanged(event)" size="8">
                       <div id="vidTime">Video Time:</div>
                       <div id="realTime">Real Time:</div>
-                      <select id="selectboxVideo" name="video" onchange="onSelectboxVideoChanged()" class="">
+                      <select id="selectboxVideo" name="video" onchange="videoManager.onSelectboxVideoChanged()" class="">
                           <option value="data/undefined.mp4" selected>Not yet initialized</option>
                       </select> <!-- selectboxVideo -->  
                   </div>
@@ -323,7 +323,7 @@
                   <div class='subpanel collapsible'>
                     <label class="primary">Video List </label>
                     <div>
-                        <div class="float-right"><input onclick="checkVideoList()" type="button" value="Check"  class="btn btn-primary btn-xs"/></div>
+                        <div class="float-right"><input onclick="videoManager.checkVideoList()" type="button" value="Check"  class="btn btn-primary btn-xs"/></div>
                         <table id='videoList'>
                         </table>
                     </div>
@@ -334,16 +334,18 @@
                     <div>
                         Start Time:
                         <input type="text" value="2016-07-15T09:59:59.360"  
-                               id="startTime" onchange="onStartTimeChanged(event)" size="25">
-                          <br>      
+                               id="startTime" onchange="videoManager.changeStartTime(event)" size="25">
+                        <br>      
                         Real FPS
-                        <input type="text" value="???" id="realfps"
-                         onchange="onFPSChanged(event)" size="4">&nbsp;Video FPS <input type="text" value="???" id="videofps"
-                         onchange="onVideoFPSChanged(event)"  size="4">
-                          <br>
-                          <input type="text" value="0" id="frameoffset"
-                         onchange="onFrameOffsetChanged(event)" size="3">
-                         <br>
+                            <input type="text" value="???" id="realfps"
+                            onchange="videoManager.changeFPS(event)" size="4">&nbsp;
+                        Video FPS 
+                            <input type="text" value="???" id="videofps"
+                            onchange="videoManager.changeVideoFPS(event)"  size="4">
+                        <br>
+                        <input type="text" value="0" id="frameoffset"
+                         onchange="videoManager.changeFrameOffset(event)" size="3">
+                        <br>
                         <div id="videoSize">-</div>
                         <div id="canvasSize">-</div>
                     </div>
@@ -429,7 +431,7 @@
                   <div>
                     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-                    <input id="videoListFromServer" onclick="videoListFromServer()" type="button" value="Load Video List"  class="btn btn-default btn-xs">
+                    <input id="videoListFromServer" onclick="videoManager.videoListFromServer()" type="button" value="Load Video List"  class="btn btn-default btn-xs">
 
                     <input id="tagsFromServer" onclick="tagsFromServer()"  type="button" value="Load Tags" class="btn btn-default btn-xs">
                       

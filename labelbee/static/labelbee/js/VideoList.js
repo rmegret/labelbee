@@ -7,11 +7,8 @@
 
 var videoinfo;
 
-/* Video List */
-function initVideoList() {
-    videoListTable=[]
-
-    videoList = [ 'DefaultList', 'testvideo.mp4',
+function VideoManager() {
+    let defaultVideoList = [ 'DefaultList', 'testvideo.mp4',
                   'vlc1.mp4',
                   'vlc2.mp4',
                   '1_02_R_170419141405.mp4',
@@ -20,14 +17,14 @@ function initVideoList() {
                   'GuraboTest/4_02_R_170511130000.mp4',
                   '2017-06-Gurabo/2_02_R_170609100000.mp4',
                   '2_02_R_170609100000.mp4' ]
+                  
     videoListTable = []
-    for (let videoname of videoList) {
-        videoListTable.push(videonameToTable(videoname))
+    for (let videoname of defaultVideoList) {
+        videoListTable.push(this.videonameToTable(videoname))
     }
     videoListCurrentID = 0;
     
-    updateVideoList()
-    updateVideoSelectbox()
+    this.updateVideoListForm()
     
     videoinfo = {
         'name': 'No video loaded',
@@ -43,77 +40,125 @@ function initVideoList() {
             'previewTimescale': 1.0
         }
     };
-    updateVideoInfoForm()
+    this.updateVideoInfoForm()
     
-    videoListFromServer('/data/videolist.csv', 1)
+    this.videoListFromServer('/data/videolist.csv', 1)
 }
 
-function checkURL(url) {
-    if (logging.videoList)
-        console.log('Checking ',url)
-    return new Promise((resolve, reject)=>{
-        fetch(url, {
-            method: "head",
-            credentials: 'same-origin',
-            mode: "no-cors"
-        })
-        .then(function(response) {
-            if (logging.videoList)
-                console.log('fetch(',url,') =>', response)
-            if (response.status == 200) {
-                resolve()
-            } else {
-                reject()
-            }
-        })
-        .catch(function(error) {
-            if (logging.videoList)
-                console.log('fetch(',url,') =>', error)
-            reject()
-        });
-    })
+VideoManager.prototype = {}
+
+
+/* I/O */
+
+VideoManager.prototype.videoListFromServer = function(path, defaultvideoid) {     
+    let videoManager = this
+
+    if (!path) {
+        var userpath = window.prompt("Please enter path for Video List (server)","/data/videolist.csv");
+        if (userpath==null || userpath=="") {
+            console.log('videoListFromServer: canceled')
+            return;
+        }
+    
+        path = userpath;
+    }
+    
+    console.log('videoListFromServer: loading path "'+path+'"...')  
+    statusWidget.statusRequest('videolistLoad',true,'')
+          
+     $.ajax( url_for(path) ,
+        function(data) {
+          console.log('videoListFromServer: loaded "'+path+'"')  
+        }
+      )
+      .done(function(data) {
+          console.log('videolist CSV content = ',data)
+          let array = $.csv.toArrays(data);
+          console.log('videolist converted to array: ',array)
+          //videoList = []
+          videoListTable=[]
+          for (let item of array) {
+              if (item.length==0) continue;
+              //videoList.push(item[0]);
+              if (item[1] ) {
+                  $('#previewVideoName').val(item[1])
+                  $('#previewVideoTimeScale').val('1')
+              }
+              let tmp = {video:item[0], preview:item[1], tags:item[2]}
+              videoListTable.push(tmp)
+          }
+
+          videoManager.updateVideoListForm()
+          if (defaultvideoid==null)
+              videoManager.selectVideoByID(0)
+          else
+              videoManager.selectVideoByID(defaultvideoid)
+          statusWidget.statusUpdate('videolistLoad',true,'')
+        }
+      )
+      .fail(function(data) {
+          console.log('videoListFromServer: ERROR loading "'+path+'"')  
+          statusWidget.statusUpdate('videolistLoad',false,'')
+        }
+      )
 }
 
-function checkVideoList() {
+VideoManager.prototype.checkVideoList = function() {
     console.log('checkVideoList')
+    
+    let videoManager = this;
+    
+    // Check if an URL is valid
+    // Returns a Promise the resolves or rejects the URL
+    function checkURL(url) {
+        if (logging.videoList)
+            console.log('Checking ',url)
+        return new Promise((resolve, reject)=>{
+            fetch(url, {
+                method: "head",
+                credentials: 'same-origin',
+                mode: "no-cors"
+            })
+            .then(function(response) {
+                if (logging.videoList)
+                    console.log('fetch(',url,') =>', response)
+                if (response.status == 200) {
+                    resolve()
+                } else {
+                    reject()
+                }
+            })
+            .catch(function(error) {
+                if (logging.videoList)
+                    console.log('fetch(',url,') =>', error)
+                reject()
+            });
+        })
+    }
+    
     let count = videoListTable.length
     for (var i = 0; i < videoListTable.length; i++){
         let itemToUpdate = videoListTable[i]
         
         let videoname = videoListTable[i].video
         itemToUpdate.checked = "requested"
-        let url = videonameToURL(videoname)
+        let url = videoManager.videonameToURL(videoname)
         checkURL(url)
         .then( function() {itemToUpdate.checked = true;} )
         .catch( function() {itemToUpdate.checked = false;} )
-        .finally( function() {updateVideoList();} )
+        .finally( function() {videoManager.updateVideoListForm();} )
         
         let tagname = videoListTable[i].tags
         itemToUpdate.tagsChecked = "requested"
-        let urlTag = videonameToURL(tagname)
+        let urlTag = videoManager.videonameToURL(tagname)
         checkURL(urlTag)
         .then( function() {itemToUpdate.tagsChecked = true;} )
         .catch( function() {itemToUpdate.tagsChecked = false;} )
-        .finally( function() {updateVideoList();} )
+        .finally( function() {videoManager.updateVideoListForm();} )
     }
 }
 
-function htmlCheckmark(flag) {
-    let checkStr = "<span class='gray'>?</span>"
-    if (typeof flag != 'undefined') {
-        if (flag == 'requested') 
-            checkStr = "<span>&#x231a;</span>"
-        else if (flag)
-            checkStr = "<span class='green'>&#x2713;</span>"
-        else
-            checkStr = "<span class='red'>&times;</span>"
-    }
-    return checkStr
-}
-
-function updateVideoList() {
-    //var data = videoList;
-    
+VideoManager.prototype.updateVideoListForm = function() {
     var html = "";
     html +="<tr>"+
                 "<td>#</td>"+
@@ -127,20 +172,20 @@ function updateVideoList() {
         let tagCheckStr = htmlCheckmark(videoListTable[i].tagsChecked)
     
         html +="<tr>"+
-                "<td><input type='button' data-arrayIndex='"+ i +"' onclick='selectVideoFromList(this)' class='btn btn-default btn-xs glyph-xs' value='"+(i+1)+"'></button>"+ "</td>"+
+                "<td><input type='button' data-arrayIndex='"+ i +"' onclick='videoManager.selectVideoFromList(this)' class='btn btn-default btn-xs glyph-xs' value='"+(i+1)+"'></button>"+ "</td>"+
                 "<td>"+ videoListTable[i].video + "</td>"+
                 "<td>"+ checkStr + "</td>"+
                 "<td>"+ tagCheckStr + "</td>"+
                 "</tr>";
     }
-    html += '<tr><td><button value="Add video to list" onclick="addVideoClick()" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus-sign"></span></button></td><td></td></tr>'
+    html += '<tr><td><button value="Add video to list" onclick="videoManager.addVideoClick()" type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus-sign"></span></button></td><td></td></tr>'
     
     $("#videoList").html(html);
     
-    updateVideoSelectbox()
-    updateVideoListSelection()
+    this.updateVideoSelectbox()
+    this.updateVideoListSelection()
 }
-function updateVideoSelectbox() {
+VideoManager.prototype.updateVideoSelectbox = function() {
     var selectbox = $("#selectboxVideo")
     selectbox.find('option').remove()
 
@@ -148,18 +193,19 @@ function updateVideoSelectbox() {
         selectbox.append("<option value='data/"+el.video+"'>"+el.video+"</option>");
     });
 }
-function updateVideoListSelection() {
+VideoManager.prototype.updateVideoListSelection = function() {
     var id = videoListCurrentID;
     $( "#videoList tr.selected" ).removeClass("selected")
     $( "#videoList tr:nth-child("+(id+2)+")" ).addClass("selected") // jQuery index starts at 1 + 1 row for table headers
     
     $('#selectboxVideo').prop("selectedIndex", id);
 }
-function onSelectboxVideoChanged() {
+
+VideoManager.prototype.onSelectboxVideoChanged = function() {
     let id = $('#selectboxVideo').prop("selectedIndex")
-    selectVideoByID(id)
+    this.selectVideoByID(id)
 }
-function prefillVideoFields() {
+VideoManager.prototype.prefillVideoFields = function() {
     if (videoListTable==null) return;
     if (videoListTable[videoListCurrentID]==null) return;
     
@@ -171,32 +217,32 @@ function prefillVideoFields() {
     }
     videoinfo.tags={'videoTagURL': tagfile}
 }
-function videonameToURL(videoname) {
+VideoManager.prototype.videonameToURL = function(videoname) {
     return url_for('/data/'+videoname)
 }
-function selectVideoByID(id) {
+VideoManager.prototype.selectVideoByID = function(id) {
     id = Number(id)
     if (id >= videoListTable.length || id<0) {
         throw ('selectVideobyID: invalid id, id='+id);
     }
     videoListCurrentID = id
     
-    prefillVideoFields()
-    updateVideoListSelection()
+    this.prefillVideoFields()
+    this.updateVideoListSelection()
     
-    let url = videonameToURL(videoListTable[videoListCurrentID].video)
+    let url = this.videonameToURL(videoListTable[videoListCurrentID].video)
     
     videoControl.loadVideo(url)
     
     // Change handled in callback onVideoLoaded
 }
-function selectVideoFromList(target) {
+VideoManager.prototype.selectVideoFromList = function(target) {
     var id = Number($(target).attr('data-arrayindex'));
     console.log('selectVideoFromList: data-arrayindex=',id)
-    selectVideoByID(id)
+    this.selectVideoByID(id)
 }
 
-function videonameToTable(videoname) {
+VideoManager.prototype.videonameToTable = function(videoname) {
     let path = videoname.split('/')
     let name = path[path.length-1].replace(/\.[^/.]+$/, "")
     path[path.length-1] = 'Tags-'+name
@@ -207,26 +253,25 @@ function videonameToTable(videoname) {
 }
 
 /* Update Video List */
-function addVideoToList(videoname) {
-    videoListTable.push(videonameToTable(videoname))
-    updateVideoList()
-    selectVideoByID(videoList.length-1);
+VideoManager.prototype.addVideoToList = function(videoname) {
+    videoListTable.push(this.videonameToTable(videoname))
+    this.updateVideoListForm()
+    this.selectVideoByID(videoListTable.length-1);
 }
-function addVideoClick() {
+VideoManager.prototype.addVideoClick = function() {
     var videoname = prompt("Add video to the list and select it:\n\nEnter video filename\n/data/ will be prefixed to its name", "vlc1.mp4");
 
     if (videoname == null || videoname == "") {
         console.log('addVideoClick: no video name entered')
     } else {
-        addVideoToList(videoname)
+        this.addVideoToList(videoname)
     }
 }
 
-
 // ## Video custom metadata
 
-function onStartTimeChanged(event) {
-    console.log('onStartTimeChanged', event)
+VideoManager.prototype.changeStartTime = function(event) {
+    console.log('changeStartTime', event)
 
     var d = new Date(event.target.value)
     videoinfo.starttime = d.toISOString()
@@ -234,28 +279,28 @@ function onStartTimeChanged(event) {
     updateChronoXDomainFromVideo()
     drawChrono()
 }
-function onVideoFPSChanged(event) {
-    console.log('onVideoFPSChanged', event)
+VideoManager.prototype.changeVideoFPS = function(event) {
+    console.log('changeVideoFPS', event)
 
     videoinfo.videofps = Number(event.target.value)
     //video2.frameRate = videoinfo.videofps // Now handled by videoControl
     videoControl.onVideoInfoChanged() // Force recomputation of various parameters: nframes...
 }
-function onFPSChanged(event) {
-    console.log('onFPSChanged (real)', event)
+VideoManager.prototype.changeFPS = function(event) {
+    console.log('changeFPS (real)', event)
 
     videoinfo.realfps = Number(event.target.value)
     updateChronoXDomainFromVideo() // Change the real timeline
     drawChrono()
 }
-function onFrameOffsetChanged(event) {
-    console.log('onFrameOffsetChanged (real)', event)
+VideoManager.prototype.changeFrameOffset = function(event) {
+    console.log('changeFrameOffset (real)', event)
 
     videoinfo.frameoffset = Number(event.target.value)
     videoControl.onVideoInfoChanged() // Force recomputation of various parameters: nframes...
 }
 
-function updateVideoInfoForm() {
+VideoManager.prototype.updateVideoInfoForm = function() {
     $('#videofps').val(videoinfo.videofps)
     $('#realfps').val(videoinfo.realfps)
     $('#startTime').val(videoinfo.starttime)

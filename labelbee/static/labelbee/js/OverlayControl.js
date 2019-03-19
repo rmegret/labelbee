@@ -105,6 +105,7 @@ function OverlayControl(canvasTagId) {
     transformFactor = 1.0;
     canvasTransform = [1,0, 0,1, 0,0]  // Global
     canvasTransformReference = {w:100, h:100} // Keep previous canvas size
+    overlay.videoSize = {x:600,y:400}
     
     refreshTagsParameters()
 }
@@ -130,6 +131,9 @@ hardRefresh: function() {
 
 canvasSetVideoSize: function(w,h) {
     // Resize canvas to have same aspect-ratio as video
+
+    overlay.videoSize.w=w;
+    overlay.videoSize.h=h;
 
     var wd=w,hd=h
     if (true) {
@@ -196,11 +200,11 @@ function refreshCanvasSize(event, ui) {
     
     // Assume width is in px to parse #canvasresize size
     let hd = Math.round(parseInt($("#canvasresize")[0].style.height)-borderThickness)
-    let wd = Math.round(hd/video.videoHeight*video.videoWidth)
+    let wd = Math.round(hd/overlay.videoSize.h*overlay.videoSize.w)
         
     resizeCanvas(wd,hd)
     
-    $("#videoSize")[0].innerHTML = 'videoSize: '+video.videoWidth.toString() + 'x' + video.videoHeight.toString();
+    $("#videoSize")[0].innerHTML = 'videoSize: '+overlay.videoSize.w.toString() + 'x' + overlay.videoSize.h.toString();
     $("#canvasSize")[0].innerHTML = 'canvasSize: '+wd.toString() + 'x' + hd.toString();
 
 
@@ -224,8 +228,16 @@ function refreshCanvasSize(event, ui) {
 /* Canvas Transform */
 function canvasTransformInternalReset() {
     let video = $('#video')[0]
-    transformFactor = video.videoWidth / overlay.canvas.width;
-    canvasTransformSet([transformFactor,0, 0,transformFactor, 0,0])
+    transformFactor = overlay.videoSize.w / overlay.canvas.width;
+    
+    let array = [transformFactor,0, 0,transformFactor, 0,0]
+    if (isNaN(transformFactor)) {
+        array = [1, 0, 0, 1, 0, 0]
+    }
+    for (let i=0; i<6; i++) {
+        canvasTransform[i]=array[i]
+    }
+    
     canvasTransformReference.w = overlay.canvas.width
     canvasTransformReference.h = overlay.canvas.height
 }
@@ -245,8 +257,8 @@ function canvasTransform_Fix() {
     let video = $('#video')[0]
     let w1 = overlay.canvas.width
     let h1 = overlay.canvas.height
-    let w2 = video.videoWidth
-    let h2 = video.videoHeight
+    let w2 = overlay.videoSize.w
+    let h2 = overlay.videoSize.h
     
     if (canvasTransform[0]*w1>w2 && canvasTransform[3]*h1>h2) {
         let scaling = Math.max(w2/w1,h2/h1)

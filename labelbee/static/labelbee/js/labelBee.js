@@ -48,7 +48,7 @@ function init() {
     statusWidget = new StatusWidget();
 
     // import * from "VideoList.js";
-    initVideoList()
+    videoManager = new VideoManager()
         
     // import * from "VideoNavigation";
     videoControl = new VideoControl('video') // Attach control to #video
@@ -145,7 +145,7 @@ function init() {
     
     /* Set defaults */
     
-    selectVideoByID(1)
+    videoManager.selectVideoByID(1)
     //Will trigger videoControl.onVideoLoaded
     onTrackWindowChanged() // to compute track window params
     
@@ -168,6 +168,19 @@ function printMessage(html, color) {
     
     if (html !== "")
         console.log("MESSAGE: %c"+html, "color:"+color)
+}
+
+function htmlCheckmark(flag) {
+    let checkStr = "<span class='gray'>?</span>"
+    if (typeof flag != 'undefined') {
+        if (flag == 'requested') 
+            checkStr = "<span>&#x231a;</span>"
+        else if (flag)
+            checkStr = "<span class='green'>&#x2713;</span>"
+        else
+            checkStr = "<span class='red'>&times;</span>"
+    }
+    return checkStr
 }
 
 function StatusWidget() {
@@ -200,7 +213,7 @@ function StatusWidget() {
             $(".status."+type).html("<td>"+type+"</td><td class='tdspacing'>"+htmlCheckmark(true)+"</td><td class='col_elapsed' >[took  "+elapsed+"s]</td>")
         } else {
             //$(".status."+type).html(type+": FAILED [elapsed "+elapsed+"s]")
-            $(".status."+type).html("<td>"+type+"</td><td class='tdspacing'>"+htmlCheckmark(true)+"</td><td class='col_elapsed'></td>")
+            $(".status."+type).html("<td>"+type+"</td><td class='tdspacing'>"+htmlCheckmark(false)+"</td><td class='col_elapsed'></td>")
         }
     }
 }
