@@ -312,7 +312,7 @@
                       <label class="primary">Current Video</label>
                       <br>
                       <div id="videoName" class="small">-</div>
-                      Frame <input type="text" value="-" id="currentFrame" onchange="videoControl.onFrameTextChanged(event)" size="6">
+                      Frame <input type="text" value="-" id="currentFrame" onchange="videoControl.onFrameTextChanged(event)" size="8">
                       <div id="vidTime">Video Time:</div>
                       <div id="realTime">Real Time:</div>
                       <select id="selectboxVideo" name="video" onchange="onSelectboxVideoChanged()" class="">
@@ -373,11 +373,11 @@
                           <label class="primary">Preview Video</label>
                           <br>
                           Name <input type="text" value="-" id="previewVideoName"
-                           size="60" onchange="onPreviewVideoInfoChanged()">
+                           size="60" onchange="videoControl.changePreviewVideoName(event)">
                           <div id="previewVideoStatus" class="btn btn-xs" title="Status of Preview Video" style="display:inline-block;">?</div>
                            <br>
                           TimeScale<input type="text" value="-" id="previewVideoTimeScale"
-                           size="10" onchange="onPreviewVideoInfoChanged()">
+                           size="10" onchange="videoControl.changePreviewVideoInfo(event)">
                       </div>
                                 
                   </div>

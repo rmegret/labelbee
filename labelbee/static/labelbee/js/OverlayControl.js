@@ -12,6 +12,9 @@ function OverlayControl(canvasTagId) {
     
     // Events:
     // overlayControl.on('trackWindow:change',...)
+    $( videoControl ).on('videosize:changed', (e,w,h)=>{this.canvasSetVideoSize(w,h)})
+    $( videoControl ).on('frame:changed', (e)=>{this.hardRefresh()})
+    $( videoControl ).on('previewframe:changed', (e)=>{this.hardRefresh()})
 
     if (typeof canvasTagId === 'undefined')
         canvasTagId = 'canvas'; // Default HTML5 canvas tag to attach to
@@ -115,7 +118,17 @@ OverlayControl.prototype.setActiveObject = function(rect) {
     return this.canvas1.setActiveObject(rect)
 }
 
-function canvasSetVideoSize(w,h) {
+/* Canvas size utils */
+
+// extend OverlayControl by copying new method in its prototype
+Object.assign(OverlayControl.prototype, {
+
+hardRefresh: function() {
+// Refresh the overlay
+    //this.canvasSetVideoSize()
+},
+
+canvasSetVideoSize: function(w,h) {
     // Resize canvas to have same aspect-ratio as video
 
     var wd=w,hd=h
@@ -143,6 +156,9 @@ function canvasSetVideoSize(w,h) {
     refreshCanvasSize()
     canvasTransformReset()
 }
+
+}
+) // assign(prototype, ...)
 function refreshCanvasSize(event, ui) {
     // Refresh based on new video size or new canvas size
     if (logging.canvasEvents) {
@@ -205,6 +221,7 @@ function refreshCanvasSize(event, ui) {
     videoControl.refresh() // Already done in canvasTransformScale()
 }
 
+/* Canvas Transform */
 function canvasTransformInternalReset() {
     let video = $('#video')[0]
     transformFactor = video.videoWidth / overlay.canvas.width;
@@ -1310,7 +1327,6 @@ function onTrackWindowChanged(event) {
 
     console.log("onTrackWindowChanged range=",range," direction=",trackDir)
     
-    let trackDir = overlay.trackWindow.direction
     if (trackDir=='Bidirectional') {
         overlay.trackWindow.forward = range
         overlay.trackWindow.backward = range

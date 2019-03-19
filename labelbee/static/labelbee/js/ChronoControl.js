@@ -77,10 +77,11 @@ function initChrono() {
             // Update should be called by callbacks
         } else {
             // Come back to initial frame before preview
-            videoControl.currentMode = 'video';
-            updateTimeMark();
-            updateTrackWindowSpan()
-            videoControl.hardRefresh();
+            //videoControl.currentMode = 'video';
+            videoControl.onFrameChanged()
+            //updateTimeMark();
+            //updateTrackWindowSpan()
+            //videoControl.hardRefresh();
         }
     }
     $( axes ).on('previewframe:trackmove', onAxesMoved)    

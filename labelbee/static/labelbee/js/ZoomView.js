@@ -1120,7 +1120,7 @@ ZoomOverlay.prototype.loadTagHammingMatrix = function() {
       )
       .fail(function(data) {
           console.log('loadTagHammingMatrix: ERROR loading "'+path+'"')  
-          //statusUpdate('videolistLoad',false,'')
+          //statusWidget.statusUpdate('videolistLoad',false,'')
         }
       )
 

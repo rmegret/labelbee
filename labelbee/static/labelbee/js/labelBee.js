@@ -45,6 +45,8 @@ function init() {
         http_script_name = '/'
      }
 
+    statusWidget = new StatusWidget();
+
     // import * from "VideoList.js";
     initVideoList()
         
@@ -102,7 +104,7 @@ function init() {
       connectWith: ".sortable",
       handle: "> label, > .block-header"
     });
-    $( ".sortable" ).disableSelection();
+    //$( ".sortable" ).disableSelection();
     
     
     // import * from "ZoomView.js";
@@ -166,6 +168,41 @@ function printMessage(html, color) {
     
     if (html !== "")
         console.log("MESSAGE: %c"+html, "color:"+color)
+}
+
+function StatusWidget() {
+    this.statusInfo = {}
+    
+    this.statusRequest = function(type, info) {
+        var time=new Date();
+        function pad(n,k) {
+            var s = String(n);
+            while (s.length < (k || 2)) {s = "0" + s;}
+            return s;
+          }
+        var _hours = time.getHours()
+        var _minutes = time.getMinutes()
+        var _seconds = time.getSeconds()
+        var HMS = pad(_hours) + ':' + pad(_minutes) + ':' + pad(_seconds)
+        this.statusInfo[type]={request:time,info:info}
+    
+        //$(".status."+type).html(type+": Requested ["+HMS+"]")
+        $(".status."+type).html("<td>"+type+"</td><td class='tdspacing'>"+htmlCheckmark('requested')+"</td><td class='col_elapsed'>[@ "+HMS+"]</td>")
+    }
+    this.statusUpdate = function(type, success, info) {
+        var time=new Date();
+        this.statusInfo[type].done=time
+        this.statusInfo[type].info2=info
+        var elapsed = (time - this.statusInfo[type].request)/1000;
+    
+        if (success) {
+            //$(".status."+type).html(type+": Success [elapsed "+elapsed+"s]")
+            $(".status."+type).html("<td>"+type+"</td><td class='tdspacing'>"+htmlCheckmark(true)+"</td><td class='col_elapsed' >[took  "+elapsed+"s]</td>")
+        } else {
+            //$(".status."+type).html(type+": FAILED [elapsed "+elapsed+"s]")
+            $(".status."+type).html("<td>"+type+"</td><td class='tdspacing'>"+htmlCheckmark(true)+"</td><td class='col_elapsed'></td>")
+        }
+    }
 }
 
 function toggleFullScreen() {

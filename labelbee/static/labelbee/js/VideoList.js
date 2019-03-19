@@ -36,7 +36,12 @@ function initVideoList() {
         'starttime': '2016-07-15T09:59:59.360',
         'duration': 1/20, // Duration in seconds
         'nframes': 1,
-        'frameoffset':0
+        'frameoffset':0,
+        'preview':{
+            'previewURL': undefined,
+            'previewInfoURL': undefined,
+            'previewTimescale': 1.0
+        }
     };
     updateVideoInfoForm()
     
@@ -157,12 +162,14 @@ function onSelectboxVideoChanged() {
 function prefillVideoFields() {
     if (videoListTable==null) return;
     if (videoListTable[videoListCurrentID]==null) return;
+    
     let tagfile = videoListTable[videoListCurrentID].tags
     if (tagfile != null) {
-            videoTagURL = '/data/'+tagfile
+        tagfile = '/data/'+tagfile
     } else {
-            videoTagURL = undefined
+        tagfile = undefined
     }
+    videoinfo.tags={'videoTagURL': tagfile}
 }
 function videonameToURL(videoname) {
     return url_for('/data/'+videoname)
