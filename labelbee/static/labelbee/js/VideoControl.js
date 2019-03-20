@@ -388,9 +388,9 @@ VideoControl.prototype.refresh = function() {
         overlay.canvas1.clear();
         createRectsFromTracks(this.previewFrame)
         selectBeeByID(defaultSelectedBee);
-        refreshOverlay()
+        overlay.refreshOverlay()
     }
-    refreshOverlay()
+    overlay.refreshOverlay()
     
     zoomOverlay.refreshZoom()
     

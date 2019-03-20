@@ -417,7 +417,8 @@ function onAxesDblClick(event) {
     if (logging.axesEvents)
         console.log("onAxesDblClick: zooming chrono around frame=",frame,"...");
  
-    axes.xdomainFocus([frame-trackWindowBackward*1.05,frame+trackWindowForward*1.05])
+    axes.xdomainFocus([frame-overlay.trackWindow.backward*1.05,
+                       frame+overlay.trackWindow.forward*1.05])
 }
 function onAxesMoved(event) {
     // User clicked in chronogram axes
@@ -933,8 +934,8 @@ function updateTrackWindowSpan() {
     trackWindowSpan.selectAll('#trackWindowSpanClipPath > rect')
              .attr("width", axes.width()).attr("y", -15)
     let f = getCurrentFrame()
-    let fmin = f-trackWindowBackward
-    let fmax = f+trackWindowForward
+    let fmin = f-overlay.trackWindow.backward
+    let fmax = f+overlay.trackWindow.forward
     trackWindowSpan.selectAll('.interval')
              .attr("x", axes.xScale(fmin)).attr("y", -13)
              .attr("width", axes.xScale(fmax)-axes.xScale(fmin))
@@ -942,8 +943,8 @@ function updateTrackWindowSpan() {
 }
 function getWindow() {
     let f = getCurrentFrame()
-    let fmin = f-trackWindowBackward
-    let fmax = f+trackWindowForward
+    let fmin = f-overlay.trackWindow.backward
+    let fmax = f+overlay.trackWindow.forward
     
     if (fmin<0) fmin=0;
     if (fmax>videoControl.maxframe()) fmax=videoControl.maxframe();

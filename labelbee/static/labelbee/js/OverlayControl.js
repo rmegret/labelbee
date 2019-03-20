@@ -28,10 +28,8 @@ function OverlayControl(canvasTagId) {
         backward: 200
     }
     /* Obs and Tags plotting params */
-    trackWindow = 200 // 10s
-    trackWindowBackward = trackWindow;
-    trackWindowForward = trackWindow;
-    $('#trackWindow').val(trackWindow)
+    $('#trackWindow').val(overlay.trackWindow.range)
+    $('#selectboxTrackDir').val(overlay.trackWindow.direction)
 
     flag_useROI=true
     ROI = {left:175,top:30,right:2305,bottom:1240} // For Gurabo videos 5MP
@@ -61,11 +59,6 @@ function OverlayControl(canvasTagId) {
     $('#showTagsOrientation').prop('checked',showTagsOrientation)
     $('#showTagsChrono').prop('checked',showTagsChrono)
     $('#showObsChrono').prop('checked',showObsChrono)
-    
-    trackDir="Bidirectional"
-    $('#selectboxTrackDir').val(trackDir)
-    
-    lockFocusTrackWindow=false
 
     /* Overlay and selection */
 
@@ -99,7 +92,7 @@ function OverlayControl(canvasTagId) {
       helper: "ui-resizable-helper",
       aspectRatio: 1   // Need to put a value even to update it later
     });
-    $("#canvasresize").on( "resizestop", refreshCanvasSize );
+    $("#canvasresize").on( "resizestop", overlay.refreshCanvasSize.bind(overlay) );
     //$("#canvasresize").on( "resize", refreshCanvasSize ); // Continuous (not working)
     
     transformFactor = 1.0;
@@ -122,15 +115,16 @@ OverlayControl.prototype.setActiveObject = function(rect) {
 /* Canvas size utils */
 
 // extend OverlayControl by copying new method in its prototype
-Object.assign(OverlayControl.prototype, {
+//Object.assign(OverlayControl.prototype, {
 
-hardRefresh: function() {
-// Refresh the overlay
+OverlayControl.prototype.hardRefresh = function() {
+    // Refresh the overlay
     //this.canvasSetVideoSize()
-},
+}
 
-canvasSetVideoSize: function(w,h) {
+OverlayControl.prototype.canvasSetVideoSize = function(w,h) {
     // Resize canvas to have same aspect-ratio as video
+    let overlay = this
 
     overlay.videoSize.w=w;
     overlay.videoSize.h=h;
@@ -157,13 +151,13 @@ canvasSetVideoSize: function(w,h) {
       aspectRatio: w / h
     });
 
-    refreshCanvasSize()
-    canvasTransformReset()
+    overlay.refreshCanvasSize()
+    overlay.canvasTransformReset()
 }
 
-}
-) // assign(prototype, ...)
-function refreshCanvasSize(event, ui) {
+OverlayControl.prototype.refreshCanvasSize = function(event, ui) {
+    let overlay = this
+
     // Refresh based on new video size or new canvas size
     if (logging.canvasEvents) {
         console.log('refreshCanvasSize: event=',event)
@@ -215,7 +209,7 @@ function refreshCanvasSize(event, ui) {
     canvasTransformReference.w = overlay.canvas.width
     canvasTransformReference.h = overlay.canvas.height
     
-    canvasTransformScale(scaling, center, center2)
+    overlay.canvasTransformScale(scaling, center, center2)
     
     // Don't use ctx.transform, as it also reduces the drawings overlays
     // Instead, we scale everything manually
@@ -226,7 +220,9 @@ function refreshCanvasSize(event, ui) {
 }
 
 /* Canvas Transform */
-function canvasTransformInternalReset() {
+OverlayControl.prototype.canvasTransformInternalReset = function() {
+    let overlay = this
+    
     let video = $('#video')[0]
     transformFactor = overlay.videoSize.w / overlay.canvas.width;
     
@@ -241,20 +237,26 @@ function canvasTransformInternalReset() {
     canvasTransformReference.w = overlay.canvas.width
     canvasTransformReference.h = overlay.canvas.height
 }
-function canvasTransformReset() {
-    canvasTransformInternalReset()
-    canvasTransform_Fix()    
+OverlayControl.prototype.canvasTransformReset = function() {
+    let overlay = this
+    
+    overlay.canvasTransformInternalReset()
+    overlay.canvasTransform_Fix()    
     videoControl.refresh()
 }
-function canvasTransformSet(array) {
+OverlayControl.prototype.canvasTransformSet = function(array) {
+    let overlay = this
+    
     for (let i=0; i<6; i++) {
         canvasTransform[i]=array[i]
     }
-    canvasTransform_Fix()
+    overlay.canvasTransform_Fix()
     videoControl.refresh()
 }
-function canvasTransform_Fix() {
-    let video = $('#video')[0]
+OverlayControl.prototype.canvasTransform_Fix = function() {
+    let overlay = this
+    
+    //let video = $('#video')[0]
     let w1 = overlay.canvas.width
     let h1 = overlay.canvas.height
     let w2 = overlay.videoSize.w
@@ -279,10 +281,10 @@ function canvasTransform_Fix() {
     for (let i=0; i<6; i++) hasNan |= isNaN(canvasTransform[i]);
     if (hasNan || canvasTransform[0]<=0 || canvasTransform[3]<=0) {
         console.log('ERROR in canvasTransform_Fix: degenerate canvasTransform. Reinit')
-        canvasTransformInternalReset()
+        overlay.canvasTransformInternalReset()
     }
 }
-function canvasTransformScale(scaling, center, center2) {
+OverlayControl.prototype.canvasTransformScale = function(scaling, center, center2) {
     // center is scaling center in current canvas coordinates
     // center2 (optional) is scaling center in new canvas coordinates
     /*
@@ -293,6 +295,7 @@ function canvasTransformScale(scaling, center, center2) {
     
     //center[1]+=2
     //center[0]+=2
+    let overlay = this
     
     if (typeof center2 === 'undefined')
         center2 = center;
@@ -303,37 +306,47 @@ function canvasTransformScale(scaling, center, center2) {
     canvasTransform[0]=canvasTransform[0]*scaling
     canvasTransform[3]=canvasTransform[3]*scaling
     
-    canvasTransform_Fix()
+    overlay.canvasTransform_Fix()
     
     videoControl.refresh()
 }
-function canvasTransformPan(dx, dy) {
+OverlayControl.prototype.canvasTransformPan = function(dx, dy) {
+    let overlay = this
+    
     canvasTransform[4] -= dx * canvasTransform[0]
     canvasTransform[5] -= dy * canvasTransform[3]
     
-    canvasTransform_Fix()
+    overlay.canvasTransform_Fix()
     
     videoControl.refresh()
 }
 
-function obsToCanvasRect(obs) {
+OverlayControl.prototype.obsToCanvasRect = function(obs) {
+    let overlay = this
+    
     let R = {left:obs.x, top:obs.y, width:obs.width, height: obs.height}
-    let R2 = videoToCanvasRect(R)
+    let R2 = overlay.videoToCanvasRect(R)
     return R2
 }
-function canvasToVideoPoint(pt) {
+OverlayControl.prototype.canvasToVideoPoint = function(pt) {
+    let overlay = this
+    
     return {
       x: canvasTransform[0]*pt.x+canvasTransform[4],
       y: canvasTransform[3]*pt.y+canvasTransform[5]
       }
 }
-function videoToCanvasPoint(pt) {
+OverlayControl.prototype.videoToCanvasPoint = function(pt) {
+    let overlay = this
+    
     return {
       x: (pt.x-canvasTransform[4])/canvasTransform[0],
       y: (pt.y-canvasTransform[5])/canvasTransform[3]
       }
 }
-function canvasToVideoRect(rect) {
+OverlayControl.prototype.canvasToVideoRect = function(rect) {
+    let overlay = this
+    
     return {
       left: canvasTransform[0]*rect.left+canvasTransform[4],
       top: canvasTransform[3]*rect.top+canvasTransform[5],
@@ -341,7 +354,9 @@ function canvasToVideoRect(rect) {
       height: canvasTransform[3]*rect.height,      
       }
 }
-function videoToCanvasRect(rect) {
+OverlayControl.prototype.videoToCanvasRect = function(rect) {
+    let overlay = this
+    
     return {
       left: (rect.left-canvasTransform[4])/canvasTransform[0],
       top: (rect.top-canvasTransform[5])/canvasTransform[3],
@@ -352,7 +367,9 @@ function videoToCanvasRect(rect) {
 
 // ## Fabric.js rects vs observations
 
-function refreshOverlay() {
+OverlayControl.prototype.refreshOverlay = function() {
+    let overlay = this
+    
     if (overlay.canvas1) {
         refreshRectFromObs()
         overlay.canvas1.renderAll(); // Clear and render all rectangles
@@ -389,7 +406,7 @@ function updateRectFromObsGeometry(rect) {
         return
     }
 
-    let canvasRect = obsToCanvasRect(obs)
+    let canvasRect = overlay.obsToCanvasRect(obs)
     
     let cx = (canvasRect.left + canvasRect.width / 2);
     let cy = (canvasRect.top + canvasRect.height / 2);
@@ -552,7 +569,7 @@ fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
         
         for (var part of parts) {
         
-            var canvasPos = videoToCanvasPoint(part.posFrame)
+            var canvasPos = overlay.videoToCanvasPoint(part.posFrame)
             
             var x = canvasPos.x
             var y = canvasPos.y
@@ -590,7 +607,7 @@ function addRect(id, startX, startY, width, height, status, inputObs, angle) {
         
         let canvasRect = {left: startX, top: startY, 
                           width: width, height: height}
-        let videoRect = canvasToVideoRect(canvasRect)
+        let videoRect = overlay.canvasToVideoRect(canvasRect)
         obs.x = videoRect.left
         obs.y = videoRect.top
         obs.width = videoRect.width
@@ -631,7 +648,7 @@ function updateRectObsGeometry(activeObject) {
         console.log('updateRectObsGeometry: activeObject=',activeObject)
 
     let geom = rotatedRectGeometry(activeObject);
-    let videoRect = canvasToVideoRect(geom.unrotated)
+    let videoRect = overlay.canvasToVideoRect(geom.unrotated)
     
     // Update Observation attached to rectangle from current Rect size
     let obs = activeObject.obs
@@ -857,7 +874,7 @@ function plotTracks(ctx) {
         let obs = getObsHandle(fmin, id, false)
         let x=undefined, y=undefined, z=0;
         if (!!obs) {
-            let rect = obsToCanvasRect(obs)
+            let rect = overlay.obsToCanvasRect(obs)
             //let geom = rotatedRectGeometry(rect)
             //x = geom.center.x
             //y = geom.center.y
@@ -869,7 +886,7 @@ function plotTracks(ctx) {
         for (let f=fmin+1; f<=fmax; f++) {
             let obs = getObsHandle(f, id, false)
             if (!obs) { z=0; continue;}
-            let rect = obsToCanvasRect(obs)            
+            let rect = overlay.obsToCanvasRect(obs)            
             let x2 = rect.left+rect.width/2
             let y2 = rect.top+rect.height/2
 //             let x2 = geom.center.x
@@ -901,7 +918,7 @@ function plotTracks(ctx) {
         
             let obs = getObsHandle(f, id, false)
             if (!obs) continue;
-            let rect = obsToCanvasRect(obs)
+            let rect = overlay.obsToCanvasRect(obs)
             
             //let geom = rotatedRectGeometry(rect)
             x = rect.left+rect.width/2
@@ -962,7 +979,7 @@ function tagCorners(tag) {
     if (typeof tag.p === 'undefined') return undefined
     let ppt=[]
     for (let i of [0,1,2,3]) {
-        ppt[i] = videoToCanvasPoint({"x":tag.p[i][0], "y":tag.p[i][1]})
+        ppt[i] = overlay.videoToCanvasPoint({"x":tag.p[i][0], "y":tag.p[i][1]})
     }
     return ppt
 }
@@ -1019,7 +1036,7 @@ function plotTag(ctx, tag, color, flags) {
     let radius = flags.radius
     if (typeof radius === 'undefined') { radius = 5; }
 
-    let pt = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+    let pt = overlay.videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
     
     if (isCurrentSelection(tag.id)) {
         ctx.save()
@@ -1075,7 +1092,7 @@ function plotTag(ctx, tag, color, flags) {
     }
 }
 function plotTagOrientation(ctx, tag, color) {
-      let pt = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+      let pt = overlay.videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
       let dir = tagUp(tag)
       if (typeof dir !== 'undefined') {
         ctx.save()
@@ -1183,7 +1200,7 @@ function plotTagsTracks(ctx) {
             let color=setColor(f)          
             
             //console.log(tag)
-            let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+            let p1 = overlay.videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
             p1.frame = f
             
             if (p0 != null) {
@@ -1267,7 +1284,7 @@ function plotTagsTracks(ctx) {
                 let color2=setColor2(f)          
             
                 //console.log(tag)
-                let p1 = videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
+                let p1 = overlay.videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
                 p1.frame = f
             
                 if (typeof p0[tag.id] !== 'undefined') {
@@ -1405,7 +1422,8 @@ function updateFocusTrackWindowButton() {
 function focusTrackWindow() {
     // Actually a Chronogram method
     let f = getCurrentFrame()
-    axes.xdomainFocus([f-trackWindowBackward, f+trackWindowForward])
+    axes.xdomainFocus([f-overlay.trackWindow.backward, 
+                       f+overlay.trackWindow.forward])
 }
 function setFocusTrackWindow(flag) {
     lockFocusTrackWindow = flag
@@ -1466,7 +1484,7 @@ function plotROI(ctx) {
     let R = {left:ROI.left, top:ROI.top, 
              width:ROI.right-ROI.left, 
              height: ROI.bottom-ROI.top}
-    let R2 = videoToCanvasRect(R)
+    let R2 = overlay.videoToCanvasRect(R)
 
     ctx.save()
     ctx.beginPath();
@@ -1598,7 +1616,7 @@ function plotExcludeRects(ctx) {
       let R = {left:r.cx-r.w/2, top:r.cy-r.h/2, 
                width:r.w, 
                height:r.h}
-      let R2 = videoToCanvasRect(R)
+      let R2 = overlay.videoToCanvasRect(R)
 
       //console.log("r=",r, " R=",R, " R2=",R2)
 
@@ -1623,7 +1641,7 @@ function plotExcludeRects(ctx) {
       let R = {left:r.cx-r.w/2, top:r.cy-r.h/2, 
                width:r.w, 
                height:r.h}
-      let R2 = videoToCanvasRect(R)
+      let R2 = overlay.videoToCanvasRect(R)
       
       ctx.save()
       ctx.beginPath();
@@ -1914,7 +1932,7 @@ var default_height = 40;
 
 function newRectForTag(tag) {
     let angle = tagAngle(tag)
-    let pt = videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
+    let pt = overlay.videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
     if (typeof angle !== 'undefined') {
         console.log("newObsForTag: found angle=",angle)
         rect = addRect(tag.id, 
@@ -1961,7 +1979,7 @@ function newRectForCurrentTag() {
 function onMouseDown_predict(option) {
     var startX = option.e.offsetX, startY = option.e.offsetY;
     let canvasXY = {x: startX, y: startY}
-    let videoXY = canvasToVideoPoint(canvasXY)
+    let videoXY = overlay.canvasToVideoPoint(canvasXY)
     var rect;
     
     if (logging.mouseEvents) {
@@ -1984,7 +2002,7 @@ function onMouseDown_predict(option) {
         if (logging.mouseEvents)
             console.log("onMouseDown: predictionTag=", predictionTag)
         let tag = predictionTag.tag;
-        let pt = videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
+        let pt = overlay.videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
       
         if (prediction.obs && prediction.id==tag.id) {
             // If found a rect with same id as tag on adjacent frame
@@ -1995,7 +2013,7 @@ function onMouseDown_predict(option) {
             
             // Copy rectangle from source of prediction
             // addRect takes canvas coordinates units
-            let r = obsToCanvasRect(obs)
+            let r = overlay.obsToCanvasRect(obs)
             rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new");
             rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
             rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
@@ -2016,7 +2034,7 @@ function onMouseDown_predict(option) {
         
         // Copy rectangle from source of prediction
         // addRect takes canvas coordinates units
-        let r = obsToCanvasRect(obs)
+        let r = overlay.obsToCanvasRect(obs)
         let width = r.width,
             height = r.height
         rect = addRect(prediction.id, startX - width / 2, startY - height / 2, width, height, "new");
@@ -2057,7 +2075,7 @@ function onMouseDown_interactiveRect(option) {
 
     let canvasXY = {x: startX, y: startX}
     let clientXY = {x: option.e.clientX, y: option.e.clientY}
-    let videoXY = canvasToVideoPoint(canvasXY)
+    let videoXY = overlay.canvasToVideoPoint(canvasXY)
     let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
     $("#I").val(prediction.id)
 
@@ -2158,7 +2176,7 @@ function onMouseDown_selectMultiframe(option) {
     console.log('onMouseDown_selectMultiframe: option=',option)
     
     let ptCanvas = {x: option.e.offsetX, y: option.e.offsetY}
-    let pt = canvasToVideoPoint(ptCanvas)
+    let pt = overlay.canvasToVideoPoint(ptCanvas)
 
     var tmp
 
@@ -2177,7 +2195,9 @@ function onMouseDown_selectMultiframe(option) {
     } else {
         let done = false
         if (showObsTracks) {
-            tmp = predictIdFromObsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
+            tmp = predictIdFromObsMultiframe(
+                        [getCurrentFrame()-overlay.trackWindow.backward, 
+                         getCurrentFrame()+overlay.trackWindow.forward], pt)
     
             if (tmp.id != null) {
               console.log('onMouseDown_selectMultiframe: found Obs id=',tmp.id, 'frame=', tmp.frame)
@@ -2186,7 +2206,9 @@ function onMouseDown_selectMultiframe(option) {
             }
         }
         if (!done && (showTagsTracks || showSelectedTagsTracks)) {
-            tmp = predictIdFromTagsMultiframe([getCurrentFrame()-trackWindowBackward, getCurrentFrame()+trackWindowForward], pt)
+            tmp = predictIdFromTagsMultiframe(
+                        [getCurrentFrame()-overlay.trackWindow.backward, 
+                         getCurrentFrame()+overlay.trackWindow.forward], pt)
     
             if (tmp.id != null) {
               console.log('onMouseDown_selectMultiframe: found Tag id=',tmp.id, 'frame=', tmp.frame)
@@ -2224,7 +2246,7 @@ function onMouseDown_panning(option) {
         
         panning.canvasTransform[4] = panning.canvasTransform0[4]-dx*panning.canvasTransform0[0]
         panning.canvasTransform[5] = panning.canvasTransform0[5]-dy*panning.canvasTransform0[3]
-        canvasTransformSet(panning.canvasTransform)
+        overlay.canvasTransformSet(panning.canvasTransform)
         
         //canvasTransform_Fix()
 
@@ -2306,7 +2328,7 @@ function onMouseWheel_Zooming(option) {
 
     let center = [cx, cy]
     
-    canvasTransformScale(scaling, center)
+    overlay.canvasTransformScale(scaling, center)
     
 //     extraScale *= scaling
 //     if (extraScale<1) extraScale = 1
@@ -2325,7 +2347,7 @@ function onMouseWheel_Panning(option) {
     if (logging.mouseEvents)
         console.log('onMouseWheel_Panning: deltaX=', deltaX, ' deltaY=',deltaY)
     
-    canvasTransformPan(deltaX, deltaY)
+    overlay.canvasTransformPan(deltaX, deltaY)
     
     videoControl.refresh()
     option.preventDefault();
@@ -2426,7 +2448,7 @@ function onObjectMoving(option) {
     updateRectObsGeometry(activeObject)
 
     //canvas1.renderAll(); // Refresh rectangles drawing
-    refreshOverlay()
+    overlay.refreshOverlay()
     
     updateForm(activeObject);
     //automatic_sub();
@@ -2445,7 +2467,7 @@ function onObjectModified(option) {
     updateRectObsGeometry(activeObject)
 
     //canvas1.renderAll(); // Refresh rectangles drawing
-    refreshOverlay()
+    overlay.refreshOverlay()
     updateForm(activeObject);
     //showZoom(activeObject)
     automatic_sub();

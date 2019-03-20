@@ -93,7 +93,7 @@ function updateForm(activeObject) {
         
         w = activeObject.width;
         h = activeObject.height;
-        let vr = canvasToVideoRect(activeObject)
+        let vr = overlay.canvasToVideoRect(activeObject)
         
         $('#X').html("X: " + vr.left.toFixed(0))
         $('#Y').html("Y: " + vr.top.toFixed(0))
