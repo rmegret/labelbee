@@ -97,17 +97,93 @@ function hardRefreshLabelTogglePanel() {
 function LabelListDialog() {
     this.div = $("#dialog-form-mainLabelList")
 
+    function toJSGrid(data) {
+        let griddata = JSON.parse(JSON.stringify(data))
+        
+        return griddata
+    }
+    function fromJSGrid(griddata) {
+        let data = JSON.parse(JSON.stringify(griddata))
+        
+        return data
+    }
+    this.getItems = function() {
+        // Static version of Rows Reordering Scenario
+        // http://js-grid.com/demos/
+        
+        var grid = this.div.find("#mainLabelList-jsGrid")
+        var $gridData = grid.find(".jsgrid-grid-body tbody");
+    
+        var itemIndexRegExp = /\s*item-(\d+)\s*/;
+        var indexes = $.map($gridData.sortable("toArray", { attribute: "class" }), function(classes) {
+            return itemIndexRegExp.exec(classes)[1];
+        });
+        //alert("Reordered indexes: " + indexes.join(", "));
+
+        // arrays of items
+        var items = $.map($gridData.find("tr"), function(row) {
+            return $(row).data("JSGridItem");
+        });
+        
+        return fromJSGrid(items);
+    }
+
     this.openDialog = function() {
         let div = this.div
     
         console.log('LabelListDialog.openDialog')
     
-        var jsontext = JSON.stringify(labelButtonsArray ,null, 4)
+        //var jsontext = JSON.stringify(labelButtonsArray ,null, 4)
   
-        div.find(".jsonTextArea").val(jsontext);
+        //div.find(".jsonTextArea").val(jsontext);
+        
         div.dialog("open");
+        this.autoResize()
+        
+        let grid = div.find("#mainLabelList-jsGrid")
+        
+        grid.jsGrid({
+            width: "100%",
+            height: "auto",
+ 
+            inserting: true,
+            editing: true,
+            sorting: true,
+            paging: false,
+ 
+            data: toJSGrid(labelButtonsArray),
+ 
+            fields: [
+                { name: "label", type: "text", width: 'auto', validate: "required" },
+                { name: "description", type: "text", width: 'auto' },
+                { name: "iconHtml", type: "text", width: 'auto' },
+                { type: "control" , width: 'auto'}
+            ],
+            
+            rowClass: function(item, itemIndex) {
+                return "item-" + itemIndex;
+            },
+            onRefreshed: function() {
+                var $gridData = grid.find(".jsgrid-grid-body tbody");
+ 
+                $gridData.sortable({
+                    update: function(e, ui) {
+                        // Dummy function to enable sorting
+                        // Items are retrieved only when pressing Ok
+                    }
+                })
+            }
+        });
+    }
+    this.autoResize = function() {
+        this.div.dialog("option", {
+                      "position": { my: "center center", at: "center center", of: $(window)},
+                      "width": $(window).width()*0.95,
+                      "height": $(window).height()*0.95
+                      });
     }
     this.initDialog = function() {
+        let that = this;
         let div = this.div
         
         div.dialog({
@@ -115,11 +191,12 @@ function LabelListDialog() {
             modal: true,
             buttons: {
                 "Ok": function() {
-                    var jsontext = div.find(".jsonTextArea").val();
+                    //var jsontext = div.find(".jsonTextArea").val();
 
-                    console.log('labelList dialog. jsontext = ',jsontext)
+                    //console.log('labelList dialog. jsontext = ',jsontext)
 
-                    labelButtonsArray = JSON.parse( jsontext )
+                    // Clone by converting to/from JSON
+                    labelButtonsArray = that.getItems()
                 
                     console.log('labelButtonsArray = ',labelButtonsArray)
                 
@@ -139,6 +216,10 @@ function LabelListDialog() {
             }
         });
 
+        $(window).resize(function() {
+            that.autoResize()
+        });
+        this.autoResize()
     }
     
     this.initDialog()

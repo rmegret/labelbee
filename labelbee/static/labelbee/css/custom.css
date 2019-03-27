@@ -793,4 +793,10 @@ input:disabled {
   border: red 3px solid;
 }
  */
-
+ 
+ .jsgrid-cell {
+    word-break: break-all;
+ }
+.ui-front {
+    z-index: 2000;
+}
