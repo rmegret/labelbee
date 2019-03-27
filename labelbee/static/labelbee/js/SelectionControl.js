@@ -21,7 +21,29 @@ function initSelectionControl() {
     $( selectionControl ).on('selection:created', updateFormButtons)
     $( selectionControl ).on('selection:cleared', updateFormButtons)
 
-    //$('.labelcheckbox').change(onLabelClicked);
+    function aux(label, description, iconHtml) {
+        return {
+                    label: label,
+                    description: description,
+                    iconHtml: iconHtml
+                }
+    }
+
+    labelButtonsArray = [
+            aux('fanning', 'Bee is moving the wings to ventilate'),
+            aux('non-fanning', 'Bee is not moving the wings'),
+            aux('stretched-wings', 'Bee has stretched wings, but is not moving them'),
+            aux('pollen', 'Bee is bringing pollen','<span class="glyphicon glyphicon-pollen small"></span>'),
+            aux('entering', 'Bee is entering the colony from outside','<span class="glyphicon glyphicon-arrow-up small" style="color:magenta"></span>'),
+            aux('leaving', 'Bee is leaving the colony to outside','<span class="glyphicon glyphicon-arrow-down small" style="color:green"></span>'),
+            aux('walking', 'Bee is walking in the ramp','<span class="glyphicon glyphicon-repeat small"></span>'),
+            aux('expulsed', 'Bee is being expulsed from the colony or prevented to enter the colony'),
+            aux('expulsing', 'Bee is rejecting/expulsing another bee or intruder'),
+            aux('falsealarm', 'A tag was detected where there is no tag', '<span class="glyphicon glyphicon-remove small red"></span>'),
+            aux('wrongid', 'A tag was detected in the correct place but it has a wrong ID', '<span class="glyphicon glyphicon-remove small blue"></span>')
+    ]
+    hardRefreshLabelTogglePanel()
+
     $('.labeltoggle').change(onLabelToggled);
     
     $('#labels').change(onLabelsChanged);
@@ -31,6 +53,8 @@ function initSelectionControl() {
         onActivityChanged(event);
       }
     });
+    
+    labelListDialog = new LabelListDialog()
     
     // dummy object to define events (inspired by Fabric.js)
     // - selection:created
@@ -42,6 +66,82 @@ function initSelectionControl() {
 //     $( selectionControl ).on('selection:cleared', updateChronoSelection)
 //     $( selectionControl ).on('tagselection:created', updateChronoSelection)
 //     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
+}
+
+function hardRefreshLabelTogglePanel() {
+    let panel = $('#labeltoggle-panel')
+    
+    panel.html('');
+    for (i in labelButtonsArray) {
+        let item = labelButtonsArray[i]
+        let content = item.label
+        if (typeof item.iconHtml == 'string') {
+            content += ' '+item.iconHtml
+        }
+    
+        let button = $('<button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle"/>')
+                          .html(content)
+                          .attr('thelabel',item.label)
+                          .attr('title',item.description)
+                        
+        panel.append( button )
+    } 
+
+    panel.append( $(document.createTextNode(' - ')) )    
+    panel.append( $('<button onclick="labelListDialog.openDialog()" type="button" class="btn btn-info btn-xs" title="Edit list of labels">...</button>') )
+
+}
+
+// Advanced Dialog
+
+function LabelListDialog() {
+    this.div = $("#dialog-form-mainLabelList")
+
+    this.openDialog = function() {
+        let div = this.div
+    
+        console.log('LabelListDialog.openDialog')
+    
+        var jsontext = JSON.stringify(labelButtonsArray ,null, 4)
+  
+        div.find(".jsonTextArea").val(jsontext);
+        div.dialog("open");
+    }
+    this.initDialog = function() {
+        let div = this.div
+        
+        div.dialog({
+            autoOpen: false,
+            modal: true,
+            buttons: {
+                "Ok": function() {
+                    var jsontext = div.find(".jsonTextArea").val();
+
+                    console.log('labelList dialog. jsontext = ',jsontext)
+
+                    labelButtonsArray = JSON.parse( jsontext )
+                
+                    console.log('labelButtonsArray = ',labelButtonsArray)
+                
+                    $(this).dialog("close");
+                
+                    hardRefreshLabelTogglePanel();
+                },
+                "Cancel": function() {
+                    $(this).dialog("close");
+                }
+            },
+            open: function(){
+                $("body").css("overflow", "hidden");
+            },
+            close: function(){
+                $("body").css("overflow", "auto");
+            }
+        });
+
+    }
+    
+    this.initDialog()
 }
 
 function updateSelectID() {

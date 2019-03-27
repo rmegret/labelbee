@@ -81,7 +81,7 @@
 
   <div class="container main">
   
-  <!-- Modal  -->
+  <!-- Modal mainAlertDialog  -->
     <div class="modal fade" id="mainAlertDialog" role="dialog">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -99,14 +99,16 @@
       </div>
     </div>
   
+    <!-- MAIN LAYOUT-->
+  
     <table class="main-table">
       <tr>
         <td>
           <div id="left-side">
 
+          <!-- PLAY CONTROL -->
+
           <p>
-            <!--Change to div-->
-            
             <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play icon-flipped"></span></button>
             <input type="text" size="6" value="1" id="playRate" onchange="videoControl.playRateInputChanged()""></input>
             <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-play"></span><span class="glyphicon glyphicon-pause"></span></button>
@@ -120,6 +122,9 @@
             <button value="Next minute" onclick="videoControl.forward(200)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut3"><span class="glyphicon glyphicon-fast-forward"></span><br class="negmargin"><span>10s</span></button>
 
           </p>
+          
+          <!-- BEE INFO CONTROL -->
+          
           <p>
           <div id="beeInfo" class="">
             <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button" class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
@@ -131,30 +136,39 @@
             <div id="alerttext"></div>
             
             <br>
+            
+            <!-- LABEL TOGGLES -->
    
-            <div style="display:inline-block">
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle fanning" thelabel="fanning" title="Toogle label">Fanning</button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle pollen" thelabel="pollen" title="Toogle label">Pollen <span class="glyphicon glyphicon-pollen small"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle entering" thelabel="entering" title="Toogle label">Entering <span class="glyphicon glyphicon-arrow-up small" style="color:magenta"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle leaving" thelabel="leaving" title="Toogle label">Leaving <span class="glyphicon glyphicon-arrow-down small" style="color:green"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle walking" thelabel="walking" title="Toogle label">Walking <span class="glyphicon glyphicon-repeat small"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsed" thelabel="expulsed" title="Toogle label Expulsed: when a bee is rejected/expelled from the colony">Expulsed</button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsing" thelabel="expulsing" title="Toogle label Expulsion: when a bee is rejecting/expelling another individual from the colony">Expulsing</button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle falsealarm" thelabel="falsealarm" title="Toogle FalseAlarm label: when a tag detection is not a tag">FalseAlarm <span class="glyphicon glyphicon-remove small red"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle wrongid" thelabel="wrongid" title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">WrongID <span class="glyphicon glyphicon-remove small blue"></span></button>
+            <div style="display:inline-block" id="labeltoggle-panel">
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle fanning" thelabel="fanning" title="Toogle label">fanning</button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle pollen" thelabel="pollen" title="Toogle label">pollen <span class="glyphicon glyphicon-pollen small"></span></button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle entering" thelabel="entering" title="Toogle label">entering <span class="glyphicon glyphicon-arrow-up small" style="color:magenta"></span></button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle leaving" thelabel="leaving" title="Toogle label">leaving <span class="glyphicon glyphicon-arrow-down small" style="color:green"></span></button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle walking" thelabel="walking" title="Toogle label">walking <span class="glyphicon glyphicon-repeat small"></span></button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsed" thelabel="expulsed" title="Toogle label Expulsed: when a bee is rejected/expelled from the colony">expulsed</button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsing" thelabel="expulsing" title="Toogle label Expulsion: when a bee is rejecting/expelling another individual from the colony">expulsing</button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle falsealarm" thelabel="falsealarm" title="Toogle FalseAlarm label: when a tag detection is not a tag">falsealarm <span class="glyphicon glyphicon-remove small red"></span></button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle wrongid" thelabel="wrongid" title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">wrongid <span class="glyphicon glyphicon-remove small blue"></span></button>
             </div>
             
             <br>
             <div class="textbox-inline">
               <label>Labels: </label><input type="textbox" value="" class="resizedTextbox" id="labels">
               <label>Notes: </label><input type="textbox" value="" class="resizedTextbox" id="notes">
-<!--                    <label>Note: </label><textarea rows="1" cols="50" id="notes"></textarea>  -->
             </div>
-<!--             </div> -->
-<!--             <br> -->
 
             <p id="alerttext"></p>
           </div>
+             
+            <div id="dialog-form-mainLabelList">
+                  <form style="width:100%; height:100%; box-sizing:border-box;">
+                  <div style="width:100%; height:100%; box-sizing:border-box;">
+                      <label for="labelList-json">Label List</label>
+                      <textarea name="labelList-json" id="mainLabelList-json" class="text ui-widget-content ui-corner-all jsonTextArea" style="width:100%; height:90%; box-sizing:border-box;">test</textarea>
+                  </div>
+                  </form>
+            </div>
+          
           </p>
           
           <!-- # VIDEO VIEW -->
@@ -543,7 +557,6 @@
                     <input type="text" size="15" value="" class="resizedTextbox" title="Label for next point/Relabel current point" id="partLabel">
                     <button onclick="zoomOverlay.onButtonClickAddRemovePartLabel(event,'+')" type="button" class="btn btn-success btn-xs" title="Add label to list">+</button>
                     <button onclick="zoomOverlay.onButtonClickAddRemovePartLabel(event,'-')" type="button" class="btn btn-warning btn-xs" title="Remove label from list">-</button>
-<!--                     <button onclick="zoomOverlay.onButtonClickAddRemovePartLabel(event,'c')" type="button" class="btn btn-info btn-xs" title="Set label color">c</button> -->
                     <button onclick="zoomOverlay.onButtonClickAddRemovePartLabel(event,'C')" type="button" class="btn btn-info btn-xs" title="Edit label list">...</button>
                     
                     <div id="dialog-form-labelList">
@@ -701,6 +714,8 @@
                             <button onclick="onClickExcludeRectNext()" type="button" class="btn btn-info btn-xs" title="Highlight next exclude rects">&#x21AA</button>
                             <button id="excludeRectDeleteButton" onclick="onClickExcludeRectDelete()" type="button" class="btn btn-red btn-xs disabled" title="Delete currently highlighted exclude rects">-</button>
                         </div>
+                        
+                        <!-- Exclude Rects dialog -->
                         
                         <div id="dialog-form-excludeRects">
                             <form style="width:100%; height:100%; box-sizing:border-box;">
