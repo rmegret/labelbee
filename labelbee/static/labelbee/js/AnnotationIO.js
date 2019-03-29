@@ -187,7 +187,7 @@ function saveEventsToFile(format) {
                    addZero(D.getHours())+addZero(D.getMinutes())+addZero(D.getSeconds());
     //.toISOString()
 
-    let filename = videoControl.videoName +
+    let filename = videoinfo.videoName +
                    '-Tracks-'+timestamp+'.json'
 
     let obj = null
@@ -579,7 +579,7 @@ function tracksListFromServer(){
     type: 'GET',
     contentType: 'application/json',
     //data:{format:'json'}, // Without 'video', list all videos
-    data:{format:'json', video:videoControl.videoName},
+    data:{format: 'json', video: videoinfo.videoName},
     success:function(json){
       // Get the file list in JSON format
 
@@ -618,7 +618,7 @@ function tracksListFromServer(){
                 html += ( '<tr>'
                 +'<td><button onclick="eventsFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button></td>'
                 +'<td>'+boldize(item['video'],
-                                item['video']==videoControl.videoName)+'</td>'
+                                item['video']==videoinfo.videoName)+'</td>'
                 +'<td>'+item['user_name']+' ('+item['user_id']+')</td>'
                 +'<td>'+formattimestamp(item['timestamp'])+'</td>'
                 +'</tr>' )
@@ -706,7 +706,7 @@ function eventsToServer(format) {
         url: url_for(route), //server url
         type: 'POST',    //passing data as post method
         contentType: 'application/json', // returning data as json
-        data: JSON.stringify({'video':videoControl.videoName,
+        data: JSON.stringify({'video':videoinfo.videoName,
                               'data':data}),  //form values
         success: function(json) {
           alert("Save Events JSON ("+format+") to server: Success "+json);  //response from the server given as alert message

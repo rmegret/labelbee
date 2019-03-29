@@ -158,6 +158,9 @@ function init() {
         (e || window.event).returnValue = confirmationMessage; //Gecko + IE
         return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
     };
+    
+    // Done
+    setTracks([])
 }
 
 function printMessage(html, color) {

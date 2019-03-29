@@ -1983,8 +1983,8 @@ function onMouseDown_predict(option) {
     var rect;
     
     if (logging.mouseEvents) {
-        console.log('onMouseDown: no object selected', option)
-        console.log('onMouseDown: currentID=', getCurrentID())
+        console.log('onMouseDown_predict: no object selected', option)
+        console.log('onMouseDown_predict: currentID=', getCurrentID())
     }
 
     // predictId takes video/obs coordinates units
@@ -1993,14 +1993,14 @@ function onMouseDown_predict(option) {
     //$("#I").val(prediction.id)
   
     if (logging.mouseEvents) {
-        console.log('onMouseDown: predictId         --> prediction=',prediction)
-        console.log('onMouseDown: predictIdFromTags --> predictionTag=',predictionTag)
+        console.log('onMouseDown_predict: predictId         --> prediction=',prediction)
+        console.log('onMouseDown_predict: predictIdFromTags --> predictionTag=',predictionTag)
     }
 
     if (predictionTag.id !== undefined) {
         // If found a tag on this frame
         if (logging.mouseEvents)
-            console.log("onMouseDown: predictionTag=", predictionTag)
+            console.log("onMouseDown_predict: predictionTag=", predictionTag)
         let tag = predictionTag.tag;
         let pt = overlay.videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
       
@@ -2009,7 +2009,7 @@ function onMouseDown_predict(option) {
             let obs = prediction.obs;
             
             if (logging.mouseEvents)
-                console.log("onMouseDown: copying rect from tag ", tag, " and obs ",obs)
+                console.log("onMouseDown_predict: copying rect from tag ", tag, " and obs ",obs)
             
             // Copy rectangle from source of prediction
             // addRect takes canvas coordinates units
@@ -2020,7 +2020,7 @@ function onMouseDown_predict(option) {
         } else {
             // Only found tag
             if (logging.mouseEvents)
-                console.log("onMouseDown: copying rect from tag ", tag)
+                console.log("onMouseDown_predict: copying rect from tag ", tag)
             
             rect = newRectForTag(tag)
         }
@@ -2030,7 +2030,7 @@ function onMouseDown_predict(option) {
         let obs = prediction.obs;
         
         if (logging.mouseEvents)
-            console.log("onMouseDown: prediction obs=", obs)
+            console.log("onMouseDown_predict: prediction obs=", obs)
         
         // Copy rectangle from source of prediction
         // addRect takes canvas coordinates units
@@ -2041,17 +2041,20 @@ function onMouseDown_predict(option) {
         rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
         rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
         if (logging.mouseEvents)
-            console.log("onMouseDown: copied rect from ", obs)
+            console.log("onMouseDown_predict: copied rect from ", obs)
     } else {
         let id = getCurrentID()
-        if (id==null) {
+        if (id==null || getObsHandle(getCurrentFrame(), id, false) !== undefined) {
             id = prediction.id;
+        }
+        while (getObsHandle(getCurrentFrame(), id, false) !== undefined) {
+            id = id+1
         }
         // Did not find any tag nor rect
         rect = addRect(id, startX - default_width / 2, startY - default_height / 2,
             default_width, default_height, "new");
         if (logging.mouseEvents)
-            console.log("onMouseDown: did not find tag or event, created new rect with default size ", rect)
+            console.log("onMouseDown_predict: did not find tag or event, created new rect with default size ", rect)
     }
     rect.setCoords();
     overlay.canvas1.setActiveObject(rect);
