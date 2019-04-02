@@ -737,7 +737,9 @@ function tagsFromServer(path, quiet) {
         }
     }
     
-    console.log('tagsFromServer: loading path "'+path+'"...')  
+    if (logging.io) {
+        console.log('tagsFromServer: loading path "'+path+'"...')  
+    }
     statusWidget.statusRequest('tagsLoad','')
 
      $.getJSON( url_for(path) ,

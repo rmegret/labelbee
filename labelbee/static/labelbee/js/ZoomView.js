@@ -1100,7 +1100,9 @@ ZoomOverlay.prototype.loadTagHammingMatrix = function() {
     let path = '/data/tags/tag25h5inv/tag25h5_hamming_matrix_5-6.json'
 
 
-    console.log('loadTagHammingMatrix: loading path "'+path+'"...')  
+    if (logging.zoomTag) {
+        console.log('loadTagHammingMatrix: loading path "'+path+'"...')  
+    }
     //statusRequest('hammingMatrix',true,'')
     
     this.hammingMatrix = undefined
@@ -1113,7 +1115,9 @@ ZoomOverlay.prototype.loadTagHammingMatrix = function() {
         }
       )
       .done(function(data) {
-          console.log('loadTagHammingMatrix = ',data)
+          if (logging.zoomTag) {
+              console.log('loadTagHammingMatrix = ',data)
+          }
           
           zoomOverlay.hammingMatrix = data
         }

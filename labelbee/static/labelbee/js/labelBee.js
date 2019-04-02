@@ -27,7 +27,8 @@ var logging = {
   "axesEvents": false,
   "zoomTag": false,
   "zoomOverlay": false,
-  "videoList": false
+  "videoList": false,
+  "io": false
 };
 
 
@@ -121,10 +122,10 @@ function init() {
         'object:moving':   zoomOverlay.selectionChanged,
         'object:modified': zoomOverlay.selectionChanged
       })
-    $(selectionControl).on({
-        'selection:created':    ()=>{videoControl.refresh()},
-        'selection:cleared':    ()=>{videoControl.refresh()}
-      })
+    //$(selectionControl).on({
+    //    'selection:created':    ()=>{videoControl.refresh()},
+    //    'selection:cleared':    ()=>{videoControl.refresh()}
+    //  })
 
     // ## Keyboard control
 

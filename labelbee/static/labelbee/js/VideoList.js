@@ -72,7 +72,9 @@ VideoManager.prototype.videoListFromServer = function(path, defaultvideoid) {
         }
       )
       .done(function(data) {
-          console.log('videolist CSV content = ',data)
+          if (logging.videoList) {
+              console.log('videolist CSV content = ',{data: data})
+          }
           let array = $.csv.toArrays(data);
           console.log('videolist converted to array: ',array)
           //videoList = []

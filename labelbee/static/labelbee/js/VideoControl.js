@@ -51,7 +51,7 @@ function VideoControl(videoTagId) {
 
 VideoControl.prototype = {} // Prepare for all VideoControl methods
 
-// ### Play/pause
+// #MARK ### Play/pause
 
 VideoControl.prototype.playRateInputChanged = function() {
     let text = $('#playRate').val()
@@ -121,7 +121,7 @@ VideoControl.prototype.pause = function() {
     this.updateNavigationView()
 }
 
-// # Change current frame
+// #MARK # Change current frame
 VideoControl.prototype.startSeekTimer = function() {
     this.seekWallTime = new Date().getTime()
     this.seekTiming = true
@@ -209,7 +209,7 @@ VideoControl.prototype.frameToTime = function(frame) {
 }
 
 
-// ## View
+// #MARK ## View
 
 VideoControl.prototype.updateNavigationView = function() {
    let playingState = this.video2.playingState()
@@ -257,9 +257,11 @@ VideoControl.prototype.onFrameChanged = function(event) {
 
     this.hardRefresh();
     
-    // Trigger public event (used by ChronoControl to change 
-    // trackWindow View and timeMark View)
-    $( this ).trigger('frame:changed') 
+    // Trigger public event 
+    // listened by: 
+    // - ChronoControl to change trackWindow View and timeMark View
+    // - OverlayControl to redraw overlay
+    $( this ).trigger('frame:changed')
 }
 
 VideoControl.prototype.onPreviewFrameChanged = function(event) {
@@ -271,18 +273,6 @@ VideoControl.prototype.onPreviewFrameChanged = function(event) {
     if (logging.frameEvents)
         console.log('previewFrameChanged', this.currentFrame)
     
-//     //overlay.canvas1.clear();
-//     let previewScaleX = this.video.videoWidth/this.previewVideo.videoWidth;
-//     let previewScaleY = this.video.videoHeight/this.previewVideo.videoHeight;
-//     overlay.ctx.drawImage(this.previewVideo, 
-//                     canvasTransform[4]/previewScaleX, canvasTransform[5]/previewScaleY,
-//                       canvasTransform[0]*canvas.width/previewScaleX, canvasTransform[3]*canvas.height/previewScaleY,
-//                     0, 0, canvas.width, canvas.height);
-//                     
-//     overlay.canvas1.clear();
-//     createRectsFromTracks(this.previewFrame)
-//     selectBeeByID(defaultSelectedBee);
-//     refreshOverlay()
     this.hardRefresh();
     
     $( this ).trigger('previewframe:changed')
@@ -316,91 +306,30 @@ VideoControl.prototype.updateVideoControlForm = function() {
 }
 
 VideoControl.prototype.hardRefresh = function() {
+    // Hard refresh when video or frame changed
 
     if (logging.frameEvents)
         console.log('hardRefresh', this.currentFrame)
-        
-    if (!this.isValidVideo) {
-        if (logging.frameEvents)
-            console.log('hardRefresh canceled, no valid video')
-        overlay.canvas1.clear();
-        this.refresh()
-        return
-    }
+    
+    this.refresh()
+}
+VideoControl.prototype.refresh = function() {
+    // Refresh when frame changed
+    
+    if (logging.frameEvents)
+        console.log('videoControl.refresh', this.currentFrame)
         
     this.updateVideoControlForm()
 
-    overlay.canvas1.clear();
-    createRectsFromTracks()
-
-    selectBeeByID(defaultSelectedBee);
+    overlay.hardRefresh()
     
-    this.refresh()
-    
-}
-VideoControl.prototype.refresh = function() {
-
-    let w = overlay.canvas.width
-    let h = overlay.canvas.height
-
-    if (!this.isValidVideo) {
-        if (logging.frameEvents)
-            console.log('refresh canceled, no valid video')
-        overlay.ctx.save()
-        overlay.ctx.setTransform(1,0, 0,1, 0,0)
-        overlay.ctx.fillStyle = '#DDD'
-        overlay.ctx.fillRect(0, 0, w, h);
-        overlay.canvas1.clear();
-        overlay.ctx.fillStyle = '#00F'
-        overlay.ctx.font = "12px Verdana";
-        overlay.ctx.textAlign = "center";
-        overlay.ctx.textBaseline = "middle"; 
-        var lineHeight = overlay.ctx.measureText("M").width * 1.2;
-        overlay.ctx.fillText("Could not load video", w/2, h/2);
-        overlay.ctx.fillText(this.video.src, w/2, h/2+lineHeight);
-        overlay.ctx.restore()
-        return
-    }
-
-    if (this.currentMode == 'video') {
-        let video = this.video; // same as $('#video')[0]
-        if (this.flagCopyVideoToCanvas) {
-          // Copy video to canvas for fully synchronous display
-          //ctx.drawImage(video, 0, 0, video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor);
-          overlay.ctx.drawImage(video, 
-                        canvasTransform[4], canvasTransform[5],
-                        canvasTransform[0]*w, canvasTransform[3]*h,
-                        0, 0, w, h);
-        } else {
-          // Rely on video under canvas. More efficient (one copy less), but
-          // may have some time discrepency between video and overlay
-          overlay.ctx.clearRect(0,0,video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor)
-        }
-    } else if (this.currentMode == 'preview') {
-        //overlay.canvas1.clear();
-        let previewScaleX = this.video.videoWidth/this.previewVideo.videoWidth;
-        let previewScaleY = this.video.videoHeight/this.previewVideo.videoHeight;
-        overlay.ctx.drawImage(this.previewVideo, 
-                        canvasTransform[4]/previewScaleX, canvasTransform[5]/previewScaleY,
-                        canvasTransform[0]*w/previewScaleX, canvasTransform[3]*h/previewScaleY,
-                        0, 0, w, h);
-                    
-        overlay.canvas1.clear();
-        createRectsFromTracks(this.previewFrame)
-        selectBeeByID(defaultSelectedBee);
-        overlay.refreshOverlay()
-    }
-    overlay.refreshOverlay()
-    
-    zoomOverlay.refreshZoom()
-    
-    updateDeleteButton()
-    updateUndoButton()
+    // Zoom Overlay supposed to be updated by triggers from overlay refresh    
+    // zoomOverlay.refreshZoom()
 }
 
 
 
-
+// #MARK ## Loading
 
 VideoControl.prototype.loadVideo = function(url, previewURL) {
     if (logging.videoEvents)
@@ -524,7 +453,7 @@ VideoControl.prototype.loadPreviewVideo = function(previewURL) {
     }
     function _onPreviewVideoError(e) {
         //if (logging.videoEvents)
-            console.log('onPreviewVideoError: could not load preview video. previewURL=',previewURL)
+            console.log('onPreviewVideoError: could not load preview video.',{previewURL:previewURL})
         videoControl.setPreviewVideoStatus('error')
         statusWidget.statusUpdate('videopreviewLoad', false, [])
     }

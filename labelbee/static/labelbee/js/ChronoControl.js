@@ -96,8 +96,10 @@ function initChrono() {
     // Detect #chronoDiv resize using ResizeSensor.js
     // Note: cannot detect resize of SVG directly
     new ResizeSensor($("#chronoDiv")[0], function() {
-       console.log('#chronoDiv resized');
-       axes.refreshLayout()
+        if (logging.guiEvents) {
+            console.log('#chronoDiv resized');
+        }
+        axes.refreshLayout()
     });
     // Equivalent pure jQuery seems to have trouble 
     // the size of chronoDiv seems to be defined after the callback is called
@@ -122,7 +124,9 @@ function initChrono() {
 
 function onMousewheelModeToggled() {
     mousewheelMode = $('#mousewheelMode').prop( "checked")
-    console.log('onMousewheelModeToggled: toggled mousewheelMode=',mousewheelMode)
+    if (logging.mouseMouseEvents) {
+        console.log('onMousewheelModeToggled: toggled mousewheelMode=',mousewheelMode)
+    }
 }
 
 // Simplify handling of input and button behaviors in one function
@@ -1888,6 +1892,102 @@ function modifyCurrentObsSpan(mode) {
     }
     updateTagsLabels()
     drawChrono()
+}
+
+
+/* Augment tags with labels */
+
+function updateTagsLabels() {
+    for (let ann of flatTracksAll) {
+        if ('span' in ann.obs) {
+          ann.span = {f1:Number(ann.obs.span.f1), f2:Number(ann.obs.span.f2)}
+          ann.span.b1='manual'
+          ann.span.b2='manual'
+        } else {
+          let f = Number(ann.frame)
+          ann.span = {f1:f, f2:f}
+          ann.span.b1='obs'
+          ann.span.b2='obs'
+        }
+    }
+    let tagIntervalsVirtual=[]
+    for (let interval of tagIntervals) {
+        interval.labeling={
+            labeled:false,
+            entering:false,
+            falsealarm:false,
+            wrongid:false
+        }
+
+        for (let ann of flatTracksAll) {
+            if (ann.id != interval.id) continue;
+        
+            let f = Number(ann.frame)
+            let f1 = Number(interval['begin'])
+            let f2 = Number(interval['end'])
+            
+            if (ann.span.b1!='manual') {
+                if (f>f1-20 && f<f2+20) {
+                    interval.labeling.labeled = true
+                    interval.labeling.entering = hasLabel(ann,'entering')
+                    interval.labeling.falsealarm = hasLabel(ann,'falsealarm')
+                    interval.labeling.wrongid = hasLabel(ann,'wrongid')
+                
+                    if (hasLabel(ann,'wrongid') && (ann.obs.newid != null)) {
+                        interval.newid=ann.obs.newid;
+                        console.log('ann=',ann,'=>',interval)
+                    }
+                
+                    if (f1<ann.span.f1) {
+                        ann.span.f1 = f1
+                        ann.span.b1='tag'
+                    }
+                    if (f2>ann.span.f2) {
+                        ann.span.f2 = f2
+                        ann.span.b2='tag'
+                    }
+                }
+            } else {
+                if (ann.span.f2>=f1 && ann.span.f1<=f2) {
+                    interval.labeling.labeled = true
+                    interval.labeling.entering = hasLabel(ann,'entering')
+                    interval.labeling.falsealarm = hasLabel(ann,'falsealarm')
+                    interval.labeling.wrongid = hasLabel(ann,'wrongid')   
+                    
+                    if (hasLabel(ann,'wrongid') && (ann.obs.newid != null)) {
+                        interval.newid=ann.obs.newid;
+                        console.log('ann=',ann,'=>',interval)
+                    }          
+                }
+            }
+        }
+        if (interval.labeling.wrongid && (interval.newid != null)) {
+            let intervalV = Object.assign({},interval)
+            intervalV.oldid=intervalV.id
+            intervalV.id=intervalV.newid
+            intervalV.wrongid=false
+            intervalV.virtual=true
+            console.log(interval,'=>',intervalV)
+            tagIntervalsVirtual.push(intervalV)
+        }
+    }
+    tagIntervals = tagIntervals.concat(tagIntervalsVirtual)
+
+    // Find redundant Tracks   
+    for (let id in flatTracksValidGroupById) { 
+        obs_for_id = flatTracksValidGroupById[id]
+        for (let j in obs_for_id) {
+            if (j==0) continue;
+            let i=j-1;
+        
+            let obs1=obs_for_id[i]
+            let obs2=obs_for_id[j]
+        
+            if (obs1.span.f2>=obs2.span.f1) {
+                obs2.isredundant = true
+            }
+        }
+    }
 }
 
 

@@ -12,9 +12,9 @@ function OverlayControl(canvasTagId) {
     
     // Events:
     // overlayControl.on('trackWindow:change',...)
-    $( videoControl ).on('videosize:changed', (e,w,h)=>{this.canvasSetVideoSize(w,h)})
-    $( videoControl ).on('frame:changed', (e)=>{this.hardRefresh()})
-    $( videoControl ).on('previewframe:changed', (e)=>{this.hardRefresh()})
+    $( videoControl ).on('videosize:changed', (e,w,h)=>{overlay.canvasSetVideoSize(w,h)})
+    //$( videoControl ).on('frame:changed', (e)=>{overlay.hardRefresh()})
+    //$( videoControl ).on('previewframe:changed', (e)=>{overlay.hardRefresh()})
 
     if (typeof canvasTagId === 'undefined')
         canvasTagId = 'canvas'; // Default HTML5 canvas tag to attach to
@@ -100,9 +100,12 @@ function OverlayControl(canvasTagId) {
     canvasTransformReference = {w:100, h:100} // Keep previous canvas size
     overlay.videoSize = {x:600,y:400}
     
+    lockFocusTrackWindow = false
+    
     refreshTagsParameters()
 }
 OverlayControl.prototype = {}
+
 
 
 OverlayControl.prototype.getActiveObject = function() {
@@ -112,15 +115,8 @@ OverlayControl.prototype.setActiveObject = function(rect) {
     return this.canvas1.setActiveObject(rect)
 }
 
-/* Canvas size utils */
 
-// extend OverlayControl by copying new method in its prototype
-//Object.assign(OverlayControl.prototype, {
-
-OverlayControl.prototype.hardRefresh = function() {
-    // Refresh the overlay
-    //this.canvasSetVideoSize()
-}
+// #MARK # UTILS CANVAS SIZE
 
 OverlayControl.prototype.canvasSetVideoSize = function(w,h) {
     // Resize canvas to have same aspect-ratio as video
@@ -154,7 +150,6 @@ OverlayControl.prototype.canvasSetVideoSize = function(w,h) {
     overlay.refreshCanvasSize()
     overlay.canvasTransformReset()
 }
-
 OverlayControl.prototype.refreshCanvasSize = function(event, ui) {
     let overlay = this
 
@@ -188,6 +183,7 @@ OverlayControl.prototype.refreshCanvasSize = function(event, ui) {
 
     }
         
+    // TODO: remove jQuery reference
     let video = $('#video')[0]
     
     var borderThickness = 4
@@ -216,7 +212,7 @@ OverlayControl.prototype.refreshCanvasSize = function(event, ui) {
     //var ctx=canvas.getContext("2d");
     //ctx.transform(...canvasTransform);
         
-    videoControl.refresh() // Already done in canvasTransformScale()
+    //overlay.hardRefresh() // Already done in canvasTransformScale()
 }
 
 /* Canvas Transform */
@@ -242,7 +238,7 @@ OverlayControl.prototype.canvasTransformReset = function() {
     
     overlay.canvasTransformInternalReset()
     overlay.canvasTransform_Fix()    
-    videoControl.refresh()
+    overlay.hardRefresh()
 }
 OverlayControl.prototype.canvasTransformSet = function(array) {
     let overlay = this
@@ -251,7 +247,7 @@ OverlayControl.prototype.canvasTransformSet = function(array) {
         canvasTransform[i]=array[i]
     }
     overlay.canvasTransform_Fix()
-    videoControl.refresh()
+    overlay.hardRefresh()
 }
 OverlayControl.prototype.canvasTransform_Fix = function() {
     let overlay = this
@@ -308,7 +304,7 @@ OverlayControl.prototype.canvasTransformScale = function(scaling, center, center
     
     overlay.canvasTransform_Fix()
     
-    videoControl.refresh()
+    overlay.hardRefresh()
 }
 OverlayControl.prototype.canvasTransformPan = function(dx, dy) {
     let overlay = this
@@ -318,7 +314,7 @@ OverlayControl.prototype.canvasTransformPan = function(dx, dy) {
     
     overlay.canvasTransform_Fix()
     
-    videoControl.refresh()
+    overlay.hardRefresh()
 }
 
 OverlayControl.prototype.obsToCanvasRect = function(obs) {
@@ -365,9 +361,90 @@ OverlayControl.prototype.videoToCanvasRect = function(rect) {
       }
 }
 
-// ## Fabric.js rects vs observations
+// #MARK # Fabric.js rects vs observations
 
+OverlayControl.prototype.hardRefresh = function() {
+    // Recreate overlay from Tracks
+
+    // Refresh the overlay
+    //this.canvasSetVideoSize()
+    
+    this.redrawVideoFrame()
+    
+    overlay.canvas1.clear();
+    createRectsFromTracks()
+    selectBeeByID(defaultSelectedBee);
+    // zoomOverlay supposed to be updated by event triggered by selectBeeByID
+    
+    this.refreshOverlay()
+    
+    updateDeleteButton()
+    updateUndoButton()
+    
+    //zoomOverlay.refreshZoom()
+}
+OverlayControl.prototype.redrawVideoFrame = function() {
+    var overlay = this;
+    
+    let w = overlay.canvas.width
+    let h = overlay.canvas.height
+    
+    let video = videoControl.video
+
+    if (!videoControl.isValidVideo) {
+        if (logging.frameEvents)
+            console.log('refresh canceled, no valid video')
+        overlay.ctx.save()
+        overlay.ctx.setTransform(1,0, 0,1, 0,0)
+        overlay.ctx.fillStyle = '#DDD'
+        overlay.ctx.fillRect(0, 0, w, h);
+        overlay.canvas1.clear();
+        overlay.ctx.fillStyle = '#00F'
+        overlay.ctx.font = "12px Verdana";
+        overlay.ctx.textAlign = "center";
+        overlay.ctx.textBaseline = "middle"; 
+        var lineHeight = overlay.ctx.measureText("M").width * 1.2;
+        overlay.ctx.fillText("Could not load video", w/2, h/2);
+        overlay.ctx.fillText(video.src, w/2, h/2+lineHeight);
+        overlay.ctx.restore()
+        
+        overlay.canvas1.clear();
+        return
+    }
+
+    if (videoControl.currentMode == 'video') {
+        let video = videoControl.video; // same as $('#video')[0]
+        if (videoControl.flagCopyVideoToCanvas) {
+          // Copy video to canvas for fully synchronous display
+          //ctx.drawImage(video, 0, 0, video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor);
+          overlay.ctx.drawImage(video, 
+                        canvasTransform[4], canvasTransform[5],
+                        canvasTransform[0]*w, canvasTransform[3]*h,
+                        0, 0, w, h);
+        } else {
+          // Rely on video under canvas. More efficient (one copy less), but
+          // may have some time discrepency between video and overlay
+          overlay.ctx.clearRect(0,0,video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor)
+        }
+    } else if (videoControl.currentMode == 'preview') {
+        let video = videoControl.video; // same as $('#video')[0]
+        let previewVideo = videoControl.previewVideo; // same as $('#video')[0]
+        //overlay.canvas1.clear();
+        let previewScaleX = video.videoWidth/previewVideo.videoWidth;
+        let previewScaleY = video.videoHeight/previewVideo.videoHeight;
+        overlay.ctx.drawImage(previewVideo, 
+                        canvasTransform[4]/previewScaleX, canvasTransform[5]/previewScaleY,
+                        canvasTransform[0]*w/previewScaleX, canvasTransform[3]*h/previewScaleY,
+                        0, 0, w, h);
+                    
+//         overlay.canvas1.clear();
+//         createRectsFromTracks(this.previewFrame)
+//         selectBeeByID(defaultSelectedBee);
+//         overlay.refreshOverlay()
+    }
+}
 OverlayControl.prototype.refreshOverlay = function() {
+    // Refresh overlay from already existing overlay data
     let overlay = this
     
     if (overlay.canvas1) {
@@ -426,8 +503,9 @@ function createRectsFromTracks(F) {
     if (typeof F === 'undefined')
         F = getCurrentFrame()
     let ids = getValidIDsForFrame(F)
-    if (logging.overlay)
+    if (logging.overlay) {
         console.log("createRectsFromTracks: ",{frame:F,ids:ids})
+    }
     for (let id of ids) { // For each valid bee ID, create a rect for it
         let obs = getObsHandle(F, id, false)
         addRectFromObs(obs)
@@ -1353,8 +1431,6 @@ function onTrackWindowChanged(event) {
     
     let trackDir = $('#selectboxTrackDir').val()
     overlay.trackWindow.direction=trackDir
-
-    console.log("onTrackWindowChanged range=",range," direction=",trackDir)
     
     if (trackDir=='Bidirectional') {
         overlay.trackWindow.forward = range
@@ -1367,6 +1443,10 @@ function onTrackWindowChanged(event) {
         overlay.trackWindow.backward = range
     } else {
       console.log('onTrackWindowChanged: ERROR, trackDir unknown trackDir=',trackDir)
+    }
+    
+    if (logging.overlay) {
+        console.log("onTrackWindowChanged:",overlay.trackWindow)
     }
     
     $(overlay).trigger('trackWindow:change')
@@ -1664,7 +1744,9 @@ tagsIDFilter = function(idinfo) {return true}
 tagsSampleFilterROI = function(tag) {return true}
 tagsSampleFilterExcludeRects = function(tag) {return true}
 function refreshTagsParameters() {
-    console.log('refreshTagsParameters')
+    if (logging.overlay) {
+        console.log('refreshTagsParameters')
+    }
     // Reread tag parameters from GUI
     
     tagsSampleFilterCustom = Function("tag",$('#tagsSampleFilter')[0].value)
@@ -1707,10 +1789,13 @@ function refreshTagsParameters() {
       return (interval.end-interval.begin>=minLength) && fun(interval)
     }
     tagsIDFilter = Function("idinfo",$('#tagsIDFilter')[0].value)
-    console.log('refreshTagsParameters:',
-                '\ntagsSampleFilter=',tagsSampleFilter,
-                '\ntagsIntervalFilter=',tagsIntervalFilter,
-                '\ntagsIDFilter=',tagsIDFilter)
+    
+    if (logging.overlay) {
+        console.log('refreshTagsParameters:',
+                    '\ntagsSampleFilter=',tagsSampleFilter,
+                    '\ntagsIntervalFilter=',tagsIntervalFilter,
+                    '\ntagsIDFilter=',tagsIDFilter)
+    }
 }
 function onTagsParametersChanged() {
     console.log('onTagsParametersChanged')
@@ -1755,7 +1840,7 @@ function onChronoParametersChanged() {
 
 
 
-/* ### ID prediction */
+// #MARK # ID PREDICTION
 
 // Auxiliary for Predict
 function dist(x, y, x2, y2) {
@@ -1925,7 +2010,7 @@ function computeDefaultNewID() {
 }
 
 
-// ######## Mouse control #######
+// #MARK # Low-level mouse events
 
 var default_width = 40;
 var default_height = 40;
@@ -2230,7 +2315,7 @@ function onMouseDown_selectMultiframe(option) {
 
 /* Canvas zoom and pan */
 function onMouseDown_panning(option) {
-    var panning={}
+    let panning={}
     panning.p0 = {
         x:  option.e.clientX,
         y:  option.e.clientY
@@ -2367,7 +2452,6 @@ function onMouseDown2(ev) {
    return true;
 }
 
-
 // REMI: Scaling arectangle in Fabric.js does not change width,height: it changes only scaleX and scaleY
 // fix this by converting scaleX,scaleY into width,height change
 function fixRectSizeAfterScaling(rect) {
@@ -2402,11 +2486,9 @@ function onMouseUp(option) {
     // attached/detached in mouseDown code
 }
 
+// #MARK # FabricJS events
 
-
-
-
-lastSelected = null
+var lastSelected = null
 function onObjectSelected(option) {
     if (logging.selectionEvents)
         console.log("onObjectSelected:", option)
@@ -2477,101 +2559,6 @@ function onObjectModified(option) {
     
     $(overlay).trigger('object:modified')
     //zoomOverlay.selectionChanged()
-}
-
-/* Augment tags with labels */
-
-function updateTagsLabels() {
-    for (let ann of flatTracksAll) {
-        if ('span' in ann.obs) {
-          ann.span = {f1:Number(ann.obs.span.f1), f2:Number(ann.obs.span.f2)}
-          ann.span.b1='manual'
-          ann.span.b2='manual'
-        } else {
-          let f = Number(ann.frame)
-          ann.span = {f1:f, f2:f}
-          ann.span.b1='obs'
-          ann.span.b2='obs'
-        }
-    }
-    let tagIntervalsVirtual=[]
-    for (let interval of tagIntervals) {
-        interval.labeling={
-            labeled:false,
-            entering:false,
-            falsealarm:false,
-            wrongid:false
-        }
-
-        for (let ann of flatTracksAll) {
-            if (ann.id != interval.id) continue;
-        
-            let f = Number(ann.frame)
-            let f1 = Number(interval['begin'])
-            let f2 = Number(interval['end'])
-            
-            if (ann.span.b1!='manual') {
-                if (f>f1-20 && f<f2+20) {
-                    interval.labeling.labeled = true
-                    interval.labeling.entering = hasLabel(ann,'entering')
-                    interval.labeling.falsealarm = hasLabel(ann,'falsealarm')
-                    interval.labeling.wrongid = hasLabel(ann,'wrongid')
-                
-                    if (hasLabel(ann,'wrongid') && (ann.obs.newid != null)) {
-                        interval.newid=ann.obs.newid;
-                        console.log('ann=',ann,'=>',interval)
-                    }
-                
-                    if (f1<ann.span.f1) {
-                        ann.span.f1 = f1
-                        ann.span.b1='tag'
-                    }
-                    if (f2>ann.span.f2) {
-                        ann.span.f2 = f2
-                        ann.span.b2='tag'
-                    }
-                }
-            } else {
-                if (ann.span.f2>=f1 && ann.span.f1<=f2) {
-                    interval.labeling.labeled = true
-                    interval.labeling.entering = hasLabel(ann,'entering')
-                    interval.labeling.falsealarm = hasLabel(ann,'falsealarm')
-                    interval.labeling.wrongid = hasLabel(ann,'wrongid')   
-                    
-                    if (hasLabel(ann,'wrongid') && (ann.obs.newid != null)) {
-                        interval.newid=ann.obs.newid;
-                        console.log('ann=',ann,'=>',interval)
-                    }          
-                }
-            }
-        }
-        if (interval.labeling.wrongid && (interval.newid != null)) {
-            let intervalV = Object.assign({},interval)
-            intervalV.oldid=intervalV.id
-            intervalV.id=intervalV.newid
-            intervalV.wrongid=false
-            intervalV.virtual=true
-            console.log(interval,'=>',intervalV)
-            tagIntervalsVirtual.push(intervalV)
-        }
-    }
-    tagIntervals = tagIntervals.concat(tagIntervalsVirtual)
-
-    // Find redundant Tracks   
-    for (let id in flatTracksValidGroupById) { 
-        obs_for_id = flatTracksValidGroupById[id]
-        for (let j in obs_for_id) {
-            if (j==0) continue;
-            let i=j-1;
-        
-            let obs1=obs_for_id[i]
-            let obs2=obs_for_id[j]
-        
-            if (obs1.span.f2>=obs2.span.f1) {
-                obs2.isredundant = true
-            }
-        }
-    }
 }
 
 
