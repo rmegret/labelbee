@@ -72,6 +72,8 @@ function OverlayControl(canvasTagId) {
     canvas1.uniScaleTransform = true; // REMI: allow free rescaling of observations without constrained aspect ratio
     //canvas1.centeredScaling = true; // REMI: rescale around center
     
+    overlay.lastSelected = null; // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
+    
     canvas1.on('mouse:down', onMouseDown);
     canvas1.on('mouse:up', onMouseUp);
     canvas1.on('object:moving', onObjectMoving); // During translation
@@ -361,7 +363,7 @@ OverlayControl.prototype.videoToCanvasRect = function(rect) {
       }
 }
 
-// #MARK # Fabric.js rects vs observations
+// #MARK # OVERLAY REFRESH
 
 OverlayControl.prototype.hardRefresh = function() {
     // Recreate overlay from Tracks
@@ -383,6 +385,7 @@ OverlayControl.prototype.hardRefresh = function() {
     
     //zoomOverlay.refreshZoom()
 }
+
 OverlayControl.prototype.redrawVideoFrame = function() {
     var overlay = this;
     
@@ -463,6 +466,8 @@ OverlayControl.prototype.refreshOverlay = function() {
             plotTags(overlay.ctx)
     }
 }
+
+// #MARK # FABRICJS RECTS MANAGEMENT
 
 function refreshRectFromObs() {
     let rectList = overlay.canvas1.getObjects()
@@ -707,7 +712,6 @@ function addRect(id, startX, startY, width, height, status, inputObs, angle) {
 }
 // Try to find a fabric rectangle with a given id
 function findRect(id) {
-
     var rects = overlay.canvas1.getObjects();
     if (rects) {
         var r;
@@ -746,14 +750,6 @@ function updateRectObsActivity(activeObject) {
 function updateObsActivityFromForm(obs) {
     // Update form --> obs.labels --> bool_acts
 
-//     obs.bool_acts[0] = $('#F').prop('checked');
-//     obs.bool_acts[1] = $('#P').prop('checked');
-//     obs.bool_acts[2] = $('#E').prop('checked');
-//     obs.bool_acts[3] = $('#L').prop('checked');
-// Moved to onLabelClicked. now, the truth about labels is obs.labels
-    
-    //obs.labels = cleanLabels($('#labels').val())
-    
     obs.bool_acts[0]=hasLabel(obs,'fanning');
     obs.bool_acts[1]=hasLabel(obs,'pollen');
     obs.bool_acts[2]=hasLabel(obs,'entering');
@@ -781,9 +777,9 @@ function setLabels(rect,labels) {
     updateForm(rect)
 }
 
-// ## Direct canvas drawing
+// #MARK # CANVAS DRAWING: TRACKS AND EVENTS
 
-// # Bee ID and their tracks
+// #MARK ## Bee ID and event tracks
 
 /* Basic drawing */
 function paintDot(ctx, pt, radius, color, id) {
@@ -918,8 +914,6 @@ function identifyBeeRect(ctx, rect, radius) {
     ctx.restore()
 }
 
-
-
 /* Obs tracks */
 function plotTracks(ctx) {
     let F = getCurrentFrame()
@@ -1027,7 +1021,6 @@ function plotTracks(ctx) {
     }
 }
 
-
 /* Options */
 var showObsTracks = false
 function onShowObsChanged() {
@@ -1036,8 +1029,7 @@ function onShowObsChanged() {
     videoControl.refresh()
 }
 
-
-// # Tags and their tracks
+// #MARK ## Tag tracks
 
 /* Access */
 function getTag(f, id) {
@@ -1208,7 +1200,6 @@ function plotTags(ctx) {
     }
 }
 
-
 function plotTrackArrow(ctx, p0, p1, L) {
     let u = {x:p1.x-p0.x, y:p1.y-p0.y}
     let n = Math.sqrt(u.x*u.x+u.y*u.y)
@@ -1220,8 +1211,6 @@ function plotTrackArrow(ctx, p0, p1, L) {
     ctx.lineTo(p1.x+L*(-u.x+0.6*u.y), p1.y+L*(-u.y-0.6*u.x))
     ctx.stroke()
 }
-
-
 
 /* Tag tracks */
 function plotTagsTracks(ctx) {
@@ -1410,6 +1399,8 @@ function plotTagsTracks(ctx) {
         }
     } 
 }
+
+// #MARK # OVERLAY PARAMETERS MANAGEMENT
 
 /* Options */
 function onShowTagsChanged() {
@@ -2010,7 +2001,7 @@ function computeDefaultNewID() {
 }
 
 
-// #MARK # Low-level mouse events
+// #MARK # LOW-LEVEL MOUSE EVENTS
 
 var default_width = 40;
 var default_height = 40;
@@ -2486,9 +2477,8 @@ function onMouseUp(option) {
     // attached/detached in mouseDown code
 }
 
-// #MARK # FabricJS events
+// #MARK # FABRICJS EVENTS
 
-var lastSelected = null
 function onObjectSelected(option) {
     if (logging.selectionEvents)
         console.log("onObjectSelected:", option)
@@ -2498,7 +2488,7 @@ function onObjectSelected(option) {
             console.log('ERROR in onObjectSelected: option.target.id != canvas1.getActiveObject().id', option.target.id, overlay.getActiveObject().id)
         }
         selectBee(option.target)
-        lastSelected = option.target
+        overlay.lastSelected = option.target
         updateDeleteButton()
     }
 }
@@ -2507,14 +2497,14 @@ function onObjectDeselected(option) {
     if (logging.selectionEvents)
         console.log("onObjectDeselected: ", option);
        
-    if (lastSelected !== null) {
-        if (lastSelected.status=="new") {
+    if (overlay.lastSelected !== null) {
+        if (overlay.lastSelected.status=="new") {
             if (logging.mouseEvents)
-                console.log('onObjectDeselected: removing non submitted lastSelected=', lastSelected)
+                console.log('onObjectDeselected: removing non submitted lastSelected=', overlay.lastSelected)
 
             // Remove tmp rect as soon as it becomes inactive
-            overlay.canvas1.remove(lastSelected);
-            lastSelected = null
+            overlay.canvas1.remove(overlay.lastSelected);
+            overlay.lastSelected = null
             videoControl.refresh()
         }
         updateDeleteButton()

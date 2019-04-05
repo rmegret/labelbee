@@ -28,6 +28,12 @@ refreshChronogram
 videoControl.onFrameChanged
     videoControl.hardRefresh
     $(videoControl).trigger('frame:changed')
+        
+videoControl.hardRefresh
+    videoControl.refresh
+        selectBeeById
+            zoomOverlay.refreshZoom()
+        refreshOverlay
     
 videoControl frame:changed
     updateTimeMark
@@ -39,17 +45,15 @@ overlay trackWindow:change
     if lockFocusTrackWindow
         focusTrackWindow
         
-videoControl.hardRefresh
-    clear canvas
-    createRectsFromTracks
-    selectBeeByID
-    videoControl.refresh
+overlay.hardRefresh
+    redrawVideoFrame
         if flagCopyVideoToCanvas
             copy video to canvas
-        refreshOverlay
-        zoomOverlay.refreshZoom()
-        
-        
+    
+    Erase all rects
+    createRectsFromTracks
+    selectBeeByID
+
 refreshOverlay
     refreshRectFromObs
     renderAll

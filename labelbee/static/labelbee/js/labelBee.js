@@ -140,7 +140,6 @@ function init() {
     // refresh();
     updateForm(null);
     defaultSelectedBee = undefined;
-    lastSelected = null; // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
     
     //loadEventsFromFile0('data/Tracks-demo.json')
     

@@ -930,10 +930,14 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
     var zoomScale = 1
     var mw=S2/2, mh=S2/2
     
+    /* 1. Extracted Tag Region */
+    
     var tmpCanvas2 = $('#zoomExtractedTagCanvas2')[0];
     var ctx2 = tmpCanvas2.getContext('2d');
     tmpCanvas2.width = S2
     tmpCanvas2.height = S2
+    
+    /* 1.2. Draw video into zoomed canvas */
     
     let video = $('#video')[0]
     
@@ -949,13 +953,17 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
         ctx2.drawImage(video,0,0) // Possibly out of sync when playing
         
     ctx2.restore()
+        
+    /* 1.2. Overlay tag edges */
     
-    var dx = mw-cx, dy = mh-cy
-    
+    var dx = mw-cx, dy = mh-cy    
     src_pts = [tag.p[0][0]+dx,tag.p[0][1]+dy, tag.p[1][0]+dx,tag.p[1][1]+dy,
-                   tag.p[2][0]+dx,tag.p[2][1]+dy, tag.p[3][0]+dx,tag.p[3][1]+dy]
+               tag.p[2][0]+dx,tag.p[2][1]+dy, tag.p[3][0]+dx,tag.p[3][1]+dy]
     
-    /* Now, let's warp it to the final canvas */
+    // Drawing of overlay done after 2., since this canvas is used as source
+    // for normalized tag extraction
+    
+    /* 2. Warped normalized tag */
     
     let npix = 7 // codepix+2 margin
     
@@ -967,72 +975,75 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
     tmpCanvas.width = S
     tmpCanvas.height = S
 
-    var data2 = ctx2.getImageData(0, 0, S2, S2).data;
-    var imageData = ctx.getImageData(0, 0, S, S)
-    var data=imageData.data
-    
-    let dst_pts = [0,0, S,0, S,S, 0,S]
-    var perspT = PerspT(src_pts, dst_pts);
-        
-    // TODO: Should probably use some GL library such as
-    // https://github.com/evanw/glfx.js instead of doing it manually
-    var nearest = false
-    if (nearest) {
-        for (var y=0; y<S; y++) {
-            for (var x=0; x<S; x++) {
-                var dstPt = perspT.transformInverse(x,y);
-                let x2=Math.round(dstPt[0]), y2=Math.round(dstPt[1])
-                data[(x+y*S)*4] = data2[(x2+y2*S2)*4]
-                data[(x+y*S)*4+1] = data2[(x2+y2*S2)*4+1]
-                data[(x+y*S)*4+2] = data2[(x2+y2*S2)*4+2]
-                data[(x+y*S)*4+3] = 255
-            }
-        }
-    } else {
-        for (var y=0; y<S; y++) {
-            for (var x=0; x<S; x++) {
-                var dstPt = perspT.transformInverse(x,y);
-                let x2=Math.round(dstPt[0]), y2=Math.round(dstPt[1])
-                let a=dstPt[0]-x2, b=dstPt[1]-y2
-                data[(x+y*S)*4] =   (1-a)*((1-b)*data2[(x2+y2*S2)*4]
-                                            + b *data2[(x2+(y2+1)*S2)*4])
-                                    +  a *((1-b)*data2[((x2+1)+y2*S2)*4]
-                                            + b *data2[((x2+1)+(y2+1)*S2)*4])
-                data[(x+y*S)*4+1] = (1-a)*((1-b)*data2[(x2+y2*S2)*4+1]
-                                            + b *data2[(x2+(y2+1)*S2)*4+1])
-                                    +  a *((1-b)*data2[((x2+1)+y2*S2)*4+1]
-                                            + b *data2[((x2+1)+(y2+1)*S2)*4+1])
-                data[(x+y*S)*4+2] = (1-a)*((1-b)*data2[(x2+y2*S2)*4+2]
-                                            + b *data2[(x2+(y2+1)*S2)*4+2])
-                                    +  a *((1-b)*data2[((x2+1)+y2*S2)*4+2]
-                                            + b *data2[((x2+1)+(y2+1)*S2)*4+2])
-                data[(x+y*S)*4+3] = 255
-            }
-        }
-    }
-    ctx.putImageData(imageData, 0, 0)
-    
-    /* Add overlay of tag position */
-    
-    
-    ctx2.setTransform(1,0, 0,1, 0,0)
-    ctx2.beginPath()
-    ctx2.moveTo(src_pts[0],src_pts[1])
-    ctx2.lineTo(src_pts[6],src_pts[7])
-    ctx2.lineTo(src_pts[4],src_pts[5])
-    ctx2.lineTo(src_pts[2],src_pts[3])
-    ctx2.strokeStyle='red'
-    ctx2.stroke()
+    /* 2.1. Warp the image data */
 
+    function unwarpTag(src_ctx, dst_ctx, perspT, src_R, dst_R) {
+        let xmin=dst_R[0]
+        let xmax=xmin+dst_R[2]
+        let ymin=dst_R[1]
+        let ymax=ymin+dst_R[3]
+        
+        let src_image = src_ctx.getImageData(...src_R);
+        let dst_image = dst_ctx.getImageData(...dst_R);
+        let src_data = src_image.data;
+        let dst_data  = dst_image.data;
+        
+        // TODO: Should probably use some GL library such as
+        // https://github.com/evanw/glfx.js instead of doing it manually
+        var nearest = false
+        if (nearest) {
+            for (var y=ymin; y<ymax; y++) {
+                for (var x=xmin; x<xmax; x++) {
+                    var dstPt = perspT.transformInverse(x,y);
+                    let x2=Math.round(dstPt[0]), y2=Math.round(dstPt[1])
+                    dst_data[(x+y*S)*4] = src_data[(x2+y2*S2)*4]
+                    dst_data[(x+y*S)*4+1] = src_data[(x2+y2*S2)*4+1]
+                    dst_data[(x+y*S)*4+2] = src_data[(x2+y2*S2)*4+2]
+                    dst_data[(x+y*S)*4+3] = 255
+                }
+            }
+        } else {
+            for (var y=ymin; y<ymax; y++) {
+                for (var x=xmin; x<xmax; x++) {
+                    var dstPt = perspT.transformInverse(x,y);
+                    let x2=Math.round(dstPt[0]), y2=Math.round(dstPt[1])
+                    let a=dstPt[0]-x2, b=dstPt[1]-y2
+                    dst_data[(x+y*S)*4] = 
+                        (1-a)*((1-b)*src_data[(x2+y2*S2)*4]
+                               + b *src_data[(x2+(y2+1)*S2)*4])
+                        + a *((1-b)*src_data[((x2+1)+y2*S2)*4]
+                               + b *src_data[((x2+1)+(y2+1)*S2)*4])
+                    dst_data[(x+y*S)*4+1] = 
+                        (1-a)*((1-b)*src_data[(x2+y2*S2)*4+1]
+                                + b *src_data[(x2+(y2+1)*S2)*4+1])
+                        +  a *((1-b)*src_data[((x2+1)+y2*S2)*4+1]
+                                + b *src_data[((x2+1)+(y2+1)*S2)*4+1])
+                    dst_data[(x+y*S)*4+2] = 
+                        (1-a)*((1-b)*src_data[(x2+y2*S2)*4+2]
+                                + b *src_data[(x2+(y2+1)*S2)*4+2])
+                        +  a *((1-b)*src_data[((x2+1)+y2*S2)*4+2]
+                                + b *src_data[((x2+1)+(y2+1)*S2)*4+2])
+                    dst_data[(x+y*S)*4+3] = 255
+                }
+            }
+        }
+        dst_ctx.putImageData(dst_image, xmin,ymin)
+    }
     
-    /* Add overlay of tag grid */
-    if (this.flagShowGrid) {
+    var dst_pts = [0,0, S,0, S,S, 0,S]
+    var perspT = PerspT(src_pts, dst_pts);
+    unwarpTag(ctx2, ctx, perspT, [0,0,S2,S2], [0,0,S,S])
+    
+    /* 2.2. Overlay normalized grid */
+    
+    function drawGrid(ctx, npix, S) {
         let step = S/npix;
+        let N = npix+1;
     
         ctx.save()
         ctx.setTransform(1,0, 0,1, 0,0)
         ctx.beginPath()
-        for (let i=0; i<9; i++) {
+        for (let i=0; i<N; i++) {
             ctx.moveTo(0, step*i)
             ctx.lineTo(S, step*i)
             ctx.moveTo(step*i,0)
@@ -1041,8 +1052,8 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
         ctx.strokeStyle='red'
         ctx.stroke()
         ctx.beginPath()
-        for (let i=0; i<9; i++) {
-            for (let j=0; j<9; j++) {
+        for (let i=0; i<N; i++) {
+            for (let j=0; j<N; j++) {
                 let x = step*(i+0.5), y=step*(j+0.5)
                 ctx.moveTo(x-1,y)
                 ctx.lineTo(x+1,y)
@@ -1054,6 +1065,22 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
         ctx.stroke()
         ctx.restore()
     }
+    
+    if (this.flagShowGrid) {
+        drawGrid(ctx, npix, S)
+    }
+    
+    /* Drawing of 1.2, done after 2. */
+    ctx2.setTransform(1,0, 0,1, 0,0)
+    ctx2.beginPath()
+    ctx2.moveTo(src_pts[0],src_pts[1])
+    ctx2.lineTo(src_pts[6],src_pts[7])
+    ctx2.lineTo(src_pts[4],src_pts[5])
+    ctx2.lineTo(src_pts[2],src_pts[3])
+    ctx2.strokeStyle='red'
+    ctx2.stroke()
+
+    /* 3. Drawing of tag reference */
 
     if ($('#tagImage')[0].complete) {
         var tmpCanvas = $('#zoomTagCanvas')[0];
@@ -1065,32 +1092,7 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
 
         /* Add overlay of tag grid */
         if (this.flagShowGrid) {
-            let step = S/npix;
-    
-            ctx.save()
-            ctx.setTransform(1,0, 0,1, 0,0)
-            ctx.beginPath()
-            for (let i=0; i<9; i++) {
-                ctx.moveTo(0, step*i)
-                ctx.lineTo(S, step*i)
-                ctx.moveTo(step*i,0)
-                ctx.lineTo(step*i,S)
-            }
-            ctx.strokeStyle='red'
-            ctx.stroke()
-            ctx.beginPath()
-            for (let i=0; i<9; i++) {
-                for (let j=0; j<9; j++) {
-                    let x = step*(i+0.5), y=step*(j+0.5)
-                    ctx.moveTo(x-1,y)
-                    ctx.lineTo(x+1,y)
-                    ctx.moveTo(x,y-1)
-                    ctx.lineTo(x,y+1)
-                }
-            }
-            ctx.strokeStyle='blue'
-            ctx.stroke()
-            ctx.restore()
+            drawGrid(ctx, npix, S);
         }
     }
 }
