@@ -169,11 +169,8 @@ function convertTracksToV2() {
     
     return obj
 }
-function saveEventsToFile(format) {
-    console.log("saveEventsToFile: exporting to JSON...")
 
-    if (!format) {format='v2'}
-
+function getTimestampedVideoname() {
     function addZero(i) {
         if (i < 10) {
             i = "0" + i;
@@ -187,9 +184,16 @@ function saveEventsToFile(format) {
                    addZero(D.getHours())+addZero(D.getMinutes())+addZero(D.getSeconds());
     //.toISOString()
 
-    let filename = videoinfo.videoName +
-                   '-Tracks-'+timestamp+'.json'
+    return videoinfo.videoName+'-'+timestamp
+}
 
+function saveEventsToFile(format) {
+    console.log("saveEventsToFile: exporting to JSON...")
+
+    if (!format) {format='v2'}
+
+    let filename = getTimestampedVideoname() + '_Tracks.json'
+    
     let obj = null
     if (format == 'v1')
         obj = convertTracksToV1()
@@ -545,22 +549,27 @@ function loadTagsFromFile(event) {
     reader.readAsText(fileToRead);
 }
 
-function saveTagsToFile(event) {
-    console.log("saveTagsToFile: exporting to JSON...")
+function saveTagsToFile(version) {
+    console.log("saveTagsToFile: exporting to JSON... v=",version)
 
-    obj = {
-        "info": {
-            "type": "tags-multiframe",
-            "data-format": "root.data[frame].tags[id_in_frame]"
-            //"source": "Exported from labelbee on "+Date()
-        },
-        "data": Tags
+    let filename = getTimestampedVideoname() + '_Tags.json'
+
+    if (version == 'v1') {
+        saveObjToJsonFile(Tags, filename)
+    } else if (version == 'v2') {
+        obj = {
+            "info": {
+                "type": "tags-multiframe",
+                "data-format": "root.data[frame].tags[id_in_frame]"
+                //"source": "Exported from labelbee on "+Date()
+            },
+            "data": Tags
+        }
+        saveObjToJsonFile(obj, filename)
+    } else {
+        console.log('ERROR in saveTagsToFile: unknown version=',version)
     }
-
-    saveObjToJsonFile(Tags, 'Tags.json')
 }
-
-
 
 
 // Server I/O

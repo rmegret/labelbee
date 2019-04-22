@@ -218,7 +218,7 @@ ZoomOverlay.prototype.syncToTracks = function() {
 }
 // See also ZoomOverlay.prototype.onToggleButtonShowOnVideo
 
-// # FABRIC.JS EVENT HANDLING
+// #MARK # FABRIC.JS EVENT HANDLING
 
 /**
  * @memberof ZoomOverlay
@@ -300,7 +300,7 @@ ZoomOverlay.prototype.onObjectModified = function(evt) {
     this.syncToTracks()
 }
 
-// # GUI CALLBACKS
+// #MARK # GUI CALLBACKS
 
 ZoomOverlay.prototype.onKeyDown = function(e) {
     if (logging.keyEvents)
@@ -410,7 +410,7 @@ ZoomOverlay.prototype.zoomSetScale = function(scale) {
     this.refreshZoom()
 }
 
-// # GEOMETRY 
+// #MARK # GEOMETRY 
 
 ZoomOverlay.prototype.refreshZoomSize = function(event, ui) {
     // Refresh based on new video size or new canvas size
@@ -476,7 +476,7 @@ ZoomOverlay.prototype.frame2canvas = function(posFrame) {
     return posCanvas
 }
 
-// # PART SELECTION
+// #MARK # PART SELECTION
 
 ZoomOverlay.prototype.onObjectSelected = function(option) {
     if (logging.zoomOverlay)
@@ -589,7 +589,7 @@ ZoomOverlay.prototype.startAutoLabel = function() {
     this.selectNextLabel(undefined)
 }
 
-// # PART INSERTION DELETION MODIFICATION
+// #MARK # PART INSERTION DELETION MODIFICATION
 
 ZoomOverlay.prototype.newPointInFrame = function(posFrame,label) {
     if (logging.zoomOverlay)
@@ -704,7 +704,7 @@ ZoomOverlay.prototype.deleteCurrentPoint = function() {
     this.deletePoint(rect)
 }
 
-// # LABEL LIST / BUTTONS
+// #MARK # LABEL LIST / BUTTONS
 
 ZoomOverlay.prototype.onButtonClickAddRemovePartLabel = function(evt, action) {
     if (logging.zoomOverlay)
@@ -816,7 +816,7 @@ ZoomOverlay.prototype.refreshButtonListParts = function() {
     }
 }
 
-// # DRAWING
+// #MARK # DRAWING
 
 ZoomOverlay.prototype.FabricPartRect = fabric.util.createClass(fabric.Rect, {
     type: 'partrect',
@@ -1097,6 +1097,7 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
     }
 }
 
+// #MARK # DISTRACTOR MANAGEMENT
 
 ZoomOverlay.prototype.loadTagHammingMatrix = function() {
     let path = '/data/tags/tag25h5inv/tag25h5_hamming_matrix_5-6.json'
@@ -1218,6 +1219,50 @@ ZoomOverlay.prototype.onClickAlternateTag = function(id) {
         refreshChronogram()
     }
 }
+ZoomOverlay.prototype.rotateTag = function(angle) {
+    console.log('ZoomOverlay.rotateTag('+angle+')')
+    
+    let rotate = (function() {
+        var unshift = Array.prototype.unshift,
+            splice = Array.prototype.splice;
+
+        return function(array, count) {
+            var len = array.length >>> 0,
+                count = count >> 0;
+
+            unshift.apply(array, splice.call(array, count % len, len));
+            return array;
+        };
+    })();
+    
+    //var activeObject = overlay.getActiveObject()
+    //if (activeObject == null) {
+    //    return;
+    //}
+    //let obs = activeObject.obs
+    let tag = getCurrentTag()
+    
+    if (!tag) return;
+    //if (!obs.tagangle) obs.tagangle=0.0;
+    
+    if (angle==90) {
+        //obs.tagangle+=angle;
+        rotate(tag.p, 1)
+    } else if (angle==-90) {
+        //obs.tagangle+=angle;
+        rotate(tag.p,-1)
+    }
+        
+    // Update the rest
+    //updateRectObsActivity(activeObject)
+    //automatic_sub()
+    
+    //updateForm(activeObject)
+    //refreshChronogram()
+    this.refreshZoom()
+}
+
+// #MARK # REFRESH
 
 ZoomOverlay.prototype.refreshZoom = function() {
 

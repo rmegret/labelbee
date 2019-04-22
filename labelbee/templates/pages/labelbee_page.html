@@ -421,6 +421,10 @@
                       
                       <label for="loadtags" value="Load Tags" class="btn btn-default btn-xs" tabindex=0>Load Tags</label>
                       <input id="loadtags" type="file" style="display:none" >
+                      
+                      <input id="savetags" onclick="saveTagsToFile('v1')" type="button" value="Save Tags" class="btn btn-default btn-xs" title="Save raw JSON">
+                      
+                      <input id="savetags" onclick="saveTagsToFile('v2')" type="button" value="Save Tags (v2)" class="btn btn-default btn-xs" title="Save Tag JSON v2">
                                       
                       <input id="eraseTags" onclick="eraseTags()" type="button" value="Erase Tags..." class="btn btn-orange btn-xs" >
                       </div>
@@ -536,7 +540,10 @@
                 </td><td class="top-align">
                 <div>
                   <div class='tagdivresizable'>
-                    <div class="inline-block tagImageID">ID</div><br>
+                    <div class="inline-block tagImageID">ID</div>
+                    <input value="⤿" onclick="zoomOverlay.rotateTag(-90)" type="button" class="btn btn-xs" title="Rotate CCW" style="display=inline;">
+                    <input value="⤾" onclick="zoomOverlay.rotateTag(+90)" type="button" class="btn btn-xs" title="Rotate CW" style="display=inline;">
+                    <br>
                     <div id="tagImageDiv" style="width:50px; height:50px;" class="inline-block hidden" >
                     <img id="tagImage" class="pixelated"/>
                     </div>
