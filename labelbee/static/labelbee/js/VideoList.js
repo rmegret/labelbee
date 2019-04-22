@@ -161,6 +161,8 @@ VideoManager.prototype.checkVideoList = function() {
 }
 
 VideoManager.prototype.updateVideoListForm = function() {
+    let videoManager = this;
+
     var html = "";
     html +="<tr>"+
                 "<td>#</td>"+
@@ -172,11 +174,18 @@ VideoManager.prototype.updateVideoListForm = function() {
     for (var i = 0; i < videoListTable.length; i++){
         let checkStr = htmlCheckmark(videoListTable[i].checked)
         let tagCheckStr = htmlCheckmark(videoListTable[i].tagsChecked)
+        let videoname = videoListTable[i].video
+        let url = videoManager.videonameToURL(videoname)
+        let color = "black"
+        if (videoListTable[i].checked === true) 
+            color = "green"
+        if (videoListTable[i].checked === false) 
+            color = "red"
     
         html +="<tr>"+
                 "<td><input type='button' data-arrayIndex='"+ i +"' onclick='videoManager.selectVideoFromList(this)' class='btn btn-default btn-xs glyph-xs' value='"+(i+1)+"'></button>"+ "</td>"+
                 "<td>"+ videoListTable[i].video + "</td>"+
-                "<td>"+ checkStr + "</td>"+
+                "<td><a target='_blank' href='"+ url + "'><span class='glyphicon glyphicon-link' style='color:"+color+"'></span></a>"+ checkStr + "</td>"+
                 "<td>"+ tagCheckStr + "</td>"+
                 "</tr>";
     }

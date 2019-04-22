@@ -372,6 +372,8 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     let name = videoinfo.name
     $('#videoName').html(name)
     
+    $('a.videolink').attr('href',name)
+    
     let videourl = videoinfo.videoURL;
     
     this.loadVideoInfo(videourl+'.info.json')
