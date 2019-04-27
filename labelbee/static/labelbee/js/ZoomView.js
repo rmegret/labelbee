@@ -107,6 +107,7 @@ function ZoomOverlay(canvas, canvasOverlay) {
     this.flagShowDistractors = false
     //$('#checkboxZoomShowDistractors').toggleClass('active', this.flagShowDistractors)
     this.flagShowAlternateHamming = false
+    this.flagShowAlternateHamming2 = true
     this.flagShowAlternateFocus = true
     $('#videozoom_distractors').accordion('option','active',this.flagShowDistractors)
     
@@ -914,6 +915,143 @@ function drawPixelated(img,context,x,y, sx,sy){
   }
 };
 
+function drawTagBin(tagbin,n, context,x,y, sx,sy, margin, inv){
+  if (!zoom) zoom=4; if (!x) x=0; if (!y) y=0;
+  if (margin == undefined) margin=1;
+  if (inv == undefined) inv=true;
+  
+  inv=Number(inv)
+
+  if (inv) {
+    context.fillStyle = "white";
+  } else {
+    context.fillStyle = "black";
+  }
+  context.fillRect(x, y, sx*(n+2*margin), sy*(n+2*margin));
+
+  var x0=x+margin*sx;
+  var y0=y+margin*sy;
+
+  for (var x2=0;x2<n;++x2){
+    for (var y2=0;y2<n;++y2){
+      var i=(y2*n+x2);
+      if (tagbin[i] ^ inv==0)
+          context.fillStyle = "black";
+      else
+          context.fillStyle = "white";
+      context.fillRect(x0+x2*sx, y0+y2*sy, sx, sy);
+    }
+  }
+};
+
+function extractTagBin(ctx, n, x,y,sx,sy, margin, inv) {
+    var m=n+margin*2;
+    
+    var bin = '';
+    var v
+    
+    var one, zero
+    if (inv) {
+      one='0'
+      zero='1'
+    } else {
+      one='1'
+      zero='0'
+    }
+    
+    idata = ctx.getImageData(0,0,m*sx,m*sy).data;
+    
+    var min=255,max=0;
+    for (var i=0;i<m*sy;++i){
+        for (var j=0;j<m*sx;++j) {
+          var t=j+i*m*sx;
+          var r=idata[t*4  ];
+          var g=idata[t*4+1];
+          var b=idata[t*4+2];
+          var a=idata[t*4+3];
+          
+          if (r<min) min=r;
+          if (r>max) max=r;
+        }
+    }
+    var threshold = (max+min)/2;
+    
+    for (var i=0;i<n;++i){
+        for (var j=0;j<n;++j){
+          var k=i+j*n;
+          var t=x+(j+margin)*sx + m*sx*(y+(i+margin)*sy);
+          var r=idata[t*4  ];
+          var g=idata[t*4+1];
+          var b=idata[t*4+2];
+          var a=idata[t*4+3];
+          v = (r>threshold)? one:zero;
+          bin+=v;
+          //console.log(i,j,r)
+        }
+      }
+    return bin
+}
+
+function hamming(bin1, bin2) {
+    if (bin1.length!=bin2.length) {
+        console.log('hamming: unequal lengths',bin1,bin2)
+        return -1;
+    }
+    var count=0;
+    for (var k=0; k<bin1.length; k++) {
+        if (bin1[k]!=bin2[k]) count++
+    }
+    return count;
+}
+
+function findBestHamming(bin, tagbin_list) {
+    //var N = tagbin_list.keys().length;
+    //N = 100;
+    
+    var bestH = 25, bestId=-1;
+    for (var k in tagbin_list) {
+        var bin2 = tagbin_list[k];
+        var H = hamming(bin, bin2)
+        if (H<bestH) {bestId=k; bestH=H;}
+        //console.log(k,H,bin,bin2)
+    }
+    return {id:bestId, H:bestH}
+}
+
+function rotateTagBin(bin, n) {
+    // Rotate CCW
+    var out = ''
+
+    for (var j=0;j<n;++j){
+        for (var i=0;i<n;++i){
+          var k=(n-1-j)+i*n;
+          out += bin[k]
+        }
+    }
+    return out
+}
+
+function findAllHamming(bin, tagbin_list, maxH) {
+    var all = {}
+    for (var h=0; h<=maxH; h++) {
+        all[h]=[]
+    }
+    for (var k in tagbin_list) {
+        var bin2 = tagbin_list[k];
+        var H = Number(hamming(bin, bin2))
+        if (H<=maxH) {
+            all[H].push(k)
+        }
+        //console.log(k,H,bin,bin2)
+    }
+    return all
+}
+// function findAllHammingWithRot(bin, tagbin_list, maxH, n) {
+//     if (n==undefined) n=5;
+//     
+//     var a = findAllHamming(bin, tagbin_list, maxH)
+// }
+
 ZoomOverlay.prototype.updateTagView = function(tag) {
     this.updateDistractors()
 
@@ -1033,6 +1171,8 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
     var dst_pts = [0,0, S,0, S,S, 0,S]
     var perspT = PerspT(src_pts, dst_pts);
     unwarpTag(ctx2, ctx, perspT, [0,0,S2,S2], [0,0,S,S])
+    
+    currentTagBin = extractTagBin(ctx, npix-2, pixsize/2, pixsize/2, pixsize,pixsize, 1, true);
     
     /* 2.2. Overlay normalized grid */
     
@@ -1155,7 +1295,7 @@ ZoomOverlay.prototype.updateDistractors = function() {
     let zoomOverlay = this
     let tagid = tag.id
     
-    console.log('tagid=',tagid)
+    //console.log('tagid=',tagid)
     
     let S = ''
         
@@ -1165,10 +1305,33 @@ ZoomOverlay.prototype.updateDistractors = function() {
         let hammingLists = zoomOverlay.hammingMatrix[tag.id]
     
         for (let H in hammingLists) {
-            S+='  H'+H+':  '
             let ids = hammingLists[H]
+            if (!ids || ids.length==0) continue;
+            S+='  H'+H+':  '
             for (let id of ids) {
-                console.log('Distractor ',id,' hamming=',H)
+                //console.log('Distractor ',id,' hamming=',H)
+            
+                let url = this.tagImgURL(String(id))
+            
+                S+='<div class="alternateTag">'+id+'<br><img class="alternateTag pixelated" src="'+url+'" onclick="zoomOverlay.onClickAlternateTag('+id+')"/></div>'
+            }
+        }
+    
+    }
+    
+    if (zoomOverlay.flagShowAlternateHamming2 && !!zoomOverlay.tagbin
+          && currentTagBin) {
+    
+        //let hammingLists = zoomOverlay.hammingMatrix[tag.id]
+    
+        var hammingLists = findAllHamming(currentTagBin, zoomOverlay.tagbin, 5)
+    
+        for (let H in Object.keys(hammingLists)) {
+            let ids = hammingLists[H]
+            if (!ids || ids.length==0) continue;
+            S+='  H'+H+':  '
+            for (let id of ids) {
+                //console.log('Distractor ',id,' hamming=',H)
             
                 let url = this.tagImgURL(String(id))
             
@@ -1183,7 +1346,7 @@ ZoomOverlay.prototype.updateDistractors = function() {
         let ids = getIdsInFocus()
         S+='  Focus:  '
         for (let id of ids) {
-            console.log('Distractor ',id)
+            //console.log('Distractor ',id)
         
             let url = this.tagImgURL(String(id))
         
@@ -1210,6 +1373,13 @@ ZoomOverlay.prototype.onClickAlternateTag = function(id) {
         
         updateObsLabel(obs, "wrongid", true)
         obs.newid = id
+        if (!obs.fix) {
+            obs.fix={
+                newid:undefined,
+                tagangle:0
+              }
+        }
+        obs.fix.newid = id
         
         // Update the rest
         updateRectObsActivity(activeObject)
@@ -1219,21 +1389,57 @@ ZoomOverlay.prototype.onClickAlternateTag = function(id) {
         refreshChronogram()
     }
 }
-ZoomOverlay.prototype.rotateTag = function(angle) {
-    console.log('ZoomOverlay.rotateTag('+angle+')')
-    
-    let rotate = (function() {
+
+rotatep = (function() {
         var unshift = Array.prototype.unshift,
             splice = Array.prototype.splice;
 
         return function(array, count) {
             var len = array.length >>> 0,
                 count = count >> 0;
-
+            array = deepcopy(array)
             unshift.apply(array, splice.call(array, count % len, len));
             return array;
         };
     })();
+
+ZoomOverlay.prototype.rotateTag = function(angle) {
+    console.log('ZoomOverlay.rotateTag('+angle+')')
+    
+    var activeObject = overlay.getActiveObject()
+    if (activeObject == null) {
+        newRectForCurrentTag()
+        activeObject = overlay.getActiveObject()
+    }
+    
+    if (activeObject == null) {
+        return;
+    }
+    let obs = activeObject.obs
+    
+    updateObsLabel(obs, "wrongid", true)
+    obs.newid = undefined
+    if (!obs.fix) {
+        obs.fix={
+            newid:undefined,
+            tagangle:0
+          }
+    }
+    
+    if (angle==90) {
+        obs.fix.tagangle+=angle;
+        //rotate(tag.p, 1)
+    } else if (angle==-90) {
+        obs.fix.tagangle+=angle;
+        //rotate(tag.p,-1)
+    }
+    
+    // Update the rest
+    updateRectObsActivity(activeObject)
+    automatic_sub()
+    
+    updateForm(activeObject)
+    refreshChronogram()
     
     //var activeObject = overlay.getActiveObject()
     //if (activeObject == null) {
@@ -1245,21 +1451,154 @@ ZoomOverlay.prototype.rotateTag = function(angle) {
     if (!tag) return;
     //if (!obs.tagangle) obs.tagangle=0.0;
     
-    if (angle==90) {
-        //obs.tagangle+=angle;
-        rotate(tag.p, 1)
-    } else if (angle==-90) {
-        //obs.tagangle+=angle;
-        rotate(tag.p,-1)
+    if (!tag.fix) {
+        tag.fix={
+            newid:undefined,
+            tagangle:0,
+            oldp:deepcopy(tag.p)
+          }
     }
-        
-    // Update the rest
-    //updateRectObsActivity(activeObject)
-    //automatic_sub()
     
-    //updateForm(activeObject)
-    //refreshChronogram()
+    tag.fix.tagangle=obs.fix.tagangle;
+    tag.p = rotatep(tag.fix.oldp, tag.fix.tagangle/90)
+    
     this.refreshZoom()
+}
+
+function getCoveredTags(obs) {
+    obs = Tracks[obs.frame][obs.ID]
+    if (!obs.span) {
+        obs.span = {f1:obs.frame, f2:obs.frame}
+    }
+    var f1 = obs.span.f1
+    var f2 = obs.span.f2
+    
+    //console.log('f1 =',f1,'f2=',f2)
+
+    let coveredTags = []
+    for (let F in Tags) {
+        let frame = Number(F)
+        
+        if ( (frame<f1) || (frame>f2) ) continue;
+    
+        let tags = Tags[F].tags
+        for (let i in tags) {
+            let tag = tags[i]
+            
+            if (tag.id == obs.ID) {
+                coveredTags.push(tag)
+            }
+        }
+    }
+    return coveredTags
+}
+
+ZoomOverlay.prototype.spreadTagFix = function() {
+    var activeObject = overlay.getActiveObject()
+    if (activeObject == null) {
+        return;
+    }
+    let obs = activeObject.obs
+    if (!obs.fix) { return }
+    
+    let tags = getCoveredTags(obs)
+    console.log(tag)
+    for (k in tags) {
+        var tag = tags[k]
+        
+        console.log(tag)
+        
+        if (!tag.fix) {
+            tag.fix={
+                newid:undefined,
+                tagangle:0,
+                oldp:deepcopy(tag.p)
+              }
+        }
+        tag.fix.newid = obs.fix.newid
+        tag.fix.tagangle = obs.fix.tagangle
+        tag.p = rotatep(tag.fix.oldp, tag.fix.tagangle/90)
+    }
+}
+ZoomOverlay.prototype.bakeTagFix = function(obs) {
+    if (!obs) {
+        var activeObject = overlay.getActiveObject()
+        if (activeObject == null) {
+            return;
+        }
+        let obs = activeObject.obs
+    }
+    if (hasLabel(obs,'falsealarm')) {
+        if (!obs.fix) {
+            obs.fix = {
+                newid:'falsealarm'
+              }
+        }
+    }
+    if (!obs.fix) { return }
+    
+    let tags = getCoveredTags(obs)
+    for (k in tags) {
+        var tag = tags[k]
+        
+        if (!tag.fix) {
+            tag.fix={
+                newid:undefined,
+                tagangle:0,
+                oldp:deepcopy(tag.p)
+              }
+        }
+        
+        if (obs.fix.newid=='falsealarm') {
+            tag.fix.newid = obs.fix.newid
+            if (tag.fix.oldid==undefined)
+              tag.fix.oldid = tag.id
+            tag.id = tag.fix.newid
+        } else {
+            tag.fix.newid = obs.fix.newid
+            tag.fix.tagangle = obs.fix.tagangle
+            tag.p = rotatep(tag.fix.oldp, tag.fix.tagangle/90)
+        
+            if (tag.fix.oldid==undefined)
+              tag.fix.oldid = tag.id
+            tag.id = tag.fix.newid
+        }
+    }
+}
+ZoomOverlay.prototype.bakeAllTagFixes = function() {
+    for (let F in Tracks) {
+        for (let id in Tracks[F]) {
+            let obs = Tracks[F][id]
+            
+            this.bakeTagFix(obs)
+        }
+    }
+    refreshChronogram()
+}
+ZoomOverlay.prototype.undoTagFix = function(tag) {
+    if (!tag.fix) {
+        return
+    }
+    if (tag.fix.oldid==undefined) {
+        return
+    }
+    if (tag.id=='falsealarm') {
+        tag.id = tag.fix.oldid
+    } else {
+        tag.id = tag.fix.oldid
+        tag.p = deepcopy(tag.fix.oldp)
+    }
+}
+ZoomOverlay.prototype.undoAllTagFixes = function() {
+    for (let F in Tags) {
+        let tags = Tags[F].tags
+        for (let i in tags) {
+            let tag = tags[i]
+            
+            this.undoTagFix(tag)
+        }
+    }
+    refreshChronogram()
 }
 
 // #MARK # REFRESH
@@ -1442,9 +1781,19 @@ ZoomOverlay.prototype.refreshInfo = function() {
     let tag=getCurrentTag()
     
     if (tag) {
-        $('#zoomInfo').html(
-            'id='+tag.id+' H='+tag.hamming+' dm='+tag.dm        
-        )
+        let str = 'id='+tag.id
+            +' H='+tag.hamming
+            +' dm='+tag.dm
+        if (tag.fix) {
+            str += '<br>tagangle='+tag.fix.tagangle
+            if (tag.fix.newid!=undefined) {
+                str += ' newid='+tag.fix.newid
+            }
+            if (tag.fix.oldid!=undefined) {
+                str += ' oldid='+tag.fix.oldid
+            }
+        }
+        $('#zoomInfo').html(str)
     } else {
         $('#zoomInfo').html('')
     }

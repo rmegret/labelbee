@@ -34,6 +34,11 @@ function cloneObs(obs) {
     return cloned
 }
 
+function deepcopy(obj) {
+    if (!obj) return obj;
+    return JSON.parse(JSON.stringify(obj))
+}
+
 function copyObs(obs, tmpObs) {
     obs.ID = tmpObs.ID;
     obs.time = tmpObs.time;
@@ -57,6 +62,7 @@ function copyObs(obs, tmpObs) {
     obs.labels = tmpObs.labels;
     obs.parts = tmpObs.parts;
     obs.newid = tmpObs.newid; // in case of wrongid
+    obs.fix = deepcopy(tmpObs.fix);
 }
 function hasParts(obs) {
     return (!!obs.parts && obs.parts.length>0)
