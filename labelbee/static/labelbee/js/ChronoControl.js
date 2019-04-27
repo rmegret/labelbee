@@ -1498,7 +1498,7 @@ path.enter()
     // crossLeft does not receive mouse events
 
 path.attr("d",function(d){
-          var X=axes.xScale(Number(d.x1)), Y=axes.yScale(Number(d.y)) + axes.yScale.rangeBand()/2;
+          var X=axes.xScale(Number(d.x1)), Y=axes.yScale(d.y) + axes.yScale.rangeBand()/2;
           return crossFunction(X,Y)})
     .attr("stroke", function(d){
 
