@@ -249,7 +249,8 @@ VideoControl.prototype.onFrameChanged = function(event) {
     if (this.seekTiming) {
         this.seekTiming=false;
         let elapsed = (new Date().getTime() - this.seekWallTime)/1000.0
-        console.log('Seek frame '+this.currentFrame+': elapsed='+elapsed+' s')
+        if (logging.frameEvents)
+            console.log('Seek frame '+this.currentFrame+': elapsed='+elapsed+' s')
     }
     
     if (logging.frameEvents)

@@ -59,6 +59,8 @@ function OverlayControl(canvasTagId) {
     $('#showTagsOrientation').prop('checked',showTagsOrientation)
     $('#showTagsChrono').prop('checked',showTagsChrono)
     $('#showObsChrono').prop('checked',showObsChrono)
+    
+    tagMarker = 'quad'
 
     /* Overlay and selection */
 
@@ -451,19 +453,24 @@ OverlayControl.prototype.refreshOverlay = function() {
     let overlay = this
     
     if (overlay.canvas1) {
-        refreshRectFromObs()
-        overlay.canvas1.renderAll(); // Clear and render all rectangles
-        
+        if (showTagsTracks || showSelectedTagsTracks)
+            plotTagsTracks(overlay.ctx)
+        if (showTags)
+            plotTags(overlay.ctx)
+            
         if (showObsTracks) {
             plotTracks(overlay.ctx);
         }
+    
+        if (showObs) {
+            refreshRectFromObs()
+            overlay.canvas1.renderAll(); // Clear and render all rectangles
+        } else {
+            overlay.canvas1.clear(); // Remove all rects
+        }
+        
         plotROI(overlay.ctx)
         plotExcludeRects(overlay.ctx)
-        
-        if (showTagsTracks || showSelectedTagsTracks)
-            plotTagsTracks(overlay.ctx)
-        else if (showTags)
-            plotTags(overlay.ctx)
     }
 }
 
@@ -986,7 +993,7 @@ function plotTracks(ctx) {
             x=x2; y=y2; z=z2;
         }
         for (let f=fmin; f<=fmax; f++) {
-            if (f==F) continue;
+            if (showObs && (f==F)) continue;
         
             let obs = getObsHandle(f, id, false)
             if (!obs) continue;
@@ -996,14 +1003,13 @@ function plotTracks(ctx) {
             x = rect.left+rect.width/2
             y = rect.top+rect.height/2
     
-//             if (f-F<0)
-//                 color = "red"
-//             else
-//                 color = "green"
             if (isSelected) {
                 color = setColorS(f);
             } else {
                 color = setColor(f);
+            }
+            if (f==F) {
+                color = 'yellow'
             }
                 
             radius = 3;
@@ -1025,8 +1031,9 @@ function plotTracks(ctx) {
 var showObsTracks = false
 function onShowObsChanged() {
     showObs = $('#showObs')[0].checked
-    showObsTracks = $("#showObsTrack")[0].checked
-    videoControl.refresh()
+    showObsTracks = $("#showObsTracks")[0].checked
+    //videoControl.refresh()
+    overlay.hardRefresh()
 }
 
 // #MARK ## Tag tracks
@@ -1109,34 +1116,59 @@ function plotTag(ctx, tag, color, flags) {
     let pt = overlay.videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
     
     if (isCurrentSelection(tag.id)) {
-        ctx.save()
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 3;
-        ctx.closePath();
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, radius+2, 0, Math.PI * 2);
-        ctx.strokeStyle = 'yellow';
-        ctx.lineWidth = 3;
-        ctx.closePath();
-      
         if (tag.frame == getCurrentFrame()) {
             if (showTagsOrientation) {
                 plotTagOrientation(ctx, tag, '#00ff00')
             } else {
                 ctx.beginPath();
-                ctx.moveTo(pt.x-20,pt.y)
-                ctx.lineTo(pt.x+20,pt.y)
-                ctx.moveTo(pt.x,pt.y-20)
-                ctx.lineTo(pt.x,pt.y+20)
-                ctx.strokeStyle = '#00FF00';
-                ctx.lineWidth = 3;
+                if (tagMarker == 'quad' && tag.p) {
+                    let p = tag.p
+                    let q = [
+                          overlay.videoToCanvasPoint({x:p[0][0],y:p[0][1]}),
+                          overlay.videoToCanvasPoint({x:p[1][0],y:p[1][1]}),
+                          overlay.videoToCanvasPoint({x:p[2][0],y:p[2][1]}),
+                          overlay.videoToCanvasPoint({x:p[3][0],y:p[3][1]})
+                       ]
+                    ctx.moveTo(q[0].x,q[0].y)
+                    ctx.lineTo(q[1].x,q[1].y)
+                    ctx.lineTo(q[2].x,q[2].y)
+                    ctx.lineTo(q[3].x,q[3].y)
+                    ctx.lineTo(q[0].x,q[0].y)
+                    ctx.strokeStyle = '#00FF00';
+                    ctx.lineWidth = 2;
+                } else if (tagMarker == 'cross') {
+                    ctx.moveTo(pt.x-20,pt.y)
+                    ctx.lineTo(pt.x+20,pt.y)
+                    ctx.moveTo(pt.x,pt.y-20)
+                    ctx.lineTo(pt.x,pt.y+20)
+                    ctx.strokeStyle = '#00FF00';
+                    ctx.lineWidth = 2;
+                } else if (tagMarker == 'circle') { // 'round'
+                    ctx.arc(pt.x, pt.y, 10, 0, Math.PI * 2, true);
+                    ctx.strokeStyle = '#00FF00';
+                    ctx.lineWidth = 2;
+                } else { //
+                    ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#00FF00';
+                    ctx.lineWidth = 4;
+                }
                 ctx.closePath();
                 ctx.stroke();
             }
             ctx.restore()
+        } else {
+            ctx.save()
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.closePath();
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, radius+2, 0, Math.PI * 2);
+            ctx.strokeStyle = 'yellow';
+            ctx.lineWidth = 3;
+            ctx.closePath();
         }
     } else {
         ctx.beginPath();
@@ -1270,17 +1302,19 @@ function plotTagsTracks(ctx) {
             let p1 = overlay.videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
             p1.frame = f
             
-            if (p0 != null) {
+            if ((p0!=null) &&
+                (Number(p1.frame)-Number(p0.frame) <= 40)) {
+            
                 ctx.save()
                 ctx.beginPath();
                 ctx.moveTo(p0.x,p0.y)
                 ctx.lineTo(p1.x,p1.y)  
-                if (tag.hamming<1000 && (Number(p1.frame)-Number(p0.frame)<10)) {
+                if (tag.hamming<1000 && (Number(p1.frame)-Number(p0.frame)<=1)) {
                     ctx.setLineDash([])
                     ctx.lineWidth=2
                     color=setColor(f)          
                 } else {
-                    ctx.setLineDash([3,3])
+                    //ctx.setLineDash([3,3])
                     ctx.lineWidth=1
                     color=setColor(f,0.5)
                 }
@@ -1354,17 +1388,21 @@ function plotTagsTracks(ctx) {
                 let p1 = overlay.videoToCanvasPoint({"x":tag.c[0], "y":tag.c[1]})
                 p1.frame = f
             
-                if (typeof p0[tag.id] !== 'undefined') {
+                if ((p0!=null && p0[tag.id] != null) &&
+                (Number(p1.frame)-Number(p0[tag.id].frame) <= 40)) {
+//                if (typeof p0[tag.id] !== 'undefined') {
+  
+                
                     ctx.save()
                     ctx.beginPath();
                     ctx.moveTo(p0[tag.id].x,p0[tag.id].y)
                     ctx.lineTo(p1.x,p1.y)  
-                    if (tag.hamming<1000 && (Number(p1.frame)-Number(p0[tag.id].frame)<10)) {
+                    if (tag.hamming<1000 && (Number(p1.frame)-Number(p0[tag.id].frame)<=1)) {
                         ctx.setLineDash([])
                         ctx.lineWidth=2
                         color2=setColor2(f)          
                     } else {
-                        ctx.setLineDash([3,3])
+                        //ctx.setLineDash([3,3])
                         ctx.lineWidth=1
                         color2=setColor2(f,0.5)
                     }
@@ -1383,6 +1421,7 @@ function plotTagsTracks(ctx) {
     }
     }
     
+    if (false) // Done in plotTag
     {
         // Plot current tag position
         let f=F;
