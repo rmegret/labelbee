@@ -132,10 +132,12 @@
           <p>
           <div id="beeInfo" class="">
             <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button" class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
-            Change ID <input type="text" size="6" value="" id="I" onkeypress="onKeyDown_IDEdit(event)""></input>
+            ID <input type="text" size="6" value="" id="I" onkeypress="onKeyDown_IDEdit(event)""></input>
             <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-warning btn-xs" style="position: inline" id="deleteButton">
             <button type="button" onclick="undoAction()" class="btn btn-info btn-xs" style="position: inline" id="undoButton">Undo</button>
 
+            <small style="color:blue">newid <input type="text" size="6" value="" id="newid" onkeypress="onKeyDown_NewIDEdit(event)""></input></small>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle wrongid" thelabel="wrongid" title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">wrongid <span class="glyphicon glyphicon-remove small blue"></span></button>
             
             <div id="alerttext"></div>
             
@@ -152,7 +154,6 @@
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsed" thelabel="expulsed" title="Toogle label Expulsed: when a bee is rejected/expelled from the colony">expulsed</button>
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsing" thelabel="expulsing" title="Toogle label Expulsion: when a bee is rejecting/expelling another individual from the colony">expulsing</button>
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle falsealarm" thelabel="falsealarm" title="Toogle FalseAlarm label: when a tag detection is not a tag">falsealarm <span class="glyphicon glyphicon-remove small red"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle wrongid" thelabel="wrongid" title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">wrongid <span class="glyphicon glyphicon-remove small blue"></span></button>
             </div>
             
             <br>
@@ -429,11 +430,8 @@
                       <input id="savetags" onclick="saveTagsToFile('v2')" type="button" value="Save Tags (v2)" class="btn btn-default btn-xs" title="Save Tag JSON v2">
                                       
                       <input id="eraseTags" onclick="eraseTags()" type="button" value="Erase Tags..." class="btn btn-orange btn-xs" >
+
                       </div>
-                      
-                      <input onclick="zoomOverlay.bakeAllTagFixes()" type="button" value="Apply Tag Fixes..." class="btn btn-orange btn-xs" title="Bake in WrongId fixes">
-                                      
-                      <input onclick="zoomOverlay.undoAllTagFixes();" type="button" value="Undo Tag Fixes..." class="btn btn-orange btn-xs" title="Undo WrongId fixes">
                       
                       <div>
                       <label>Events (Tracks):</label>
@@ -451,6 +449,22 @@
                       <input id="saveCSV" onclick="saveEventsToCSV()" type="button" value="Export Events (CSV)" class="btn btn-default btn-xs">
                       
                       <input id="saveBBoxes" onclick="saveEventsToBBoxes()" type="button" value="Export Events (BBox)" class="btn btn-default btn-xs" >
+                      </div>
+                      
+                      <div>
+                      <label>Fixes:</label>
+                      <br>
+                      
+                      <input onclick="zoomOverlay.bakeAllTagFixes()" type="button" value="Apply Tag Fixes..." class="btn btn-orange btn-xs" title="Bake in WrongId fixes">
+                                      
+                      <input onclick="zoomOverlay.undoAllTagFixes();" type="button" value="Undo Tag Fixes..." class="btn btn-orange btn-xs" title="Undo WrongId fixes">
+                      
+                      <input onclick="zoomOverlay.deleteFalsealarmTags()" type="button" value="Delete FA Tags..." class="btn btn-orange btn-xs" title="Delete all tags with falsealarm ID (NO UNDO)">
+                      
+                      <input onclick="zoomOverlay.deleteFalsealarmEvents();" type="button" value="Delete FA Events..." class="btn btn-orange btn-xs" title="Delete all events with a falsealarm label (NO UNDO)">
+                      
+                      <input onclick="zoomOverlay.deleteWrongIdEvents();" type="button" value="Delete WId Events..." class="btn btn-orange btn-xs" title="Delete all events with a wrongid label (NO UNDO)">
+                      
                       </div>
                       
                   </div>
@@ -640,16 +654,16 @@
                       <div>
                           <label>Overlay:</label>
                           <div class="checkbox">
-                            <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>Show Events/Obs</label>
+                            <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>Show Events</label>
                           </div>
                           <div class="checkbox">
-                            <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Events/Obs Tracks</label>
+                            <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Events Tracks</label>
                           </div>
                           <div class="checkbox">
                             <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">Show Tags</label>
                           </div>
                           <div class="checkbox">
-                            <label><input type="checkbox" checked="true" id="showTagsTracks" onclick="onShowTagsTracksChanged()">Show Tags Tracks</label>
+                            <label><input type="checkbox" checked="true" id="showTagsTracks" onclick="onShowTagsTracksChanged()">Show Tag Tracks</label>
                           </div>
                           <div class="checkbox">
                             <label><input type="checkbox" checked="true" id="showSelectedTagsTracks" onclick="onShowTagsTracksChanged()">Show Selected Track</label>
@@ -657,6 +671,10 @@
                           <div class="checkbox">
                             <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">Show Tags Orientation</label>
                           </div>
+                          <div>Tag style
+                          <select id="selectboxTagMarker" name="tagMarker" onchange="overlay.selectboxTagMarkerChanged()" class=""></select>
+                          </div>
+                          
                           <div class="inline-block">
                               Track window
                   

@@ -1477,12 +1477,13 @@ var lineFunction = d3.svg.line()
               .y(function(d) {return d.y;})
               .interpolate("linear");
 
-function crossFunction(x,y){
+function crossFunction(x,y, r){
     x = Number(x);
     y = Number(y);
+    if (!r) { r=10 }
 
-    return "M"+(x-10)+","+(y-10)+"L"+(x+10)+","+(y+10)+"M"+(x+10)+","
-    +(y-10)+"L"+(x-10)+","+(y+10);
+    return "M"+(x-r)+","+(y-r)+"L"+(x+r)+","+(y+r)+"M"+(x+r)+","
+    +(y-r)+"L"+(x-r)+","+(y+r);
 }
 
 //Append line to chronogram
@@ -1499,17 +1500,23 @@ path.enter()
 
 path.attr("d",function(d){
           var X=axes.xScale(Number(d.x1)), Y=axes.yScale(d.y) + axes.yScale.rangeBand()/2;
-          return crossFunction(X,Y)})
+          //if((d.labels == "wrongid") && (d.newid != null))
+          //    return crossFunction(X,Y,5);
+          return crossFunction(X,Y, 5)})
     .attr("stroke", function(d){
-
         var color = "black";
         if(d.labels == "falsealarm")
             color = "red";
         else if(d.labels == "wrongid")
-            color = "#00bfff";
+            color = "#009fff";
         return color;
     })
-    .attr("stroke-width", 3)
+    .attr("stroke-width", function(d){
+        var width = 3;
+        if((d.labels == "wrongid") && (d.newid != null))
+            width = 1.5;
+        return width;
+    })
     .attr("fill", "none");
 path.exit().remove();
 
@@ -1718,7 +1725,7 @@ function getFlatTags(useFilter) {
     for (let F in Tags) {
         let tags = Tags[F].tags
         for (let i in tags) {
-            let id = Number(tags[i].id)
+            let id = tags[i].id
             
             if (useFilter) {
                 if (flag_restrictID) {
@@ -1739,11 +1746,11 @@ function getTTags() {
     allTagsID = new Set()
 
     /* Transpose Tags data structure */
-    let ttags = []
+    let ttags = {}
     for (let F in Tags) {
         let tags = Tags[F].tags
         for (let i in tags) {
-            let id = Number(tags[i].id)
+            let id = String(tags[i].id)
             
             allTagsID.add(id)
             
@@ -1755,8 +1762,8 @@ function getTTags() {
             }
             
             if (typeof ttags[id] === 'undefined')
-                ttags[id]=[];
-            ttags[String(id)][String(F)]=tags[i];
+                ttags[id]={}
+            ttags[id][String(F)]=tags[i];
         }
     }
     
@@ -2093,8 +2100,9 @@ function refreshChronogram() {
           let obsarray = ttags[id]
           let activeInterval = []
           let isActive = false
-          for (let f in obsarray) {
-            let tags = obsarray[f]
+          for (let frame in obsarray) {
+            let tags = obsarray[frame]
+            let f = Number(frame)
         
             if (!tagsSampleFilter(tags)) {
                 continue
@@ -2185,96 +2193,97 @@ function refreshChronogram() {
 function interpolateTags(maxgap) {
     tagIntervals = []
 
+    function getAllTTags() {
         /* Transpose Tags data structure */
-        let ttags = []
+        let ttags = {}
         for (let F in Tags) {
             let tags = Tags[F].tags
             for (let i in tags) {
-                let id = Number(tags[i].id)
-                ttags[id]=[];
-            }
-        }
-        for (let F in Tags) {
-            let tags = Tags[F].tags
-            for (let i in tags) {
-                let id = Number(tags[i].id)
-                ttags[id][F]=tags[i];
-            }
-        }
-        
-        function pushInterpolate(id,f1,f2) {
-            let T1 = ttags[id][f1]
-            let T2 = ttags[id][f2]
-            let P1 = T1.p
+                let id = String(tags[i].id)
             
-            for (let j=f1+1; j<f2; j++) {
-                let a = (j-f1)/(f2-f1)
-                let cx = (1-a)*T1.c[0] + a*T2.c[0]
-                let cy = (1-a)*T1.c[1] + a*T2.c[1]
-                let dx = cx - T1.c[0]
-                let dy = cy - T1.c[1]
-                //cx = T1.c[0]
-                //cy = T1.c[1]
-                //dx = 0
-                //dy = 0
-                let pts = [ 
-                            [P1[0][0]+dx,P1[0][1]+dy],
-                            [P1[1][0]+dx,P1[1][1]+dy],
-                            [P1[2][0]+dx,P1[2][1]+dy],
-                            [P1[3][0]+dx,P1[3][1]+dy]
-                          ];
-                if (Tags[j] == null) {
-                    Tags[j] = {tags:[]}
-                }
-                Tags[j].tags.push({id: id, c: [cx,cy], hamming: 1000, p: pts, frame: j})
-                console.log('interpolate id='+id+' f='+j)
+                if (typeof ttags[id] === 'undefined')
+                    ttags[id]={}
+                ttags[id][String(F)]=tags[i];
             }
+        }
+        return ttags;
+    }
+
+    let ttags = getAllTTags()
+    
+    function pushInterpolate(id,f1,f2) {
+        let T1 = ttags[id][f1]
+        let T2 = ttags[id][f2]
+        let P1 = T1.p
+        
+        for (let j=f1+1; j<f2; j++) {
+            let a = (j-f1)/(f2-f1)
+            let cx = (1-a)*T1.c[0] + a*T2.c[0]
+            let cy = (1-a)*T1.c[1] + a*T2.c[1]
+            let dx = cx - T1.c[0]
+            let dy = cy - T1.c[1]
+            //cx = T1.c[0]
+            //cy = T1.c[1]
+            //dx = 0
+            //dy = 0
+            let pts = [ 
+                        [P1[0][0]+dx,P1[0][1]+dy],
+                        [P1[1][0]+dx,P1[1][1]+dy],
+                        [P1[2][0]+dx,P1[2][1]+dy],
+                        [P1[3][0]+dx,P1[3][1]+dy]
+                      ];
+            if (Tags[j] == null) {
+                Tags[j] = {tags:[]}
+            }
+            Tags[j].tags.push({id: id, c: [cx,cy], hamming: 1000, p: pts, frame: j})
+            console.log('interpolate id='+id+' f='+j)
+        }
+    }
+
+    /* Convert to intervals */
+    for (let id in ttags) {
+      let obsarray = ttags[id]
+      let activeInterval = []
+      let isActive = false
+      for (let f0 in obsarray) {
+        let f = Number(f0)
+        let tags = obsarray[f]
+    
+        if (!tagsSampleFilter(tags)) {
+            continue
         }
     
-        /* Convert to intervals */
-        for (let id in ttags) {
-          let obsarray = ttags[id]
-          let activeInterval = []
-          let isActive = false
-          for (let f0 in obsarray) {
-            let f = Number(f0)
-            let tags = obsarray[f]
-        
-            if (!tagsSampleFilter(tags)) {
-                continue
-            }
-        
-            if (isActive) {
-              let doPush = false
-              if (activeInterval.end == f-1) {
-                activeInterval.end = f
-              } else if (f - activeInterval.end < maxgap) {
-                  // Try to interpolate
-                  
-                  pushInterpolate(id,activeInterval.end,f)
-                  
-                  activeInterval.end = f
-              } else {
-                  doPush = true
-              }
-              if (doPush) {
-                // Close previous 
-                //activeInterval['end']++
-                //tagIntervals.push(activeInterval)
-                // Open new one
-                activeInterval={'id':id,'begin':f,'end':f}
-              }
-            } else {
-              // Open new one
-              activeInterval={'id':id,'begin':f,'end':f}
-              isActive=true;
-            }
+        if (isActive) {
+          let doPush = false
+          if (activeInterval.end == f-1) {
+            activeInterval.end = f
+          } else if (f - activeInterval.end < maxgap) {
+              // Try to interpolate
+              
+              pushInterpolate(id,activeInterval.end,f)
+              
+              activeInterval.end = f
+          } else {
+              doPush = true
           }
-          // Close if active
-          if (isActive)
-            activeInterval['end']++
+          if (doPush) {
+            // Close previous 
+            //activeInterval['end']++
             //tagIntervals.push(activeInterval)
+            // Open new one
+            activeInterval={'id':id,'begin':f,'end':f}
+          }
+        } else {
+          // Open new one
+          activeInterval={'id':id,'begin':f,'end':f}
+          isActive=true;
         }
+      }
+      // Close if active
+      if (isActive)
+        activeInterval['end']++
+        //tagIntervals.push(activeInterval)
+    }
 }
 
 function computeMotionDirection() {

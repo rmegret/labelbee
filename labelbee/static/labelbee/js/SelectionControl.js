@@ -83,7 +83,9 @@ function hardRefreshLabelTogglePanel() {
                           .html(content)
                           .attr('thelabel',item.label)
                           .attr('title',item.description)
-                        
+        
+        // This button can be accessed as: $('.labeltoggle[thelabel="xxxx"]')
+        
         panel.append( button )
     } 
 
@@ -246,6 +248,10 @@ function updateFormButtons() {
     }
 }
 
+function updateButtonsForLabel(obs, label) {
+    $('.labeltoggle[thelabel="'+label+'"]').toggleClass('active',hasLabel(obs,label))
+}
+
 /* Update form rectangle data from activeObject */
 /* CAUTION: use updateForm(null) for empty form */
 function updateForm(activeObject) {
@@ -253,8 +259,10 @@ function updateForm(activeObject) {
         console.log('updateForm: activeObject=',activeObject)
     }
 
+    $('#newid').val('')
     if (activeObject === null) {
         $('#I').val('-')
+        $('#newid').val('')
         
         $('#X').html("X: -")
         $('#Y').html("Y: -")
@@ -288,19 +296,7 @@ function updateForm(activeObject) {
             console.log("ERROR: updateForm called for activeObject with non existing observation. activeObject=", activeObject)
             return
         }
-        
-//         $('#F').prop('checked', obs.bool_acts[0]);
-//         $('#P').prop('checked', obs.bool_acts[1]);
-//         $('#E').prop('checked', obs.bool_acts[2]);
-//         $('#L').prop('checked', obs.bool_acts[3]);
-        
-//         $('.labelcheckbox.fanning').prop('checked', hasLabel(obs,'fanning'));
-//         $('.labelcheckbox.pollen').prop('checked', hasLabel(obs,'pollen'));
-//         $('.labelcheckbox.entering').prop('checked', hasLabel(obs,'entering'));
-//         $('.labelcheckbox.leaving').prop('checked', hasLabel(obs,'leaving'));
-//         $('.labelcheckbox.falsealarm').prop('checked', hasLabel(obs,'falsealarm'));
-//         $('.labelcheckbox.wrongid').prop('checked', hasLabel(obs,'wrongid'));
-                
+
         if (typeof obs.notes === 'undefined')
             $('#notes').prop('value', '');
         else
@@ -308,14 +304,12 @@ function updateForm(activeObject) {
             
         $('#labels').val(getLabels(obs).join(','))
         
-        $('.labeltoggle.fanning').toggleClass('active',hasLabel(obs,'fanning'))
-        $('.labeltoggle.pollen').toggleClass('active',hasLabel(obs,'pollen'))
-        $('.labeltoggle.entering').toggleClass('active',hasLabel(obs,'entering'))
-        $('.labeltoggle.leaving').toggleClass('active',hasLabel(obs,'leaving'))
-        $('.labeltoggle.falsealarm').toggleClass('active',hasLabel(obs,'falsealarm'))
-        $('.labeltoggle.wrongid').toggleClass('active',hasLabel(obs,'wrongid'))
-        $('.labeltoggle.walking').toggleClass('active',hasLabel(obs,'walking'))
-        $('.labeltoggle.expulsion').toggleClass('active',hasLabel(obs,'expulsion'))
+        for (var labelItem of labelButtonsArray) {
+            updateButtonsForLabel(obs, labelItem.label)
+        }
+        
+        if (obs.newid != null)
+            $('#newid').val(obs.newid)
     }
 
 }
@@ -703,37 +697,41 @@ function onLabelToggled(event) {
     if (logging.guiEvents)
         console.log("onLabelToggled: event=", event)
     var activeObject = overlay.getActiveObject()
-    var target = event.target;
+    var target = event.currentTarget;
     if (activeObject == null) {
         newRectForCurrentTag()
         activeObject = overlay.getActiveObject()
     }
-    if (activeObject !== null) {
-        let obs = activeObject.obs
-        
-        let oldState = $(target).hasClass('active')
-        
-        console.log('oldState=',oldState)
-        let isOn = !oldState
-        
-        
-        $(target).toggleClass('active', isOn)
-        
-        let labelList = ['fanning','pollen','entering','leaving','walking','expulsion',
-                'falsealarm','wrongid'];
-        
-        let theClass = $(target).attr('thelabel')
-        updateObsLabel(obs, theClass, isOn)
-        
-        console.log('onLabelToggled: thelabel=',theClass,'isOn=',isOn,'obs.labels=',obs.labels)
-        
-        // Update the rest
-        updateRectObsActivity(activeObject)
-        automatic_sub()
-        
-        updateForm(activeObject)
-        refreshChronogram()
+    if (activeObject == null) {
+        console.log('onLabelToggled: aborted, could not get an activeObject')
+        return
     }
+    
+    let obs = activeObject.obs
+    
+    let thelabel = $(target).attr('thelabel')
+    let oldState = $(target).hasClass('active')
+
+    let isOn = !oldState
+    $(target).toggleClass('active', isOn)
+    updateObsLabel(obs, thelabel, isOn)
+        
+    console.log('onLabelToggled: thelabel=',thelabel,'newstate=',isOn,'obs.labels=',obs.labels)
+    
+    if ((thelabel=="wrongid") && (isOn)) {
+        if (!obs.fix) {
+            obs.fix = {
+                  newid: undefined
+              }
+        }
+    }
+    
+    // Update the rest
+    updateRectObsActivity(activeObject)
+    automatic_sub()
+    
+    updateForm(activeObject)
+    refreshChronogram()
 }
 
 // If labels changed from pressing return ?

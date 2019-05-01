@@ -267,6 +267,8 @@ function onKeyDown_IDEdit(event) {
         let new_id = fieldID.value
 
         let activeObject = overlay.getActiveObject()
+        if (!activeObject) return;
+        
         if (activeObject.status === "new") {
             activeObject.id = new_id
             printMessage("ID changed + submitted", "green")
@@ -288,6 +290,50 @@ function onKeyDown_IDEdit(event) {
             videoControl.refresh();
             refreshChronogram()
         }
+    }
+}
+
+
+function onKeyDown_NewIDEdit(event) {
+    if (logging.keyEvents)
+        console.log("onKeyDown_NewIDEdit: event=",event)
+    var key = event.which || event.keyCode;
+    if (key == 13) { // Enter
+        let frame = getCurrentFrame()
+        let fieldID = document.getElementById("newid");
+        let new_id = fieldID.value
+        
+        if (new_id == '') {
+            new_id = undefined
+        }
+
+        let activeObject = overlay.getActiveObject()
+        
+        if (!activeObject) return;
+        
+        let obs = activeObject.obs
+        obs.newid = new_id
+        if (new_id != null) {
+            if (!obs.fix) {
+                obs.fix = {
+                      newid: undefined
+                  }
+            }
+            obs.fix.newid = new_id;
+        }
+        
+        if ((new_id != null) && !hasLabel(obs,'wrongid')) {
+            updateObsLabel(obs,'wrongid',true)
+        }
+        
+        if (activeObject.status === "new") {
+            submit_bee(activeObject)
+        } else /* status=="db"*/ {
+            storeObs(obs)
+        }
+        overlay.hardRefresh();
+        refreshChronogram()
+        updateForm(activeObject)
     }
 }
 

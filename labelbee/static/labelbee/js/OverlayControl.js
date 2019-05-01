@@ -60,7 +60,10 @@ function OverlayControl(canvasTagId) {
     $('#showTagsChrono').prop('checked',showTagsChrono)
     $('#showObsChrono').prop('checked',showObsChrono)
     
-    tagMarker = 'quad'
+    overlay.tagMarkerOptions = ['quad','cross','circle']
+    overlay.selectboxTagMarkerInit()
+    overlay.tagMarker = 'quad'
+    overlay.selectboxTagMarkerUpdate()
 
     /* Overlay and selection */
 
@@ -110,6 +113,38 @@ function OverlayControl(canvasTagId) {
 }
 OverlayControl.prototype = {}
 
+
+function selectboxSetOptions(selectbox, options, names) {
+    selectbox.find('option').remove()
+    $.each(options, function (i, el) {
+        let name
+        if (name == null) {
+            name = el
+        } else {
+            name = names[i]
+        }
+        selectbox.append("<option value='"+el+"'>"+name+"</option>");
+    });
+}
+
+OverlayControl.prototype.selectboxTagMarkerInit = function() {
+    var selectbox = $("#selectboxTagMarker")
+    
+    selectboxSetOptions(selectbox, this.tagMarkerOptions);
+}
+OverlayControl.prototype.selectboxTagMarkerUpdate = function(value) {
+    var selectbox = $("#selectboxTagMarker")
+    
+    if (value != null) {
+        this.tagMarker = value
+    }
+    
+    selectbox.val(this.tagMarker)
+}
+OverlayControl.prototype.selectboxTagMarkerChanged = function() {
+    this.tagMarker = $('#selectboxTagMarker').val()
+    this.hardRefresh()
+}
 
 
 OverlayControl.prototype.getActiveObject = function() {
@@ -858,7 +893,14 @@ function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
     ctx.font = "20px Arial";
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
-    ctx.fillText(String(rect.id), x, y - radius - 3);
+    
+    let obs=rect.obs
+    if (hasLabel(obs,'wrongid')) {
+        ctx.fillStyle = 'cyan';
+        ctx.fillText(String(rect.id), x, y - radius - 3);
+    } else {
+        ctx.fillText(String(rect.id), x, y - radius - 3);
+    }
 
     let acti = activityString(rect.obs)
 
@@ -899,7 +941,22 @@ function identifyBeeRect(ctx, rect, radius) {
     ctx.font = "20px Arial";
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
-    ctx.fillText(String(rect.id), x, y - radius - 3);
+    let obs=rect.obs
+    if (hasLabel(obs,'wrongid')) {
+        if (obs.newid == null) {
+            ctx.fillStyle = 'cyan';
+            ctx.fillText(String(obs.ID), x, y - radius - 3);
+        } else {
+            ctx.font = "14px Arial";
+            ctx.fillStyle = 'cyan';
+            ctx.fillText(String(obs.ID), x, y - radius - 3);
+            ctx.font = "10px Arial";
+            ctx.fillStyle = color;
+            ctx.fillText(String(obs.newid), x, y - radius - 16);
+        }
+    } else {
+        ctx.fillText(String(rect.id), x, y - radius - 3);
+    }
 
     let acti = activityString(rect.obs)
 
@@ -1121,7 +1178,7 @@ function plotTag(ctx, tag, color, flags) {
                 plotTagOrientation(ctx, tag, '#00ff00')
             } else {
                 ctx.beginPath();
-                if (tagMarker == 'quad' && tag.p) {
+                if (overlay.tagMarker == 'quad' && tag.p) {
                     let p = tag.p
                     let q = [
                           overlay.videoToCanvasPoint({x:p[0][0],y:p[0][1]}),
@@ -1136,14 +1193,14 @@ function plotTag(ctx, tag, color, flags) {
                     ctx.lineTo(q[0].x,q[0].y)
                     ctx.strokeStyle = '#00FF00';
                     ctx.lineWidth = 2;
-                } else if (tagMarker == 'cross') {
+                } else if (overlay.tagMarker == 'cross') {
                     ctx.moveTo(pt.x-20,pt.y)
                     ctx.lineTo(pt.x+20,pt.y)
                     ctx.moveTo(pt.x,pt.y-20)
                     ctx.lineTo(pt.x,pt.y+20)
                     ctx.strokeStyle = '#00FF00';
                     ctx.lineWidth = 2;
-                } else if (tagMarker == 'circle') { // 'round'
+                } else if (overlay.tagMarker == 'circle') { // 'round'
                     ctx.arc(pt.x, pt.y, 10, 0, Math.PI * 2, true);
                     ctx.strokeStyle = '#00FF00';
                     ctx.lineWidth = 2;

@@ -1467,6 +1467,17 @@ ZoomOverlay.prototype.rotateTag = function(angle) {
 
 function getCoveredTags(obs) {
     obs = Tracks[obs.frame][obs.ID]
+    
+    let tracks = flatTracksAll.filter(
+              function(element) {return element.obs == obs}
+          )
+    if (tracks.length>0) {
+        let track=tracks[0]
+        if (! ('span' in obs)) {
+            obs.span = {'f1':track.span.f1, 'f2':track.span.f2}
+        }
+    }
+    
     if (!obs.span) {
         obs.span = {f1:obs.frame, f2:obs.frame}
     }
@@ -1575,6 +1586,61 @@ ZoomOverlay.prototype.bakeAllTagFixes = function() {
     }
     refreshChronogram()
 }
+ZoomOverlay.prototype.deleteFalsealarmTags = function() {
+
+    var filter = (obj, predicate) => 
+        Object.keys(obj)
+          .filter( key => predicate(obj[key]) )
+          .reduce( (res, key) => Object.assign(res, { [key]: obj[key] }), {} );
+
+    for (let F in Tags) {
+        let tags = Tags[F].tags
+        
+        Tags[F].tags = filter(Tags[F].tags,
+                              (tag) => tag.id!='falsealarm')
+        if ($.isEmptyObject(Tags[F].tags)) {
+            delete Tags[F]
+        }
+    }
+    
+    refreshChronogram()
+}
+ZoomOverlay.prototype.deleteFalsealarmEvents = function() {
+    
+    for (let F in Tracks) {
+        for (let id in Tracks[F]) {
+            let obs = Tracks[F][id]
+            
+            if (hasLabel(obs,'falsealarm')) {
+                delete Tracks[F][id]
+            }
+        }
+        if ($.isEmptyObject(Tracks[F])) {
+            delete Tracks[F]
+        }
+    }
+    
+    refreshChronogram()
+}
+ZoomOverlay.prototype.deleteWrongIdEvents = function() {
+    
+    for (let F in Tracks) {
+        for (let id in Tracks[F]) {
+            let obs = Tracks[F][id]
+            
+            if (hasLabel(obs,'wrongid')) {
+                delete Tracks[F][id]
+            }
+        }
+        if ($.isEmptyObject(Tracks[F])) {
+            delete Tracks[F]
+        }
+    }
+    
+    refreshChronogram()
+}
+
+
 ZoomOverlay.prototype.undoTagFix = function(tag) {
     if (!tag.fix) {
         return
