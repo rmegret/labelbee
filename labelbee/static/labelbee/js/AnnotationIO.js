@@ -410,9 +410,13 @@ function setTracks(obj) {
     refreshChronogram()
 }
 function onReaderLoad(event) {
-    console.log(event.target.result);
+    if (logging.io) {
+        console.log(event.target.result);
+    }
     var obj = JSON.parse(event.target.result);
-    console.log(obj)
+    if (logging.io) {
+        console.log(obj)
+    }
     
     setTracks(obj);
 }

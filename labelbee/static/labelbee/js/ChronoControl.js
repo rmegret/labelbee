@@ -461,205 +461,273 @@ function eventSeekModeClicked(mode) {
     updateEventSeekMode()
 }
 
-function gotoFirstEvent() {
-    let frame = videoControl.getCurrentFrame()
-    let id = defaultSelectedBee
-    console.log("id=",id)
-    let interval = findNextTagEvent(0, id)
-    //nextSeekFocusWindow()
-    videoControl.seekFrame(Number(interval.begin))
+function getIdCoord(id) {
+    return axes.yScale(id)
 }
-function gotoLastEvent() {
-    let frame = videoControl.getCurrentFrame()
-    let id = defaultSelectedBee
-    console.log("id=",id)
-    let interval = findPreviousTagEvent(videoControl.maxframe(), id)
-    //nextSeekFocusWindow()
-    videoControl.seekFrame(Number(interval.begin))
+
+// Sort/compare Tag intervals
+function compareIncreasingIdBegin(a,b) {
+    let d=getIdCoord(a.id)-getIdCoord(b.id)
+    if (d==0) return (Number(a.begin)-Number(b.begin))
+    else return d
 }
-function gotoNextEvent() {
-    let frame = videoControl.getCurrentFrame()
-    let id = defaultSelectedBee
-    console.log("id=",id)
-    
-    if (eventSeekMode == 'tag') {
-        let interval = findNextTagEvent(Number(frame), id)
-    
-        if (interval==null) {
-            if (flag_autoEventMode) {
-                onClickNextID()
-                return
-            } else
-              return;
-        }
-    
-        console.log(interval)
-        defaultSelectedBee = id
-        //nextSeekFocusWindow()
-        videoControl.seekFrame(Number(interval.begin))
-    } else if (eventSeekMode == 'freetag') {
-        let interval = findNextFreeTagEvent(Number(frame), id)
-        console.log('goto interval=',interval)
-        if (interval==null) {
-              return;
-        }
-        if (interval.id != id) {
-            if (!flag_autoEventMode) {
-                console.log('not same id. aborted')
-                return
-            }
-        }
-        defaultSelectedBee = interval.id
-        videoControl.seekFrame(Number(interval.begin))
-    } else if (eventSeekMode == 'obs') {
-        let obs = findNextObsEvent(Number(frame), id)
-    
-        if (!obs) {
-            if (flag_autoEventMode) {
-                onClickNextID()
-                return
-            } else
-              return;
-        }
-    
-        console.log(obs)
-        defaultSelectedBee = id
-        //nextSeekFocusWindow()
-        videoControl.seekFrame(Number(obs.frame))
+function compareDecreasingIdBegin(a,b) {
+    let d=getIdCoord(a.id)-getIdCoord(b.id)
+    if (d==0) return -(Number(a.begin)-Number(b.begin))
+    else return -d
+}
+function isNotLabeled(element) {
+    return !element.labeling.labeled
+}
+function funGreaterThanIdBegin(id, frame) {
+    return function(element) {
+        return (element.id==id && Number(element.begin)>frame)
+           || (getIdCoord(element.id)>getIdCoord(id))
     }
 }
+function funLessThanIdBegin(id, frame) {
+    return function(element) {
+        return (element.id==id && Number(element.begin)<frame)
+           || (getIdCoord(element.id)<getIdCoord(id))
+    }
+}
+// Sort/compare Events
+function compareIncreasingIdFrame(a,b) {
+    let d=getIdCoord(a.id)-getIdCoord(b.id)
+    if (d==0) return (Number(a.frame)-Number(b.frame))
+    else return d
+}
+function compareDecreasingIdFrame(a,b) {
+    let d=getIdCoord(a.id)-getIdCoord(b.id)
+    if (d==0) return -(Number(a.frame)-Number(b.frame))
+    else return -d
+}
+function funGreaterThanIdFrame(id, frame) {
+    return function(element) {
+        return (element.id==id && Number(element.frame)>frame)
+           || (getIdCoord(element.id)>getIdCoord(id))
+    }
+}
+function funLessThanIdFrame(id, frame) {
+    return function(element) {
+        return (element.id==id && Number(element.frame)<frame)
+           || (getIdCoord(element.id)<getIdCoord(id))
+    }
+}
+function funEqualId(id) {
+    return function(element) {
+        return (element.id==id)
+    }
+}
+
+function gotoFrameId(frame, id) {
+    console.log("gotoFrameId frame=",frame,"id=",id)
+    defaultSelectedBee = id
+    videoControl.seekFrame(Number(frame))
+}
+
+function gotoFirstEvent() {
+    let from={frame:-1,id:defaultSelectedBee}
+    if (flag_autoEventMode) {
+        let ids = axes.yScale.domain()
+        if (!ids) return;
+        from.id = ids[0]
+    }
+    gotoNextEvent(from)
+}
+function gotoLastEvent() {
+    let from={frame:videoControl.maxframe()+1,id:defaultSelectedBee}
+    if (flag_autoEventMode) {
+        let ids = axes.yScale.domain()
+        if (!ids) return;
+        from.id=ids[ids.length-1]
+    }
+    gotoPreviousEvent(from)
+}
+function gotoNextEvent(from) {
+    let frame = Number(videoControl.getCurrentFrame())
+    let id = defaultSelectedBee
+    if (from) {
+        frame = from.frame
+        id = from.id
+    }
+    console.log("gotoNextEvent from frame=",frame,"id=",id)
+    
+    if (eventSeekMode == 'tag') {
+        let interval = findNextTagEvent(frame, id)
+    
+        if (!interval) {
+            console.log('Did not find next Tag')
+            return
+        }
+        gotoFrameId(interval.begin, interval.id)
+    } else if (eventSeekMode == 'freetag') {
+        let interval = findNextFreeTagEvent(frame, id)
+
+        if (!interval) {
+            console.log('Did not find next Unlabeled Tag')
+            return
+        }
+        gotoFrameId(interval.begin, interval.id)
+    } else if (eventSeekMode == 'obs') {
+        let obs = findNextObsEvent(frame, id)
+    
+        if (!obs) {
+            console.log('Did not find next Event')
+            return
+        }
+        gotoFrameId(obs.frame, obs.id)
+    }
+}
+function gotoPreviousEvent(from) {
+    let frame = Number(videoControl.getCurrentFrame())
+    let id = defaultSelectedBee
+    if (from) {
+        frame = from.frame
+        id = from.id
+    }
+    console.log("gotoPreviousEvent from frame=",frame,"id=",id)
+    
+    if (eventSeekMode == 'tag') {
+        let interval = findPreviousTagEvent(frame, id)
+    
+        if (!interval) {
+            console.log('Did not find previous Tag')
+            return
+        }
+        gotoFrameId(interval.begin, interval.id)
+    } else if (eventSeekMode == 'freetag') {
+        let interval = findPreviousFreeTagEvent(frame, id)
+
+        if (!interval) {
+            console.log('Did not find previous Unlabeled Tag')
+            return
+        }
+        gotoFrameId(interval.begin, interval.id)
+    } else if (eventSeekMode == 'obs') {
+        let obs = findPreviousObsEvent(frame, id)
+    
+        if (!obs) {
+            console.log('Did not find previous Event')
+            return
+        }
+        gotoFrameId(obs.frame, obs.id)
+    }
+}
+
 function findNextTagEvent(frame, id) {
-    let list = tagIntervals.filter(
-          function(element) {return element.id==id && ((element.id==id && Number(element.begin)>frame) || (Number(element.id)>Number(id)))}
-        ).sort(
-          function(a,b) {
-              let d=Number(a.id)-Number(b.id)
-              if (d==0) return Number(a.begin)-Number(b.begin)
-              else return d}
-        )
-    console.log(list)
-    if (list.length==0) return undefined
-    return list[0]
+    let tagList = []
+    if (flag_autoEventMode) {
+        tagList = tagIntervals
+    } else {
+        tagList = tagIntervals.filter(funEqualId(id))
+    }
+    if (!tagList) return undefined
+    
+    let tag = tagList
+        .sort(compareIncreasingIdBegin)
+        .find(funGreaterThanIdBegin(id,frame))
+    //console.log(tag)
+    return tag
 }
 function findNextFreeTagEvent(frame, id) {
-    let list = tagIntervals.filter(
-          function(element) {return !element.labeling.labeled && ((element.id==id && Number(element.begin)>frame) || (Number(element.id)>Number(id)))}
-        ).sort(
-          function(a,b) {
-              let d=Number(a.id)-Number(b.id)
-              if (d==0) return Number(a.begin)-Number(b.begin)
-              else return d}
-        )
-    console.log(list)
-    if (list.length==0) return undefined
-    return list[0]
+    let tagList = []
+    if (flag_autoEventMode) {
+        tagList = tagIntervals.filter(isNotLabeled)
+    } else {
+        tagList = tagIntervals
+              .filter(funEqualId(id))
+              .filter(isNotLabeled)
+    }
+    if (!tagList) return undefined
+
+    let tag = tagList
+          .sort(compareIncreasingIdBegin)
+          .find(funGreaterThanIdBegin(id,frame))
+    //console.log(tag)
+    return tag
 }
 function findNextObsEvent(frame, id) {
     let obsList = []
-    if (flag_hideInvalid) {
-        obsList = flatTracksValidGroupById[id]
+    if (flag_autoEventMode) {
+        if (flag_hideInvalid) {
+            obsList = flatTracksValid
+        } else {
+            obsList = flatTracksAll
+        }
     } else {
-        obsList = flatTracksAllGroudById[id]
+        if (flag_hideInvalid) {
+            obsList = flatTracksValidGroupById[id]
+        } else {
+            obsList = flatTracksAllGroupById[id]
+        }
     }
     if (!obsList) return undefined
-    let list = obsList.filter(
-          function(element) {return Number(element.frame)>frame}
-        ) // already sorted by frame
-    console.log(list)
-    if (list.length==0) return undefined
-    return list[0]
+    let obs = obsList.sort(compareIncreasingIdFrame)
+              .find(funGreaterThanIdFrame(id,frame))
+    //console.log(obs)
+    return obs
 }
+function findPreviousTagEvent(frame, id) {
+    let tagList = []
+    if (flag_autoEventMode) {
+        tagList = tagIntervals
+    } else {
+        tagList = tagIntervals.filter(funEqualId(id))
+    }
+    if (!tagList) return undefined
+    
+    let tag = tagList
+        .sort(compareDecreasingIdBegin)
+        .find(funLessThanIdBegin(id,frame))
+    //console.log(tag)
+    return tag
+}
+function findPreviousFreeTagEvent(frame, id) {
+    let tagList = []
+    if (flag_autoEventMode) {
+        tagList = tagIntervals.filter(isNotLabeled)
+    } else {
+        tagList = tagIntervals
+              .filter(funEqualId(id))
+              .filter(isNotLabeled)
+    }
+    if (!tagList) return undefined
+
+    let tag = tagList
+        .sort(compareDecreasingIdBegin)
+        .find(funLessThanIdBegin(id,frame))
+    //console.log(tag)
+    return tag
+}
+function findPreviousObsEvent(frame, id) {
+    let obsList = []
+    if (flag_autoEventMode) {
+        if (flag_hideInvalid) {
+            obsList = flatTracksValid
+        } else {
+            obsList = flatTracksAll
+        }
+    } else {
+        if (flag_hideInvalid) {
+            obsList = flatTracksValidGroupById[id]
+        } else {
+            obsList = flatTracksAllGroupById[id]
+        }
+    }
+    if (!obsList) return undefined
+    let obs = obsList.sort(compareDecreasingIdFrame)
+              .find(funLessThanIdFrame(id,frame))
+    //console.log(obs)
+    return obs
+}
+
 function nextSeekFocusWindow() {
     $( videoControl ).on('frame:changed',gotoEvent_seekCB)
 }
 function gotoEvent_seekCB() {
     $( videoControl ).off('frame:changed',gotoEvent_seekCB)
     focusTrackWindow()
-}
-function gotoPreviousEvent() {
-    let frame = videoControl.getCurrentFrame()
-    let id = defaultSelectedBee
-    console.log("id=",id)
-    if (eventSeekMode == 'tag') {
-        let interval = findPreviousTagEvent(Number(frame), id)
-        console.log('goto interval=',interval)
-        if (interval==null) {
-              return;
-        }
-        if (interval.id != id) {
-            if (!flag_autoEventMode) {
-                console.log('not same id. aborted')
-                return
-            }
-        }
-        defaultSelectedBee = interval.id
-        videoControl.seekFrame(Number(interval.begin))
-    } else if (eventSeekMode == 'freetag') {
-        let interval = findPreviousFreeTagEvent(Number(frame), id)
-        console.log('goto interval=',interval)
-        if (interval==null) {
-              return;
-        }
-        if (interval.id != id) {
-            if (!flag_autoEventMode) {
-                console.log('not same id. aborted')
-                return
-            }
-        }
-        defaultSelectedBee = interval.id
-        videoControl.seekFrame(Number(interval.begin))
-    } else if (eventSeekMode == 'obs') {
-        let obs = findPreviousObsEvent(Number(frame), id)
-    
-        if (!obs) {
-            if (flag_autoEventMode) {
-                onClickPrevID(true)
-                return
-            } else
-              return;
-        }
-    
-        console.log(obs)
-        defaultSelectedBee = id
-        //nextSeekFocusWindow()
-        videoControl.seekFrame(Number(obs.frame))
-    }
-}
-function findPreviousTagEvent(frame, id) {
-    let list = tagIntervals.filter(
-          function(element) {return (element.id==id && Number(element.begin)<frame) || (Number(element.id)<Number(id))}
-        ).sort(
-          function(a,b) {
-              let d=Number(a.id)-Number(b.id)
-              if (d==0) return -(Number(a.begin)-Number(b.begin))
-              else return -d}
-        )
-    console.log(list)
-    if (list.length==0) return undefined
-    return list[0]
-}
-function findPreviousFreeTagEvent(frame, id) {
-    let list = tagIntervals.filter(
-          function(element) {return !element.labeling.labeled && ((element.id==id && Number(element.begin)<frame) || (Number(element.id)<Number(id)))}
-        ).sort(
-          function(a,b) {
-              let d=Number(a.id)-Number(b.id)
-              if (d==0) return -(Number(a.begin)-Number(b.begin))
-              else return -d}
-        )
-    console.log(list)
-    if (list.length==0) return undefined
-    return list[0]
-}
-function findPreviousObsEvent(frame, id) {
-    let obsList = flatTracksValidGroupById[id]
-    if (!obsList) return undefined
-    let list = obsList.filter(
-          function(element) {return Number(element.frame)<frame}
-        ) // already sorted by frame
-    console.log(list)
-    if (list.length==0) return undefined
-    return list[list.length-1]
 }
 
 function onClickNextID() {
@@ -1942,7 +2010,7 @@ function updateTagsLabels() {
                 
                     if (hasLabel(ann,'wrongid') && (ann.obs.newid != null)) {
                         interval.newid=ann.obs.newid;
-                        console.log('ann=',ann,'=>',interval)
+                        //console.log('ann=',ann,'=>',interval)
                     }
                 
                     if (f1<ann.span.f1) {
@@ -1963,7 +2031,7 @@ function updateTagsLabels() {
                     
                     if (hasLabel(ann,'wrongid') && (ann.obs.newid != null)) {
                         interval.newid=ann.obs.newid;
-                        console.log('ann=',ann,'=>',interval)
+                        //console.log('ann=',ann,'=>',interval)
                     }          
                 }
             }
@@ -1974,7 +2042,7 @@ function updateTagsLabels() {
             intervalV.id=intervalV.newid
             intervalV.wrongid=false
             intervalV.virtual=true
-            console.log(interval,'=>',intervalV)
+            //console.log(interval,'=>',intervalV)
             tagIntervalsVirtual.push(intervalV)
         }
     }

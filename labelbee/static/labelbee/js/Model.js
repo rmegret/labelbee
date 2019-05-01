@@ -184,8 +184,8 @@ function cacheTags() {
         let tags = Tags[F].tags
         for (let i in tags) {
             let tag = tags[i]
-            let id = Number(tag.id)
-            let key = F.toString()+','+id.toString()
+            let id = String(tag.id)
+            let key = F.toString()+','+id
             if (typeof ttags[key] === 'undefined')
                 tagCache[key]=[tag]
             else
