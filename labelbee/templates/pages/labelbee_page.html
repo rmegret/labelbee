@@ -452,12 +452,8 @@
                       </div>
                       
                       <div>
-                      <label>Fixes:</label>
+                      <label>Selective delete:</label>
                       <br>
-                      
-                      <input onclick="zoomOverlay.bakeAllTagFixes()" type="button" value="Apply Tag Fixes..." class="btn btn-orange btn-xs" title="Bake in WrongId fixes">
-                                      
-                      <input onclick="zoomOverlay.undoAllTagFixes();" type="button" value="Undo Tag Fixes..." class="btn btn-orange btn-xs" title="Undo WrongId fixes">
                       
                       <input onclick="zoomOverlay.deleteFalsealarmTags()" type="button" value="Delete FA Tags..." class="btn btn-orange btn-xs" title="Delete all tags with falsealarm ID (NO UNDO)">
                       
@@ -542,6 +538,8 @@
                   <input value="Z+" onclick="zoomOverlay.zoomApplyScale(2)" type="button" class="btn btn-info btn-xs" title="Zoom In" style="display=inline;">
                   <input value="Z=" onclick="zoomOverlay.zoomSetScale(1)" type="button" class="btn btn-info btn-xs" title="Reset Zoom" style="display=inline;">
                   <input value="Z-" onclick="zoomOverlay.zoomApplyScale(1/2)" type="button" class="btn btn-info btn-xs" title="Zoom Out" style="display=inline;">
+                  <input value="⤿" onclick="zoomOverlay.rotateTag(-90)" type="button" class="btn btn-xs" title="Rotate CCW" style="display=inline;">
+                  <input value="⤾" onclick="zoomOverlay.rotateTag(+90)" type="button" class="btn btn-xs" title="Rotate CW" style="display=inline;">
                 </div>
                 
                 <div style="clear:both;"></div>
@@ -561,8 +559,6 @@
                 <div>
                   <div class='tagdivresizable'>
                     <div class="inline-block tagImageID">ID</div>
-                    <input value="⤿" onclick="zoomOverlay.rotateTag(-90)" type="button" class="btn btn-xs" title="Rotate CCW" style="display=inline;">
-                    <input value="⤾" onclick="zoomOverlay.rotateTag(+90)" type="button" class="btn btn-xs" title="Rotate CW" style="display=inline;">
                     <br>
                     <div id="tagImageDiv" style="width:50px; height:50px;" class="inline-block hidden" >
                     <img id="tagImage" class="pixelated"/>
@@ -578,8 +574,20 @@
                 
                 <div id='videozoom_distractors' class='subpanel collapsible default-active'> 
                   <label>Alternate Tags</label>
+                  <div>
                   <div id="zoomDistractors">
                     
+                  </div>
+                  <div class="small">
+                  <button onclick="zoomOverlay.onToggleButtonShowAlternate(event)" type="button" class="btn btn-green-toggle btn-xs alternate-use-image" title="Toggle Show Similar Tag from image">From image</button>
+                  <button onclick="zoomOverlay.onToggleButtonShowAlternate(event)" type="button" class="btn btn-green-toggle btn-xs alternate-use-focus" title="Toggle Show Similar Tag from image">From focus</button>
+
+                  &nbsp;
+                  
+                  <input onclick="zoomOverlay.bakeAllTagFixes()" type="button" value="Apply All Tag Fixes..." class="btn btn-orange btn-xs" title="Bake in WrongId fixes">
+                                  
+                  <input onclick="zoomOverlay.undoAllTagFixes();" type="button" value="Undo All Tag Fixes..." class="btn btn-orange btn-xs" title="Undo WrongId fixes">
+                  </div>
                   </div>
                 </div>
                 

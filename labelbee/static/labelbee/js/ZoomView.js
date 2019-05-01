@@ -96,7 +96,7 @@ function ZoomOverlay(canvas, canvasOverlay) {
 //     });
     $('#tagImage').on('load',x=>this.refreshTagImage())
                           
-    this.flagShowOverlay = false;
+    this.flagShowOverlay = true;
     $('#checkboxZoomShowOverlay').prop('checked', this.flagShowOverlay);
     this.flagShowGrid = true
     $('#buttonZoomShowGrid').toggleClass('active', this.flagShowGrid)
@@ -109,6 +109,11 @@ function ZoomOverlay(canvas, canvasOverlay) {
     this.flagShowAlternateHamming = false
     this.flagShowAlternateHamming2 = true
     this.flagShowAlternateFocus = true
+    
+    this.currentTagBin = ''
+    this.loadTagCodesFromServer()
+    $('button.alternate-use-image').toggleClass('active', this.flagShowAlternateHamming2)
+    $('button.alternate-use-focus').toggleClass('active', this.flagShowAlternateFocus)
     $('#videozoom_distractors').accordion('option','active',this.flagShowDistractors)
     
     $('#partLabel').change(this.onPartLabelTextChanged); // bind ok
@@ -121,7 +126,14 @@ function ZoomOverlay(canvas, canvasOverlay) {
             //console.log(event,ui)
             zoomOverlay.flagShowDistractors = ($('#videozoom_distractors').accordion('option','active')!==false);
             zoomOverlay.updateDistractors()
-        } );            
+        } );     
+        
+    $('#videozoom').accordion({
+        activate: function( event, ui ) {
+              console.log('Opening zoom overlay: refresh')
+              zoomOverlay.refreshZoom()
+          }
+      });
 }
 
 ZoomOverlay.prototype = {}
@@ -392,6 +404,24 @@ ZoomOverlay.prototype.clickShowZoom = function() {
     if (this.flagShowZoom) {
       this.syncFromTracks()
     }
+}
+ZoomOverlay.prototype.onToggleButtonShowAlternate = function(event) {
+    let button = $(event.currentTarget)
+    if (button.hasClass('alternate-use-image')) {
+        console.log('Toggle alternate-use-image/flagShowAlternateHamming2')
+        let active = !button.hasClass('active')
+        this.flagShowAlternateHamming2 = active
+        button.toggleClass('active', active)
+        this.refreshZoom()
+    }
+    if (button.hasClass('alternate-use-focus')) {
+        console.log('Toggle alternate-use-focus/flagShowAlternateFocus')
+        let active = !button.hasClass('active')
+        this.flagShowAlternateFocus = active
+        button.toggleClass('active', active)
+        this.refreshZoom()
+    }
+
 }
 // ZoomOverlay.prototype.clickShowDistractors = function() {
 //     this.flagShowDistractors = $('#checkboxZoomShowDistractors').is(':checked')
@@ -1172,7 +1202,7 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
     var perspT = PerspT(src_pts, dst_pts);
     unwarpTag(ctx2, ctx, perspT, [0,0,S2,S2], [0,0,S,S])
     
-    currentTagBin = extractTagBin(ctx, npix-2, pixsize/2, pixsize/2, pixsize,pixsize, 1, true);
+    this.currentTagBin = extractTagBin(ctx, npix-2, pixsize/2, pixsize/2, pixsize,pixsize, 1, true);
     
     /* 2.2. Overlay normalized grid */
     
@@ -1241,10 +1271,10 @@ ZoomOverlay.prototype.updateTagView = function(tag) {
 
 ZoomOverlay.prototype.loadTagHammingMatrix = function() {
     let path = '/data/tags/tag25h5inv/tag25h5_hamming_matrix_5-6.json'
-
+    let url = url_for(path)
 
     if (logging.zoomTag) {
-        console.log('loadTagHammingMatrix: loading path "'+path+'"...')  
+        console.log('loadTagHammingMatrix: loading from URL "'+url+'"...')  
     }
     //statusRequest('hammingMatrix',true,'')
     
@@ -1252,7 +1282,7 @@ ZoomOverlay.prototype.loadTagHammingMatrix = function() {
     
     let zoomOverlay = this
       
-     $.getJSON( url_for(path) ,
+     $.getJSON( url ,
         function(data) {
           console.log('loadTagHammingMatrix: loaded "'+path+'"')  
         }
@@ -1270,9 +1300,28 @@ ZoomOverlay.prototype.loadTagHammingMatrix = function() {
           //statusWidget.statusUpdate('videolistLoad',false,'')
         }
       )
-
-    
 }
+ZoomOverlay.prototype.loadTagCodesFromServer = function(){
+    let path = '/data/tags/tag25h5inv/tag25h5_bin.json'
+    let url = url_for(path)
+
+    console.log("tagCodesFromServer: importing tagbin from URL '"+url+"'...")
+
+    let zoomOverlay = this
+    $.ajax({
+          url: url, //server url
+          type: 'GET',    //passing data as post method
+          contentType: 'application/json', // returning data as json
+          data:'',
+          success:function(obj)
+          {
+            console.log('tagCodesFromServer: SUCCESS')
+            
+            zoomOverlay.tagbin = obj
+          },
+          error: showAjaxError('tagCodesFromServer: ERROR')
+        });
+  }
 
 ZoomOverlay.prototype.deleteDistractors = function() {
     
@@ -1320,11 +1369,11 @@ ZoomOverlay.prototype.updateDistractors = function() {
     }
     
     if (zoomOverlay.flagShowAlternateHamming2 && !!zoomOverlay.tagbin
-          && currentTagBin) {
+          && zoomOverlay.currentTagBin) {
     
         //let hammingLists = zoomOverlay.hammingMatrix[tag.id]
     
-        var hammingLists = findAllHamming(currentTagBin, zoomOverlay.tagbin, 5)
+        var hammingLists = findAllHamming(zoomOverlay.currentTagBin, zoomOverlay.tagbin, 5)
     
         for (let H in Object.keys(hammingLists)) {
             let ids = hammingLists[H]
@@ -1371,15 +1420,31 @@ ZoomOverlay.prototype.onClickAlternateTag = function(id) {
     if (activeObject !== null) {
         let obs = activeObject.obs
         
-        updateObsLabel(obs, "wrongid", true)
-        obs.newid = id
-        if (!obs.fix) {
-            obs.fix={
-                newid:undefined,
-                tagangle:0
-              }
+        if (obs.fix) {
+            
         }
-        obs.fix.newid = id
+        if (obs.ID == id) {
+            if (!obs.fix) {
+                // Just clicked on same tag
+            } else {
+                delete obs.fix['newid']
+                delete obs.fix['tagangle']
+            }
+            delete obs['newid'] 
+            updateObsLabel(obs, "wrongid", false)
+        } else {  // different id
+            updateObsLabel(obs, "wrongid", true)
+            obs.newid = id
+            if (!obs.fix) {
+                obs.fix={
+                    newid:undefined,
+                    tagangle:0
+                  }
+            }
+            obs.fix.newid = id
+        }
+        
+        this.spreadTagFix()
         
         // Update the rest
         updateRectObsActivity(activeObject)
@@ -1433,34 +1498,37 @@ ZoomOverlay.prototype.rotateTag = function(angle) {
         obs.fix.tagangle+=angle;
         //rotate(tag.p,-1)
     }
+    // Normalize between (-180,180]
+    if (obs.fix.tagangle>180) obs.fix.tagangle-=360
+    if (obs.fix.tagangle<=-180) obs.fix.tagangle+=360
     
     // Update the rest
     updateRectObsActivity(activeObject)
     automatic_sub()
     
     updateForm(activeObject)
+    
+    
+    this.spreadTagFix()
+    
+    
     refreshChronogram()
     
-    //var activeObject = overlay.getActiveObject()
-    //if (activeObject == null) {
-    //    return;
-    //}
-    //let obs = activeObject.obs
-    let tag = getCurrentTag()
-    
-    if (!tag) return;
-    //if (!obs.tagangle) obs.tagangle=0.0;
-    
-    if (!tag.fix) {
-        tag.fix={
-            newid:undefined,
-            tagangle:0,
-            oldp:deepcopy(tag.p)
-          }
-    }
-    
-    tag.fix.tagangle=obs.fix.tagangle;
-    tag.p = rotatep(tag.fix.oldp, tag.fix.tagangle/90)
+//     let tag = getCurrentTag()
+//     
+//     if (!tag) return;
+//     //if (!obs.tagangle) obs.tagangle=0.0;
+//     
+//     if (!tag.fix) {
+//         tag.fix={
+//             newid:undefined,
+//             tagangle:0,
+//             oldp:deepcopy(tag.p)
+//           }
+//     }
+//     
+//     tag.fix.tagangle=obs.fix.tagangle;
+//     tag.p = rotatep(tag.fix.oldp, tag.fix.tagangle/90)
     
     this.refreshZoom()
 }
@@ -1510,25 +1578,33 @@ ZoomOverlay.prototype.spreadTagFix = function() {
         return;
     }
     let obs = activeObject.obs
-    if (!obs.fix) { return }
     
     let tags = getCoveredTags(obs)
     console.log(tag)
     for (k in tags) {
         var tag = tags[k]
         
-        console.log(tag)
+        //console.log(tag)
         
-        if (!tag.fix) {
-            tag.fix={
-                newid:undefined,
-                tagangle:0,
-                oldp:deepcopy(tag.p)
-              }
+        if (!obs.fix || (!obs.fix.tagangle && !obs.fix.newid)) { 
+            if (tag.fix) {
+                if (tag.fix.oldp) {
+                    tag.p = deepcopy(tag.fix.oldp)
+                }
+                delete tag.fix    
+            }            
+        } else {        
+            if (!tag.fix) {
+                tag.fix={
+                    newid:undefined,
+                    tagangle:0,
+                    oldp:deepcopy(tag.p)
+                  }
+            }
+            tag.fix.newid = obs.fix.newid
+            tag.fix.tagangle = obs.fix.tagangle
+            tag.p = rotatep(tag.fix.oldp, tag.fix.tagangle/90)
         }
-        tag.fix.newid = obs.fix.newid
-        tag.fix.tagangle = obs.fix.tagangle
-        tag.p = rotatep(tag.fix.oldp, tag.fix.tagangle/90)
     }
 }
 ZoomOverlay.prototype.bakeTagFix = function(obs) {
@@ -1817,6 +1893,8 @@ ZoomOverlay.prototype.refreshZoom = function() {
     }
     
     this.redraw()
+    
+    this.refreshInfo()
 }
 ZoomOverlay.prototype.refreshTagImage = function() {
     this.refreshZoom(); // Lazy
