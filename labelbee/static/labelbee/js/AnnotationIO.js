@@ -13,6 +13,51 @@ function initAnnotationIO() {
 }
 
 
+function ajaxlogin(email, password) {
+    var url = url_for('/rest/auth/login')
+    
+    //console.log(url)
+    
+    $.ajax({
+        url: url, //server url
+        type: 'POST',    //passing data as post method
+        //contentType: 'application/json', // returning data as json
+        data: {'email':email,'password':password},  //form values
+        success: function(json) {
+          console.log('ajaxlogin: json=',json) 
+          if (json.status=='SUCCESS') {
+              whoami()
+          }
+        },
+        error: function(json) {
+          console.log('ajaxlogin: ERROR json=',json) 
+        }
+    })    
+}
+
+function ajaxlogout(email, password) {
+    var url = url_for('/rest/auth/logout')
+    
+    //console.log(url)
+    
+    $.ajax({
+        url: url, //server url
+        type: 'POST',    //passing data as post method
+        success: function(json) {
+          console.log('ajaxlogout: json=',json) 
+          if (json.status=='SUCCESS') {
+              whoami()
+          }
+        },
+        error: function(json) {
+          console.log('ajaxlogout: ERROR json=',json) 
+        }
+    })    
+}
+
+
+
+
 function whoami() {
 
      $.getJSON( url_for('/rest/auth/whoami') ,

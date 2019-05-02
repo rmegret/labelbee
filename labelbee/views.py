@@ -2,11 +2,12 @@
 #
 # Authors: Ling Thio <ling.thio@gmail.com>
 
-
+from flask import current_app
 from flask import redirect, Blueprint
 from flask import render_template, render_template_string, Markup, jsonify
 from flask import request, url_for
 from flask_user import current_user, login_required, roles_accepted
+from flask_login import logout_user, login_user
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden
 
 import os 
@@ -143,11 +144,30 @@ def send_data_():
 # --------------------------------------
 # REST API for authentification
 
-@app.route('/rest/auth/login', methods=['POST'])
+@app.route('/rest/auth/login', methods=['GET','POST'])
 def ajaxlogin():
-    user = request.args.get('user')
-    #login_user(user)
-    raise BadRequest("Ajax login not implemented")
+    email = request.form.get('email')
+    password = request.form.get('password')
+    
+    #print(email,password)
+    
+    user = User.query.filter_by(email=email).first()
+    
+    def check_password(user, password):
+        #print(user.password)
+        return current_app.user_manager.verify_password(password, user)
+    
+    if user is None or not check_password(user, password):
+        return jsonify({"request":"login","email":email
+                       ,"status":"FAIL","message":"Invalid username or password"})
+    
+    login_user(user)
+    return jsonify({"request":"login","email":email,"status":"SUCCESS"})
+    
+@app.route('/rest/auth/logout', methods=['GET','POST'])
+def ajaxlogout():
+    logout_user()
+    return jsonify({"request":"logout","status":"SUCCESS"})
     
 @app.route('/rest/auth/whoami')
 def whoami():
