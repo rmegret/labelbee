@@ -161,6 +161,8 @@ function init() {
     
     // Done
     setTracks([])
+    
+    loginDialog = new LoginDialog()
 }
 
 function printMessage(html, color) {

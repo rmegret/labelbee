@@ -17,6 +17,7 @@ function ajaxlogin(email, password) {
     var url = url_for('/rest/auth/login')
     
     //console.log(url)
+    console.log('ajaxlogin, email=',email)
     
     $.ajax({
         url: url, //server url
@@ -27,10 +28,15 @@ function ajaxlogin(email, password) {
           console.log('ajaxlogin: json=',json) 
           if (json.status=='SUCCESS') {
               whoami()
+              loginDialog.closeDialog()
+          } else {
+              console.log('ajaxlogin: ERROR json=',json) 
+              loginDialog.message('ERROR: '+json.message)
           }
         },
-        error: function(json) {
-          console.log('ajaxlogin: ERROR json=',json) 
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.log('ajaxlogin: ERROR ',textStatus,errorThrown,jqXHR) 
+          loginDialog.message('ERROR: '+textStatus+' '+errorThrown+' '+jqXHR.responseText)
         }
     })    
 }
@@ -47,15 +53,75 @@ function ajaxlogout(email, password) {
           console.log('ajaxlogout: json=',json) 
           if (json.status=='SUCCESS') {
               whoami()
+          } else {
+              console.log('ajaxlogout: ERROR json=',json) 
           }
         },
-        error: function(json) {
-          console.log('ajaxlogout: ERROR json=',json) 
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.log('ajaxlogout: ERROR ',textStatus,errorThrown,jqXHR) 
         }
     })    
 }
 
+function LoginDialog() {
+    this.div = $("#dialog-login")
 
+    this.openDialog = function() {
+        let div = this.div
+    
+        console.log('LoginDialog.openDialog')
+    
+        loginDialog.message('')
+        div.dialog("open");
+    }        
+    this.initDialog = function() {
+        let that = this;
+        let div = this.div
+        
+        div.dialog({
+            autoOpen: false,
+            modal: true,
+            buttons: {
+                "Ok": function() {
+                    var email = div.find('input[id="email"]').val()
+                    var password = div.find('input[id="password"]').val()
+                    var tmp = $(this)
+                    ajaxlogin(email,password,function() {console.log('test'); tmp.dialog("close")})
+                },
+                "Cancel": function() {
+                    $(this).dialog("close");
+                }
+            },
+            open: function(){
+                $("body").css("overflow", "hidden");
+            },
+            close: function(){
+                $("body").css("overflow", "auto");
+            }
+        });
+    }
+    this.closeDialog = function() {
+        this.div.dialog("close");
+    }
+    this.message = function(html) {
+        this.div.find('#message').html(html)
+    }
+    
+    this.initDialog()
+}
+
+function try_login() {
+    console.log('try_login: Open Login Dialog')
+    loginDialog.openDialog()
+}
+
+function try_logout() {
+    if (confirm("Confirm log out?")) {
+        ajaxlogout()
+    } else {
+        console.log('User canceled log out')
+    }
+}
 
 
 function whoami() {
@@ -68,10 +134,10 @@ function whoami() {
       .done(function(data) {
           //$('#whoami').html(JSON.stringify(data))
           if (data.is_authenticated) {
-              $('#whoami').html('Logged in as "'+data.first_name+'"')
+              $('#whoami').html('Logged as '+data.first_name+' <button onclick="try_logout()" type="button" class="btn btn-black btn-xs" title="Log out current user">Log out</button>')
               $('.require-server').toggleClass('disabled',false)
           } else {
-              $('#whoami').html('Not logged in')
+              $('#whoami').html('<button onclick="try_login()" type="button" class="btn btn-success btn-xs" title="Log in">Log in</button>')
               $('.require-server').toggleClass('disabled',true)
           }
           
@@ -82,7 +148,10 @@ function whoami() {
           $('#whoami').html('No connection to server storage')
           $('.require-server').toggleClass('disabled',true)
         }
-      )
+      )   
+}
+
+function show_log_in() {
     
 }
 

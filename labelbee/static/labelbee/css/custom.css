@@ -548,6 +548,11 @@ input[type=text].btn-green-border {
   border-color: #6a6;
 }
 
+.btn-black {
+  border-color: #888;
+  background-color: #000;
+  color: #888;
+}
 .btn-red {
   border-color: #f00;
   background-color: #f22;
