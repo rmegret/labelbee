@@ -764,6 +764,9 @@ table.eventFiles div.basedon {
     padding: 0px 2px;
     border: solid 1px #888;
 }
+table.eventFiles td.metadata-notes {
+    max-width: 300px;
+}
 
 .crossLeft {
   pointer-events: none;

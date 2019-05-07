@@ -350,6 +350,8 @@
               </div>
             </div>
             
+            <!-- ## VIDEO INFO -->
+            
             <div id='videoinfo' class='collapsible'> 
               <label>Video Info</label>
               <div>
@@ -436,6 +438,8 @@
               </div>
             </div> <!-- videoinfo -->            
             
+            <!-- ## I/O -->
+            
             <div id='I/O' class='collapsible'> 
               <label>I/O</label>
               <div>
@@ -476,18 +480,6 @@
                       <input id="saveBBoxes" onclick="saveEventsToBBoxes()" type="button" value="Export Events (BBox)" class="btn btn-default btn-xs" >
                       </div>
                       
-                      <div>
-                      <label>Selective delete:</label>
-                      <br>
-                      
-                      <input onclick="zoomOverlay.deleteFalsealarmTags()" type="button" value="Delete FA Tags..." class="btn btn-orange btn-xs" title="Delete all tags with falsealarm ID (NO UNDO)">
-                      
-                      <input onclick="zoomOverlay.deleteFalsealarmEvents();" type="button" value="Delete FA Events..." class="btn btn-orange btn-xs" title="Delete all events with a falsealarm label (NO UNDO)">
-                      
-                      <input onclick="zoomOverlay.deleteWrongIdEvents();" type="button" value="Delete WId Events..." class="btn btn-orange btn-xs" title="Delete all events with a wrongid label (NO UNDO)">
-                      
-                      </div>
-                      
                   </div>
               </div>
               <div class='subpanel collapsible'>
@@ -514,7 +506,8 @@
                         <div class="modal-header">
                           <button type="button" class="close" data-dismiss="modal">&times;</button>
                           <h4 class="modal-title">Events Files</h4>
-                          <label><input type="checkbox" checked="false" class="showMetadata" onclick="eventsFromServerDialog.clickedShowMetadata()">Show metadata</label>
+                          <label><input type="checkbox" checked="true" class="showNotes" onclick="eventsFromServerDialog.clickedShowMetadata('notes')">Show notes</label> 
+                          <label><input type="checkbox" checked="false" class="showMetadata" onclick="eventsFromServerDialog.clickedShowMetadata('metadata')">Show metadata</label>
                         </div>
                         <div class="modal-body" >
                               <!-- To be filled up by AJAX request -->
@@ -549,6 +542,51 @@
               
               </div>
             </div>
+            
+            <!-- ## LABELING -->
+
+            <div id='Labeling' class='collapsible'> 
+              <label>Labeling</label>
+              <div>
+                  <label for="event-notes">Notes for current events</label>
+                  <textarea name="events-notes" id="events-notes" class="text ui-widget-content ui-corner-all" style="width:100%; height:3em; box-sizing:border-box;"></textarea>
+              
+                  <div id='labeling-delete' class='subpanel collapsible'>
+                    <label>Selective delete</label>
+                    <div>                  
+                      <input onclick="zoomOverlay.deleteFalsealarmTags()" type="button" value="Delete FA Tags..." class="btn btn-orange btn-xs" title="Delete all tags with falsealarm ID (NO UNDO)">
+                  
+                      <input onclick="zoomOverlay.deleteFalsealarmEvents();" type="button" value="Delete FA Events..." class="btn btn-orange btn-xs" title="Delete all events with a falsealarm label (NO UNDO)">
+                  
+                      <input onclick="zoomOverlay.deleteWrongIdEvents();" type="button" value="Delete WId Events..." class="btn btn-orange btn-xs" title="Delete all events with a wrongid label (NO UNDO)">
+                    </div>
+                  </div>
+                  
+                  <div id='beeinfo' class='subpanel collapsible'>
+                    <label>Bee info</label>
+                    <div>
+                      <p>Bounding Box:</p>
+                      <table>
+                        <tr>
+                          <td><div id="X">X:</div></td>
+                          <td><div id="Y">Y:</div></td>
+                        </tr>
+                        <tr>
+                          <td><div id="W">Width:</div></td>
+                          <td><div id="H">Height:</div></td>
+                        </tr>
+                        <tr>
+                          <td><div id="CX">Center X:</div></td>
+                          <td><div id="CY">Center Y:</div></td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>
+                  
+              </div>
+              
+            </div>
+            
             
             <!-- ## VIDEO ZOOM -->
             
@@ -655,27 +693,6 @@
                   </div>
                 </div>
                                 
-              </div>
-            </div>
-              
-            <div id='beeinfo' class='collapsible'>
-              <label>Bee info</label>
-              <div>
-                <p>Bounding Box:</p>
-                <table>
-                  <tr>
-                    <td><div id="X">X:</div></td>
-                    <td><div id="Y">Y:</div></td>
-                  </tr>
-                  <tr>
-                    <td><div id="W">Width:</div></td>
-                    <td><div id="H">Height:</div></td>
-                  </tr>
-                  <tr>
-                    <td><div id="CX">Center X:</div></td>
-                    <td><div id="CY">Center Y:</div></td>
-                  </tr>
-                </table>
               </div>
             </div>
             

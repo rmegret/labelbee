@@ -12,6 +12,8 @@ function initAnnotationIO() {
     ttags=[]
     
     eventsFromServerDialog = new EventsFromServerDialog()
+    
+    $("#events-notes").on("input",onChanged_events_notes)
 }
 
 
@@ -544,6 +546,8 @@ function setTracks(obj) {
     Tracks = evts.data;
     TracksInfo = evts.info;
     
+    updateEventsNotes()
+    
     videoControl.onFrameChanged();
     refreshChronogram()
 }
@@ -736,10 +740,11 @@ function EventsFromServerDialog() {
   
         console.log("EventsFromServerDialog: importing Tracks List from URL '"+route+"'...")
         
-        var showNotes = div.find('.showMetadata').prop('checked')
+        var showMetadata = div.find('.showMetadata').prop('checked')
+        var showNotes = div.find('.showNotes').prop('checked')
         
         var data = {format: 'json', video: videoinfo.videoName}
-        if (showNotes)
+        if (showNotes || showMetadata)
             data['metadata']="1"
         
         $.ajax({
@@ -766,6 +771,9 @@ function EventsFromServerDialog() {
                     +"<th>Created on</th>"
                     +"<th>Owner</th>"
                 if (showNotes) {
+                    html+="<th>Notes</th>"
+                }
+                if (showMetadata) {
                     html+="<th>Info</th>"
                     html+="<th>Filename</th>"
                     html+="<th>Based on</th>"
@@ -799,12 +807,22 @@ function EventsFromServerDialog() {
                                           item['video']==videoinfo.videoName)
                                           +'</td>'
                           +'<td>'+formattimestamp(item['timestamp'])+'</td>'
-                          +'<td>'+item['user_name']+' ('+item['user_id']+')</td>'
+                          +'<td>U'+item['user_id']+' '+item['user_name']+' </td>'
                       if (showNotes) {
-                          var basedon=''
-                          if (item['metadata']) {
-                              html += '<td><button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' + k + ')">Show</button></td>'
-                              var history = item['metadata']['history']
+                          let notes=''
+                          let metadata = item['metadata']
+                          if (metadata && metadata['notes']) {
+                              notes = metadata['notes']
+                          }
+                          html+='<td class="metadata-notes">'+notes+'</td>'
+                      }
+                      if (showMetadata) {
+                          let info=''
+                          let basedon=''
+                          let metadata = item['metadata']
+                          if (metadata) {
+                              info += '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' + k + ')">Show</button>'
+                              var history = metadata['history']
                               if (history) {
                                   for (let h of history) {
                                       if (h['filename']) {
@@ -814,9 +832,8 @@ function EventsFromServerDialog() {
                                       }
                                   }
                               }
-                          } else {
-                              html += '<td></td>'
                           }
+                          html+='<td>'+info+'</td>'
                           html+='<td>'+item['filename']+'</td>'
                           html+='<td>'+basedon+'</td>'
                       }
@@ -1142,3 +1159,15 @@ function tagsFromServer(path, quiet) {
       )
 }
 
+/* METADATA EDITION */
+
+function onChanged_events_notes(event) {
+    if (TracksInfo) {
+        TracksInfo['notes']=$("#events-notes").val()
+    }
+}
+function updateEventsNotes() {
+    if (TracksInfo) {
+        $("#events-notes").val(TracksInfo['notes'])
+    }
+}
