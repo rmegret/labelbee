@@ -10,6 +10,8 @@ function initAnnotationIO() {
             .addEventListener('change', loadTagsFromFile);
             
     ttags=[]
+    
+    eventsFromServerDialog = new EventsFromServerDialog()
 }
 
 
@@ -426,6 +428,28 @@ function sanitizeEvents(obj) {
             return
         }
         
+//         function monthid(monthname) {
+//             var map = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',
+//                        Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}
+//             return map[monthname]
+//         }
+//         
+//         if (info.history && info.history[0] 
+//             && typeof info.history[0] == 'string') {
+//             for (var k in info.history) {
+//                 var s = info.history[k]
+//                 var filename = undefined
+//                 if (s.startsWith('Saved using labelbee on')) {
+//                     filename = videoinfo.videoName+'-'
+//                         +s.substring(37,39)+monthid(s.substring(28,31))
+//                         +s.substring(32,34)
+//                         +s.substring(40,42)+s.substring(43,45)
+//                         +s.substring(46,48)+'.json'
+//                 }
+//                 info.history[k] = {filename:filename,notes:info.history[k]}
+//             }
+//         }
+        
         // obj['data'].tags[tag_id_in_frame]
         data0 = obj['data']
         
@@ -523,6 +547,14 @@ function setTracks(obj) {
     videoControl.onFrameChanged();
     refreshChronogram()
 }
+function setEventsProp(option, value) {
+    if (!TracksInfo) {
+        TracksInfo = {}
+        console.log('setEventsProp: ERROR TracksInfo non existing. Created it')
+    }
+    TracksInfo[option] = value
+}
+
 function onReaderLoad(event) {
     if (logging.io) {
         console.log(event.target.result);
@@ -694,6 +726,215 @@ function saveTagsToFile(version) {
 
 /* REST API Tracks files */
 
+function EventsFromServerDialog() {
+    var theDialog = this
+    this.div = $("#dialog-event-from-server")
+    var div = this.div
+
+    this.updateDialog = function() {
+        var route = '/rest/events/'; // Hardcoded
+  
+        console.log("EventsFromServerDialog: importing Tracks List from URL '"+route+"'...")
+        
+        var showNotes = div.find('.showMetadata').prop('checked')
+        
+        var data = {format: 'json', video: videoinfo.videoName}
+        if (showNotes)
+            data['metadata']="1"
+        
+        $.ajax({
+          url: url_for(route),
+          type: 'GET',
+          contentType: 'application/json',
+          //data:{format:'json'}, // Without 'video', list all videos
+          data:data,
+          success:function(json){
+            // Get the file list in JSON format
+
+            console.log("EventsFromServerDialog: ajax SUCCESS\ntracksList=",json)
+            theDialog.json = json
+
+            let html = ""
+            if (false) {
+                for (let item of json) {
+                      html += '<button onclick="eventsFromServer(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+                }
+            } else {
+                html+="<table class='eventFiles'><thead>"
+                    +"<th></th>"
+                    +"<th>Video</th>"
+                    +"<th>Created on</th>"
+                    +"<th>Owner</th>"
+                if (showNotes) {
+                    html+="<th>Info</th>"
+                    html+="<th>Filename</th>"
+                    html+="<th>Based on</th>"
+                }
+                html+="</thead><tbody>"
+                function boldize(text, flag) {
+                    if (flag) {
+                        return '<b>'+text+'</b>'
+                    } else
+                        return text
+                }
+                function formattimestamp(timestamp) {
+                    if (timestamp.length==12) {
+                      return "20"+timestamp.slice(0,2)+"-"
+                             +timestamp.slice(2,4)+"-"+timestamp.slice(4,6)
+                             +' '
+                             +timestamp.slice(6,8)+':'
+                             +timestamp.slice(8,10)+':'
+                             +timestamp.slice(10,12)
+                    } else 
+                      return timestamp
+                }
+                for (let k in json) {
+                    json[k].k = k
+                }
+                for (let k in json) {
+                      var item = json[k]
+                      html += '<tr data-row="'+k+'">'
+                          +'<td id="'+item['filename']+'"><button onclick="eventsFromServerDialog.loadEvents(' + k + ')">'+k+' Load</button></td>'                      
+                          +'<td>'+boldize(item['video'],                                         
+                                          item['video']==videoinfo.videoName)
+                                          +'</td>'
+                          +'<td>'+formattimestamp(item['timestamp'])+'</td>'
+                          +'<td>'+item['user_name']+' ('+item['user_id']+')</td>'
+                      if (showNotes) {
+                          var basedon=''
+                          if (item['metadata']) {
+                              html += '<td><button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' + k + ')">Show</button></td>'
+                              var history = item['metadata']['history']
+                              if (history) {
+                                  for (let h of history) {
+                                      if (h['filename']) {
+                                          let kk = json.find((el)=>el['filename']==h['filename'])
+                                          if (kk!=null) 
+                                              basedon+='<div class="basedon" data-basedon="'+kk.k+'">'+kk.k+'</div>'
+                                      }
+                                  }
+                              }
+                          } else {
+                              html += '<td></td>'
+                          }
+                          html+='<td>'+item['filename']+'</td>'
+                          html+='<td>'+basedon+'</td>'
+                      }
+                      html+='</tr>'
+                }
+                html+="</tbody></table>"
+            }
+            div.find('.modal-body').html(html);
+            div.find('.modal-message').html('')
+            
+            div.find('.modal-body div.basedon')
+                .mouseover(function() {
+                  var k = $( this ).attr('data-basedon')
+                  div.find('.modal-body tr[data-row="'+k+'"]').toggleClass("active",true)
+                })
+                .mouseout(function() {
+                  div.find('.modal-body tr').toggleClass("active",false)
+                });
+      
+            // Nothing else to do here: 
+            // The modal #loadTracksFromServerDialog is supposed to be open 
+            // and filled with links to each Track file
+            // Clicking on one of the link will trigger eventsFromServer()
+            },
+          error: typesetAjaxError('ERROR in EventsFromServer dialog',
+                          function(html) {div.find('.modal-message').html(html)})
+        })
+    }
+    this.openDialog = function() {
+        console.log('EventsFromServerDialog.openDialog')
+
+        div.find('.modal-body').html('[...]');
+        div.find('.modal-message').html('<div>Loading Tracks file list from server. Please wait...</div>')
+        
+        this.updateDialog()
+
+        div.modal("show");
+    }        
+    this.initDialog = function() {
+        div.modal({
+            show:false,
+            autoOpen: false,
+            modal: true,
+            open: function(){
+                $("body").css("overflow", "auto");
+            },
+            close: function(){
+                $("body").css("overflow", "auto");
+            }
+        });
+        div.find(".modal-dialog").draggable({
+            handle: ".modal-header"
+        })
+        div.find(".modal-content").resizable({
+          alsoResize: ".modal-content",
+          minHeight: 300,
+          minWidth: 300
+        })
+    }
+    this.closeDialog = function() {
+        div.modal("hide");
+    }
+    
+    this.loadEvents = function(k) {
+        var info = theDialog.json[k]
+        var url = info['uri']
+    
+        console.log("eventsFromServer: importing Tracks from URL '"+url+"'...")
+
+        div.find('.modal-message').html('Loading events from '+url+'...')
+
+        $.ajax({
+            url: url, //server url
+            type: 'GET',    //passing data as post method
+            contentType: 'application/json', // returning data as json
+            data:'',
+            success:function(json)
+            {
+              //alert("success");  //response from the server given as alert message
+
+              console.log('eventsFromServer: SUCCESS\njson=', json); 
+              let obj = JSON.parse(json);
+        
+              setTracks(obj)       
+              
+              {
+                  var basedon = {}
+                  var fields = ['video','filename','timestamp','user_name','user_id']
+                  for (var f of fields)
+                      basedon[f] = info[f]
+                  setEventsProp("basedon",basedon)
+              }
+               
+              videoControl.onFrameChanged();
+
+              refreshChronogram();
+        
+              div.find('.modal-message').html('Events loaded. Closing.')
+              theDialog.closeDialog();
+            },
+            error: typesetAjaxError('ERROR in loading '+url,
+                      function(html) {div.find('.modal-message').html(html)})
+          });
+    }
+    this.clickedShowMetadata = function() {
+        this.updateDialog()
+    }
+    this.showMetadata = function(k) {
+        var data = theDialog.json[k]['metadata']
+        var html = JSON.stringify(data, undefined, 2)
+        html = '<pre class="json">'+html+'</pre>'
+        div.find('.modal-message').html(html)
+    }
+
+    
+    this.initDialog()
+}
+
 function tracksListFromServer(){
   var route = '/rest/events/'; // Hardcoded
   
@@ -800,6 +1041,18 @@ function mainAlert(text) {
     $('#mainAlertDialog').modal('show')
 }
 
+function typesetAjaxError(title, hook) {
+    var callback = function(jqXHR, textStatus, errorThrown) {
+        console.log('AJAX ERROR: '+title, jqXHR, textStatus, errorThrown, jqXHR.responseText)
+        if (hook) {
+            var html = '<div>'+title+'<br>Status: '+ textStatus
+           +'<br>Error: '+ errorThrown
+           +'<br>'+ jqXHR.responseText+'</div>'
+            hook(html)
+        }
+    }
+    return callback
+}
 function showAjaxError(title, prehook) {
     var callback = function(jqXHR, textStatus, errorThrown) {
         console.log('AJAX ERROR: '+title, jqXHR, textStatus, errorThrown, jqXHR.responseText)

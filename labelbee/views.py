@@ -213,15 +213,19 @@ def events_get_list():
 
     format = request.args.get('format', 'html')
     video = request.args.get('video')
+    metadata = request.args.get('metadata')
+
+    print('metadata',metadata)
 
     user_ids = os.listdir('labelbee/static/upload/')
     #user_ids = [str(current_user.id))]
     
     uri_list = []
     for user_id in user_ids:
-        if (not os.path.isdir('labelbee/static/upload/'+user_id)):
+        user_dir = 'labelbee/static/upload/'+ user_id
+        if (not os.path.isdir(user_dir)):
             continue
-        tracks = os.listdir('labelbee/static/upload/'+ user_id)
+        tracks = os.listdir(user_dir)
         print('user_id=',user_id)
         user = User.query.filter_by(id=int(user_id)).first()
         print('user=',user)
@@ -246,6 +250,13 @@ def events_get_list():
                       'timestamp': parsedfilename.get('timestamp'),
                       'video': parsedfilename.get('video')
                     } )
+                    
+            if (metadata is not None):
+                with open(user_dir+'/'+file, 'r') as json_file:
+                    data = json.load(json_file)
+                    if ('info' in data):
+                        uri_list[-1]['metadata'] = data['info']
+                    
     uri_list = sorted(uri_list, key=lambda item: item['timestamp'])
 
     if (format=='html'):
