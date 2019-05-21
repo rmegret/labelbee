@@ -583,12 +583,14 @@ function loadEventsFromFile0(fileToRead) {
 function loadEventsFromFile(event) {
     console.log("loadEventsFromFile: importing from JSON...")
 
-    fileToRead = event.target.files[0]
-    
+    const fileToRead = event.target.files[0]
+    event.target.value=''  // Reinit value to allow loading same file again
+
     if (!fileToRead) {
-        console.log("loadEventsFromFile: Canceled importation, no file provided.")
+        console.log("loadEventsFromFile: Canceled by user.")
         return;
-    }
+    }    
+    console.log("loadEventsFromFile: importing from JSON file:",fileToRead)
 
     var reader = new FileReader();
     reader.onload = onReaderLoad;
@@ -691,12 +693,21 @@ function onTagsReaderLoad(event) {
     //console.log(obj) // Caution: heavy
 
     setTags(obj);
+    
+    console.log("loadTagsFromFile: importing from JSON file. DONE")
 }
 
 function loadTagsFromFile(event) {
-    console.log("loadTagsFromFile: importing from JSON...")
+    //console.log("loadTagsFromFile: importing from JSON...")
 
-    fileToRead = event.target.files[0]
+    const fileToRead = event.target.files[0]
+    event.target.value=''  // Reinit value to allow loading same file again
+    
+    if (!fileToRead) {
+        console.log("loadTagsFromFile: Canceled by user.")
+        return;
+    }
+    console.log("loadTagsFromFile: importing from JSON file:",fileToRead)
 
     var reader = new FileReader();
     reader.onload = onTagsReaderLoad;
