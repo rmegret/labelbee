@@ -8,6 +8,12 @@
 var videoinfo;
 
 function VideoManager() {
+
+    document.getElementById('loadvideolistjson')
+            .addEventListener('change', (evt)=>this.loadVideoListFromFile(evt,'json'));
+    document.getElementById('loadvideolistcsv')
+            .addEventListener('change', (evt)=>this.loadVideoListFromFile(evt,'csv'));
+
     let defaultVideoList = [ 'DefaultList', 'testvideo.mp4',
                   'vlc1.mp4',
                   'vlc2.mp4',
@@ -50,6 +56,125 @@ VideoManager.prototype = {}
 
 /* I/O */
 
+
+
+VideoManager.prototype.loadVideoListFromFile = function(event,format) {
+    console.log("loadVideoListFromFile: importing from...")
+
+    const fileToRead = event.target.files[0]
+    event.target.value=''  // Reinit value to allow loading same file again
+
+    if (!fileToRead) {
+        console.log("loadVideoListFromFile: Canceled by user.")
+        return;
+    }    
+    console.log("loadVideoListFromFile: importing from file:",fileToRead)
+
+    if (!format) {
+        format = 'csv'
+    }
+
+    var onReaderLoad = function(event) {
+        if (logging.io) {
+            console.log(event.target.result);
+        }
+        
+        switch (format) {
+            case 'json':
+                var json = event.target.result
+                videoManager.setVideoListFromJSON(json)
+                break
+            case 'csv':
+                var txt = event.target.result
+                videoManager.setVideoListFromCSV(txt)
+                break
+            default:
+                console.log('VideoManager::loadVideoListFromFile: ERROR, unknown format '+format)
+                return
+        }
+    }
+
+    var reader = new FileReader();
+    reader.onload = onReaderLoad;
+    reader.readAsText(fileToRead);
+}
+
+VideoManager.prototype.videoListToCSV = function(videoListTable) {
+    var fields = ['video','preview','tags']
+
+    var csv = fields.join(',')
+    if (videoListTable == null) return csv
+    for (let item of videoListTable) {
+          out = []
+          for (let i in fields) {
+              out.push( item[fields[i]] )
+          }
+          csv += '\n'+out.join(',')
+      }
+    return csv
+}
+
+VideoManager.prototype.saveVideoListToFile = function(format) {
+    if (format==null) format='json'
+    
+    switch (format) {
+    case 'json':
+        var obj = {
+            schema: "https://bigdbee.hpcf.upr.edu/schemas/videolist-0-0-1.schema.json",
+            info: { type : "videolist"},
+            data: videoListTable
+        }
+        saveObjToJsonFile(obj, 'videolist-'+getTimestampNow()+'.json')
+        break
+    case 'csv':
+        var txt = this.videoListToCSV(videoListTable);
+        saveCSVToFile(txt, 'videolist-'+getTimestampNow()+'.csv')
+        break
+    default:
+        console.log('VideoManager::saveVideoListToFile: ERROR, unknown format'+format)
+        return
+    }
+}
+
+VideoManager.prototype.setVideoList = function(_videoListTable, defaultvideoid) {
+    let videoManager = this
+    
+    videoListTable = _videoListTable
+
+    videoManager.updateVideoListForm()
+    if (defaultvideoid==null)
+        defaultvideoid = 0
+    videoManager.selectVideoByID(defaultvideoid)
+}
+
+VideoManager.prototype.setVideoListFromJSON = function(json, defaultvideoid) {
+    var obs = JSON.parse(json)
+
+    this.setVideoList(obs.data, defaultvideoid)
+}
+
+VideoManager.prototype.setVideoListFromCSV = function(csv_data, defaultvideoid) {
+    let array = $.csv.toArrays(csv_data);
+    console.log('videolist converted to array: ',array)
+
+    var obj=[] // videoListTable
+    for (let item of array) {
+        if (item.length==0) continue;
+        if (item[0] == 'video') {
+            // This is the header, skip it...
+            continue
+        }
+        if (item[1] ) {
+            $('#previewVideoName').val(item[1])
+            $('#previewVideoTimeScale').val('1')
+        }
+        let tmp = {video:item[0], preview:item[1], tags:item[2]}
+        obj.push(tmp)
+    }
+
+    this.setVideoList(obj, defaultvideoid)
+}
+
 VideoManager.prototype.videoListFromServer = function(path, defaultvideoid) {     
     let videoManager = this
 
@@ -75,26 +200,9 @@ VideoManager.prototype.videoListFromServer = function(path, defaultvideoid) {
           if (logging.videoList) {
               console.log('videolist CSV content = ',{data: data})
           }
-          let array = $.csv.toArrays(data);
-          console.log('videolist converted to array: ',array)
-          //videoList = []
-          videoListTable=[]
-          for (let item of array) {
-              if (item.length==0) continue;
-              //videoList.push(item[0]);
-              if (item[1] ) {
-                  $('#previewVideoName').val(item[1])
-                  $('#previewVideoTimeScale').val('1')
-              }
-              let tmp = {video:item[0], preview:item[1], tags:item[2]}
-              videoListTable.push(tmp)
-          }
+          
+          videoManager.setVideoListFromCSV(data, defaultvideoid)
 
-          videoManager.updateVideoListForm()
-          if (defaultvideoid==null)
-              videoManager.selectVideoByID(0)
-          else
-              videoManager.selectVideoByID(defaultvideoid)
           statusWidget.statusUpdate('videolistLoad',true,'')
         }
       )

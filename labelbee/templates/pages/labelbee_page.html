@@ -375,6 +375,18 @@
                         <div class="float-right"><input onclick="videoManager.checkVideoList()" type="button" value="Check"  class="btn btn-primary btn-xs"/></div>
                         <table id='videoList'>
                         </table>
+                        
+                      <input id="videoListFromServer" onclick="videoManager.videoListFromServer()" type="button" value="List From Server"  class="btn btn-default btn-xs">
+
+                      <label for="loadvideolistjson" value="Load Video List" class="btn btn-default btn-xs" tabindex=0>List from JSON file</label>
+                      <input id="loadvideolistjson" type="file" style="display:none" >
+                      
+                      <label for="loadvideolistcsv" value="Load Video List" class="btn btn-default btn-xs" tabindex=0>List from CSV file</label>
+                      <input id="loadvideolistcsv" type="file" style="display:none" >
+
+                      <input id="savevideolistjson" onclick="videoManager.saveVideoListToFile('json')" type="button" value="Save as JSON File" class="btn btn-default btn-xs" title="Save Video List as JSON File">
+                      
+                      <input id="savevideolistcsv" onclick="videoManager.saveVideoListToFile('csv')" type="button" value="Save as CSV File" class="btn btn-default btn-xs" title="Save Video List as CSV File">
                     </div>
                   </div>
                 
@@ -444,9 +456,12 @@
               <label>I/O</label>
               <div>
               
+              <!-- ### Local storage -->
+              
               <div class='subpanel collapsible'>
                   <label>Local storage</label>
                   <div>
+                  
                       <div>
                       <label>Tags:</label>
                       <br>
@@ -482,12 +497,13 @@
                       
                   </div>
               </div>
+              
+              <!-- ### Server storage -->
+              
               <div class='subpanel collapsible'>
                   <label>Server storage</label>
                   <div>
                     <meta name="csrf-token" content="{{ csrf_token() }}">
-
-                    <input id="videoListFromServer" onclick="videoManager.videoListFromServer()" type="button" value="Load Video List"  class="btn btn-default btn-xs">
 
                     <input id="tagsFromServer" onclick="tagsFromServer()"  type="button" value="Load Tags" class="btn btn-default btn-xs">
                       
@@ -499,7 +515,7 @@
 
                     <input id="eventsToServer" onclick="eventsToServer('v1')" type="button" value="Save Events (JSON v1)" class="btn btn-green-toggle btn-xs require-server"></button>
 
-              <!-- Modal  -->
+                  <!-- #### Modal  -->
                   <div class="modal fade" id="dialog-event-from-server" role="dialog">
                     <div class="modal-dialog">
                       <div class="modal-content" style="overflow:auto;">
@@ -524,6 +540,8 @@
 
                   </div>
               </div>
+              
+              <!-- ### I/O Status -->
               
               <div class='subpanel collapsible'>
                   <label>I/O Status</label>

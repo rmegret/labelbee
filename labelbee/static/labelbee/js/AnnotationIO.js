@@ -288,7 +288,7 @@ function convertTracksToV2() {
     return obj
 }
 
-function getTimestampedVideoname() {
+function getTimestampNow() {
     function addZero(i) {
         if (i < 10) {
             i = "0" + i;
@@ -297,12 +297,17 @@ function getTimestampedVideoname() {
     }
 
     let D = new Date()
-    let timestamp = D.getFullYear()+addZero(D.getMonth()+1)+addZero(D.getDate())+
+    let timestamp = D.getFullYear()
+                    +addZero(D.getMonth()+1)
+                    +addZero(D.getDate())+
                    '_'+
-                   addZero(D.getHours())+addZero(D.getMinutes())+addZero(D.getSeconds());
-    //.toISOString()
-
-    return videoinfo.videoName+'-'+timestamp
+                   addZero(D.getHours())
+                   +addZero(D.getMinutes())
+                   +addZero(D.getSeconds());
+    return timestamp
+}
+function getTimestampedVideoname() {
+    return videoinfo.videoName+'-'+getTimestampNow()
 }
 
 function saveEventsToFile(format) {
