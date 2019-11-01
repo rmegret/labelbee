@@ -1678,7 +1678,10 @@ function setTagGeom(selection) {
     // Tag interval
     let H=axes.yScale.rangeBand();
     function tagHeight(d) {
-        return H*(3-d.hammingavg)/3;
+        if (d.hammingavg > 2)
+            return H/4
+        else
+            return H*(4-d.hammingavg)/4;
     }
     selection
         .attr("x", function(d) {

@@ -688,6 +688,8 @@ function setTags(obj) {
     $('.requireDM').prop('disabled', !tagsHaveDM); 
     $('.requireDM').toggleClass('disabled', !tagsHaveDM); 
     
+    console.log('setTags: done. Sending signals to refresh chronogram and video...')
+    
     refreshChronogram()
     adjustChronogramHeight()
     videoControl.onFrameChanged();

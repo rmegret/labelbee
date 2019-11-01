@@ -243,6 +243,8 @@ VideoControl.prototype.onFrameTextChanged = function() {
 
 // This callback is the only one that should handle frame changes. It is called automatically by video2
 VideoControl.prototype.onFrameChanged = function(event) {
+    this.previewReady = true
+
     this.currentMode = 'video'
     this.currentFrame = this.getCurrentVideoFrame();
     
@@ -267,6 +269,11 @@ VideoControl.prototype.onFrameChanged = function(event) {
 
 VideoControl.prototype.onPreviewFrameChanged = function(event) {
     console.log('videoControl.onPreviewFrameChanged')
+    
+    if (!this.previewReady) {
+        console.log('onPreviewFrameChanged: not ready, skip')
+        return;
+    }
     
     this.currentMode = 'preview'
     this.currentFrame = this.getCurrentVideoFrame();
@@ -379,13 +386,13 @@ VideoControl.prototype.onVideoLoaded = function(event) {
     
     this.loadVideoInfo(videourl+'.info.json')
     this.loadPreviewVideo()
-    
-    statusWidget.statusRequest('tagsLoad', [])
-    tagsFromServer(videoinfo.tags.videoTagURL, true) // quiet
-    
+        
     $( this ).trigger('video:loaded') 
     
     this.hardRefresh()
+    
+    statusWidget.statusRequest('tagsLoad', [])
+    tagsFromServer(videoinfo.tags.videoTagURL, true) // quiet
 }
 VideoControl.prototype.onVideoError = function(event) {
     if (logging.videoEvents)
@@ -441,6 +448,8 @@ VideoControl.prototype.loadPreviewVideo = function(previewURL) {
     $("#previewVideoName").val(previewURL)
 
     statusWidget.statusRequest('videopreviewLoad', [])
+    
+    this.previewReady = false
     
     function _onPreviewVideoLoaded(event) {
         if (logging.videoEvents)
