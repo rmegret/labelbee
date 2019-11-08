@@ -31,6 +31,10 @@ function OverlayControl(canvasTagId) {
     $('#trackWindow').val(overlay.trackWindow.range)
     $('#selectboxTrackDir').val(overlay.trackWindow.direction)
 
+    overlay.guiAngle = {
+        angleEnabled: true
+    }
+
     flag_useROI=true
     ROI = {left:175,top:30,right:2305,bottom:1240} // For Gurabo videos 5MP
     $('#ROI').val([ROI.left,ROI.top,ROI.right,ROI.bottom].join(','))
@@ -110,8 +114,11 @@ function OverlayControl(canvasTagId) {
     lockFocusTrackWindow = false
     
     refreshTagsParameters()
+    overlay.updateDisableAngleButton()
 }
 OverlayControl.prototype = {}
+
+
 
 
 function selectboxSetOptions(selectbox, options, names) {
@@ -155,6 +162,60 @@ OverlayControl.prototype.setActiveObject = function(rect) {
 }
 
 
+// GUI for enabling/disabling angle in BB
+OverlayControl.prototype.onClickDisableAngle = function() {
+    console.log('overlay.onClickDisableAngle')
+    
+    this.guiAngle.angleEnabled = !this.guiAngle.angleEnabled
+    this.updateDisableAngleButton()
+    
+    this.refreshOverlay()
+}
+OverlayControl.prototype.updateDisableAngleButton = function() {
+    console.log('overlay.updateDisableAngleButton')
+    if ( !this.guiAngle.angleEnabled ) {
+        $(".guiAngle-disableAngle").addClass("active")
+    } else {
+        $(".guiAngle-disableAngle").removeClass("active")      
+    }
+}
+OverlayControl.prototype.onClickResetAngle = function() {
+    console.log('overlay.onClickResetAngle')
+    
+    var activeObject = overlay.getActiveObject()
+    if (activeObject == null) {
+        console.log('onClickResetAngle: aborted, could not get an activeObject')
+        return
+    }
+    const obs = activeObject.obs
+    
+    obs.angle = 0
+
+    submit_bee()
+}
+OverlayControl.prototype.onClickAngleFromTag = function() {
+    console.log('overlay.onClickAngleFromTag')
+    
+    var activeObject = overlay.getActiveObject()
+    if (activeObject == null) {
+        console.log('onClickAngleFromTag: could not get an activeObject. abort.')
+        return
+    }
+    const obs = activeObject.obs
+    
+    const tag = getCurrentTag()
+    if (tag==null) {
+        console.log('onClickAngleFromTag: tag not defined for current event. abort.')
+        return;
+    }
+        
+    obs.angle = tagAngle(tag)
+    
+    submit_bee()
+
+//    this.refreshOverlay()
+}
+    
 // #MARK # UTILS CANVAS SIZE
 
 OverlayControl.prototype.canvasSetVideoSize = function(w,h) {
@@ -516,10 +577,21 @@ function refreshRectFromObs() {
     //if (logging.overlay)
     //    console.log("refreshRectFromObs: updating ",rectList.length," rect(s)")
     for (let rect of rectList) {
-        if (typeof rect.obs !== 'undefined')
+        if (typeof rect.obs !== 'undefined') {
             updateRectFromObsGeometry(rect)
+        }
+        refreshRectStyle(rect)
     }
     //refreshOverlay() // Avoid infinite cycle
+}
+function refreshRectStyle(rect) {
+    
+    let lockRotation = false
+    if (!overlay.guiAngle.angleEnabled) {
+        lockRotation = true
+    }
+    
+    rect.setControlVisible('mtr', !lockRotation)  // Remove rotation handle
 }
 function updateRectFromObsGeometry(rect) {
     if (logging.overlay)
@@ -592,8 +664,8 @@ function addRectFromObs(inputObs, status) {
         cornerSize: 6,
         rotatingPointOffset: 20,
         centeredRotation: true,
-        //hasRotatingPoint: true,
-        //lockRotation: false
+        //hasRotatingPoint: hasRotatingPoint,
+        //lockRotation: lockRotation
     });
     rect.originX = 'center'
     rect.originY = 'center'
@@ -601,7 +673,8 @@ function addRectFromObs(inputObs, status) {
     //rect.setAngle(obs.angle); // Done in update
     updateRectFromObsGeometry(rect)
     
-    //rect.setControlVisible('mtr', false)  // Remove rotation handle
+    refreshRectStyle(rect)
+    
     overlay.canvas1.add(rect);
     
     if (logging.addRect)
@@ -2104,6 +2177,9 @@ var default_height = 40;
 
 function newRectForTag(tag) {
     let angle = tagAngle(tag)
+    if (!overlay.guiAngle.angleEnabled) {
+        angle = 0
+    }
     let pt = overlay.videoToCanvasPoint({x:tag.c[0], y:tag.c[1]});
     if (typeof angle !== 'undefined') {
         console.log("newObsForTag: found angle=",angle)

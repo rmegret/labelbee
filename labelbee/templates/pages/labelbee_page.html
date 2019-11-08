@@ -164,6 +164,17 @@
             <small style="color:blue">newid <input type="text" size="6" value="" id="newid" onkeypress="onKeyDown_NewIDEdit(event)""></input></small>
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle wrongid" thelabel="wrongid" title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">wrongid <span class="glyphicon glyphicon-remove small blue"></span></button>
             
+            <div class='block inline-collapsible'>
+              <div class="block-header small">BoundingBox angle:</div>
+              <span class="block-content">
+              
+              <input value="Disable" onclick="overlay.onClickDisableAngle()" type="button" class="guiAngle-disableAngle btn btn-pink-toggle btn-xs" title="Does not allow event to have angle by default">
+              
+              <button value="Reset to 0" onclick="overlay.onClickResetAngle()" type="button" class="btn btn-default btn-xs" title="Reset event angle to 0">Reset angle to 0</button>
+              <button value="Set from tag" onclick="overlay.onClickAngleFromTag()" type="button" class="btn btn-default btn-xs" title="Set Event angle from associated tag">Angle from tag</button>
+              </span>
+            </div>
+            
             <div id="alerttext"></div>
             
             <br>
@@ -193,6 +204,22 @@
             <div id="dialog-form-mainLabelList" class="modal-dialog">
                   <form style="width:100%; height:100%; box-sizing:border-box;">
                   <div style="width:100%; height:100%; box-sizing:border-box;">
+                      
+<!-- 
+                      <label for="loadlabels" value="Load from File" class="btn btn-default btn-xs" tabindex=0>Load from File</label>
+                      <input id="loadlabels" type="file" style="display:none" >
+                      
+                      <input onclick="labelsIO.save()" type="button" value="Save to File" class="btn btn-default btn-xs" title="Save Labels as JSON">
+                      
+                      <input onclick="labelsIO.loadFromServer()" type="button" value="Load From Server" class="btn btn-default btn-xs" title="Load Labels from Server">
+                      
+                      <input onclick="labelsIO.saveToServer()" type="button" value="Save to Server" class="btn btn-default btn-xs" title="Save Labels To Server">
+                      
+                      <input onclick="labelsIO.editJSON()" type="button" value="Edit JSON" class="btn btn-default btn-xs" title="Edit JSON directly">
+ -->
+                      
+                      <br>
+                      
                       <label for="mainLabelList-json">Label List</label>
 <!--                       <textarea name="mainLabelList-json" id="mainLabelList-json" class="text ui-widget-content ui-corner-all jsonTextArea" style="width:100%; height:90%; box-sizing:border-box;">test</textarea> -->
                         <div id="mainLabelList-jsGrid"></div>
@@ -372,9 +399,7 @@
                   <div class='subpanel collapsible'>
                     <label class="primary">Video List </label>
                     <div>
-                        <div class="float-right"><input onclick="videoManager.checkVideoList()" type="button" value="Check"  class="btn btn-primary btn-xs"/></div>
-                        <table id='videoList'>
-                        </table>
+                      <div class="float-right"><input onclick="videoManager.checkVideoList()" type="button" value="Check"  class="btn btn-primary btn-xs"/></div>
                         
                       <input id="videoListFromServer" onclick="videoManager.videoListFromServer()" type="button" value="List From Server"  class="btn btn-default btn-xs">
 
@@ -387,6 +412,10 @@
                       <input id="savevideolistjson" onclick="videoManager.saveVideoListToFile('json')" type="button" value="Save as JSON File" class="btn btn-default btn-xs" title="Save Video List as JSON File">
                       
                       <input id="savevideolistcsv" onclick="videoManager.saveVideoListToFile('csv')" type="button" value="Save as CSV File" class="btn btn-default btn-xs" title="Save Video List as CSV File">
+                        
+                      <table id='videoList'>
+                      </table>
+                        
                     </div>
                   </div>
                 
