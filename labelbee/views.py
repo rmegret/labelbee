@@ -244,7 +244,7 @@ def serve_files(base_dir, path, base_uri, format='html'):
                         }
                    for filename in dirs]
 
-            result = {'files':files_obj, 'dirs':dirs_obj}
+            result = {'files':files_obj, 'dirs':dirs_obj,'base_uri':base_uri,'path':path,'uri':uripath}
             return jsonify(result)
         raise BadRequest('GET '+base_uri+': Internal error')
     else:
@@ -264,7 +264,7 @@ def labellist_get(path=''):
     format = request.args.get('format', 'html')
     
     base_dir = os.path.join(app.root_path,'static/data/config/labellist/')
-    base_uri = '/rest/config/labellist/'
+    base_uri = url_for('labellist_get',path='') #'/rest/config/labellist/'
 
     return serve_files(base_dir, path,  base_uri, format)
     
@@ -280,7 +280,7 @@ def keypointlabels_get(path=''):
     format = request.args.get('format', 'html')
     
     base_dir = os.path.join(app.root_path,'static/data/config/keypointlabels/')
-    base_uri = '/rest/config/keypointlabels/'
+    base_uri = url_for('keypointlabels_get',path='') #'/rest/config/keypointlabels/'
 
     return serve_files(base_dir, path,  base_uri, format)
 
