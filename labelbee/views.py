@@ -258,10 +258,8 @@ def labellist_get(path=''):
             result = {'files':files, 'dirs':dirs}
             return jsonify(result)
     else:
-        print('444')
         raise BadRequest('/rest/config/labellist GET: unrecognized format "{}"'.format(format))
             
-    print('555')
     raise BadRequest('/rest/config/labellist GET: Internal error')
 
 
