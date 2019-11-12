@@ -191,6 +191,10 @@
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsing" thelabel="expulsing" title="Toogle label Expulsion: when a bee is rejecting/expelling another individual from the colony">expulsing</button>
             <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle falsealarm" thelabel="falsealarm" title="Toogle FalseAlarm label: when a tag detection is not a tag">falsealarm <span class="glyphicon glyphicon-remove small red"></span></button>
             </div>
+            <div style="display:inline-block" id="labeltoggle-config">
+                <button onclick="labelListDialog.openDialog()" type="button" class="btn btn-info btn-xs" title="Edit list of labels">Edit...</button>
+                <button onclick="labelListFromServerDialog.openDialog()" type="button" class="btn btn-info btn-xs" title="Load list of labels">Preset...</button>'
+            </div>
             
             <br>
             <div class="textbox-inline">
@@ -204,24 +208,9 @@
             <div id="dialog-form-mainLabelList" class="modal-dialog">
                   <form style="width:100%; height:100%; box-sizing:border-box;">
                   <div style="width:100%; height:100%; box-sizing:border-box;">
-                      
-<!-- 
-                      <label for="loadlabels" value="Load from File" class="btn btn-default btn-xs" tabindex=0>Load from File</label>
-                      <input id="loadlabels" type="file" style="display:none" >
-                      
-                      <input onclick="labelsIO.save()" type="button" value="Save to File" class="btn btn-default btn-xs" title="Save Labels as JSON">
-                      
-                      <input onclick="labelsIO.loadFromServer()" type="button" value="Load From Server" class="btn btn-default btn-xs" title="Load Labels from Server">
-                      
-                      <input onclick="labelsIO.saveToServer()" type="button" value="Save to Server" class="btn btn-default btn-xs" title="Save Labels To Server">
-                      
-                      <input onclick="labelsIO.editJSON()" type="button" value="Edit JSON" class="btn btn-default btn-xs" title="Edit JSON directly">
- -->
-                      
                       <br>
                       
                       <label for="mainLabelList-json">Label List</label>
-<!--                       <textarea name="mainLabelList-json" id="mainLabelList-json" class="text ui-widget-content ui-corner-all jsonTextArea" style="width:100%; height:90%; box-sizing:border-box;">test</textarea> -->
                         <div id="mainLabelList-jsGrid"></div>
                   </div>
                   </form>
@@ -731,7 +720,8 @@
                     <input type="text" size="15" value="" class="resizedTextbox" title="Label for next point/Relabel current point" id="partLabel">
                     <button onclick="zoomOverlay.onButtonClickAddRemovePartLabel(event,'+')" type="button" class="btn btn-success btn-xs" title="Add label to list">+</button>
                     <button onclick="zoomOverlay.onButtonClickAddRemovePartLabel(event,'-')" type="button" class="btn btn-warning btn-xs" title="Remove label from list">-</button>
-                    <button onclick="zoomOverlay.onButtonClickAddRemovePartLabel(event,'C')" type="button" class="btn btn-info btn-xs" title="Edit label list">...</button>
+                    <button onclick="zoomOverlay.onButtonClickAddRemovePartLabel(event,'C')" type="button" class="btn btn-info btn-xs" title="Edit label list">Edit...</button>
+                    <button onclick="zoomOverlay.onButtonClickAddRemovePartLabel(event,'LoadPreset')" type="button" class="btn btn-info btn-xs" title="Load label list from server">Preset...</button>
                     
                     <div id="dialog-form-labelList">
                         <form style="width:100%; height:100%; box-sizing:border-box;">
@@ -758,6 +748,26 @@
                     <button id="buttonShowParts" onclick="zoomOverlay.onToggleButtonShowOnVideo(event)" type="button" class="btn btn-green-toggle btn-xs" title="Show/Hide parts on video canvas">Show on Video</button>
                     <button onclick="onToggleButtonShowOnChrono(event)" type="button" class="buttonShowPartsOnChrono btn btn-green-toggle btn-xs" title="Show/Hide events with parts">Show on Chrono</button>
                   </div>
+                </div>
+                
+                <div class="modal fade" id="dialog-keypointLabelsFromServer" role="dialog">
+                    <div class="modal-dialog">
+                      <div class="modal-content" style="overflow:auto;">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal">&times;</button>
+                          <h4 class="modal-title">Keypoint labels Files</h4>
+                        </div>
+                        <div class="modal-body" >
+                              <!-- To be filled up by AJAX request -->
+                        </div>
+                        <div class="modal-message" >
+                              <!-- To be filled up by AJAX request -->
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                      </div>
+                    </div>
                 </div>
                                 
               </div>

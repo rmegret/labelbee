@@ -134,9 +134,154 @@ function ZoomOverlay(canvas, canvasOverlay) {
               zoomOverlay.refreshZoom()
           }
       });
+      
+    this.keypointLabelsFromServerDialog = new KeypointLabelsFromServerDialog()
 }
 
+
 ZoomOverlay.prototype = {}
+
+
+/* KEYPOINT LABELS LOADING */
+
+function KeypointLabelsFromServerDialog() {
+    this.dialogName = "KeypointLabelsFromServerDialog"
+    this.divId = "#dialog-keypointLabelsFromServer"
+    this.route = '/rest/config/keypointlabels/'
+
+    var theDialog = this
+    this.div = $(this.divId)
+    var div = this.div
+    if (!div.length) {
+        console.log(this.dialogName+': ERROR, could not find div '+this.divId)
+    }
+
+    this.updateDialog = function(uri) {
+        console.log(this.dialogName+': importing labellist from URL "'+this.route+"'...")
+        
+        let route = this.route
+        if (!!uri) { route=uri; }
+        
+        var data = {format: 'json'}       
+        $.ajax({
+          url: url_for(route),
+          type: 'GET',
+          contentType: 'application/json',
+          data:data,
+          success:function(json){
+            // Get the file list in JSON format
+
+            console.log(this.dialogName+": ajax SUCCESS\nlabellist=",json)
+            theDialog.json = json
+
+            let html = ""
+            for (let item of json.files) {
+                  html += '<button onclick="zoomOverlay.keypointLabelsFromServerDialog.onClickFile(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+            }
+            
+            for (let item of json.dirs) {
+                  html += '<button onclick="zoomOverlay.keypointLabelsFromServerDialog.onClickDir(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+            }
+            
+            div.find('.modal-body').html(html);
+            div.find('.modal-message').html('')
+            
+            // Nothing else to do here: 
+            // The modal #loadTracksFromServerDialog is supposed to be open 
+            // and filled with links to each Track file
+            // Clicking on one of the link will trigger eventsFromServer()
+            },
+          error: typesetAjaxError(this.dialogName+': ERROR',
+                          function(html) {div.find('.modal-message').html(html)})
+        })
+    }
+    this.openDialog = function() {
+        console.log(this.dialogName+': openDialog')
+        
+        if (!div.length) {
+            console.log(this.dialogName+': ERROR, could not find div '+this.divId)
+            return
+        }
+
+        div.find('.modal-body').html('[...]');
+        div.find('.modal-message').html('<div>Loading label list from server. Please wait...</div>')
+        
+        div.modal("show");
+        
+        this.updateDialog()
+    }        
+    this.initDialog = function() {
+        div.modal({
+            show:false,
+            autoOpen: false,
+            modal: true,
+            open: function(){
+                $("body").css("overflow", "auto");
+            },
+            close: function(){
+                $("body").css("overflow", "auto");
+            }
+        });
+        div.find(".modal-dialog").draggable({
+            handle: ".modal-header"
+        })
+        div.find(".modal-content").resizable({
+          alsoResize: ".modal-content",
+          minHeight: 300,
+          minWidth: 300
+        })
+    }
+    this.closeDialog = function() {
+        div.modal("hide");
+    }
+    
+    this.onClickFile = function(url) {
+        console.log(this.dialogName+": importing label list from URL '"+url+"'...")
+
+        div.find('.modal-message').html('Loading labels from '+url+'...')
+
+        zoomOverlay.keypointLabelsFromServer(url)
+            .then(function(){
+                div.find('.modal-message').html('Labels loaded. Closing.')
+                theDialog.closeDialog()}
+                )
+    }
+    this.onClickDir = function(uri) {
+        console.log(this.dialogName+": onClickDir "+uri)
+
+        this.updateDialog(uri)
+    }
+    
+    this.initDialog()
+}
+
+ZoomOverlay.prototype.keypointLabelsFromServer = function(url){
+    let zoomOverlay=this   
+
+    console.log("keypointLabelsFromServer: importing label list from URL '"+url+"'...")
+
+    return $.ajax({
+          url: url, //server url
+          type: 'GET',    //passing data as post method
+          contentType: 'application/json', // returning data as json
+          data:'',
+          success:function(obj)
+          {
+            console.log('keypointLabelsFromServer: SUCCESS\nobj=', obj); 
+            
+            if (!obj || !obj.labelList) {
+                console.log('keypointLabelsFromServer: could not parse JSON. Abort.'); 
+                return false
+            }
+            
+            console.log('keypointLabelsFromServer: updating labelList...'); 
+            zoomOverlay.labelList = new Map(obj.labelList)
+            zoomOverlay.refreshButtonListParts()
+          },
+          error: showAjaxError('keypointLabelsFromServer: ERROR')
+        });
+  }
+
 
 // # EXTERNAL EVENTS AND SYNC
 
@@ -785,6 +930,9 @@ ZoomOverlay.prototype.onButtonClickAddRemovePartLabel = function(evt, action) {
         $("#labellist-json").val(jsontext)
         
         $("#dialog-form-labelList").dialog("open");
+    }
+    if (action==='LoadPreset') {
+        this.keypointLabelsFromServerDialog.openDialog();
     }
 }
 ZoomOverlay.prototype.initLabelListDialog = function() {

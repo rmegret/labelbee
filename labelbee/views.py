@@ -206,6 +206,53 @@ def parse_trackfilename(filename):
   return {'video':'unknown','timestamp':'unknown'}
 
 
+def serve_files(base_dir, path, base_uri, format='html'):
+    filepath = safe_join(base_dir, path)
+    uripath = safe_join(base_uri, path)
+    
+    print('serve_files...')
+    print('filepath={}'.format(filepath))
+    print('uripath={}'.format(uripath))
+    
+    if not os.path.exists(filepath):
+        raise BadRequest('GET '+base_uri+': File not found "{}"'.format(filepath))
+        
+    if (format=='html'):
+        if (os.path.isfile(filepath)):
+            return send_from_directory_partial(base_dir, path, base_uri)
+        if (os.path.isdir(filepath)):
+            return dir_listing(filepath, '', uripath, show_hidden=False)
+    elif (format=='json'):
+        if (os.path.isfile(filepath)):
+            raise BadRequest('GET '+base_uri+': Attempting to get file in JSON format. try format=html')
+        if (os.path.isdir(filepath)):
+            items = os.listdir(filepath)
+            files = [f for f in items if f.endswith('.json') and os.path.isfile(safe_join(filepath,f))]
+            dirs  = [f for f in items if os.path.isdir(safe_join(filepath,f))]
+            if (path != ''):
+                dirs.append('..')
+            files_obj = [{
+                      'uri': os.path.normpath(os.path.join(base_uri,path,filename)),#url_for('send_data', path=os.path.join('config/labellist/',path,filename)),
+                      'filename': filename,
+                      'path': os.path.normpath(os.path.join(path,filename))
+                        }
+                   for filename in files]
+            dirs_obj = [{
+                      'uri': os.path.normpath(os.path.join(base_uri,path,filename+'/')),#url_for('labellist_get', path=os.path.join(path,filename+'/'), format=format),
+                      'filename': filename+'/',
+                      'path': os.path.normpath(os.path.join(path,filename+'/'))
+                        }
+                   for filename in dirs]
+
+            result = {'files':files_obj, 'dirs':dirs_obj}
+            return jsonify(result)
+        raise BadRequest('GET '+base_uri+': Internal error')
+    else:
+        raise BadRequest('GET '+base_uri+': Unrecognized format "{}"'.format(format))
+            
+    raise BadRequest('GET '+base_uri+': Internal error')
+
+
 # LIST AND GET
 @app.route('/rest/config/labellist', methods=['GET'])
 @app.route('/rest/config/labellist/', methods=['GET'])
@@ -216,51 +263,26 @@ def labellist_get(path=''):
     #    raise Forbidden('/rest/config/labellist GET: login required !')
     format = request.args.get('format', 'html')
     
-    labellist_dir = os.path.join(app.root_path,'static/data/config/labellist/')
-    labellist_uri = '/rest/config/labellist/'
+    base_dir = os.path.join(app.root_path,'static/data/config/labellist/')
+    base_uri = '/rest/config/labellist/'
 
-    filepath = safe_join(labellist_dir, path)
-    uripath = safe_join(labellist_uri, path)
+    return serve_files(base_dir, path,  base_uri, format)
     
-    print('filepath={}'.format(filepath))
-    print('uripath={}'.format(uripath))
 
-    if not os.path.exists(filepath):
-        raise BadRequest('/rest/config/labellist GET: file not found "{}"'.format(filepath))
-        
-    if (format=='html'):
-        if (os.path.isfile(filepath)):
-            return send_from_directory_partial(labellist_dir, path, labellist_uri)
-        if (os.path.isdir(filepath)):
-                return dir_listing(filepath, '', uripath, show_hidden=False)
-    elif (format=='json'):
+# LIST AND GET
+@app.route('/rest/config/keypointlabels', methods=['GET'])
+@app.route('/rest/config/keypointlabels/', methods=['GET'])
+@app.route('/rest/config/keypointlabels/<path:path>', methods=['GET'])
+def keypointlabels_get(path=''): 
+    print('Handling keypointlabels request PATH='+path)
+    #if (not current_user.is_authenticated):
+    #    raise Forbidden('/rest/config/labellist GET: login required !')
+    format = request.args.get('format', 'html')
     
-        if (os.path.isfile(filepath)):
-            raise BadRequest('/rest/config/labellist GET: attempting to get file in JSON format. try format=html')
-        if (os.path.isdir(filepath)):
-            labellist_items = os.listdir(filepath)
-            labellist_files = [f for f in labellist_items if f.endswith('.json') and os.path.isfile(safe_join(filepath,f))]
-            labellist_dirs =  [f for f in labellist_items if os.path.isdir(safe_join(filepath,f))]
-            if (path != ''):
-                labellist_dirs.append('..')
-            files = [{
-                      'uri': url_for('send_data', path=os.path.join('config/labellist/',path,filename)),
-                      'filename': filename
-                        }
-                   for filename in labellist_files]
-            dirs = [{
-                      'uri': url_for('labellist_get', path=os.path.join(path,filename+'/'), format=format),
-                      'filename': filename+'/',
-                      'subdir': os.path.normpath(os.path.join(path,filename+'/'))
-                        }
-                   for filename in labellist_dirs]
+    base_dir = os.path.join(app.root_path,'static/data/config/keypointlabels/')
+    base_uri = '/rest/config/keypointlabels/'
 
-            result = {'files':files, 'dirs':dirs}
-            return jsonify(result)
-    else:
-        raise BadRequest('/rest/config/labellist GET: unrecognized format "{}"'.format(format))
-            
-    raise BadRequest('/rest/config/labellist GET: Internal error')
+    return serve_files(base_dir, path,  base_uri, format)
 
 
 # LIST
