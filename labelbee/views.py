@@ -5,7 +5,7 @@
 from flask import current_app
 from flask import redirect, Blueprint
 from flask import render_template, render_template_string, Markup, jsonify
-from flask import request, url_for
+from flask import request, url_for, safe_join
 from flask_user import current_user, login_required, roles_accepted
 from flask_login import logout_user, login_user
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden
@@ -204,6 +204,66 @@ def parse_trackfilename(filename):
               'name':d.get('name')}
   
   return {'video':'unknown','timestamp':'unknown'}
+
+
+# LIST AND GET
+@app.route('/rest/config/labellist', methods=['GET'])
+@app.route('/rest/config/labellist/', methods=['GET'])
+@app.route('/rest/config/labellist/<path:path>', methods=['GET'])
+def labellist_get(path=''): 
+    print('Handling labellist request PATH='+path)
+    #if (not current_user.is_authenticated):
+    #    raise Forbidden('/rest/config/labellist GET: login required !')
+    format = request.args.get('format', 'html')
+    
+    labellist_dir = os.path.join(app.root_path,'static/data/config/labellist/')
+    labellist_uri = '/rest/config/labellist/'
+
+    filepath = safe_join(labellist_dir, path)
+    uripath = safe_join(labellist_uri, path)
+    
+    print('filepath={}'.format(filepath))
+    print('uripath={}'.format(uripath))
+
+    if not os.path.exists(filepath):
+        raise BadRequest('/rest/config/labellist GET: file not found "{}"'.format(filepath))
+        
+    if (format=='html'):
+        if (os.path.isfile(filepath)):
+            return send_from_directory_partial(labellist_dir, path, labellist_uri)
+        if (os.path.isdir(filepath)):
+                return dir_listing(filepath, '', uripath, show_hidden=False)
+    elif (format=='json'):
+    
+        if (os.path.isfile(filepath)):
+            raise BadRequest('/rest/config/labellist GET: attempting to get file in JSON format. try format=html')
+        if (os.path.isdir(filepath)):
+            labellist_items = os.listdir(filepath)
+            labellist_files = [f for f in labellist_items if f.endswith('.json') and os.path.isfile(safe_join(filepath,f))]
+            labellist_dirs =  [f for f in labellist_items if os.path.isdir(safe_join(filepath,f))]
+            if (path != ''):
+                labellist_dirs.append('..')
+            files = [{
+                      'uri': url_for('send_data', path=os.path.join('config/labellist/',path,filename)),
+                      'filename': filename
+                        }
+                   for filename in labellist_files]
+            dirs = [{
+                      'uri': url_for('labellist_get', path=os.path.join(path,filename+'/'), format=format),
+                      'filename': filename+'/',
+                      'subdir': os.path.normpath(os.path.join(path,filename+'/'))
+                        }
+                   for filename in labellist_dirs]
+
+            result = {'files':files, 'dirs':dirs}
+            return jsonify(result)
+    else:
+        print('444')
+        raise BadRequest('/rest/config/labellist GET: unrecognized format "{}"'.format(format))
+            
+    print('555')
+    raise BadRequest('/rest/config/labellist GET: Internal error')
+
 
 # LIST
 @app.route('/rest/events/', methods=['GET'])

@@ -13,9 +13,10 @@ from werkzeug.exceptions import BadRequest, NotFound, Forbidden
 #    response.headers.add('Accept-Ranges', 'bytes')
 #    return response
 
-def dir_listing(directory, dirname='', base_uri='/'):
+def dir_listing(directory, dirname='', base_uri='/', show_hidden=False):
     # Joining the base dir and the requested relative dir
     abs_path = os.path.join(directory, dirname)
+    #abs_path = safe_join(directory, dirname)
 
     # Return 404 if path doesn't exist
     if not os.path.exists(abs_path):
@@ -27,7 +28,9 @@ def dir_listing(directory, dirname='', base_uri='/'):
         #return send_file(abs_path)
 
     # Show directory contents
-    files = ['..'] + os.listdir(abs_path)
+    files = [f for f in os.listdir(abs_path) if not f.startswith('.')]
+    files = [os.path.normpath(f) for f in files]
+    files.insert(0,'..')
     dir_uri = os.path.join(base_uri, dirname, '') # Add trailing /
     return render_template('pages/files.html', dir_uri=dir_uri, files=files)
 

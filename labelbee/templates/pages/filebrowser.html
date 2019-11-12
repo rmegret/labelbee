@@ -1,0 +1,20 @@
+{% extends "common/page_base.html" %}  {# common/page_base.html extends layout.html #}
+
+{% block content %}
+
+<h1>File Browsing: {{ uri }} </h1>
+
+<ul>
+    {% for file in files %}
+    <li><a href="{{ file.uri }}">{{ file.filename }}</a></li>
+    {% endfor %}
+    
+    {% for file in dirs %}
+    <li><a href="{{ file.uri }}">{{ file.filename }}</a></li>
+    {% endfor %}
+
+</ul>
+
+{% endblock %}
+
+

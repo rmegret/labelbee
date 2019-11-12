@@ -91,6 +91,7 @@ function hardRefreshLabelTogglePanel() {
 
     panel.append( $(document.createTextNode(' - ')) )    
     panel.append( $('<button onclick="labelListDialog.openDialog()" type="button" class="btn btn-info btn-xs" title="Edit list of labels">...</button>') )
+    panel.append( $('<button onclick="labelListFromServerDialog.openDialog()" type="button" class="btn btn-info btn-xs" title="Load list of labels">Load...</button>') )
 
 }
 
