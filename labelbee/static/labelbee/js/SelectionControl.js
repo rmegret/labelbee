@@ -98,6 +98,7 @@ function hardRefreshLabelTogglePanel() {
 // Advanced Dialog
 
 function LabelListDialog() {
+    const theDialog = this
     this.div = $("#dialog-form-mainLabelList")
 
     function toJSGrid(data) {
@@ -143,7 +144,11 @@ function LabelListDialog() {
         div.dialog("open");
         this.autoResize()
         
-        let grid = div.find("#mainLabelList-jsGrid")
+        theDialog.grid = div.find("#mainLabelList-jsGrid")
+        let grid = theDialog.grid
+        
+        theDialog.jsondiv = div.find("#mainLabelList-JSON")
+        theDialog.jsondiv.on('input', function(){theDialog.updateJSONstate('changed')})
         
         grid.jsGrid({
             width: "100%",
@@ -173,10 +178,61 @@ function LabelListDialog() {
                     update: function(e, ui) {
                         // Dummy function to enable sorting
                         // Items are retrieved only when pressing Ok
+                        theDialog.updateJSON()
                     }
-                })
-            }
+                })     
+ 
+                theDialog.updateJSON()
+            },
+            onDataLoaded: function() {theDialog.updateJSON()},
+            onItemInserted: function() {theDialog.updateJSON()},
+            onItemDeleted: function() {theDialog.updateJSON()},
+            onItemUpdated: function() {theDialog.updateJSON()}
         });
+    }
+    this.updateJSON = function() {
+      if (theDialog.jsondiv) {
+          theDialog.jsondiv.html(JSON.stringify({labelListArray:theDialog.getItems()},null, 2))
+          theDialog.updateJSONstate('valid')
+      }
+    }
+    this.updateFromJSON = function() {
+      if (theDialog.jsondiv) {
+          json=theDialog.jsondiv.val()
+          try {
+              obj=JSON.parse(json)
+          } catch (e) {
+              console.log('ERROR parsing JSON:',e)
+              theDialog.updateJSONstate('invalid')
+              return
+          }
+          //console.log(obj)
+          if (!obj || !obj.labelListArray) {
+              console.log('ERROR in JSON:missing field "labelListArray"')
+              theDialog.updateJSONstate('invalid')
+              return
+          }
+          theDialog.grid.jsGrid("option", "data", toJSGrid(obj.labelListArray))
+//          theDialog.grid.reset()
+      }
+    }
+    this.updateJSONstate = function(state) {
+        if (theDialog.jsonState == state) {
+            return
+        }
+        if (state == 'changed') {
+            let button = $('<button>Validate</button>')
+            button.on('click',function(){theDialog.updateFromJSON()})
+            $('#tabs-labellist .tab-msg').html(' ').append(button)
+        }
+        if (state == 'valid') {
+            $('#tabs-labellist .tab-msg').html(' (Valid)')
+        }
+        if (state == 'invalid') {
+            let button = $('<button>Validate</button>')
+            button.on('click',function(){theDialog.updateFromJSON()})
+            $('#tabs-labellist .tab-msg').html(' (Invalid)').append(button)
+        }
     }
     this.autoResize = function() {
         this.div.dialog("option", {
@@ -188,6 +244,8 @@ function LabelListDialog() {
     this.initDialog = function() {
         let that = this;
         let div = this.div
+        
+        $('#tabs-labellist').tabs()
         
         div.dialog({
             autoOpen: false,

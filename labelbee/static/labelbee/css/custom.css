@@ -816,9 +816,13 @@ table.eventFiles td.metadata-notes {
 }
  */
  
- .jsgrid-cell {
+li.ui-tabs-active > .ui-tabs-anchor {
+    color: black;
+    font-weight: bold;
+}
+.jsgrid-cell {
     word-break: break-all;
- }
+}
 .ui-front {
     z-index: 2000;
 }
