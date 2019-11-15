@@ -252,6 +252,238 @@ function url_for(path) {
     return route
 }
 
+function FilePickerFromServerDialog() {
+    this.dialogName = "FilePickerFromServerDialog"
+    this.divId = "#dialog-filepicker-from-server"
+    this.route = null
+    this.hideOnSuccess = true
+
+    var theDialog = this
+    this.div = $(this.divId)
+    var div = this.div
+    if (!div.length) {
+        console.log('FilePickerFromServerDialog: ERROR, could not find div '+this.divId)
+    }
+
+    this.updateDialog = function(uri) {
+        console.log('FilePickerFromServerDialog: importing file list from URL "'+this.route+"'...")
+        
+        let route = this.route
+        if (!!uri) { route=uri; }
+        
+        var data = {format: 'json'}       
+        $.ajax({
+          url: url_for(route),
+          type: 'GET',
+          contentType: 'application/json',
+          dataType:'json',
+          data: data,
+          success:function(json){
+            // Get the file list in JSON format
+
+            console.log("FilePickerFromServerDialog: ajax SUCCESS\njson=",json)
+            theDialog.json = json
+
+            if (typeof json != 'object'|| !('files' in json) || !('dirs' in json)) {
+                div.find('.modal-body').html('No valid JSON');
+                div.find('.modal-message').html('Format error in server response')
+                return
+            }
+
+            let listdiv = div.find('.modal-body').html('');
+
+            //let html = ""
+            for (let item of json.files) {
+                  let button = $('<button>'+ item['filename'] +'</button>')
+                  button.attr('data-uri', item['uri'])
+                  button.on('click', theDialog.onClickFile)
+                  
+                  listdiv.append(button)
+                  listdiv.append($('<br>'))
+                  
+                  //html += '<button onclick="filePickerFromServerDialog.onClickFile(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+            }
+            
+            for (let item of json.dirs) {
+                  let button = $('<button>'+ item['filename'] +'</button>')
+                  button.attr('data-uri', item['uri'])
+                  button.on('click', theDialog.onClickDir)
+                  
+                  listdiv.append(button)
+                  listdiv.append($('<br>'))
+                  
+                  //html += '<button onclick="filePickerFromServerDialog.onClickDir(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
+            }
+            
+            div.find('.dir-uri-text').val(route)
+            
+            div.find('.modal-message').html('')
+            
+            // Nothing else to do here: 
+            // The modal #loadTracksFromServerDialog is supposed to be open 
+            // and filled with links to each Track file
+            // Clicking on one of the link will trigger eventsFromServer()
+            },
+          error: typesetAjaxError('FilePickerFromServerDialog: ERROR',
+                          function(html) {div.find('.modal-message').html(html)})
+        })
+    }
+    this.openDialog = function() {
+        console.log('FilePickerFromServerDialog: openDialog, dialogName=',theDialog.dialogName)
+        
+        if (!div.length) {
+            console.log('FilePickerFromServerDialog: ERROR, could not find div '+this.divId)
+            return
+        }
+        if (!theDialog.route) {
+            console.log('FilePickerFromServerDialog: no route defined. abort')
+            return
+        }
+        
+        // Reset it each time we open it
+        div.modal({
+            show:false,
+            autoOpen: false,
+            modal: true,
+            open: function(){
+                $("body").css("overflow", "auto");
+            },
+            close: function(){
+                $("body").css("overflow", "auto");
+            }
+        });
+        div.find(".modal-dialog").draggable({
+            handle: ".modal-header"
+        })
+        div.find(".modal-content").resizable({
+          alsoResize: ".modal-content",
+          minHeight: 300,
+          minWidth: 300
+        })
+
+        div.find('.dir-uri-btn')
+          .off('click')
+          .on('click', theDialog.onClickLoad)
+        
+        div.find('.dir-uri-btn-preview')
+          .off('click')
+          .on('click', theDialog.onClickPreview)
+        
+        div.find('.modal-body').html('[...]');
+        div.find('.modal-message').html('<div>Loading file list from server. Please wait...</div>')
+        
+        div.modal("show");
+        
+        this.updateDialog()
+    }        
+    this.initDialog = function(params) {
+    
+        // Only internal settings. Nothing stored to DOM dialog
+        theDialog.route = params.base_uri
+        theDialog.fileLoadedCallback = params.fileLoadedCallback
+        
+        theDialog.dialogName = params.dialogName ? params.dialogName : 'Pick File from Server'
+        
+        if ('hideOnSuccess' in params) 
+            theDialog.hideOnSuccess = params.hideOnSuccess
+        else 
+            theDialog.hideOnSuccess = true
+    }
+    this.closeDialog = function() {
+        div.find('.dir-uri-btn').off('click')
+        div.modal("hide");
+        //this.route = null
+    }
+
+    this.onClickLoad = function(evt) {    
+        console.log("FilePickerFromServerDialog: onClickLoad ",evt)
+        const uri = div.find('.dir-uri-text').val()
+        
+        theDialog.loadFile(uri)
+    }
+    this.onClickPreview = function(evt) {    
+        console.log("FilePickerFromServerDialog: onClickPreview ",evt)
+        const uri = div.find('.dir-uri-text').val()
+        
+        theDialog.previewFile(uri)
+    }
+    this.onClickFile = function(evt) {
+        console.log("FilePickerFromServerDialog: onClickFile ",evt)
+        console.log(evt.target);
+        const uri = $(evt.target).attr('data-uri')
+        
+        div.find('.dir-uri-text').val(uri)
+        theDialog.previewFile(null)
+        //theDialog.loadFile(uri)
+        
+    }
+    this.loadFile = function(uri) {
+        console.log("FilePickerFromServerDialog: importing file from URL '"+uri+"'...")
+
+        div.find('.modal-message').html('Loading file from '+uri+'...')
+
+        $.ajax({
+          url: uri,
+          type: 'GET',    //passing data as post method
+          contentType: 'plain/text',
+          error:   showAjaxError("FilePickerFromServerDialog.onClickFile: Ajax ERROR"),
+          success: function(content) {
+            console.log('FilePickerFromServerDialog: GET '+uri+' ajax SUCCESS')
+            console.log('content=', content); 
+            
+            try {
+                theDialog.fileLoadedCallback(uri,content)
+            } catch (e) {
+                console.log('FilePickerFromServerDialog: error parsing file content. See error:',e);
+                return
+            }
+            
+            console.log('FilePickerFromServerDialog: file loaded'); 
+            div.find('.modal-message').html('File loaded.')
+            
+            if (theDialog.hideOnSuccess) {
+                div.find('.modal-message').html('FilePickerFromServerDialog: File loaded. Closing.')
+                theDialog.closeDialog()
+            } 
+          }
+        });
+    }
+    this.previewFile = function(uri) {
+        console.log("FilePickerFromServerDialog: preview file from URL '"+uri+"'...")
+        if (uri==null) {
+            div.find('.modal-message').html('')       
+            return     
+        }
+
+        div.find('.modal-message').html('Loading file from '+uri+'...')
+
+        $.ajax({
+          url: uri,
+          type: 'GET',    //passing data as post method
+          contentType: 'plain/text',
+          error:   showAjaxError("FilePickerFromServerDialog.previewFile: Ajax ERROR"),
+          success: function(content) {
+            console.log('FilePickerFromServerDialog: GET '+uri+' ajax SUCCESS')
+            console.log('content=', content); 
+            
+            console.log('FilePickerFromServerDialog: file loaded'); 
+            div.find('.modal-message').append($('<pre>').text(content))
+          }
+        });
+    }
+    this.onClickDir = function(evt) {
+        console.log("FilePickerFromServerDialog: onClickDir "+evt)
+        console.log(evt.target);
+        const uri = $(evt.target).attr('data-uri')
+    
+        console.log("FilePickerFromServerDialog: change directory uri="+uri)
+
+        theDialog.updateDialog(uri)
+    }
+    
+    //this.initDialog(params)
+}
+
 
 
 // ######################################################################

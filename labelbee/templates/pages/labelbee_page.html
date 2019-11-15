@@ -422,17 +422,18 @@
                     <div>
                       <div class="float-right"><input onclick="videoManager.checkVideoList()" type="button" value="Check"  class="btn btn-primary btn-xs"/></div>
                         
-                      <input id="videoListFromServer" onclick="videoManager.videoListFromServer()" type="button" value="List From Server"  class="btn btn-default btn-xs">
+<!--                       <input id="videoListFromServer" onclick="videoManager.videoListFromServer()" type="button" value="List From Server"  class="btn btn-default btn-xs"> -->
+                      <input onclick="videoManager.filePicker.openDialog()" type="button" value="Load From Server"  class="btn btn-default btn-xs">
 
-                      <label for="loadvideolistjson" value="Load Video List" class="btn btn-default btn-xs" tabindex=0>List from JSON file</label>
+                      <label for="loadvideolistjson" value="Load Video List" class="btn btn-default btn-xs" tabindex=0>Load from JSON</label>
                       <input id="loadvideolistjson" type="file" style="display:none" >
                       
-                      <label for="loadvideolistcsv" value="Load Video List" class="btn btn-default btn-xs" tabindex=0>List from CSV file</label>
+                      <label for="loadvideolistcsv" value="Load Video List" class="btn btn-default btn-xs" tabindex=0>List from CSV</label>
                       <input id="loadvideolistcsv" type="file" style="display:none" >
 
-                      <input id="savevideolistjson" onclick="videoManager.saveVideoListToFile('json')" type="button" value="Save as JSON File" class="btn btn-default btn-xs" title="Save Video List as JSON File">
+                      <input id="savevideolistjson" onclick="videoManager.saveVideoListToFile('json')" type="button" value="Save as JSON" class="btn btn-default btn-xs" title="Save Video List as JSON File">
                       
-                      <input id="savevideolistcsv" onclick="videoManager.saveVideoListToFile('csv')" type="button" value="Save as CSV File" class="btn btn-default btn-xs" title="Save Video List as CSV File">
+                      <input id="savevideolistcsv" onclick="videoManager.saveVideoListToFile('csv')" type="button" value="Save as CSV" class="btn btn-default btn-xs" title="Save Video List as CSV File">
                         
                       <table id='videoList'>
                       </table>
@@ -980,6 +981,33 @@
   <div id="tagDetails">-</div>
   <br/>  <br/>  <br/>
     
+  </div>
+  
+<!--  ## GENERAL FILE PICKER  -->
+  
+  <div class="modal fade" id="dialog-filepicker-from-server" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content" style="overflow:auto;">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Pick Files From Server</h4>
+        </div>
+        <div class="modal-dir-uri" style="display: flex; flex-direction:row;">
+          <input type="text" class="dir-uri-text text ui-widget-content ui-corner-all btn-xs" style="flex-grow:1;"/>
+          <button type="button" class="dir-uri-btn btn btn-success btn-xs">Load</button>
+          </div>
+        <div class="modal-body" > <!-- To be filled up by AJAX request -->
+        </div>
+        <div class="modal-message" > <!-- To be filled up by AJAX request -->
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="dir-uri-btn-preview btn btn-default">Preview</button>
+            <button type="button" class="dir-uri-btn btn btn-success">Load</button>
+
+        </div>
+      </div>
+    </div>
   </div>
 
 

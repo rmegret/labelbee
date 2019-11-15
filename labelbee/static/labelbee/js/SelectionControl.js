@@ -192,7 +192,7 @@ function LabelListDialog() {
     }
     this.updateJSON = function() {
       if (theDialog.jsondiv) {
-          theDialog.jsondiv.html(JSON.stringify({labelListArray:theDialog.getItems()},null, 2))
+          theDialog.jsondiv.val(JSON.stringify({labelListArray:theDialog.getItems()},null, 2))
           theDialog.updateJSONstate('valid')
       }
     }

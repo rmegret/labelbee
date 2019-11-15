@@ -9,6 +9,8 @@ var videoinfo;
 
 function VideoManager() {
 
+    const videoManager = this
+
     document.getElementById('loadvideolistjson')
             .addEventListener('change', (evt)=>this.loadVideoListFromFile(evt,'json'));
     document.getElementById('loadvideolistcsv')
@@ -49,6 +51,13 @@ function VideoManager() {
     this.updateVideoInfoForm()
     
     this.videoListFromServer('/data/videolist.csv', 1)
+    
+    this.filePicker = new FilePickerFromServerDialog()
+    this.filePicker.initDialog({
+              base_uri: url_for('/rest/config/videolist/'),
+              fileLoadedCallback: function(file, content) {videoManager.setVideoListFromCSV(content,0)},
+              dialogName: 'Load Video List from Server'
+          })
 }
 
 VideoManager.prototype = {}

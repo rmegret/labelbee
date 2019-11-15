@@ -227,7 +227,8 @@ def serve_files(base_dir, path, base_uri, format='html'):
             raise BadRequest('GET '+base_uri+': Attempting to get file in JSON format. try format=html')
         if (os.path.isdir(filepath)):
             items = os.listdir(filepath)
-            files = [f for f in items if f.endswith('.json') and os.path.isfile(safe_join(filepath,f))]
+            #files = [f for f in items if f.endswith('.json') and os.path.isfile(safe_join(filepath,f))]
+            files = [f for f in items if os.path.isfile(safe_join(filepath,f))]
             dirs  = [f for f in items if os.path.isdir(safe_join(filepath,f))]
             if (path != ''):
                 dirs.append('..')
@@ -281,6 +282,23 @@ def keypointlabels_get(path=''):
     
     base_dir = os.path.join(app.root_path,'static/data/config/keypointlabels/')
     base_uri = url_for('keypointlabels_get',path='') #'/rest/config/keypointlabels/'
+
+    return serve_files(base_dir, path,  base_uri, format)
+    
+# LIST AND GET
+@app.route('/rest/config/videolist', methods=['GET'])
+@app.route('/rest/config/videolist/', methods=['GET'])
+@app.route('/rest/config/videolist/<path:path>', methods=['GET'])
+def videolist_get(path=''): 
+    print('Handling videolist request PATH='+path)
+    #if (not current_user.is_authenticated):
+    #    raise Forbidden('/rest/config/labellist GET: login required !')
+    format = request.args.get('format', 'html')
+    
+    print('format=',format)
+    
+    base_dir = os.path.join(app.root_path,'static/data/config/videolist/')
+    base_uri = url_for('videolist_get',path='') #'/rest/config/keypointlabels/'
 
     return serve_files(base_dir, path,  base_uri, format)
 
