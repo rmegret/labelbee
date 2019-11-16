@@ -35,13 +35,13 @@ function OverlayControl(canvasTagId) {
         angleEnabled: true
     }
 
-    flag_useROI=true
+    flag_useROI=false
     ROI = {left:175,top:30,right:2305,bottom:1240} // For Gurabo videos 5MP
     $('#ROI').val([ROI.left,ROI.top,ROI.right,ROI.bottom].join(','))
     //$(videoControl).on('video:loaded', updateROIFromVideo)
     $('#useROI').toggleClass('active', flag_useROI);
 
-    flag_useExcludeRects=true
+    flag_useExcludeRects=false
     excludeRects = [{"cx":335,"cy":75,"w":50,"h":50},{"cx":2165,"cy":80,"w":50,"h":50},{"cx":320,"cy":1034,"w":50,"h":50},{"cx":2130,"cy":1080,"w":50,"h":50}]
     initExcludeRectsDialog()
     $('#useExcludeRects').toggleClass('active', flag_useExcludeRects);
