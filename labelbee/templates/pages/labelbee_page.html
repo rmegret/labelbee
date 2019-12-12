@@ -134,72 +134,58 @@
       <tr>
         <td>
           <div id="left-side">
-
-          <!-- PLAY CONTROL -->
-
-          <p>
-            <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play icon-flipped"></span></button>
-            <input type="text" size="6" value="1" id="playRate" onchange="videoControl.playRateInputChanged()""></input>
-            <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-info btn-sm"><span class="glyphicon glyphicon-play"></span><span class="glyphicon glyphicon-pause"></span></button>
-            
-            <button value="Previous minute" onclick="videoControl.rewind(200)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut3"><span class="glyphicon glyphicon-fast-forward icon-flipped"></span><br class="negmargin"><span>10s</span></button>
-            <button value="Previous second" onclick="videoControl.rewind(20)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fbut2"><span class="glyphicon glyphicon-fast-forward icon-flipped"></span><br class="negmargin"><span>1s</span></button>
-            <button value="Previous frame" onclick="videoControl.rewind(1)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut1"><span class="glyphicon glyphicon-step-backward"></span><br class="negmargin"><span>1f</span></button>
-            
-            <button value="Next frame" onclick="videoControl.forward(1)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut1"><span class="glyphicon glyphicon-step-forward"></span><br class="negmargin"><span>1f</span></button>
-            <button value="Next second" onclick="videoControl.forward(20)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut2"><span class="glyphicon glyphicon-fast-forward"></span><br class="negmargin"><span>1s</span></button>
-            <button value="Next minute" onclick="videoControl.forward(200)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut3"><span class="glyphicon glyphicon-fast-forward"></span><br class="negmargin"><span>10s</span></button>
-
-          </p>
           
           <!-- BEE INFO CONTROL -->
+              
+          <div id="beeInfo" class="sortable">
           
-          <p>
-          <div id="beeInfo" class="">
+          <div id="beeidpanel" class="block inline-collapsible">
+          <div class="block-header small">BeeID:</div>
+          <div class="block-content" style="display:inline">
+            <input type="text" size="5" value="" id="I" onkeypress="onKeyDown_IDEdit(event)" class="small"></input>
             <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button" class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
-            ID <input type="text" size="6" value="" id="I" onkeypress="onKeyDown_IDEdit(event)""></input>
             <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-warning btn-xs" style="position: inline" id="deleteButton">
             <button type="button" onclick="undoAction()" class="btn btn-info btn-xs" style="position: inline" id="undoButton">Undo</button>
 
             <small style="color:blue">newid <input type="text" size="6" value="" id="newid" onkeypress="onKeyDown_NewIDEdit(event)""></input></small>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle wrongid" thelabel="wrongid" title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">wrongid <span class="glyphicon glyphicon-remove small blue"></span></button>
+            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle wrongid" thelabel="wrongid" title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">wrongid <span class="glyphicon glyphicon-remove small blue"></span></button>            
+          </div>
+          </div>
             
-            <div class='block inline-collapsible'>
-              <div class="block-header small">BoundingBox angle:</div>
-              <span class="block-content">
-              
+          <div class='block inline-collapsible'>
+            <div class="block-header small">BoundingBox angle:</div>
+            <span class="block-content">
               <input value="Disable" onclick="overlay.onClickDisableAngle()" type="button" class="guiAngle-disableAngle btn btn-pink-toggle btn-xs" title="Does not allow event to have angle by default">
-              
+            
               <button value="Reset to 0" onclick="overlay.onClickResetAngle()" type="button" class="btn btn-default btn-xs" title="Reset event angle to 0">Reset angle to 0</button>
               <button value="Set from tag" onclick="overlay.onClickAngleFromTag()" type="button" class="btn btn-default btn-xs" title="Set Event angle from associated tag">Angle from tag</button>
-              </span>
-            </div>
-            
-            <div id="alerttext"></div>
-            
-            <br>
+            </span>
+          </div>
             
             <!-- LABEL TOGGLES -->
    
-            <div style="display:inline-block" id="labeltoggle-panel">
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle fanning" thelabel="fanning" title="Toogle label">fanning</button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle pollen" thelabel="pollen" title="Toogle label">pollen <span class="glyphicon glyphicon-pollen small"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle entering" thelabel="entering" title="Toogle label">entering <span class="glyphicon glyphicon-arrow-up small" style="color:magenta"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle leaving" thelabel="leaving" title="Toogle label">leaving <span class="glyphicon glyphicon-arrow-down small" style="color:green"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle walking" thelabel="walking" title="Toogle label">walking <span class="glyphicon glyphicon-repeat small"></span></button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsed" thelabel="expulsed" title="Toogle label Expulsed: when a bee is rejected/expelled from the colony">expulsed</button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsing" thelabel="expulsing" title="Toogle label Expulsion: when a bee is rejecting/expelling another individual from the colony">expulsing</button>
-            <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle falsealarm" thelabel="falsealarm" title="Toogle FalseAlarm label: when a tag detection is not a tag">falsealarm <span class="glyphicon glyphicon-remove small red"></span></button>
+         <div id="labeltoggle" class="block inline-collapsible">
+         <div class="block-header small">Labels:</div>
+          <div class="block-content" style="display:inline">
+            <div style="display:inline" id="labeltoggle-panel">
+              <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle fanning" thelabel="fanning" title="Toogle label">fanning</button>
+              <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle pollen" thelabel="pollen" title="Toogle label">pollen <span class="glyphicon glyphicon-pollen small"></span></button>
+              <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle entering" thelabel="entering" title="Toogle label">entering <span class="glyphicon glyphicon-arrow-up small" style="color:magenta"></span></button>
+              <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle leaving" thelabel="leaving" title="Toogle label">leaving <span class="glyphicon glyphicon-arrow-down small" style="color:green"></span></button>
+              <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle walking" thelabel="walking" title="Toogle label">walking <span class="glyphicon glyphicon-repeat small"></span></button>
+              <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsed" thelabel="expulsed" title="Toogle label Expulsed: when a bee is rejected/expelled from the colony">expulsed</button>
+              <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle expulsing" thelabel="expulsing" title="Toogle label Expulsion: when a bee is rejecting/expelling another individual from the colony">expulsing</button>
+              <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle falsealarm" thelabel="falsealarm" title="Toogle FalseAlarm label: when a tag detection is not a tag">falsealarm <span class="glyphicon glyphicon-remove small red"></span></button>
             </div>
-            <div style="display:inline-block" id="labeltoggle-config">
+            <div style="display:inline" id="labeltoggle-config">
                 <button onclick="labelListDialog.openDialog()" type="button" class="btn btn-info btn-xs" title="Edit list of labels">Edit...</button>
-                <button onclick="labelListFromServerDialog.openDialog()" type="button" class="btn btn-info btn-xs" title="Load list of labels">Preset...</button>'
+                <button onclick="labelListFromServerDialog.openDialog()" type="button" class="btn btn-info btn-xs" title="Load list of labels">Preset...</button>    
             </div>
-            
             <br>
             <div class="textbox-inline">
               <label>Labels: </label><input type="textbox" value="" class="resizedTextbox" id="labels">
               <label>Notes: </label><input type="textbox" value="" class="resizedTextbox" id="notes">
+            </div>
             </div>
 
             <p id="alerttext"></p>
@@ -252,6 +238,9 @@
           
           <!-- # VIDEO VIEW -->
           
+          <!-- PLAY CONTROL -->
+
+          
           <div id="canvasresize" class="ui-widget-content">
               <div class="canvaswrapper">
                 <video src="" id="video" style="width:400px; z-index: -1"></video>
@@ -263,6 +252,26 @@
           <!-- # VIDEO CONTROL -->
 
           <div class="sortable">
+          
+            <div id="videocontrol" class="block inline-collapsible">
+                <div class="block-header small">
+                  Video
+                </div>
+                <span class="block-content">
+                <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play icon-flipped"></span></button>
+                <span class="small">Speed </span><input type="text" class="btn-sm nopad" size="4" value="1" id="playRate" onchange="videoControl.playRateInputChanged()""></input>
+                <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-success btn-sm nopad"><span class="glyphicon glyphicon-play"></span><span class="glyphicon glyphicon-pause"></span></button>
+            
+                <button value="Previous minute" onclick="videoControl.rewind(200)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut3" title="-10s"><span class="glyphicon glyphicon-fast-forward icon-flipped"></span></button>
+                <button value="Previous second" onclick="videoControl.rewind(20)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fbut2" title="-1s"><span class="glyphicon glyphicon-fast-forward icon-flipped"></span></button>
+                <button value="Previous frame" onclick="videoControl.rewind(1)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut1" title="-1 frame"><span class="glyphicon glyphicon-step-backward"></span></button>
+            
+                <button value="Next frame" onclick="videoControl.forward(1)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut1" title="+1 frame"><span class="glyphicon glyphicon-step-forward"></span></button>
+                <button value="Next second" onclick="videoControl.forward(20)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut2" title="+1s"><span class="glyphicon glyphicon-fast-forward"></span></button>
+                <button value="Next minute" onclick="videoControl.forward(200)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut3" title="+10s"><span class="glyphicon glyphicon-fast-forward"></span></button>
+                </small>
+                </span>
+              </div>
               
               <div class='block inline-collapsible'>
               <div class="block-header small">FocusInterval:</div>
@@ -278,19 +287,6 @@
               <button value="1s" onclick="setTrackWindow(20)" type="button" class="btn btn-default btn-xs" title="Track window = 1s">1s</button>
               <button value="10s" onclick="setTrackWindow(200)" type="button" class="btn btn-default btn-xs" title="Track window = 10s">10s</button>
               <button value="1m" onclick="setTrackWindow(1200)" type="button" class="btn btn-default btn-xs" title="Track window = 1min">1m</button>
-              </span>
-              </div>
-              
-              <div class='block inline-collapsible'>
-              <div class="block-header small">ChronogramView:</div>
-              <span class="block-content">
-              <div onclick="shiftTimeDomain(-0.5)"  class="btn btn-info btn-xs" title="Shift left"><span class="glyphicon glyphicon-step-backward small"></span></div>
-              <div onclick="shiftTimeDomain(0.5)"  class="btn btn-info btn-xs" title="Shift right"><span class="glyphicon glyphicon-step-forward small"></span></div>
-              
-              <input value="Z+" onclick="scaleTimeDomain(2)" type="button" class="btn btn-info btn-xs" title="Zoom In time">
-              <input value="Z-" onclick="scaleTimeDomain(1/2)" type="button" class="btn btn-info btn-xs" title="Zoom Out time">
-              
-              <input value="Video" onclick="onClickFocusVideo()" type="button" class="btn btn-default btn-video-border btn-xs" title="Reinit view">              
               </span>
               </div>
               
@@ -346,25 +342,53 @@
               <button value="ghost" onclick="plotGhostImage()" type="button" class="btn btn-default btn-xs" title="Plot averaged image">Ghost</span></button>
               </div>
  -->
- 
-               <div class='block inline-collapsible'>
-              <span class="block-header small">ChronoSize:</span>
-              <span class="block-content">
-              <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram height">h-</button>
-              <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram height">h=</button>
-              <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram height">h+</button>
-              &nbsp;
-              <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram width">w-</button>
-              <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram width">w=</button>
-              <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram width">w+</button>
-              <span>
-              </div>
-
-              <div id="chronoDiv" class="ui-widget-content" 
+              <br>
+              <div id="chronoTab" class="block inline-collapsible" width="100%" >
+                   
+                  <div class="block-header small">Chronogram:</div>
+                  <span class="block-content">
+                   
+                  <div class='block inline-collapsible'>
+                    <div class="block-header small">View:</div>
+                    <span class="block-content">
+                    <div onclick="shiftTimeDomain(-0.5)"  class="btn btn-info btn-xs" title="Shift left"><span class="glyphicon glyphicon-step-backward small"></span></div>
+                    <div onclick="shiftTimeDomain(0.5)"  class="btn btn-info btn-xs" title="Shift right"><span class="glyphicon glyphicon-step-forward small"></span></div>
+            
+                    <input value="Z+" onclick="scaleTimeDomain(2)" type="button" class="btn btn-info btn-xs" title="Zoom In time">
+                    <input value="Z-" onclick="scaleTimeDomain(1/2)" type="button" class="btn btn-info btn-xs" title="Zoom Out time">
+            
+                    <input value="Video" onclick="onClickFocusVideo()" type="button" class="btn btn-default btn-video-border btn-xs" title="Reinit view">              
+                    </span>
+                  </div>
+                   
+                  <div class='block inline-collapsible'>
+                    <div class="block-header small">Size:</div>
+                    <span class="block-content">
+                      <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram height">h-</button>
+                      <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram height">h=</button>
+                      <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram height">h+</button>
+                      &nbsp;
+                      <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs" title="Reduce chronogram width">w-</button>
+                      <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs" title="Reinit chronogram width">w=</button>
+                      <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs" title="Increase chronogram width">w+</button>
+                    </span>
+                  </div>
+                  
+                  <div>
+                  <div class="">
+                  <div id="chronoDiv" class="ui-widget-content" 
                    width="400" height="200" style="padding-right: 16px;">
                   <svg id="svgVisualize" width="100%" height="100%"></svg>
+                  </div>
+                  </div>
+                  </div>
+                  
+                  </span>
               </div>
           </div>
+          
+
+
 
           </div>
 
@@ -759,7 +783,7 @@
                     <button onclick="zoomOverlay.onClickButtonDeletePart(event)" type="button" class="btn btn-warning btn-xs" title="Delete part">Delete</button>
                     
                     <button id="buttonShowParts" onclick="zoomOverlay.onToggleButtonShowOnVideo(event)" type="button" class="btn btn-green-toggle btn-xs" title="Show/Hide parts on video canvas">Show on Video</button>
-                    <button onclick="onToggleButtonShowOnChrono(event)" type="button" class="buttonShowPartsOnChrono btn btn-green-toggle btn-xs" title="Show/Hide events with parts">Show on Chrono</button>
+                    <button onclick="onToggleButton_showPartsOnChrono(event)" type="button" class="buttonShowPartsOnChrono btn btn-green-toggle btn-xs" title="Show/Hide events with parts">Show on Chrono</button>
                   </div>
                 </div>
                 

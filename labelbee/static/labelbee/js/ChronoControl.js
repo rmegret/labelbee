@@ -88,30 +88,15 @@ function initChrono() {
     $( axes ).on('previewframe:trackend', endPreview)
     
     /* Resize events */
+
+    $("#chronoTab").on( "collapsibleexpand", refreshChronoLayout )
     
     // Make it resizable using jQuery-UI
     $("#chronoDiv").resizable({
+      handles: 'n, s, e, w',
       helper: "ui-resizable-helper",
+      stop: refreshChronoLayout
     });
-    // Detect #chronoDiv resize using ResizeSensor.js
-    // Note: cannot detect resize of SVG directly
-    new ResizeSensor($("#chronoDiv")[0], function() {
-        if (logging.guiEvents) {
-            console.log('#chronoDiv resized');
-        }
-        axes.refreshLayout()
-    });
-    // Equivalent pure jQuery seems to have trouble 
-    // the size of chronoDiv seems to be defined after the callback is called
-    //     $("#chronoDiv").on("resize", function(event) {
-    //         console.log('#chronoDiv.onresize',event)
-    //         axes.refreshLayout()
-    //         return false
-    //       })
-    
-    // For some reason, svg does not have the correct size at the beginning,
-    // trigger an asynchronous refresh
-    setTimeout(axes.refreshLayout, 50)
 
     /* ## Init chronogram content ## */
     
@@ -120,6 +105,30 @@ function initChrono() {
     
     initVideoSpan()
     initTrackWindowSpan()
+}
+function debouncer( func , timeout ) {
+   var timeoutID , timeout = timeout || 100;
+   return function () {
+      var scope = this , args = arguments;
+      clearTimeout( timeoutID );
+      timeoutID = setTimeout( function () {
+          func.apply( scope , Array.prototype.slice.call( args ) );
+      } , timeout );
+   }
+}
+function refreshChronoLayout() {
+    const doRefresh = function() {
+        if (true || logging.axesEvents) {
+           console.log("refreshChronoLayout"); 
+        }
+        // Make sure chrono is flushed top/left even after resize 
+        // from top/left handles
+        $("#chronoDiv").css({top:0, left:0})
+        if (!$("#chronoTab").hasClass("collapsed")) {
+          axes.refreshLayout()
+        }
+    } 
+    debouncer(doRefresh)()
 }
 
 function onMousewheelModeToggled() {
@@ -180,6 +189,10 @@ function getChronoItemHeight() {
     return itemHeight
 }
 function chronoAdjust(mode) {
+    let debouncedRefresh = debouncer(function(event) {
+        axes.refreshLayout()
+      })
+
     let factor = 1.2
     let mh = axes.margin.top+axes.margin.bottom
     let mw = axes.margin.left+axes.margin.right
@@ -188,29 +201,35 @@ function chronoAdjust(mode) {
 //         if (h<100) h=100;
 //         $('#chronoDiv').height(h)
         adjustChronogramHeight(getChronoItemHeight()/factor)
+        debouncedRefresh()
     }
     if (mode == 'H=') {
         adjustChronogramHeight(12)
+        debouncedRefresh()
     }
     if (mode == 'H+') {
 //         let h = ($('#chronoDiv').height()-mh)*factor+mh
 //         $('#chronoDiv').height(h)
         adjustChronogramHeight(getChronoItemHeight()*factor)
+        debouncedRefresh()
     }
 
     if (mode == 'W-') {
         let w = ($('#chronoDiv').width()-mw)/factor+mw
         if (w<200) w=200;
         $('#chronoDiv').width(w)
+        debouncedRefresh()
     }
     if (mode == 'W=') {
         let w = $('#canvasresize').width()
         if (w<200) w=200;
         $('#chronoDiv').width(w)
+        debouncedRefresh()
     }
     if (mode == 'W+') {
         let w = ($('#chronoDiv').width()-mw)*factor+mw
         $('#chronoDiv').width(w)
+        debouncedRefresh()
     }
 }
 function adjustChronogramHeight(itemHeight) {

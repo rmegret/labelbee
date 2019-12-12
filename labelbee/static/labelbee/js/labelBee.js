@@ -94,10 +94,15 @@ function init() {
     $(".inline-collapsible > .block-header").on("click",function (e) {
         //console.log(e)
         let header = $(e.currentTarget) //$(".block-header", $(e.currentTarget).parent())
-        let content = $(".block-content", header.parent())
+        let content = $("> .block-content", header.parent())
         content.toggle()
         header.toggleClass("collapsed",content.is(":hidden"))
         header.parent().toggleClass("collapsed",content.is(":hidden"))
+        if (header.hasClass("collapsed")) {
+            header.parent().trigger("collapsiblecollapse",e)
+        } else {
+            header.parent().trigger("collapsibleexpand",e)
+        }
         console.log('DONE\n\n')
       })
       
