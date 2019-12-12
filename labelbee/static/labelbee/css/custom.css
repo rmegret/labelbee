@@ -18,8 +18,31 @@ canvas {
 
 
 .main-table > tbody > tr > td {
-    padding-right: 40px;
+/*     padding-right: 10px; */
     vertical-align: top;
+}
+
+.main {
+  position: absolute;
+  top: 53px;
+/*   margin-top: 53px; */
+  padding: 10px;
+}
+.container {
+  width: 100%; /*1170px;*/
+      /* border: solid 1pt black; */
+  height: 100%;
+}
+
+#left-side {
+    padding: 5px;
+}
+#left-side:focus {
+    outline: none;
+    box-shadow: 0 0 2px 1px #ffe070;
+}
+#right-side {
+    padding: 5px;
 }
 
 td.top-align {
@@ -73,16 +96,7 @@ div.float-right {
   float:right;
 }
 
-.main {
-  position: absolute;
-  top: 53px;
-/*   margin-top: 53px; */
-  padding: 10px;
-}
-.container {
-  width: 100%; /*1170px;*/
-      /* border: solid 1pt black; */
-}
+
 .canvaswrapper {
     position: relative;
     width: 100%;/*480px;*/
@@ -298,13 +312,6 @@ button > p.multiline {
 /*     border: lightgray solid 1px; */
 }
 
-#left-side {
-    padding: 5px;
-}
-#left-side:focus {
-    outline: none;
-    box-shadow: 0 0 2px 1px #ffe070;
-}
 
 .ui-accordion:focus > .ui-accordion-content-active {
     outline: none;

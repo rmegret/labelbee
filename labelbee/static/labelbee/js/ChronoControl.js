@@ -29,6 +29,8 @@ function initChrono() {
     
     eventSeekMode = 'tag'
     updateEventSeekMode()
+    
+    chronoItemHeight = 12
 
     // SVG adjust to its parent #chronoDiv
     var svg = d3.select("#svgVisualize")    
@@ -95,7 +97,10 @@ function initChrono() {
     $("#chronoDiv").resizable({
       handles: 'n, s, e, w',
       helper: "ui-resizable-helper",
-      stop: refreshChronoLayout
+      stop: function() {
+          chronoItemHeight = getChronoItemHeight()
+          refreshChronoLayout()
+        }
     });
 
     /* ## Init chronogram content ## */
@@ -105,6 +110,8 @@ function initChrono() {
     
     initVideoSpan()
     initTrackWindowSpan()
+    
+    debouncer( refreshChronoLayout, 300 )
 }
 function debouncer( func , timeout ) {
    var timeoutID , timeout = timeout || 100;
@@ -118,7 +125,7 @@ function debouncer( func , timeout ) {
 }
 function refreshChronoLayout() {
     const doRefresh = function() {
-        if (true || logging.axesEvents) {
+        if (logging.axesEvents) {
            console.log("refreshChronoLayout"); 
         }
         // Make sure chrono is flushed top/left even after resize 
@@ -129,6 +136,7 @@ function refreshChronoLayout() {
         }
     } 
     debouncer(doRefresh)()
+    //doRefresh()
 }
 
 function onMousewheelModeToggled() {
@@ -180,11 +188,15 @@ function updateButtons_showIndividualEvents(event) {
 }
 
 function getChronoItemHeight() {
+    //return chronoItemHeight;
+    
     let H = $('#chronoDiv').height()
 
     let mh = axes.margin.top+axes.margin.bottom
     let N = axes.ydomain().length
     let itemHeight = (H-mh)/N
+    
+    console.trace(itemHeight)
     
     return itemHeight
 }
@@ -200,7 +212,7 @@ function chronoAdjust(mode) {
 //         let h = ($('#chronoDiv').height()-mh)/factor+mh
 //         if (h<100) h=100;
 //         $('#chronoDiv').height(h)
-        adjustChronogramHeight(getChronoItemHeight()/factor)
+        adjustChronogramHeight(chronoItemHeight/factor)
         debouncedRefresh()
     }
     if (mode == 'H=') {
@@ -210,7 +222,7 @@ function chronoAdjust(mode) {
     if (mode == 'H+') {
 //         let h = ($('#chronoDiv').height()-mh)*factor+mh
 //         $('#chronoDiv').height(h)
-        adjustChronogramHeight(getChronoItemHeight()*factor)
+        adjustChronogramHeight(chronoItemHeight*factor)
         debouncedRefresh()
     }
 
@@ -236,14 +248,14 @@ function adjustChronogramHeight(itemHeight) {
     if (itemHeight == null) {
         itemHeight = 12
     }
+    chronoItemHeight = itemHeight
 
     let mh = axes.margin.top+axes.margin.bottom
     let domain = axes.ydomain()
+    //console.trace(domain)
     let minheight = domain.length*itemHeight + mh
-    //if (minheight < 100) minheight = 100;
-    //if ($('#chronoDiv').height() < minheight) {
-        $('#chronoDiv').height(minheight)
-    //}
+    $('#chronoDiv').height(minheight)
+    refreshChronoLayout()
 }
 
 /* Synchronization between chronogram, video and chronogramData */
@@ -374,11 +386,11 @@ function updateChronoYDomain() {
     //let oldN=axes.ydomain().length
     //let N=domain.length
     
-    let itemHeight = getChronoItemHeight()
+    //let itemHeight = getChronoItemHeight()
     
     axes.ydomain(domain)
     
-    adjustChronogramHeight(itemHeight)
+    adjustChronogramHeight(chronoItemHeight)
     
     //axes.ydomain(['0','1','2','3','10','12']) // Testing
     
