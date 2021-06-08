@@ -6,14 +6,17 @@
 from datetime import datetime
 from flask import Flask
 from flask_mail import Mail
-from flask_migrate import Migrate, MigrateCommand
+from flask_migrate import Migrate  # , MigrateCommand
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
-from flask_user import UserManager, SQLAlchemyAdapter
+from flask_user import UserManager
 from flask_wtf.csrf import CSRFProtect
+from traceback import print_exc
 
 # Enable running in subdomain
 # http://flask.pocoo.org/snippets/35/
+
+
 class ReverseProxied(object):
     '''Wrap the application in this middleware and configure the 
     front-end server to add these headers, to let you quietly bind 
@@ -31,11 +34,12 @@ class ReverseProxied(object):
 
     :param app: the WSGI application
     '''
+
     def __init__(self, app):
         self.app = app
 
     def __call__(self, environ, start_response):
-        #print('ReverseProxied',environ,start_response)
+        # print('ReverseProxied',environ,start_response)
         script_name = environ.get('HTTP_X_SCRIPT_NAME', '')
         if script_name:
             environ['SCRIPT_NAME'] = script_name
@@ -46,18 +50,19 @@ class ReverseProxied(object):
         scheme = environ.get('HTTP_X_SCHEME', '')
         if scheme:
             environ['wsgi.url_scheme'] = scheme
-            
+
         server = environ.get('HTTP_X_FORWARDED_SERVER', '')
-        if server: 
+        if server:
             environ['HTTP_HOST'] = server
-            
+
         port = environ.get('HTTP_X_FORWARDED_PORT', '')
-        if port: 
+        if port:
             environ['SERVER_PORT'] = port
-        
+
         return self.app(environ, start_response)
 
 ####
+
 
 app = Flask(__name__, static_url_path='')  # The WSGI compliant webapp object
 app.wsgi_app = ReverseProxied(app.wsgi_app)
@@ -68,9 +73,11 @@ manager = Manager(app)          # Setup Flask-Script
 ####
 
 # Initialize Flask Application
+
+
 def init_app(app, extra_config_settings={}):
 
-    print('init_app: app=', app, '\nextra_config_settings=',extra_config_settings)
+    print('init_app: app=', app, '\nextra_config_settings=', extra_config_settings)
 
     # Read common settings from 'app/settings.py'
     app.config.from_object('labelbee.settings')
@@ -79,22 +86,23 @@ def init_app(app, extra_config_settings={}):
     try:
         app.config.from_object('labelbee.local_settings')
     except ImportError:
-        print("The configuration file 'labelbee/local_settings.py' does not exist.\n"+
-              "Please copy labelbee/local_settings_example.py to labelbee/local_settings.py\n"+
+        print("The configuration file 'labelbee/local_settings.py' does not exist.\n" +
+              "Please copy labelbee/local_settings_example.py to labelbee/local_settings.py\n" +
               "and customize its settings before you continue.")
         exit()
 
     # Add/overwrite extra settings from parameter 'extra_config_settings'
     app.config.update(extra_config_settings)
     if app.testing:
-        app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF checks while testing
+        # Disable CSRF checks while testing
+        app.config['WTF_CSRF_ENABLED'] = False
 
     # Initialize Flask-SQLAlchemy and Flask-Script _after_ app.config has been read
     db.init_app(app)
 
     # Setup Flask-Migrate
     migrate = Migrate(app, db)
-    manager.add_command('db', MigrateCommand)
+    #manager.add_command('db', MigrateCommand)
 
     # Setup Flask-Mail
     mail = Mail(app)
@@ -114,21 +122,14 @@ def init_app(app, extra_config_settings={}):
     init_email_error_handler(app)
 
     # Setup Flask-User to handle user account related forms
-    from labelbee.models import User, MyRegisterForm
+    from labelbee.models import User, CustomUserManager
     from labelbee.views import user_profile_page
 
-    try:
-        db_adapter = SQLAlchemyAdapter(db, User)  # Setup the SQLAlchemy DB Adapter
-    except Exception as e:
-        raise Exception('ERROR connecting to the User database') from e
-    user_manager = UserManager(db_adapter, app,  # Init Flask-User and bind to app
-                               register_form=MyRegisterForm,  # using a custom register form with UserProfile fields
-                               user_profile_view_function=user_profile_page,
-    )
+    user_manager = CustomUserManager(app, db, User)
 
     import labelbee.manage_commands
-    
-    #print(app.logger)
+
+    # print(app.logger)
 
 
 def init_email_error_handler(app):
@@ -136,7 +137,8 @@ def init_email_error_handler(app):
     Initialize a logger to send emails on error-level messages.
     Unhandled exceptions will now send an email message to app.config.ADMINS.
     """
-    if app.debug: return  # Do not send error emails while developing
+    if app.debug:
+        return  # Do not send error emails while developing
 
     # Retrieve email settings from app.config
     host = app.config['MAIL_SERVER']
@@ -166,8 +168,3 @@ def init_email_error_handler(app):
     app.logger.addHandler(mail_handler)
 
     # Log errors using: app.logger.error('Some error message')
-
-
-
-
-
