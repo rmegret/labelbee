@@ -2,7 +2,7 @@
 #
 # Authors: Ling Thio <ling.thio@gmail.com>
 
-#import logging
+# import logging
 from datetime import datetime
 from flask import Flask
 from flask_mail import Mail
@@ -17,9 +17,9 @@ from flask_wtf.csrf import CSRFProtect
 
 
 class ReverseProxied(object):
-    '''Wrap the application in this middleware and configure the 
-    front-end server to add these headers, to let you quietly bind 
-    this to a URL other than / and to an HTTP scheme that is 
+    """Wrap the application in this middleware and configure the
+    front-end server to add these headers, to let you quietly bind
+    this to a URL other than / and to an HTTP scheme that is
     different than what is used locally.
 
     In nginx:
@@ -32,42 +32,43 @@ class ReverseProxied(object):
         }
 
     :param app: the WSGI application
-    '''
+    """
 
     def __init__(self, app):
         self.app = app
 
     def __call__(self, environ, start_response):
         # print('ReverseProxied',environ,start_response)
-        script_name = environ.get('HTTP_X_SCRIPT_NAME', '')
+        script_name = environ.get("HTTP_X_SCRIPT_NAME", "")
         if script_name:
-            environ['SCRIPT_NAME'] = script_name
-            path_info = environ['PATH_INFO']
+            environ["SCRIPT_NAME"] = script_name
+            path_info = environ["PATH_INFO"]
             if path_info.startswith(script_name):
-                environ['PATH_INFO'] = path_info[len(script_name):]
+                environ["PATH_INFO"] = path_info[len(script_name) :]
 
-        scheme = environ.get('HTTP_X_SCHEME', '')
+        scheme = environ.get("HTTP_X_SCHEME", "")
         if scheme:
-            environ['wsgi.url_scheme'] = scheme
+            environ["wsgi.url_scheme"] = scheme
 
-        server = environ.get('HTTP_X_FORWARDED_SERVER', '')
+        server = environ.get("HTTP_X_FORWARDED_SERVER", "")
         if server:
-            environ['HTTP_HOST'] = server
+            environ["HTTP_HOST"] = server
 
-        port = environ.get('HTTP_X_FORWARDED_PORT', '')
+        port = environ.get("HTTP_X_FORWARDED_PORT", "")
         if port:
-            environ['SERVER_PORT'] = port
+            environ["SERVER_PORT"] = port
 
         return self.app(environ, start_response)
+
 
 ####
 
 
-app = Flask(__name__, static_url_path='')  # The WSGI compliant webapp object
+app = Flask(__name__, static_url_path="")  # The WSGI compliant webapp object
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
-db = SQLAlchemy()               # Setup Flask-SQLAlchemy
-manager = Manager(app)          # Setup Flask-Script
+db = SQLAlchemy()  # Setup Flask-SQLAlchemy
+manager = Manager(app)  # Setup Flask-Script
 
 ####
 
@@ -76,32 +77,34 @@ manager = Manager(app)          # Setup Flask-Script
 
 def init_app(app, extra_config_settings={}):
 
-    print('init_app: app=', app, '\nextra_config_settings=', extra_config_settings)
+    print("init_app: app=", app, "\nextra_config_settings=", extra_config_settings)
 
     # Read common settings from 'app/settings.py'
-    app.config.from_object('labelbee.settings')
+    app.config.from_object("labelbee.settings")
 
     # Read environment-specific settings from 'app/local_settings.py'
     try:
-        app.config.from_object('labelbee.local_settings')
+        app.config.from_object("labelbee.local_settings")
     except ImportError:
-        print("The configuration file 'labelbee/local_settings.py' does not exist.\n" +
-              "Please copy labelbee/local_settings_example.py to labelbee/local_settings.py\n" +
-              "and customize its settings before you continue.")
+        print(
+            "The configuration file 'labelbee/local_settings.py' does not exist.\n"
+            + "Please copy labelbee/local_settings_example.py to labelbee/local_settings.py\n"
+            + "and customize its settings before you continue."
+        )
         exit()
 
     # Add/overwrite extra settings from parameter 'extra_config_settings'
     app.config.update(extra_config_settings)
     if app.testing:
         # Disable CSRF checks while testing
-        app.config['WTF_CSRF_ENABLED'] = False
+        app.config["WTF_CSRF_ENABLED"] = False
 
     # Initialize Flask-SQLAlchemy and Flask-Script _after_ app.config has been read
     db.init_app(app)
 
     # Setup Flask-Migrate
     migrate = Migrate(app, db)
-    #manager.add_command('db', MigrateCommand)
+    # manager.add_command('db', MigrateCommand)
 
     # Setup Flask-Mail
     mail = Mail(app)
@@ -115,7 +118,7 @@ def init_app(app, extra_config_settings={}):
     def is_hidden_field_filter(field):
         return isinstance(field, HiddenField)
 
-    app.jinja_env.globals['bootstrap_is_hidden_field'] = is_hidden_field_filter
+    app.jinja_env.globals["bootstrap_is_hidden_field"] = is_hidden_field_filter
 
     # Setup an error-logger to send emails to app.config.ADMINS
     init_email_error_handler(app)
@@ -127,6 +130,10 @@ def init_app(app, extra_config_settings={}):
     user_manager = CustomUserManager(app, db, User)
 
     import labelbee.manage_commands
+
+    from labelbee.injest import injest_tags
+
+    injest_tags("data/tags.csv")
 
     # print(app.logger)
 
@@ -140,16 +147,16 @@ def init_email_error_handler(app):
         return  # Do not send error emails while developing
 
     # Retrieve email settings from app.config
-    host = app.config['MAIL_SERVER']
-    port = app.config['MAIL_PORT']
-    from_addr = app.config['MAIL_DEFAULT_SENDER']
-    username = app.config['MAIL_USERNAME']
-    password = app.config['MAIL_PASSWORD']
-    secure = () if app.config.get('MAIL_USE_TLS') else None
+    host = app.config["MAIL_SERVER"]
+    port = app.config["MAIL_PORT"]
+    from_addr = app.config["MAIL_DEFAULT_SENDER"]
+    username = app.config["MAIL_USERNAME"]
+    password = app.config["MAIL_PASSWORD"]
+    secure = () if app.config.get("MAIL_USE_TLS") else None
 
     # Retrieve app settings from app.config
-    to_addr_list = app.config['ADMINS']
-    subject = app.config.get('APP_SYSTEM_ERROR_SUBJECT_LINE', 'System Error')
+    to_addr_list = app.config["ADMINS"]
+    subject = app.config.get("APP_SYSTEM_ERROR_SUBJECT_LINE", "System Error")
 
     # Setup an SMTP mail handler for error-level messages
     import logging
