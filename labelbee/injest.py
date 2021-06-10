@@ -12,17 +12,18 @@ def injest_tags(filename):
             for i, row in enumerate(reader):
                 file_name = row["mp4file"].split("/")[-1]
                 path = "/".join(row["mp4file"].split("/")[:-1])
-                timestamp = datetime(
-                    year=int("20" + row["YY"]),
-                    month=int(row["MM"]),
-                    day=int(row["DD"]),
-                    hour=int(row["hh"]),
-                    minute=int(row["mm"]),
-                    second=int(row["ss"]),
-                )
                 if not Video.query.filter(
                     Video.file_name == file_name and Video.path == path
                 ).first():
+
+                    timestamp = datetime(
+                        year=int("20" + row["YY"]),
+                        month=int(row["MM"]),
+                        day=int(row["DD"]),
+                        hour=int(row["hh"]),
+                        minute=int(row["mm"]),
+                        second=int(row["ss"]),
+                    )
 
                     video = Video(
                         file_name=file_name,
@@ -30,7 +31,23 @@ def injest_tags(filename):
                         timestamp=timestamp,
                         location=row["cam"],
                         colony=int(float(row["newcol"])),
+                        frames=int(float(row["frames"])),
+                        width=int(float(row["width"])),
+                        height=int(float(row["height"])),
+                        fps=float(row["fps"]),
+                        realfps=float(row["realfps"]),
+                        filesize=int(row["filesize"]),
+                        hash=row["hash"],
+                        corrupted=bool(row["corrupted"]),
+                        trimmed=bool(row["trimmed"]),
+                        hasframe0=bool(row["hasframe0"]),
+                        hasframe_1s=bool(row["hasframe_1s"]),
+                        hasframe_2s=bool(row["hasframe_2s"]),
+                        hasframe_10s=bool(row["hasframe_10s"]),
+                        hasframeN_30s=bool(row["hasframeN_30s"]),
+                        hasframeN_2s=bool(row["hasframeN_2s"]),
+                        hasframeN_1s=bool(row["hasframeN_1s"]),
+                        hasframeN=bool(row["hasframeN"]),
                     )
                     db.session.add(video)
-                    db.session.commit()
-                break
+            db.session.commit()
