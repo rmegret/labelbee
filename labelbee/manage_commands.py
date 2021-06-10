@@ -4,11 +4,10 @@
 #
 # Authors: Ling Thio <ling.thio@gmail.com>
 
-import datetime
+from datetime import datetime
 
 from labelbee.init_app import app, db, manager
 from labelbee.models import User, Role
-import xlrd
 import pandas as pd
 
 
@@ -24,8 +23,7 @@ def init_db():
 
 def add_students():
     archivo = 'labelbee/private/usuarios.xlsx'
-    libro = xlrd.open_workbook(archivo)
-    xlsx = pd.read_excel(libro, engine='xlrd')
+    xlsx = pd.read_excel(archivo, engine='openpyxl')
     student_role = find_or_create_role('student', u'student')
     for i in range(len(xlsx)):
         student = User.query.filter(User.email == xlsx["email"][i]).first()
@@ -37,7 +35,7 @@ def add_students():
                            password=app.user_manager.hash_password(
                                str(xlsx["password"][i])),
                            active=True,
-                           confirmed_at=datetime.datetime.utcnow(),
+                           email_confirmed_at=datetime.utcnow(),
                            studentnum=xlsx["studentnum"][i],
                            clase=xlsx["clase"][i])
             student.roles.append(student_role)
@@ -80,7 +78,7 @@ def find_or_create_user(first_name, last_name, email, password, role=None):
                     last_name=last_name,
                     password=app.user_manager.hash_password(password),
                     active=True,
-                    confirmed_at=datetime.datetime.utcnow())
+                    email_confirmed_at=datetime.utcnow())
         if role:
             user.roles.append(role)
         db.session.add(user)

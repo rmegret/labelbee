@@ -17,7 +17,7 @@ class User(db.Model, UserMixin):
     # User authentication information (required for Flask-User)
     email = db.Column(db.Unicode(255), nullable=False,
                       server_default=u'', unique=True)
-    confirmed_at = db.Column(db.DateTime())
+    email_confirmed_at = db.Column(db.DateTime())
     password = db.Column(db.String(255), nullable=False, server_default='')
     # reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
     active = db.Column(db.Boolean(), nullable=False, server_default='0')
@@ -50,9 +50,50 @@ class UsersRoles(db.Model):
     __tablename__ = 'users_roles'
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey(
-        'users.id', ondelete='CASCADE'))
+        'users.id', ondelete='CASCADE'
+    ))
     role_id = db.Column(db.Integer(), db.ForeignKey(
-        'roles.id', ondelete='CASCADE'))
+        'roles.id', ondelete='CASCADE'
+    ))
+
+
+class Video(db.Model):
+    __tablename__ = 'videos'
+    id = db.Column(db.Integer(), primary_key=True)
+    file_name = db.Column(db.String(200), nullable=False,
+                          server_default=u"")
+    path = db.Column(db.String(100), nullable=False,
+                     server_default=u'')
+    timestamp = db.Column(db.DateTime, nullable=False)
+    location = db.Column(db.Integer())
+    colony = db.Column(db.Integer(), db.ForeignKey(
+        "colonies.id", ondelete="CASCADE"
+    ))
+
+
+class Colony(db.Model):
+    __tablename__ = 'colonies'
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(100), nullable=False,
+                     server_default=u"")
+    locations = db.Column(db.Integer())
+
+
+class VideoData(db.Model):
+    __tablename__ = 'video_data'
+    id = db.Column(db.Integer(), primary_key=True)
+    file_name = db.Column(db.String(200), nullable=False,
+                          server_default=u"")
+    path = db.Column(db.String(100), nullable=False,
+                     server_default=u'')
+    timestamp = db.Column(db.DateTime, nullable=False)
+    data_type = db.Column(db.String(25))
+    video = db.Column(db.Integer(), db.ForeignKey(
+        "videos.id", ondelete="CASCADE"
+    ))
+    created_by = db.Column(db.Integer(), db.ForeignKey(
+        "users.id", ondelete="CASCADE"
+    ))
 
 
 # Define the User registration form
