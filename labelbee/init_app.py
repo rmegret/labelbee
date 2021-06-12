@@ -129,11 +129,9 @@ def init_app(app, extra_config_settings={}):
 
     user_manager = CustomUserManager(app, db, User)
 
-    import labelbee.manage_commands
+    from labelbee.db_functions import injest_tags
 
-    from labelbee.injest import injest_tags
-
-    injest_tags("data/tags.csv")
+    # injest_tags("data/tags.csv")
 
     # print(app.logger)
 

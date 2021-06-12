@@ -14,12 +14,18 @@
 
 <table class="table" id="videos_table">
     <thead>
-        <th>ID</th>
-        <th>Name</th>
+        <th>Video Name</th>
         <th>Colony</th>
         <th>Date and Time</th>
     </thead>
     <tbody id="videosBody"></tbody>
+    {% for item in videos %}
+    <tr>
+        <td>{{ item.video_name }}</td>
+        <td>{{ item.colony }}</td>
+        <td>{{ item.timestamp }}</td>
+    </tr>
+    {% endfor %}
 </table>
 
 <script>

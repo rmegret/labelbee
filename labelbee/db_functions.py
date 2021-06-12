@@ -1,10 +1,10 @@
 from csv import DictReader
 from datetime import datetime
 from labelbee.models import Video
-from labelbee.init_app import db, manager, app
+from labelbee.init_app import db, app
+from json import dumps
 
 
-@manager.command
 def injest_tags(filename):
     with app.app_context():
         with open(filename) as tagfile:
@@ -51,3 +51,18 @@ def injest_tags(filename):
                     )
                     db.session.add(video)
             db.session.commit()
+
+
+def video_list():
+    result_json = []
+
+    for entry in Video.query.order_by(Video.timestamp.desc()).all()[0:100]:
+        result_json.append(
+            {
+                "video_name": entry.file_name,
+                "timestamp": entry.timestamp,
+                "colony": entry.colony,
+            }
+        )
+
+    return result_json
