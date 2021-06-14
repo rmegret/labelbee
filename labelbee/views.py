@@ -18,7 +18,7 @@ import pandas as pd
 import numpy as np
 import re
 
-from labelbee.init_app import app, db
+from labelbee.init_app import app, db, csrf
 from labelbee.models import UserProfileForm, User
 from labelbee.db_functions import video_list
 
@@ -47,7 +47,21 @@ def user_page():
 @app.route("/videos", methods=["GET", "POST"])
 @login_required
 def videos_page():
-    return render_template("pages/videos_page.html", videos=video_list())
+    form = UserProfileForm(obj=current_user)
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        # Redirect to home page
+        return redirect(url_for("videos_page"))
+
+    # Process GET or invalid POST
+    return render_template("pages/videos_page.html", videos=video_list(), form=form)
 
 
 @app.route("/user/profile", methods=["GET", "POST"])

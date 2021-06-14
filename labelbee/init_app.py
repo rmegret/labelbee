@@ -69,6 +69,7 @@ app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 db = SQLAlchemy()  # Setup Flask-SQLAlchemy
 manager = Manager(app)  # Setup Flask-Script
+csrf = CSRFProtect(app)
 
 ####
 
@@ -110,7 +111,6 @@ def init_app(app, extra_config_settings={}):
     mail = Mail(app)
 
     # Setup WTForms CsrfProtect
-    csrf = CSRFProtect(app)
 
     csrf.init_app(app)
 
