@@ -2,12 +2,35 @@
 
 {% block content %}
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<script type="text/javascript">
+    var csrftoken = $('meta[name=csrf-token]').attr('content')
+
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+        }
+    })
+</script>
+
+
 <h1>Videos: {{ uri }} </h1>
 
-
-<div class="col-md-3">
-    <div class="form-group" max_width=100>
-        <input type="text" onkeypress="is_enter(event)" class="form-control" placeholder="Enter Search">
+<div>
+    <div class="col-md-3">
+        <div class="form-group" max_width=100>
+            <input type="text" onkeypress="is_enter(event)" class="form-control" placeholder="Enter Search">
+        </div>
+    </div>
+    <div class="col-md-3 offset-md-3">
+        <div class="form-group">
+            <form action="/videos" method="post" role="form">
+                <input type="submit" class="btn btn-primary" value="Next Page" />
+            </form>
+        </div>
     </div>
 </div>
 
@@ -28,7 +51,7 @@
     {% endfor %}
 </table>
 
-<script>
+<!-- <script>
     let is_enter = (e) => {
         if (e.keyCode === 13) {
             search();
@@ -54,6 +77,8 @@
                 alert("running");
             });
     }
-</script>
+</script> -->
+
+
 
 {% endblock %}

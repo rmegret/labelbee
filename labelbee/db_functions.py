@@ -53,10 +53,12 @@ def injest_tags(filename):
             db.session.commit()
 
 
-def video_list():
+def video_list(page=1):
     result_json = []
 
-    for entry in Video.query.order_by(Video.timestamp.desc()).all()[0:100]:
+    for entry in Video.query.order_by(Video.timestamp.desc()).all()[
+        0 * page : 100 * page
+    ]:
         result_json.append(
             {
                 "video_name": entry.file_name,

@@ -110,7 +110,9 @@ def init_app(app, extra_config_settings={}):
     mail = Mail(app)
 
     # Setup WTForms CsrfProtect
-    CSRFProtect(app)
+    csrf = CSRFProtect(app)
+
+    csrf.init_app(app)
 
     # Define bootstrap_is_hidden_field for flask-bootstrap's bootstrap_wtf.html
     from wtforms.fields import HiddenField

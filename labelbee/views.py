@@ -44,7 +44,7 @@ def user_page():
     return render_template("pages/user_page.html", userid=str(current_user.id))
 
 
-@app.route("/videos")
+@app.route("/videos", methods=["GET", "POST"])
 @login_required
 def videos_page():
     return render_template("pages/videos_page.html", videos=video_list())
