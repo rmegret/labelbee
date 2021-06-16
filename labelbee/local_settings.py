@@ -16,6 +16,7 @@ WTF_CSRF_TIME_LIMIT = None
 
 # SQLAlchemy settings
 SQLALCHEMY_DATABASE_URI = "sqlite:///private/app.sqlite"
+# SQLALCHEMY_DATABASE_URI = "mysql+pymysql://dsuazo:S/<R&WZp1rRu5if@136.145.54.43/videos"
 
 # Flask-Mail settings (use local server)
 MAIL_SERVER = "localhost"

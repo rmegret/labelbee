@@ -87,12 +87,11 @@ def init_app(app, extra_config_settings={}):
     try:
         app.config.from_object("labelbee.local_settings")
     except ImportError:
-        print(
+        exit(
             "The configuration file 'labelbee/local_settings.py' does not exist.\n"
             + "Please copy labelbee/local_settings_example.py to labelbee/local_settings.py\n"
             + "and customize its settings before you continue."
         )
-        exit()
 
     # Add/overwrite extra settings from parameter 'extra_config_settings'
     app.config.update(extra_config_settings)
@@ -131,8 +130,9 @@ def init_app(app, extra_config_settings={}):
 
     user_manager = CustomUserManager(app, db, User)
 
-    from labelbee.db_functions import injest_tags
+    from labelbee.db_functions import injest_tags, injest_videos
 
+    # injest_videos("data/tags.csv")
     # injest_tags("data/tags.csv")
 
     # print(app.logger)

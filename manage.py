@@ -3,6 +3,7 @@
 # - Developers can run it from the command line: python runserver.py
 
 from labelbee.init_app import app, init_app, manager
+from labelbee.manage_commands import init_db
 
 import sys
 import logging

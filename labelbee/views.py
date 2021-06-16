@@ -45,7 +45,7 @@ def user_page():
 
 
 @app.route("/videos", methods=["GET", "POST"])
-@login_required
+# @login_required
 def videos_page():
     form = UserProfileForm(obj=current_user)
 
