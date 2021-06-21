@@ -96,6 +96,7 @@ def video_list(page=1):
                 "video_name": entry.file_name,
                 "timestamp": entry.timestamp,
                 "colony": entry.colony,
+                "path": entry.path,
             }
         )
 

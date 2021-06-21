@@ -91,6 +91,8 @@ def labelbee_user_page():
 
     # print('SCRIPT_NAME=',request.environ.get('SCRIPT_NAME'))
 
+    video_url = request.args.get("video_url")
+
     http_script_name = request.environ.get("SCRIPT_NAME")
 
     print("labelbee_user_page launched with http_script_name=", http_script_name)
@@ -106,12 +108,14 @@ def labelbee_user_page():
             "pages/labelbee_page.html",
             userid=str(current_user.id),
             http_script_name=http_script_name,
+            video_url=video_url,
         )
     else:
         return render_template(
             "pages/labelbee_page.html",
             userid="anonymous",
             http_script_name=http_script_name,
+            video_url=video_url,
         )
 
 

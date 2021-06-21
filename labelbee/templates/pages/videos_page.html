@@ -34,7 +34,7 @@
     <tbody id="videosBody">
         {% for item in videos %}
         <tr>
-            <td>{{ item.video_name }}</td>
+            <td><a href="/labelbee/gui?video_url={{item.path + '/' + item.video_name }}">{{ item.video_name }}</a></td>
             <td>{{ item.colony }}</td>
             <td>{{ item.timestamp }}</td>
         </tr>
