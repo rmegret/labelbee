@@ -61,7 +61,7 @@ class Video(db.Model):
     path = db.Column(db.String(100), nullable=False, server_default=u"")
     timestamp = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.Integer(), nullable=False)
-    colony = db.Column(db.Integer(), db.ForeignKey("colonies.id", ondelete="CASCADE"))
+    colony = db.Column(db.Integer())
     frames = db.Column(db.Integer(), nullable=False)
     height = db.Column(db.Integer(), nullable=False)
     width = db.Column(db.Integer(), nullable=False)
@@ -81,13 +81,6 @@ class Video(db.Model):
     hasframeN = db.Column(db.Boolean(), nullable=False)
 
 
-class Colony(db.Model):
-    __tablename__ = "colonies"
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(100), nullable=False, server_default=u"")
-    locations = db.Column(db.Integer())
-
-
 class VideoData(db.Model):
     __tablename__ = "video_data"
     __table_args__ = (db.UniqueConstraint("file_name", "path"),)
@@ -98,6 +91,21 @@ class VideoData(db.Model):
     data_type = db.Column(db.String(25))
     video = db.Column(db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"))
     created_by = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
+
+
+class VideoDataSet(db.Model):
+    __tablename__ = "video_data_set"
+    __table_args__ = (db.UniqueConstraint("ds_id", "video_id"),)
+    id = db.Column(db.Integer(), primary_key=True)
+    ds_id = db.Column(db.Integer(), db.ForeignKey("data_set.id", ondelete="CASCADE"))
+    video_id = db.Column(db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"))
+
+
+class DataSet(db.Model):
+    __tablename__ = "data_set"
+    id = db.Column(db.Integer(), primary_key=True)
+    created_by = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
+    timestamp = db.Column(db.DateTime, nullable=False)
 
 
 # Define the User registration form

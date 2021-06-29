@@ -39,7 +39,7 @@ var logging = {
 // INITITALIZATION
 
 /** Global init */
-function init() {
+function init(video_data, tag_file) {
   // Parameter passed through HTML Jinja template
   if (http_script_name_0) {
     http_script_name = http_script_name_0;
@@ -150,7 +150,11 @@ function init() {
 
   /* Set defaults */
 
-  videoManager.selectVideoByID(1);
+  if (video_data !== "None" && tag_file !== "None") {
+    videoManager.addDefaultVideo(video_data, tag_file);
+  }
+  videoManager.selectVideoByID(0);
+
   //Will trigger videoControl.onVideoLoaded
   onTrackWindowChanged(); // to compute track window params
 

@@ -45,7 +45,7 @@ def user_page():
 
 
 @app.route("/videos", methods=["GET", "POST"])
-# @login_required
+@login_required
 def videos_page():
     form = UserProfileForm(obj=current_user)
 
@@ -92,6 +92,7 @@ def labelbee_user_page():
     # print('SCRIPT_NAME=',request.environ.get('SCRIPT_NAME'))
 
     video_url = request.args.get("video_url")
+    tag_file = request.args.get("tag_file")
 
     http_script_name = request.environ.get("SCRIPT_NAME")
 
@@ -109,6 +110,7 @@ def labelbee_user_page():
             userid=str(current_user.id),
             http_script_name=http_script_name,
             video_url=video_url,
+            tag_file=tag_file,
         )
     else:
         return render_template(
@@ -116,6 +118,7 @@ def labelbee_user_page():
             userid="anonymous",
             http_script_name=http_script_name,
             video_url=video_url,
+            tag_file=tag_file,
         )
 
 
