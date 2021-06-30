@@ -2,7 +2,9 @@ data/
 perso/
 gitlog
 gitversion
-Icon
+Icon
+env/
+
 __pycache__
 jsdoc/
 *.pyc

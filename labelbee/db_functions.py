@@ -1,6 +1,6 @@
 from csv import DictReader
 from datetime import datetime
-from labelbee.models import Video, VideoData
+from labelbee.models import Video, VideoData, DataSet, VideoDataSet
 from labelbee.init_app import db, app
 
 
@@ -87,17 +87,39 @@ def injest_tags(filename):
             db.session.commit()
 
 
-def video_list(page=1):
+def video_list(dataset=None):
     result_json = []
 
-    for entry in Video.query.all():
-        result_json.append(
-            {
-                "video_name": entry.file_name,
-                "timestamp": entry.timestamp,
-                "colony": entry.colony,
-                "path": entry.path,
-            }
-        )
+    if dataset:
+        for entry in (
+            Video.query.join(VideoDataSet)
+            .filter(
+                VideoDataSet.ds_id == dataset,
+                Video.id == VideoDataSet.video_id,
+            )
+            .all()
+        ):
+            result_json.append(
+                {
+                    "video_name": entry.file_name,
+                    "timestamp": entry.timestamp,
+                    "colony": entry.colony,
+                    "path": entry.path,
+                }
+            )
+    else:
+        for entry in Video.query.all():
+            result_json.append(
+                {
+                    "video_name": entry.file_name,
+                    "timestamp": entry.timestamp,
+                    "colony": entry.colony,
+                    "path": entry.path,
+                }
+            )
 
     return result_json
+
+
+def dataset_list():
+    return DataSet.query.all()

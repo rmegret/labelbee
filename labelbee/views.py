@@ -20,7 +20,7 @@ import re
 
 from labelbee.init_app import app, db, csrf
 from labelbee.models import UserProfileForm, User
-from labelbee.db_functions import video_list
+from labelbee.db_functions import video_list, dataset_list
 
 upload_dir = "labelbee/static/upload/"
 
@@ -49,6 +49,8 @@ def user_page():
 def videos_page():
     form = UserProfileForm(obj=current_user)
 
+    dataset = request.args.get("dataset")
+
     # Process valid POST
     if request.method == "POST" and form.validate():
         # Copy form fields to user_profile fields
@@ -61,7 +63,31 @@ def videos_page():
         return redirect(url_for("videos_page"))
 
     # Process GET or invalid POST
-    return render_template("pages/videos_page.html", videos=video_list(), form=form)
+    return render_template(
+        "pages/videos_page.html", videos=video_list(dataset), form=form
+    )
+
+
+@app.route("/datasets", methods=["GET", "POST"])
+@login_required
+def datasets_page():
+    form = UserProfileForm(obj=current_user)
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        # Redirect to home page
+        return redirect(url_for("datasets_page"))
+
+    # Process GET or invalid POST
+    return render_template(
+        "pages/datasets_page.html", datasets=dataset_list(), form=form
+    )
 
 
 @app.route("/user/profile", methods=["GET", "POST"])

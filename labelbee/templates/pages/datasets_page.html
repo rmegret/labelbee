@@ -21,21 +21,23 @@
 
 
 
-<h1>Videos: {{ uri }} </h1>
+<h1>Datasets: {{ uri }} </h1>
+
+<p1><a href="/videos">All Videos</a></p1>
 
 
 
-<table class="table" id="videos_table">
+<table class="table" id="datasets_table">
     <thead>
-        <th>Video Name</th>
-        <th>Colony</th>
+        <th>Dataset id</th>
+        <th>Creator</th>
         <th>Date and Time</th>
     </thead>
-    <tbody id="videosBody">
-        {% for item in videos %}
+    <tbody id="datasetsBody">
+        {% for item in datasets %}
         <tr>
-            <td><a href="/labelbee/gui?video_url={{ item.path + '/' + item.video_name }}&tag_file={{ item.path + '/' + item.video_name[:-4] + '_tags.json' }}">{{ item.video_name }}</a></td>
-            <td>{{ item.colony }}</td>
+            <td><a href="/videos?dataset={{ item.id }}">{{ item.id }}</a></td>
+            <td>{{ item.created_by }}</td>
             <td>{{ item.timestamp }}</td>
         </tr>
         {% endfor %}
