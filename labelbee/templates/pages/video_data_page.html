@@ -27,16 +27,18 @@
 
 <table class="table" id="videos_table">
     <thead>
-        <th>Video Name</th>
-        <th>Colony</th>
+        <th>File Name</th>
+        <th>Data Type</th>
         <th>Date and Time</th>
+        <th>Created By</th>
     </thead>
     <tbody id="videosBody">
-        {% for item in videos %}
+        {% for item in video_data %}
         <tr>
-            <td><a href="/labelbee/gui?video_url={{ item.path + '/' + item.video_name }}&tag_file={{ item.path + '/' + item.video_name[:-4] + '_tags.json' }}">{{ item.video_name }}</a></td>
-            <td>{{ item.colony }}</td>
+            <td><a href="/labelbee/gui?video_url={{ video_url }}&tag_file={{ item.path + '/' + item.file_name}}">{{ item.file_name }}</a></td>
+            <td>{{ item.data_type }}</td>
             <td>{{ item.timestamp }}</td>
+            <td>{{ item.created_by }}</td>
         </tr>
         {% endfor %}
     </tbody>

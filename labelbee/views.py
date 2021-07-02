@@ -20,7 +20,7 @@ import re
 
 from labelbee.init_app import app, db, csrf
 from labelbee.models import UserProfileForm, User
-from labelbee.db_functions import video_list, dataset_list
+from labelbee.db_functions import video_list, dataset_list, video_data_list
 
 upload_dir = "labelbee/static/upload/"
 
@@ -65,6 +65,35 @@ def videos_page():
     # Process GET or invalid POST
     return render_template(
         "pages/videos_page.html", videos=video_list(dataset), form=form
+    )
+
+
+@app.route("/videodata", methods=["GET", "POST"])
+@login_required
+def video_data_page():
+    form = UserProfileForm(obj=current_user)
+
+    videoid = request.args.get("videoid")
+
+    video_url = request.args.get("video_url")
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        # Redirect to home page
+        return redirect(url_for("video_data_page"))
+
+    # Process GET or invalid POST
+    return render_template(
+        "pages/video_data_page.html",
+        video_data=video_data_list(videoid),
+        video_url=video_url,
+        form=form,
     )
 
 

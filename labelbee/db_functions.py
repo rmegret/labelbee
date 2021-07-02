@@ -87,6 +87,23 @@ def injest_tags(filename):
             db.session.commit()
 
 
+def video_data_list(videoid):
+    result_json = []
+
+    for entry in VideoData.query.filter(VideoData.video == videoid).all():
+        print(entry.file_name)
+        result_json.append(
+            {
+                "file_name": entry.file_name,
+                "timestamp": entry.timestamp,
+                "data_type": entry.data_type,
+                "created_by": entry.created_by,
+                "path": entry.path,
+            }
+        )
+    return result_json
+
+
 def video_list(dataset=None):
     result_json = []
 
@@ -105,6 +122,7 @@ def video_list(dataset=None):
                     "timestamp": entry.timestamp,
                     "colony": entry.colony,
                     "path": entry.path,
+                    "id": entry.id,
                 }
             )
     else:
@@ -115,6 +133,7 @@ def video_list(dataset=None):
                     "timestamp": entry.timestamp,
                     "colony": entry.colony,
                     "path": entry.path,
+                    "id": entry.id,
                 }
             )
 
