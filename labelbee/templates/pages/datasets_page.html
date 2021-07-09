@@ -24,27 +24,29 @@
 <h1>Datasets: {{ uri }} </h1>
 
 
-<a href="/videos">
+<a href="{{ url_for('videos_page') }}">
     <button type="button" onclick="" class="btn btn-primary">All Videos</button>
 </a>
 
-<a href="/videos">
+<a href="{{ url_for('add_dataset_page') }}">
     <button type="button" onclick="" class="btn btn-primary">New Dataset</button>
 </a>
-
+<br>
 
 
 
 <table class="table" id="datasets_table">
     <thead>
-        <th>Dataset id</th>
+        <th>Dataset</th>
+        <th>Description</th>
         <th>Creator</th>
         <th>Date and Time</th>
     </thead>
     <tbody id="datasetsBody">
         {% for item in datasets %}
         <tr>
-            <td><a href="/videos?dataset={{ item.id }}">{{ item.id }}</a></td>
+            <td><a href="{{ url_for('videos_page') }}?dataset={{ item.id }}">{{ item.name }}</a></td>
+            <td>{{ item.description }}</td>
             <td>{{ item.created_by }}</td>
             <td>{{ item.timestamp }}</td>
         </tr>
@@ -56,7 +58,7 @@
 
 <script>
     $(document).ready(function () {
-        $('#videos_table').DataTable({
+        $('#datasets_table').DataTable({
             "order": [[2, "desc"]]
         });
 

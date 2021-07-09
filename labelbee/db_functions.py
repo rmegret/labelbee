@@ -1,6 +1,6 @@
 from csv import DictReader
 from datetime import datetime
-from labelbee.models import Video, VideoData, DataSet, VideoDataSet
+from labelbee.models import Video, VideoData, DataSet, VideoDataSet, User
 from labelbee.init_app import db, app
 
 
@@ -87,58 +87,64 @@ def injest_tags(filename):
             db.session.commit()
 
 
-def video_data_list(videoid):
-    result_json = []
-
-    for entry in VideoData.query.filter(VideoData.video == videoid).all():
-        print(entry.file_name)
-        result_json.append(
-            {
-                "file_name": entry.file_name,
-                "timestamp": entry.timestamp,
-                "data_type": entry.data_type,
-                "created_by": entry.created_by,
-                "path": entry.path,
-            }
-        )
-    return result_json
+def video_data_list(videoid: int):
+    return VideoData.query.filter(VideoData.video == videoid).all()
 
 
 def video_list(dataset=None):
-    result_json = []
-
     if dataset:
-        for entry in (
+        return (
             Video.query.join(VideoDataSet)
             .filter(
                 VideoDataSet.ds_id == dataset,
                 Video.id == VideoDataSet.video_id,
             )
             .all()
-        ):
-            result_json.append(
-                {
-                    "video_name": entry.file_name,
-                    "timestamp": entry.timestamp,
-                    "colony": entry.colony,
-                    "path": entry.path,
-                    "id": entry.id,
-                }
-            )
+        )
     else:
-        for entry in Video.query.all():
-            result_json.append(
-                {
-                    "video_name": entry.file_name,
-                    "timestamp": entry.timestamp,
-                    "colony": entry.colony,
-                    "path": entry.path,
-                    "id": entry.id,
-                }
-            )
-
-    return result_json
+        return Video.query.all()
 
 
 def dataset_list():
     return DataSet.query.all()
+
+
+def video_info(videoid: int):
+    return Video.query.filter(Video.id == videoid).first()
+
+
+def new_dataset(name: str, description: str, user: User):
+    dataset = DataSet(
+        name=name,
+        description=description,
+        created_by=user.id,
+        timestamp=datetime.utcnow(),
+    )
+    db.session.add(dataset)
+    db.session.commit()
+
+
+# search for a video using sqlalchemy flask
+def search_video(query: str):
+    return Video.query.filter(Video.file_name.like(f"%{query}%")).all()
+
+
+def get_user_by_id(userid: int):
+    return User.query.filter(User.id == userid).first()
+
+
+def get_dataset_by_id(datasetid: int):
+    return DataSet.query.filter(DataSet.id == datasetid).first()
+
+
+def delete_dataset_by_id(datasetid: int):
+    dataset = get_dataset_by_id(datasetid)
+    db.session.delete(dataset)
+    db.session.commit()
+
+
+# Add video to a dataset using video id and dataset id
+def add_video_to_dataset(videoid: int, datasetid: int):
+    video_data_set = VideoDataSet(video_id=videoid, ds_id=datasetid)
+    db.session.add(video_data_set)
+    db.session.commit()

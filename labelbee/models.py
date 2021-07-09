@@ -104,6 +104,8 @@ class VideoDataSet(db.Model):
 class DataSet(db.Model):
     __tablename__ = "data_set"
     id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(100), nullable=False, server_default=u"")
+    description = db.Column(db.String(2000))
     created_by = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
     timestamp = db.Column(db.DateTime, nullable=False)
 

@@ -132,8 +132,8 @@ def init_app(app, extra_config_settings={}):
 
     from labelbee.db_functions import injest_tags, injest_videos
 
-    # injest_videos("labelbee/data/tags.csv")
-    # injest_tags("labelbee/data/tags.csv")
+    # injest_videos("data/tags.csv")
+    # injest_tags("data/tags.csv")
 
     # print(app.logger)
 

@@ -1,0 +1,33 @@
+{% extends "common/page_base.html" %} {# common/page_base.html extends layout.html #}
+
+{% block content %}
+
+<script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<link href="//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css" rel="stylesheet">
+
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<script type="text/javascript">
+  var csrftoken = $('meta[name=csrf-token]').attr('content')
+
+  $.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+      if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+        xhr.setRequestHeader("X-CSRFToken", csrftoken)
+      }
+    }
+  })
+</script>
+
+<form action="{{ url_for('add_dataset_page') }}" method="POST">
+  {{ form.hidden_tag() }}
+  <div class='form-group'>
+    Dataset Name: <input class="form-control" type="text" name="name"><br>
+    Description: <textarea class="form-control" type="text" name="description"></textarea><br>
+  </div>
+
+  <input class="btn btn-primary" type="submit">
+</form>
+
+
+{% endblock %}
