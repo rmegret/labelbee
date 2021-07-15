@@ -1,0 +1,43 @@
+{% extends "common/page_base.html" %} {# common/page_base.html extends layout.html #}
+
+{% block content %}
+
+<script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<link href="//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css" rel="stylesheet">
+
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<script type="text/javascript">
+    var csrftoken = $('meta[name=csrf-token]').attr('content')
+
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+        }
+    })
+</script>
+
+<h1>Edit {{video.name}}</h1>
+<form action="{{ url_for('edit_video_page') }}" method="POST">
+    {{ form.hidden_tag() }}
+    <div class='form-group'>
+        <input type="hidden" name="video" value="{{video.id}}">
+        File Name: <input class="form-control" type="text" name="file_name" value="{{ video.file_name }}"><br>
+        Path: <input class="form-control" type="text" name="path" value="{{ video.path }}"><br>
+        Timestamp: <input class="form-control" type="text" name="timestamp" value="{{ video.timestamp }}"><br>
+        Location: <input class="form-control" type="text" name="location" value="{{ video.location }}"><br>
+        Colony: <input class="form-control" type="text" name="colony" value="{{ video.colony }}"><br>
+        Frames: <input class="form-control" type="text" name="frames" value="{{ video.frames }}"><br>
+        Width: <input class="form-control" type="text" name="width" value="{{ video.width }}"><br>
+        Height: <input class="form-control" type="text" name="height" value="{{ video.height }}"><br>
+    </div>
+
+    <input class="btn btn-primary" type="submit" value="Edit">
+</form>
+<br>
+
+
+
+{% endblock %}

@@ -53,6 +53,16 @@ class UsersRoles(db.Model):
     role_id = db.Column(db.Integer(), db.ForeignKey("roles.id", ondelete="CASCADE"))
 
 
+class VideoDataSet(db.Model):
+    __tablename__ = "video_data_set"
+    ds_id = db.Column(
+        db.Integer(), db.ForeignKey("data_set.id", ondelete="CASCADE"), primary_key=True
+    )
+    video_id = db.Column(
+        db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"), primary_key=True
+    )
+
+
 class Video(db.Model):
     __tablename__ = "videos"
     __table_args__ = (db.UniqueConstraint("file_name", "path"),)
@@ -80,6 +90,13 @@ class Video(db.Model):
     hasframeN_1s = db.Column(db.Boolean(), nullable=False)
     hasframeN = db.Column(db.Boolean(), nullable=False)
 
+    data_set = db.relationship(
+        "VideoDataSet",
+        backref=db.backref("video", lazy=True),
+        lazy=True,
+        cascade="delete, delete-orphan",
+    )
+
 
 class VideoData(db.Model):
     __tablename__ = "video_data"
@@ -93,21 +110,22 @@ class VideoData(db.Model):
     created_by = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
 
 
-class VideoDataSet(db.Model):
-    __tablename__ = "video_data_set"
-    __table_args__ = (db.UniqueConstraint("ds_id", "video_id"),)
-    id = db.Column(db.Integer(), primary_key=True)
-    ds_id = db.Column(db.Integer(), db.ForeignKey("data_set.id", ondelete="CASCADE"))
-    video_id = db.Column(db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"))
-
-
 class DataSet(db.Model):
     __tablename__ = "data_set"
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(100), nullable=False, server_default=u"")
-    description = db.Column(db.String(2000))
+    name = db.Column(db.String(100), nullable=False, server_default="Dataset")
+    description = db.Column(db.Text())
     created_by = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
     timestamp = db.Column(db.DateTime, nullable=False)
+
+    # Properly link the data_set to videos
+    # https://flask-sqlalchemy.palletsprojects.com/en/2.x/models/
+    videos = db.relationship(
+        "VideoDataSet",
+        backref=db.backref("data_set", lazy=True),
+        lazy=True,
+        cascade="delete, delete-orphan",
+    )
 
 
 # Define the User registration form

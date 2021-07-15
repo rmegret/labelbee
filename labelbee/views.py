@@ -23,13 +23,18 @@ from labelbee.models import UserProfileForm, User
 from labelbee.db_functions import (
     add_video_to_dataset,
     delete_dataset_by_id,
+    edit_dataset,
+    edit_video,
     get_dataset_by_id,
+    get_video_by_id,
     new_dataset,
     video_list,
     dataset_list,
     video_data_list,
     video_info,
     get_user_by_id,
+    get_video_data_by_id,
+    edit_video_data,
 )
 
 upload_dir = "labelbee/static/upload/"
@@ -97,20 +102,21 @@ def videos_page():
 
 @app.route("/edit_dataset", methods=["GET", "POST"])
 @roles_accepted("admin")
-def edit_dataset():
+def edit_dataset_page():
     form = UserProfileForm(obj=current_user)
 
     datasetid = request.args.get("dataset")
-    e = get_dataset_by_id(datasetid=datasetid)
-    dataset = {
-        "id": e.id,
-        "name": e.name,
-        "description": e.description,
-        "created_by": get_user_by_id(e.created_by).first_name
-        + " "
-        + get_user_by_id(e.created_by).last_name,
-        "timestamp": e.timestamp,
-    }
+    if datasetid != None:
+        e = get_dataset_by_id(datasetid=datasetid)
+        dataset = {
+            "id": e.id,
+            "name": e.name,
+            "description": e.description,
+            "created_by": get_user_by_id(e.created_by).first_name
+            + " "
+            + get_user_by_id(e.created_by).last_name,
+            "timestamp": e.timestamp,
+        }
 
     # Process valid POST
     if request.method == "POST" and form.validate():
@@ -120,8 +126,16 @@ def edit_dataset():
         # Save user_profile
         db.session.commit()
 
+        edit_dataset(
+            datasetid=request.form.get("dataset"),
+            name=request.form.get("name"),
+            description=request.form.get("description"),
+        )
+
         # Redirect to home page
-        return redirect(url_for("video_data_page"))
+        return redirect(
+            url_for("videos_page") + "?dataset=" + request.form.get("dataset")
+        )
 
     # Process GET or invalid POST
     return render_template("pages/edit_dataset.html", form=form, dataset=dataset)
@@ -152,8 +166,40 @@ def delete_dataset():
 
 @app.route("/edit_video", methods=["GET", "POST"])
 @roles_accepted("admin")
-def edit_video():
-    pass
+def edit_video_page():
+    form = UserProfileForm(obj=current_user)
+
+    videoid = request.args.get("video")
+    if videoid != None:
+        video = get_video_by_id(videoid=videoid)
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        edit_video(
+            videoid=request.form.get("video"),
+            file_name=request.form.get("file_name"),
+            path=request.form.get("path"),
+            timestamp=request.form.get("timestamp"),
+            location=request.form.get("location"),
+            colony=request.form.get("colony"),
+            frames=request.form.get("frames"),
+            width=request.form.get("width"),
+            height=request.form.get("height"),
+        )
+
+        # Redirect to home page
+        return redirect(
+            url_for("video_data_page") + "?videoid=" + request.form.get("video")
+        )
+
+    # Process GET or invalid POST
+    return render_template("pages/edit_video.html", form=form, video=video)
 
 
 @app.route("/add_video", methods=["GET", "POST"])
@@ -214,7 +260,7 @@ def video_data_page():
         "pages/video_data_page.html",
         video_data=video_data_list(videoid),
         video_url=video_url,
-        video_info=video_info(videoid),
+        video=video_info(videoid),
         form=form,
     )
 
@@ -275,6 +321,84 @@ def datasets_page():
 
     # Process GET or invalid POST
     return render_template("pages/datasets_page.html", datasets=datasets, form=form)
+
+
+@app.route("/video_data_details", methods=["GET", "POST"])
+@login_required
+def video_data_details_page():
+    form = UserProfileForm(obj=current_user)
+
+    video_dataid = request.args.get("video_data")
+    video_data = get_video_data_by_id(video_dataid=video_dataid)
+
+    video_url = request.args.get("video_url")
+    tag_file = request.args.get("tag_file")
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        # Redirect to home page
+        return redirect(url_for("video_data_details_page"))
+
+    # Process GET or invalid POST
+    return render_template(
+        "pages/video_data_details_page.html",
+        form=form,
+        video_data=video_data,
+        video_url=video_url,
+        tag_file=tag_file,
+    )
+
+
+@app.route("/edit_video_data", methods=["GET", "POST"])
+@roles_accepted("admin")
+def edit_video_data_page():
+    form = UserProfileForm(obj=current_user)
+
+    video_dataid = request.args.get("video_data")
+    if video_dataid != None:
+        video_data = get_video_data_by_id(video_dataid=video_dataid)
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        edit_video_data(
+            video_dataid=video_dataid,
+            name=request.form.get("name"),
+            path=request.form.get("path"),
+            timestamp=request.form.get("timestamp"),
+            data_type=request.form.get("data_type"),
+            video=request.form.get("video"),
+        )
+        
+        video = get_video_by_id(request.form.get("video"))
+        # Redirect to home page
+        return redirect(
+            url_for("video_data_details_page")
+            + "?video_url="
+            + video.path
+            + "/"
+            + video.file_name
+            + "&tag_file="
+            + request.form.get("path")
+            + "/"
+            + request.form.get("tag_file")
+        )
+
+    # Process GET or invalid POST
+    return render_template(
+        "pages/edit_video_data.html", form=form, video_data=video_data
+    )
 
 
 @app.route("/user/profile", methods=["GET", "POST"])

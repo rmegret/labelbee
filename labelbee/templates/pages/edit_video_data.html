@@ -19,20 +19,26 @@
     })
 </script>
 
-<h1>Add Video to {{ dataset.name }}</h1>
-
-<form action="{{ url_for('add_video') }}" method="POST">
+<h1>Edit video_data #{{video_data.id}}</h1>
+<form action="{{ url_for('edit_video_data_page') }}" method="POST">
     {{ form.hidden_tag() }}
     <div class='form-group'>
-        Video ID: <input class="form-control" type="number" name="videoid" min="1" max="{{ number_videos }}"><br>
-        <input type="hidden" name="dataset" value="{{ dataset.id }}">
+        <input type="hidden" name="dataset" value="{{dataset.id}}">
+        Dataset Name: <input class="form-control" type="text" name="name" value="{{ dataset.name }}"><br>
+        Description: <textarea class="form-control" type="text" name="description">{{ dataset.description }}</textarea><br>
     </div>
 
-    <input class="btn btn-primary" type="submit" value="Add Video">
+    <input class="btn btn-primary" type="submit" value="Edit">
+</form>
+<br>
+<br>
+<form action="{{ url_for('delete_dataset') }}?dataset={{ dataset.id }}" method="POST">
+    {{ form.hidden_tag() }}
+    <div class='form-group'>
+        <input class="btn btn-danger" type="submit" name="Delete Dataset" value="Delete Dataset"><br>
+    </div>
 </form>
 
-<a href="{{ url_for('videos_page')}}?dataset={{ dataset.id }}">
-    <button type="button" onclick="" class="btn btn-primary">Return to Dataset</button>
-</a>
+
 
 {% endblock %}

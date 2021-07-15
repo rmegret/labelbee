@@ -32,17 +32,21 @@
     </thead>
     <tbody>
         <tr>
-            <td>{{video_info.id}}</td>
-            <td>{{video_info.path + "/" + video_info.file_name}}</td>
-            <td>{{video_info.timestamp}}</td>
-            <td>{{video_info.location}}</td>
-            <td>{{video_info.colony}}</td>
-            <td>{{video_info.frames}}</td>
-            <td>{{video_info.height}} px</td>
-            <td>{{video_info.width}} px</td>
+            <td>{{video.id}}</td>
+            <td>{{video.path + "/" + video.file_name}}</td>
+            <td>{{video.timestamp}}</td>
+            <td>{{video.location}}</td>
+            <td>{{video.colony}}</td>
+            <td>{{video.frames}}</td>
+            <td>{{video.height}} px</td>
+            <td>{{video.width}} px</td>
         </tr>
     </tbody>
 </table>
+
+<a href="{{ url_for('edit_video_page')}}?video={{ video.id }}">
+    <button type="button" onclick="" class="btn btn-primary">Edit Video</button>
+</a>
 
 
 <h1>Video Data: {{ uri }} </h1>
@@ -58,7 +62,7 @@
     <tbody id="videosBody">
         {% for item in video_data %}
         <tr>
-            <td><a href="{{ url_for('labelbee_user_page') }}?video_url={{ video_url }}&tag_file={{ item.path + '/' + item.file_name}}">{{ item.file_name }}</a></td>
+            <td><a href="{{ url_for('video_data_details_page') }}?video_url={{ video_url }}&tag_file={{ item.path + '/' + item.file_name }}&video_data={{ item.id }}">{{ item.path + '/' + item.file_name }}</a></td>
             <td>{{ item.data_type }}</td>
             <td>{{ item.timestamp }}</td>
             <td>{{ item.created_by }}</td>

@@ -8,25 +8,25 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <script type="text/javascript">
-  var csrftoken = $('meta[name=csrf-token]').attr('content')
+    var csrftoken = $('meta[name=csrf-token]').attr('content')
 
-  $.ajaxSetup({
-    beforeSend: function (xhr, settings) {
-      if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
-        xhr.setRequestHeader("X-CSRFToken", csrftoken)
-      }
-    }
-  })
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken)
+            }
+        }
+    })
 </script>
 
 <form action="{{ url_for('add_dataset_page') }}" method="POST">
-  {{ form.hidden_tag() }}
-  <div class='form-group'>
-    Dataset Name: <input class="form-control" type="text" name="name"><br>
-    Description: <textarea class="form-control" type="text" name="description"></textarea><br>
-  </div>
+    {{ form.hidden_tag() }}
+    <div class='form-group'>
+        Dataset Name: <input class="form-control" type="text" name="name"><br>
+        Description: <textarea class="form-control" type="text" name="description"></textarea><br>
+    </div>
 
-  <input class="btn btn-primary" type="submit">
+    <input class="btn btn-primary" type="submit">
 </form>
 
 

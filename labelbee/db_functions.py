@@ -2,9 +2,10 @@ from csv import DictReader
 from datetime import datetime
 from labelbee.models import Video, VideoData, DataSet, VideoDataSet, User
 from labelbee.init_app import db, app
+from typing import List
 
 
-def injest_videos(filename):
+def injest_videos(filename: str) -> None:
     with app.app_context():
         with open(filename) as tagfile:
             reader = DictReader(tagfile)
@@ -49,7 +50,7 @@ def injest_videos(filename):
             db.session.commit()
 
 
-def injest_tags(filename):
+def injest_tags(filename: str) -> None:
     with app.app_context():
         with open(filename) as tagfile:
             reader = DictReader(tagfile)
@@ -87,11 +88,11 @@ def injest_tags(filename):
             db.session.commit()
 
 
-def video_data_list(videoid: int):
+def video_data_list(videoid: int) -> List[VideoData]:
     return VideoData.query.filter(VideoData.video == videoid).all()
 
 
-def video_list(dataset=None):
+def video_list(dataset=None) -> List[Video]:
     if dataset:
         return (
             Video.query.join(VideoDataSet)
@@ -105,17 +106,17 @@ def video_list(dataset=None):
         return Video.query.all()
 
 
-def dataset_list():
+def dataset_list() -> List[DataSet]:
     return DataSet.query.all()
 
 
-def video_info(videoid: int):
+def video_info(videoid: int) -> Video:
     return Video.query.filter(Video.id == videoid).first()
 
 
 def new_dataset(name: str, description: str, user: User):
     dataset = DataSet(
-        name=name,
+        name="New Dataset" if name.strip() == "" else name,
         description=description,
         created_by=user.id,
         timestamp=datetime.utcnow(),
@@ -125,26 +126,82 @@ def new_dataset(name: str, description: str, user: User):
 
 
 # search for a video using sqlalchemy flask
-def search_video(query: str):
+def search_video(query: str) -> List[Video]:
     return Video.query.filter(Video.file_name.like(f"%{query}%")).all()
 
 
-def get_user_by_id(userid: int):
+def get_user_by_id(userid: int) -> User:
     return User.query.filter(User.id == userid).first()
 
 
-def get_dataset_by_id(datasetid: int):
+def get_dataset_by_id(datasetid: int) -> DataSet:
     return DataSet.query.filter(DataSet.id == datasetid).first()
 
 
-def delete_dataset_by_id(datasetid: int):
+def delete_dataset_by_id(datasetid: int) -> None:
     dataset = get_dataset_by_id(datasetid)
+    print(dataset.name, dataset.id)
     db.session.delete(dataset)
     db.session.commit()
 
 
 # Add video to a dataset using video id and dataset id
-def add_video_to_dataset(videoid: int, datasetid: int):
+def add_video_to_dataset(videoid: int, datasetid: int) -> None:
     video_data_set = VideoDataSet(video_id=videoid, ds_id=datasetid)
     db.session.add(video_data_set)
+    db.session.commit()
+
+
+def edit_dataset(datasetid: int, name: str, description: str) -> None:
+    dataset = get_dataset_by_id(datasetid)
+    dataset.name = name
+    dataset.description = description
+    db.session.commit()
+
+
+def get_video_by_id(videoid: int) -> Video:
+    return Video.query.filter(Video.id == videoid).first()
+
+
+def edit_video(
+    videoid: int,
+    file_name: str,
+    path: str,
+    timestamp: datetime,
+    location: str,
+    colony: int,
+    frames: int,
+    width: int,
+    height: int,
+) -> None:
+    video = get_video_by_id(videoid)
+    video.file_name = file_name
+    video.path = path
+    video.timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    video.location = location
+    video.colony = colony
+    video.frames = frames
+    video.width = width
+    video.height = height
+    db.session.commit()
+
+
+def get_video_data_by_id(video_dataid: int) -> VideoData:
+    return VideoData.query.filter(VideoData.video == video_dataid).first()
+
+
+def edit_video_data(
+    video_dataid: int,
+    file_name: str,
+    path: str,
+    timestamp: datetime,
+    data_type: str,
+    video: int,
+) -> None:
+    video_data = get_video_data_by_id(video_dataid)
+    video_data.file_name = file_name
+    video_data.path = path
+    video_data.timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    video_data.data_type = data_type
+    video_data.video = video
     db.session.commit()
