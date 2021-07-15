@@ -187,7 +187,8 @@ def edit_video(
 
 
 def get_video_data_by_id(video_dataid: int) -> VideoData:
-    return VideoData.query.filter(VideoData.video == video_dataid).first()
+    print(video_dataid)
+    return VideoData.query.filter(VideoData.id == video_dataid).first()
 
 
 def edit_video_data(

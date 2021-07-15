@@ -23,21 +23,19 @@
 <form action="{{ url_for('edit_video_data_page') }}" method="POST">
     {{ form.hidden_tag() }}
     <div class='form-group'>
-        <input type="hidden" name="dataset" value="{{dataset.id}}">
-        Dataset Name: <input class="form-control" type="text" name="name" value="{{ dataset.name }}"><br>
-        Description: <textarea class="form-control" type="text" name="description">{{ dataset.description }}</textarea><br>
+        <input type="hidden" name="video_data" value="{{video_data.id}}">
+        File Name: <input class="form-control" type="text" name="file_name" value="{{ video_data.file_name }}"><br>
+        Path: <input class="form-control" type="text" name="path" value="{{ video_data.path }}"><br>
+        Timestamp: <input class="form-control" type="text" name="timestamp" value="{{ video_data.timestamp }}"><br>
+        Data Type: <input class="form-control" type="text" name="data_type" value="{{ video_data.data_type }}"><br>
+        Video (id): <input class="form-control" type="text" name="video" value="{{ video_data.video }}"><br>
     </div>
 
     <input class="btn btn-primary" type="submit" value="Edit">
 </form>
 <br>
 <br>
-<form action="{{ url_for('delete_dataset') }}?dataset={{ dataset.id }}" method="POST">
-    {{ form.hidden_tag() }}
-    <div class='form-group'>
-        <input class="btn btn-danger" type="submit" name="Delete Dataset" value="Delete Dataset"><br>
-    </div>
-</form>
+
 
 
 

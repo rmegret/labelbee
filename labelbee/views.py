@@ -373,14 +373,14 @@ def edit_video_data_page():
         db.session.commit()
 
         edit_video_data(
-            video_dataid=video_dataid,
-            name=request.form.get("name"),
+            video_dataid=request.form.get("video_data"),
+            file_name=request.form.get("file_name"),
             path=request.form.get("path"),
             timestamp=request.form.get("timestamp"),
             data_type=request.form.get("data_type"),
             video=request.form.get("video"),
         )
-        
+
         video = get_video_by_id(request.form.get("video"))
         # Redirect to home page
         return redirect(
@@ -392,7 +392,9 @@ def edit_video_data_page():
             + "&tag_file="
             + request.form.get("path")
             + "/"
-            + request.form.get("tag_file")
+            + request.form.get("file_name")
+            + "&video_data="
+            + request.form.get("video_data")
         )
 
     # Process GET or invalid POST

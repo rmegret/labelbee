@@ -4,6 +4,7 @@
 
 <script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
 <link href="//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="video.css" rel="stylesheet">
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -49,10 +50,12 @@
 
 <table class="table" id="videos_table">
     <thead>
-        <th>Video Name</th>
-        <th>Colony</th>
-        <th>Date and Time</th>
-        <th>Video ID</th>
+        <tr>
+            <th>Video Name</th>
+            <th>Colony</th>
+            <th>Date and Time</th>
+            <th>Video ID</th>
+        </tr>
     </thead>
     <tbody id="videosBody">
         {% for item in videos %}
@@ -64,14 +67,40 @@
         </tr>
         {% endfor %}
     </tbody>
+    <tfoot>
+        <tr>
+            <th>Video Name</th>
+            <th>Colony</th>
+            <th>Date and Time</th>
+            <th>Video ID</th>
+        </tr>
+    </tfoot>
     <!--  -->
 </table>
 
 
 <script>
     $(document).ready(function () {
+        $('#videos_table tfoot th').each( function () {
+            var title = $(this).text();
+            $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+        } );
         $('#videos_table').DataTable({
-            "order": [[2, "desc"]]
+            "order": [[2, "desc"]],
+            initComplete: function () {
+                // Apply the search
+                this.api().columns().every( function () {
+                    var that = this;
+    
+                    $( 'input', this.footer() ).on( 'keyup change clear', function () {
+                        if ( that.search() !== this.value ) {
+                            that
+                                .search( this.value )
+                                .draw();
+                        }
+                    } );
+                } );
+            }
         });
 
     });
