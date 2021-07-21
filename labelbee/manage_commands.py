@@ -7,7 +7,7 @@
 from datetime import datetime
 
 from labelbee.init_app import app, db, manager
-from labelbee.models import User, Role
+from labelbee.models import User, Role, UsersRoles
 import pandas as pd
 
 
@@ -70,7 +70,9 @@ def find_or_create_role(name, label):
     return role
 
 
-def find_or_create_user(first_name, last_name, email, password, role=None):
+def find_or_create_user(
+    first_name: str, last_name: str, email: str, password: str, role: UsersRoles = None
+):
     """Find existing user or create new user"""
     user = User.query.filter(User.email == email).first()
     if not user:

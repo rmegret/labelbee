@@ -9,7 +9,7 @@ def injest_videos(filename: str) -> None:
     with app.app_context():
         with open(filename) as tagfile:
             reader = DictReader(tagfile)
-            for i, row in enumerate(reader):
+            for row in reader:
                 file_name = row["mp4file"].split("/")[-1]
                 path = "/".join(row["mp4file"].split("/")[:-1])
 
@@ -54,7 +54,7 @@ def injest_tags(filename: str) -> None:
     with app.app_context():
         with open(filename) as tagfile:
             reader = DictReader(tagfile)
-            for i, row in enumerate(reader):
+            for row in reader:
                 file_name = row["tagsfile"].split("/")[-1]
                 path = "/".join(row["tagsfile"].split("/")[:-1])
 

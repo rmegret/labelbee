@@ -72,6 +72,8 @@ class Video(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.Integer(), nullable=False)
     colony = db.Column(db.Integer())
+    # notes = db.Column(db.Text())
+
     frames = db.Column(db.Integer(), nullable=False)
     height = db.Column(db.Integer(), nullable=False)
     width = db.Column(db.Integer(), nullable=False)
