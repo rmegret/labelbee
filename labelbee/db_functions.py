@@ -140,7 +140,6 @@ def get_dataset_by_id(datasetid: int) -> DataSet:
 
 def delete_dataset_by_id(datasetid: int) -> None:
     dataset = get_dataset_by_id(datasetid)
-    print(dataset.name, dataset.id)
     db.session.delete(dataset)
     db.session.commit()
 
@@ -187,7 +186,6 @@ def edit_video(
 
 
 def get_video_data_by_id(video_dataid: int) -> VideoData:
-    print(video_dataid)
     return VideoData.query.filter(VideoData.id == video_dataid).first()
 
 
