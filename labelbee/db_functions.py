@@ -66,10 +66,11 @@ def injest_tags(filename: str) -> None:
                     minute=int(row["mm"]),
                     second=int(row["ss"]),
                 )
-                if video := Video.query.filter(
+                video = Video.query.filter(
                     Video.file_name == row["mp4file"].split("/")[-1],
                     Video.path == "/".join(row["mp4file"].split("/")[:-1]),
-                ).first():
+                ).first()
+                if video:
                     video = video.id
                 else:
                     raise Exception(
