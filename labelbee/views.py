@@ -441,13 +441,13 @@ def labelbee_user_page():
         except:
             print("labelbee_user_page: could not create upload dir")
             pass
-
+        print(tag_file)
         return render_template(
             "pages/labelbee_page.html",
             userid=str(current_user.id),
             http_script_name=http_script_name,
             video_url="datasets/gurabo10avi/mp4/" + video_url,
-            tag_file="datasets/gurabo10avi/tags" + tag_file,
+            tag_file="datasets/gurabo10avi/tags/" + tag_file,
         )
     else:
         return render_template(
