@@ -14,8 +14,6 @@ from werkzeug.exceptions import BadRequest, NotFound, Forbidden
 import os
 from datetime import datetime
 import json
-import pandas as pd
-import numpy as np
 import re
 
 from labelbee.init_app import app, db, csrf
@@ -448,8 +446,8 @@ def labelbee_user_page():
             "pages/labelbee_page.html",
             userid=str(current_user.id),
             http_script_name=http_script_name,
-            video_url=video_url,
-            tag_file=tag_file,
+            video_url="datasets/gurabo10avi/mp4/" + video_url,
+            tag_file="datasets/gurabo10avi/tags" + tag_file,
         )
     else:
         return render_template(

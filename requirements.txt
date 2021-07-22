@@ -23,6 +23,7 @@ Flask-Script==2.0.6
 Flask-SQLAlchemy==2.5.1
 Flask-User==1.0.2.2
 Flask-WTF==0.15.1
+flask_script_extras
 greenlet==1.1.0
 html5lib==1.0.1
 idna==2.8
