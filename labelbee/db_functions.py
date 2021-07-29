@@ -205,3 +205,21 @@ def edit_video_data(
     video_data.data_type = data_type
     video_data.video = video
     db.session.commit()
+
+
+def add_video_data(
+    file_name: str,
+    path: str,
+    timestamp: datetime,
+    data_type: str,
+    video: int,
+) -> None:
+    video_data = VideoData(
+        file_name=file_name,
+        path=path,
+        timestamp=datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S"),
+        data_type=data_type,
+        video=video,
+    )
+    db.session.add(video_data)
+    db.session.commit()
