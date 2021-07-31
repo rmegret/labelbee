@@ -230,6 +230,7 @@ def add_video():
         number_videos=len(video_list()),
         form=form,
         dataset=dataset,
+        videos=video_list(),
     )
 
 

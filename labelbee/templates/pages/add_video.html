@@ -21,7 +21,78 @@
 
 <h1>Add Video to {{ dataset.name }}</h1>
 
-<form action="{{ url_for('add_video') }}" method="POST">
+
+<table class="table" id="videos_table">
+    <thead>
+        <tr>
+            <th>Video Name</th>
+            <th>Colony</th>
+            <th>Date and Time</th>
+            <th>Video ID</th>
+            <th>Add Video</th>
+        </tr>
+    </thead>
+    <tbody id="videosBody">
+        {% for item in videos %}
+        <tr>
+            <td><a href="{{ url_for('video_data_page') }}?video_url={{ item.path + '/' + item.file_name }}&videoid={{ item.id }}">{{ item.path + '/' + item.file_name }}</a></td>
+            <td>{{ item.colony }}</td>
+            <td>{{ item.timestamp }}</td>
+            <td>{{ item.id }}</td>
+            <td></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <th>Video Name</th>
+            <th>Colony</th>
+            <th>Date and Time</th>
+            <th>Video ID</th>
+            <th>Add Video</th>
+        </tr>
+    </tfoot>
+    <!--  -->
+</table>
+
+
+<script>
+    $(document).ready(function () {
+        $('#videos_table tfoot th').each( function () {
+            var title = $(this).text();
+            $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+        } );
+        var table = $('#videos_table').DataTable({
+            "order": [[2, "desc"]],
+            "columnDefs": [ {
+                "targets": -1,
+                "data": null,
+                "defaultContent": "<button>Add Video</button>"
+            } ],
+            initComplete: function () {
+                // Apply the search
+                this.api().columns().every( function () {
+                    var that = this;
+                    
+                    $( 'input', this.footer() ).on( 'keyup change clear', function () {
+                        if ( that.search() !== this.value ) {
+                            that
+                                .search( this.value )
+                                .draw();
+                        }
+                    } );
+                } );
+            }
+        });
+        $('#videos_table tbody').on( 'click', 'button', function () {
+            var data = table.row( $(this).parents('tr') ).data();
+            alert("{{ url_for('add_video') }}" + " {{ dataset.id }} " + data[3]);
+            $.post("{{ url_for('add_video') }}", {dataset: "{{ dataset.id }}", videoid: data[3]})
+        } );
+    });
+</script>
+
+<!-- <form action="{{ url_for('add_video') }}" method="POST">
     {{ form.hidden_tag() }}
     <div class='form-group'>
         Video ID: <input class="form-control" type="number" name="videoid" min="1" max="{{ number_videos }}"><br>
@@ -29,7 +100,7 @@
     </div>
 
     <input class="btn btn-primary" type="submit" value="Add Video">
-</form>
+</form> -->
 
 <a href="{{ url_for('videos_page')}}?dataset={{ dataset.id }}">
     <button type="button" onclick="" class="btn btn-primary">Return to Dataset</button>
