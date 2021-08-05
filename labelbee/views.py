@@ -2,14 +2,17 @@
 #
 # Authors: Ling Thio <ling.thio@gmail.com>
 
+from labelbee.user_management import create_user, edit_user
 from labelbee.flask_range_requests import send_from_directory_partial, dir_listing
 from flask import current_app
-from flask import redirect, Blueprint
+from flask import redirect
 from flask import render_template, render_template_string, Markup, jsonify
 from flask import request, url_for, safe_join
 from flask_user import current_user, login_required, roles_accepted
 from flask_login import logout_user, login_user
-from werkzeug.exceptions import BadRequest, NotFound, Forbidden
+from flask_wtf.csrf import generate_csrf
+from werkzeug.exceptions import BadRequest, Forbidden
+import json
 
 import os
 from datetime import datetime
@@ -26,6 +29,7 @@ from labelbee.db_functions import (
     get_dataset_by_id,
     get_video_by_id,
     new_dataset,
+    user_list,
     video_list,
     dataset_list,
     video_data_list,
@@ -434,8 +438,6 @@ def labelbee_user_page():
 
     http_script_name = request.environ.get("SCRIPT_NAME")
 
-    print("labelbee_user_page launched with http_script_name=", http_script_name)
-
     if current_user.is_authenticated:
         try:
             os.makedirs(upload_dir + str(current_user.id))
@@ -464,7 +466,31 @@ def labelbee_user_page():
 @app.route("/admin")
 @roles_accepted("admin")  # Limits access to users with the 'admin' role
 def admin_page():
-    return render_template("pages/admin_page.html")
+    form = UserProfileForm(obj=current_user)
+    return render_template("pages/admin_page.html", form=form)
+
+
+@app.route("/manage_users", methods=["GET", "POST"])
+@roles_accepted("admin")  # Limits access to users with the 'admin' role
+def manage_users_page():
+
+    form = UserProfileForm(obj=current_user)
+    users = user_list()
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        # Redirect to home page
+        return render_template("pages/manage_users_page.html", form=form, users=users)
+
+    # Process GET or invalid POST
+
+    return render_template("pages/manage_users_page.html", form=form, users=users)
 
 
 @app.route("/admin/version")
@@ -547,8 +573,47 @@ def send_data_():
 # REST API for authentification
 
 
+@app.route("/rest/add_users", methods=["POST"])
+# @csrf.exempt
+def add_users():
+    if current_user.is_authenticated and current_user.has_roles("admin"):
+        json_list = json.loads(request.form.get("json"))
+        for user in json_list:
+            create_user(
+                first_name=user["first_name"],
+                last_name=user["last_name"],
+                email=user["email"],
+                password=user["password"],
+                role_id=int(user["role_id"]),
+            )
+        return jsonify({"status": "users added"})
+    else:
+        return jsonify({"status": "error", "message": "not authenticated"})
+
+
+@app.route("/rest/edit_users", methods=["POST"])
+# @csrf.exempt
+def edit_users():
+    if current_user.is_authenticated and current_user.has_roles("admin"):
+        json_list = json.loads(request.form.get("json"))
+        for user in json_list:
+            edit_user(
+                user_id=int(user["user_id"]),
+                first_name=user.setdefault("first_name", None),
+                last_name=user.setdefault("last_name", None),
+                email=user.setdefault("email", None),
+                password=user.setdefault("password", None),
+                role_id=user.setdefault("role_id", 2),
+            )
+        return jsonify({"status": "ok"})
+    else:
+        return jsonify({"status": "error", "message": "not authenticated"})
+
+
 @app.route("/rest/auth/login", methods=["GET", "POST"])
+# @csrf.exempt
 def ajaxlogin():
+
     email = request.form.get("email")
     password = request.form.get("password")
 
@@ -558,7 +623,7 @@ def ajaxlogin():
 
     def check_password(user, password):
         # print(user.password)
-        return current_app.user_manager.verify_password(password, user)
+        return current_app.user_manager.verify_password(password, user.password)
 
     if user is None or not check_password(user, password):
         return jsonify(
@@ -570,8 +635,16 @@ def ajaxlogin():
             }
         )
 
+    # login and return token
     login_user(user)
-    return jsonify({"request": "login", "email": email, "status": "SUCCESS"})
+    return jsonify(
+        {
+            "request": "login",
+            "email": email,
+            "status": "SUCCESS",
+            "csrf_token": generate_csrf(),
+        }
+    )
 
 
 @app.route("/rest/auth/logout", methods=["GET", "POST"])

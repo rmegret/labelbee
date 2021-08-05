@@ -223,3 +223,7 @@ def add_video_data(
     )
     db.session.add(video_data)
     db.session.commit()
+
+
+def user_list() -> List[User]:
+    return User.query.all()

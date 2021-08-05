@@ -1,0 +1,57 @@
+{% extends "common/page_base.html" %}  {# common/page_base.html extends layout.html #}
+
+{% block content %}
+
+<script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<link href="//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="video.css" rel="stylesheet">
+
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<script type="text/javascript">
+  var csrftoken = $('meta[name=csrf-token]').attr('content')
+
+  $.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+      if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+        xhr.setRequestHeader("X-CSRFToken", csrftoken)
+      }
+    }
+  })
+</script>
+
+
+<h1>Manage Users</h1>
+
+
+<table class="table" id="users_table">
+  <thead>
+      <tr>
+          <th>Video Name</th>
+          <th>Colony</th>
+          <th>Date and Time</th>
+          <th>Video ID</th>
+      </tr>
+  </thead>
+  <tbody id="videosBody">
+      {% for item in videos %}
+      <tr>
+          <td><a href="{{ url_for('video_data_page') }}?video_url={{ item.path + '/' + item.file_name }}&videoid={{ item.id }}">{{ item.path + '/' + item.file_name }}</a></td>
+          <td>{{ item.colony }}</td>
+          <td>{{ item.timestamp }}</td>
+          <td>{{ item.id }}</td>
+      </tr>
+      {% endfor %}
+  </tbody>
+  <tfoot>
+      <tr>
+          <th>Video Name</th>
+          <th>Colony</th>
+          <th>Date and Time</th>
+          <th>Video ID</th>
+      </tr>
+  </tfoot>
+  <!--  -->
+</table>
+
+{% endblock %}

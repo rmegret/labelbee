@@ -1,12 +1,38 @@
 {% extends "common/page_base.html" %}  {# common/page_base.html extends layout.html #}
 
 {% block content %}
+
+<script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<link href="//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="video.css" rel="stylesheet">
+
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<script type="text/javascript">
+  var csrftoken = $('meta[name=csrf-token]').attr('content')
+
+  $.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+      if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+        xhr.setRequestHeader("X-CSRFToken", csrftoken)
+      }
+    }
+  })
+</script>
+
+
 <h1>Admin page</h1>
 
 <p>This page is accessible to authenticated users with the 'admin' role.</p>
 
 <ul>
 <li><a href={{ url_for('version_page') }}>Version</a></li>
+<li>
+  <form action={{ url_for('manage_users_page') }} method="post">
+    {{ form.hidden_tag() }}
+    <input type="submit" value="Manage Users">
+  </form>
+</li>
 </ul>
 
 {% endblock %}
