@@ -14,6 +14,5 @@ labelbee/static/data
 .htpasswd
 labelbee/local_settings.py
 ~$*
-docs/
 labelbee-comments/
 

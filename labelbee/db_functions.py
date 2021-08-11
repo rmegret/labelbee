@@ -1,3 +1,10 @@
+"""
+Database Functions
+====================================
+All functions that interact with the database.
+"""
+
+
 from csv import DictReader
 from datetime import datetime
 from labelbee.models import Video, VideoData, DataSet, VideoDataSet, User
@@ -6,6 +13,15 @@ from typing import List
 
 
 def injest_videos(filename: str) -> None:
+    """
+    Injest videos from a csv file.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the csv file to injest.
+    """
+
     with app.app_context():
         with open(filename) as tagfile:
             reader = DictReader(tagfile)
@@ -51,6 +67,15 @@ def injest_videos(filename: str) -> None:
 
 
 def injest_tags(filename: str) -> None:
+    """
+    Injest tags from a csv file.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the csv file to injest.
+    """
+
     with app.app_context():
         with open(filename) as tagfile:
             reader = DictReader(tagfile)
@@ -90,10 +115,39 @@ def injest_tags(filename: str) -> None:
 
 
 def video_data_list(videoid: int) -> List[VideoData]:
+    """
+    Get a list of all video data for a video.
+
+    Parameters
+    ----------
+    videoid : int
+        The id of the video to get data for.
+
+    Returns
+    -------
+    List[VideoData]
+        A list of all video data.
+    """
+
     return VideoData.query.filter(VideoData.video == videoid).all()
 
 
 def video_list(dataset=None) -> List[Video]:
+    """
+    Get a list of all videos in a dataset.
+
+    Parameters
+    ----------
+    dataset : DataSet
+        The dataset to get videos from.
+        if None, get all videos.
+
+    Returns
+    -------
+    List[Video]
+        A list of all videos.
+    """
+
     if dataset:
         return (
             Video.query.join(VideoDataSet)
@@ -108,14 +162,50 @@ def video_list(dataset=None) -> List[Video]:
 
 
 def dataset_list() -> List[DataSet]:
+    """
+    Get list of all datasets.
+
+    Returns
+    -------
+    List[DataSet]
+        A list of all datasets.
+    """
+
     return DataSet.query.all()
 
 
 def video_info(videoid: int) -> Video:
+    """
+    Get a video by id.
+
+    Parameters
+    ----------
+    videoid : int
+        The id of the video to get.
+
+    Returns
+    -------
+    Video
+        The video.
+    """
+
     return Video.query.filter(Video.id == videoid).first()
 
 
 def new_dataset(name: str, description: str, user: User):
+    """
+    Create a new dataset.
+
+    Parameters
+    ----------
+    name : str
+        The name of the dataset.
+    description : str
+        The description of the dataset.
+    user : User
+        The user creating the dataset.
+    """
+
     dataset = DataSet(
         name="New Dataset" if name.strip() == "" else name,
         description=description,
@@ -128,38 +218,127 @@ def new_dataset(name: str, description: str, user: User):
 
 # search for a video using sqlalchemy flask
 def search_video(query: str) -> List[Video]:
+    """
+    Search for a video by name.
+
+    Parameters
+    ----------
+    query : str
+        The name of the video to search for.
+
+    Returns
+    -------
+    List[Video]
+        A list of videos matching the query.
+    """
+
     return Video.query.filter(Video.file_name.like(f"%{query}%")).all()
 
 
 def get_user_by_id(userid: int) -> User:
+    """
+    Get a user by id.
+
+    Parameters
+    ----------
+    userid : int
+        The id of the user to get.
+
+    Returns
+    -------
+    User
+        The user.
+    """
+
     return User.query.filter(User.id == userid).first()
 
 
 def get_dataset_by_id(datasetid: int) -> DataSet:
+    """
+    Get a dataset by id.
+
+    Parameters
+    ----------
+    datasetid : int
+        The id of the dataset to get.
+
+    Returns
+    -------
+    DataSet
+        The dataset.
+    """
     return DataSet.query.filter(DataSet.id == datasetid).first()
 
 
 def delete_dataset_by_id(datasetid: int) -> None:
+    """
+    Delete a dataset by id.
+
+    Parameters
+    ----------
+    datasetid : int
+        The id of the dataset to delete.
+    """
+
     dataset = get_dataset_by_id(datasetid)
-    db.session.delete(dataset)
-    db.session.commit()
+    if dataset:
+        db.session.delete(dataset)
+        db.session.commit()
 
 
 # Add video to a dataset using video id and dataset id
 def add_video_to_dataset(videoid: int, datasetid: int) -> None:
+    """
+    Add a video to a dataset.
+
+    Parameters
+    ----------
+    videoid : int
+        The id of the video to add.
+    datasetid : int
+        The id of the dataset to add the video to.
+    """
     video_data_set = VideoDataSet(video_id=videoid, ds_id=datasetid)
     db.session.add(video_data_set)
     db.session.commit()
 
 
 def edit_dataset(datasetid: int, name: str, description: str) -> None:
+    """
+    Edit a dataset.
+
+    Parameters
+    ----------
+    datasetid : int
+        The id of the dataset to edit.
+    name : str
+        The new name of the dataset.
+    description : str
+        The new description of the dataset.
+    """
+
     dataset = get_dataset_by_id(datasetid)
-    dataset.name = name
-    dataset.description = description
-    db.session.commit()
+    if dataset:
+        dataset.name = name
+        dataset.description = description
+        db.session.commit()
 
 
 def get_video_by_id(videoid: int) -> Video:
+    """
+    Get a video by id.
+
+    Parameters
+    ----------
+    videoid : int
+        The id of the video to get.
+
+    Returns
+    -------
+    Video
+        The video.
+    """
+
     return Video.query.filter(Video.id == videoid).first()
 
 
@@ -174,6 +353,31 @@ def edit_video(
     width: int,
     height: int,
 ) -> None:
+    """
+    Edit a video.
+
+    Parameters
+    ----------
+    videoid : int
+        The id of the video to edit.
+    file_name : str
+        The new name of the video.
+    path : str
+        The new path of the video.
+    timestamp : datetime
+        The new timestamp of the video.
+    location : str
+        The new location of the video.
+    colony : int
+        The new colony of the video.
+    frames : int
+        The new number of frames of the video.
+    width : int
+        The new width of the video.
+    height : int
+        The new height of the video.
+    """
+
     video = get_video_by_id(videoid)
     video.file_name = file_name
     video.path = path
@@ -187,6 +391,20 @@ def edit_video(
 
 
 def get_video_data_by_id(video_dataid: int) -> VideoData:
+    """
+    Get a video data by id.
+
+    Parameters
+    ----------
+    video_dataid : int
+        The id of the video data to get.
+
+    Returns
+    -------
+    VideoData
+        The video data.
+    """
+
     return VideoData.query.filter(VideoData.id == video_dataid).first()
 
 
@@ -198,6 +416,24 @@ def edit_video_data(
     data_type: str,
     video: int,
 ) -> None:
+    """
+    Edit a video data.
+
+    Parameters
+    ----------
+    video_dataid : int
+        The id of the video data to edit.
+    file_name : str
+        The new name of the video data.
+    path : str
+        The new path of the video data.
+    timestamp : datetime
+        The new timestamp of the video data.
+    data_type : str
+        The new data type of the video data.
+    video : int
+        The new video for the video data.
+    """
     video_data = get_video_data_by_id(video_dataid)
     video_data.file_name = file_name
     video_data.path = path
@@ -214,6 +450,22 @@ def add_video_data(
     data_type: str,
     video: int,
 ) -> None:
+    """
+    Add a video data.
+
+    Parameters
+    ----------
+    file_name : str
+        The name of the video data.
+    path : str
+        The path of the video data.
+    timestamp : datetime
+        The timestamp of the video data.
+    data_type : str
+        The data type of the video data.
+    video : int
+        The video for the video data.
+    """
     video_data = VideoData(
         file_name=file_name,
         path=path,
@@ -226,4 +478,12 @@ def add_video_data(
 
 
 def user_list() -> List[User]:
+    """
+    Get a list of users.
+
+    Returns
+    -------
+    List[User]
+        A list of all users.
+    """
     return User.query.all()
