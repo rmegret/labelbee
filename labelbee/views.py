@@ -574,7 +574,6 @@ def send_data_():
 
 
 @app.route("/rest/add_users", methods=["POST"])
-# @csrf.exempt
 def add_users():
     if current_user.is_authenticated and current_user.has_roles("admin"):
         json_list = json.loads(request.form.get("json"))
@@ -592,7 +591,6 @@ def add_users():
 
 
 @app.route("/rest/edit_users", methods=["POST"])
-# @csrf.exempt
 def edit_users():
     if current_user.is_authenticated and current_user.has_roles("admin"):
         json_list = json.loads(request.form.get("json"))
@@ -611,7 +609,6 @@ def edit_users():
 
 
 @app.route("/rest/auth/login", methods=["GET", "POST"])
-# @csrf.exempt
 def ajaxlogin():
 
     email = request.form.get("email")
