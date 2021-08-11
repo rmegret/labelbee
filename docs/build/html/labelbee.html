@@ -1,0 +1,1069 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>labelbee package &#8212; LabelBee 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="labelbee-package">
+<h1>labelbee package<a class="headerlink" href="#labelbee-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-labelbee.db_functions">
+<span id="labelbee-db-functions-module"></span><h2>labelbee.db_functions module<a class="headerlink" href="#module-labelbee.db_functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="database-functions">
+<h3>Database Functions<a class="headerlink" href="#database-functions" title="Permalink to this headline">¶</a></h3>
+<p>All functions that interact with the database.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.add_video_data">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">add_video_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">datetime.datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.db_functions.add_video_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a video data.</p>
+<dl class="simple">
+<dt>file_name<span class="classifier">str</span></dt><dd><p>The name of the video data.</p>
+</dd>
+<dt>path<span class="classifier">str</span></dt><dd><p>The path of the video data.</p>
+</dd>
+<dt>timestamp<span class="classifier">datetime</span></dt><dd><p>The timestamp of the video data.</p>
+</dd>
+<dt>data_type<span class="classifier">str</span></dt><dd><p>The data type of the video data.</p>
+</dd>
+<dt>video<span class="classifier">int</span></dt><dd><p>The video for the video data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.add_video_to_dataset">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">add_video_to_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">videoid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasetid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.db_functions.add_video_to_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a video to a dataset.</p>
+<dl class="simple">
+<dt>videoid<span class="classifier">int</span></dt><dd><p>The id of the video to add.</p>
+</dd>
+<dt>datasetid<span class="classifier">int</span></dt><dd><p>The id of the dataset to add the video to.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.dataset_list">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">dataset_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#labelbee.models.DataSet" title="labelbee.models.DataSet"><span class="pre">labelbee.models.DataSet</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#labelbee.db_functions.dataset_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get list of all datasets.</p>
+<dl class="simple">
+<dt>List[DataSet]</dt><dd><p>A list of all datasets.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.delete_dataset_by_id">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">delete_dataset_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasetid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.db_functions.delete_dataset_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a dataset by id.</p>
+<dl class="simple">
+<dt>datasetid<span class="classifier">int</span></dt><dd><p>The id of the dataset to delete.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.edit_dataset">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">edit_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasetid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.db_functions.edit_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edit a dataset.</p>
+<dl class="simple">
+<dt>datasetid<span class="classifier">int</span></dt><dd><p>The id of the dataset to edit.</p>
+</dd>
+<dt>name<span class="classifier">str</span></dt><dd><p>The new name of the dataset.</p>
+</dd>
+<dt>description<span class="classifier">str</span></dt><dd><p>The new description of the dataset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.edit_video">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">edit_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">videoid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">datetime.datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colony</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.db_functions.edit_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edit a video.</p>
+<dl class="simple">
+<dt>videoid<span class="classifier">int</span></dt><dd><p>The id of the video to edit.</p>
+</dd>
+<dt>file_name<span class="classifier">str</span></dt><dd><p>The new name of the video.</p>
+</dd>
+<dt>path<span class="classifier">str</span></dt><dd><p>The new path of the video.</p>
+</dd>
+<dt>timestamp<span class="classifier">datetime</span></dt><dd><p>The new timestamp of the video.</p>
+</dd>
+<dt>location<span class="classifier">str</span></dt><dd><p>The new location of the video.</p>
+</dd>
+<dt>colony<span class="classifier">int</span></dt><dd><p>The new colony of the video.</p>
+</dd>
+<dt>frames<span class="classifier">int</span></dt><dd><p>The new number of frames of the video.</p>
+</dd>
+<dt>width<span class="classifier">int</span></dt><dd><p>The new width of the video.</p>
+</dd>
+<dt>height<span class="classifier">int</span></dt><dd><p>The new height of the video.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.edit_video_data">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">edit_video_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_dataid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">datetime.datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">video</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.db_functions.edit_video_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edit a video data.</p>
+<dl class="simple">
+<dt>video_dataid<span class="classifier">int</span></dt><dd><p>The id of the video data to edit.</p>
+</dd>
+<dt>file_name<span class="classifier">str</span></dt><dd><p>The new name of the video data.</p>
+</dd>
+<dt>path<span class="classifier">str</span></dt><dd><p>The new path of the video data.</p>
+</dd>
+<dt>timestamp<span class="classifier">datetime</span></dt><dd><p>The new timestamp of the video data.</p>
+</dd>
+<dt>data_type<span class="classifier">str</span></dt><dd><p>The new data type of the video data.</p>
+</dd>
+<dt>video<span class="classifier">int</span></dt><dd><p>The new video for the video data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.get_dataset_by_id">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">get_dataset_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasetid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#labelbee.models.DataSet" title="labelbee.models.DataSet"><span class="pre">labelbee.models.DataSet</span></a></span></span><a class="headerlink" href="#labelbee.db_functions.get_dataset_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dataset by id.</p>
+<dl class="simple">
+<dt>datasetid<span class="classifier">int</span></dt><dd><p>The id of the dataset to get.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>DataSet</dt><dd><p>The dataset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.get_user_by_id">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">get_user_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">userid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#labelbee.models.User" title="labelbee.models.User"><span class="pre">labelbee.models.User</span></a></span></span><a class="headerlink" href="#labelbee.db_functions.get_user_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a user by id.</p>
+<dl class="simple">
+<dt>userid<span class="classifier">int</span></dt><dd><p>The id of the user to get.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>User</dt><dd><p>The user.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.get_video_by_id">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">get_video_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">videoid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#labelbee.models.Video" title="labelbee.models.Video"><span class="pre">labelbee.models.Video</span></a></span></span><a class="headerlink" href="#labelbee.db_functions.get_video_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a video by id.</p>
+<dl class="simple">
+<dt>videoid<span class="classifier">int</span></dt><dd><p>The id of the video to get.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Video</dt><dd><p>The video.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.get_video_data_by_id">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">get_video_data_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">video_dataid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#labelbee.models.VideoData" title="labelbee.models.VideoData"><span class="pre">labelbee.models.VideoData</span></a></span></span><a class="headerlink" href="#labelbee.db_functions.get_video_data_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a video data by id.</p>
+<dl class="simple">
+<dt>video_dataid<span class="classifier">int</span></dt><dd><p>The id of the video data to get.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>VideoData</dt><dd><p>The video data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.injest_tags">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">injest_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.db_functions.injest_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Injest tags from a csv file.</p>
+<dl class="simple">
+<dt>filename<span class="classifier">str</span></dt><dd><p>The name of the csv file to injest.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.injest_videos">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">injest_videos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.db_functions.injest_videos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Injest videos from a csv file.</p>
+<dl class="simple">
+<dt>filename<span class="classifier">str</span></dt><dd><p>The name of the csv file to injest.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.new_dataset">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">new_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#labelbee.models.User" title="labelbee.models.User"><span class="pre">labelbee.models.User</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.db_functions.new_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new dataset.</p>
+<dl class="simple">
+<dt>name<span class="classifier">str</span></dt><dd><p>The name of the dataset.</p>
+</dd>
+<dt>description<span class="classifier">str</span></dt><dd><p>The description of the dataset.</p>
+</dd>
+<dt>user<span class="classifier">User</span></dt><dd><p>The user creating the dataset.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.search_video">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">search_video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#labelbee.models.Video" title="labelbee.models.Video"><span class="pre">labelbee.models.Video</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#labelbee.db_functions.search_video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for a video by name.</p>
+<dl class="simple">
+<dt>query<span class="classifier">str</span></dt><dd><p>The name of the video to search for.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>List[Video]</dt><dd><p>A list of videos matching the query.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.user_list">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">user_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#labelbee.models.User" title="labelbee.models.User"><span class="pre">labelbee.models.User</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#labelbee.db_functions.user_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of users.</p>
+<dl class="simple">
+<dt>List[User]</dt><dd><p>A list of all users.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.video_data_list">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">video_data_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">videoid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#labelbee.models.VideoData" title="labelbee.models.VideoData"><span class="pre">labelbee.models.VideoData</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#labelbee.db_functions.video_data_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of all video data for a video.</p>
+<dl class="simple">
+<dt>videoid<span class="classifier">int</span></dt><dd><p>The id of the video to get data for.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>List[VideoData]</dt><dd><p>A list of all video data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.video_info">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">video_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">videoid</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#labelbee.models.Video" title="labelbee.models.Video"><span class="pre">labelbee.models.Video</span></a></span></span><a class="headerlink" href="#labelbee.db_functions.video_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a video by id.</p>
+<dl class="simple">
+<dt>videoid<span class="classifier">int</span></dt><dd><p>The id of the video to get.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Video</dt><dd><p>The video.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.db_functions.video_list">
+<span class="sig-prename descclassname"><span class="pre">labelbee.db_functions.</span></span><span class="sig-name descname"><span class="pre">video_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#labelbee.models.Video" title="labelbee.models.Video"><span class="pre">labelbee.models.Video</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#labelbee.db_functions.video_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of all videos in a dataset.</p>
+<dl class="simple">
+<dt>dataset<span class="classifier">DataSet</span></dt><dd><p>The dataset to get videos from.
+if None, get all videos.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>List[Video]</dt><dd><p>A list of all videos.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-labelbee.flask_range_requests">
+<span id="labelbee-flask-range-requests-module"></span><h2>labelbee.flask_range_requests module<a class="headerlink" href="#module-labelbee.flask_range_requests" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.flask_range_requests.dir_listing">
+<span class="sig-prename descclassname"><span class="pre">labelbee.flask_range_requests.</span></span><span class="sig-name descname"><span class="pre">dir_listing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_uri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.flask_range_requests.dir_listing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.flask_range_requests.send_from_directory_partial">
+<span class="sig-prename descclassname"><span class="pre">labelbee.flask_range_requests.</span></span><span class="sig-name descname"><span class="pre">send_from_directory_partial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_uri</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.flask_range_requests.send_from_directory_partial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simple wrapper around send_file which handles HTTP 206 Partial Content
+(byte ranges)
+TODO: handle all send_file args, mirror send_file’s error handling
+(if it has any)</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-labelbee.init_app">
+<span id="labelbee-init-app-module"></span><h2>labelbee.init_app module<a class="headerlink" href="#module-labelbee.init_app" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.init_app.ReverseProxied">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.init_app.</span></span><span class="sig-name descname"><span class="pre">ReverseProxied</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.init_app.ReverseProxied" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrap the application in this middleware and configure the
+front-end server to add these headers, to let you quietly bind
+this to a URL other than / and to an HTTP scheme that is
+different than what is used locally.</p>
+<p>In nginx:
+location /myprefix {</p>
+<blockquote>
+<div><p>proxy_pass <a class="reference external" href="http://192.168.0.1:5001">http://192.168.0.1:5001</a>;
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Scheme $scheme;
+proxy_set_header X-Script-Name /myprefix;
+}</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>app</strong> – the WSGI application</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.init_app.init_app">
+<span class="sig-prename descclassname"><span class="pre">labelbee.init_app.</span></span><span class="sig-name descname"><span class="pre">init_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_config_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.init_app.init_app" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.init_app.init_email_error_handler">
+<span class="sig-prename descclassname"><span class="pre">labelbee.init_app.</span></span><span class="sig-name descname"><span class="pre">init_email_error_handler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.init_app.init_email_error_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a logger to send emails on error-level messages.
+Unhandled exceptions will now send an email message to app.config.ADMINS.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-labelbee.local_settings">
+<span id="labelbee-local-settings-module"></span><h2>labelbee.local_settings module<a class="headerlink" href="#module-labelbee.local_settings" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-labelbee.local_settings_example">
+<span id="labelbee-local-settings-example-module"></span><h2>labelbee.local_settings_example module<a class="headerlink" href="#module-labelbee.local_settings_example" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-labelbee.manage_commands">
+<span id="labelbee-manage-commands-module"></span><h2>labelbee.manage_commands module<a class="headerlink" href="#module-labelbee.manage_commands" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.manage_commands.add_students">
+<span class="sig-prename descclassname"><span class="pre">labelbee.manage_commands.</span></span><span class="sig-name descname"><span class="pre">add_students</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.manage_commands.add_students" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.manage_commands.add_users">
+<span class="sig-prename descclassname"><span class="pre">labelbee.manage_commands.</span></span><span class="sig-name descname"><span class="pre">add_users</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.manage_commands.add_users" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create users when app starts</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.manage_commands.find_or_create_role">
+<span class="sig-prename descclassname"><span class="pre">labelbee.manage_commands.</span></span><span class="sig-name descname"><span class="pre">find_or_create_role</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.manage_commands.find_or_create_role" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find existing role or create new role</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.manage_commands.find_or_create_user">
+<span class="sig-prename descclassname"><span class="pre">labelbee.manage_commands.</span></span><span class="sig-name descname"><span class="pre">find_or_create_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#labelbee.models.UsersRoles" title="labelbee.models.UsersRoles"><span class="pre">labelbee.models.UsersRoles</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.manage_commands.find_or_create_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find existing user or create new user</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.manage_commands.init_db">
+<span class="sig-prename descclassname"><span class="pre">labelbee.manage_commands.</span></span><span class="sig-name descname"><span class="pre">init_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.manage_commands.init_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the database.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-labelbee.models">
+<span id="labelbee-models-module"></span><h2>labelbee.models module<a class="headerlink" href="#module-labelbee.models" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.CustomUserManager">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">CustomUserManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UserClass</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.CustomUserManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">flask_user.user_manager.UserManager</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="labelbee.models.CustomUserManager.customize">
+<span class="sig-name descname"><span class="pre">customize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">app</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.CustomUserManager.customize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this method to customize properties.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Customize Flask-User</span>
+<span class="k">class</span> <span class="nc">CustomUserManager</span><span class="p">(</span><span class="n">UserManager</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">customize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+
+        <span class="c1"># Add custom managers and email mailers here</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email_manager</span> <span class="o">=</span> <span class="n">CustomEmailManager</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password_manager</span> <span class="o">=</span> <span class="n">CustomPasswordManager</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">token_manager</span> <span class="o">=</span> <span class="n">CustomTokenManager</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email_adapter</span> <span class="o">=</span> <span class="n">CustomEmailAdapter</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+
+<span class="c1"># Setup Flask-User</span>
+<span class="n">user_manager</span> <span class="o">=</span> <span class="n">CustomUserManager</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">User</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.DataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">DataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.DataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Model</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.DataSet.created_by">
+<span class="sig-name descname"><span class="pre">created_by</span></span><a class="headerlink" href="#labelbee.models.DataSet.created_by" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.DataSet.description">
+<span class="sig-name descname"><span class="pre">description</span></span><a class="headerlink" href="#labelbee.models.DataSet.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.DataSet.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#labelbee.models.DataSet.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.DataSet.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#labelbee.models.DataSet.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.DataSet.timestamp">
+<span class="sig-name descname"><span class="pre">timestamp</span></span><a class="headerlink" href="#labelbee.models.DataSet.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.DataSet.videos">
+<span class="sig-name descname"><span class="pre">videos</span></span><a class="headerlink" href="#labelbee.models.DataSet.videos" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.MyRegisterForm">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">MyRegisterForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.MyRegisterForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">flask_user.forms.RegisterForm</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.MyRegisterForm.first_name">
+<span class="sig-name descname"><span class="pre">first_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">&lt;UnboundField(StringField,</span> <span class="pre">('First</span> <span class="pre">name',),</span> <span class="pre">{'validators':</span> <span class="pre">[&lt;wtforms.validators.DataRequired</span> <span class="pre">object&gt;]})&gt;</span></em><a class="headerlink" href="#labelbee.models.MyRegisterForm.first_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.MyRegisterForm.last_name">
+<span class="sig-name descname"><span class="pre">last_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">&lt;UnboundField(StringField,</span> <span class="pre">('Last</span> <span class="pre">name',),</span> <span class="pre">{'validators':</span> <span class="pre">[&lt;wtforms.validators.DataRequired</span> <span class="pre">object&gt;]})&gt;</span></em><a class="headerlink" href="#labelbee.models.MyRegisterForm.last_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.Role">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">Role</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.Role" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Model</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Role.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#labelbee.models.Role.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Role.label">
+<span class="sig-name descname"><span class="pre">label</span></span><a class="headerlink" href="#labelbee.models.Role.label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Role.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#labelbee.models.Role.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Role.users">
+<span class="sig-name descname"><span class="pre">users</span></span><a class="headerlink" href="#labelbee.models.Role.users" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.User">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">User</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.User" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Model</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">flask_user.user_mixin.UserMixin</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.active">
+<span class="sig-name descname"><span class="pre">active</span></span><a class="headerlink" href="#labelbee.models.User.active" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.clase">
+<span class="sig-name descname"><span class="pre">clase</span></span><a class="headerlink" href="#labelbee.models.User.clase" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.email">
+<span class="sig-name descname"><span class="pre">email</span></span><a class="headerlink" href="#labelbee.models.User.email" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.email_confirmed_at">
+<span class="sig-name descname"><span class="pre">email_confirmed_at</span></span><a class="headerlink" href="#labelbee.models.User.email_confirmed_at" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.first_name">
+<span class="sig-name descname"><span class="pre">first_name</span></span><a class="headerlink" href="#labelbee.models.User.first_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#labelbee.models.User.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.last_name">
+<span class="sig-name descname"><span class="pre">last_name</span></span><a class="headerlink" href="#labelbee.models.User.last_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.password">
+<span class="sig-name descname"><span class="pre">password</span></span><a class="headerlink" href="#labelbee.models.User.password" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.roles">
+<span class="sig-name descname"><span class="pre">roles</span></span><a class="headerlink" href="#labelbee.models.User.roles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.User.studentnum">
+<span class="sig-name descname"><span class="pre">studentnum</span></span><a class="headerlink" href="#labelbee.models.User.studentnum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.UserProfileForm">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">UserProfileForm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.UserProfileForm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">flask_wtf.form.FlaskForm</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.UserProfileForm.first_name">
+<span class="sig-name descname"><span class="pre">first_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">&lt;UnboundField(StringField,</span> <span class="pre">('First</span> <span class="pre">name',),</span> <span class="pre">{'validators':</span> <span class="pre">[&lt;wtforms.validators.DataRequired</span> <span class="pre">object&gt;]})&gt;</span></em><a class="headerlink" href="#labelbee.models.UserProfileForm.first_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.UserProfileForm.last_name">
+<span class="sig-name descname"><span class="pre">last_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">&lt;UnboundField(StringField,</span> <span class="pre">('Last</span> <span class="pre">name',),</span> <span class="pre">{'validators':</span> <span class="pre">[&lt;wtforms.validators.DataRequired</span> <span class="pre">object&gt;]})&gt;</span></em><a class="headerlink" href="#labelbee.models.UserProfileForm.last_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.UserProfileForm.submit">
+<span class="sig-name descname"><span class="pre">submit</span></span><em class="property"> <span class="pre">=</span> <span class="pre">&lt;UnboundField(SubmitField,</span> <span class="pre">('Save',),</span> <span class="pre">{})&gt;</span></em><a class="headerlink" href="#labelbee.models.UserProfileForm.submit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.UsersRoles">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">UsersRoles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.UsersRoles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Model</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.UsersRoles.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#labelbee.models.UsersRoles.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.UsersRoles.role_id">
+<span class="sig-name descname"><span class="pre">role_id</span></span><a class="headerlink" href="#labelbee.models.UsersRoles.role_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.UsersRoles.user_id">
+<span class="sig-name descname"><span class="pre">user_id</span></span><a class="headerlink" href="#labelbee.models.UsersRoles.user_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.Video">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">Video</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.Video" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Model</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.colony">
+<span class="sig-name descname"><span class="pre">colony</span></span><a class="headerlink" href="#labelbee.models.Video.colony" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.corrupted">
+<span class="sig-name descname"><span class="pre">corrupted</span></span><a class="headerlink" href="#labelbee.models.Video.corrupted" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.data_set">
+<span class="sig-name descname"><span class="pre">data_set</span></span><a class="headerlink" href="#labelbee.models.Video.data_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.file_name">
+<span class="sig-name descname"><span class="pre">file_name</span></span><a class="headerlink" href="#labelbee.models.Video.file_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.filesize">
+<span class="sig-name descname"><span class="pre">filesize</span></span><a class="headerlink" href="#labelbee.models.Video.filesize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.fps">
+<span class="sig-name descname"><span class="pre">fps</span></span><a class="headerlink" href="#labelbee.models.Video.fps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.frames">
+<span class="sig-name descname"><span class="pre">frames</span></span><a class="headerlink" href="#labelbee.models.Video.frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.hasframe0">
+<span class="sig-name descname"><span class="pre">hasframe0</span></span><a class="headerlink" href="#labelbee.models.Video.hasframe0" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.hasframeN">
+<span class="sig-name descname"><span class="pre">hasframeN</span></span><a class="headerlink" href="#labelbee.models.Video.hasframeN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.hasframeN_1s">
+<span class="sig-name descname"><span class="pre">hasframeN_1s</span></span><a class="headerlink" href="#labelbee.models.Video.hasframeN_1s" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.hasframeN_2s">
+<span class="sig-name descname"><span class="pre">hasframeN_2s</span></span><a class="headerlink" href="#labelbee.models.Video.hasframeN_2s" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.hasframeN_30s">
+<span class="sig-name descname"><span class="pre">hasframeN_30s</span></span><a class="headerlink" href="#labelbee.models.Video.hasframeN_30s" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.hasframe_10s">
+<span class="sig-name descname"><span class="pre">hasframe_10s</span></span><a class="headerlink" href="#labelbee.models.Video.hasframe_10s" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.hasframe_1s">
+<span class="sig-name descname"><span class="pre">hasframe_1s</span></span><a class="headerlink" href="#labelbee.models.Video.hasframe_1s" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.hasframe_2s">
+<span class="sig-name descname"><span class="pre">hasframe_2s</span></span><a class="headerlink" href="#labelbee.models.Video.hasframe_2s" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.hash">
+<span class="sig-name descname"><span class="pre">hash</span></span><a class="headerlink" href="#labelbee.models.Video.hash" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.height">
+<span class="sig-name descname"><span class="pre">height</span></span><a class="headerlink" href="#labelbee.models.Video.height" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#labelbee.models.Video.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.location">
+<span class="sig-name descname"><span class="pre">location</span></span><a class="headerlink" href="#labelbee.models.Video.location" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.path">
+<span class="sig-name descname"><span class="pre">path</span></span><a class="headerlink" href="#labelbee.models.Video.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.realfps">
+<span class="sig-name descname"><span class="pre">realfps</span></span><a class="headerlink" href="#labelbee.models.Video.realfps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.timestamp">
+<span class="sig-name descname"><span class="pre">timestamp</span></span><a class="headerlink" href="#labelbee.models.Video.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.trimmed">
+<span class="sig-name descname"><span class="pre">trimmed</span></span><a class="headerlink" href="#labelbee.models.Video.trimmed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.Video.width">
+<span class="sig-name descname"><span class="pre">width</span></span><a class="headerlink" href="#labelbee.models.Video.width" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.VideoData">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">VideoData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.VideoData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Model</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoData.created_by">
+<span class="sig-name descname"><span class="pre">created_by</span></span><a class="headerlink" href="#labelbee.models.VideoData.created_by" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoData.data_type">
+<span class="sig-name descname"><span class="pre">data_type</span></span><a class="headerlink" href="#labelbee.models.VideoData.data_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoData.file_name">
+<span class="sig-name descname"><span class="pre">file_name</span></span><a class="headerlink" href="#labelbee.models.VideoData.file_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoData.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#labelbee.models.VideoData.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoData.path">
+<span class="sig-name descname"><span class="pre">path</span></span><a class="headerlink" href="#labelbee.models.VideoData.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoData.timestamp">
+<span class="sig-name descname"><span class="pre">timestamp</span></span><a class="headerlink" href="#labelbee.models.VideoData.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoData.video">
+<span class="sig-name descname"><span class="pre">video</span></span><a class="headerlink" href="#labelbee.models.VideoData.video" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="labelbee.models.VideoDataSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">labelbee.models.</span></span><span class="sig-name descname"><span class="pre">VideoDataSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.models.VideoDataSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Model</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoDataSet.data_set">
+<span class="sig-name descname"><span class="pre">data_set</span></span><a class="headerlink" href="#labelbee.models.VideoDataSet.data_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoDataSet.ds_id">
+<span class="sig-name descname"><span class="pre">ds_id</span></span><a class="headerlink" href="#labelbee.models.VideoDataSet.ds_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoDataSet.video">
+<span class="sig-name descname"><span class="pre">video</span></span><a class="headerlink" href="#labelbee.models.VideoDataSet.video" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="labelbee.models.VideoDataSet.video_id">
+<span class="sig-name descname"><span class="pre">video_id</span></span><a class="headerlink" href="#labelbee.models.VideoDataSet.video_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-labelbee.settings">
+<span id="labelbee-settings-module"></span><h2>labelbee.settings module<a class="headerlink" href="#module-labelbee.settings" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-labelbee.user_management">
+<span id="labelbee-user-management-module"></span><h2>labelbee.user_management module<a class="headerlink" href="#module-labelbee.user_management" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.user_management.change_user_role">
+<span class="sig-prename descclassname"><span class="pre">labelbee.user_management.</span></span><span class="sig-name descname"><span class="pre">change_user_role</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.user_management.change_user_role" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.user_management.create_user">
+<span class="sig-prename descclassname"><span class="pre">labelbee.user_management.</span></span><span class="sig-name descname"><span class="pre">create_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.user_management.create_user" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.user_management.edit_user">
+<span class="sig-prename descclassname"><span class="pre">labelbee.user_management.</span></span><span class="sig-name descname"><span class="pre">edit_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#labelbee.user_management.edit_user" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-labelbee.views">
+<span id="labelbee-views-module"></span><h2>labelbee.views module<a class="headerlink" href="#module-labelbee.views" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.add_dataset_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">add_dataset_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.add_dataset_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.add_users">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">add_users</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.add_users" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.add_video">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">add_video</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.add_video" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.admin_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">admin_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.admin_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.after_request">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">after_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.after_request" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.ajaxlogin">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">ajaxlogin</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.ajaxlogin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.ajaxlogout">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">ajaxlogout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.ajaxlogout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.datasets_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">datasets_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.datasets_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.delete_dataset">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">delete_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.delete_dataset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.edit_dataset_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">edit_dataset_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.edit_dataset_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.edit_users">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">edit_users</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.edit_users" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.edit_video_data_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">edit_video_data_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.edit_video_data_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.edit_video_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">edit_video_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.edit_video_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.events_get_list">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">events_get_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.events_get_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.events_post">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">events_post</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.events_post" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.home_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">home_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.home_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.keypointlabels_get">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">keypointlabels_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.keypointlabels_get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.labelbee_user_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">labelbee_user_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.labelbee_user_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.labellist_get">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">labellist_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.labellist_get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.load_json">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">load_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trackfile</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.load_json" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.loadtrack">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">loadtrack</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trackfile</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.loadtrack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.manage_users_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">manage_users_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.manage_users_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.parse_trackfilename">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">parse_trackfilename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.parse_trackfilename" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.send_data">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">send_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.send_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.send_data_">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">send_data_</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.send_data_" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.serve_files">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">serve_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_uri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'html'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.serve_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.user_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">user_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.user_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.user_profile_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">user_profile_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.user_profile_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.version_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">version_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.version_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.video_data_details_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">video_data_details_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.video_data_details_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.video_data_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">video_data_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.video_data_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.videolist_get">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">videolist_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.videolist_get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.videos_page">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">videos_page</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.videos_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="labelbee.views.whoami">
+<span class="sig-prename descclassname"><span class="pre">labelbee.views.</span></span><span class="sig-name descname"><span class="pre">whoami</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#labelbee.views.whoami" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-labelbee">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-labelbee" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">LabelBee</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Rémi Mégret.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/labelbee.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
