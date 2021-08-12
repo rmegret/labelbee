@@ -487,3 +487,19 @@ def user_list() -> List[User]:
         A list of all users.
     """
     return User.query.all()
+
+
+def delete_user(userid: int) -> None:
+    """
+    Delete a user.
+
+    Parameters
+    ----------
+    userid : int
+        The id of the user to delete.
+    """
+
+    user = User.query.filter(User.id == userid).first()
+    if user:
+        db.session.delete(user)
+        db.session.commit()

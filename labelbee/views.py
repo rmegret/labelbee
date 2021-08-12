@@ -24,6 +24,7 @@ from labelbee.models import UserProfileForm, User
 from labelbee.db_functions import (
     add_video_to_dataset,
     delete_dataset_by_id,
+    delete_user,
     edit_dataset,
     edit_video,
     get_dataset_by_id,
@@ -606,6 +607,23 @@ def edit_users():
         return jsonify({"status": "ok"})
     else:
         return jsonify({"status": "error", "message": "not authenticated"})
+
+
+@app.route("/rest/list_users", methods=["POST"])
+def list_users():
+    if current_user.is_authenticated and current_user.has_roles("admin"):
+        return jsonify({"status": "ok", "users": user_list()})
+    else:
+        return jsonify({"status": "error", "message": "not authenticated"})
+
+
+@app.route("/rest/delete_users", methods=["POST"])
+def delete_users():
+    if current_user.is_authenticated and current_user.has_roles("admin"):
+        json_list = json.loads(request.form.get("json"))
+        for user_id in json_list:
+            delete_user(user_id)
+        return jsonify({"status": "ok"})
 
 
 @app.route("/rest/auth/login", methods=["GET", "POST"])
