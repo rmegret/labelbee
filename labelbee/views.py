@@ -612,7 +612,17 @@ def edit_users():
 @app.route("/rest/list_users", methods=["POST"])
 def list_users():
     if current_user.is_authenticated and current_user.has_roles("admin"):
-        return jsonify({"status": "ok", "users": user_list()})
+        list_users = [
+            {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "role_id": user.role_id,
+            }
+            for user in user_list()
+        ]
+        return jsonify({"status": "ok", "users": list_users})
     else:
         return jsonify({"status": "error", "message": "not authenticated"})
 
