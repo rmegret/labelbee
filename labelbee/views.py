@@ -1,6 +1,8 @@
-# Copyright 2014 SolidBuilds.com. All rights reserved
-#
-# Authors: Ling Thio <ling.thio@gmail.com>
+"""
+Views
+====================================
+All web endpoints are defined here.
+"""
 
 from labelbee.user_management import create_user, edit_user
 from labelbee.flask_range_requests import send_from_directory_partial, dir_listing
@@ -97,7 +99,7 @@ def videos_page():
     # Process GET or invalid POST
     return render_template(
         "pages/videos_page.html",
-        videos=video_list(datasetid),
+        videos=video_list(int(datasetid)),
         form=form,
         dataset=dataset,
     )
@@ -574,69 +576,19 @@ def send_data_():
 # REST API for authentification
 
 
-@app.route("/rest/add_users", methods=["POST"])
-def add_users():
-    if current_user.is_authenticated and current_user.has_roles("admin"):
-        json_list = json.loads(request.form.get("json"))
-        for user in json_list:
-            create_user(
-                first_name=user["first_name"],
-                last_name=user["last_name"],
-                email=user["email"],
-                password=user["password"],
-                role_id=int(user["role_id"]),
-            )
-        return jsonify({"status": "users added"})
-    else:
-        return jsonify({"status": "error", "message": "not authenticated"})
-
-
-@app.route("/rest/edit_users", methods=["POST"])
-def edit_users():
-    if current_user.is_authenticated and current_user.has_roles("admin"):
-        json_list = json.loads(request.form.get("json"))
-        for user in json_list:
-            edit_user(
-                user_id=int(user["user_id"]),
-                first_name=user.setdefault("first_name", None),
-                last_name=user.setdefault("last_name", None),
-                email=user.setdefault("email", None),
-                password=user.setdefault("password", None),
-                role_id=user.setdefault("role_id", 2),
-            )
-        return jsonify({"status": "ok"})
-    else:
-        return jsonify({"status": "error", "message": "not authenticated"})
-
-
-@app.route("/rest/list_users", methods=["POST"])
-def list_users():
-    if current_user.is_authenticated and current_user.has_roles("admin"):
-        list_users = [
-            {
-                "id": user.id,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "email": user.email,
-            }
-            for user in user_list()
-        ]
-        return jsonify({"status": "ok", "users": list_users})
-    else:
-        return jsonify({"status": "error", "message": "not authenticated"})
-
-
-@app.route("/rest/delete_users", methods=["POST"])
-def delete_users():
-    if current_user.is_authenticated and current_user.has_roles("admin"):
-        json_list = json.loads(request.form.get("json"))
-        for user_id in json_list:
-            delete_user(user_id)
-        return jsonify({"status": "ok"})
-
-
 @app.route("/rest/auth/login", methods=["GET", "POST"])
 def ajaxlogin():
+    """
+    API endpoint for authentification
+
+    Usage
+    -----
+    - GET: Log in with a get request using an email and password
+
+    Returns
+    -------
+    CSRF token
+    """
 
     email = request.form.get("email")
     password = request.form.get("password")
@@ -673,12 +625,27 @@ def ajaxlogin():
 
 @app.route("/rest/auth/logout", methods=["GET", "POST"])
 def ajaxlogout():
+    """
+    Logs out the current user
+    """
     logout_user()
     return jsonify({"request": "logout", "status": "SUCCESS"})
 
 
 @app.route("/rest/auth/whoami")
 def whoami():
+    """
+    Returns the current user
+
+    Returns
+    -------
+    is_authenticated: boolean
+    first_name: string
+    last_name: string
+    email: string
+    id: int
+    """
+
     if current_user.is_authenticated:
         return jsonify(
             {
@@ -691,6 +658,86 @@ def whoami():
         )
     else:
         return jsonify({"is_authenticated": current_user.is_authenticated})
+
+
+@app.route("/rest/add_users", methods=["POST"])
+def add_users():
+    """
+    Adds a new users to the database
+
+    POST parameters
+    ---------------
+    csrf_token: string
+    json: string
+        json requirements for user creation:
+        [
+            {
+                "first_name": string,
+                "last_name": string,
+                "email" string,
+                "password": string,
+                "role_id": int
+            }
+        ]
+    """
+
+    if current_user.is_authenticated and current_user.has_roles("admin"):
+        json_list = json.loads(request.form.get("json"))
+        for user in json_list:
+            create_user(
+                first_name=user["first_name"],
+                last_name=user["last_name"],
+                email=user["email"],
+                password=user["password"],
+                role_id=int(user["role_id"]),
+            )
+        return jsonify({"status": "users added"})
+    else:
+        return jsonify({"status": "error", "message": "not authenticated"})
+
+
+@app.route("/rest/edit_users", methods=["POST"])
+def edit_users():
+    if current_user.is_authenticated and current_user.has_roles("admin"):
+        json_list = json.loads(request.form.get("json"))
+        for user in json_list:
+            edit_user(
+                user_id=int(user["user_id"]),
+                first_name=user.setdefault("first_name", None),
+                last_name=user.setdefault("last_name", None),
+                email=user.setdefault("email", None),
+                password=user.setdefault("password", None),
+                role_id=user.setdefault("role_id", 2),
+            )
+        return jsonify({"status": "ok"})
+    else:
+        return jsonify({"status": "error", "message": "not authenticated"})
+
+
+@app.route("/rest/list_users", methods=["GET"])
+def list_users():
+    if current_user.is_authenticated and current_user.has_roles("admin"):
+        list_users = [
+            {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+            }
+            for user in user_list()
+        ]
+        return jsonify({"status": "ok", "users": list_users})
+    else:
+        return jsonify({"status": "error", "message": "not authenticated"})
+
+
+@app.route("/rest/delete_users", methods=["POST"])
+def delete_users():
+    if current_user.is_authenticated and current_user.has_roles("admin"):
+        json_list = json.loads(request.form.get("json"))
+        for user_id in json_list:
+            delete_user(user_id)
+        return jsonify({"status": "ok"})
 
 
 # --------------------------------------
@@ -819,7 +866,7 @@ def keypointlabels_get(path=""):
     return serve_files(base_dir, path, base_uri, format)
 
 
-# LIST AND GET
+# LIST AND GET V1
 
 
 @app.route("/rest/config/videolist", methods=["GET"])
@@ -838,6 +885,19 @@ def videolist_get(path=""):
     base_uri = url_for("videolist_get", path="")
 
     return serve_files(base_dir, path, base_uri, format)
+
+
+# LIST AND GET V2
+@app.route("/rest/v2/config/videolist", methods=["GET"])
+def videolist_get_v2():
+    print("Handling videolist request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/config/labellist GET: login required !")
+    dataset = request.args.get("dataset", "")
+
+    dataset = None if dataset == "" else dataset
+
+    return jsonify(video_list(int(dataset)))
 
 
 # LIST

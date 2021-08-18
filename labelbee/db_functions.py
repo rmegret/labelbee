@@ -13,13 +13,11 @@ from typing import List
 
 
 def injest_videos(filename: str) -> None:
-    """
-    Injest videos from a csv file.
+    """Injest videos from a csv file.
 
-    Parameters
-    ----------
-    filename : str
-        The name of the csv file to injest.
+    :param filename: The name of the csv file to injest.
+    :type filename: str
+
     """
 
     with app.app_context():
@@ -67,13 +65,12 @@ def injest_videos(filename: str) -> None:
 
 
 def injest_tags(filename: str) -> None:
-    """
-    Injest tags from a csv file.
+    """Injest tags from a csv file.
 
-    Parameters
-    ----------
-    filename : str
-        The name of the csv file to injest.
+    :param filename: The name of the csv file to injest.
+    :type filename: str
+    :raises Exception: No Video file Found
+
     """
 
     with app.app_context():
@@ -115,37 +112,24 @@ def injest_tags(filename: str) -> None:
 
 
 def video_data_list(videoid: int) -> List[VideoData]:
-    """
-    Get a list of all video data for a video.
+    """Get a list of all video data for a video.
 
-    Parameters
-    ----------
-    videoid : int
-        The id of the video to get data for.
-
-    Returns
-    -------
-    List[VideoData]
-        A list of all video data.
+    :param videoid: The id of the video to get data for
+    :type videoid: int
+    :return: A list of all video data.
+    :rtype: List[VideoData]
     """
 
     return VideoData.query.filter(VideoData.video == videoid).all()
 
 
-def video_list(dataset=None) -> List[Video]:
-    """
-    Get a list of all videos in a dataset.
+def video_list(dataset: int = None) -> List[Video]:
+    """Get a list of all videos in a dataset.
 
-    Parameters
-    ----------
-    dataset : DataSet
-        The dataset to get videos from.
-        if None, get all videos.
-
-    Returns
-    -------
-    List[Video]
-        A list of all videos.
+    :param dataset: The dataset to get videos from, defaults to None
+    :type dataset: DataSet, optional
+    :return: A list of videos from a dataset, if None, all videos are returned.
+    :rtype: List[Video]
     """
 
     if dataset:
@@ -162,48 +146,36 @@ def video_list(dataset=None) -> List[Video]:
 
 
 def dataset_list() -> List[DataSet]:
-    """
-    Get list of all datasets.
+    """Get list of all datasets.
 
-    Returns
-    -------
-    List[DataSet]
-        A list of all datasets.
+    :return: A list of all datasets.
+    :rtype: List[DataSet]
     """
 
     return DataSet.query.all()
 
 
 def video_info(videoid: int) -> Video:
-    """
-    Get a video by id.
+    """Get a video by id.
 
-    Parameters
-    ----------
-    videoid : int
-        The id of the video to get.
-
-    Returns
-    -------
-    Video
-        The video.
+    :param videoid: The id of the video to get.
+    :type videoid: int
+    :return: The video specified by the id.
+    :rtype: Video
     """
 
     return Video.query.filter(Video.id == videoid).first()
 
 
 def new_dataset(name: str, description: str, user: User):
-    """
-    Create a new dataset.
+    """Create a new dataset.
 
-    Parameters
-    ----------
-    name : str
-        The name of the dataset.
-    description : str
-        The description of the dataset.
-    user : User
-        The user creating the dataset.
+    :param name: The name of the dataset.
+    :type name: str
+    :param description: The description of the dataset.
+    :type description: str
+    :param user: The user creating the dataset.
+    :type user: User
     """
 
     dataset = DataSet(
@@ -218,66 +190,46 @@ def new_dataset(name: str, description: str, user: User):
 
 # search for a video using sqlalchemy flask
 def search_video(query: str) -> List[Video]:
-    """
-    Search for a video by name.
+    """Search for a video by name.
 
-    Parameters
-    ----------
-    query : str
-        The name of the video to search for.
-
-    Returns
-    -------
-    List[Video]
-        A list of videos matching the query.
+    :param query: The name of the video to search for.
+    :type query: str
+    :return: A list of videos matching the query.
+    :rtype: List[Video]
     """
 
     return Video.query.filter(Video.file_name.like(f"%{query}%")).all()
 
 
 def get_user_by_id(userid: int) -> User:
-    """
-    Get a user by id.
+    """Get a user by id.
 
-    Parameters
-    ----------
-    userid : int
-        The id of the user to get.
-
-    Returns
-    -------
-    User
-        The user.
+    :param userid: The id of the user to get.
+    :type userid: int
+    :return: The user specified by the id.
+    :rtype: User
     """
 
     return User.query.filter(User.id == userid).first()
 
 
 def get_dataset_by_id(datasetid: int) -> DataSet:
-    """
-    Get a dataset by id.
+    """Get a dataset by id.
 
-    Parameters
-    ----------
-    datasetid : int
-        The id of the dataset to get.
-
-    Returns
-    -------
-    DataSet
-        The dataset.
+    :param datasetid: The id of the dataset to get.
+    :type datasetid: int
+    :return: The dataset specified by the id.
+    :rtype: DataSet
     """
+
     return DataSet.query.filter(DataSet.id == datasetid).first()
 
 
 def delete_dataset_by_id(datasetid: int) -> None:
-    """
-    Delete a dataset by id.
+    """Delete a dataset by id.
 
-    Parameters
-    ----------
-    datasetid : int
-        The id of the dataset to delete.
+    :param datasetid: The id of the dataset to delete.
+    :type datasetid: int
     """
 
     dataset = get_dataset_by_id(datasetid)
@@ -288,33 +240,28 @@ def delete_dataset_by_id(datasetid: int) -> None:
 
 # Add video to a dataset using video id and dataset id
 def add_video_to_dataset(videoid: int, datasetid: int) -> None:
-    """
-    Add a video to a dataset.
+    """Add a video to a dataset.
 
-    Parameters
-    ----------
-    videoid : int
-        The id of the video to add.
-    datasetid : int
-        The id of the dataset to add the video to.
+    :param videoid: The id of the video to add.
+    :type videoid: int
+    :param datasetid: The id of the dataset to add the video to.
+    :type datasetid: int
     """
+
     video_data_set = VideoDataSet(video_id=videoid, ds_id=datasetid)
     db.session.add(video_data_set)
     db.session.commit()
 
 
 def edit_dataset(datasetid: int, name: str, description: str) -> None:
-    """
-    Edit a dataset.
+    """Edit a dataset.
 
-    Parameters
-    ----------
-    datasetid : int
-        The id of the dataset to edit.
-    name : str
-        The new name of the dataset.
-    description : str
-        The new description of the dataset.
+    :param datasetid: The id of the dataset to edit.
+    :type datasetid: int
+    :param name: The new name of the dataset.
+    :type name: str
+    :param description: The new description of the dataset.
+    :type description: str
     """
 
     dataset = get_dataset_by_id(datasetid)
@@ -325,18 +272,12 @@ def edit_dataset(datasetid: int, name: str, description: str) -> None:
 
 
 def get_video_by_id(videoid: int) -> Video:
-    """
-    Get a video by id.
+    """Get a video by id.
 
-    Parameters
-    ----------
-    videoid : int
-        The id of the video to get.
-
-    Returns
-    -------
-    Video
-        The video.
+    :param videoid: The id of the video to get.
+    :type videoid: int
+    :return: The video specified by the id.
+    :rtype: Video
     """
 
     return Video.query.filter(Video.id == videoid).first()
@@ -353,29 +294,26 @@ def edit_video(
     width: int,
     height: int,
 ) -> None:
-    """
-    Edit a video.
+    """Edit a video.
 
-    Parameters
-    ----------
-    videoid : int
-        The id of the video to edit.
-    file_name : str
-        The new name of the video.
-    path : str
-        The new path of the video.
-    timestamp : datetime
-        The new timestamp of the video.
-    location : str
-        The new location of the video.
-    colony : int
-        The new colony of the video.
-    frames : int
-        The new number of frames of the video.
-    width : int
-        The new width of the video.
-    height : int
-        The new height of the video.
+    :param videoid: The id of the video to edit
+    :type videoid: int
+    :param file_name: The new name of the video.
+    :type file_name: str
+    :param path: The new path of the video.
+    :type path: str
+    :param timestamp: The new timestamp of the video.
+    :type timestamp: datetime
+    :param location: The new location of the video.
+    :type location: str
+    :param colony: The new colony of the video.
+    :type colony: int
+    :param frames: The new number of frames of the video.
+    :type frames: int
+    :param width: The new width of the video.
+    :type width: int
+    :param height: The new height of the video.
+    :type height: int
     """
 
     video = get_video_by_id(videoid)
@@ -391,18 +329,12 @@ def edit_video(
 
 
 def get_video_data_by_id(video_dataid: int) -> VideoData:
-    """
-    Get a video data by id.
+    """Get a video data by id.
 
-    Parameters
-    ----------
-    video_dataid : int
-        The id of the video data to get.
-
-    Returns
-    -------
-    VideoData
-        The video data.
+    :param video_dataid: The id of the video data to get.
+    :type video_dataid: int
+    :return: The video data specified by the id.
+    :rtype: VideoData
     """
 
     return VideoData.query.filter(VideoData.id == video_dataid).first()
@@ -416,24 +348,22 @@ def edit_video_data(
     data_type: str,
     video: int,
 ) -> None:
-    """
-    Edit a video data.
+    """Edit a video data.
 
-    Parameters
-    ----------
-    video_dataid : int
-        The id of the video data to edit.
-    file_name : str
-        The new name of the video data.
-    path : str
-        The new path of the video data.
-    timestamp : datetime
-        The new timestamp of the video data.
-    data_type : str
-        The new data type of the video data.
-    video : int
-        The new video for the video data.
+    :param video_dataid: The id of the video data to edit.
+    :type video_dataid: int
+    :param file_name: The new name of the video data.
+    :type file_name: str
+    :param path: The new path of the video data.
+    :type path: str
+    :param timestamp: The new timestamp of the video data.
+    :type timestamp: datetime
+    :param data_type: The new data type of the video data.
+    :type data_type: str
+    :param video: The new video for the video data.
+    :type video: int
     """
+
     video_data = get_video_data_by_id(video_dataid)
     video_data.file_name = file_name
     video_data.path = path
@@ -450,22 +380,19 @@ def add_video_data(
     data_type: str,
     video: int,
 ) -> None:
-    """
-    Add a video data.
+    """Add a video data.
 
-    Parameters
-    ----------
-    file_name : str
-        The name of the video data.
-    path : str
-        The path of the video data.
-    timestamp : datetime
-        The timestamp of the video data.
-    data_type : str
-        The data type of the video data.
-    video : int
-        The video for the video data.
+    :param file_name: The name of the video data.
+    :type file_name: str
+    :param path: The path of the video data.
+    :param timestamp: The timestamp of the video data.
+    :type timestamp: datetime
+    :param data_type: The data type of the video data.
+    :type data_type: str
+    :param video: The video for the video data.
+    :type video: int
     """
+
     video_data = VideoData(
         file_name=file_name,
         path=path,
@@ -478,25 +405,20 @@ def add_video_data(
 
 
 def user_list() -> List[User]:
-    """
-    Get a list of users.
+    """Get a list of users.
 
-    Returns
-    -------
-    List[User]
-        A list of all users.
+    :return: A list of all users.
+    :rtype: List[User]
     """
+
     return User.query.all()
 
 
 def delete_user(userid: int) -> None:
-    """
-    Delete a user.
+    """Delete a user.
 
-    Parameters
-    ----------
-    userid : int
-        The id of the user to delete.
+    :param userid: The id of the user to delete.
+    :type userid: int
     """
 
     user = User.query.filter(User.id == userid).first()
