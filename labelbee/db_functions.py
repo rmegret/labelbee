@@ -92,9 +92,7 @@ def injest_tags(filename: str) -> None:
                     Video.file_name == row["mp4file"].split("/")[-1],
                     Video.path == "/".join(row["mp4file"].split("/")[:-1]),
                 ).first()
-                if video:
-                    video = video.id
-                else:
+                if not video:
                     raise Exception(
                         f"""No video found with name {row["mp4file"].split("/")[-1]} and path {"/".join(row["mp4file"].split("/")[:-1])}"""
                     )
@@ -105,7 +103,7 @@ def injest_tags(filename: str) -> None:
                     timestamp=timestamp,
                     data_type="tag",
                     video=video,
-                    created_by="bigdbee",
+                    created_by=User.query.filter(User.id == 1).first(),
                 )
                 db.session.add(video_data)
             db.session.commit()
@@ -120,7 +118,7 @@ def video_data_list(videoid: int) -> List[VideoData]:
     :rtype: List[VideoData]
     """
 
-    return VideoData.query.filter(VideoData.video == videoid).all()
+    return VideoData.query.filter(VideoData.video_id == videoid).all()
 
 
 def video_list(dataset: int = None) -> List[Video]:

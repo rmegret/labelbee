@@ -6,7 +6,8 @@ from flask_user import UserMixin, UserManager
 from flask_user.forms import RegisterForm
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, validators
-from labelbee.init_app import db
+from labelbee.init_app import db, ma
+from flask_marshmallow.fields import fields
 
 
 # Define the User data model. Make sure to add the flask_user.UserMixin !!
@@ -108,8 +109,12 @@ class VideoData(db.Model):
     path = db.Column(db.String(100), nullable=False, server_default=u"")
     timestamp = db.Column(db.DateTime, nullable=False)
     data_type = db.Column(db.String(25))
-    video = db.Column(db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"))
-    created_by = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
+    video_id = db.Column(db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"))
+    video = db.relationship("Video", backref="video_data")
+    created_by_id = db.Column(
+        db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE")
+    )
+    created_by = db.relationship("User", backref="video_data")
 
 
 class DataSet(db.Model):
@@ -118,6 +123,7 @@ class DataSet(db.Model):
     name = db.Column(db.String(100), nullable=False, server_default="Dataset")
     description = db.Column(db.Text())
     created_by = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
+    creator = db.relationship("User", backref="data_set")
     timestamp = db.Column(db.DateTime, nullable=False)
 
     # Properly link the data_set to videos
@@ -128,6 +134,81 @@ class DataSet(db.Model):
         lazy=True,
         cascade="delete, delete-orphan",
     )
+
+
+class RoleSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = Role
+
+    id = ma.auto_field()
+    name = ma.auto_field()
+
+
+class VideoSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = Video
+
+    id = ma.auto_field()
+    file_name = ma.auto_field()
+    path = ma.auto_field()
+    timestamp = ma.auto_field()
+    location = ma.auto_field()
+    colony = ma.auto_field()
+    # notes = ma.auto_field()
+    frames = ma.auto_field()
+    height = ma.auto_field()
+    width = ma.auto_field()
+    fps = fields.Float()
+    realfps = fields.Float()
+    filesize = ma.auto_field()
+    hash = ma.auto_field()
+    corrupted = ma.auto_field()
+    trimmed = ma.auto_field()
+    hasframe0 = ma.auto_field()
+    hasframe_1s = ma.auto_field()
+    hasframe_2s = ma.auto_field()
+    hasframe_10s = ma.auto_field()
+    hasframeN_30s = ma.auto_field()
+    hasframeN_2s = ma.auto_field()
+    hasframeN_1s = ma.auto_field()
+    hasframeN = ma.auto_field()
+
+
+class VideoDataSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = VideoData
+
+    id = ma.auto_field()
+    file_name = ma.auto_field()
+    path = ma.auto_field()
+    timestamp = ma.auto_field()
+    data_type = ma.auto_field()
+    video = ma.auto_field()
+    created_by = ma.auto_field()
+
+
+class UserSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = User
+
+    id = ma.auto_field()
+    email = ma.auto_field()
+    first_name = ma.auto_field()
+    last_name = ma.auto_field()
+    # studentnum = ma.auto_field()
+    clase = ma.auto_field()
+
+
+class DataSetSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = DataSet
+        # include_fk = True
+
+    id = ma.auto_field()
+    name = ma.auto_field()
+    description = ma.auto_field()
+    creator = ma.auto_field()
+    timestamp = ma.auto_field()
 
 
 # Define the User registration form

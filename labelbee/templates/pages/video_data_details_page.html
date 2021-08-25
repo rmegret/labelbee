@@ -36,8 +36,8 @@
             <td>{{video_data.path}}</td>
             <td>{{video_data.data_type}}</td>
             <td>{{video_data.timestamp}}</td>
-            <td>{{video_data.video}}</td>
-            <td>{{video_data.created_by}}</td>
+            <td>{{video_data.video.id}}</td>
+            <td>{{video_data.created_by.first_name + " " + video_data.created_by.last_name}}</td>
         </tr>
     </tbody>
 </table>

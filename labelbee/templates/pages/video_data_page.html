@@ -54,20 +54,20 @@
 
 <table class="table" id="video_data_table">
     <thead>
+        <th>ID</th>
         <th>File Name</th>
         <th>Data Type</th>
         <th>Date and Time</th>
         <th>Created By</th>
     </thead>
     <tbody id="videosBody">
-        {% for item in video_data %}
         <tr>
-            <td><a href="{{ url_for('video_data_details_page') }}?video_url={{ video_url }}&tag_file={{ item.path + '/' + item.file_name }}&video_data={{ item.id }}">{{ item.path + '/' + item.file_name }}</a></td>
-            <td>{{ item.data_type }}</td>
-            <td>{{ item.timestamp }}</td>
-            <td>{{ item.created_by }}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
         </tr>
-        {% endfor %}
     </tbody>
     <!--  -->
 </table>
@@ -76,9 +76,21 @@
 <script>
     $(document).ready(function () {
         $('#video_data_table').DataTable({
+            "ajax": "{{ url_for('videodata_get_v2') }}?video_id={{ video.id }}",
+            "columns": [
+            { "data": "id", "name": "id" },
+            { "data": "file_name", "name": "file_name" ,
+                // convert file_name to link
+                fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
+                    $(nTd).html("<a href='{{ url_for('video_data_details_page') }}" + "?video_url={{video.path + '/' + video.file_name}}" + "&tag_file=" + rowData.path + "/" + rowData.file_name + "&video_data=" + rowData.id + "'>" + rowData.file_name+"</a>");
+                }
+            },
+            { "data": "data_type", "name": "data_type" },
+            { "data": "timestamp", "name": "timestamp" },
+            { "data": "created_by", "name": "created_by" },
+            ],
             "order": [[2, "desc"]]
         });
-
     });
 </script>
 

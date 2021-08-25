@@ -9,6 +9,7 @@ from flask_mail import Mail
 from flask_migrate import Migrate  # , MigrateCommand
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 from flask_user import UserManager
 from flask_wtf.csrf import CSRFProtect
 
@@ -69,7 +70,8 @@ app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 db = SQLAlchemy()  # Setup Flask-SQLAlchemy
 manager = Manager(app)  # Setup Flask-Script
-csrf = CSRFProtect(app)
+csrf = CSRFProtect(app)  # Setup CSRF protection
+ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
 
 ####
 
@@ -132,8 +134,15 @@ def init_app(app, extra_config_settings={}):
 
     from labelbee.db_functions import injest_tags, injest_videos
 
-    # injest_videos("data/tags.csv")
-    # injest_tags("data/tags.csv")
+    # try:
+    #     injest_videos("data/tags.csv")
+    # except Exception as e:
+    #     print(e)
+
+    # try:
+    #     injest_tags("data/tags.csv")
+    # except Exception as e:
+    #     print(e)
 
     # print(app.logger)
 

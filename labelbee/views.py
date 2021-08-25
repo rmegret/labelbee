@@ -22,7 +22,14 @@ import json
 import re
 
 from labelbee.init_app import app, db, csrf
-from labelbee.models import UserProfileForm, User
+from labelbee.models import (
+    DataSetSchema,
+    UserProfileForm,
+    User,
+    UserSchema,
+    VideoDataSchema,
+    VideoSchema,
+)
 from labelbee.db_functions import (
     add_video_to_dataset,
     delete_dataset_by_id,
@@ -99,7 +106,6 @@ def videos_page():
     # Process GET or invalid POST
     return render_template(
         "pages/videos_page.html",
-        videos=video_list(int(datasetid)),
         form=form,
         dataset=dataset,
     )
@@ -248,7 +254,7 @@ def video_data_page():
 
     videoid = request.args.get("videoid")
 
-    video_url = request.args.get("video_url")
+    video_url = request.args.get("video_file")
 
     # Process valid POST
     if request.method == "POST" and form.validate():
@@ -264,7 +270,6 @@ def video_data_page():
     # Process GET or invalid POST
     return render_template(
         "pages/video_data_page.html",
-        video_data=video_data_list(videoid),
         video_url=video_url,
         video=video_info(videoid),
         form=form,
@@ -681,19 +686,19 @@ def add_users():
         ]
     """
 
-    if current_user.is_authenticated and current_user.has_roles("admin"):
-        json_list = json.loads(request.form.get("json"))
-        for user in json_list:
-            create_user(
-                first_name=user["first_name"],
-                last_name=user["last_name"],
-                email=user["email"],
-                password=user["password"],
-                role_id=int(user["role_id"]),
-            )
-        return jsonify({"status": "users added"})
-    else:
+    if not current_user.is_authenticated or not current_user.has_roles("admin"):
         return jsonify({"status": "error", "message": "not authenticated"})
+
+    json_list = json.loads(request.form.get("json"))
+    for user in json_list:
+        create_user(
+            first_name=user["first_name"],
+            last_name=user["last_name"],
+            email=user["email"],
+            password=user["password"],
+            role_id=int(user["role_id"]),
+        )
+    return jsonify({"status": "users added"})
 
 
 @app.route("/rest/edit_users", methods=["POST"])
@@ -716,17 +721,11 @@ def edit_users():
 
 @app.route("/rest/list_users", methods=["GET"])
 def list_users():
-    if current_user.is_authenticated and current_user.has_roles("admin"):
-        list_users = [
-            {
-                "id": user.id,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "email": user.email,
-            }
-            for user in user_list()
-        ]
-        return jsonify({"status": "ok", "users": list_users})
+    if current_user.is_authenticated:
+
+        # Use Flask-Marshmallow Schema to make json serializable list of users
+        user_schema = UserSchema(many=True)
+        return jsonify({"status": "ok", "users": user_schema.dump(user_list())})
     else:
         return jsonify({"status": "error", "message": "not authenticated"})
 
@@ -888,16 +887,43 @@ def videolist_get(path=""):
 
 
 # LIST AND GET V2
-@app.route("/rest/v2/config/videolist", methods=["GET"])
+@app.route("/rest/v2/videolist", methods=["GET"])
 def videolist_get_v2():
     print("Handling videolist request")
     if not current_user.is_authenticated:
-        raise Forbidden("/rest/config/labellist GET: login required !")
+        raise Forbidden("/rest/v2/videolist GET: login required !")
     dataset = request.args.get("dataset", "")
 
     dataset = None if dataset == "" else dataset
 
-    return jsonify(video_list(int(dataset)))
+    videos_schema = VideoSchema(many=True)
+
+    return jsonify({"data": videos_schema.dump(video_list(dataset))})
+
+
+@app.route("/rest/v2/videodata", methods=["GET"])
+def videodata_get_v2():
+    print("Handling videodata request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/videodata GET: login required !")
+    video_id = request.args.get("video_id")
+    if video_id is None:
+        raise BadRequest("/rest/v2/videodata GET: video_id required !")
+
+    videodatas = VideoDataSchema(many=True)
+
+    return jsonify({"data": videodatas.dump(video_data_list(video_id))})
+
+
+@app.route("/rest/v2/datasets", methods=["GET"])
+def dataset_get_v2():
+    print("Handling dataset request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/datasets GET: login required !")
+
+    datasets_schema = DataSetSchema(many=True)
+
+    return jsonify(datasets_schema.dump(dataset_list()))
 
 
 # LIST
