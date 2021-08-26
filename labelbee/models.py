@@ -2,12 +2,14 @@
 #
 # Authors: Ling Thio <ling.thio@gmail.com>
 
+import re
 from flask_user import UserMixin, UserManager
 from flask_user.forms import RegisterForm
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, validators
 from labelbee.init_app import db, ma
-from flask_marshmallow.fields import fields
+from marshmallow import validate, fields
+from labelbee.validation import FileName, Path
 
 
 # Define the User data model. Make sure to add the flask_user.UserMixin !!
@@ -140,63 +142,63 @@ class RoleSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Role
 
-    id = ma.auto_field()
-    name = ma.auto_field()
+    id = fields.Integer(dump_only=True)
+    name = fields.String(required=True)
 
 
 class VideoSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Video
 
-    id = ma.auto_field()
-    file_name = ma.auto_field()
-    path = ma.auto_field()
-    timestamp = ma.auto_field()
-    location = ma.auto_field()
-    colony = ma.auto_field()
+    id = fields.Integer(dump_only=True)
+    file_name = FileName(required=True)
+    path = Path(required=True)
+    timestamp = fields.DateTime(required=True)
+    location = fields.Integer(required=True)
+    colony = fields.Integer(required=True)
     # notes = ma.auto_field()
-    frames = ma.auto_field()
-    height = ma.auto_field()
-    width = ma.auto_field()
-    fps = fields.Float()
-    realfps = fields.Float()
-    filesize = ma.auto_field()
-    hash = ma.auto_field()
-    corrupted = ma.auto_field()
-    trimmed = ma.auto_field()
-    hasframe0 = ma.auto_field()
-    hasframe_1s = ma.auto_field()
-    hasframe_2s = ma.auto_field()
-    hasframe_10s = ma.auto_field()
-    hasframeN_30s = ma.auto_field()
-    hasframeN_2s = ma.auto_field()
-    hasframeN_1s = ma.auto_field()
-    hasframeN = ma.auto_field()
+    frames = fields.Integer(required=True)
+    height = fields.Integer(required=True)
+    width = fields.Integer(required=True)
+    fps = fields.Float(required=True)
+    realfps = fields.Float(required=True)
+    filesize = fields.Integer(required=True)
+    hash = fields.String()
+    corrupted = fields.Boolean()
+    trimmed = fields.Boolean()
+    hasframe0 = fields.Boolean()
+    hasframe_1s = fields.Boolean()
+    hasframe_2s = fields.Boolean()
+    hasframe_10s = fields.Boolean()
+    hasframeN_30s = fields.Boolean()
+    hasframeN_2s = fields.Boolean()
+    hasframeN_1s = fields.Boolean()
+    hasframeN = fields.Boolean()
 
 
 class VideoDataSchema(ma.SQLAlchemySchema):
     class Meta:
         model = VideoData
 
-    id = ma.auto_field()
-    file_name = ma.auto_field()
-    path = ma.auto_field()
-    timestamp = ma.auto_field()
-    data_type = ma.auto_field()
-    video = ma.auto_field()
-    created_by = ma.auto_field()
+    id = fields.Integer(dump_only=True)
+    file_name = FileName(required=True)
+    path = FileName(required=True)
+    timestamp = fields.DateTime(required=True)
+    data_type = fields.String(required=True, validate=validate.OneOf(["tag"]))
+    video = fields.Integer()
+    created_by = fields.Integer()
 
 
 class UserSchema(ma.SQLAlchemySchema):
     class Meta:
         model = User
 
-    id = ma.auto_field()
-    email = ma.auto_field()
-    first_name = ma.auto_field()
-    last_name = ma.auto_field()
-    # studentnum = ma.auto_field()
-    clase = ma.auto_field()
+    id = fields.Integer(dump_only=True)
+    email = fields.Email(required=True)
+    first_name = fields.String(required=True)
+    last_name = fields.String(required=True)
+    studentnum = fields.Integer()
+    clase = fields.String()
 
 
 class DataSetSchema(ma.SQLAlchemySchema):
@@ -204,11 +206,11 @@ class DataSetSchema(ma.SQLAlchemySchema):
         model = DataSet
         # include_fk = True
 
-    id = ma.auto_field()
-    name = ma.auto_field()
-    description = ma.auto_field()
-    creator = ma.auto_field()
-    timestamp = ma.auto_field()
+    id = fields.Integer(dump_only=True)
+    name = fields.String(required=True)
+    description = fields.String()
+    creator = fields.Integer(required=True)
+    timestamp = fields.DateTime(required=True)
 
 
 # Define the User registration form
