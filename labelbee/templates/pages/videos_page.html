@@ -87,7 +87,7 @@
         } );
         var table = $('#videos_table').DataTable({
             // load the data
-            "ajax": "{{ url_for('videolist_get_v2') }}",
+            "ajax": "{{ url_for('videolist_get_v2') + '?dataset=' + dataset.id|string }}",
             // put the data into the table
             "columns": [
                 { "data": "file_name", "name": "file_name",
