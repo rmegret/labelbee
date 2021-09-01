@@ -17,8 +17,8 @@ class Path(fields.Field):
 
         if value.startswith("/"):
             raise ValidationError("Path must not start with /")
-        elif not value.endswith("/"):
-            raise ValidationError("Path must end with /")
+        elif value.endswith("/"):
+            raise ValidationError("Path must not end with /")
         else:
             return value
 
