@@ -926,6 +926,35 @@ def dataset_get_v2():
     return jsonify(datasets_schema.dump(dataset_list()))
 
 
+@app.route("/rest/v2/edit_video/<id>", methods=["PUT"])
+def edit_videos_v2(id):
+    print("Handling edit_videos request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/edit_videos POST: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/edit_videos POST: admin required !")
+
+    video_schema = VideoSchema()
+
+    video = video_schema.dump(get_video_by_id(id))
+    print(type(request.form.get("data")), request.form.get("data"))
+    newdata = video_schema.loads(request.form.get("data"))
+    print(newdata)
+
+    video = video_schema.dump(
+        edit_video(
+            videoid=id,
+            file_name=newdata.setdefault("file_name", None),
+            path=newdata.setdefault("path", None),
+            timestamp=newdata.setdefault("timestamp", None),
+        )
+    )
+
+    return jsonify({"data": video})
+
+
+# 1_01_R_190715123307.mp4
+
 # LIST
 @app.route("/rest/events/", methods=["GET"])
 def events_get_list():

@@ -1,7 +1,6 @@
 # MEMO deployment of labelbee webapp
 
-Overview
-------------
+## Overview
 
 ### Server config
 
@@ -12,7 +11,7 @@ httpd serves at:    https://bigdbee.hpcf.upr.edu:80/webapp/
 gunicorn serves at: http://127.0.0.1:8080/
 ```
 
-Apache `httpd` Web Server serves on `http://labelbee.hpcf.upr.edu:80/webapp/` (the final slash is required). It serves the heavy static files directly, and routes the dynamic content to gunicorn/flask through a reverse proxy. 
+Apache `httpd` Web Server serves on `http://labelbee.hpcf.upr.edu:80/webapp/` (the final slash is required). It serves the heavy static files directly, and routes the dynamic content to gunicorn/flask through a reverse proxy.
 
 `gunicorn` provides the WSGI HTTP server that serves the flask app at `127.0.0.1:8080`. It launches the app through `manage.py`.
 
@@ -41,23 +40,22 @@ sudo -u flaskuser /var/www/flask/gunicorn_start.sh
 sudo -u flaskuser /var/www/flask/gunicorn_stop.sh
 ```
 
-`postfix` mail server installed to let flask send email for user registration and password recovery. 
+`postfix` mail server installed to let flask send email for user registration and password recovery.
 [How To Install Postfix](https://www.digitalocean.com/community/tutorials/how-to-install-postfix-on-centos-6)
 
 ### Dev server
 
 First configure flask, then launch python
+
 ```
 sudo /opt/local/sbin/apachectl start
 flask_activate
 gunicorn -b 127.0.0.1:5000 manage:app
 ```
 
+## WebApp routing
 
-WebApp routing
-----------------
-
-### Note 
+### Note
 
 All routes are relative to the webapp subdomain prefix. For instance, if the app is served in subdomain `/webapp/`, route `/user` actually corresponds to client visible URL `https://labelbee.hpcf.upr.edu:80/webapp/user` proxied to local `http://127.0.0.1:8080/user`.
 
@@ -68,36 +66,38 @@ If we want to serve the flask app on a subdomain, the whole webapp need to rewri
 
 ### Route overview
 
-| Route     | Description    |
-| --------- | --- |
-| **Pages** | **Flask page**
-| /               | Home page |
-| /user           | Page for logged in users |
-| /admin          | Page for administration | |
-| /labelbee/gui   | single page WebApp |
-| |
-| **REST API** | **Flask GET/POST**
-| /rest/*         | REST API for the WebApp |
-| |
-| **Static**   | **Static content**
-| /labelbee/* (js,css,fonts,images)    | Flask: /static/labelbee/* |
-| /* (bootstrap, upload, css, data)    | Flask: /static/*
-| /data     | Apache: external data folder for video and tags |
-| /upload   | Apache: /static/upload  |
+| Route                              | Description                                      |
+| ---------------------------------- | ------------------------------------------------ | --- |
+| **Pages**                          | **Flask page**                                   |
+| /                                  | Home page                                        |
+| /user                              | Page for logged in users                         |
+| /admin                             | Page for administration                          |     |
+| /labelbee/gui                      | single page WebApp                               |
+| /datasets                          | Page to show all datasets                        |
+| /videos                            | Page to show videos from a dataset or all videos |
+|                                    |
+| **REST API**                       | **Flask GET/POST**                               |
+| /rest/\*                           | REST API for the WebApp                          |
+|                                    |
+| **Static**                         | **Static content**                               |
+| /labelbee/\* (js,css,fonts,images) | Flask: /static/labelbee/\*                       |
+| /\* (bootstrap, upload, css, data) | Flask: /static/\*                                |
+| /data                              | Apache: external data folder for video and tags  |
+| /upload                            | Apache: /static/upload                           |
 
 ### REST API
 
-| Method    | URL    | Arguments | Description |
-| --------- | --- | ------ | ----- |
-| GET   | `/rest/auth/whoami` | | Information about current flask user |
-| GET   | `/rest/events/`     | `video`, `format` | LIST event files for `video` |
-| POST   | `/rest/events/`     | `video` | CREATE new event file for `video`, return URI to retrieve event file |
-| GET   | `/rest/events/<user>/<trackfile>`     | | RETRIEVE event file |
-| GET   | `/rest/events/self/<trackfile>`     | | RETRIEVE event file for current flask user |
+| Method | URL                               | Arguments           | Description                                                          |
+| ------ | --------------------------------- | ------------------- | -------------------------------------------------------------------- |
+| GET    | `/rest/auth/whoami`               |                     | Information about current flask user                                 |
+| GET    | `/rest/auth/login`                | `email`, `password` | Login the current user and return CSRF token                         |
+| GET    | `/rest/auth/logout`               |                     | Logout the current user                                              |
+| GET    | `/rest/events/`                   | `video`, `format`   | LIST event files for `video`                                         |
+| POST   | `/rest/events/`                   | `video`             | CREATE new event file for `video`, return URI to retrieve event file |
+| GET    | `/rest/events/<user>/<trackfile>` |                     | RETRIEVE event file                                                  |
+| GET    | `/rest/events/self/<trackfile>`   |                     | RETRIEVE event file for current flask user                           |
 
-
-Apache Config
--------------
+## Apache Config
 
 Main config `httpd.conf`
 
@@ -141,7 +141,7 @@ Listen 8000
 
 Alias /data /var/www/html/demo/data
 
-<Directory "/var/www/html/demo/data"> 
+<Directory "/var/www/html/demo/data">
 
 Options +Indexes +FollowSymLinks
 AllowOverride None
@@ -153,3 +153,4 @@ Require all granted
 
     SetEnv proxy-initial-not-pooled 1
 </VirtualHost>
+```
