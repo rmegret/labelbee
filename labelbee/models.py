@@ -185,8 +185,16 @@ class VideoDataSchema(ma.SQLAlchemySchema):
     path = Path(required=True)
     timestamp = fields.DateTime(required=True)
     data_type = fields.String(required=True, validate=validate.OneOf(["tag"]))
-    video = fields.Integer()
-    created_by = fields.Integer()
+    video_id = fields.Integer()
+    created_by_id = fields.Integer()
+
+    # id = fields.Integer(dump_only=True)
+    # file_name = FileName(required=True)
+    # path = Path(required=True)
+    # timestamp = fields.DateTime(required=True)
+    # data_type = fields.String(required=True, validate=validate.OneOf(["tag"]))
+    # video = fields.Integer()
+    # created_by_id = fields.Integer()
 
 
 class UserSchema(ma.SQLAlchemySchema):
@@ -197,8 +205,15 @@ class UserSchema(ma.SQLAlchemySchema):
     email = fields.Email(required=True)
     first_name = fields.String(required=True)
     last_name = fields.String(required=True)
-    studentnum = fields.Integer()
+    studentnum = fields.String()
     clase = fields.String()
+
+    # id = fields.Integer(dump_only=True)
+    # email = fields.Email(required=True)
+    # first_name = fields.String(required=True)
+    # last_name = fields.String(required=True)
+    # studentnum = fields.Integer()
+    # clase = fields.String()
 
 
 class DataSetSchema(ma.SQLAlchemySchema):

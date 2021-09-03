@@ -15,7 +15,7 @@ import pandas as pd
 def init_db():
     """Initialize the database."""
     # Create all tables
-    db.create_all()
+    # db.create_all()
     # Add all Users
     add_users()
     add_students()
@@ -36,7 +36,7 @@ def add_students():
                 password=app.user_manager.hash_password(str(xlsx["password"][i])),
                 active=True,
                 email_confirmed_at=datetime.utcnow(),
-                studentnum=xlsx["studentnum"][i],
+                studentnum=int(xlsx["studentnum"][i]),
                 clase=xlsx["clase"][i],
             )
             student.roles.append(student_role)

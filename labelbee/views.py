@@ -906,12 +906,13 @@ def videodata_get_v2():
     print("Handling videodata request")
     if not current_user.is_authenticated:
         raise Forbidden("/rest/v2/videodata GET: login required !")
-    video_id = request.args.get("video_id")
+    video_id = int(request.args.get("video_id"))
     if video_id is None:
         raise BadRequest("/rest/v2/videodata GET: video_id required !")
 
     videodatas = VideoDataSchema(many=True)
-
+    print(type(video_id), video_id)
+    print(videodatas.dumps(video_data_list(video_id)))
     return jsonify({"data": videodatas.dump(video_data_list(video_id))})
 
 
