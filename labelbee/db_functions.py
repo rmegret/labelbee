@@ -346,12 +346,12 @@ def get_video_data_by_id(video_dataid: int) -> VideoData:
 
 def edit_video_data(
     video_dataid: int,
-    file_name: str,
-    path: str,
-    timestamp: datetime,
-    data_type: str,
-    video: int,
-) -> None:
+    file_name: str = None,
+    path: str = None,
+    timestamp: datetime = None,
+    data_type: str = None,
+    video_id: int = None,
+) -> VideoData:
     """Edit a video data.
 
     :param video_dataid: The id of the video data to edit.
@@ -369,12 +369,13 @@ def edit_video_data(
     """
 
     video_data = get_video_data_by_id(video_dataid)
-    video_data.file_name = file_name
-    video_data.path = path
-    video_data.timestamp = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-    video_data.data_type = data_type
-    video_data.video = video
+    video_data.file_name = file_name if file_name else video_data.file_name
+    video_data.path = path if path else video_data.path
+    video_data.timestamp = timestamp if timestamp else video_data.timestamp
+    video_data.data_type = data_type if data_type else video_data.data_type
+    video_data.video_id = video_id if video_id else video_data.video_id
     db.session.commit()
+    return video_data
 
 
 def add_video_data(

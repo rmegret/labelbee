@@ -181,10 +181,10 @@ class VideoDataSchema(ma.SQLAlchemySchema):
         model = VideoData
 
     id = fields.Integer(dump_only=True)
-    file_name = FileName(required=True)
-    path = Path(required=True)
-    timestamp = fields.DateTime(required=True)
-    data_type = fields.String(required=True, validate=validate.OneOf(["tag"]))
+    file_name = FileName()
+    path = Path()
+    timestamp = fields.DateTime()
+    data_type = fields.String(validate=validate.OneOf(["tag"]))
     video_id = fields.Integer()
     created_by_id = fields.Integer()
 

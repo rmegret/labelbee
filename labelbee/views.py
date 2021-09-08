@@ -937,10 +937,9 @@ def edit_videos_v2(id):
 
     video_schema = VideoSchema()
 
-    video = video_schema.dump(get_video_by_id(id))
-    print(type(request.form.get("data")), request.form.get("data"))
+    # video = video_schema.dump(get_video_by_id(id))
+
     newdata = video_schema.loads(request.form.get("data"))
-    print(newdata)
 
     video = video_schema.dump(
         edit_video(
@@ -954,7 +953,44 @@ def edit_videos_v2(id):
     return jsonify({"data": video})
 
 
-# 1_01_R_190715123307.mp4
+# 26_01_R_190824070000.mp4
+
+
+@app.route("/rest/v2/get_video_data/<id>", methods=["GET"])
+def get_video_data_v2(id):
+    print("Handling get_video_data request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/get_video_data GET: login required !")
+
+    video_data_schema = VideoDataSchema()
+
+    return jsonify({"data": video_data_schema.dump(get_video_data_by_id(id))})
+
+
+@app.route("/rest/v2/edit_video_data/<id>", methods=["PUT"])
+def edit_video_data_v2(id):
+    print("Handling edit_video_data request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/edit_video_data POST: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/edit_video_data POST: admin required !")
+
+    video_data_schema = VideoDataSchema()
+
+    newdata = video_data_schema.loads(request.form.get("data"))
+
+    video_data = video_data_schema.dump(
+        edit_video_data(
+            video_dataid=id,
+            path=newdata.setdefault("path", None),
+            timestamp=newdata.setdefault("timestamp", None),
+            data_type=newdata.setdefault("data_type", None),
+            video_id=newdata.setdefault("video_id", None),
+        )
+    )
+
+    return jsonify({"data": video_data})
+
 
 # LIST
 @app.route("/rest/events/", methods=["GET"])
