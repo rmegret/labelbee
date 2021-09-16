@@ -928,7 +928,7 @@ def dataset_get_v2():
 
 
 @app.route("/rest/v2/edit_video/<id>", methods=["PUT"])
-def edit_videos_v2(id):
+def edit_video_v2(id):
     print("Handling edit_videos request")
     if not current_user.is_authenticated:
         raise Forbidden("/rest/v2/edit_videos POST: login required !")
@@ -990,6 +990,11 @@ def edit_video_data_v2(id):
     )
 
     return jsonify({"data": video_data})
+
+
+@app.route("/rest/v2/add_video_data", methods=["POST"])
+def add_video_data_v2():
+
 
 
 # LIST

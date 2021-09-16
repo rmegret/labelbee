@@ -38,7 +38,7 @@ def injest_videos(filename: str) -> None:
 
                 video = Video(
                     file_name=file_name,
-                    path=path,
+                    path=f"gurabo10avi/mp4/{path}",
                     timestamp=timestamp,
                     location=row["cam"],
                     colony=int(float(row["newcol"])),
@@ -99,7 +99,7 @@ def injest_tags(filename: str) -> None:
 
                 video_data = VideoData(
                     file_name=file_name,
-                    path=path,
+                    path=f"gurabo10avi/tags/{path}",
                     timestamp=timestamp,
                     data_type="tag",
                     video=video,
