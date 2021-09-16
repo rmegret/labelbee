@@ -994,7 +994,7 @@ def edit_video_data_v2(id):
 
 @app.route("/rest/v2/add_video_data", methods=["POST"])
 def add_video_data_v2():
-
+    pass
 
 
 # LIST
