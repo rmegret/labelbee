@@ -108,6 +108,7 @@ def injest_tags(filename: str) -> None:
                 )
                 db.session.add(video_data)
             db.session.commit()
+            print("added all video_data")
 
 
 def video_data_list(videoid: int) -> List[VideoData]:
