@@ -78,7 +78,7 @@ def injest_tags(filename: str) -> None:
             reader = DictReader(tagfile)
             for row in reader:
                 file_name = row["tagsfile"].split("/")[-1]
-                path = "/".join(row["tagsfile"].split("/")[:-1])
+                path = "gurabo10avi/tags/".join(row["tagsfile"].split("/")[:-1])
 
                 timestamp = datetime(
                     year=int("20" + row["YY"]),
@@ -90,7 +90,8 @@ def injest_tags(filename: str) -> None:
                 )
                 video = Video.query.filter(
                     Video.file_name == row["mp4file"].split("/")[-1],
-                    Video.path == "/".join(row["mp4file"].split("/")[:-1]),
+                    Video.path
+                    == "gurabo10avi/tags/".join(row["mp4file"].split("/")[:-1]),
                 ).first()
                 if not video:
                     raise Exception(
@@ -99,7 +100,7 @@ def injest_tags(filename: str) -> None:
 
                 video_data = VideoData(
                     file_name=file_name,
-                    path=f"gurabo10avi/tags/{path}",
+                    path=path,
                     timestamp=timestamp,
                     data_type="tag",
                     video=video,
