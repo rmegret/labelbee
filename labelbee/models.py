@@ -162,7 +162,7 @@ class VideoSchema(ma.SQLAlchemySchema):
     width = fields.Integer()
     fps = fields.Float()
     realfps = fields.Float()
-    filesize = fields.Integer()
+    filesize = fields.String()
     hash = fields.String()
     corrupted = fields.Boolean()
     trimmed = fields.Boolean()
