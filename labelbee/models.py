@@ -82,7 +82,7 @@ class Video(db.Model):
     width = db.Column(db.Integer(), nullable=False)
     fps = db.Column(db.Numeric(), nullable=False)
     realfps = db.Column(db.Numeric(), nullable=False)
-    filesize = db.Column(db.Integer(), nullable=False)
+    filesize = db.Column(db.String(), nullable=False)
     hash = db.Column(db.String(70))
     corrupted = db.Column(db.Boolean())
     trimmed = db.Column(db.Boolean())
