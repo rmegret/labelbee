@@ -134,15 +134,15 @@ def init_app(app, extra_config_settings={}):
 
     from labelbee.db_functions import injest_tags, injest_videos
 
-    # try:
-    #     injest_videos("data/tags.csv")
-    # except Exception as e:
-    #     print(e)
+    try:
+        injest_videos("data/tags.csv")
+    except Exception as e:
+        print(e)
 
-    # try:
-    #     injest_tags("data/tags.csv")
-    # except Exception as e:
-    #     print(e)
+    try:
+        injest_tags("data/tags.csv")
+    except Exception as e:
+        print(e)
 
     # print(app.logger)
 

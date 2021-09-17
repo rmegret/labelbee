@@ -15,7 +15,7 @@ import pandas as pd
 def init_db():
     """Initialize the database."""
     # Create all tables
-    # db.create_all()
+    db.create_all()
     # Add all Users
     add_users()
     add_students()
