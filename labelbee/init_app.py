@@ -139,10 +139,10 @@ def init_app(app, extra_config_settings={}):
     # except Exception as e:
     #     print(e)
 
-    try:
-        injest_tags("data/tags.csv")
-    except Exception as e:
-        print(e)
+    # try:
+    #     injest_tags("data/tags.csv")
+    # except Exception as e:
+    #     print(e)
 
     # print(app.logger)
 

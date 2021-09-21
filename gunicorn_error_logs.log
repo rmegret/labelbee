@@ -31,3 +31,10 @@ ModuleNotFoundError: No module named 'manage'
 [2021-09-17 00:26:33 -0400] [9141] [INFO] Listening at: http://127.0.0.1:8090 (9141)
 [2021-09-17 00:26:33 -0400] [9141] [INFO] Using worker: gthread
 [2021-09-17 00:26:33 -0400] [9144] [INFO] Booting worker with pid: 9144
+[2021-09-17 00:27:44 -0400] [9141] [INFO] Handling signal: term
+[2021-09-17 00:27:44 -0400] [9144] [INFO] Worker exiting (pid: 9144)
+[2021-09-17 00:27:45 -0400] [9141] [INFO] Shutting down: Master
+[2021-09-17 00:28:26 -0400] [9251] [INFO] Starting gunicorn 20.1.0
+[2021-09-17 00:28:26 -0400] [9251] [INFO] Listening at: http://127.0.0.1:8090 (9251)
+[2021-09-17 00:28:26 -0400] [9251] [INFO] Using worker: gthread
+[2021-09-17 00:28:26 -0400] [9254] [INFO] Booting worker with pid: 9254
