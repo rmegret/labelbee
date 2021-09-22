@@ -256,6 +256,8 @@ def video_data_page():
 
     video_url = request.args.get("video_file")
 
+    datasetid = request.args.get("dataset")
+
     # Process valid POST
     if request.method == "POST" and form.validate():
         # Copy form fields to user_profile fields
@@ -273,6 +275,7 @@ def video_data_page():
         video_url=video_url,
         video=video_info(videoid),
         form=form,
+        datasetid=datasetid,
     )
 
 
@@ -342,8 +345,8 @@ def video_data_details_page():
     video_dataid = request.args.get("video_data")
     video_data = get_video_data_by_id(video_dataid=video_dataid)
 
-    video_url = request.args.get("video_url")
-    tag_file = request.args.get("tag_file")
+    video_id = request.args.get("video")
+    datasetid = request.args.get("dataset")
 
     # Process valid POST
     if request.method == "POST" and form.validate():
@@ -361,8 +364,8 @@ def video_data_details_page():
         "pages/video_data_details_page.html",
         form=form,
         video_data=video_data,
-        video_url=video_url,
-        tag_file=tag_file,
+        datasetid=datasetid,
+        video_id=video_id,
     )
 
 
