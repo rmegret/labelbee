@@ -1020,10 +1020,17 @@ function EventsFromServerDialog() {
 
   //Extracting GET parameters from URL
   var getParams = new URLSearchParams(window.location.search);
+  if (!getParams){
+    console.log("Error obtaining any parameters from URL");
+  }
   videoID = getParams.get('video')
   if (!videoID){
     console.log("Error obtaining GET parameter \"video\"");
   }
+  else{
+    console.log("Video ID:", videoID);
+  }
+
   // Loading video event data 
   // GET request that sends a video ID and data_type to receive a json
   // json includes information about all event files related to the current video 
