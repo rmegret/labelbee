@@ -82,7 +82,7 @@
             { "data": "file_name", "name": "file_name" ,
                 // convert file_name to link
                 fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
-                    $(nTd).html("<a href='{{ url_for('video_data_details_page') }}" + "?video_url={{video.path + '/' + video.file_name}}" + "&tag_file=" + rowData.path + "/" + rowData.file_name + "&video_data=" + rowData.id + "'>" + rowData.file_name+"</a>");
+                    $(nTd).html("<a href='{{ url_for('video_data_details_page') }}" + "?dataset={{ datasetid }}" + "&video={{video.id}}" + "&video_data=" + rowData.id + "'>" + rowData.file_name+"</a>");
                 }
             },
             { "data": "data_type", "name": "data_type" },

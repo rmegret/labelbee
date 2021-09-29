@@ -38,7 +38,7 @@ def injest_videos(filename: str) -> None:
 
                 video = Video(
                     file_name=file_name,
-                    path=path,
+                    path=f"gurabo10avi/mp4/{path}",
                     timestamp=timestamp,
                     location=row["cam"],
                     colony=int(float(row["newcol"])),
@@ -78,7 +78,7 @@ def injest_tags(filename: str) -> None:
             reader = DictReader(tagfile)
             for row in reader:
                 file_name = row["tagsfile"].split("/")[-1]
-                path = "/".join(row["tagsfile"].split("/")[:-1])
+                path = "gurabo10avi/tags/" + "".join(row["tagsfile"].split("/")[:-1])
 
                 timestamp = datetime(
                     year=int("20" + row["YY"]),
@@ -90,11 +90,12 @@ def injest_tags(filename: str) -> None:
                 )
                 video = Video.query.filter(
                     Video.file_name == row["mp4file"].split("/")[-1],
-                    Video.path == "/".join(row["mp4file"].split("/")[:-1]),
+                    Video.path
+                    == "gurabo10avi/mp4/" + "".join(row["mp4file"].split("/")[:-1]),
                 ).first()
                 if not video:
                     raise Exception(
-                        f"""No video found with name {row["mp4file"].split("/")[-1]} and path {"/".join(row["mp4file"].split("/")[:-1])}"""
+                        f"""No video found with name {row["mp4file"].split("/")[-1]} and path {"gurabo10avi/mp4/" + "".join(row["mp4file"].split("/")[:-1])}"""
                     )
 
                 video_data = VideoData(
@@ -107,9 +108,10 @@ def injest_tags(filename: str) -> None:
                 )
                 db.session.add(video_data)
             db.session.commit()
+            print("added all video_data")
 
 
-def video_data_list(videoid: int) -> List[VideoData]:
+def video_data_list(videoid: int, datatype: str = "") -> List[VideoData]:
     """Get a list of all video data for a video.
 
     :param videoid: The id of the video to get data for
@@ -117,8 +119,12 @@ def video_data_list(videoid: int) -> List[VideoData]:
     :return: A list of all video data.
     :rtype: List[VideoData]
     """
-
-    return VideoData.query.filter(VideoData.video_id == videoid).all()
+    if datatype == "":
+        return VideoData.query.filter(VideoData.video_id == videoid).all()
+    else:
+        return VideoData.query.filter(
+            VideoData.video_id == videoid, VideoData.data_type == datatype
+        ).all()
 
 
 def video_list(dataset: int = None) -> List[Video]:
@@ -381,10 +387,11 @@ def edit_video_data(
 def add_video_data(
     file_name: str,
     path: str,
-    timestamp: datetime,
     data_type: str,
     video: int,
-) -> None:
+    created_by: User,
+    timestamp: str = None,
+) -> VideoData:
     """Add a video data.
 
     :param file_name: The name of the video data.
@@ -398,15 +405,19 @@ def add_video_data(
     :type video: int
     """
 
+    timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S") if not timestamp else timestamp
+
     video_data = VideoData(
         file_name=file_name,
         path=path,
-        timestamp=datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S"),
+        timestamp=datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S"),
         data_type=data_type,
         video=video,
+        created_by=created_by,
     )
     db.session.add(video_data)
     db.session.commit()
+    return video_data
 
 
 def user_list() -> List[User]:

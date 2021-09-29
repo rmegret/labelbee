@@ -82,7 +82,7 @@ class Video(db.Model):
     width = db.Column(db.Integer(), nullable=False)
     fps = db.Column(db.Numeric(), nullable=False)
     realfps = db.Column(db.Numeric(), nullable=False)
-    filesize = db.Column(db.Integer(), nullable=False)
+    filesize = db.Column(db.BigInteger(), nullable=False)
     hash = db.Column(db.String(70))
     corrupted = db.Column(db.Boolean())
     trimmed = db.Column(db.Boolean())
@@ -184,7 +184,7 @@ class VideoDataSchema(ma.SQLAlchemySchema):
     file_name = FileName()
     path = Path()
     timestamp = fields.DateTime()
-    data_type = fields.String(validate=validate.OneOf(["tag"]))
+    data_type = fields.String(validate=validate.OneOf(["tag", "annotation", "event"]))
     video_id = fields.Integer()
     created_by_id = fields.Integer()
 

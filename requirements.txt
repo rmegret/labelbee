@@ -48,16 +48,12 @@ Mako==1.1.4
 MarkupSafe==2.0.1
 marshmallow==3.13.0
 marshmallow-sqlalchemy==0.26.1
-mkl-fft==1.3.0
-mkl-random==1.2.2
-mkl-service==2.4.0
 msgpack==0.6.2
 mypy-extensions==0.4.3
-networkx==2.6.2
-numpy==1.20.3
+numpy
 openpyxl==3.0.7
 packaging==20.3
-pandas==1.2.4
+pandas
 passlib==1.7.4
 pathspec==0.8.1
 pep517==0.8.2
@@ -85,7 +81,6 @@ ruamel.yaml==0.17.10
 ruamel.yaml.clib==0.2.6
 setuptools==52.0.0.post20210125
 six==1.14.0
-snooty-lextudio==1.11.0.dev0
 snowballstemmer==2.1.0
 Sphinx==4.1.2
 sphinx-rtd-theme==0.5.2
