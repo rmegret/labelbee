@@ -15,8 +15,8 @@ SECRET_KEY = "This is an UNSECURE Secret. CHANGE THIS for production environment
 WTF_CSRF_TIME_LIMIT = None
 
 # SQLAlchemy settings
-SQLALCHEMY_DATABASE_URI = "sqlite:///private/app.sqlite"
-# SQLALCHEMY_DATABASE_URI = "mysql+pymysql://dsuazo:S/<R&WZp1rRu5if@136.145.54.43/videos"
+# SQLALCHEMY_DATABASE_URI = "sqlite:///private/app.sqlite"
+SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{os.environ['DB_USER']}:{os.environ['DB_PASSWORD']}@{os.environ['DB_URL']}/labelbee"
 
 # Flask-Mail settings (use local server)
 MAIL_SERVER = "localhost"

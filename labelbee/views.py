@@ -457,8 +457,9 @@ def labelbee_user_page():
             "pages/labelbee_page.html",
             userid=str(current_user.id),
             http_script_name=http_script_name,
-            video_url="datasets/gurabo10avi/mp4/" + video_url,
-            tag_file="datasets/gurabo10avi/tags/" + tag_file,
+            video_url="datasets/gurabo10avi/mp4/", # + video_url  
+            tag_file = "datasets/gurabo10avi/tags/"# + tag_file,
+            
         )
     else:
         return render_template(

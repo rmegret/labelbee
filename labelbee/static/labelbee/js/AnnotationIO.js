@@ -1018,6 +1018,31 @@ function EventsFromServerDialog() {
         "'..."
     );
 
+  //Extracting GET parameters from URL
+  var getParams = new URLSearchParams(window.location.search);
+  videoID = getParams.get('video')
+  if (!videoID){
+    console.log("Error obtaining GET parameter \"video\"");
+  }
+  // Loading video event data 
+  // GET request that sends a video ID and data_type to receive a json
+  // json includes information about all event files related to the current video 
+  $.ajax({
+    url: "rest/v2/videodata",
+    method: 'get',
+    data: {video_id : videoID, data_type: "tag"},
+    dataType: 'json',
+    success: function(response){
+    console.log("Load event data from serverJoel: Success");
+      var videoData = response;
+    },
+    error: function(){
+      console.log("Failed to load event ")
+    }
+  });
+
+    // Setting showMetadata and showNotes checkboxes to "checked" 
+    // Part of modal header
     var showMetadata = div.find(".showMetadata").prop("checked");
     var showNotes = div.find(".showNotes").prop("checked");
 
@@ -1493,6 +1518,8 @@ function eventsToServer(format) {
   });
 }
 
+
+// Old version of tag loading, does not send request to database
 function tagsFromServer(path, quiet) {
   //var path = "data/Gurabo/Tags-C02_170624100000.json" ;// Default
 
@@ -1531,6 +1558,13 @@ function tagsFromServer(path, quiet) {
       setTags(data);
     });
 }
+
+// function tagsFromServer(videoID){
+//   tagLoadDialog = new FilePickerFromServerDialog();
+//   tagLoadDialog.openDialog();
+
+// }
+
 
 /* METADATA EDITION */
 

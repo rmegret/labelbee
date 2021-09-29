@@ -51,10 +51,17 @@
 </head>
 
 <script>
-  let video_url = "{{video_url | safe}}";
-  let tag_file = "{{tag_file | safe}}";
+  // let videoID = "{{video | safe}}";
+  // let tagID = "{{video_data | safe}}";
+  var p = window.location.search.substr(1).split("&");
+  var $_GET_PARAMETERS = {};
+  for (var i = 0; i < p.length; i++) {
+    var temp = p[i].split("=");
+    $_GET_PARAMETERS[decodeURIComponent(temp[0])] = decodeURIComponent(temp[1]);
+  }
+
   window.onload = () => {
-    init(video_url, tag_file);
+    init($_GET_PARAMETERS['video'], $_GET_PARAMETERS['video_data']);
   };
 </script>
 
@@ -734,8 +741,36 @@
 
                       <input id="eventsToServer" onclick="eventsToServer('v1')" type="button"
                         value="Save Events (JSON v1)" class="btn btn-green-toggle btn-xs require-server"></button>
+                      
+                        <!-- #### Tags Modal  -->
+                      <div class="modal fade" id="dialog-tag-from-server" role="dialog">
+                        <div class="modal-dialog">
+                          <div class="modal-content" style="overflow:auto;">
+                            <div class="modal-header">
+                              <button type="button" class="close" data-dismiss="modal">&times;</button>
+                              <h4 class="modal-title">Tags Files</h4>
+                              <label><input type="checkbox" checked="true" class="showNotes"
+                                  onclick="eventsFromServerDialog.clickedShowMetadata('notes')">Show notes</label>
+                              <label><input type="checkbox" checked="false" class="showMetadata"
+                                  onclick="eventsFromServerDialog.clickedShowMetadata('metadata')">Show metadata</label>
+                            </div>
+                            <div class="modal-body">
+                              <!-- To be filled up by AJAX request -->
+                            </div>
+                            <div class="modal-message">
+                              <!-- To be filled up by AJAX request -->
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-                      <!-- #### Modal  -->
+                    </div>
+                  </div>
+
+                      <!-- #### Events Modal  -->
                       <div class="modal fade" id="dialog-event-from-server" role="dialog">
                         <div class="modal-dialog">
                           <div class="modal-content" style="overflow:auto;">

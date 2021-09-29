@@ -1561,7 +1561,7 @@ ZoomOverlay.prototype.loadTagCodesFromServer = function () {
   let zoomOverlay = this;
   $.ajax({
     url: url, //server url
-    type: "GET", //passing data as post method
+    type: "GET", //passing data as get method
     contentType: "application/json", // returning data as json
     data: "",
     success: function (obj) {

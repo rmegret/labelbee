@@ -39,7 +39,7 @@ var logging = {
 // INITITALIZATION
 
 /** Global init */
-function init(video_data, tag_file) {
+function init(videoID, tagID) {
   // Parameter passed through HTML Jinja template
   if (http_script_name_0) {
     http_script_name = http_script_name_0;
@@ -147,6 +147,20 @@ function init(video_data, tag_file) {
   defaultSelectedBee = undefined;
 
   //loadEventsFromFile0('data/Tracks-demo.json')
+
+  // // Loading video tag data
+  // $.ajax({
+  //   url: "rest/v2/videodata",
+  //   method: 'get',
+  //   data: {video_id : videoID},
+  //   dataType: 'json',
+  //   success: function(response){
+  //   console.log("Load tag data from server: Success");
+  //     var videoData = response;
+  //   }
+  // });
+
+
 
   /* Set defaults */
 
