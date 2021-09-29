@@ -184,7 +184,7 @@ class VideoDataSchema(ma.SQLAlchemySchema):
     file_name = FileName()
     path = Path()
     timestamp = fields.DateTime()
-    data_type = fields.String(validate=validate.OneOf(["tag", "annotation"]))
+    data_type = fields.String(validate=validate.OneOf(["tag", "annotation", "event"]))
     video_id = fields.Integer()
     created_by_id = fields.Integer()
 

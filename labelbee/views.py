@@ -31,6 +31,7 @@ from labelbee.models import (
     VideoSchema,
 )
 from labelbee.db_functions import (
+    add_video_data,
     add_video_to_dataset,
     delete_dataset_by_id,
     delete_user,
@@ -913,10 +914,16 @@ def videodata_get_v2():
     if video_id is None:
         raise BadRequest("/rest/v2/videodata GET: video_id required !")
 
+    data_type = request.args.get("data_type", "")
     videodatas = VideoDataSchema(many=True)
-    print(type(video_id), video_id)
-    print(videodatas.dumps(video_data_list(video_id)))
-    return jsonify({"data": videodatas.dump(video_data_list(video_id))})
+
+    if data_type == "":
+        videos = video_data_list(video_id)
+    else:
+        videos = video_data_list(video_id, data_type)
+    # print(type(video_id), video_id)
+    # print(videodatas.dumps(video_data_list(video_id)))
+    return jsonify({"data": videodatas.dump(videos)})
 
 
 @app.route("/rest/v2/datasets", methods=["GET"])
@@ -956,14 +963,13 @@ def edit_video_v2(id):
     return jsonify({"data": video})
 
 
-# 26_01_R_190824070000.mp4
-
-
 @app.route("/rest/v2/get_video_data/<id>", methods=["GET"])
 def get_video_data_v2(id):
     print("Handling get_video_data request")
     if not current_user.is_authenticated:
         raise Forbidden("/rest/v2/get_video_data GET: login required !")
+    
+    data_type = request.args.get("data_type", "")
 
     video_data_schema = VideoDataSchema()
 
@@ -997,6 +1003,40 @@ def edit_video_data_v2(id):
 
 @app.route("/rest/v2/add_video_data", methods=["POST"])
 def add_video_data_v2():
+    print("Handling add_video_data request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/add_video_data POST: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/add_video_data POST: admin required !")
+
+    video_data_schema = VideoDataSchema()
+
+    newdata = video_data_schema.loads(request.form.get("data"))
+    if "video_id" not in newdata:
+        raise BadRequest("/rest/v2/add_video_data POST: video_id required !")
+    if "created_by_id" not in newdata:
+        raise BadRequest("/rest/v2/add_video_data POST: created_by_id required !")
+    
+    video = get_video_by_id(newdata["video_id"])
+    created_by = get_user_by_id(newdata["created_by_id"])
+    
+    print(newdata)
+    video_data = video_data_schema.dump(
+        add_video_data(
+            file_name=newdata.setdefault("file_name", None),
+            path=newdata.setdefault("path", None),
+            timestamp=newdata.setdefault("timestamp", None),
+            data_type=newdata.setdefault("data_type", None),
+            video=video,
+            created_by=created_by,
+        )
+    )
+
+    return jsonify({"data": video_data})
+
+
+@app.route("/rest/v2/get_video", methods=["POST"])
+def get_video_v2():
     pass
 
 
