@@ -924,10 +924,10 @@ def videodata_get_v2():
     videos_json = videodatas.dump(videos)
 
     for i in videos_json:
-        pass
-    # print(type(video_id), video_id)
-    # print(videodatas.dumps(video_data_list(video_id)))
-    return jsonify({"data": videodatas.dump(videos)})
+        user = get_user_by_id(i["created_by_id"])
+        i["created_by"] = user.first_name + " " + user.last_name
+
+    return jsonify({"data": videos_json})
 
 
 @app.route("/rest/v2/datasets", methods=["GET"])
