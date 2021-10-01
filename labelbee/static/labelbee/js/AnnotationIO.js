@@ -1002,6 +1002,27 @@ function labelListFromServer(url) {
   });
 }
 
+
+// Timestamp parsing
+function formattimestamp(timestamp) {
+  if (timestamp.length == 12) {
+    return (
+      "20" +
+      timestamp.slice(0, 2) +
+      "-" +
+      timestamp.slice(2, 4) +
+      "-" +
+      timestamp.slice(4, 6) +
+      " " +
+      timestamp.slice(6, 8) +
+      ":" +
+      timestamp.slice(8, 10) +
+      ":" +
+      timestamp.slice(10, 12)
+    );
+  } else return timestamp;
+}
+
 /* REST API Tracks files */
 
 function EventsFromServerDialog() {
@@ -1009,223 +1030,319 @@ function EventsFromServerDialog() {
   this.div = $("#dialog-event-from-server");
   var div = this.div;
 
-  this.updateDialog = function () {
-    var route = "/rest/events/"; // Hardcoded
+  this.updateDialog = function (dataType) {
+    // var route = "/rest/events/"; // Hardcoded
 
-    console.log(
-      "EventsFromServerDialog: importing Tracks List from URL '" +
-        route +
-        "'..."
-    );
+    // console.log(
+    //   "EventsFromServerDialog: importing Tracks List from URL '" +
+    //     route +
+    //     "'..."
+    // );
 
-  //Extracting GET parameters from URL
-  var getParams = new URLSearchParams(window.location.search);
-  if (!getParams){
-    console.log("Error obtaining any parameters from URL");
-  }
-  videoID = getParams.get('video')
-  if (!videoID){
-    console.log("Error obtaining GET parameter \"video\"");
-  }
-  else{
-    console.log("Video ID:", videoID);
-  }
-
-  // Loading video event data 
-  // GET request that sends a video ID and data_type to receive a json
-  // json includes information about all event files related to the current video 
-  $.ajax({
-    url: "rest/v2/videodata",
-    method: 'get',
-    data: {video_id : videoID, data_type: "tag"},
-    dataType: 'json',
-    success: function(response){
-    console.log("Load event data from serverJoel: Success");
-      var videoData = response;
-    },
-    error: function(){
-      console.log("Failed to load event ")
+    //Extracting GET parameters from URL
+    var getParams = new URLSearchParams(window.location.search);
+    if (!getParams){
+      console.log("Error obtaining any parameters from URL");
     }
-  });
+    videoID = getParams.get('video')
+    if (!videoID){
+      console.log("Error obtaining GET parameter \"video\"");
+    }
+    else{
+      console.log("EventsFromServerDialog: Video ID obtained from URL:", videoID);
+    }
 
     // Setting showMetadata and showNotes checkboxes to "checked" 
     // Part of modal header
     var showMetadata = div.find(".showMetadata").prop("checked");
     var showNotes = div.find(".showNotes").prop("checked");
-
     var data = { format: "json", video: videoinfo.videoName };
     if (showNotes || showMetadata) data["metadata"] = "1";
-
+  
+    
+    // Loading video event data 
+    // GET request that sends a video ID and data_type to receive a json
+    // json includes information about all event files related to the current video 
+    // videoID obtained from URL as GET parameter, dataType entered as argument when called in labelbee_page.html
     $.ajax({
-      url: url_for(route),
-      type: "GET",
-      contentType: "application/json",
-      //data:{format:'json'}, // Without 'video', list all videos
-      data: data,
-      success: function (json) {
-        // Get the file list in JSON format
-
-        console.log("EventsFromServerDialog: ajax SUCCESS\ntracksList=", json);
-        theDialog.json = json;
-
-        let html = "";
-        if (false) {
-          for (let item of json) {
-            html +=
-              '<button onclick="eventsFromServer(' +
-              "'" +
-              item["uri"] +
-              "'" +
-              ')">' +
-              item["filename"] +
-              "</button> <br>";
-          }
-        } else {
-          html +=
-            "<table class='eventFiles'><thead>" +
-            "<th></th>" +
-            "<th>Video</th>" +
-            "<th>Created on</th>" +
-            "<th>Owner</th>";
-          if (showNotes) {
-            html += "<th>Notes</th>";
-          }
-          if (showMetadata) {
-            html += "<th>Info</th>";
-            html += "<th>Filename</th>";
-            html += "<th>Based on</th>";
-          }
-          html += "</thead><tbody>";
-          function boldize(text, flag) {
-            if (flag) {
-              return "<b>" + text + "</b>";
-            } else return text;
-          }
-          function formattimestamp(timestamp) {
-            if (timestamp.length == 12) {
-              return (
-                "20" +
-                timestamp.slice(0, 2) +
-                "-" +
-                timestamp.slice(2, 4) +
-                "-" +
-                timestamp.slice(4, 6) +
-                " " +
-                timestamp.slice(6, 8) +
-                ":" +
-                timestamp.slice(8, 10) +
-                ":" +
-                timestamp.slice(10, 12)
-              );
-            } else return timestamp;
-          }
-          for (let k in json) {
-            json[k].k = k;
-          }
-          for (let k in json) {
-            var item = json[k];
-            html +=
-              '<tr data-row="' +
-              k +
-              '">' +
-              '<td id="' +
-              item["filename"] +
-              '"><button onclick="eventsFromServerDialog.loadEvents(' +
-              k +
-              ')">' +
-              k +
-              " Load</button></td>" +
-              "<td>" +
-              boldize(item["video"], item["video"] == videoinfo.videoName) +
-              "</td>" +
-              "<td>" +
-              formattimestamp(item["timestamp"]) +
-              "</td>" +
-              "<td>U" +
-              item["user_id"] +
-              " " +
-              item["user_name"] +
-              " </td>";
-            if (showNotes) {
-              let notes = "";
-              let metadata = item["metadata"];
-              if (metadata && metadata["notes"]) {
-                notes = metadata["notes"];
-              }
-              html += '<td class="metadata-notes">' + notes + "</td>";
-            }
-            if (showMetadata) {
-              let info = "";
-              let basedon = "";
-              let metadata = item["metadata"];
-              if (metadata) {
-                info +=
-                  '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
-                  k +
-                  ')">Show</button>';
-                var history = metadata["history"];
-                if (history) {
-                  for (let h of history) {
-                    if (h["filename"]) {
-                      let kk = json.find(
-                        (el) => el["filename"] == h["filename"]
-                      );
-                      if (kk != null)
-                        basedon +=
-                          '<div class="basedon" data-basedon="' +
-                          kk.k +
-                          '">' +
-                          kk.k +
-                          "</div>";
-                    }
-                  }
-                }
-              }
-              html += "<td>" + info + "</td>";
-              html += "<td>" + item["filename"] + "</td>";
-              html += "<td>" + basedon + "</td>";
-            }
-            html += "</tr>";
-          }
-          html += "</tbody></table>";
-        }
-        div.find(".modal-body").html(html);
-        div.find(".modal-message").html("");
-
-        div
-          .find(".modal-body div.basedon")
-          .mouseover(function () {
-            var k = $(this).attr("data-basedon");
-            div
-              .find('.modal-body tr[data-row="' + k + '"]')
-              .toggleClass("active", true);
-          })
-          .mouseout(function () {
-            div.find(".modal-body tr").toggleClass("active", false);
-          });
-
-        // Nothing else to do here:
-        // The modal #loadTracksFromServerDialog is supposed to be open
-        // and filled with links to each Track file
-        // Clicking on one of the link will trigger eventsFromServer()
-      },
+      url: url_for("rest/v2/videodata"),
+      method: 'get',
+      data: {video_id : videoID, data_type: dataType}, 
+      dataType: 'json',
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
         function (html) {
           div.find(".modal-message").html(html);
         }
       ),
-    });
-  };
-  this.openDialog = function () {
-    console.log("EventsFromServerDialog.openDialog");
+      success: function(eventFilesData){
+      console.log("EventsFromServerDialog: (ajax) Load event files data from server: Success", eventFilesData);
+        // Building table HTML
+        let html = "";
+        html +=
+        "<table class='eventFiles'><thead>" +
+        "<th></th>" +
+        "<th>Video</th>" +
+        "<th>Created on</th>" +
+        "<th>Owner ID</th>" +
+        "<th>Filename</th>";
+        // if (showNotes) {
+          // html += "<th>Notes</th>";
+        // }
+        // if (showMetadata) {
+          // html += "<th>Info</th>";
 
+          // html += "<th>Based on</th>";
+        // }
+        html += "</thead><tbody>";
+        for(let i in eventFilesData["data"]){
+          fileData = eventFilesData["data"][i];
+          // console.log(fileData);
+          html +=
+            '<tr data-row="' +
+            i +
+            '">' +
+            '<td id="' +
+            fileData["file_name"] +
+            '"><button onclick="eventsFromServerDialog.loadEvents(' +
+            i +
+            ')">' +
+            " Load</button></td>" +
+            "<td>" +
+            fileData["file_name"].split("_tags")[0] +
+            "</td>" +
+            "<td>" +
+            fileData["timestamp"].split("T").join(' ') +
+            "</td>" +
+            "<td>" +
+            fileData["created_by_id"] +
+            "</td>" +
+            "<td>" +
+            fileData["file_name"] + 
+            "</td>";
+          // if (showNotes) {
+          //   let notes = "";
+          //   let metadata = item["metadata"];
+          //   if (metadata && metadata["notes"]) {
+          //     notes = metadata["notes"];
+          //   }
+          //   html += '<td class="metadata-notes">' + notes + "</td>";
+          // }
+          // if (showMetadata) {
+          //   let info = "";
+          //   let basedon = "";
+          //   let metadata = item["metadata"];
+          //   if (metadata) {
+          //     info +=
+          //       '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
+          //       k +
+          //       ')">Show</button>';
+          //     var history = metadata["history"];
+          //     if (history) {
+          //       for (let h of history) {
+          //         if (h["filename"]) {
+          //           let kk = json.find(
+          //             (el) => el["filename"] == h["filename"]
+          //           );
+          //           if (kk != null)
+          //             basedon +=
+          //               '<div class="basedon" data-basedon="' +
+          //               kk.k +
+          //               '">' +
+          //               kk.k +
+          //               "</div>";
+          //         }
+          //       }
+          //     }
+          //   }
+          //   html += "<td>" + info + "</td>";
+          //   html += "<td>" + item["filename"] + "</td>";
+          //   html += "<td>" + basedon + "</td>";
+          // }
+          html += "</tr>";
+        }
+        html += "</tbody></table>";
+        // console.log("HTML produced from database response:\n", html);
+        
+        // Filling html with ajax result(line 781)
+        div.find(".modal-body").html(html);
+        div.find(".modal-message").html("");
+      }
+    });
+    
+
+      // $.ajax({
+      //   url: url_for(route),
+      //   type: "GET",
+      //   contentType: "application/json",
+      //   //data:{format:'json'}, // Without 'video', list all videos
+      //   data: data,
+      //   success: function (json) {
+      //     // Get the file list in JSON format
+
+      //     console.log("EventsFromServerDialog: ajax SUCCESS\ntracksList=", json);
+      //     theDialog.json = json;
+
+      //     let html = "";
+      //     if (false) {
+      //       for (let item of json) {
+      //         html +=
+      //           '<button onclick="eventsFromServer(' +
+      //           "'" +
+      //           item["uri"] +
+      //           "'" +
+      //           ')">' +
+      //           item["filename"] +
+      //           "</button> <br>";
+      //       }
+      //     } else {
+      //       html +=
+      //         "<table class='eventFiles'><thead>" +
+      //         "<th></th>" +
+      //         "<th>Video</th>" +
+      //         "<th>Created on</th>" +
+      //         "<th>Owner</th>";
+      //       if (showNotes) {
+      //         html += "<th>Notes</th>";
+      //       }
+      //       if (showMetadata) {
+      //         html += "<th>Info</th>";
+      //         html += "<th>Filename</th>";
+      //         html += "<th>Based on</th>";
+      //       }
+      //       html += "</thead><tbody>";
+      //       function boldize(text, flag) {
+      //         if (flag) {
+      //           return "<b>" + text + "</b>";
+      //         } else return text;
+      //       }
+      //       function formattimestamp(timestamp) {
+      //         if (timestamp.length == 12) {
+      //           return (
+      //             "20" +
+      //             timestamp.slice(0, 2) +
+      //             "-" +
+      //             timestamp.slice(2, 4) +
+      //             "-" +
+      //             timestamp.slice(4, 6) +
+      //             " " +
+      //             timestamp.slice(6, 8) +
+      //             ":" +
+      //             timestamp.slice(8, 10) +
+      //             ":" +
+      //             timestamp.slice(10, 12)
+      //           );
+      //         } else return timestamp;
+      //       }
+      //       for (let k in json) {
+      //         json[k].k = k;
+      //       }
+      //       for (let k in json) {
+      //         var item = json[k];
+      //         html +=
+      //           '<tr data-row="' +
+      //           k +
+      //           '">' +
+      //           '<td id="' +
+      //           item["filename"] +
+      //           '"><button onclick="eventsFromServerDialog.loadEvents(' +
+      //           k +
+      //           ')">' +
+      //           k +
+      //           " Load</button></td>" +
+      //           "<td>" +
+      //           boldize(item["video"], item["video"] == videoinfo.videoName) +
+      //           "</td>" +
+      //           "<td>" +
+      //           formattimestamp(item["timestamp"]) +
+      //           "</td>" +
+      //           "<td>U" +
+      //           item["user_id"] +
+      //           " " +
+      //           item["user_name"] +
+      //           " </td>";
+      //         if (showNotes) {
+      //           let notes = "";
+      //           let metadata = item["metadata"];
+      //           if (metadata && metadata["notes"]) {
+      //             notes = metadata["notes"];
+      //           }
+      //           html += '<td class="metadata-notes">' + notes + "</td>";
+      //         }
+      //         if (showMetadata) {
+      //           let info = "";
+      //           let basedon = "";
+      //           let metadata = item["metadata"];
+      //           if (metadata) {
+      //             info +=
+      //               '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
+      //               k +
+      //               ')">Show</button>';
+      //             var history = metadata["history"];
+      //             if (history) {
+      //               for (let h of history) {
+      //                 if (h["filename"]) {
+      //                   let kk = json.find(
+      //                     (el) => el["filename"] == h["filename"]
+      //                   );
+      //                   if (kk != null)
+      //                     basedon +=
+      //                       '<div class="basedon" data-basedon="' +
+      //                       kk.k +
+      //                       '">' +
+      //                       kk.k +
+      //                       "</div>";
+      //                 }
+      //               }
+      //             }
+      //           }
+      //           html += "<td>" + info + "</td>";
+      //           html += "<td>" + item["filename"] + "</td>";
+      //           html += "<td>" + basedon + "</td>";
+      //         }
+      //         html += "</tr>";
+      //       }
+      //       html += "</tbody></table>";
+      //     }
+      //     div.find(".modal-body").html(html);
+      //     div.find(".modal-message").html("");
+
+      //     div
+      //       .find(".modal-body div.basedon")
+      //       .mouseover(function () {
+      //         var k = $(this).attr("data-basedon");
+      //         div
+      //           .find('.modal-body tr[data-row="' + k + '"]')
+      //           .toggleClass("active", true);
+      //       })
+      //       .mouseout(function () {
+      //         div.find(".modal-body tr").toggleClass("active", false);
+      //       });
+
+          // Nothing else to do here:
+          // The modal #loadTracksFromServerDialog is supposed to be open
+          // and filled with links to each Track file
+          // Clicking on one of the link will trigger eventsFromServer()
+        // },
+      //   error: typesetAjaxError(
+      //     "ERROR in EventsFromServer dialog",
+      //     function (html) {
+      //       div.find(".modal-message").html(html);
+      //     }
+      //   ),
+      // });
+    };
+  this.openDialog = function (dataType) {
+    console.log("EventsFromServerDialog.openDialog('"+dataType+"')");
+    div
+      .find(".modal-title")
+      .html(dataType.charAt(0).toUpperCase() + dataType.slice(1) + " Files");
     div.find(".modal-body").html("[...]");
     div
       .find(".modal-message")
       .html("<div>Loading Tracks file list from server. Please wait...</div>");
 
-    this.updateDialog();
+    this.updateDialog(dataType);
 
     div.modal("show");
   };
@@ -1309,7 +1426,6 @@ function EventsFromServerDialog() {
     html = '<pre class="json">' + html + "</pre>";
     div.find(".modal-message").html(html);
   };
-
   this.initDialog();
 }
 

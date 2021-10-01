@@ -728,12 +728,12 @@
                     <div>
                       <meta name="csrf-token" content="{{ csrf_token() }}">
 
-                      <input id="tagsFromServer" onclick="tagsFromServer()" type="button" value="Load Tags"
+                      <input id="tagsFromServer" onclick="eventsFromServerDialog.openDialog('tag')" type="button" value="Load Tags"
                         class="btn btn-default btn-xs">
 
                       <br>
 
-                      <input type="button" onclick="eventsFromServerDialog.openDialog()" class="btn btn-primary btn-sm"
+                      <input type="button" onclick="eventsFromServerDialog.openDialog('event')" class="btn btn-primary btn-sm"
                         value="Load Events">
 
                       <input id="eventsToServerV2" onclick="eventsToServer('v2')" type="button"
@@ -741,46 +741,18 @@
 
                       <input id="eventsToServer" onclick="eventsToServer('v1')" type="button"
                         value="Save Events (JSON v1)" class="btn btn-green-toggle btn-xs require-server"></button>
-                      
-                        <!-- #### Tags Modal  -->
-                      <div class="modal fade" id="dialog-tag-from-server" role="dialog">
-                        <div class="modal-dialog">
-                          <div class="modal-content" style="overflow:auto;">
-                            <div class="modal-header">
-                              <button type="button" class="close" data-dismiss="modal">&times;</button>
-                              <h4 class="modal-title">Tags Files</h4>
-                              <label><input type="checkbox" checked="true" class="showNotes"
-                                  onclick="eventsFromServerDialog.clickedShowMetadata('notes')">Show notes</label>
-                              <label><input type="checkbox" checked="false" class="showMetadata"
-                                  onclick="eventsFromServerDialog.clickedShowMetadata('metadata')">Show metadata</label>
-                            </div>
-                            <div class="modal-body">
-                              <!-- To be filled up by AJAX request -->
-                            </div>
-                            <div class="modal-message">
-                              <!-- To be filled up by AJAX request -->
-                            </div>
-                            <div class="modal-footer">
-                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-
-                      <!-- #### Events Modal  -->
+                    
+                      <!-- #### Tag/Event Loading Modal  -->
                       <div class="modal fade" id="dialog-event-from-server" role="dialog">
                         <div class="modal-dialog">
                           <div class="modal-content" style="overflow:auto;">
                             <div class="modal-header">
                               <button type="button" class="close" data-dismiss="modal">&times;</button>
-                              <h4 class="modal-title">Events Files</h4>
-                              <label><input type="checkbox" checked="true" class="showNotes"
+                              <h4 class="modal-title"></h4>
+                              <!-- <label><input type="checkbox" checked="true" class="showNotes"
                                   onclick="eventsFromServerDialog.clickedShowMetadata('notes')">Show notes</label>
                               <label><input type="checkbox" checked="false" class="showMetadata"
-                                  onclick="eventsFromServerDialog.clickedShowMetadata('metadata')">Show metadata</label>
+                                  onclick="eventsFromServerDialog.clickedShowMetadata('metadata')">Show metadata</label> -->
                             </div>
                             <div class="modal-body">
                               <!-- To be filled up by AJAX request -->
