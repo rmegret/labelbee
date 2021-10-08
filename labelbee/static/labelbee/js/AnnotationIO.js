@@ -1052,7 +1052,7 @@ function EventsFromServerDialog() {
       console.log("EventsFromServerDialog: Video ID obtained from URL:", videoID);
     }
 
-    // Setting showMetadata and showNotes checkboxes to "checked" 
+    // Setting showMetadata and showNotes checkboxes to "checked"
     // Part of modal header
     var showMetadata = div.find(".showMetadata").prop("checked");
     var showNotes = div.find(".showNotes").prop("checked");
@@ -1060,7 +1060,7 @@ function EventsFromServerDialog() {
     if (showNotes || showMetadata) data["metadata"] = "1";
   
     
-    // Loading video event data 
+    // Loading video event data
     // GET request that sends a video ID and data_type to receive a json
     // json includes information about all event files related to the current video 
     // videoID obtained from URL as GET parameter, dataType entered as argument when called in labelbee_page.html
@@ -1075,8 +1075,10 @@ function EventsFromServerDialog() {
           div.find(".modal-message").html(html);
         }
       ),
-      success: function(eventFilesData){
-      console.log("EventsFromServerDialog: (ajax) Load event files data from server: Success", eventFilesData);
+      success: function(json){
+      console.log("EventsFromServerDialog: (ajax) Load event files data from server: Success", json);
+
+        theDialog.json = json["data"];
         // Building table HTML
         let html = "";
         html +=
@@ -1095,8 +1097,8 @@ function EventsFromServerDialog() {
           // html += "<th>Based on</th>";
         // }
         html += "</thead><tbody>";
-        for(let i in eventFilesData["data"]){
-          fileData = eventFilesData["data"][i];
+        for(let i in json["data"]){
+          fileData = json["data"][i];
           // console.log(fileData);
           html +=
             '<tr data-row="' +
@@ -1164,7 +1166,7 @@ function EventsFromServerDialog() {
         html += "</tbody></table>";
         // console.log("HTML produced from database response:\n", html);
         
-        // Filling html with ajax result(line 781)
+        // Filling html with ajax result
         div.find(".modal-body").html(html);
         div.find(".modal-message").html("");
       }
@@ -1172,7 +1174,7 @@ function EventsFromServerDialog() {
     
 
       // $.ajax({
-      //   url: url_for(route),
+      //   url: url_for("/rest/events/"),
       //   type: "GET",
       //   contentType: "application/json",
       //   //data:{format:'json'}, // Without 'video', list all videos
@@ -1373,15 +1375,15 @@ function EventsFromServerDialog() {
 
   this.loadEvents = function (k) {
     var info = theDialog.json[k];
-    var url = info["uri"];
+    var url = info["path"];
 
     console.log("eventsFromServer: importing Tracks from URL '" + url + "'...");
 
     div.find(".modal-message").html("Loading events from " + url + "...");
 
     $.ajax({
-      url: url, //server url
-      type: "GET", //passing data as post method
+      url: url_for(url), // url to tag/event file
+      type: "GET", //passing data as get method
       contentType: "application/json", // returning data as json
       data: "",
       success: function (json) {
@@ -1392,18 +1394,19 @@ function EventsFromServerDialog() {
 
         setTracks(obj);
 
-        {
-          var basedon = {};
-          var fields = [
-            "video",
-            "filename",
-            "timestamp",
-            "user_name",
-            "user_id",
-          ];
-          for (var f of fields) basedon[f] = info[f];
-          setEventsProp("basedon", basedon);
-        }
+        // This code seems unnecessary, no longer printing "basedon" column when showing tag/event list
+        // {
+        //   var basedon = {};
+        //   var fields = [
+        //     "video",
+        //     "filename",
+        //     "timestamp",
+        //     "user_name",
+        //     "user_id",
+        //   ];
+        //   for (var f of fields) basedon[f] = info[f];
+        //   setEventsProp("basedon", basedon);
+        // }
 
         videoControl.onFrameChanged();
 
