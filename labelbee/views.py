@@ -386,14 +386,14 @@ def edit_video_data_page():
 
         # Save user_profile
         db.session.commit()
-
+        video = get_video_by_id(videoid=request.form.get("video"))
         edit_video_data(
             video_dataid=request.form.get("video_data"),
             file_name=request.form.get("file_name"),
             path=request.form.get("path"),
             timestamp=request.form.get("timestamp"),
             data_type=request.form.get("data_type"),
-            video=request.form.get("video"),
+            video=video,
         )
 
         video = get_video_by_id(request.form.get("video"))

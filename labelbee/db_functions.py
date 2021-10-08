@@ -129,6 +129,7 @@ def video_data_list(videoid: int, datatype: str = "") -> List[VideoData]:
                 VideoData.data_type,
                 VideoData.video_id,
                 VideoData.created_by_id,
+                VideoData.created_from_id,
             )
             .filter(VideoData.video_id == videoid)
             .all()
@@ -143,6 +144,7 @@ def video_data_list(videoid: int, datatype: str = "") -> List[VideoData]:
                 VideoData.data_type,
                 VideoData.video_id,
                 VideoData.created_by_id,
+                VideoData.created_from_id,
             )
             .filter(VideoData.video_id == videoid, VideoData.data_type == datatype)
             .all()
@@ -379,6 +381,7 @@ def edit_video_data(
     timestamp: datetime = None,
     data_type: str = None,
     video_id: int = None,
+    parent_id: int = None,
 ) -> VideoData:
     """Edit a video data.
 
@@ -402,6 +405,7 @@ def edit_video_data(
     video_data.timestamp = timestamp if timestamp else video_data.timestamp
     video_data.data_type = data_type if data_type else video_data.data_type
     video_data.video_id = video_id if video_id else video_data.video_id
+    video_data.created_from_id = parent_id if parent_id else video_data.created_from_id
     db.session.commit()
     return video_data
 
@@ -413,6 +417,7 @@ def add_video_data(
     video: int,
     created_by: User,
     timestamp: str = None,
+    parent_id: int = None,
 ) -> VideoData:
     """Add a video data.
 
@@ -438,6 +443,7 @@ def add_video_data(
         data_type=data_type,
         video=video,
         created_by=created_by,
+        created_from_id=parent_id,
     )
     db.session.add(video_data)
     db.session.commit()
