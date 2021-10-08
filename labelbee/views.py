@@ -922,9 +922,13 @@ def videodata_get_v2():
         videos = video_data_list(video_id)
     else:
         videos = video_data_list(video_id, data_type)
-    # print(type(video_id), video_id)
-    # print(videodatas.dumps(video_data_list(video_id)))
-    return jsonify({"data": videodatas.dump(videos)})
+    videos_json = videodatas.dump(videos)
+
+    for i in videos_json:
+        user = get_user_by_id(i["created_by_id"])
+        i["created_by"] = user.first_name + " " + user.last_name
+
+    return jsonify({"data": videos_json})
 
 
 @app.route("/rest/v2/datasets", methods=["GET"])
@@ -969,7 +973,7 @@ def get_video_data_v2(id):
     print("Handling get_video_data request")
     if not current_user.is_authenticated:
         raise Forbidden("/rest/v2/get_video_data GET: login required !")
-    
+
     data_type = request.args.get("data_type", "")
 
     video_data_schema = VideoDataSchema()
@@ -1017,10 +1021,10 @@ def add_video_data_v2():
         raise BadRequest("/rest/v2/add_video_data POST: video_id required !")
     if "created_by_id" not in newdata:
         raise BadRequest("/rest/v2/add_video_data POST: created_by_id required !")
-    
+
     video = get_video_by_id(newdata["video_id"])
     created_by = get_user_by_id(newdata["created_by_id"])
-    
+
     print(newdata)
     video_data = video_data_schema.dump(
         add_video_data(
@@ -1036,9 +1040,17 @@ def add_video_data_v2():
     return jsonify({"data": video_data})
 
 
-@app.route("/rest/v2/get_video", methods=["POST"])
-def get_video_v2():
-    pass
+@app.route("/rest/v2/get_video/<videoid>", methods=["GET"])
+def get_video_v2(videoid):
+    print("Handling get_video request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/add_video_data POST: login required !")
+
+    video = get_video_by_id(videoid)
+
+    video_schema = VideoSchema()
+
+    return jsonify({"data": video_schema.dump(video)})
 
 
 # LIST

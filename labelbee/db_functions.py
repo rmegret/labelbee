@@ -120,11 +120,33 @@ def video_data_list(videoid: int, datatype: str = "") -> List[VideoData]:
     :rtype: List[VideoData]
     """
     if datatype == "":
-        return VideoData.query.filter(VideoData.video_id == videoid).all()
+        return (
+            VideoData.query.with_entities(
+                VideoData.id,
+                VideoData.file_name,
+                VideoData.path,
+                VideoData.timestamp,
+                VideoData.data_type,
+                VideoData.video_id,
+                VideoData.created_by_id,
+            )
+            .filter(VideoData.video_id == videoid)
+            .all()
+        )
     else:
-        return VideoData.query.filter(
-            VideoData.video_id == videoid, VideoData.data_type == datatype
-        ).all()
+        return (
+            VideoData.query.with_entities(
+                VideoData.id,
+                VideoData.file_name,
+                VideoData.path,
+                VideoData.timestamp,
+                VideoData.data_type,
+                VideoData.video_id,
+                VideoData.created_by_id,
+            )
+            .filter(VideoData.video_id == videoid, VideoData.data_type == datatype)
+            .all()
+        )
 
 
 def video_list(dataset: int = None) -> List[Video]:
@@ -405,7 +427,9 @@ def add_video_data(
     :type video: int
     """
 
-    timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S") if not timestamp else timestamp
+    timestamp = (
+        datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S") if not timestamp else timestamp
+    )
 
     video_data = VideoData(
         file_name=file_name,

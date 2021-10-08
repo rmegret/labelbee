@@ -75,7 +75,7 @@ class Video(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.Integer(), nullable=False)
     colony = db.Column(db.Integer())
-    # notes = db.Column(db.Text())
+    notes = db.Column(db.Text())
 
     frames = db.Column(db.Integer(), nullable=False)
     height = db.Column(db.Integer(), nullable=False)
@@ -111,8 +111,11 @@ class VideoData(db.Model):
     path = db.Column(db.String(100), nullable=False, server_default=u"")
     timestamp = db.Column(db.DateTime, nullable=False)
     data_type = db.Column(db.String(25))
+    data = db.Column(db.Text())
     video_id = db.Column(db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"))
     video = db.relationship("Video", backref="video_data")
+    # created_from = db.relationship("VideoData", backref="created_from")
+    # created_from_id = db.Column(db.Integer(), db.ForeignKey("video_data.id"))
     created_by_id = db.Column(
         db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE")
     )
@@ -156,7 +159,7 @@ class VideoSchema(ma.SQLAlchemySchema):
     timestamp = fields.DateTime()
     location = fields.Integer()
     colony = fields.Integer()
-    # notes = ma.auto_field()
+    notes = fields.String()
     frames = fields.Integer()
     height = fields.Integer()
     width = fields.Integer()
@@ -187,6 +190,8 @@ class VideoDataSchema(ma.SQLAlchemySchema):
     data_type = fields.String(validate=validate.OneOf(["tag", "annotation", "event"]))
     video_id = fields.Integer()
     created_by_id = fields.Integer()
+    data = fields.String()
+    # created_from_id = fields.Integer()
 
     # id = fields.Integer(dump_only=True)
     # file_name = FileName(required=True)
