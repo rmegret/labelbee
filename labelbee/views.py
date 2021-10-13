@@ -915,12 +915,17 @@ def videodata_get_v2():
         raise BadRequest("/rest/v2/videodata GET: video_id required !")
 
     data_type = request.args.get("data_type", "")
+    allusers = request.args.get("allusers", None)
     videodatas = VideoDataSchema(many=True)
 
-    if data_type == "":
+    if data_type == "" and allusers != "True":
+        videos = video_data_list(video_id, current_user.id)
+    elif data_type == "" and allusers == "True":
         videos = video_data_list(video_id)
-    else:
+    elif data_type != "" and allusers == "True":
         videos = video_data_list(video_id, data_type)
+    else:
+        videos = video_data_list(video_id, data_type, current_user.id)
     videos_json = videodatas.dump(videos)
 
     for i in videos_json:
