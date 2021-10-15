@@ -386,14 +386,14 @@ def edit_video_data_page():
 
         # Save user_profile
         db.session.commit()
-
+        video = get_video_by_id(videoid=request.form.get("video"))
         edit_video_data(
             video_dataid=request.form.get("video_data"),
             file_name=request.form.get("file_name"),
             path=request.form.get("path"),
             timestamp=request.form.get("timestamp"),
             data_type=request.form.get("data_type"),
-            video=request.form.get("video"),
+            video=video,
         )
 
         video = get_video_by_id(request.form.get("video"))
@@ -916,12 +916,17 @@ def videodata_get_v2():
         raise BadRequest("/rest/v2/videodata GET: video_id required !")
 
     data_type = request.args.get("data_type", "")
+    allusers = request.args.get("allusers", None)
     videodatas = VideoDataSchema(many=True)
 
-    if data_type == "":
+    if data_type == "" and allusers != "True":
+        videos = video_data_list(video_id, current_user.id)
+    elif data_type == "" and allusers == "True":
         videos = video_data_list(video_id)
-    else:
+    elif data_type != "" and allusers == "True":
         videos = video_data_list(video_id, data_type)
+    else:
+        videos = video_data_list(video_id, data_type, current_user.id)
     videos_json = videodatas.dump(videos)
 
     for i in videos_json:

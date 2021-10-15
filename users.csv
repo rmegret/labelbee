@@ -1,10 +1,3 @@
-id,email,confirmed_at,password,is_active,first_name,last_name,studentnum,clase
-1,admin@example.com,"2018-02-26 02:05:28.675600",$2b$12$DT8ShLU6q8ez/bMX.I79b.Sy4LKkQ8XQHKjFJZIMvozxXHG0S5fiy,1,Admin,Example,"",""
-2,user@example.com,"2018-02-26 02:05:29.108890",$2b$12$X747XvHCf8WlXUWPr7cG/OtxDb2IzVfzXbVBxstRwfDDeVjIKMzcW,1,User,Example,"",""
-3,f@example.com,"2018-02-26 02:08:34.584653",$2b$12$lFwdI7ULYQU/zx.jKRRzlOzd8K3kV2ji6eGTbd7YgVSuqu9iCUmfG,1,f,f,"ð8",biol
-4,g@example.com,"2018-02-26 02:08:35.114108",$2b$12$1vxVteXMpCIJcyaDjyr78.96NeBM7fVSqP9h/x8EMRAsbzXWuoigS,1,g,g,"ñ8",biol
-5,h@example.com,"2018-02-26 02:08:35.547593",$2b$12$dSSgVqLyh1mlpDrFOQ4hlOOeIVEpLOdHGm9P8uYerElGVpd0BpCFe,1,h,h,"K",biol
-6,chris@example.com,"2018-02-26 02:08:35.979468",$2b$12$vcSjd0IGRQxnwNIRp1mUOeqy/iZktcOp3H5IdoVM.r/ptGtL85rsO,1,christ,chris,"L",biol
 7,remi.megret@upr.edu,"2020-02-25 19:33:14.893306",$2b$12$IzSs352FMWMpvh3WVVNZuuaK/aSlUTaO928E9XCcoV2dbzPtqImYa,1,Remi,Megret,"",""
 8,remi.megret@gmail.com,,$2b$12$tghnHhmpZ7zQ7UdEz7SvpunSmxTNjMsU6piAhLjtqhCyqinAgMV0e,1,Remi,Megret,"",""
 9,isada.claudio@upr.edu,"2018-03-28 20:49:36.360316",$2b$12$U8xPbnGGPWqPFsbgXOly0.PEac8TNYNCx3t4hbz5/Mg9nzqQLG1PW,1,Isada,Claudio,"",""

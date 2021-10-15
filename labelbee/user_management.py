@@ -5,19 +5,29 @@ from datetime import datetime
 
 
 def import_users(csv_file: str) -> None:
-    with open(csv_file, "r") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            first_name, last_name, email, password, role_id = line.split(",")
-            create_user(
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                password=password,
-                role_id=role_id,
-            )
+    with app.app_context():
+        with open(csv_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                (
+                    id,
+                    email,
+                    confirmed_at,
+                    password,
+                    is_active,
+                    first_name,
+                    last_name,
+                    studentnum,
+                    clase,
+                ) = line.split(",")
+                create_user(
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    password=password,
+                )
 
 
 def change_user_role(user_id: int, role_id: int) -> None:

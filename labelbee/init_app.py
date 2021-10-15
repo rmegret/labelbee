@@ -6,12 +6,13 @@
 from datetime import datetime
 from flask import Flask
 from flask_mail import Mail
-from flask_migrate import Migrate  # , MigrateCommand
+from flask_migrate import Migrate
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_user import UserManager
 from flask_wtf.csrf import CSRFProtect
+
 
 # Enable running in subdomain
 # http://flask.pocoo.org/snippets/35/
@@ -106,7 +107,6 @@ def init_app(app, extra_config_settings={}):
 
     # Setup Flask-Migrate
     migrate = Migrate(app, db)
-    # manager.add_command('db', MigrateCommand)
 
     # Setup Flask-Mail
     mail = Mail(app)
@@ -145,6 +145,10 @@ def init_app(app, extra_config_settings={}):
     #     print(e)
 
     # print(app.logger)
+
+    from labelbee.user_management import import_users
+
+    # import_users("users.csv")
 
 
 def init_email_error_handler(app):

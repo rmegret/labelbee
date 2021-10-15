@@ -112,10 +112,11 @@ class VideoData(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     data_type = db.Column(db.String(25))
     data = db.Column(db.Text())
+    notes = db.Column(db.Text())
     video_id = db.Column(db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"))
     video = db.relationship("Video", backref="video_data")
     # created_from = db.relationship("VideoData", backref="created_from")
-    # created_from_id = db.Column(db.Integer(), db.ForeignKey("video_data.id"))
+    created_from_id = db.Column(db.Integer(), db.ForeignKey("video_data.id"))
     created_by_id = db.Column(
         db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE")
     )
@@ -191,7 +192,8 @@ class VideoDataSchema(ma.SQLAlchemySchema):
     video_id = fields.Integer()
     created_by_id = fields.Integer()
     data = fields.String()
-    # created_from_id = fields.Integer()
+    notes = fields.String()
+    created_from_id = fields.Integer()
 
     # id = fields.Integer(dump_only=True)
     # file_name = FileName(required=True)
