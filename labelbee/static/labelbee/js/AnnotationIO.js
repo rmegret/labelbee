@@ -2019,6 +2019,7 @@ function recentTagOrEventFromServerDialog() {
     }
 
     // Loading video file name for dialog window title
+    // WILL BE REPLACED ONCE NEW VIDEOLIST IMPLEMENTATION IS WORKING
     $.ajax({
       url: url_for("/rest/v2/get_video/" + this.videoID),
       method: 'get',
