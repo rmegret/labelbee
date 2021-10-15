@@ -15,6 +15,7 @@ function initAnnotationIO() {
 
   eventsFromServerDialog = new EventsFromServerDialog();
   labelListFromServerDialog = new LabelListFromServerDialog();
+  recentTagOrEventFromServerDialog = new RecentTagOrEventFromServerDialog();
 
   $("#events-notes").on("input", onChanged_events_notes);
 }
@@ -1054,7 +1055,7 @@ function EventsFromServerDialog() {
     $.ajax({
       url: url_for("rest/v2/videodata"),
       method: 'get',
-      data: {video_id : this.videoID, data_type: dataType}, 
+      data: {video_id : this.videoID, data_type: dataType, allusers:this.showAll}, 
       dataType: 'json',
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
@@ -1073,7 +1074,7 @@ function EventsFromServerDialog() {
         "<th></th>" +
         "<th>File Name</th>" +
         "<th>Created on</th>" +
-        "<th>Owner ID</th>";
+        "<th>Owner</th>";
         // if (showNotes) {
           // html += "<th>Notes</th>";
         // }
@@ -1318,6 +1319,7 @@ function EventsFromServerDialog() {
       // });
     };
   this.openDialog = function (dataType) {
+    this.showAll = "false";
     console.log("EventsFromServerDialog.openDialog('"+dataType+"')");
     this.dataType = dataType;
     //Extracting GET parameters from URL
@@ -1436,6 +1438,13 @@ function EventsFromServerDialog() {
           },
       });
     }
+  };
+  this.clickedShowAllUsers = function () {
+    this.showAll = "false";
+    if ($("#showAllUsers").prop('checked')){
+      this.showAll = "True";
+    }
+    this.updateDialog(this.dataType);
   };
   this.clickedShowMetadata = function () {
     this.updateDialog();
@@ -1727,9 +1736,9 @@ function updateEventsNotes() {
   }
 }
 
-function recentTagOrEventFromServerDialog() {
+function RecentTagOrEventFromServerDialog() {
   var theDialog = this;
-  this.div = $("#dialog-event-from-server");
+  this.div = $("#dialog-recent-from-server");
   var div = this.div;
 
   this.updateDialog = function (dataType) {
@@ -1757,10 +1766,9 @@ function recentTagOrEventFromServerDialog() {
         let html = "";
         html +=
         "<table class='eventFiles'><thead>" +
-        "<th></th>" +
         "<th>File Name</th>" +
         "<th>Created on</th>" +
-        "<th>Owner ID</th>";
+        "<th>Owner</th>";
         // if (showNotes) {
           // html += "<th>Notes</th>";
         // }
@@ -1776,12 +1784,6 @@ function recentTagOrEventFromServerDialog() {
           '<tr data-row="' +
           0 +
           '">' +
-          '<td id="' +
-          fileData["file_name"] +
-          '"><button onclick="recentTagOrEventFromServerDialog.loadEvents(' +
-          0 +
-          ')">' +
-          " Load</button></td>" +
           "<td>" +
           fileData["file_name"] +
           "</td>" +
@@ -1831,7 +1833,11 @@ function recentTagOrEventFromServerDialog() {
           //   html += "<td>" + item["filename"] + "</td>";
           //   html += "<td>" + basedon + "</td>";
           // }
-        html += "</tbody></table>";
+        html += "</tbody></table><br>";
+        html += "<h4>Do you wish to load this " + dataType + " file?</h4>";
+        html += '<button onclick="recentTagOrEventFromServerDialog.loadEvents(\'0\')" class="btn btn-success btn-lg">Yes</button> '
+        html += '<button type="button" class="btn btn-danger btn-lg" data-dismiss="modal">No</button>';
+        html += "<br><br>WARNING: If another tag file is currently loaded, unsaved changes may be lost.";
         // console.log("HTML produced from database response:\n", html);
         
         // Filling html with ajax result
@@ -2003,7 +2009,7 @@ function recentTagOrEventFromServerDialog() {
       // });
     };
   this.openDialog = function (dataType) {
-    console.log("recentTagOrEventFromServerDialog.openDialog('"+dataType+"')");
+    console.log("RecentTagOrEventFromServerDialog.openDialog('"+dataType+"')");
     this.dataType = dataType;
     //Extracting GET parameters from URL
     var getParams = new URLSearchParams(window.location.search);
@@ -2015,7 +2021,7 @@ function recentTagOrEventFromServerDialog() {
       console.log("Error obtaining GET parameter \"video\"");
     }
     else{
-      console.log("recentTagOrEventFromServerDialog: Video ID obtained from URL:", this.videoID);
+      console.log("RecentTagOrEventFromServerDialog: Video ID obtained from URL:", this.videoID);
     }
 
     // Loading video file name for dialog window title
@@ -2031,7 +2037,7 @@ function recentTagOrEventFromServerDialog() {
       success: function(json){
         div
           .find(".modal-title")
-          .html(dataType.charAt(0).toUpperCase() + dataType.slice(1) + " Files for " + json["data"]["file_name"]);
+          .html("Most Recent " + dataType.charAt(0).toUpperCase() + dataType.slice(1) + " File for " + json["data"]["file_name"]);
       }
     });
     
@@ -2073,7 +2079,7 @@ function recentTagOrEventFromServerDialog() {
     var tag_event_ID = theDialog.json[k]["id"];
 
     //MODIFY CONSOLE MESSAGE DEPENDING ON FILE
-    console.log("eventsFromServerDialog: importing " + this.dataType + "s from database for file ID '" + tag_event_ID + "'...");
+    console.log("RecentTagOrEventFromServerDialog: importing " + this.dataType + "s from database for file ID '" + tag_event_ID + "'...");
 
     div.find(".modal-message").html("Loading " + this.dataType + "s from database for file ID " + tag_event_ID + "...");
     // Load tag or event file
