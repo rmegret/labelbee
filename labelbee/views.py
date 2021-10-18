@@ -1025,6 +1025,8 @@ def add_video_data_v2():
         raise BadRequest("/rest/v2/add_video_data POST: video_id required !")
     if "created_by_id" not in newdata:
         raise BadRequest("/rest/v2/add_video_data POST: created_by_id required !")
+    if "data" not in newdata:
+        raise BadRequest("/rest/v2/add_video_data POST: data required !")
 
     video = get_video_by_id(newdata["video_id"])
     created_by = get_user_by_id(newdata["created_by_id"])
@@ -1038,6 +1040,9 @@ def add_video_data_v2():
             data_type=newdata.setdefault("data_type", None),
             video=video,
             created_by=created_by,
+            data=newdata.setdefault("data", None),
+            notes=newdata.setdefault("notes", None),
+            created_from=newdata.setdefault("created_from", None),
         )
     )
 

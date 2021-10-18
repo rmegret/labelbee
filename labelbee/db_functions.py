@@ -112,7 +112,9 @@ def injest_tags(filename: str) -> None:
             print("added all video_data")
 
 
-def video_data_list(videoid: int, datatype: str = "", userid : int = None) -> List[VideoData]:
+def video_data_list(
+    videoid: int, datatype: str = "", userid: int = None
+) -> List[VideoData]:
     """Get a list of all video data for a video.
 
     :param videoid: The id of the video to get data for
@@ -149,7 +151,9 @@ def video_data_list(videoid: int, datatype: str = "", userid : int = None) -> Li
                     VideoData.created_by_id,
                     VideoData.created_from_id,
                 )
-                .filter(VideoData.video_id == videoid, VideoData.created_by_id == userid)
+                .filter(
+                    VideoData.video_id == videoid, VideoData.created_by_id == userid
+                )
                 .order_by(VideoData.timestamp.desc())
                 .all()
             )
@@ -457,8 +461,10 @@ def add_video_data(
     data_type: str,
     video: int,
     created_by: User,
+    data: str,
     timestamp: str = None,
-    parent_id: int = None,
+    created_from: int = None,
+    notes: str = None,
 ) -> VideoData:
     """Add a video data.
 
@@ -484,7 +490,9 @@ def add_video_data(
         data_type=data_type,
         video=video,
         created_by=created_by,
-        created_from_id=parent_id,
+        data=data,
+        created_from_id=created_from,
+        notes=notes,
     )
     db.session.add(video_data)
     db.session.commit()
