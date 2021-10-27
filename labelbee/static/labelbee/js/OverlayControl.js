@@ -625,10 +625,13 @@ function createRectsFromTracks(F) {
     if (logging.overlay) {
         console.log("createRectsFromTracks: ",{frame:F,ids:ids})
     }
+    overlay.canvas1.renderOnAddRemove=false  # Do not render all for each change
     for (let id of ids) { // For each valid bee ID, create a rect for it
         let obs = getObsHandle(F, id, false)
         addRectFromObs(obs)
     }
+    overlay.canvas1.renderAll(); # Render only once at the end
+    overlay.canvas1.renderOnAddRemove=true
 }
 function addRectFromObs(inputObs, status) {
     if (typeof inputObs === 'undefined') {
