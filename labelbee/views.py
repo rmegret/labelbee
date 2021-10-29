@@ -4,7 +4,6 @@ Views
 All web endpoints are defined here.
 """
 
-from sqlalchemy.orm.query import _MapperEntity
 from labelbee.user_management import create_user, edit_user
 from labelbee.flask_range_requests import send_from_directory_partial, dir_listing
 from flask import current_app
@@ -49,6 +48,7 @@ from labelbee.db_functions import (
     get_user_by_id,
     get_video_data_by_id,
     edit_video_data,
+    import_from_csv,
 )
 
 upload_dir = "labelbee/static/upload/"
@@ -1130,6 +1130,17 @@ def import_from_csv_v2():
 
     import_from_csv(csv_file, dataset)
 
+    return jsonify({"data": "OK"})
+
+
+@app.route("/rest/v2/update_paths", methods=["GET"])
+def update_paths():
+    if not current_user.is_authenticated:
+        raise BadRequest("/rest/v2/update_paths GET: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/update_paths GET: admin required !")
+
+    update_paths()
     return jsonify({"data": "OK"})
 
 

@@ -14,7 +14,7 @@ from labelbee.init_app import db, app
 from typing import List
 
 
-def import_from_csv(csv_file: FileStorage, dataset: str) -> None:
+def import_from_csv(csvfile: FileStorage, dataset: str) -> None:
 
     """Injest videos from a csv file.
 
@@ -24,89 +24,95 @@ def import_from_csv(csv_file: FileStorage, dataset: str) -> None:
     """
 
     with app.app_context():
-        with open(csv_file) as csvfile:
-            reader = DictReader(csvfile)
-            for row in reader:
-                mp4path = (
-                    f"/mnt/storage/Gurabo/datasets/{dataset}/col{row['newcol']}/mp4"
-                    if row["newcol"]
-                    else f"/mnt/storage/Gurabo/datasets/{dataset}/mp4"
-                )
-                file_name = row["mp4file"].split("/")[-1]
+        reader = DictReader(csvfile.read().decode("utf-8").split("\n"))
+        for row in reader:
+            mp4path = (
+                f"/mnt/storage/Gurabo/datasets/{dataset}/col{row['newcol']}/mp4"
+                if row.setdefault("newcol", False)
+                else f"/mnt/storage/Gurabo/datasets/{dataset}/mp4"
+            )
+            file_name = row["mp4file"].split("/")[-1]
 
-                timestamp = datetime(
-                    year=int("20" + row["YY"]),
-                    month=int(row["MM"]),
-                    day=int(row["DD"]),
-                    hour=int(row["hh"]),
-                    minute=int(row["mm"]),
-                    second=int(row["ss"]),
+            timestamp = datetime(
+                year=int("20" + row["YY"]),
+                month=int(row["MM"]),
+                day=int(row["DD"]),
+                hour=int(row["hh"]),
+                minute=int(row["mm"]),
+                second=int(row["ss"]),
+            )
+
+            video = Video(
+                file_name=file_name,
+                path=mp4path,
+                timestamp=timestamp,
+                location=row["cam"],
+                colony=int(float(row.setdefault("newcol", 1)))
+                if dataset != "gurabo1"
+                else "C01",
+                frames=int(float(row["frames"])),
+                width=int(float(row["width"])),
+                height=int(float(row["height"])),
+                fps=float(row["fps"]),
+                realfps=float(row["realfps"]),
+                filesize=int(row["filesize"]),
+                hash=row["hash"],
+                corrupted=bool(row["corrupted"]),
+                trimmed=bool(row["trimmed"]),
+                hasframe0=bool(row["hasframe0"]),
+                hasframe_1s=bool(row["hasframe_1s"]),
+                hasframe_2s=bool(row["hasframe_2s"]),
+                hasframe_10s=bool(row["hasframe_10s"]),
+                hasframeN_30s=bool(row["hasframeN_30s"]),
+                hasframeN_2s=bool(row["hasframeN_2s"]),
+                hasframeN_1s=bool(row["hasframeN_1s"]),
+                hasframeN=bool(row["hasframeN"]),
+            )
+            db.session.add(video)
+        db.session.commit()
+        print("added all videos")
+
+        for row in reader:
+            mp4path = (
+                f"/mnt/storage/Gurabo/datasets/{dataset}/col{row['newcol']}/mp4"
+                if row.setdefault("newcol", False)
+                else f"/mnt/storage/Gurabo/datasets/{dataset}/mp4"
+            )
+            tagspath = (
+                f"/mnt/storage/Gurabo/datasets/{dataset}/col{row['colony']}/tags"
+                if row.setdefault("colony", False)
+                else f"/mnt/storage/Gurabo/datasets/{dataset}/tags"
+            )
+            file_name = row["tagsfile"]
+
+            timestamp = datetime(
+                year=int("20" + row["YY"]),
+                month=int(row["MM"]),
+                day=int(row["DD"]),
+                hour=int(row["hh"]),
+                minute=int(row["mm"]),
+                second=int(row["ss"]),
+            )
+            video = Video.query.filter(
+                Video.file_name == row["mp4file"],
+                Video.path == mp4path,
+            ).first()
+            if not video:
+                raise Exception(
+                    f"""No video found with name {row["mp4file"]} and path {mp4path}"""
                 )
 
-                video = Video(
-                    file_name=file_name,
-                    path=f"gurabo10avi/mp4/{mp4path}",
-                    timestamp=timestamp,
-                    location=row["cam"],
-                    colony=int(float(row.setdefault("newcol", 1))),
-                    frames=int(float(row["frames"])),
-                    width=int(float(row["width"])),
-                    height=int(float(row["height"])),
-                    fps=float(row["fps"]),
-                    realfps=float(row["realfps"]),
-                    filesize=int(row["filesize"]),
-                    hash=row["hash"],
-                    corrupted=bool(row["corrupted"]),
-                    trimmed=bool(row["trimmed"]),
-                    hasframe0=bool(row["hasframe0"]),
-                    hasframe_1s=bool(row["hasframe_1s"]),
-                    hasframe_2s=bool(row["hasframe_2s"]),
-                    hasframe_10s=bool(row["hasframe_10s"]),
-                    hasframeN_30s=bool(row["hasframeN_30s"]),
-                    hasframeN_2s=bool(row["hasframeN_2s"]),
-                    hasframeN_1s=bool(row["hasframeN_1s"]),
-                    hasframeN=bool(row["hasframeN"]),
-                )
-                db.session.add(video)
-            db.session.commit()
-            print("added all videos")
-
-            for row in reader:
-                tagspath = (
-                    f"/mnt/storage/Gurabo/datasets/{dataset}/col{row['colony']}/tags"
-                    if row["colony"]
-                    else f"/mnt/storage/Gurabo/datasets/{dataset}/tags"
-                )
-                file_name = row["tagsfile"]
-
-                timestamp = datetime(
-                    year=int("20" + row["YY"]),
-                    month=int(row["MM"]),
-                    day=int(row["DD"]),
-                    hour=int(row["hh"]),
-                    minute=int(row["mm"]),
-                    second=int(row["ss"]),
-                )
-                video = Video.query.filter(
-                    Video.file_name == row["mp4file"],
-                    Video.path == mp4path,
-                ).first()
-                if not video:
-                    raise Exception(
-                        f"""No video found with name {row["mp4file"]} and path {mp4path}"""
-                    )
-
-                video_data = VideoData(
-                    file_name=file_name,
-                    path=tagspath,
-                    timestamp=timestamp,
-                    data_type="tag",
-                    video=video,
-                    created_by=User.query.filter(User.id == 1).first(),
-                )
-                db.session.add(video_data)
-            db.session.commit()
-            print("added all tags")
+            video_data = VideoData(
+                file_name=file_name,
+                path=tagspath,
+                timestamp=timestamp,
+                data_type="tag",
+                video=video,
+                created_by=User.query.filter(User.id == 1).first(),
+            )
+            db.session.add(video_data)
+        db.session.commit()
+        print("added all tags")
 
 
 def injest_videos(filename: str) -> None:
@@ -135,7 +141,7 @@ def injest_videos(filename: str) -> None:
 
                 video = Video(
                     file_name=file_name,
-                    path=f"gurabo10avi/mp4/{path}",
+                    path=f"/mnt/storage/Gurabo/datasets/gurabo10avi/mp4/{path}",
                     timestamp=timestamp,
                     location=row["cam"],
                     colony=int(float(row["newcol"])),
@@ -175,7 +181,9 @@ def injest_tags(filename: str) -> None:
             reader = DictReader(tagfile)
             for row in reader:
                 file_name = row["tagsfile"].split("/")[-1]
-                path = "gurabo10avi/tags/" + "".join(row["tagsfile"].split("/")[:-1])
+                path = "/mnt/storage/Gurabo/datasets/gurabo10avi/tags/" + "".join(
+                    row["tagsfile"].split("/")[:-1]
+                )
 
                 timestamp = datetime(
                     year=int("20" + row["YY"]),
@@ -188,11 +196,12 @@ def injest_tags(filename: str) -> None:
                 video = Video.query.filter(
                     Video.file_name == row["mp4file"].split("/")[-1],
                     Video.path
-                    == "gurabo10avi/mp4/" + "".join(row["mp4file"].split("/")[:-1]),
+                    == "/mnt/storage/Gurabo/datasets/gurabo10avi/mp4/"
+                    + "".join(row["mp4file"].split("/")[:-1]),
                 ).first()
                 if not video:
                     raise Exception(
-                        f"""No video found with name {row["mp4file"].split("/")[-1]} and path {"gurabo10avi/mp4/" + "".join(row["mp4file"].split("/")[:-1])}"""
+                        f"""No video found with name {row["mp4file"].split("/")[-1]} and path {"/mnt/storage/Gurabo/datasets/gurabo10avi/mp4/" + "".join(row["mp4file"].split("/")[:-1])}"""
                     )
 
                 video_data = VideoData(
@@ -206,6 +215,19 @@ def injest_tags(filename: str) -> None:
                 db.session.add(video_data)
             db.session.commit()
             print("added all video_data")
+
+
+def update_paths() -> None:
+    """Update paths in the database from relative to absolute."""
+
+    with app.app_context():
+        videos = Video.query.all()
+        for video in videos:
+            video.path = f"/mnt/storage/Gurabo/datasets/{video.path}"
+        video_data = VideoData.query.all()
+        for video_datum in video_data:
+            video_datum.path = f"/mnt/storage/Gurabo/datasets/{video_datum.path}"
+        db.session.commit()
 
 
 def video_data_list(
