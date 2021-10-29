@@ -223,10 +223,12 @@ def update_paths() -> None:
     with app.app_context():
         videos = Video.query.all()
         for video in videos:
-            video.path = f"/mnt/storage/Gurabo/datasets/{video.path}"
+            if not video.path.startswith("/mnt/storage"):
+                video.path = f"/mnt/storage/Gurabo/datasets/{video.path}"
         video_data = VideoData.query.all()
         for video_datum in video_data:
-            video_datum.path = f"/mnt/storage/Gurabo/datasets/{video_datum.path}"
+            if not video_datum.path.startswith("/mnt/storage"):
+                video_datum.path = f"/mnt/storage/Gurabo/datasets/{video_datum.path}"
         db.session.commit()
 
 
