@@ -48,6 +48,7 @@ from labelbee.db_functions import (
     get_user_by_id,
     get_video_data_by_id,
     edit_video_data,
+    import_from_csv,
 )
 
 upload_dir = "labelbee/static/upload/"
@@ -216,7 +217,7 @@ def edit_video_page():
 
 @app.route("/add_video", methods=["GET", "POST"])
 @login_required
-def add_video():
+def add_video_page():
     form = UserProfileForm(obj=current_user)
 
     datasetid = request.args.get("dataset")
@@ -236,7 +237,7 @@ def add_video():
         db.session.commit()
 
         # Redirect to home page
-        return redirect(url_for("add_video") + "?dataset=" + str(datasetid))
+        return redirect(url_for("add_video_page") + "?dataset=" + str(datasetid))
 
     # Process GET or invalid POST
     return render_template(
@@ -617,7 +618,6 @@ def ajaxlogin():
                 "request": "login",
                 "email": email,
                 "status": "FAIL",
-                "message": "Invalid username or password",
             }
         )
 
@@ -638,8 +638,21 @@ def ajaxlogout():
     """
     Logs out the current user
     """
-    logout_user()
-    return jsonify({"request": "logout", "status": "SUCCESS"})
+    if not current_user.is_authenticated:
+        return jsonify(
+            {
+                "request": "logout",
+                "status": "FAIL",
+            }
+        )
+    else:
+        logout_user()
+        return jsonify(
+            {
+                "request": "logout",
+                "status": "SUCCESS",
+            }
+        )
 
 
 @app.route("/rest/auth/whoami")
@@ -670,7 +683,7 @@ def whoami():
         return jsonify({"is_authenticated": current_user.is_authenticated})
 
 
-@app.route("/rest/add_users", methods=["POST"])
+@app.route("/rest/user/add_users", methods=["POST"])
 def add_users():
     """
     Adds a new users to the database
@@ -692,21 +705,25 @@ def add_users():
     """
 
     if not current_user.is_authenticated or not current_user.has_roles("admin"):
-        return jsonify({"status": "error", "message": "not authenticated"})
+        return jsonify({"status": "FAIL"})
 
     json_list = json.loads(request.form.get("json"))
+    user_list = []
     for user in json_list:
-        create_user(
-            first_name=user["first_name"],
-            last_name=user["last_name"],
-            email=user["email"],
-            password=user["password"],
-            role_id=int(user["role_id"]),
+        user_list.append(
+            create_user(
+                first_name=user["first_name"],
+                last_name=user["last_name"],
+                email=user["email"],
+                password=user["password"],
+                role_id=int(user["role_id"]),
+            )
         )
-    return jsonify({"status": "users added"})
+    user_schema = UserSchema(many=True)
+    return jsonify({"status": "SUCCESS", "users": user_schema.dump(user_list)})
 
 
-@app.route("/rest/edit_users", methods=["POST"])
+@app.route("/rest/user/edit_users", methods=["POST"])
 def edit_users():
     if current_user.is_authenticated and current_user.has_roles("admin"):
         json_list = json.loads(request.form.get("json"))
@@ -719,29 +736,31 @@ def edit_users():
                 password=user.setdefault("password", None),
                 role_id=user.setdefault("role_id", 2),
             )
-        return jsonify({"status": "ok"})
+        return jsonify({"status": "SUCCESS"})
     else:
-        return jsonify({"status": "error", "message": "not authenticated"})
+        return jsonify({"status": "FAIL", "message": "not authenticated"})
 
 
-@app.route("/rest/list_users", methods=["GET"])
+@app.route("/rest/user/list_users", methods=["GET"])
 def list_users():
     if current_user.is_authenticated:
 
         # Use Flask-Marshmallow Schema to make json serializable list of users
         user_schema = UserSchema(many=True)
-        return jsonify({"status": "ok", "users": user_schema.dump(user_list())})
+        return jsonify({"status": "SUCCESS", "users": user_schema.dump(user_list())})
     else:
-        return jsonify({"status": "error", "message": "not authenticated"})
+        return jsonify({"status": "FAIL"})
 
 
-@app.route("/rest/delete_users", methods=["POST"])
+@app.route("/rest/user/delete_users", methods=["POST"])
 def delete_users():
     if current_user.is_authenticated and current_user.has_roles("admin"):
         json_list = json.loads(request.form.get("json"))
         for user_id in json_list:
             delete_user(user_id)
-        return jsonify({"status": "ok"})
+        return jsonify({"status": "SUCCESS"})
+    else:
+        return jsonify({"status": "FAIL"})
 
 
 # --------------------------------------
@@ -979,8 +998,6 @@ def get_video_data_v2(id):
     if not current_user.is_authenticated:
         raise Forbidden("/rest/v2/get_video_data GET: login required !")
 
-    data_type = request.args.get("data_type", "")
-
     video_data_schema = VideoDataSchema()
 
     return jsonify({"data": video_data_schema.dump(get_video_data_by_id(id))})
@@ -1001,6 +1018,7 @@ def edit_video_data_v2(id):
     video_data = video_data_schema.dump(
         edit_video_data(
             video_dataid=id,
+            file_name=newdata.setdefault("file_name", None),
             path=newdata.setdefault("path", None),
             timestamp=newdata.setdefault("timestamp", None),
             data_type=newdata.setdefault("data_type", None),
@@ -1020,17 +1038,20 @@ def add_video_data_v2():
         raise Forbidden("/rest/v2/add_video_data POST: admin required !")
 
     video_data_schema = VideoDataSchema()
-
     newdata = video_data_schema.loads(request.form.get("data"))
+
     if "video_id" not in newdata:
         raise BadRequest("/rest/v2/add_video_data POST: video_id required !")
     if "created_by_id" not in newdata:
         raise BadRequest("/rest/v2/add_video_data POST: created_by_id required !")
+    if "data" not in newdata:
+        raise BadRequest("/rest/v2/add_video_data POST: data required !")
+    if "data_type" not in newdata:
+        raise BadRequest("/rest/v2/add_video_data POST: data_type required !")
 
     video = get_video_by_id(newdata["video_id"])
     created_by = get_user_by_id(newdata["created_by_id"])
 
-    print(newdata)
     video_data = video_data_schema.dump(
         add_video_data(
             file_name=newdata.setdefault("file_name", None),
@@ -1039,6 +1060,9 @@ def add_video_data_v2():
             data_type=newdata.setdefault("data_type", None),
             video=video,
             created_by=created_by,
+            data=newdata.setdefault("data", None),
+            notes=newdata.setdefault("notes", None),
+            created_from=newdata.setdefault("created_from", None),
         )
     )
 
@@ -1056,6 +1080,69 @@ def get_video_v2(videoid):
     video_schema = VideoSchema()
 
     return jsonify({"data": video_schema.dump(video)})
+
+
+# @app.route("/rest/v2/add_video", methods=["POST"])
+# def add_video_v2():
+#     if not current_user.is_authenticated:
+#         raise Forbidden("/rest/v2/add_video POST: login required !")
+#     if not current_user.has_roles("admin"):
+#         raise Forbidden("/rest/v2/add_video POST: admin required !")
+
+#     video_schema = VideoSchema()
+#     newdata = video_schema.loads(request.form.get("data"))
+
+#     if "created_by_id" not in newdata:
+#         raise BadRequest("/rest/v2/add_video POST: created_by_id required !")
+#     if "file_name" not in newdata:
+#         raise BadRequest("/rest/v2/add_video POST: file_name required !")
+#     if "path" not in newdata:
+#         raise BadRequest("/rest/v2/add_video POST: path required !")
+
+
+#     created_by = get_user_by_id(newdata["created_by_id"])
+
+#     video = video_schema.dump(
+#         # TODO CREATE ADD_VIDEO FUNCTION
+#         add_video(
+#             file_name=newdata.setdefault("file_name", None),
+#             path=newdata.setdefault("path", None),
+#             timestamp=newdata.setdefault("timestamp", None),
+#             created_by=created_by,
+#             notes=newdata.setdefault("notes", None),
+#             created_from=newdata.setdefault("created_from", None),
+#         )
+#     )
+
+
+@app.route("/rest/v2/import_from_csv", methods=["POST"])
+def import_from_csv_v2():
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/import_from_csv POST: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/import_from_csv POST: admin required !")
+
+    csv_file = request.files["csv_file"]
+    dataset = request.form.get("dataset")
+    if not csv_file:
+        raise BadRequest("/rest/v2/import_from_csv POST: csv_file required !")
+    if not dataset:
+        raise BadRequest("/rest/v2/import_from_csv POST: dataset required !")
+
+    import_from_csv(csv_file, dataset)
+
+    return jsonify({"data": "OK"})
+
+
+@app.route("/rest/v2/update_paths", methods=["GET"])
+def update_paths():
+    if not current_user.is_authenticated:
+        raise BadRequest("/rest/v2/update_paths GET: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/update_paths GET: admin required !")
+
+    update_paths()
+    return jsonify({"data": "OK"})
 
 
 # LIST

@@ -74,7 +74,7 @@ class Video(db.Model):
     path = db.Column(db.String(100), nullable=False, server_default=u"")
     timestamp = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.Integer(), nullable=False)
-    colony = db.Column(db.Integer())
+    colony = db.Column(db.String(50))
     notes = db.Column(db.Text())
 
     frames = db.Column(db.Integer(), nullable=False)

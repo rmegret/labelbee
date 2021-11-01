@@ -1,0 +1,37 @@
+{
+  "info": { "type": "events-multiframe", "basedon": null },
+  "data": [
+    {
+      "675": {
+        "ID": 675,
+        "time": 0,
+        "frame": 0,
+        "x": 2025.493,
+        "y": 642.129,
+        "cx": 2147.609,
+        "cy": 774.455,
+        "width": 244.231,
+        "height": 264.651,
+        "angle": 86.2508245302707,
+        "bool_acts": [true, false, false, false],
+        "notes": "",
+        "labels": "expulsed,fanning",
+        "tag": {
+          "id": 675,
+          "c": [2130.5, 792.5],
+          "hamming": 0,
+          "p": [
+            [2145.29, 777.62],
+            [2143.82, 806.68],
+            [2114.52, 808.6],
+            [2116.69, 777.62]
+          ],
+          "goodness": 0,
+          "dm": 52.09,
+          "rgb_mean": [118.5, 111, 104.9],
+          "frame": 0
+        }
+      }
+    }
+  ]
+}

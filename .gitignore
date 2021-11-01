@@ -4,6 +4,7 @@ gitlog
 gitversion
 Icon
 env/
+migrations/
 
 __pycache__
 jsdoc/
