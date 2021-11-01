@@ -22,6 +22,9 @@
   <script type="text/javascript" src="js/extern/jsgrid-1.5.3/jsgrid.min.js"></script>
 
   <link href="css/bootstrap.css" rel="stylesheet">
+  <link href="css/dataTables.bootstrap.min.css" rel="stylesheet">
+  <link href="css/buttons.dataTables.min.css" rel="stylesheet">
+  <link href="css/jquery.dataTables.min.css" rel="stylesheet">
 
   <!--  <script type="text/javascript" src="js/extern/jquery.js"></script> -->
   <script type="text/javascript" src="js/extern/bootstrap.js"></script>
@@ -33,6 +36,9 @@
   <script type="text/javascript" src="js/extern/D3/d3.js"></script>
   <script type="text/javascript" src="js/extern/marcj-css-element-queries-134443d/src/ResizeSensor.js"></script>
   <script type="text/javascript" src="js/extern/jquery.csv.js"></script>
+  <script type="text/javascript" src="js/extern/dataTables.bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/extern/jquery.dataTables.min.js"></script>
+
 
   <script type="text/javascript" src="js/extern/perspective-transform/perspective-transform.js"></script>
 
@@ -561,6 +567,7 @@
                 <label>Video Info</label>
                 <div>
                   <div class='subpanel'>
+                    <button class="btn btn-default" onclick="videoListFromServerDialog.open">Load Video</button>
                     <label class="primary">Current Video
                       <a class="videolink" href="undefined" target="_blank">[Raw File]</a>
                     </label>
@@ -755,7 +762,7 @@
                     
                       <!-- #### Recent Tag/Event Loading Modal  -->
                       <div class="modal fade" id="dialog-recent-from-server" role="dialog">
-                        <div class="modal-dialog">
+                        <div class="modal-dialog modal-lg">
                           <div class="modal-content" style="overflow:auto;">
                             <div class="modal-header">
                               <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -768,7 +775,13 @@
                             <div class="modal-body">
                               <!-- To be filled up by AJAX request -->
                             </div>
-
+                            <div class="modal-message">
+                              <h4></h4>
+                              <!-- Filled up by javascript -->
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -782,8 +795,16 @@
                             <div class="modal-header">
                               <button type="button" class="close" data-dismiss="modal">&times;</button>
                               <h4 class="modal-title"></h4>
-                               <label><input type="checkbox" id="showAllUsers"
-                                  onclick="eventsFromServerDialog.clickedShowAllUsers()">Show files from all users</label>
+                              <label> 
+                                <input type="checkbox" id="showAllUsers" onclick="eventsFromServerDialog.clickedShowAllUsers()">
+                                Show files from all users 
+                              </label>
+                              <br>
+                              <div id="EventDropdownMenu">
+                                <!--  -->
+                              </div>
+
+
                               <!-- <label><input type="checkbox" checked="true" class="showNotes"
                                   onclick="eventsFromServerDialog.clickedShowMetadata('notes')">Show notes</label>
                               <label><input type="checkbox" checked="false" class="showMetadata"
@@ -793,6 +814,7 @@
                               <!-- To be filled up by AJAX request -->
                             </div>
                             <div class="modal-message">
+                              <h4 id="TagEventError"> test </h4>
                               <!-- To be filled up by AJAX request -->
                             </div>
                             <div class="modal-footer">
@@ -903,15 +925,15 @@
 
                   <div style="display:inline-block">
                     <input value="Z+" onclick="zoomOverlay.zoomApplyScale(2)" type="button" class="btn btn-info btn-xs"
-                      title="Zoom In" style="display=inline;">
+                      title="Zoom In" style="display:inline;">
                     <input value="Z=" onclick="zoomOverlay.zoomSetScale(1)" type="button" class="btn btn-info btn-xs"
-                      title="Reset Zoom" style="display=inline;">
+                      title="Reset Zoom" style="display:inline;">
                     <input value="Z-" onclick="zoomOverlay.zoomApplyScale(1/2)" type="button"
-                      class="btn btn-info btn-xs" title="Zoom Out" style="display=inline;">
+                      class="btn btn-info btn-xs" title="Zoom Out" style="display:inline;">
                     <input value="⤿" onclick="zoomOverlay.rotateTag(-90)" type="button" class="btn btn-xs"
-                      title="Rotate CCW" style="display=inline;">
+                      title="Rotate CCW" style="display:inline;">
                     <input value="⤾" onclick="zoomOverlay.rotateTag(+90)" type="button" class="btn btn-xs"
-                      title="Rotate CW" style="display=inline;">
+                      title="Rotate CW" style="display:inline;">
                   </div>
 
                   <div style="clear:both;"></div>

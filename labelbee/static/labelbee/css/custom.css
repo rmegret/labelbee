@@ -833,3 +833,7 @@ li.ui-tabs-active > .ui-tabs-anchor {
 .ui-front {
     z-index: 2000;
 }
+
+table, th, td {
+  border: 1px solid black;
+}

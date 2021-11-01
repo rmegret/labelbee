@@ -464,135 +464,143 @@ function eraseEvents() {
 function sanitizeEvents(obj) {
   var info;
   var data;
-  if ("info" in obj) {
-    // New events format v2 with metainfo
-
-    // obj['info']
-    info = obj["info"];
-
-    if (info["type"] != "events-multiframe") {
-      console.log(
-        'sanitizeEvents: ABORTED, unsupported file format. info["type"]=' +
-          info["type"]
-      );
-      return;
-    }
-
-    //         function monthid(monthname) {
-    //             var map = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',
-    //                        Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}
-    //             return map[monthname]
-    //         }
-    //
-    //         if (info.history && info.history[0]
-    //             && typeof info.history[0] == 'string') {
-    //             for (var k in info.history) {
-    //                 var s = info.history[k]
-    //                 var filename = undefined
-    //                 if (s.startsWith('Saved using labelbee on')) {
-    //                     filename = videoinfo.videoName+'-'
-    //                         +s.substring(37,39)+monthid(s.substring(28,31))
-    //                         +s.substring(32,34)
-    //                         +s.substring(40,42)+s.substring(43,45)
-    //                         +s.substring(46,48)+'.json'
-    //                 }
-    //                 info.history[k] = {filename:filename,notes:info.history[k]}
-    //             }
-    //         }
-
-    // obj['data'].tags[tag_id_in_frame]
-    data0 = obj["data"];
-
-    // New format more complex (store each frame as array of evts,
-    // instead of dict of evts: allow duplicate ids,
-    // which current interface does not support)
-    // for the moment, downgrade to simpler format
-
-    hasDuplicateEntries = false;
-
-    data = {};
-    for (let f in data0) {
-      let frameItem0 = data0[f];
-      if (frameItem0 == null) continue;
-
-      let frameItem = {};
-      data[String(f)] = frameItem;
-
-      for (let i in frameItem0) {
-        let evt0 = frameItem0[i];
-        if (evt0 == null) continue;
-
-        let evt = Object.assign({ ID: String(evt0.id) }, evt0);
-        delete evt.id;
-
-        evt.bool_acts = [
-          hasLabel(evt, "fanning"),
-          hasLabel(evt, "pollen"),
-          hasLabel(evt, "entering"),
-          hasLabel(evt, "leaving"),
-        ];
-
-        if (frameItem[String(evt0.id)] == null) {
-          frameItem[String(evt0.id)] = evt;
-        } else {
-          console.log(
-            "sanitizeEvents: WARNING duplicate entry: data[" +
-              f +
-              "][" +
-              i +
-              "] with id=" +
-              evt0.id +
-              " ignored."
-          );
-          hasDuplicateEntries = true;
+  try{
+    if ("info" in obj) {
+      // New events format v2 with metainfo
+  
+      // obj['info']
+      info = obj["info"];
+  
+      if (info["type"] != "events-multiframe") {
+        console.log(
+          'sanitizeEvents: ABORTED, unsupported file format. info["type"]=' +
+            info["type"]
+        );
+        return;
+      }
+  
+      //         function monthid(monthname) {
+      //             var map = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',
+      //                        Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}
+      //             return map[monthname]
+      //         }
+      //
+      //         if (info.history && info.history[0]
+      //             && typeof info.history[0] == 'string') {
+      //             for (var k in info.history) {
+      //                 var s = info.history[k]
+      //                 var filename = undefined
+      //                 if (s.startsWith('Saved using labelbee on')) {
+      //                     filename = videoinfo.videoName+'-'
+      //                         +s.substring(37,39)+monthid(s.substring(28,31))
+      //                         +s.substring(32,34)
+      //                         +s.substring(40,42)+s.substring(43,45)
+      //                         +s.substring(46,48)+'.json'
+      //                 }
+      //                 info.history[k] = {filename:filename,notes:info.history[k]}
+      //             }
+      //         }
+  
+      // obj['data'].tags[tag_id_in_frame]
+      data0 = obj["data"];
+  
+      // New format more complex (store each frame as array of evts,
+      // instead of dict of evts: allow duplicate ids,
+      // which current interface does not support)
+      // for the moment, downgrade to simpler format
+  
+      hasDuplicateEntries = false;
+  
+      data = {};
+      for (let f in data0) {
+        let frameItem0 = data0[f];
+        if (frameItem0 == null) continue;
+  
+        let frameItem = {};
+        data[String(f)] = frameItem;
+  
+        for (let i in frameItem0) {
+          let evt0 = frameItem0[i];
+          if (evt0 == null) continue;
+  
+          let evt = Object.assign({ ID: String(evt0.id) }, evt0);
+          delete evt.id;
+  
+          evt.bool_acts = [
+            hasLabel(evt, "fanning"),
+            hasLabel(evt, "pollen"),
+            hasLabel(evt, "entering"),
+            hasLabel(evt, "leaving"),
+          ];
+  
+          if (frameItem[String(evt0.id)] == null) {
+            frameItem[String(evt0.id)] = evt;
+          } else {
+            console.log(
+              "sanitizeEvents: WARNING duplicate entry: data[" +
+                f +
+                "][" +
+                i +
+                "] with id=" +
+                evt0.id +
+                " ignored."
+            );
+            hasDuplicateEntries = true;
+          }
         }
       }
-    }
-
-    if (hasDuplicateEntries) {
-      alert(
-        "WARNING: Events file was loaded, but it has duplicate entries. Current version of software deleted redundant events."
-      );
-    }
-  } else {
-    // Old format v1: Tracks JSON directly stored in the json
-    // obj is an array
-    // obj[frame][bee_id]
-
-    // Create dummy info header
-    info = {
-      type: "events-multiframe",
-      source: "Converted from Tracks v1",
-    };
-
-    console.log("sanitizeEvents: Tracks JSON v1");
-    if (typeof obj == "array") {
-      console.log("sanitizeEvents: got an array, converting to object");
-      data = obj.reduce(function (acc, cur, i) {
-        acc[i] = cur;
-        return acc;
-      }, {});
-      info.source = "Converted from Tracks v1 array";
-    } else if (typeof obj == "object") {
-      console.log("sanitizeEvents: got an object, use directly");
-      data = obj;
-      info.source = "Converted from Tracks v1 object";
-    } else {
-      console.log(
-        "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys."
-      );
-      return;
-    }
-    if (
-      !Object.keys(data).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
-      !Object.keys(data).every((v) => Number.isInteger(v))
-    ) {
-      console.log(
-        "sanitizeEvents: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
-      );
-      return;
+  
+      if (hasDuplicateEntries) {
+        alert(
+          "WARNING: Events file was loaded, but it has duplicate entries. Current version of software deleted redundant events."
+        );
+      }
+    } 
+    else {
+      // Old format v1: Tracks JSON directly stored in the json
+      // obj is an array
+      // obj[frame][bee_id]
+  
+      // Create dummy info header
+      info = {
+        type: "events-multiframe",
+        source: "Converted from Tracks v1",
+      };
+  
+      console.log("sanitizeEvents: Tracks JSON v1");
+      if (typeof obj == "array") {
+        console.log("sanitizeEvents: got an array, converting to object");
+        data = obj.reduce(function (acc, cur, i) {
+          acc[i] = cur;
+          return acc;
+        }, {});
+        info.source = "Converted from Tracks v1 array";
+      } else if (typeof obj == "object") {
+        console.log("sanitizeEvents: got an object, use directly");
+        data = obj;
+        info.source = "Converted from Tracks v1 object";
+      } else {
+        console.log(
+          "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys."
+        );
+        return;
+      }
+      if (
+        !Object.keys(data).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
+        !Object.keys(data).every((v) => Number.isInteger(v))
+      ) {
+        console.log(
+          "sanitizeEvents: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
+        );
+        return;
+      }
     }
   }
+  catch(error){ // Case: loaded json from server does not match expected structure
+    console.error(error);
+    return;
+  }
+
 
   return { info: info, data: data };
 }
@@ -603,7 +611,7 @@ function setTracks(obj) {
 
   if (!evts) {
     console.log("setTracks: ABORTED, wrong format.");
-    return;
+    return 0;
   }
 
   Tracks = evts.data;
@@ -613,6 +621,7 @@ function setTracks(obj) {
 
   videoControl.onFrameChanged();
   refreshChronogram();
+  return 1;
 }
 function setEventsProp(option, value) {
   if (!TracksInfo) {
@@ -663,7 +672,7 @@ function eraseTags() {
   var r = confirm("Are you sure you want to ERASE all Tags?");
   if (r == true) {
     console.log("ERASING all Tags...");
-    setTags({});
+    setTags({}, "");
   } else {
     console.log("User CANCELED Erase Tags ...");
   }
@@ -683,50 +692,52 @@ function tagsAddFrames(Tags) {
     }
   }
 }
-function setTags(obj) {
+function setTags(obj, div) {
   console.log("setTags: changing Tags data structure and refreshing...");
 
   var info;
-  if ("info" in obj) {
-    // New tag format v2 with metainfo
-
-    // obj['info']
-    info = obj["info"];
-
-    if (info["type"] != "tags-multiframe") {
-      console.log(
-        'setTags: ABORTED, unsupported file format. info["type"]=' +
-          info["type"]
-      );
-      return;
+  try{
+    if ("info" in obj) {
+      // New tag format v2 with metainfo
+  
+      // obj['info']
+      info = obj["info"];
+  
+      if (info["type"] != "tags-multiframe") {
+        console.log(
+          'setTags: ABORTED, unsupported file format. info["type"]=' +
+            info["type"]
+        );
+        return 0;
+      }
+  
+      // obj['data'].tags[tag_id_in_frame]
+      obj = obj["data"];
     }
-
-    // obj['data'].tags[tag_id_in_frame]
-    obj = obj["data"];
-  } else {
-    // Old format v1: Tags JSON directly stored in the json
-    // obj is an object
-    // obj[frame].tags[tag_id_in_frame]
-
-    console.log("setTags: Tags JSON v1, dictionary of frames");
-    if (typeof obj != "object") {
-      console.log(
-        'setTags: ABORTED, unsupported file format. typeof(obj) is "' +
-          typeof obj +
-          '", should be "object"'
-      );
-      return;
+    else {
+      // Old format v1: Tags JSON directly stored in the json
+      // obj is an object
+      // obj[frame].tags[tag_id_in_frame]
+  
+      console.log("setTags: Tags JSON v1, dictionary of frames");
+      if (typeof obj != "object") {
+        console.log(
+          'setTags: ABORTED, unsupported file format. typeof(obj) is "' +
+            typeof obj +
+            '", should be "object"'
+        );
+        return 0;
+      }
+      if (
+        !Object.keys(Tags).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
+        !Object.keys(Tags).every((v) => Number.isInteger(v))
+      ) {
+        console.log(
+          "setTags: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
+        );
+        return 0;
+      }
     }
-    if (
-      !Object.keys(Tags).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
-      !Object.keys(Tags).every((v) => Number.isInteger(v))
-    ) {
-      console.log(
-        "setTags: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
-      );
-      return;
-    }
-
     // Just use obj directly
 
     // Create dummy info header
@@ -734,6 +745,10 @@ function setTags(obj) {
       type: "tags-multiframe",
       source: "Converted from Tags v1",
     };
+  }
+  catch(error){ // Case: loaded json from server does not match expected structure
+    console.error(error);
+    return 0;
   }
 
   Tags = obj;
@@ -762,6 +777,7 @@ function setTags(obj) {
   refreshChronogram();
   adjustChronogramHeight();
   videoControl.onFrameChanged();
+  return 1;
 }
 function onTagsReaderLoad(event) {
   //console.log(event.target.result);
@@ -1033,7 +1049,7 @@ function EventsFromServerDialog() {
 
   this.updateDialog = function (dataType) {
     // var route = "/rest/events/"; // Hardcoded
-
+    this.dataType = dataType;
     // console.log(
     //   "EventsFromServerDialog: importing Tracks List from URL '" +
     //     route +
@@ -1060,21 +1076,15 @@ function EventsFromServerDialog() {
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
         function (html) {
-          div.find(".modal-message").html(html);
+          $("#TagEventError").text(html);
         }
       ),
       success: function(json){
       console.log("EventsFromServerDialog: (ajax) Load"+ this.dataType +"files data from server: Success", json);
 
-        theDialog.json = json["data"];
-        // Building table HTML
-        let html = "";
-        html +=
-        "<table class='eventFiles'><thead>" +
-        "<th></th>" +
-        "<th>File Name</th>" +
-        "<th>Created on</th>" +
-        "<th>Owner</th>";
+        // theDialog.json = json["data"];
+        // Building table HTML 
+        // NO LONGER USED AFTER SWITCHING TO JQUERY DATATABLES() METHOD TO CONSTRUCT TABLE
         // if (showNotes) {
           // html += "<th>Notes</th>";
         // }
@@ -1083,29 +1093,10 @@ function EventsFromServerDialog() {
 
           // html += "<th>Based on</th>";
         // }
-        html += "</thead><tbody>";
-        for(let i in json["data"]){
-          fileData = json["data"][i];
+        // html += "</thead><tbody>";
+        // for(let i in json["data"]){
+          // fileData = json["data"][i];
           // console.log(fileData);
-          html +=
-            '<tr data-row="' +
-            i +
-            '">' +
-            '<td id="' +
-            fileData["file_name"] +
-            '"><button onclick="eventsFromServerDialog.loadEvents(' +
-            i +
-            ')">' +
-            " Load</button></td>" +
-            "<td>" +
-            fileData["file_name"] +
-            "</td>" +
-            "<td>" +
-            fileData["timestamp"].split("T").join(' ') +
-            "</td>" +
-            "<td>" +
-            '['+fileData["created_by_id"]+']' + fileData["created_by"] +
-            "</td>";
           // if (showNotes) {
           //   let notes = "";
           //   let metadata = item["metadata"];
@@ -1145,14 +1136,38 @@ function EventsFromServerDialog() {
           //   html += "<td>" + item["filename"] + "</td>";
           //   html += "<td>" + basedon + "</td>";
           // }
-          html += "</tr>";
-        }
-        html += "</tbody></table>";
+          // html += "</tr>";
+        // }
+        html =
+        "<table id='TagOrEventFileListFromServer' style='width:100%'>" +
+        "<thead>" +
+        "<th></th>" +
+        "<th>File Name</th>" +
+        "<th>Created on</th>" +
+        "<th>Owner</th></thead>" +
+        "</table>";
+        html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
         // console.log("HTML produced from database response:\n", html);
         
-        // Filling html with ajax result
+        // Creating table with only headers
         div.find(".modal-body").html(html);
-        div.find(".modal-message").html("");
+        div.find("#TagEventError").html("");
+        // Filling empty table using data from json
+        div.find("#TagOrEventFileListFromServer").DataTable({
+          data: json["data"],
+          columns:[
+            {data:"id", render: function(id){
+              return "<button onclick='eventsFromServerDialog.loadEvents("+id+")'>Load</button>";
+            }},
+            {data:"file_name"},
+            {data:"timestamp", render: function(timestamp){
+              return timestamp.split('T').join(' ');
+            }},
+            {data:"created_by", render:function(created_by, type, full){
+              return '[' + full.created_by_id + '] ' + created_by;
+            }}
+          ]
+        } );
       }
     });
     
@@ -1319,9 +1334,24 @@ function EventsFromServerDialog() {
       // });
     };
   this.openDialog = function (dataType) {
+    // Default value for show all checkbox
     this.showAll = "false";
+
+    // Setting data type according to which button user used to open dialog(function parameter on html side)
     console.log("EventsFromServerDialog.openDialog('"+dataType+"')");
     this.dataType = dataType;
+    if (dataType=="tag"){
+      $("#EventDropdownMenu").html("");
+    }
+    else{
+      $("#EventDropdownMenu").html(
+        "Select type of event: " +
+        "<select id='EventDropdownElement' onchange='eventsFromServerDialog.updateDialog(this.value);'>" +
+          "<option value='tag'>tag</option>" +
+          "<option value='event' selected='selected'>event</option>" +
+          "<option value='flowers'>flowers</option>"+
+        "</select>");
+    }
     //Extracting GET parameters from URL
     var getParams = new URLSearchParams(window.location.search);
     if (!getParams){
@@ -1342,7 +1372,8 @@ function EventsFromServerDialog() {
       data: "", 
       dataType: 'json',
       error: function (){
-          div.find(".modal-message").html("ERROR: Invalid Video ID.");
+          $("#TagEventError").css("color","red");
+          $("#TagEventError").html("ERROR: Invalid Video ID.");
         },
       success: function(json){
         div
@@ -1351,10 +1382,11 @@ function EventsFromServerDialog() {
       }
     });
     
+    // Resetting checkbox to unchecked 
+    div.find("#showAllUsers").prop('checked', false);
+
     div.find(".modal-body").html("[...]");
-    div
-      .find(".modal-message")
-      .html("<div>Loading Tracks file list from server. Please wait...</div>"); //MODIFY DEPENDING ON TYPE OF FILE BEING LOADED
+    $("#TagEventError").html("Loading " + dataType + " file list from server. Please wait...");
 
     this.updateDialog(dataType);
 
@@ -1385,16 +1417,24 @@ function EventsFromServerDialog() {
     div.modal("hide");
   };
 
-  this.loadEvents = function (k) {
-    var tag_event_ID = theDialog.json[k]["id"];
-
+  this.loadEvents = function (tag_event_ID) {
     //MODIFY CONSOLE MESSAGE DEPENDING ON FILE
-    console.log("eventsFromServerDialog: importing " + this.dataType + "s from database for file ID '" + tag_event_ID + "'...");
-
-    div.find(".modal-message").html("Loading " + this.dataType + "s from database for file ID " + tag_event_ID + "...");
+    console.log("eventsFromServerDialog: importing " + this.dataType + "s from database for ID '" + tag_event_ID);
+    $("#TagEventError").css("color","black");
+    $("#TagEventError").html("Loading " + this.dataType + "s from database for ID " + tag_event_ID + "...");
     // Load tag or event file
     if(this.dataType== "tag"){      // Case: tag file
-      tagsFromServer(tag_event_ID);
+      success = tagsFromServer(tag_event_ID, div);
+      
+      // Confirmation or error message after attempting to load
+      if (success){
+        $("#TagEventError").css("color","black");
+        $('#TagEventError').html("Tags loaded successfully.");
+      }
+      else{
+        $("#TagEventError").css("color","red");
+        $('#TagEventError').html("ERROR" + " <br> " + "setTags: Invalid tag information obtained from server.");
+      }
     }
     else{                           // Case: event file
       //Sending GET request to flask API to retrieve json containing annotation data
@@ -1408,8 +1448,14 @@ function EventsFromServerDialog() {
 
           console.log("loadEvents: Loaded events data:", json["data"]["data"]);
           // Case: event file
-          let obj = JSON.parse(json["data"]["data"]);
-          setTracks(obj);
+          try{
+            var obj = JSON.parse(json["data"]["data"]);
+          }
+          catch{
+            $("#TagEventError").css("color","red");
+            $('#TagEventError').html("ERROR <br> EventsFromServerDialog.loadEvents: Unable to parse json file.")
+          }
+          success = setTracks(obj);
           // Setting basedon information
           // {
           //   var basedon = {};
@@ -1428,21 +1474,29 @@ function EventsFromServerDialog() {
 
           refreshChronogram();
           
-
-          // Close dialogue window
-          div.find(".modal-message").html("Events loaded. Closing.");
-          theDialog.closeDialog();
-          },
+          // Confirmation or error message after attempting to load
+          if(success){
+            $("#TagEventError").css("color","black");
+            $("#TagEventError").html("Events loaded successfully.")
+          }
+          else{
+            $("#TagEventError").css("color","red");
+            $('#TagEventError').html("ERROR <br> setTracks: Invalid event information obtained from server.")
+          }          
+        },
         error:  function () {
-          div.find(".modal-message").html("ERROR in loading file ID" + tag_event_ID);
+          $("#TagEventError").css("color","red");
+          $("#TagEventError").html("ERROR in loading file ID" + tag_event_ID);
           },
       });
     }
   };
   this.clickedShowAllUsers = function () {
-    this.showAll = "false";
     if ($("#showAllUsers").prop('checked')){
       this.showAll = "True";
+    }
+    else{
+      this.showAll = "false";
     }
     this.updateDialog(this.dataType);
   };
@@ -1643,7 +1697,7 @@ function showAjaxError(title, prehook) {
 }
 
 function eventsToServer(format) {
-  var route = "/rest/events/";
+  var route = "/rest/v2/add_video_data";
 
   console.log("eventsToServer");
 
@@ -1652,26 +1706,35 @@ function eventsToServer(format) {
   }
 
   let data;
-  if (format == "v2") {
-    data = convertTracksToV2();
-  } else {
-    data = convertTracksToV1();
-  }
-
+  // if (format == "v2") {
+  //   data = convertTracksToV2();
+  // } 
+  // else {
+  //   data = convertTracksToV1();
+  // }
+  data = {
+      video_id: "9371",
+      created_by_id: "1",
+      data_type:"tag",
+      path:"testPath",
+      file_name:"testFileName",
+      // data: convertTracksToV2()
+    }
   $.ajax({
     url: url_for(route), //server url
     type: "POST", //passing data as post method
     contentType: "application/json", // returning data as json
-    data: JSON.stringify({ video: videoinfo.videoName, data: data }), //form values
+    data: JSON.stringify(data) , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
     success: function (json) {
-      alert("Save Events JSON (" + format + ") to server: Success " + json); //response from the server given as alert message
+      alert("Save Events JSON (" + format + ") to server: Success " + json['data']['data']['created_by_id']); //response from the server given as alert message
+      console.log(json)
     },
     error: showAjaxError("ERROR in eventsToServer"),
   });
 }
 
 
-function tagsFromServer(tagFileID) {
+function tagsFromServer(tagFileID, div) {
 
   // Files are not being loaded from a specific URL anymore, 
   // Commented code block should no longer be necessary
@@ -1707,12 +1770,12 @@ function tagsFromServer(tagFileID) {
     .fail(function () {
       console.log('tagsFromServer: ERROR loading tag file with ID "' + tagFileID + '"');
       statusWidget.statusUpdate("tagsLoad", false, "");
-      setTags([]);
+      return setTags([], div);
     })
     .done(function (data) {
       tags = data["data"]["data"];
       console.log("Loaded tag data:", tags)
-      setTags(tags);
+      return setTags(tags, div);
     });
 }
 
@@ -1740,6 +1803,7 @@ function RecentTagOrEventFromServerDialog() {
   var theDialog = this;
   this.div = $("#dialog-recent-from-server");
   var div = this.div;
+  this.dataType = null;
 
   this.updateDialog = function (dataType) {
     
@@ -1755,94 +1819,102 @@ function RecentTagOrEventFromServerDialog() {
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
         function (html) {
-          div.find(".modal-message").html(html);
+          div.find(".modal-message h4").css("color","red");
+          div.find(".modal-message h4").html(html);
         }
       ),
       success: function(json){
-      console.log("recentTagOrEventFromServerDialog: (ajax) Load most recent "+ this.dataType +"file from server: Success", json);
+        try {
+          console.log("recentTagOrEventFromServerDialog: (ajax) Load most recent "+ dataType +"file from server: Success", json);
 
-        theDialog.json = json["data"];
-        // Building table HTML
-        let html = "";
-        html +=
-        "<table class='eventFiles'><thead>" +
-        "<th>File Name</th>" +
-        "<th>Created on</th>" +
-        "<th>Owner</th>";
-        // if (showNotes) {
-          // html += "<th>Notes</th>";
-        // }
-        // if (showMetadata) {
-          // html += "<th>Info</th>";
-
-          // html += "<th>Based on</th>";
-        // }
-        html += "</thead><tbody>";
-        fileData = json["data"][0];
-        // console.log(fileData);
-        html +=
-          '<tr data-row="' +
-          0 +
-          '">' +
-          "<td>" +
-          fileData["file_name"] +
-          "</td>" +
-          "<td>" +
-          fileData["timestamp"].split("T").join(' ') +
-          "</td>" +
-          "<td>" +
-          '['+fileData["created_by_id"]+']' + fileData["created_by"] +
-          "</td>";
-        html += "</tr>";
+          theDialog.json = json["data"];
+          // Building table HTML
+          let html = "";
+          html +=
+          "<table id='RecentFromServerTable' style='width:100%'><thead>" +
+          "<th>File Name</th>" +
+          "<th>Created on</th>" +
+          "<th>Owner</th>";
           // if (showNotes) {
-          //   let notes = "";
-          //   let metadata = item["metadata"];
-          //   if (metadata && metadata["notes"]) {
-          //     notes = metadata["notes"];
-          //   }
-          //   html += '<td class="metadata-notes">' + notes + "</td>";
+            // html += "<th>Notes</th>";
           // }
           // if (showMetadata) {
-          //   let info = "";
-          //   let basedon = "";
-          //   let metadata = item["metadata"];
-          //   if (metadata) {
-          //     info +=
-          //       '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
-          //       k +
-          //       ')">Show</button>';
-          //     var history = metadata["history"];
-          //     if (history) {
-          //       for (let h of history) {
-          //         if (h["filename"]) {
-          //           let kk = json.find(
-          //             (el) => el["filename"] == h["filename"]
-          //           );
-          //           if (kk != null)
-          //             basedon +=
-          //               '<div class="basedon" data-basedon="' +
-          //               kk.k +
-          //               '">' +
-          //               kk.k +
-          //               "</div>";
-          //         }
-          //       }
-          //     }
-          //   }
-          //   html += "<td>" + info + "</td>";
-          //   html += "<td>" + item["filename"] + "</td>";
-          //   html += "<td>" + basedon + "</td>";
+            // html += "<th>Info</th>";
+
+            // html += "<th>Based on</th>";
           // }
-        html += "</tbody></table><br>";
-        html += "<h4>Do you wish to load this " + dataType + " file?</h4>";
-        html += '<button onclick="recentTagOrEventFromServerDialog.loadEvents(\'0\')" class="btn btn-success btn-lg">Yes</button> '
-        html += '<button type="button" class="btn btn-danger btn-lg" data-dismiss="modal">No</button>';
-        html += "<br><br>WARNING: If another tag file is currently loaded, unsaved changes may be lost.";
-        // console.log("HTML produced from database response:\n", html);
-        
-        // Filling html with ajax result
-        div.find(".modal-body").html(html);
-        div.find(".modal-message").html("");
+          html += "</thead><tbody>";
+          fileData = json["data"][0];
+          // console.log(fileData);
+          html +=
+            '<tr data-row="' +
+            0 +
+            '">' +
+            "<td>" +
+            fileData["file_name"] +
+            "</td>" +
+            "<td>" +
+            fileData["timestamp"].split("T").join(' ') +
+            "</td>" +
+            "<td>" +
+            '['+fileData["created_by_id"]+'] ' + fileData["created_by"] +
+            "</td>";
+          html += "</tr>";
+            // if (showNotes) {
+            //   let notes = "";
+            //   let metadata = item["metadata"];
+            //   if (metadata && metadata["notes"]) {
+            //     notes = metadata["notes"];
+            //   }
+            //   html += '<td class="metadata-notes">' + notes + "</td>";
+            // }
+            // if (showMetadata) {
+            //   let info = "";
+            //   let basedon = "";
+            //   let metadata = item["metadata"];
+            //   if (metadata) {
+            //     info +=
+            //       '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
+            //       k +
+            //       ')">Show</button>';
+            //     var history = metadata["history"];
+            //     if (history) {
+            //       for (let h of history) {
+            //         if (h["filename"]) {
+            //           let kk = json.find(
+            //             (el) => el["filename"] == h["filename"]
+            //           );
+            //           if (kk != null)
+            //             basedon +=
+            //               '<div class="basedon" data-basedon="' +
+            //               kk.k +
+            //               '">' +
+            //               kk.k +
+            //               "</div>";
+            //         }
+            //       }
+            //     }
+            //   }
+            //   html += "<td>" + info + "</td>";
+            //   html += "<td>" + item["filename"] + "</td>";
+            //   html += "<td>" + basedon + "</td>";
+            // }
+          html += "</tbody></table><br>";
+          html += "<h4>Do you wish to load this " + dataType + " file?</h4>";
+          html += '<button onclick="recentTagOrEventFromServerDialog.loadEvents(\'0\')" class="btn btn-success btn-lg">Yes</button> '
+          html += '<button type="button" class="btn btn-danger btn-lg" data-dismiss="modal">No</button>';
+          html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
+          // console.log("HTML produced from database response:\n", html);
+          
+          // Filling html with ajax result
+          div.find(".modal-body").html(html);
+          div.find(".modal-message h4").html("");
+        }
+        catch{
+          div.find(".modal-body").html("<h3 style='color:red;'>Current user has not recently worked with "+dataType+"s.<br>\
+          Please use the advanced " + dataType + " loading menu.</h3>")
+          div.find(".modal-message h4").html("")
+        }
       }
     });
     
@@ -2032,7 +2104,8 @@ function RecentTagOrEventFromServerDialog() {
       data: "", 
       dataType: 'json',
       error: function (){
-          div.find(".modal-message").html("ERROR: Invalid Video ID.");
+          div.find(".modal-message h4").css("color","red");
+          div.find(".modal-message h4").html("ERROR: Invalid Video ID.");
         },
       success: function(json){
         div
@@ -2042,8 +2115,9 @@ function RecentTagOrEventFromServerDialog() {
     });
     
     div.find(".modal-body").html("[...]");
-    div
-      .find(".modal-message")
+    
+    div.find(".modal-message h4").css("color","black");
+    div.find(".modal-message h4")
       .html("<div>Loading Tracks file list from server. Please wait...</div>"); //MODIFY DEPENDING ON TYPE OF FILE BEING LOADED
 
     this.updateDialog(dataType);
@@ -2080,11 +2154,20 @@ function RecentTagOrEventFromServerDialog() {
 
     //MODIFY CONSOLE MESSAGE DEPENDING ON FILE
     console.log("RecentTagOrEventFromServerDialog: importing " + this.dataType + "s from database for file ID '" + tag_event_ID + "'...");
-
-    div.find(".modal-message").html("Loading " + this.dataType + "s from database for file ID " + tag_event_ID + "...");
+    
+    div.find(".modal-message h4").css("color","black");
+    div.find(".modal-message h4").html("Loading " + this.dataType + "s from database for file ID " + tag_event_ID + "...");
     // Load tag or event file
     if(this.dataType== "tag"){      // Case: tag file
-      tagsFromServer(tag_event_ID);
+      success = tagsFromServer(tag_event_ID, this.div);
+      if(success){
+        div.find(".modal-message h4").css("color","black");
+        div.find('.modal-message h4').html("Tags loaded successfully.")        
+      }
+      else{
+        div.find(".modal-message h4").css("color","red");
+        div.find('.modal-message h4').html("ERROR <br> setTags: Invalid tag information obtained from server.")
+      }
     }
     else{                           // Case: event file
       //Sending GET request to flask API to retrieve json containing annotation data
@@ -2099,7 +2182,7 @@ function RecentTagOrEventFromServerDialog() {
           console.log("loadEvents: Loaded events data:", json["data"]["data"]);
           // Case: event file
           let obj = JSON.parse(json["data"]["data"]);
-          setTracks(obj);
+          success = setTracks(obj);
           // Setting basedon information
           // {
           //   var basedon = {};
@@ -2117,14 +2200,20 @@ function RecentTagOrEventFromServerDialog() {
           videoControl.onFrameChanged();
 
           refreshChronogram();
-          
 
           // Close dialogue window
-          div.find(".modal-message").html("Events loaded. Closing.");
-          theDialog.closeDialog();
-          },
+          if(success){
+            div.find(".modal-message h4").css("color","black");
+            div.find(".modal-message h4").html("Events loaded.");
+          }
+          else{
+            div.find(".modal-message h4").css("color","red");
+            div.find('.modal-message h4').html("ERROR <br> setTracks: Invalid event information obtained from server.");
+          }
+        },
         error:  function () {
-          div.find(".modal-message").html("ERROR in loading file ID" + tag_event_ID);
+          div.find(".modal-message h4").css("color","red");
+          div.find(".modal-message h4").html("ERROR in loading tag or event with ID " + tag_event_ID);
           },
       });
     }
