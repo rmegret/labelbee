@@ -159,7 +159,7 @@ class VideoSchema(ma.SQLAlchemySchema):
     path = Path()
     timestamp = fields.DateTime()
     location = fields.Integer()
-    colony = fields.Integer()
+    colony = fields.String()
     notes = fields.String()
     frames = fields.Integer()
     height = fields.Integer()
@@ -188,7 +188,15 @@ class VideoDataSchema(ma.SQLAlchemySchema):
     file_name = FileName()
     path = Path()
     timestamp = fields.DateTime()
-    data_type = fields.String(validate=validate.OneOf(["tag", "annotation", "event"]))
+    data_type = fields.String(
+        validate=validate.OneOf(
+            [
+                "tag",
+                "event",
+                "flowers",
+            ]
+        )
+    )
     video_id = fields.Integer()
     created_by_id = fields.Integer()
     data = fields.String()
