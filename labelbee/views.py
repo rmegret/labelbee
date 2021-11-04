@@ -40,6 +40,7 @@ from labelbee.db_functions import (
     get_dataset_by_id,
     get_video_by_id,
     new_dataset,
+    populate_datasets,
     user_list,
     video_list,
     dataset_list,
@@ -1142,6 +1143,17 @@ def update_paths_endpoint():
         raise Forbidden("/rest/v2/update_paths GET: admin required !")
 
     update_paths()
+    return jsonify({"data": "OK"})
+
+
+@app.route("/rest/v2/populate_datasets", methods=["GET"])
+def populate_datasets_endpoint():
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/populate_datasets POST: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/populate_datasets POST: admin required !")
+
+    populate_datasets()
     return jsonify({"data": "OK"})
 
 

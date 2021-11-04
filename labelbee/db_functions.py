@@ -232,6 +232,19 @@ def update_paths() -> None:
         db.session.commit()
 
 
+def populate_datasets() -> None:
+    """Populate datasets for each video."""
+
+    with app.app_context():
+        videos = Video.query.all()
+        for video in videos:
+            if video.colony == "C01":
+                video.dataset = "gurabo1"
+            else:
+                video.dataset = "gurabo10"
+        db.session.commit()
+
+
 def video_data_list(
     videoid: int, datatype: str = "", userid: int = None
 ) -> List[VideoData]:
