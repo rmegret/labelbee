@@ -49,6 +49,7 @@ from labelbee.db_functions import (
     get_video_data_by_id,
     edit_video_data,
     import_from_csv,
+    update_paths,
 )
 
 upload_dir = "labelbee/static/upload/"
@@ -1134,7 +1135,7 @@ def import_from_csv_v2():
 
 
 @app.route("/rest/v2/update_paths", methods=["GET"])
-def update_paths():
+def update_paths_endpoint():
     if not current_user.is_authenticated:
         raise BadRequest("/rest/v2/update_paths GET: login required !")
     if not current_user.has_roles("admin"):
