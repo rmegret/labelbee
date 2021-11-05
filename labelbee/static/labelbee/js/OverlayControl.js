@@ -63,6 +63,17 @@ function OverlayControl(canvasTagId) {
     $('#showTagsOrientation').prop('checked',showTagsOrientation)
     $('#showTagsChrono').prop('checked',showTagsChrono)
     $('#showObsChrono').prop('checked',showObsChrono)
+
+    overlay.opts = {
+        showRect: true,
+        showID: true,
+        showLabels: true,
+        labelFormatter: function(obs) {return activityString(obs)},
+        showNotes: true,
+        dotRadiusFrame: 4, // Radius of dot center
+        resizeAroundCenter: false
+    }
+    overlay.updateOptsButtons()
     
     overlay.tagMarkerOptions = ['quad','cross','circle']
     overlay.selectboxTagMarkerInit()
@@ -119,7 +130,25 @@ function OverlayControl(canvasTagId) {
 OverlayControl.prototype = {}
 
 
-
+OverlayControl.prototype.optsClick = function(option) {
+    console.log('overlay.onClickDisableAngle')
+    
+    this.opts[option] = !this.opts[option]
+    this.updateOptsButtons()
+    
+    this.refreshOverlay()
+}
+OverlayControl.prototype.updateOptsButtons = function() {
+    console.log('overlay.updateDisableAngleButton')
+    for (option of ['showRect','showID','showLabels','showNotes','resizeAroundCenter']) {
+        console.log(option)
+        if ( this.opts[option] ) {
+            $(".overlayOpts-"+option).addClass("active")
+        } else {
+            $(".overlayOpts-"+option).removeClass("active")      
+        }
+    }
+}
 
 function selectboxSetOptions(selectbox, options, names) {
     selectbox.find('option').remove()
@@ -586,13 +615,52 @@ function refreshRectFromObs() {
 }
 function refreshRectStyle(rect) {
     
-    let lockRotation = false
-    if (!overlay.guiAngle.angleEnabled) {
-        lockRotation = true
+    if (overlay.opts.showRect) {
+        let lockRotation = false
+        if (!overlay.guiAngle.angleEnabled) {
+            lockRotation = true
+        }
+        
+        //rect.setControlVisible('mtr', !lockRotation)  // Remove rotation handle
+        rect.setControlsVisibility({
+            mtr: !lockRotation,
+            mt: false, // middle top disable
+            mb: false, // midle bottom
+            ml: false, // middle left
+            mr: false, // middle right
+            tl: true,
+            bl: true, 
+            tr: true,
+            br: true,
+        });
+        rect.lockScalingFlip = true
+        rect.lockScalingX = false
+        rect.lockScalingY = false
+        rect.hasControls = true
+        rect.hasBorders = true
+
+        if (overlay.opts.resizeAroundCenter) {
+            rect.centeredScaling = true
+        } else {
+            rect.centeredScaling = false
+        }
+    } else {
+        // rect.setControlsVisibility({
+        //     mtr: false,
+        //     mt: false, // middle top disable
+        //     mb: false, // midle bottom
+        //     ml: false, // middle left
+        //     mr: false, // middle right
+        // });
+        //rect.lockScalingFlip = true
+        //rect.lockScalingX = true
+        //rect.lockScalingY = true
+        rect.hasControls = false
+        rect.hasBorders = false
     }
-    
-    rect.setControlVisible('mtr', !lockRotation)  // Remove rotation handle
 }
+
+// OBS to Fabric BeeRect
 function updateRectFromObsGeometry(rect) {
     if (logging.overlay)
         console.log('updateRectFromObsGeometry: rect=',rect)
@@ -609,15 +677,63 @@ function updateRectFromObsGeometry(rect) {
     //let cx = canvasRect.left;
     //let cy = canvasRect.top;
     
-    // CAUTION: rect.left/top are misnamed. When originX/originY='center', they
-    // Correspond to rectangle center
-    rect.setLeft(cx)     // unrotated left (rotation around center)
-    rect.setTop(cy)      // unrotated top
-    rect.setWidth(canvasRect.width)
-    rect.setHeight(canvasRect.height)
-    rect.setAngle(obs.angle)
-    rect.setCoords()
+    if (overlay.opts.showRect) {
+        // CAUTION: rect.left/top are misnamed. When originX/originY='center', they
+        // Correspond to rectangle center
+        rect.setLeft(cx)     // unrotated left (rotation around center)
+        rect.setTop(cy)      // unrotated top
+        rect.setWidth(canvasRect.width)
+        rect.setHeight(canvasRect.height)
+        rect.setAngle(obs.angle)
+        rect.setCoords()
+    } else {
+        rect.setWidth(overlay.opts.dotRadiusFrame*2)
+        rect.setHeight(overlay.opts.dotRadiusFrame*2)
+        rect.setLeft(cx)     // unrotated left (rotation around center)
+        rect.setTop(cy)      // unrotated top
+        rect.setAngle(0)
+        rect.setCoords()
+        // Rely on refreshRectStyle
+    }
 }
+
+// Fabric BeeRect to obs
+function updateRectObsGeometry(activeObject) {
+    if (logging.overlay)
+        console.log('updateRectObsGeometry: activeObject=',activeObject)
+    let obs = activeObject.obs
+        if (typeof obs === 'undefined') {
+            console.log('updateRectObsGeometry: activeObject.obs undefined')
+            return
+    }
+
+    let geom = rotatedRectGeometry(activeObject);
+    let videoRect = overlay.canvasToVideoRect(geom.unrotated)
+    
+    if (overlay.opts.showRect) {
+        // Update Observation attached to rectangle from current Rect size
+        obs.x = videoRect.left    // unrotated left (rotation around center)
+        obs.y = videoRect.top     // unrotated top
+        obs.width = videoRect.width
+        obs.height = videoRect.height
+        obs.angle = activeObject.angle    
+        obs.cx = (videoRect.left + videoRect.width / 2);
+        obs.cy = (videoRect.top + videoRect.height / 2);
+    } else {
+        // `Virtual rect, just update center, keep width, height, angle
+        // Update Observation attached to rectangle from current Rect size
+        //obs.x = videoRect.left    // unrotated left (rotation around center)
+        //obs.y = videoRect.top     // unrotated top
+        //obs.width = videoRect.width
+        //obs.height = videoRect.height
+        //obs.angle = activeObject.angle    
+        obs.cx = (videoRect.left + videoRect.width / 2);
+        obs.cy = (videoRect.top + videoRect.height / 2);
+        obs.x = obs.cx - obs.width/2;
+        obs.y = obs.cy - obs.height/2;
+    }
+}
+
 function createRectsFromTracks(F) {
     if (typeof F === 'undefined')
         F = getCurrentFrame()
@@ -726,7 +842,7 @@ fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
             this._drawParts(ctx)
         }
         
-        identifyBeeRect(ctx, this, 5);
+        identifyBeeRect(ctx, this, overlay.opts.dotRadiusFrame, this.active);
     },
     
     _colormapping: function(label) {
@@ -843,23 +959,6 @@ function findRect(id) {
     return undefined
 }
 
-function updateRectObsGeometry(activeObject) {
-    if (logging.overlay)
-        console.log('updateRectObsGeometry: activeObject=',activeObject)
-
-    let geom = rotatedRectGeometry(activeObject);
-    let videoRect = overlay.canvasToVideoRect(geom.unrotated)
-    
-    // Update Observation attached to rectangle from current Rect size
-    let obs = activeObject.obs
-    obs.x = videoRect.left    // unrotated left (rotation around center)
-    obs.y = videoRect.top     // unrotated top
-    obs.width = videoRect.width
-    obs.height = videoRect.height
-    obs.angle = activeObject.angle    
-    obs.cx = (videoRect.left + videoRect.width / 2);
-    obs.cy = (videoRect.top + videoRect.height / 2);
-}
 function updateRectObsActivity(activeObject) {
     // Update Observation attached to rectangle from Form information
     let obs = activeObject.obs
@@ -987,7 +1086,9 @@ function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
     ctx.fillText(acti, x, y + radius + 3);
     ctx.textBaseline = 'alphabetic';
 }
-function identifyBeeRect(ctx, rect, radius) {
+
+// Main function to display annotation info
+function identifyBeeRect(ctx, rect, radius, isActive) {
 
     var color
     if (rect.status === "new")
@@ -1014,41 +1115,57 @@ function identifyBeeRect(ctx, rect, radius) {
     ctx.closePath();
     ctx.fill();
 
-    ctx.font = "20px Arial";
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    let obs=rect.obs
-    if (hasLabel(obs,'wrongid')) {
-        if (obs.newid == null) {
-            ctx.fillStyle = 'cyan';
-            ctx.fillText(String(obs.ID), x, y - radius - 3);
-        } else {
-            ctx.font = "14px Arial";
-            ctx.fillStyle = 'cyan';
-            ctx.fillText(String(obs.ID), x, y - radius - 3);
-            ctx.font = "10px Arial";
-            ctx.fillStyle = color;
-            ctx.fillText(String(obs.newid), x, y - radius - 16);
+    if (!overlay.opts.showRect) {
+        if (isActive) {
+            // Compensate for the fact the selected rect will not have visible handles
+            ctx.strokeStyle = 'red'
+            ctx.lineWidth = 3
+            ctx.stroke();
         }
-    } else {
-        ctx.fillText(String(rect.id), x, y - radius - 3);
     }
 
-    let acti = activityString(rect.obs)
+    let obs=rect.obs
 
-    ctx.font = "10px Arial";
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(acti, x, y + radius + 3);
-    ctx.textBaseline = 'alphabetic';
-    
-    if (typeof rect.obs.notes !== 'undefined') {
+    if (overlay.opts.showID) {
+        ctx.font = "20px Arial";
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        if (hasLabel(obs,'wrongid')) {
+            if (obs.newid == null) {
+                ctx.fillStyle = 'cyan';
+                ctx.fillText(String(obs.ID), x, y - radius - 3);
+            } else {
+                ctx.font = "14px Arial";
+                ctx.fillStyle = 'cyan';
+                ctx.fillText(String(obs.ID), x, y - radius - 3);
+                ctx.font = "10px Arial";
+                ctx.fillStyle = color;
+                ctx.fillText(String(obs.newid), x, y - radius - 16);
+            }
+        } else {
+            ctx.fillText(String(rect.id), x, y - radius - 3);
+        }
+    }
+
+    if (overlay.opts.showLabels) {
+        let acti = overlay.opts.labelFormatter(rect.obs)
+        //activityString(rect.obs)
+
         ctx.font = "10px Arial";
         ctx.fillStyle = color;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        wrapText(ctx, rect.obs.notes, x, y + radius + 3 + 12, 80, 10)
+        ctx.fillText(acti, x, y + radius + 3);
+        ctx.textBaseline = 'alphabetic';
+    }
+    if (overlay.opts.showNotes) {
+        if (typeof rect.obs.notes !== 'undefined') {
+            ctx.font = "10px Arial";
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            wrapText(ctx, rect.obs.notes, x, y + radius + 3 + 12, 80, 10)
+        }
     }
     
     ctx.restore()
