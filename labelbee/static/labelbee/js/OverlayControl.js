@@ -70,8 +70,9 @@ function OverlayControl(canvasTagId) {
         showLabels: true,
         labelFormatter: function(obs) {return activityString(obs)},
         showNotes: true,
-        dotRadiusFrame: 4, // Radius of dot center
-        resizeAroundCenter: false
+        resizeAroundCenter: false,
+        ID_dotRadius: 4, // Radius of dot center
+        ID_fontSize: 20
     }
     overlay.updateOptsButtons()
     
@@ -148,6 +149,14 @@ OverlayControl.prototype.updateOptsButtons = function() {
             $(".overlayOpts-"+option).removeClass("active")      
         }
     }
+    $('#overlayOpts-ID_dotRadius').val(String(this.opts.ID_dotRadius))
+    $('#overlayOpts-ID_fontSize').val(String(this.opts.ID_fontSize))
+}
+function onOverlayParamsChanged(event) {
+    console.log('onOverlayParamsChanged')
+    overlay.opts.ID_dotRadius = Number($('#overlayOpts-ID_dotRadius').val())
+    overlay.opts.ID_fontSize = Number($('#overlayOpts-ID_fontSize').val())
+    overlay.refreshOverlay()
 }
 
 function selectboxSetOptions(selectbox, options, names) {
@@ -687,8 +696,8 @@ function updateRectFromObsGeometry(rect) {
         rect.setAngle(obs.angle)
         rect.setCoords()
     } else {
-        rect.setWidth(overlay.opts.dotRadiusFrame*2)
-        rect.setHeight(overlay.opts.dotRadiusFrame*2)
+        rect.setWidth(overlay.opts.ID_dotRadius*2)
+        rect.setHeight(overlay.opts.ID_dotRadius*2)
         rect.setLeft(cx)     // unrotated left (rotation around center)
         rect.setTop(cy)      // unrotated top
         rect.setAngle(0)
@@ -842,7 +851,7 @@ fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
             this._drawParts(ctx)
         }
         
-        identifyBeeRect(ctx, this, overlay.opts.dotRadiusFrame, this.active);
+        identifyBeeRect(ctx, this, overlay.opts.ID_dotRadius, this.active);
     },
     
     _colormapping: function(label) {
@@ -1127,7 +1136,9 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
     let obs=rect.obs
 
     if (overlay.opts.showID) {
-        ctx.font = "20px Arial";
+        //ctx.font = "20px Arial";
+        font = ''+overlay.opts.ID_fontSize+'px Arial' 
+        ctx.font = font
         ctx.fillStyle = color;
         ctx.textAlign = 'center';
         if (hasLabel(obs,'wrongid')) {
@@ -1151,7 +1162,9 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
         let acti = overlay.opts.labelFormatter(rect.obs)
         //activityString(rect.obs)
 
-        ctx.font = "10px Arial";
+        //ctx.font = "10px Arial";
+        font = ''+(overlay.opts.ID_fontSize/2)+'px Arial' 
+        ctx.font = font
         ctx.fillStyle = color;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
@@ -1160,7 +1173,9 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
     }
     if (overlay.opts.showNotes) {
         if (typeof rect.obs.notes !== 'undefined') {
-            ctx.font = "10px Arial";
+            //ctx.font = "10px Arial";
+            font = ''+(overlay.opts.ID_fontSize/2)+'px Arial' 
+            ctx.font = font
             ctx.fillStyle = color;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';

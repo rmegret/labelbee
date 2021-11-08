@@ -1467,7 +1467,7 @@ ZoomOverlay.prototype.loadTagCodesFromServer = function(){
             
             zoomOverlay.tagbin = obj
           },
-          error: showAjaxError('tagCodesFromServer: ERROR')
+          error: showAjaxError('tagCodesFromServer: ERROR', undefined, true) // Only console
         });
   }
 

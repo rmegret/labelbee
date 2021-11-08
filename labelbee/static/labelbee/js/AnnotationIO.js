@@ -1253,17 +1253,19 @@ function typesetAjaxError(title, hook) {
     }
     return callback
 }
-function showAjaxError(title, prehook) {
+function showAjaxError(title, prehook, onlyConsole) {
     var callback = function(jqXHR, textStatus, errorThrown) {
         console.log('AJAX ERROR: '+title, jqXHR, textStatus, errorThrown, jqXHR.responseText)
         if (prehook) {
             prehook(jqXHR, textStatus, errorThrown)
         }
-        mainAlert(title 
-                  +'<br>Status: '+ textStatus
-                  +'<br>Error: '+ errorThrown
-                  +'<br>'+ jqXHR.responseText
-)
+        if (!onlyConsole) {
+            mainAlert(title 
+                    +'<br>Status: '+ textStatus
+                    +'<br>Error: '+ errorThrown
+                    +'<br>'+ jqXHR.responseText
+            )
+        }
     }
     return callback
 }

@@ -162,6 +162,60 @@ function changeObservationID(frame, old_id, new_id) {
         return false
     }
 }
+function getFramesWithID(interval, id) {
+    let fmin = interval[0];
+    let fmax = interval[1];
+    if (fmax==-1) {
+        fmax = videoinfo.nframes-1
+    }
+    
+    var frames = []
+    for (let f=fmin; f<=fmax; f++) {
+        if (obsDoesExist(f, id)) {
+            frames.push(f)
+        }
+    }    
+    return frames;
+}
+function getFramesWithSwapID(interval, id, new_id) {
+    let fmin = interval[0];
+    let fmax = interval[1];
+    if (fmax==-1) {
+        fmax = videoinfo.nframes-1
+    }
+    
+    var frames = []
+    for (let f=fmin; f<=fmax; f++) {
+        if (obsDoesExist(f, id) && obsDoesExist(f, new_id)) {
+            frames.push(f)
+        }
+    }    
+    return frames;
+}
+function obs_swapID(interval, old_id, new_id) {
+    let fmin = interval[0];
+    let fmax = interval[1];
+    if (fmax==-1) {
+        fmax = videoinfo.nframes-1
+    }
+
+    for (let f=fmin; f<=fmax; f++) {
+        if (obsDoesExist(f, old_id)) {
+            let exist = obsDoesExist(f, new_id)
+            if (exist) {
+                if (logging.submitEvents) {
+                    console.log('swapID, existing event frame='+f+' id='+new_id+' swapped down to id='+old_id)
+                }
+                changeObservationID(f, new_id, 'SWAP_save_'+new_id)
+            }
+            changeObservationID(f, old_id, new_id)
+            if (exist) {
+                changeObservationID(f, 'SWAP_save_'+new_id, old_id)
+            }
+        }
+    }    
+}
+
 
 
 function printTracks() {

@@ -415,6 +415,51 @@ function automatic_sub() {
     }
 }
 
+function swapID_findAll(ID) {
+    frames = getFramesWithID([getCurrentFrame(),-1],ID)
+
+}
+function swapID_callback() {
+    var activeObject = overlay.getActiveObject();
+    if (activeObject === null) {
+        printMessage("No bee selected", "red")
+        return false;
+    }
+
+    let swapNewID = 
+        $('<input type="text" size="5" value="" id="swapNewIDInput" class="small"></input>')
+            
+
+    function doSwap2(interval, old_id, new_id) {
+        obs_swapID(interval, old_id, new_id)
+        videoControl.refresh() // Just refresh
+        refreshChronogram();
+    }
+    function doSwap() {
+        let interval = [getCurrentFrame(),-1]
+        let old_id = activeObject.id
+        let new_id = swapNewID.val()
+        console.log('Swapping ID '+old_id+' with '+new_id)
+        let frames = getFramesWithID(interval, old_id)
+        let swapFrames = getFramesWithSwapID(interval, old_id, new_id)
+        $('#alerttext').html('Swap ID '+old_id+' with '+new_id+' nframes='+frames.length+' (including '+swapFrames.length+' swaps)')
+            .append($('<button>CONFIRM</button>').click((evt) => doSwap2(interval, old_id, new_id)))
+            .append($('<button>CANCEL</button>').click(cancelSwap))
+    }
+    function cancelSwap() {
+        $('#alerttext').html('SwapID canceled')
+    }
+
+    swapNewID.val(activeObject.id)
+
+    //printMessage(
+    $('#alerttext').html("Swap current ID="+activeObject.id+" with new ID for frame "+getCurrentFrame()+" until end. NewID=")
+    .append(swapNewID)
+    .append($('<button>SWAP</button>').click(doSwap))
+    .append($(document.createTextNode(' ')))
+    .append($('<button>CANCEL</button>').click(cancelSwap))
+}
+
 /* Selection */
 
 tagSelection=undefined
