@@ -72,7 +72,9 @@ function OverlayControl(canvasTagId) {
         showNotes: true,
         resizeAroundCenter: false,
         ID_dotRadius: 4, // Radius of dot center
-        ID_fontSize: 20
+        ID_fontSize: 20,
+        clickModeSelectMultiframe: false,
+        clickModeNewAnnotation: false
     }
     overlay.updateOptsButtons()
     
@@ -141,7 +143,7 @@ OverlayControl.prototype.optsClick = function(option) {
 }
 OverlayControl.prototype.updateOptsButtons = function() {
     console.log('overlay.updateDisableAngleButton')
-    for (option of ['showRect','showID','showLabels','showNotes','resizeAroundCenter']) {
+    for (option of ['showRect','showID','showLabels','showNotes','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation']) {
         console.log(option)
         if ( this.opts[option] ) {
             $(".overlayOpts-"+option).addClass("active")
@@ -2229,6 +2231,27 @@ function predictId(frame, rect, mode) {
         reason: 'default'
     };
 }
+function defaultIfIDExists(predictStruct) {
+    let id = predictStruct.id
+    if (id==null) {
+        return {
+            id: computeDefaultNewID(),
+            obs: undefined,
+            d: Infinity,
+            frame: undefined,
+            reason: 'notFound'
+        };
+    } 
+    if (findRect(id))
+        return {
+            id: computeDefaultNewID(),
+            predicted_id: id,
+            predicted_obs: obs,
+            reason: 'conflict'
+        };
+    else
+        return predictStruct;
+}
 function predictIdFromObsMultiframe(frameInterval, pt, mode) {
     let out = {id: undefined, obs: undefined, reason:'notFound', d:Infinity, frame: undefined};
     
@@ -2371,7 +2394,13 @@ function onMouseDown_predict(option) {
     }
 
     // predictId takes video/obs coordinates units
-    let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
+    //let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
+    let f = getCurrentFrame()
+    let interval = [f-10, f+10]
+    if (interval[0]<0) interval[0]=0
+    if (interval[1]>=videoinfo.nframes) interval[1]=videoinfo.nframes-1
+    let prediction = predictIdFromObsMultiframe(interval,videoXY, "distance")
+    prediction = defaultIfIDExists(prediction)
     let predictionTag = predictIdFromTags(getCurrentFrame(), videoXY, "distance");
     //$("#I").val(prediction.id)
   
@@ -2446,10 +2475,10 @@ function onMouseDown_predict(option) {
     //automatic_sub();
     submit_bee();
     // Fire mouse:down again, this time with the created target
-    overlay.canvas1.fire("mouse:down", {
-        target: rect,
-        e: option.e
-    })
+    // overlay.canvas1.fire("mouse:down", {
+    //     target: rect,
+    //     e: option.e
+    // })
 }
 
 /* Create new rectangle interactively (dragging) */
@@ -2659,16 +2688,36 @@ function onMouseDown(option) {
     
     printMessage("")
 
-    if (typeof option.target != "undefined") {
-        if (option.e.altKey) {
-            onMouseDown_panning(option)
-        } else {
-            // Clicked on an existing object
-            if (logging.mouseEvents)
-                console.log("onMouseDown: Clicked on object ", option.target)
-            // This is now handled by event onObjectSelected()
-            return false;
+    if (option.e.altKey) {
+        if (logging.mouseEvents)
+             console.log('onMouseDown: panning', option)
+        onMouseDown_panning(option)
+        return
+    }
+    if (overlay.opts.clickModeNewAnnotation) {
+        if ((typeof option.target != "undefined")
+             //&& (overlay.previouslySelected.id == option.target.id)
+             ) {
+            // Allow to move currentlu selected annotation
+            // Workaround: previouslySelected used because lastSelected is updated during mouseDown
+            return false
         }
+        if (logging.mouseEvents)
+             console.log('onMouseDown: create object', option)
+        // By default, create new annotation
+        // Try to copy prediction
+        // or create box centered on click if none
+        onMouseDown_predict(option)        
+        printMessage('Note: Click creates new annotations. If you want to select instead, deselect option "Click Mode/New annotation"','blue')
+        return false
+    }
+
+    if (typeof option.target != "undefined") {
+        // Clicked on an existing object
+        if (logging.mouseEvents)
+            console.log("onMouseDown: Clicked on object ", option.target)
+        // This is now handled by event onObjectSelected()
+        return false;
     } else {
         // Clicked on the background
         if (logging.mouseEvents)
@@ -2681,12 +2730,11 @@ function onMouseDown(option) {
         } else if (option.e.ctrlKey) {
             // If CTRL key, draw the box directly. Try to predict ID using TopLeft corner        
             onMouseDown_interactiveRect(option)
-        } else if (option.e.altKey) {
-            // If ALT key, do panning
-            onMouseDown_panning(option)
-        } else {
+        } else if (overlay.opts.clickModeSelectMultiframe) {
             // If no key, background click: try to select trajectory
             onMouseDown_selectMultiframe(option)
+        } else {
+            // Do nothing, just deselected
         }
     }
 }
@@ -2794,6 +2842,7 @@ function onObjectSelected(option) {
         if (option.target.id != overlay.getActiveObject().id) {
             console.log('ERROR in onObjectSelected: option.target.id != canvas1.getActiveObject().id', option.target.id, overlay.getActiveObject().id)
         }
+        overlay.previouslySelected = overlay.lastSelected
         selectBee(option.target)
         overlay.lastSelected = option.target
         updateDeleteButton()
