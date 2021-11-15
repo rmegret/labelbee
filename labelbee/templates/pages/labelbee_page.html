@@ -188,8 +188,6 @@
               <label>Notes: </label><input type="textbox" value="" class="resizedTextbox" id="notes">
             </div>
             </div>
-
-            <p id="alerttext"></p>
           </div>
              
             <div id="dialog-form-mainLabelList" class="modal-dialog"
@@ -248,6 +246,17 @@
                 <canvas id="canvas" style="z-index: 2"></canvas>
                 <canvas id="canvas1" style="border: none; z-index: 3"></canvas>
               </div>
+          </div>
+
+          <div id="alerttextblock" class="block inline-collapsible">
+            <div class="block-header small">
+              Messages
+            </div>
+            <div class="block-content">
+              <div id='alertextwrapper'>
+                <div id="alerttext"></div>
+              </div>
+            </div>
           </div>
           
           <!-- # VIDEO CONTROL -->
@@ -715,11 +724,11 @@
                 </div>
 
                 <div style="display:inline-block">
-                  <input value="Z+" onclick="zoomOverlay.zoomApplyScale(2)" type="button" class="btn btn-info btn-xs" title="Zoom In" style="display=inline;">
-                  <input value="Z=" onclick="zoomOverlay.zoomSetScale(1)" type="button" class="btn btn-info btn-xs" title="Reset Zoom" style="display=inline;">
-                  <input value="Z-" onclick="zoomOverlay.zoomApplyScale(1/2)" type="button" class="btn btn-info btn-xs" title="Zoom Out" style="display=inline;">
-                  <input value="⤿" onclick="zoomOverlay.rotateTag(-90)" type="button" class="btn btn-xs" title="Rotate CCW" style="display=inline;">
-                  <input value="⤾" onclick="zoomOverlay.rotateTag(+90)" type="button" class="btn btn-xs" title="Rotate CW" style="display=inline;">
+                  <input value="Z+" onclick="zoomOverlay.zoomApplyScale(2)" type="button" class="btn btn-info btn-xs" title="Zoom In" style="display:inline;">
+                  <input value="Z=" onclick="zoomOverlay.zoomSetScale(1)" type="button" class="btn btn-info btn-xs" title="Reset Zoom" style="display:inline;">
+                  <input value="Z-" onclick="zoomOverlay.zoomApplyScale(1/2)" type="button" class="btn btn-info btn-xs" title="Zoom Out" style="display:inline;">
+                  <input value="⤿" onclick="zoomOverlay.rotateTag(-90)" type="button" class="btn btn-xs" title="Rotate CCW" style="display:inline;">
+                  <input value="⤾" onclick="zoomOverlay.rotateTag(+90)" type="button" class="btn btn-xs" title="Rotate CW" style="display:inline;">
                 </div>
                 
                 <div style="clear:both;"></div>

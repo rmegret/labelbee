@@ -143,14 +143,38 @@ function storeObs(tmpObs) {
         console.log("Submitting obs = ", obs)
 }
 
-function changeObservationID(frame, old_id, new_id) {
+/**
+ * 
+ * @param {*} frame 
+ * @param {*} old_id 
+ * @param {*} new_id 
+ * @param {(false|true|'swap')} force 
+ * @returns true if change was performed
+ */
+function changeObservationID(frame, old_id, new_id, force) {
     // REMI: modified to be be independent of View
+    if (old_id==new_id) {
+        console.log("changeObservationID: ABORT, old_id=",old_id," same as new_id=",new_id);
+        return false
+    }
     if (Tracks[frame] != null) {
+        if (!force) {
+            if (Tracks[frame][new_id] != null) {
+                console.log("changeObservationID: ABORT, new_id=",new_id," already exists");
+                return false
+            }
+        }
         if (Tracks[frame][old_id] != null) {
             if (logging.submitEvents)
                 console.log("changeObservationID: frame=", frame, "old_id=", old_id, " new_id=", new_id);
+            let backup_new_id = Tracks[frame][new_id]
             Tracks[frame][new_id] = Tracks[frame][old_id];
-            delete Tracks[frame][old_id];
+            if ((backup_new_id) && (force=='swap')) {
+                Tracks[frame][old_id] = backup_new_id
+                Tracks[frame][old_id].ID = old_id;
+            } else {
+                delete Tracks[frame][old_id];
+            }
             Tracks[frame][new_id].ID = new_id;
             return true
         } else {

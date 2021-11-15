@@ -2124,7 +2124,7 @@ function refreshChronogram() {
         for (let F in Tracks) {
             for (let id in Tracks[F]) {
                 let obs=Tracks[F][id]
-                let labelArray = obs.labels.split(",")
+                let labelArray = (obs.labels || '').split(",")
             
                 if (flag_restrictID) {
                     if ($.inArray(String(id), restrictIDArray)<0) continue;

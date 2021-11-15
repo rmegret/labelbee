@@ -2324,7 +2324,7 @@ function computeDefaultNewID() {
         console.log("computeDefaultNewID: frame=",frame," default_id=",default_id)
         console.log("   ids=",ids)
     }
-    return default_id
+    return String(default_id)
 }
 
 
@@ -2708,7 +2708,10 @@ function onMouseDown(option) {
         // Try to copy prediction
         // or create box centered on click if none
         onMouseDown_predict(option)        
-        printMessage('Note: Click creates new annotations. If you want to select instead, deselect option "Click Mode/New annotation"','blue')
+        //printMessage('Note: Click creates new annotations. If you want to select instead, deselect option "Click Mode/New annotation"','blue')
+        // Animate the New annotation button to remind the user of current mode
+        $('.overlayOpts-clickModeNewAnnotation').effect({'effect':"highlight","duration":200,"color":"#ffff00"})
+        //$('.overlayOpts-clickModeNewAnnotation').effect({'effect':"pulsate","duration":100,"times":2})
         return false
     }
 
@@ -2733,6 +2736,7 @@ function onMouseDown(option) {
         } else if (overlay.opts.clickModeSelectMultiframe) {
             // If no key, background click: try to select trajectory
             onMouseDown_selectMultiframe(option)
+            //$('.overlayOpts-clickModeSelectMultiframe').effect({'effect':"highlight","duration":500,"color":"#ffff00"})
         } else {
             // Do nothing, just deselected
         }

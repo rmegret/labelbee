@@ -135,16 +135,24 @@ function init() {
     // ## Keyboard control
 
     // REMI: use keyboard
-    //$(window).on("keydown", onKeyDown);
+    //$(window).on("keydown", onWindowKeyDown);
     $('#left-side').attr("tabindex", "0")
     $('#left-side').on("keydown", onKeyDown);
-    
+    //$('#video').on("keydown", onKeyDown);
+    // Enable keyboard events from video wrapper
+    //let videocanvaswrapper = $('.canvaswrapper')[0]
+    //$(videocanvaswrapper).on('keydown',function(){console.log('KKEY')})
+    //$(videocanvaswrapper).attr('tabindex','0')
+
     // ## Misc init
 
     // Do not trigger first refresh: onloadeddata will call it
     // refresh();
     updateForm(null);
     defaultSelectedBee = undefined;
+    change_id_force = 'swap'  // What to do if conflict when changing id
+
+    $('#alerttextblock').resizable()
     
     //loadEventsFromFile0('data/Tracks-demo.json')
     
@@ -174,7 +182,7 @@ function printMessage(html, color) {
     if (typeof color === 'undefined') color='black'
 
     $('#alerttext').html(html)
-    $('#alerttext').css('color', color);
+    $('#alerttext').css('color', color)
     
     if (html !== "")
         console.log("MESSAGE: %c"+html, "color:"+color)
@@ -499,8 +507,8 @@ function FilePickerFromServerDialog() {
 function onKeyDown_IDEdit(event) {
     if (logging.keyEvents)
         console.log("onKeyDown_IDEdit: event=",event)
-    var key = event.which || event.keyCode;
-    if (key == 13) { // Enter
+    //var key = event.which || event.keyCode;
+    if (event.key == 'Enter') { // Enter
         let frame = getCurrentFrame()
         let fieldID = document.getElementById("I");
         let new_id = fieldID.value
@@ -510,13 +518,18 @@ function onKeyDown_IDEdit(event) {
         
         if (activeObject.status === "new") {
             activeObject.id = new_id
+            submit_bee(activeObject)  
+            defaultSelectedBee=new_id          
             printMessage("ID changed + submitted", "green")
-            submit_bee(activeObject)
         } else /* status=="db"*/ {
             let old_id = activeObject.id
-            if (changeObservationID(frame, old_id, new_id)) {
+            if (logging.keyEvents)
+                console.log("onKeyDown_IDEdit: trying to change ID", 
+                            {object: activeObject, old_id: old_id, new_id: new_id})
+            if (changeObservationID(frame, old_id, new_id, change_id_force)) {
                 // Successfull
                 activeObject.id = new_id
+                defaultSelectedBee=new_id
                 printMessage("ID changed succesfully!", "green")
             } else {
                 console.log("onKeyDown_IDEdit: unsuccessfull ID change", {
@@ -526,6 +539,7 @@ function onKeyDown_IDEdit(event) {
                 })
                 printMessage("ID not changed", "orange")
             }
+            //console.log(defaultSelectedBee)
             videoControl.refresh();
             refreshChronogram()
         }
@@ -581,18 +595,32 @@ function onKeyDown(e) {
         console.log("onKeyDown: e=",e)
         
     if (/textarea|select/i.test( e.target.nodeName ) || e.target.type === "text") {
+      if (e.key=="Escape") {
+        if (logging.keyEvents)
+            console.log("onKeyDown: Escape in text field. focus back to canvas/left-side")
+        $('#left-side')[0].focus({preventScroll:true}) // Use HTML5 API to prevent scroll
+        e.stopPropagation();
+        return;
+      }
       if (logging.keyEvents)
         console.log("onKeyDown: coming from text field. stopped event")
       e.stopPropagation();
       return;
     }
-        
-    if (e.target == document.getElementById("I")) {
-        if (e.keyCode==32 || e.keyCode==188 || e.keyCode==190) {
-          console.log("onKeyDown: detected keydown happened in textfield #I with keyCode for navigation shortcuts. Canceling it and showing a message.")
-          printMessage("Editing ID. Press ESC to exit...", "green")
-          return false
-        }
+
+    var id_field = document.getElementById("I");
+    if (e.target == id_field) {
+        if (e.keyCode==27) {
+            console.log("onKeyDown: detected keydown ESC happened in textfield #I. Canceling edit.")
+            id_field.blur();
+            $('#left-side')[0].focus({preventScroll:true})
+            return false
+          }
+        //if (e.keyCode==32 || e.keyCode==188 || e.keyCode==190) {
+        //  console.log("onKeyDown: detected keydown happened in textfield #I with keyCode for navigation shortcuts. Canceling it and showing a message.")
+        //  printMessage("Editing ID. Press ESC to exit...", "green")
+        //  return false
+        //}
     }
     if (e.target.type == "text") {
         if (logging.keyEvents)
@@ -614,13 +642,6 @@ function onKeyDown(e) {
         return false
     }
     switch (e.keyCode) {
-/*        case 32: // Space
-            var id_field = document.getElementById("I");
-            id_field.focus(); // Facilitate changing the id
-            id_field.select();
-            return false; // Prevent the event to be used as input to the field
-            break;
-            */
         case 32: // Space
             if (e.ctrlKey) {
                 if (e.shiftKey)
@@ -640,6 +661,7 @@ function onKeyDown(e) {
             if ($(id_field).is(':focus')) {
                 id_field.selectionStart = id_field.selectionEnd
                 id_field.blur();
+                $('#left-side')[0].focus({preventScroll:true})
                 return false;
             } else {
                 id_field.focus(); // Facilitate changing the id
@@ -647,19 +669,17 @@ function onKeyDown(e) {
                 return false;
             }
             break;
-        //case 83: // key S
-        //    submit_bee();
-        //    if (logging.keyEvents)
-        //        console.log("onKeyDown: 'S' bound to submit_bee. Prevented key 'S' to propagate to textfield.")
-        //    return false; // Prevent using S in textfield
         case 13: // Enter
-            if ($(document.activeElement)[0]==document.body) {
-                // No specific focus, process the key
-                submit_bee();
-            }
+            // if ($(document.activeElement)[0]==document.body) {
+            //     // No specific focus, process the key
+            //     submit_bee();
+            // }
             //onKeyDown_IDEdit(e) // Forward to IDedit keydown handler
             //return false;
-            return true
+            //return true
+            id_field.focus(); // Facilitate changing the id
+            id_field.select();
+            return false; // jQuery: preventDefault + stopPropagation
         case 16: // Shift
         case 17: // Ctrl
         case 18: // Alt
