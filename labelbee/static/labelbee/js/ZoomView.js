@@ -102,6 +102,11 @@ function ZoomOverlay(canvas, canvasOverlay) {
     $('#buttonZoomShowGrid').toggleClass('active', this.flagShowGrid)
     this.flagShowZoom = true;
     $('#checkboxShowZoom').prop('checked', this.flagShowZoom);
+    this.flagShowTagView = false
+    $('#checkboxZoomShowTagView').prop('checked', this.flagShowTagView)
+    if (!this.flagShowTagView) 
+        $('#zoomTagView').hide()
+
     this.flagShowParts = false
     $('#buttonZoomShowParts').toggleClass('active', this.flagShowParts)
     this.flagShowDistractors = false
@@ -109,6 +114,8 @@ function ZoomOverlay(canvas, canvasOverlay) {
     this.flagShowAlternateHamming = false
     this.flagShowAlternateHamming2 = true
     this.flagShowAlternateFocus = true
+
+    
     
     this.currentTagBin = ''
     this.loadTagCodesFromServer()
@@ -548,6 +555,15 @@ ZoomOverlay.prototype.clickShowZoom = function() {
     this.flagShowZoom = $('#checkboxShowZoom').is(':checked')
     if (this.flagShowZoom) {
       this.syncFromTracks()
+    }
+}
+ZoomOverlay.prototype.clickToggleShowTagView = function() {
+    this.flagShowTagView = $('#checkboxZoomShowTagView').is(':checked')
+    if (this.flagShowTagView) {
+        $('#zoomTagView').show()
+        this.refreshZoom()
+    } else {
+        $('#zoomTagView').hide()
     }
 }
 ZoomOverlay.prototype.onToggleButtonShowAlternate = function(event) {
@@ -1231,6 +1247,10 @@ function findAllHamming(bin, tagbin_list, maxH) {
 // }
 
 ZoomOverlay.prototype.updateTagView = function(tag) {
+    if (!this.showTagView) {
+        return
+    }
+
     this.updateDistractors()
 
     if (!tag) return
@@ -2050,6 +2070,12 @@ ZoomOverlay.prototype.refreshTagImage = function() {
 ZoomOverlay.prototype.loadTagImage = function() {
     if (logging.zoomTag)
         console.log('ZoomOverlay.loadTagImage')
+
+    if (!this.flagShowTagView) {
+        if (logging.zoomTag)
+            console.log('ZoomOverlay.loadTagImage: ABORTED, flagShowTagView is false')
+        return
+    }
   
     $('.tagImageID').html("ID="+String(this.id))
   

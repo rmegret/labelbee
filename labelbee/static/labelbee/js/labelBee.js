@@ -599,6 +599,7 @@ function onKeyDown(e) {
         if (logging.keyEvents)
             console.log("onKeyDown: Escape in text field. focus back to canvas/left-side")
         $('#left-side')[0].focus({preventScroll:true}) // Use HTML5 API to prevent scroll
+        updateForm(overlay.getActiveObject())
         e.stopPropagation();
         return;
       }
@@ -610,10 +611,11 @@ function onKeyDown(e) {
 
     var id_field = document.getElementById("I");
     if (e.target == id_field) {
-        if (e.keyCode==27) {
+        if (e.key=="Escape") { //(e.keyCode==27) {
             console.log("onKeyDown: detected keydown ESC happened in textfield #I. Canceling edit.")
             id_field.blur();
             $('#left-side')[0].focus({preventScroll:true})
+            updateForm(overlay.getActiveObject())
             return false
           }
         //if (e.keyCode==32 || e.keyCode==188 || e.keyCode==190) {
@@ -641,45 +643,76 @@ function onKeyDown(e) {
         videoControl.refresh()
         return false
     }
-    switch (e.keyCode) {
-        case 32: // Space
-            if (e.ctrlKey) {
-                if (e.shiftKey)
-                    videoControl.playPauseVideoBackward(2);
-                else
-                    videoControl.playPauseVideo(2);
-            } else {
-                if (e.shiftKey)
-                    videoControl.playPauseVideoBackward();
-                else
-                    videoControl.playPauseVideo();
-            }
+    // Prev Frame: <, arrow
+    if ((e.key=="ArrowLeft")||(e.keyCode==188)) { 
+        if (e.ctrlKey && e.shiftKey)
+            videoControl.rewind4();
+        else if (e.ctrlKey)
+            videoControl.rewind3();
+        else if (e.shiftKey)
+            videoControl.rewind2();
+        else
+            videoControl.rewind();
+        return false;
+    }
+    // Next Frame: >, arrow
+    if ((e.key=="ArrowRight")||(e.keyCode==190)) { 
+        if (e.ctrlKey && e.shiftKey)
+            videoControl.forward4();
+        else if (e.ctrlKey)
+            videoControl.forward3();
+        if (e.shiftKey)
+            videoControl.forward2();
+        else
+            videoControl.forward();
+        return false;
+    }
+    // Play/Pause: Space (32)
+    if ((e.key==" ")) { 
+        if (e.ctrlKey) {
+            if (e.shiftKey)
+                videoControl.playPauseVideoBackward(2);
+            else
+                videoControl.playPauseVideo(2);
+        } else {
+            if (e.shiftKey)
+                videoControl.playPauseVideoBackward();
+            else
+                videoControl.playPauseVideo();
+        }
+        return false;
+    }
+    // Escape: Focus on ID field vs video control (27)
+    if ((e.key=="Escape")) { 
+        var id_field = document.getElementById("I");
+        if ($(id_field).is(':focus')) {
+            id_field.selectionStart = id_field.selectionEnd
+            id_field.blur();
+            $('#left-side')[0].focus({preventScroll:true})
             return false;
-        case 27: // Escape
-            //return true;
-            var id_field = document.getElementById("I");
-            if ($(id_field).is(':focus')) {
-                id_field.selectionStart = id_field.selectionEnd
-                id_field.blur();
-                $('#left-side')[0].focus({preventScroll:true})
-                return false;
-            } else {
-                id_field.focus(); // Facilitate changing the id
-                id_field.select();
-                return false;
-            }
-            break;
-        case 13: // Enter
-            // if ($(document.activeElement)[0]==document.body) {
-            //     // No specific focus, process the key
-            //     submit_bee();
-            // }
-            //onKeyDown_IDEdit(e) // Forward to IDedit keydown handler
-            //return false;
-            //return true
+        } else {
             id_field.focus(); // Facilitate changing the id
             id_field.select();
-            return false; // jQuery: preventDefault + stopPropagation
+            return false;
+        }
+        return false;
+    }
+    // Enter: Focus on ID field vs video control (27)
+    if ((e.key=="Enter")) { 
+        var id_field = document.getElementById("I");
+        if ($(id_field).is(':focus')) {
+            id_field.selectionStart = id_field.selectionEnd
+            id_field.blur();
+            $('#left-side')[0].focus({preventScroll:true})
+            return false;
+        } else {
+            id_field.focus(); // Facilitate changing the id
+            id_field.select();
+            return false;
+        }
+        return false;
+    }
+    switch (e.keyCode) {
         case 16: // Shift
         case 17: // Ctrl
         case 18: // Alt
@@ -688,81 +721,11 @@ function onKeyDown(e) {
         case 35: // End
         case 36: // Home
             break;
-        case 188: // <
-            if (e.ctrlKey && e.shiftKey)
-                videoControl.rewind4();
-            else if (e.ctrlKey)
-                videoControl.rewind3();
-            else if (e.shiftKey)
-                videoControl.rewind2();
-            else
-                videoControl.rewind();
-            return false;
-        case 190: // >
-            if (e.ctrlKey && e.shiftKey)
-                videoControl.forward4();
-            else if (e.ctrlKey)
-                videoControl.forward3();
-            if (e.shiftKey)
-                videoControl.forward2();
-            else
-                videoControl.forward();
-            return false;
-            // Mac CMD Key
         case 91: // Safari, Chrome
         case 93: // Safari, Chrome
         case 224: // Firefox
             break;
     }
-    /*
-    let obj = canvas1.getActiveObject();
-    if (obj) {
-        switch (e.keyCode) {
-            case 37: // Left
-                if (e.shiftKey && obj.width > 10) {
-                    obj.width -= 10;
-                    obj.left += 5;
-                } else
-                    obj.left -= 10;
-                obj.setCoords();
-                videoControl.refresh();
-                return false;
-            case 39: // Right
-                if (e.ctrlKey) {
-                    obj.set("width", parseFloat(obj.get("width")) + 10)
-                    obj.set("left", parseFloat(obj.get("left")) - 5)
-                } else
-                    obj.set("left", parseFloat(obj.get("left")) + 10)
-                obj.setCoords();
-                videoControl.refresh();
-                return false;
-            case 38: // Up
-                if (e.ctrlKey) {
-                    obj.set("height", parseFloat(obj.get("width")) + 10)
-                    obj.set("top", parseFloat(obj.get("top")) - 5)
-                } else
-                    obj.set("top", parseFloat(obj.get("top")) - 10)
-                obj.setCoords();
-                videoControl.refresh();
-                return false;
-            case 40: // Down
-                obj.set("top", parseFloat(obj.get("top")) + 10)
-                obj.setCoords();
-                videoControl.refresh();
-                return false;
-        }
-    }
-    */
-    /*
-    if (e.keyCode >= 48 && e.keyCode <= 57) { // Numbers from 0 to 9
-        if (!$("#I").is(':focus')) { // If ID not focused, focus it
-            $("#I")[0].focus()
-            $("#I")[0].select()
-                //$("#I").val(e.keyCode-48); // Type in the numerical character
-            return true; // Let keycode be transfered to field
-        }
-    }
-    */
 }
 
 

@@ -276,6 +276,8 @@
                 <button value="Previous second" onclick="videoControl.rewind(20)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fbut2" title="-1s"><span class="glyphicon glyphicon-fast-forward icon-flipped"></span></button>
                 <button value="Previous frame" onclick="videoControl.rewind(1)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut1" title="-1 frame"><span class="glyphicon glyphicon-step-backward"></span></button>
             
+                <input type="text" value="-" id="currentFrame" onchange="videoControl.onFrameTextChanged(event)" size="7" title="Frame">
+
                 <button value="Next frame" onclick="videoControl.forward(1)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut1" title="+1 frame"><span class="glyphicon glyphicon-step-forward"></span></button>
                 <button value="Next second" onclick="videoControl.forward(20)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut2" title="+1s"><span class="glyphicon glyphicon-fast-forward"></span></button>
                 <button value="Next minute" onclick="videoControl.forward(200)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut3" title="+10s"><span class="glyphicon glyphicon-fast-forward"></span></button>
@@ -462,7 +464,7 @@
                       </label>
                       <br>
                       <div id="videoName" class="small">-</div>
-                      Frame <input type="text" value="-" id="currentFrame" onchange="videoControl.onFrameTextChanged(event)" size="8">
+                      <div class="currentFrameDiv">-</div>
                       <div id="vidTime">Video Time:</div>
                       <div id="realTime">Real Time:</div>
                       <select id="selectboxVideo" name="video" onchange="videoManager.onSelectboxVideoChanged()" class="">
@@ -720,7 +722,8 @@
                     <label><input type="checkbox" checked="false" id="checkboxShowZoom" onclick="zoomOverlay.clickShowZoom()">Update</label>
                     <label><input type="checkbox" checked="true" id="checkboxZoomShowOverlay" onclick="zoomOverlay.clickShowOverlay()">Overlay</label>
                     <label><input type="checkbox" checked="true" id="checkboxZoomToggleGrid" onclick="zoomOverlay.clickToggleGrid()">Grid</label>
-<!--                     <label><input type="checkbox" checked="true" id="checkboxZoomShowDistractors" onclick="zoomOverlay.clickShowDistractors()">Alternate Tags</label> -->
+                    <label><input type="checkbox" checked="true" id="checkboxZoomShowTagView" onclick="zoomOverlay.clickToggleShowTagView()">Tag</label>
+                    <!--                     <label><input type="checkbox" checked="true" id="checkboxZoomShowDistractors" onclick="zoomOverlay.clickShowDistractors()">Alternate Tags</label> -->
                 </div>
 
                 <div style="display:inline-block">
@@ -744,7 +747,8 @@
                 </div>
                 <div id='zoomInfo'>
                 </div>
-                </td><td class="top-align">
+                </td>
+                <td class="top-align" id="zoomTagView">
                 <div>
                   <div class='tagdivresizable'>
                     <div class="inline-block tagImageID">ID</div>

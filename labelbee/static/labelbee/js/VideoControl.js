@@ -30,6 +30,11 @@ function VideoControl(videoTagId) {
     if (typeof videoTagId === 'undefined')
         videoTagId = 'video'; // Default HTML5 video tag to attach to
     
+    /*  Architecture:
+        this.video is handle to <video id='video'> HTML tag is responsible for loading and decoding the video
+        this.video2 is VideoFrame API to control this.video frame by frame
+        this.previewVideo is handle to <video> HTML tag to decode previewVideo
+        */
     this.video2 = new VideoFrame({
         id: videoTagId,
         /* We use the fps declared in the video here, even if not real */
@@ -263,7 +268,8 @@ VideoControl.prototype.onFrameChanged = function(event) {
     // Trigger public event 
     // listened by: 
     // - ChronoControl to change trackWindow View and timeMark View
-    // - OverlayControl to redraw overlay
+    // - OverlayControl to redraw overlay  
+    // (Update: videoControl.hardRefresh calls overlay.hardRefresh directly. Synchronicyt issue?)
     $( this ).trigger('frame:changed')
 }
 
@@ -303,9 +309,11 @@ VideoControl.prototype.updateVideoControlForm = function() {
     }
         
     if (this.currentMode == 'preview') {
-        $('#currentFrame').val(''+this.currentFrame+'[P]')
+        $('#currentFrame').val(''+this.currentFrame)
+        $('.currentFrameDiv').text('Frame: '+this.currentFrame+' [P]')
     } else {
-        $('#currentFrame').val(+this.currentFrame)
+        $('#currentFrame').val(''+this.currentFrame)
+        $('.currentFrameDiv').text('Frame: '+this.currentFrame)
     }
     $('#vidTime').html("Video Time: " + this.video2.toHMSm(this.getCurrentVideoTime()))
     $('#realTime').html("Real Time: " + toLocaleISOString(this.getCurrentRealDate()))
