@@ -269,7 +269,7 @@
                 </div>
                 <span class="block-content">
                 <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward" type="button" class="btn btn-info btn-sm nopad"><span class="glyphicon glyphicon-pause"></span><span class="glyphicon glyphicon-play icon-flipped"></span></button>
-                <span class="small">Speed </span><input type="text" class="btn-sm nopad" size="4" value="1" id="playRate" onchange="videoControl.playRateInputChanged()""></input>
+                <span class="small">Speed </span><input type="text" class="btn-sm nopad small" size="4" value="1.0" id="playRate" onchange="videoControl.playRateInputChanged()""></input>
                 <button value="Play" onclick="videoControl.playPauseVideo()" id="play"  type="button" class="btn btn-success btn-sm nopad"><span class="glyphicon glyphicon-play"></span><span class="glyphicon glyphicon-pause"></span></button>
             
                 <button value="Previous minute" onclick="videoControl.rewind(200)" type="button" class="btn btn-info btn-xs x-small nopad fwbut fwbut3" title="-10s"><span class="glyphicon glyphicon-fast-forward icon-flipped"></span></button>
@@ -309,16 +309,25 @@
               <span class="block-content">
               <button onclick="shiftTrackWindow(-0.75)" type="button" class="btn btn-window btn-xs" title="Reduce track window"><span class="glyphicon glyphicon-step-backward small"></span></button>
               <button onclick="shiftTrackWindow(0.75)" type="button" class="btn btn-window btn-xs" title="Extend track window"><span class="glyphicon glyphicon-step-forward small"></span></button>
-              
+              <input id="focusTrackWindow" value="Follow" onclick="onClickFocusTrackWindow()" type="button" class="btn btn-pink-toggle btn-xs" 
+                     title="Track window follows current frame">
+
               <button value="win-" onclick="scaleTrackWindow(0.5)" type="button" class="btn btn-window btn-xs" title="Reduce track window"><span class="glyphicon glyphicon-chevron-right small"></span>-<span class="glyphicon glyphicon-chevron-left small"></span></button>
               <button value="win+" onclick="scaleTrackWindow(2)" type="button" class="btn btn-window btn-xs" title="Extend track window"><span class="glyphicon glyphicon-chevron-left small"></span>+<span class="glyphicon glyphicon-chevron-right small"></span></button>
+              <select id="selectboxTrackDir" name="selectboxTrackDir" title="Focus interval direction" 
+                      onchange="onTrackWindowChanged(event)" class="small" style="display:inline-block;">
+                <option value="Bidirectional" selected>Bidir</option>
+                <option value="Forward">Fwd</option>
+                <option value="Backward">Bwd</option>
+                </select> <!-- selectboxVideo -->  
               
-              <input id="focusTrackWindow" value="FocusView" onclick="onClickFocusTrackWindow()" type="button" class="btn btn-pink-toggle btn-xs" title="Focus on Track window">
-              
+              <input type="text" value="5" size="4" id="trackWindow" class="small" onchange="onTrackWindowChanged(event)" 
+                     title="Track window size from center in frames">
               <button value="1s" onclick="setTrackWindow(20)" type="button" class="btn btn-default btn-xs" title="Track window = 1s">1s</button>
               <button value="10s" onclick="setTrackWindow(200)" type="button" class="btn btn-default btn-xs" title="Track window = 10s">10s</button>
               <button value="1m" onclick="setTrackWindow(1200)" type="button" class="btn btn-default btn-xs" title="Track window = 1min">1m</button>
-              </span>
+              
+            </span>
               </div>
               
               <div class='block inline-collapsible'>
@@ -851,50 +860,28 @@
                     </div>
                     
                     <div class='subpanel collapsible'>
-                      <label>Show/Hide</label>
+                      <label>Annotation overlay</label>
                       <div>
-                          <label>Overlay:</label>
-                          <div class="checkbox">
-                            <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>Show Events</label>
-                          </div>
-                          <div class="checkbox">
-                            <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Show Events Tracks</label>
-                          </div>
-                          <div class="checkbox">
-                            <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">Show Tags</label>
-                          </div>
-                          <div class="checkbox">
-                            <label><input type="checkbox" checked="true" id="showTagsTracks" onclick="onShowTagsTracksChanged()">Show Tag Tracks</label>
-                          </div>
-                          <div class="checkbox">
-                            <label><input type="checkbox" checked="true" id="showSelectedTagsTracks" onclick="onShowTagsTracksChanged()">Show Selected Track</label>
-                          </div>
-                          <div class="checkbox">
-                            <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">Show Tags Orientation</label>
-                          </div>
-                          <div>Tag style
-                          <select id="selectboxTagMarker" name="tagMarker" onchange="overlay.selectboxTagMarkerChanged()" class=""></select>
-                          </div>
-                          
-                          <div class="inline-block">
-                              Track window
-                  
-                              <input type="text" value="5" size="6" id="trackWindow" onchange="onTrackWindowChanged(event)">             
-                  
-                              <select id="selectboxTrackDir" name="selectboxTrackDir" onchange="onTrackWindowChanged(event)" class="" style="display:inline-block;">
-                              <option value="Bidirectional" selected>Bidirectional</option>
-                              <option value="Forward">Forward</option>
-                              <option value="Backward">Backward</option>
-                              </select> <!-- selectboxVideo -->  
-                          </div>
-                          <div class="inline-block">
-                            ID Appearance <br>       
-                            dotRadius <input type="text" value="5" size="4" id="overlayOpts-ID_dotRadius" onchange="onOverlayParamsChanged(event)">      
-                            <br>
-                            fontSize <input type="text" value="5" size="4" id="overlayOpts-ID_fontSize" onchange="onOverlayParamsChanged(event)">            
+                        <div class="checkbox">
+                          <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()" class='btn-sm'>In current frame</label>
                         </div>
-                          <hr>
-                          <label>Chronogram:</label>
+                        <div class="checkbox">
+                          <label><input type="checkbox" checked="false" id="showObsTracks" onclick="onShowObsChanged()">Tracks</label>
+                        </div>
+                        <div class="inline-block">
+                          <b>ID Appearance</b><br>       
+                          dotRadius <input type="text" value="5" size="4" id="overlayOpts-ID_dotRadius" onchange="onOverlayParamsChanged(event)">      
+                          <br>
+                          fontSize <input type="text" value="5" size="4" id="overlayOpts-ID_fontSize" onchange="onOverlayParamsChanged(event)">            
+                          <br>
+                          color <input type="text" value="7" size="4" id="overlayOpts-ID_color" onchange="onOverlayParamsChanged(event)">            
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class='subpanel collapsible'>
+                        <label>Chronogram</label>
+                        <div>
                           <div class="checkbox">
                                 <label><input type="checkbox" checked="true" id="showObsChrono" onclick="onChronoParametersChanged()"/>Show Events</label>
                           </div>
@@ -906,12 +893,31 @@
                           </div>                          
                           <div class="checkbox">
                               <label><input type="checkbox" checked="true" id="showTagsChrono" onclick="onChronoParametersChanged()"/>Show Tags</label>
-                        </div>
-
+                          </div>
                       </div>
                     </div>
                   
                   
+                    <div class='subpanel collapsible'>
+                      <label>Tags overlay</label>
+                      <div>
+                        <div class="checkbox">
+                          <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">In current frame</label>
+                        </div>
+                        <div class="checkbox">
+                          <label><input type="checkbox" checked="true" id="showTagsOrientation" onclick="onShowTagsChanged()">Tag Orientation</label>
+                        </div>
+                        <div class="checkbox">
+                          <label><input type="checkbox" checked="true" id="showTagsTracks" onclick="onShowTagsTracksChanged()">All tag tracks</label>
+                        </div>
+                        <div class="checkbox">
+                          <label><input type="checkbox" checked="true" id="showSelectedTagsTracks" onclick="onShowTagsTracksChanged()">Selected track</label>
+                        </div>
+                        <div>Tag style
+                        <select id="selectboxTagMarker" name="tagMarker" onchange="overlay.selectboxTagMarkerChanged()" class=""></select>
+                        </div>
+                      </div>
+                    </div>
                     <div class='subpanel collapsible'>
                       <label>Tag filtering</label>
                       <div>

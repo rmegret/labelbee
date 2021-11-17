@@ -73,6 +73,7 @@ function OverlayControl(canvasTagId) {
         resizeAroundCenter: false,
         ID_dotRadius: 4, // Radius of dot center
         ID_fontSize: 20,
+        ID_color: 'yellow',
         clickModeSelectMultiframe: false,
         clickModeNewAnnotation: false
     }
@@ -153,11 +154,13 @@ OverlayControl.prototype.updateOptsButtons = function() {
     }
     $('#overlayOpts-ID_dotRadius').val(String(this.opts.ID_dotRadius))
     $('#overlayOpts-ID_fontSize').val(String(this.opts.ID_fontSize))
+    $('#overlayOpts-ID_color').val(String(this.opts.ID_color))
 }
 function onOverlayParamsChanged(event) {
     console.log('onOverlayParamsChanged')
     overlay.opts.ID_dotRadius = Number($('#overlayOpts-ID_dotRadius').val())
     overlay.opts.ID_fontSize = Number($('#overlayOpts-ID_fontSize').val())
+    overlay.opts.ID_color = $('#overlayOpts-ID_color').val()
     overlay.refreshOverlay()
 }
 
@@ -1101,13 +1104,13 @@ function identify(ctx, rect, radius) { // old prototype: obs, x,y, color){
 // Main function to display annotation info
 function identifyBeeRect(ctx, rect, radius, isActive) {
 
-    var color
-    if (rect.status === "new")
-        color = "green"
-    else if (rect.status === "db")
-        color = "yellow"
-    else
-        color = "red" //problem
+    var color = overlay.opts.ID_color
+    // if (rect.status === "new")
+    //     color = "green"
+    // else if (rect.status === "db")
+    //     color = "yellow"
+    // else
+    //     color = "red" //problem
 
     // Local coordinates ?
     let x = 0
