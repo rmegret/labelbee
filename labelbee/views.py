@@ -1083,6 +1083,30 @@ def get_video_v2(videoid):
     return jsonify({"data": video_schema.dump(video)})
 
 
+@app.route("/rest/v2/get_video_info/<videoid>", methods=["GET"])
+def get_videoinfo_v2(videoid):
+    print("Handling get_videoinfo request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/get_videoinfo GET: login required !")
+
+    video = get_video_by_id(videoid)
+
+    video_schema = VideoSchema()
+
+    video = video_schema.dump(video)
+    videoinfo = {
+        "video_id": video["id"],
+        "videoURL": video["path"] + "/" + video["file_name"],
+        "videofps": video["fps"],
+        "realfps": video["realfps"],
+        "starttime": video["timestamp"],
+        "duration": video["frames"] / video["fps"],
+        "nframes": video["frames"],
+    }
+
+    return jsonify(videoinfo)
+
+
 # @app.route("/rest/v2/add_video", methods=["POST"])
 # def add_video_v2():
 #     if not current_user.is_authenticated:
