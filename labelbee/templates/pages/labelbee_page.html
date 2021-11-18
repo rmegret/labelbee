@@ -567,7 +567,7 @@
                 <label>Video Info</label>
                 <div>
                   <div class='subpanel'>
-                    <button class="btn btn-default" onclick="videoListFromServerDialog.open">Load Video</button>
+                    <!-- <button class="btn btn-default" onclick="videoListFromServerDialog.open">Load Video</button>  -->
                     <label class="primary">Current Video
                       <a class="videolink" href="undefined" target="_blank">[Raw File]</a>
                     </label>
@@ -760,17 +760,13 @@
                       <input id="eventsToServer" onclick="eventsToServer('v1')" type="button"
                         value="Save Events (JSON v1)" class="btn btn-green-toggle btn-xs require-server">
                     
-                      <!-- #### Recent Tag/Event Loading Modal  -->
-                      <div class="modal fade" id="dialog-recent-from-server" role="dialog">
+                      <!-- #### Loading Recent From Server Modal  -->
+                      <div class="modal fade" id="from-server-dialog" role="dialog">
                         <div class="modal-dialog modal-lg">
                           <div class="modal-content" style="overflow:auto;">
                             <div class="modal-header">
                               <button type="button" class="close" data-dismiss="modal">&times;</button>
                               <h4 class="modal-title"></h4>
-                              <!-- <label><input type="checkbox" checked="true" class="showNotes"
-                                  onclick="recentTagOrEventFromServerDialog.clickedShowMetadata('notes')">Show notes</label>
-                              <label><input type="checkbox" checked="false" class="showMetadata"
-                                  onclick="recentTagOrEventFromServerDialog.clickedShowMetadata('metadata')">Show metadata</label> -->
                             </div>
                             <div class="modal-body">
                               <!-- To be filled up by AJAX request -->
@@ -785,8 +781,6 @@
                           </div>
                         </div>
                       </div>
-
-
 
                       <!-- #### Tag/Event Menu Loading Modal  -->
                       <div class="modal fade" id="dialog-event-from-server" role="dialog">

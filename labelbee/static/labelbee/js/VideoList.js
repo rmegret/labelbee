@@ -9,7 +9,7 @@ var videoinfo;
 
 function VideoManager() {
   const videoManager = this;
-
+  
   document
     .getElementById("loadvideolistjson")
     .addEventListener("change", (evt) =>
@@ -495,3 +495,39 @@ VideoManager.prototype.updateVideoInfoForm = function () {
   $("#videoPlace").val(videoinfo.place);
   $("#videoComments").text(videoinfo.comments);
 };
+
+VideoManager.prototype.videoListFromDB = function () {
+  this.div = $("from-server-dialog");
+  this.div.find(".modal-body").html("[...]");
+    
+  this.div.find(".modal-message h4").css("color","black");
+  this.div.find(".modal-message h4")
+    .html("<div>Loading video list from server. Please wait...</div>");
+  this.receivedVideoSelection();
+  this.div.modal("show");
+}
+
+VideoManager.prototype.receivedVideoSelection = async function(){
+  $.ajax({
+    url: url_for("/rest/v2/videodata"),
+    method: 'get',
+    data: "", 
+    dataType: 'json',
+    error: function (){
+        $("#TagEventError").css("color","red");
+        $("#TagEventError").html("videoManager.receivedVideoSelection ERROR: Unable to retrieve video list from server.");
+      },
+    success: function(json){
+      html =
+      "<table id='VideoListFromServerTable' style='width:100%'>" +
+      "<thead>" +
+      "<th></th>" +
+      "<th>File Name</th>" +
+      "<th>Created on</th>" +
+      "<th>Owner</th></thead>" +
+      "</table>";
+      
+    }
+
+  });
+}

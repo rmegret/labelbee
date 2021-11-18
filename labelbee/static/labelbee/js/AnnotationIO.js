@@ -1512,296 +1512,9 @@ function EventsFromServerDialog() {
   this.initDialog();
 }
 
-function tracksListFromServer() {
-  var route = "/rest/events/"; // Hardcoded
-
-  console.log(
-    "tracksListFromServer: importing Tracks List from URL '" + route + "'..."
-  );
-
-  $("#loadTracksFromServerDialog .modal-body").html(
-    "<div>Loading Tracks file list from server. Please wait...</div>"
-  );
-
-  $.ajax({
-    url: url_for(route),
-    type: "GET",
-    contentType: "application/json",
-    //data:{format:'json'}, // Without 'video', list all videos
-    data: { format: "json", video: videoinfo.videoName },
-    success: function (json) {
-      // Get the file list in JSON format
-
-      console.log("tracksListFromServer: SUCCESS\ntracksList=", json);
-
-      let html = "";
-      if (false) {
-        for (let item of json) {
-          html +=
-            '<button onclick="eventsFromServer(' +
-            "'" +
-            item["uri"] +
-            "'" +
-            ')">' +
-            item["filename"] +
-            "</button> <br>";
-        }
-      } else {
-        html +=
-          "<table><thead>" +
-          "<th>Link</th>" +
-          "<th>Video</th>" +
-          "<th>Owner</th>" +
-          "<th>Created on</th>" +
-          "</thead><tbody>";
-        function boldize(text, flag) {
-          if (flag) {
-            return "<b>" + text + "</b>";
-          } else return text;
-        }
-        function formattimestamp(timestamp) {
-          if (timestamp.length == 12) {
-            return (
-              "20" +
-              timestamp.slice(0, 2) +
-              "-" +
-              timestamp.slice(2, 4) +
-              "-" +
-              timestamp.slice(4, 6) +
-              " " +
-              timestamp.slice(6, 8) +
-              ":" +
-              timestamp.slice(8, 10) +
-              ":" +
-              timestamp.slice(10, 12)
-            );
-          } else return timestamp;
-        }
-        for (let item of json) {
-          html +=
-            "<tr>" +
-            '<td><button onclick="eventsFromServer(' +
-            "'" +
-            item["uri"] +
-            "'" +
-            ')">' +
-            item["filename"] +
-            "</button></td>" +
-            "<td>" +
-            boldize(item["video"], item["video"] == videoinfo.videoName) +
-            "</td>" +
-            "<td>" +
-            item["user_name"] +
-            " (" +
-            item["user_id"] +
-            ")</td>" +
-            "<td>" +
-            formattimestamp(item["timestamp"]) +
-            "</td>" +
-            "</tr>";
-        }
-        html += "</tbody></table>";
-      }
-      $("#loadTracksFromServerDialog .modal-body").html(html);
-
-      // Nothing else to do here:
-      // The modal #loadTracksFromServerDialog is supposed to be open
-      // and filled with links to each Track file
-      // Clicking on one of the link will trigger eventsFromServer()
-    },
-    error: showAjaxError("ERROR in EventsFromServerDialog", function () {
-      $("#loadTracksFromServerDialog").modal("hide");
-    }),
-  });
-}
-
-function eventsFromServer(url) {
-  console.log("eventsFromServer: importing Tracks from URL '" + url + "'...");
-
-  $.ajax({
-    url: url, //server url
-    type: "GET", //passing data as post method
-    contentType: "application/json", // returning data as json
-    data: "",
-    success: function (json) {
-      //alert("success");  //response from the server given as alert message
-
-      console.log("eventsFromServer: SUCCESS\njson=", json);
-      let obj = JSON.parse(json);
-
-      setTracks(obj);
-
-      videoControl.onFrameChanged();
-
-      refreshChronogram();
-
-      $("#loadTracksFromServerDialog").modal("hide");
-    },
-    error: showAjaxError("ERROR in eventsFromServer"),
-  });
-}
-
-function mainAlert(text) {
-  $("#mainAlertDialog .modal-body").html(text);
-  $("#mainAlertDialog").modal("show");
-}
-
-function typesetAjaxError(title, hook) {
-  var callback = function (jqXHR, textStatus, errorThrown) {
-    console.log(
-      "AJAX ERROR: " + title,
-      jqXHR,
-      textStatus,
-      errorThrown,
-      jqXHR.responseText
-    );
-    if (hook) {
-      var html =
-        "<div>" +
-        title +
-        "<br>Status: " +
-        textStatus +
-        "<br>Error: " +
-        errorThrown +
-        "<br>" +
-        jqXHR.responseText +
-        "</div>";
-      hook(html);
-    }
-  };
-  return callback;
-}
-function showAjaxError(title, prehook) {
-  var callback = function (jqXHR, textStatus, errorThrown) {
-    console.log(
-      "AJAX ERROR: " + title,
-      jqXHR,
-      textStatus,
-      errorThrown,
-      jqXHR.responseText
-    );
-    if (prehook) {
-      prehook(jqXHR, textStatus, errorThrown);
-    }
-    mainAlert(
-      title +
-        "<br>Status: " +
-        textStatus +
-        "<br>Error: " +
-        errorThrown +
-        "<br>" +
-        jqXHR.responseText
-    );
-  };
-  return callback;
-}
-
-function eventsToServer(format) {
-  var route = "/rest/v2/add_video_data";
-
-  console.log("eventsToServer");
-
-  if (!format) {
-    format = "v1";
-  }
-
-  let data;
-  // if (format == "v2") {
-  //   data = convertTracksToV2();
-  // } 
-  // else {
-  //   data = convertTracksToV1();
-  // }
-  data = {
-      video_id: "9371",
-      created_by_id: "1",
-      data_type:"tag",
-      path:"testPath",
-      file_name:"testFileName",
-      // data: convertTracksToV2()
-    }
-  $.ajax({
-    url: url_for(route), //server url
-    type: "POST", //passing data as post method
-    contentType: "application/json", // returning data as json
-    data: JSON.stringify(data) , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
-    success: function (json) {
-      alert("Save Events JSON (" + format + ") to server: Success " + json['data']['data']['created_by_id']); //response from the server given as alert message
-      console.log(json)
-    },
-    error: showAjaxError("ERROR in eventsToServer"),
-  });
-}
-
-
-function tagsFromServer(tagFileID, div) {
-
-  // Files are not being loaded from a specific URL anymore, 
-  // Commented code block should no longer be necessary
-
-  //var path = "data/Gurabo/Tags-C02_170624100000.json" ;// Default
-
-  // if (path == null) {
-  //   var p = videoControl.name.split("/");
-  //   var q = p[p.length - 1].split(".");
-  //   q[0] = "Tags-" + q[0];
-  //   q[q.length - 1] = "json";
-  //   p[p.length - 1] = q.join(".");
-
-  //   var path = p.join("/"); // Default
-  // }
-  // if (!quiet) {
-  //   path = window.prompt("Please enter path for Tags JSON (server)", path);
-  //   if (path == null || path == "") {
-  //     console.log("tagsFromServer: canceled");
-  //     return;
-  //   }
-  // }
-
-  if (logging.io) {
-    console.log('tagsFromServer: loading tag file with ID "' + tagFileID + '"...');
-  }
-  statusWidget.statusRequest("tagsLoad", "");
-
-  $.getJSON(url_for("rest/v2/get_video_data/" + tagFileID), function () {
-    console.log('tagsFromServer: loaded tag file with ID "' + tagFileID + '"');
-    statusWidget.statusUpdate("tagsLoad", true, "");
-  })
-    .fail(function () {
-      console.log('tagsFromServer: ERROR loading tag file with ID "' + tagFileID + '"');
-      statusWidget.statusUpdate("tagsLoad", false, "");
-      return setTags([], div);
-    })
-    .done(function (data) {
-      tags = data["data"]["data"];
-      console.log("Loaded tag data:", tags)
-      return setTags(tags, div);
-    });
-}
-
-// function tagsFromServer(videoID){
-//   tagLoadDialog = new FilePickerFromServerDialog();
-//   tagLoadDialog.openDialog();
-
-// }
-
-
-/* METADATA EDITION */
-
-function onChanged_events_notes(event) {
-  if (TracksInfo) {
-    TracksInfo["notes"] = $("#events-notes").val();
-  }
-}
-function updateEventsNotes() {
-  if (TracksInfo) {
-    $("#events-notes").val(TracksInfo["notes"]);
-  }
-}
-
 function RecentTagOrEventFromServerDialog() {
   var theDialog = this;
-  this.div = $("#dialog-recent-from-server");
+  this.div = $("#from-server-dialog");
   var div = this.div;
   this.dataType = null;
 
@@ -2229,3 +1942,291 @@ function RecentTagOrEventFromServerDialog() {
   };
   this.initDialog();
 }
+
+function tracksListFromServer() {
+  var route = "/rest/events/"; // Hardcoded
+
+  console.log(
+    "tracksListFromServer: importing Tracks List from URL '" + route + "'..."
+  );
+
+  $("#loadTracksFromServerDialog .modal-body").html(
+    "<div>Loading Tracks file list from server. Please wait...</div>"
+  );
+
+  $.ajax({
+    url: url_for(route),
+    type: "GET",
+    contentType: "application/json",
+    //data:{format:'json'}, // Without 'video', list all videos
+    data: { format: "json", video: videoinfo.videoName },
+    success: function (json) {
+      // Get the file list in JSON format
+
+      console.log("tracksListFromServer: SUCCESS\ntracksList=", json);
+
+      let html = "";
+      if (false) {
+        for (let item of json) {
+          html +=
+            '<button onclick="eventsFromServer(' +
+            "'" +
+            item["uri"] +
+            "'" +
+            ')">' +
+            item["filename"] +
+            "</button> <br>";
+        }
+      } else {
+        html +=
+          "<table><thead>" +
+          "<th>Link</th>" +
+          "<th>Video</th>" +
+          "<th>Owner</th>" +
+          "<th>Created on</th>" +
+          "</thead><tbody>";
+        function boldize(text, flag) {
+          if (flag) {
+            return "<b>" + text + "</b>";
+          } else return text;
+        }
+        function formattimestamp(timestamp) {
+          if (timestamp.length == 12) {
+            return (
+              "20" +
+              timestamp.slice(0, 2) +
+              "-" +
+              timestamp.slice(2, 4) +
+              "-" +
+              timestamp.slice(4, 6) +
+              " " +
+              timestamp.slice(6, 8) +
+              ":" +
+              timestamp.slice(8, 10) +
+              ":" +
+              timestamp.slice(10, 12)
+            );
+          } else return timestamp;
+        }
+        for (let item of json) {
+          html +=
+            "<tr>" +
+            '<td><button onclick="eventsFromServer(' +
+            "'" +
+            item["uri"] +
+            "'" +
+            ')">' +
+            item["filename"] +
+            "</button></td>" +
+            "<td>" +
+            boldize(item["video"], item["video"] == videoinfo.videoName) +
+            "</td>" +
+            "<td>" +
+            item["user_name"] +
+            " (" +
+            item["user_id"] +
+            ")</td>" +
+            "<td>" +
+            formattimestamp(item["timestamp"]) +
+            "</td>" +
+            "</tr>";
+        }
+        html += "</tbody></table>";
+      }
+      $("#loadTracksFromServerDialog .modal-body").html(html);
+
+      // Nothing else to do here:
+      // The modal #loadTracksFromServerDialog is supposed to be open
+      // and filled with links to each Track file
+      // Clicking on one of the link will trigger eventsFromServer()
+    },
+    error: showAjaxError("ERROR in EventsFromServerDialog", function () {
+      $("#loadTracksFromServerDialog").modal("hide");
+    }),
+  });
+}
+
+function eventsFromServer(url) {
+  console.log("eventsFromServer: importing Tracks from URL '" + url + "'...");
+
+  $.ajax({
+    url: url, //server url
+    type: "GET", //passing data as post method
+    contentType: "application/json", // returning data as json
+    data: "",
+    success: function (json) {
+      //alert("success");  //response from the server given as alert message
+
+      console.log("eventsFromServer: SUCCESS\njson=", json);
+      let obj = JSON.parse(json);
+
+      setTracks(obj);
+
+      videoControl.onFrameChanged();
+
+      refreshChronogram();
+
+      $("#loadTracksFromServerDialog").modal("hide");
+    },
+    error: showAjaxError("ERROR in eventsFromServer"),
+  });
+}
+
+function mainAlert(text) {
+  $("#mainAlertDialog .modal-body").html(text);
+  $("#mainAlertDialog").modal("show");
+}
+
+function typesetAjaxError(title, hook) {
+  var callback = function (jqXHR, textStatus, errorThrown) {
+    console.log(
+      "AJAX ERROR: " + title,
+      jqXHR,
+      textStatus,
+      errorThrown,
+      jqXHR.responseText
+    );
+    if (hook) {
+      var html =
+        "<div>" +
+        title +
+        "<br>Status: " +
+        textStatus +
+        "<br>Error: " +
+        errorThrown +
+        "<br>" +
+        jqXHR.responseText +
+        "</div>";
+      hook(html);
+    }
+  };
+  return callback;
+}
+function showAjaxError(title, prehook) {
+  var callback = function (jqXHR, textStatus, errorThrown) {
+    console.log(
+      "AJAX ERROR: " + title,
+      jqXHR,
+      textStatus,
+      errorThrown,
+      jqXHR.responseText
+    );
+    if (prehook) {
+      prehook(jqXHR, textStatus, errorThrown);
+    }
+    mainAlert(
+      title +
+        "<br>Status: " +
+        textStatus +
+        "<br>Error: " +
+        errorThrown +
+        "<br>" +
+        jqXHR.responseText
+    );
+  };
+  return callback;
+}
+
+function eventsToServer(format) {
+  var route = "/rest/v2/add_video_data";
+
+  console.log("eventsToServer");
+
+  if (!format) {
+    format = "v1";
+  }
+
+  let data;
+  // if (format == "v2") {
+  //   data = convertTracksToV2();
+  // } 
+  // else {
+  //   data = convertTracksToV1();
+  // }
+  data = {
+      video_id: "9371",
+      created_by_id: "1",
+      data_type:"tag",
+      path:"testPath",
+      file_name:"testFileName",
+      // data: convertTracksToV2()
+    }
+  $.ajax({
+    url: url_for(route), //server url
+    type: "POST", //passing data as post method
+    contentType: "application/json", // returning data as json
+    data: JSON.stringify(data) , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
+    success: function (json) {
+      alert("Save Events JSON (" + format + ") to server: Success " + json['data']['data']['created_by_id']); //response from the server given as alert message
+      console.log(json)
+    },
+    error: showAjaxError("ERROR in eventsToServer"),
+  });
+}
+
+
+function tagsFromServer(tagFileID, div) {
+
+  // Files are not being loaded from a specific URL anymore, 
+  // Commented code block should no longer be necessary
+
+  //var path = "data/Gurabo/Tags-C02_170624100000.json" ;// Default
+
+  // if (path == null) {
+  //   var p = videoControl.name.split("/");
+  //   var q = p[p.length - 1].split(".");
+  //   q[0] = "Tags-" + q[0];
+  //   q[q.length - 1] = "json";
+  //   p[p.length - 1] = q.join(".");
+
+  //   var path = p.join("/"); // Default
+  // }
+  // if (!quiet) {
+  //   path = window.prompt("Please enter path for Tags JSON (server)", path);
+  //   if (path == null || path == "") {
+  //     console.log("tagsFromServer: canceled");
+  //     return;
+  //   }
+  // }
+
+  if (logging.io) {
+    console.log('tagsFromServer: loading tag file with ID "' + tagFileID + '"...');
+  }
+  statusWidget.statusRequest("tagsLoad", "");
+
+  $.getJSON(url_for("rest/v2/get_video_data/" + tagFileID), function () {
+    console.log('tagsFromServer: loaded tag file with ID "' + tagFileID + '"');
+    statusWidget.statusUpdate("tagsLoad", true, "");
+  })
+    .fail(function () {
+      console.log('tagsFromServer: ERROR loading tag file with ID "' + tagFileID + '"');
+      statusWidget.statusUpdate("tagsLoad", false, "");
+      return setTags([], div);
+    })
+    .done(function (data) {
+      tags = data["data"]["data"];
+      console.log("Loaded tag data:", tags)
+      return setTags(tags, div);
+    });
+}
+
+// function tagsFromServer(videoID){
+//   tagLoadDialog = new FilePickerFromServerDialog();
+//   tagLoadDialog.openDialog();
+
+// }
+
+
+/* METADATA EDITION */
+
+function onChanged_events_notes(event) {
+  if (TracksInfo) {
+    TracksInfo["notes"] = $("#events-notes").val();
+  }
+}
+function updateEventsNotes() {
+  if (TracksInfo) {
+    $("#events-notes").val(TracksInfo["notes"]);
+  }
+}
+
