@@ -35,11 +35,13 @@ from labelbee.db_functions import (
     add_video_to_dataset,
     delete_dataset_by_id,
     delete_user,
+    delete_video,
     edit_dataset,
     edit_video,
     get_dataset_by_id,
     get_video_by_id,
     new_dataset,
+    populate_datasets,
     user_list,
     video_list,
     dataset_list,
@@ -49,6 +51,7 @@ from labelbee.db_functions import (
     get_video_data_by_id,
     edit_video_data,
     import_from_csv,
+    update_paths,
 )
 
 upload_dir = "labelbee/static/upload/"
@@ -1082,6 +1085,43 @@ def get_video_v2(videoid):
     return jsonify({"data": video_schema.dump(video)})
 
 
+@app.route("/rest/v2/delete_video/<videoid>", methods=["GET"])
+def delete_video_v2(videoid):
+    print("Handling delete_video request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/delete_video GET: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/delete_video GET: admin required !")
+
+    delete_video(videoid)
+
+    return jsonify({"data": "Video deleted"})
+
+
+@app.route("/rest/v2/get_video_info/<videoid>", methods=["GET"])
+def get_videoinfo_v2(videoid):
+    print("Handling get_videoinfo request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/get_videoinfo GET: login required !")
+
+    video = get_video_by_id(videoid)
+
+    video_schema = VideoSchema()
+
+    video = video_schema.dump(video)
+    videoinfo = {
+        "video_id": video["id"],
+        "videoURL": video["path"] + "/" + video["file_name"],
+        "videofps": video["fps"],
+        "realfps": video["realfps"],
+        "starttime": video["timestamp"],
+        "duration": video["frames"] / video["fps"],
+        "nframes": video["frames"],
+    }
+
+    return jsonify(videoinfo)
+
+
 # @app.route("/rest/v2/add_video", methods=["POST"])
 # def add_video_v2():
 #     if not current_user.is_authenticated:
@@ -1135,13 +1175,24 @@ def import_from_csv_v2():
 
 
 @app.route("/rest/v2/update_paths", methods=["GET"])
-def update_paths():
+def update_paths_endpoint():
     if not current_user.is_authenticated:
         raise BadRequest("/rest/v2/update_paths GET: login required !")
     if not current_user.has_roles("admin"):
         raise Forbidden("/rest/v2/update_paths GET: admin required !")
 
     update_paths()
+    return jsonify({"data": "OK"})
+
+
+@app.route("/rest/v2/populate_datasets", methods=["GET"])
+def populate_datasets_endpoint():
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/populate_datasets POST: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/populate_datasets POST: admin required !")
+
+    populate_datasets()
     return jsonify({"data": "OK"})
 
 
