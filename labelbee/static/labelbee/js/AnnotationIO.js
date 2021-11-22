@@ -1076,7 +1076,7 @@ function EventsFromServerDialog() {
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
         function (html) {
-          $("#TagEventError").text(html);
+          $(".modal-message h4").text(html);
         }
       ),
       success: function(json){
@@ -1151,7 +1151,7 @@ function EventsFromServerDialog() {
         
         // Creating table with only headers
         div.find(".modal-body").html(html);
-        div.find("#TagEventError").html("");
+        div.find(".modal-message h4").html("");
         // Filling empty table using data from json
         div.find("#TagOrEventFileListFromServer").DataTable({
           data: json["data"],
@@ -1167,7 +1167,7 @@ function EventsFromServerDialog() {
               return '[' + full.created_by_id + '] ' + created_by;
             }}
           ]
-        } );
+        });
       }
     });
     
@@ -1372,8 +1372,8 @@ function EventsFromServerDialog() {
       data: "", 
       dataType: 'json',
       error: function (){
-          $("#TagEventError").css("color","red");
-          $("#TagEventError").html("ERROR: Invalid Video ID.");
+          $(".modal-message h4").css("color","red");
+          $(".modal-message h4").html("ERROR: Invalid Video ID.");
         },
       success: function(json){
         div
@@ -1386,7 +1386,7 @@ function EventsFromServerDialog() {
     div.find("#showAllUsers").prop('checked', false);
 
     div.find(".modal-body").html("[...]");
-    $("#TagEventError").html("Loading " + dataType + " file list from server. Please wait...");
+    $(".modal-message h4").html("Loading " + dataType + " file list from server. Please wait...");
 
     this.updateDialog(dataType);
 
@@ -1420,20 +1420,20 @@ function EventsFromServerDialog() {
   this.loadEvents = function (tag_event_ID) {
     //MODIFY CONSOLE MESSAGE DEPENDING ON FILE
     console.log("eventsFromServerDialog: importing " + this.dataType + "s from database for ID '" + tag_event_ID);
-    $("#TagEventError").css("color","black");
-    $("#TagEventError").html("Loading " + this.dataType + "s from database for ID " + tag_event_ID + "...");
+    $(".modal-message h4").css("color","black");
+    $(".modal-message h4").html("Loading " + this.dataType + "s from database for ID " + tag_event_ID + "...");
     // Load tag or event file
     if(this.dataType== "tag"){      // Case: tag file
       success = tagsFromServer(tag_event_ID, div);
       
       // Confirmation or error message after attempting to load
       if (success){
-        $("#TagEventError").css("color","black");
-        $('#TagEventError').html("Tags loaded successfully.");
+        $(".modal-message h4").css("color","black");
+        $('.modal-message h4').html("Tags loaded successfully.");
       }
       else{
-        $("#TagEventError").css("color","red");
-        $('#TagEventError').html("ERROR" + " <br> " + "setTags: Invalid tag information obtained from server.");
+        $(".modal-message h4").css("color","red");
+        $('.modal-message h4').html("ERROR" + " <br> " + "setTags: Invalid tag information obtained from server.");
       }
     }
     else{                           // Case: event file
@@ -1452,8 +1452,8 @@ function EventsFromServerDialog() {
             var obj = JSON.parse(json["data"]["data"]);
           }
           catch{
-            $("#TagEventError").css("color","red");
-            $('#TagEventError').html("ERROR <br> EventsFromServerDialog.loadEvents: Unable to parse json file.")
+            $(".modal-message h4").css("color","red");
+            $('.modal-message h4').html("ERROR <br> EventsFromServerDialog.loadEvents: Unable to parse json file.")
           }
           success = setTracks(obj);
           // Setting basedon information
@@ -1476,17 +1476,17 @@ function EventsFromServerDialog() {
           
           // Confirmation or error message after attempting to load
           if(success){
-            $("#TagEventError").css("color","black");
-            $("#TagEventError").html("Events loaded successfully.")
+            $(".modal-message h4").css("color","black");
+            $(".modal-message h4").html("Events loaded successfully.")
           }
           else{
-            $("#TagEventError").css("color","red");
-            $('#TagEventError').html("ERROR <br> setTracks: Invalid event information obtained from server.")
+            $(".modal-message h4").css("color","red");
+            $('.modal-message h4').html("ERROR <br> setTracks: Invalid event information obtained from server.")
           }          
         },
         error:  function () {
-          $("#TagEventError").css("color","red");
-          $("#TagEventError").html("ERROR in loading file ID" + tag_event_ID);
+          $(".modal-message h4").css("color","red");
+          $(".modal-message h4").html("ERROR in loading file ID" + tag_event_ID);
           },
       });
     }

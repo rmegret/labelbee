@@ -92,7 +92,7 @@ VideoManager.prototype.loadVideoListFromFile = function (event, format) {
   event.target.value = ""; // Reinit value to allow loading same file again
 
   if (!fileToRead) {
-    console.log("loadVideoListFromFile: Canceled by user.");
+    console.log("loadVideoListFromFile: Canceled by user."); 
     return;
   }
   console.log("loadVideoListFromFile: importing from file:", fileToRead);
@@ -514,8 +514,8 @@ VideoManager.prototype.receivedVideoSelection = async function(){
     data: "", 
     dataType: 'json',
     error: function (){
-        $("#TagEventError").css("color","red");
-        $("#TagEventError").html("videoManager.receivedVideoSelection ERROR: Unable to retrieve video list from server.");
+        $(".modal-message h4").css("color","red");
+        $(".modal-message h4").html("VideoManager.receivedVideoSelection ERROR: Unable to retrieve video list from server.");
       },
     success: function(json){
       html =
@@ -524,10 +524,68 @@ VideoManager.prototype.receivedVideoSelection = async function(){
       "<th></th>" +
       "<th>File Name</th>" +
       "<th>Created on</th>" +
-      "<th>Owner</th></thead>" +
+      "<th>Location</th></thead>" +
       "</table>";
-      
-    }
 
+      html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
+      div.find(".modal-body").html(html);
+      div.find(".modal-message h4").html("");
+
+      this.div.find("#TagOrEventFileListFromServer").DataTable({
+        data: json["data"],
+        columns:[
+          {data:"id", render: function(id){
+            return "<button onclick='videoManager.videoSelected("+id+")'>Load</button>";
+          }},
+          {data:"file_name"},
+          {data:"timestamp", render: function(timestamp){
+            return timestamp.split('T').join(' ');
+          }},
+          {data:"location"}
+        ]
+      });
+    }
   });
+}
+
+VideoManager.prototype.videoSelected = async function(id) {
+  this.currentVideoID = id;
+  $.ajax({
+    url: url_for("/rest/v2/get_video_info/" + id),
+    method: 'get',
+    data: "", 
+    dataType: 'json',
+    error: function (){
+        this.div.find(".modal-message h4").css("color","red");
+        this.div.find(".modal-message h4").html("VideoManager.receivedVideoSelection ERROR: Unable to retrieve " +
+        "selected video's information from server.");
+      },
+    success: function(json){
+      this.setVideoInfo(json);
+    }
+  });
+}
+
+VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
+  videoinfo = {
+    videoURL: videoInfoJSON["videoURL"],
+    videofps: videoInfoJSON["videofps"],
+    realfps: videoInfoJSON["realfps"],
+    starttime: videoInfoJSON["starttime"],
+    duration: videoInfoJSON["duration"],
+    nframes: videoInfoJSON["nframes"],
+    frameoffset: 0,
+    preview: {
+      previewURL: "",
+      previewInfoURL: "",
+      previewTimescale: 1.0
+    },
+    tagsfamily: "tag25h5",
+    place: "",
+    comments: ""
+  }
+  this.updateVideoInfoForm();
+  updateChronoXDomainFromVideo();
+  
+
 }
