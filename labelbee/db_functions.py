@@ -499,6 +499,7 @@ def edit_video(
     frames: int = None,
     width: int = None,
     height: int = None,
+    dataset: str = None,
 ) -> Video:
     """Edit a video.
 
@@ -535,9 +536,21 @@ def edit_video(
     video.frames = frames if frames else video.frames
     video.width = width if width else video.width
     video.height = height if height else video.height
+    video.dataset = dataset if dataset else video.dataset
 
     db.session.commit()
     return video
+
+
+def delete_video(videoid: int) -> None:
+    """Delete a video.
+
+    :param videoid: The id of the video to delete.
+    :type int: int
+    """
+    video = get_video_by_id(videoid)
+    db.session.delete(video)
+    db.session.commit()
 
 
 def get_video_data_by_id(video_dataid: int) -> VideoData:
