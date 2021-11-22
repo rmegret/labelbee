@@ -1,4 +1,6 @@
 #!/bin/bash
 
-killall -HUP gunicorn 
+./gunicorn_stop.sh
+
+./gunicorn_start.sh 
 

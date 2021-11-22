@@ -84,3 +84,31 @@ KeyError: 'csv_file'
 [2021-11-04 16:20:04 -0400] [17509] [INFO] Handling signal: term
 [2021-11-04 16:20:05 -0400] [18248] [INFO] Worker exiting (pid: 18248)
 [2021-11-04 16:20:05 -0400] [17509] [INFO] Shutting down: Master
+[2021-11-22 13:14:50 -0400] [6893] [INFO] Starting gunicorn 20.1.0
+[2021-11-22 13:14:50 -0400] [6893] [INFO] Listening at: http://127.0.0.1:8090 (6893)
+[2021-11-22 13:14:50 -0400] [6893] [INFO] Using worker: gthread
+[2021-11-22 13:14:50 -0400] [6896] [INFO] Booting worker with pid: 6896
+[2021-11-22 13:16:09 -0400] [6893] [INFO] Handling signal: term
+[2021-11-22 13:16:09 -0400] [6896] [INFO] Worker exiting (pid: 6896)
+[2021-11-22 13:16:09 -0400] [6893] [INFO] Shutting down: Master
+[2021-11-22 13:16:53 -0400] [6937] [INFO] Starting gunicorn 20.1.0
+[2021-11-22 13:16:53 -0400] [6937] [INFO] Listening at: http://127.0.0.1:8090 (6937)
+[2021-11-22 13:16:53 -0400] [6937] [INFO] Using worker: gthread
+[2021-11-22 13:16:53 -0400] [6940] [INFO] Booting worker with pid: 6940
+[2021-11-22 13:17:39 -0400] [6937] [INFO] Handling signal: term
+[2021-11-22 13:17:39 -0400] [6940] [INFO] Worker exiting (pid: 6940)
+[2021-11-22 13:17:40 -0400] [6937] [INFO] Shutting down: Master
+[2021-11-22 13:19:48 -0400] [6971] [INFO] Starting gunicorn 20.1.0
+[2021-11-22 13:19:48 -0400] [6971] [INFO] Listening at: http://127.0.0.1:8090 (6971)
+[2021-11-22 13:19:48 -0400] [6971] [INFO] Using worker: gthread
+[2021-11-22 13:19:48 -0400] [6974] [INFO] Booting worker with pid: 6974
+[2021-11-22 13:19:59 -0400] [6971] [INFO] Handling signal: term
+[2021-11-22 13:19:59 -0400] [6974] [INFO] Worker exiting (pid: 6974)
+[2021-11-22 13:20:00 -0400] [6971] [INFO] Shutting down: Master
+[2021-11-22 13:20:00 -0400] [6982] [INFO] Starting gunicorn 20.1.0
+[2021-11-22 13:20:00 -0400] [6982] [INFO] Listening at: http://127.0.0.1:8090 (6982)
+[2021-11-22 13:20:00 -0400] [6982] [INFO] Using worker: gthread
+[2021-11-22 13:20:00 -0400] [6985] [INFO] Booting worker with pid: 6985
+[2021-11-22 13:20:25 -0400] [6982] [INFO] Handling signal: term
+[2021-11-22 13:20:26 -0400] [6985] [INFO] Worker exiting (pid: 6985)
+[2021-11-22 13:20:26 -0400] [6982] [INFO] Shutting down: Master
