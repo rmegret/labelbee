@@ -548,6 +548,7 @@ VideoManager.prototype.receivedVideoSelection = async function(){
         $(".modal-message h4").html("VideoManager.receivedVideoSelection ERROR: Unable to retrieve video list from server.");
       },
     success: function(json){
+      console.log("VideoManager.receivedVideoSelection: Successfully loaded video list from server.")
       html =
       "<table id='VideoListFromServerTable' style='width:100%'>" +
       "<thead>" +

@@ -45,7 +45,7 @@ function VideoControl(videoTagId) {
   };
 
   this.video = this.video2.video; // Same as $('#video')[0]
-  this.video.onloadeddata = this.onVideoLoaded.bind(this);
+  this.video.onloadeddata = this.onVideoLoaded2.bind(this);
   this.video.onerror = this.onVideoError.bind(this);
 
   this.previewVideo = document.createElement("video");
