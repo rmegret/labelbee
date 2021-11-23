@@ -497,19 +497,48 @@ VideoManager.prototype.updateVideoInfoForm = function () {
 };
 
 VideoManager.prototype.videoListFromDB = function () {
-  this.div = $("from-server-dialog");
-  this.div.find(".modal-body").html("[...]");
-    
-  this.div.find(".modal-message h4").css("color","black");
-  this.div.find(".modal-message h4")
-    .html("<div>Loading video list from server. Please wait...</div>");
+  this.div = $("#from-server-dialog");
+  var div = this.div;
+
+  // Initializing modal
+  this.initDialog = function () {
+    div.modal({
+      show: false,
+      autoOpen: false,
+      modal: true,
+      open: function () {
+        $("body").css("overflow", "auto");
+      },
+      close: function () {
+        $("body").css("overflow", "auto");
+      },
+    });
+    div.find(".modal-dialog").draggable({
+      handle: ".modal-header",
+    });
+    div.find(".modal-content").resizable({
+      alsoResize: ".modal-content",
+      minHeight: 300,
+      minWidth: 300,
+    });
+    div.find(".modal-title").html("Load Video");
+    div.find(".modal-body").html("[...]");
+
+    div.find(".modal-message h4").css("color","black");
+    div.find(".modal-message h4")
+      .html("<div>Loading video list from server. Please wait...</div>");
+  };
+  this.initDialog();
+  // Producing video list table
   this.receivedVideoSelection();
-  this.div.modal("show");
+  div.modal("show");
+
 }
 
 VideoManager.prototype.receivedVideoSelection = async function(){
+  var div = this.div
   $.ajax({
-    url: url_for("/rest/v2/videodata"),
+    url: url_for("/rest/v2/videolist"),
     method: 'get',
     data: "", 
     dataType: 'json',
@@ -527,11 +556,11 @@ VideoManager.prototype.receivedVideoSelection = async function(){
       "<th>Location</th></thead>" +
       "</table>";
 
-      html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
+      html += "<br><br><h4>WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.<h4>";
       div.find(".modal-body").html(html);
       div.find(".modal-message h4").html("");
 
-      this.div.find("#TagOrEventFileListFromServer").DataTable({
+      div.find("#VideoListFromServerTable").DataTable({
         data: json["data"],
         columns:[
           {data:"id", render: function(id){
@@ -556,12 +585,16 @@ VideoManager.prototype.videoSelected = async function(id) {
     data: "", 
     dataType: 'json',
     error: function (){
+        console.log("VideoManager.videoSelected ERROR: Unable to retrieve " +
+        "selected video's information from server.")
         this.div.find(".modal-message h4").css("color","red");
-        this.div.find(".modal-message h4").html("VideoManager.receivedVideoSelection ERROR: Unable to retrieve " +
+        this.div.find(".modal-message h4").html("VideoManager.videoSelected ERROR: Unable to retrieve " +
         "selected video's information from server.");
       },
-    success: function(json){
-      this.setVideoInfo(json);
+    success: function(videoInfoJSON){
+      console.log()
+      this.setVideoInfo(videoInfoJSON);
+      console.log("VideoManager.videoSelected: Loaded video information: ", videoInfoJSON)
     }
   });
 }
@@ -586,6 +619,5 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   }
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
-  
-
+  videoControl.loadVideo2(videoinfo.videoURL);
 }

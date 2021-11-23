@@ -45,7 +45,7 @@ function VideoControl(videoTagId) {
   };
 
   this.video = this.video2.video; // Same as $('#video')[0]
-  this.video.onloadeddata = this.onVideoLoaded2.bind(this);
+  this.video.onloadeddata = this.onVideoLoaded.bind(this);
   this.video.onerror = this.onVideoError.bind(this);
 
   this.previewVideo = document.createElement("video");
@@ -661,3 +661,57 @@ VideoControl.prototype.onVideoInfoChanged = function () {
 VideoControl.prototype.maxframe = function () {
   return Math.floor(videoinfo.duration * videoinfo.videofps);
 };
+
+VideoControl.prototype.loadVideo2 = function(videoURL){
+  if (logging.videoEvents) console.log("loadVideo2: url=", videoURL);
+  this.name = videoURL.split('/').reverse()[0];
+  this.video.src = videoURL;
+  videoControl.onVideoLoaded2();
+  this.setPreviewVideoStatus("undefined");
+  statusWidget.statusRequest("videoLoad", []);
+}
+
+VideoControl.prototype.onVideoLoaded2 = async function(){
+  console.log("onVideoLoaded2: VIDEO loaded ", this.video.src);
+  statusWidget.statusUpdate("videoLoad", true, []);
+  this.isValidVideo = true;
+  this.onVideoSizeChanged();
+  let name = videoinfo.name;
+  $("#videoName").html(name);
+  $("a.videolink").attr("href", name);
+  let videourl = videoinfo.videoURL;
+  this.loadPreviewVideo();
+  $(this).trigger("video:loaded");
+  this.hardRefresh();
+
+}
+
+// {
+//   if (logging.videoEvents) console.log("onVideoLoaded", event);
+
+//   statusWidget.statusUpdate("videoLoad", true, []);
+
+//   this.isValidVideo = true;
+
+//   this.onVideoSizeChanged();
+
+//   videoinfo.duration = this.video.duration;
+//   videoinfo.name = this.video.src;
+
+//   let name = videoinfo.name;
+//   $("#videoName").html(name);
+
+//   $("a.videolink").attr("href", name);
+
+//   let videourl = videoinfo.videoURL;
+
+//   this.loadVideoInfo(videourl + ".info.json");
+//   this.loadPreviewVideo();
+
+//   $(this).trigger("video:loaded");
+
+//   this.hardRefresh();
+
+//   statusWidget.statusRequest("tagsLoad", []);
+//   tagsFromServer(videoinfo.tags.videoTagURL, true); // quiet
+// }

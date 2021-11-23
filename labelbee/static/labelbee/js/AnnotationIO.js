@@ -1046,6 +1046,29 @@ function EventsFromServerDialog() {
   var theDialog = this;
   this.div = $("#dialog-event-from-server");
   var div = this.div;
+  this.initDialog = function () {
+    div.modal({
+      show: false,
+      autoOpen: false,
+      modal: true,
+      open: function () {
+        $("body").css("overflow", "auto");
+      },
+      close: function () {
+        $("body").css("overflow", "auto");
+      },
+    });
+    div.find(".modal-dialog").draggable({
+      handle: ".modal-header",
+    });
+    div.find(".modal-content").resizable({
+      alsoResize: ".modal-content",
+      minHeight: 300,
+      minWidth: 300,
+    });
+  };
+
+  this.initDialog();
 
   this.updateDialog = function (dataType) {
     // var route = "/rest/events/"; // Hardcoded
@@ -1076,7 +1099,7 @@ function EventsFromServerDialog() {
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
         function (html) {
-          $(".modal-message h4").text(html);
+          div.find(".modal-message h4").text(html);
         }
       ),
       success: function(json){
@@ -1372,8 +1395,8 @@ function EventsFromServerDialog() {
       data: "", 
       dataType: 'json',
       error: function (){
-          $(".modal-message h4").css("color","red");
-          $(".modal-message h4").html("ERROR: Invalid Video ID.");
+          div.find(".modal-message h4").css("color","red");
+          div.find(".modal-message h4").html("ERROR: Invalid Video ID.");
         },
       success: function(json){
         div
@@ -1386,33 +1409,13 @@ function EventsFromServerDialog() {
     div.find("#showAllUsers").prop('checked', false);
 
     div.find(".modal-body").html("[...]");
-    $(".modal-message h4").html("Loading " + dataType + " file list from server. Please wait...");
+    div.find(".modal-message h4").html("Loading " + dataType + " file list from server. Please wait...");
 
     this.updateDialog(dataType);
 
     div.modal("show");
   };
-  this.initDialog = function () {
-    div.modal({
-      show: false,
-      autoOpen: false,
-      modal: true,
-      open: function () {
-        $("body").css("overflow", "auto");
-      },
-      close: function () {
-        $("body").css("overflow", "auto");
-      },
-    });
-    div.find(".modal-dialog").draggable({
-      handle: ".modal-header",
-    });
-    div.find(".modal-content").resizable({
-      alsoResize: ".modal-content",
-      minHeight: 300,
-      minWidth: 300,
-    });
-  };
+
   this.closeDialog = function () {
     div.modal("hide");
   };
@@ -1509,7 +1512,7 @@ function EventsFromServerDialog() {
     html = '<pre class="json">' + html + "</pre>";
     div.find(".modal-message").html(html);
   };
-  this.initDialog();
+
 }
 
 function RecentTagOrEventFromServerDialog() {
