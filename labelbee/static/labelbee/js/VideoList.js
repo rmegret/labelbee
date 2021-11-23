@@ -499,6 +499,7 @@ VideoManager.prototype.updateVideoInfoForm = function () {
 VideoManager.prototype.videoListFromDB = function () {
   this.div = $("#from-server-dialog");
   var div = this.div;
+  console.log("VideoManager.videoListFromDB: Loading video list from server.")
 
   // Initializing modal
   this.initDialog = function () {
@@ -579,6 +580,7 @@ VideoManager.prototype.receivedVideoSelection = async function(){
 
 VideoManager.prototype.videoSelected = async function(id) {
   this.currentVideoID = id;
+
   $.ajax({
     url: url_for("/rest/v2/get_video_info/" + id),
     method: 'get',
@@ -593,7 +595,7 @@ VideoManager.prototype.videoSelected = async function(id) {
       },
     success: function(videoInfoJSON){
       console.log()
-      this.setVideoInfo(videoInfoJSON);
+      videoManager.setVideoInfo(videoInfoJSON);
       console.log("VideoManager.videoSelected: Loaded video information: ", videoInfoJSON)
     }
   });
