@@ -1963,7 +1963,10 @@ function updateObsTable() {
 
 function modifyCurrentObsSpan(mode) {
     let r = getSelectedRect()
-    if (!r) return;
+    if (!r) {
+        console.log('modifyCurrentObsSpan: CANCELED, no event selected')
+        return;
+    }
     
     let frame = r.obs.frame
     let id = r.obs.ID
@@ -1999,6 +2002,16 @@ function modifyCurrentObsSpan(mode) {
         obs.span.f2 = obs.span.f2-10
         if (obs.span.f2<obs.frame) obs.span.f2=obs.frame
     }
+
+    if (mode=='setspan-start') {
+        overlay.setInteractionMode('pick-frame',{type:'setspan-start'})
+        return
+    }
+    if (mode=='setspan-end') {
+        overlay.setInteractionMode('pick-frame',{type:'setspan-end'})
+        return
+    }
+
     updateTagsLabels()
     drawChrono()
 }

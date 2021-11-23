@@ -714,6 +714,19 @@ function onKeyDown(e) {
     }
     switch (e.keyCode) {
         case 16: // Shift
+            // Preparation for new annotation?
+            // Highlight closest existing ID
+            // Does not work, no access to mouse positio, would need constant mouseMove monitoring
+            // {
+            //     let f = getCurrentFrame()
+            //     let interval = [f-overlay.trackWindow.backward, f+overlay.trackWindow.forward]
+            //     if (interval[0]<0) interval[0]=0
+            //     if (interval[1]>=videoinfo.nframes) interval[1]=videoinfo.nframes-1
+            //     let prediction = predictIdFromObsMultiframe(interval,videoXY, "distance")
+            //     prediction = defaultIfIDExists(prediction)
+            //     printMessage('Predicted ID = ',prediction.id)
+            // }
+            break
         case 17: // Ctrl
         case 18: // Alt
         case 19: // Pause/Break

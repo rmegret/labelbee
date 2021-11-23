@@ -70,14 +70,21 @@ function OverlayControl(canvasTagId) {
         showLabels: true,
         labelFormatter: function(obs) {return activityString(obs)},
         showNotes: true,
+        showSpan: false,
         resizeAroundCenter: false,
         ID_dotRadius: 4, // Radius of dot center
         ID_fontSize: 20,
         ID_color: 'yellow',
         clickModeSelectMultiframe: false,
-        clickModeNewAnnotation: false
+        clickModeNewAnnotation: false,
+        predictIdClickRadius: 120
     }
     overlay.updateOptsButtons()
+
+    overlay.interaction = {
+        mode: 'main', // 'pick-frame'
+        opts: {}
+    }
     
     overlay.tagMarkerOptions = ['quad','cross','circle']
     overlay.selectboxTagMarkerInit()
@@ -134,6 +141,54 @@ function OverlayControl(canvasTagId) {
 OverlayControl.prototype = {}
 
 
+
+OverlayControl.prototype.setInteractionMode = function(mode, opts) {
+    console.log('overlay.setInteractionMode', mode, opts)
+    
+    if (mode=='main') {
+        this.interaction.mode = 'main'
+        this.interaction.opts = opts
+    } else if (mode=='pick-frame') {
+        let activeObj = this.getActiveObject()
+        if (!activeObj) {
+            console.log('overlay.setInteractionMode: CANCELED, no active object')
+            return;
+        }
+        let obs = activeObj.obs
+        if (!obs) {
+            console.log('overlay.setInteractionMode: CANCELED, no obs')
+            return;
+        }
+        let frame = videoControl.getCurrentFrame()
+
+        this.interaction.mode = 'pick-frame'
+        this.interaction.opts = opts
+        this.interaction.opts.obs = obs
+        this.interaction.opts.id = obs.ID
+        this.interaction.opts.frame = frame
+    } else {
+        console.log('overlay.setInteractionMode')
+    }
+    this.refreshInteraction()
+}
+OverlayControl.prototype.refreshInteraction = function() {
+    console.log('overlay.refreshInteration',this.interaction)
+    let mode = this.interaction.mode
+    let opts = this.interaction.opts
+    
+    $('.setspan-start').removeClass("active")
+    $('.setspan-end').removeClass("active")
+
+    if (mode=='pick-frame') {
+        if (opts.type=='setspan-start') {
+            $('.setspan-start').addClass("active")
+        }
+        if (opts.type=='setspan-end') {
+            $('.setspan-end').addClass("active")
+        }
+    }
+}
+
 OverlayControl.prototype.optsClick = function(option) {
     console.log('overlay.onClickDisableAngle')
     
@@ -144,7 +199,7 @@ OverlayControl.prototype.optsClick = function(option) {
 }
 OverlayControl.prototype.updateOptsButtons = function() {
     console.log('overlay.updateDisableAngleButton')
-    for (option of ['showRect','showID','showLabels','showNotes','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation']) {
+    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation']) {
         console.log(option)
         if ( this.opts[option] ) {
             $(".overlayOpts-"+option).addClass("active")
@@ -516,7 +571,56 @@ OverlayControl.prototype.hardRefresh = function() {
     
     overlay.canvas1.clear();
     createRectsFromTracks()
-    selectBeeByID(defaultSelectedBee);
+
+    if (this.interaction.mode == 'pick-frame') {
+        let overlay = this
+        selectBeeByID(this.interaction.opts.id)
+        let id = overlay.interaction.opts.id
+        let frame = overlay.interaction.opts.frame
+    
+        // Poke directly in the main datastructure as the active object
+        // does not copy this field. // TODO: cleanme
+        let obs=Tracks[frame][id]
+        if (! ('span' in obs)) {
+            obs.span = {'f1':frame, 'f2':frame}
+        }
+
+        function doSwap2(interval, old_id, new_id) {
+            obs_swapID(interval, old_id, new_id)
+            videoControl.refresh() // Just refresh
+            refreshChronogram();
+        }
+        function doSetSpanStart() {
+            let f = videoControl.getCurrentFrame()
+            obs.span.f1 = f
+            $('#alerttext').html('Set Start DONE')
+            overlay.setInteractionMode('main')
+            overlay.hardRefresh()
+            refreshChronogram();
+        }
+        function doSetSpanEnd() {
+            let f = videoControl.getCurrentFrame()
+            obs.span.f2 = f
+            $('#alerttext').html('Set Start DONE')
+            overlay.setInteractionMode('main')
+            overlay.hardRefresh()
+            refreshChronogram();
+        }
+        function cancelSetSpan() {
+            $('#alerttext').html('Set Start canceled')
+            overlay.setInteractionMode('main')
+        }
+
+        //printMessage(
+        $('#alerttext').html("PICK FRAME: set start for "+id+" @ frame "+frame+": ")
+        .append($('<button>Set Start</button>').click(doSetSpanStart))
+        .append($('<button>Set End</button>').click(doSetSpanEnd))
+        .append($(document.createTextNode(' ')))
+        .append($('<button>CANCEL</button>').click(cancelSetSpan))
+    } else {
+        // Default behavior
+        selectBeeByID(defaultSelectedBee);
+    }
     // zoomOverlay supposed to be updated by event triggered by selectBeeByID
     
     this.refreshOverlay()
@@ -1163,6 +1267,27 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
         }
     }
 
+    let labelOffset = radius + 3
+    if (overlay.opts.showSpan) {
+        //ctx.font = "10px Arial";
+        let obs = getObsHandle(rect.obs.frame,rect.obs.ID)//rect.obs
+        if ((obs) && ('span' in obs)) {
+            let spannotes = ''
+            let f = obs.frame
+            let f1 = Number(obs.span.f1)
+            let f2 = Number(obs.span.f2)
+            if (f2!=f1) {
+                spannotes = '['+df1+'-'+df2+']'
+            }
+            font = ''+(overlay.opts.ID_fontSize/2)+'px Arial' 
+            ctx.font = font
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            wrapText(ctx, spannotes, x, y + labelOffset, 80, 10)
+            labelOffset += overlay.opts.ID_fontSize/2
+        }
+    }
     if (overlay.opts.showLabels) {
         let acti = overlay.opts.labelFormatter(rect.obs)
         //activityString(rect.obs)
@@ -1173,19 +1298,23 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
         ctx.fillStyle = color;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillText(acti, x, y + radius + 3);
+        ctx.fillText(acti, x, y + labelOffset);
         ctx.textBaseline = 'alphabetic';
+        if (acti!='')
+            labelOffset += overlay.opts.ID_fontSize/2
     }
     if (overlay.opts.showNotes) {
         if (typeof rect.obs.notes !== 'undefined') {
             //ctx.font = "10px Arial";
+            let notes = rect.obs.notes
             font = ''+(overlay.opts.ID_fontSize/2)+'px Arial' 
             ctx.font = font
             ctx.fillStyle = color;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            wrapText(ctx, rect.obs.notes, x, y + radius + 3 + 12, 80, 10)
+            wrapText(ctx, notes, x, y + labelOffset, 80, 10)
         }
+        labelOffset += overlay.opts.ID_fontSize/2
     }
     
     ctx.restore()
@@ -2266,7 +2395,7 @@ function predictIdFromObsMultiframe(frameInterval, pt, mode) {
                 cy = obs.y + obs.height/2;
             //console.log("id=",id,"obs=",obs)
             let d = dist(pt.x, pt.y, cx, cy);
-            if (d < predictIdClickRadius && d < out.d) {
+            if (d < overlay.opts.predictIdClickRadius && d < out.d) {
                 out = {id: id, obs: obs, reason:'distance', d:d, frame:frame};
             }
         }
@@ -2274,7 +2403,6 @@ function predictIdFromObsMultiframe(frameInterval, pt, mode) {
     return out;
 }
 
-predictIdClickRadius = 60
 function predictIdFromTags(frame, pt, mode) {
     var tmp = Tags[frame];
     if (tmp == null) return {id: undefined, tag: undefined, reason:'notFound'};
@@ -2283,7 +2411,7 @@ function predictIdFromTags(frame, pt, mode) {
         for (let k in frame_tags) {
             let tag = frame_tags[k];
             let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
-            if (d < predictIdClickRadius) {
+            if (d < overlay.opts.predictIdClickRadius) {
                 return {id: tag.id, tag: tag, reason:'distance'};
             }
         }
@@ -2301,7 +2429,7 @@ function predictIdFromTagsMultiframe(frameInterval, pt, mode) {
             for (let k in frame_tags) {
                 let tag = frame_tags[k];
                 let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
-                if (d < predictIdClickRadius && d < out.d) {
+                if (d < overlay.opts.predictIdClickRadius && d < out.d) {
                     out = {id: tag.id, tag: tag, reason:'distance', d:d, frame:frame};
                 }
             }
@@ -2399,7 +2527,7 @@ function onMouseDown_predict(option) {
     // predictId takes video/obs coordinates units
     //let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
     let f = getCurrentFrame()
-    let interval = [f-10, f+10]
+    let interval = [f-overlay.trackWindow.backward, f+overlay.trackWindow.forward]
     if (interval[0]<0) interval[0]=0
     if (interval[1]>=videoinfo.nframes) interval[1]=videoinfo.nframes-1
     let prediction = predictIdFromObsMultiframe(interval,videoXY, "distance")
@@ -2491,10 +2619,20 @@ function onMouseDown_interactiveRect(option) {
 
     var startX = option.e.offsetX, startY = option.e.offsetY;
 
-    let canvasXY = {x: startX, y: startX}
+    let canvasXY = {x: startX, y: startY}
     let clientXY = {x: option.e.clientX, y: option.e.clientY}
     let videoXY = overlay.canvasToVideoPoint(canvasXY)
-    let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
+    //let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
+
+    let f = getCurrentFrame()
+    let interval = [f-overlay.trackWindow.backward, f+overlay.trackWindow.forward]
+    if (interval[0]<0) interval[0]=0
+    if (interval[1]>=videoinfo.nframes) interval[1]=videoinfo.nframes-1
+    let prediction = predictIdFromObsMultiframe(interval,videoXY, "distance")
+    prediction = defaultIfIDExists(prediction)
+    if (logging.mouseEvents)
+        console.log("onMouseDown_interactiveRect: prediction", prediction,'from videoXY',videoXY)
+
     $("#I").val(prediction.id)
 
     let id = prediction.id;
@@ -2516,7 +2654,7 @@ function onMouseDown_interactiveRect(option) {
 
         let delta = {x: e.clientX - clientXY.x, y: e.clientY - clientXY.y}
 
-        if (e.ctrlKey) {
+        if (overlay.opts.resizeAroundCenter) {
             let w = delta.x * 2,
                 h = delta.y * 2;
             rect.set({
@@ -2540,6 +2678,7 @@ function onMouseDown_interactiveRect(option) {
             });
         }
         rect.setCoords();
+
         //canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
         overlay.canvas1.renderAll(); // Refresh rectangles drawing
 
@@ -2554,7 +2693,7 @@ function onMouseDown_interactiveRect(option) {
         var activeObject = rect;
         if (logging.mouseEvents)
             console.log('onMouseUp_interactiveRect: rect=', rect, 'active=', overlay.canvas1.getActiveObject())
-        if (activeObject.validated) {
+        if (activeObject.validated) {        
             fixRectSizeAfterScaling(activeObject) // Fix negative width or height
             updateRectObsGeometry(activeObject) // Copy geometry to obs
                 //canvas1.deactivateAll()
@@ -2566,11 +2705,14 @@ function onMouseDown_interactiveRect(option) {
             default_width = activeObject.width;
             default_height = activeObject.height;
 
-            updateForm(activeObject)
-            $('#I')[0].focus() // Set focus to allow easy ID typing
-            $('#I')[0].select()
+            // updateForm(activeObject)
+            // $('#I')[0].focus() // Set focus to allow easy ID typing
+            // $('#I')[0].select()
             
-            printMessage("Press enter to validate ID", "green")
+            // printMessage("Press enter to validate ID", "green")
+
+            updateForm(activeObject)
+            submit_bee()
         } else {
             // Not enough drag to define a new rectangle
             overlay.canvas1.deactivateAll()

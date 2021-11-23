@@ -292,6 +292,7 @@
                   <button onclick="overlay.optsClick('showID')" type="button" class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showID" title="Show ID in the overlay">Show ID</button>
                   <button onclick="overlay.optsClick('showLabels')" type="button" class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showLabels" title="Show Labels in the overlay (CAUTION: only applied to entering, leaving, pollen)">Show Labels</button>
                   <button onclick="overlay.optsClick('showNotes')" type="button" class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showNotes" title="Show Notes in the overlay">Show Notes</button>
+                  <button onclick="overlay.optsClick('showSpan')" type="button" class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showSpan" title="Show Events Time Span in the overlay">Show Timespan</button>
                   <button onclick="overlay.optsClick('resizeAroundCenter')" type="button" class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-resizeAroundCenter" title="Rectangle resize is around the box center">Resize around center</button>
                 </span>
               </div>
@@ -339,9 +340,11 @@
               <button id="nextIDButton" onclick="onClickNextID()" type="button" class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID <span class="glyphicon glyphicon-arrow-down small"></span></button>
               
               <button onclick="modifyCurrentObsSpan('extendleft')" type="button" class="btn btn-obs-expand btn-xs" title="Extend annotation left"> <span class="glyphicon glyphicon-chevron-left small"></span>+</button>
+              <button onclick="modifyCurrentObsSpan('setspan-start')" type="button" class="btn btn-blue-toggle btn-xs setspan-start" title="Set span left">Set Start</button>
               <button onclick="modifyCurrentObsSpan('restrictleft')" type="button" class="btn btn-obs-expand btn-xs" title="Restrict annotation left"> <span class="glyphicon glyphicon-chevron-right small"></span>-</button>
               <span class='small blue-text'>-span-</span>
               <button onclick="modifyCurrentObsSpan('restrictright')" type="button" class="btn btn-obs-expand btn-xs" title="Restrict annotation right">-<span class="glyphicon glyphicon-chevron-left small"></span></button>
+              <button onclick="modifyCurrentObsSpan('setspan-end')" type="button" class="btn btn-blue-toggle btn-xs setspan-end" title="Set span right">Set End</button>
               <button onclick="modifyCurrentObsSpan('extendright')" type="button" class="btn btn-obs-expand btn-xs" title="Extend annotation right">+<span class="glyphicon glyphicon-chevron-right small"></span></button>
               </span>
               </div>
