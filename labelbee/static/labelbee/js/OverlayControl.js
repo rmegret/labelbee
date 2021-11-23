@@ -149,6 +149,8 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
         this.interaction.mode = 'main'
         this.interaction.opts = opts
     } else if (mode=='pick-frame') {
+        // For the moment, does not check opts.type, since we have only setspan
+
         let activeObj = this.getActiveObject()
         if (!activeObj) {
             console.log('overlay.setInteractionMode: CANCELED, no active object')
@@ -170,21 +172,18 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
         console.log('overlay.setInteractionMode')
     }
     this.refreshInteraction()
+    this.hardRefresh()
 }
 OverlayControl.prototype.refreshInteraction = function() {
     console.log('overlay.refreshInteration',this.interaction)
     let mode = this.interaction.mode
     let opts = this.interaction.opts
     
-    $('.setspan-start').removeClass("active")
-    $('.setspan-end').removeClass("active")
+    $('.setspan').removeClass("active")
 
     if (mode=='pick-frame') {
-        if (opts.type=='setspan-start') {
-            $('.setspan-start').addClass("active")
-        }
-        if (opts.type=='setspan-end') {
-            $('.setspan-end').addClass("active")
+        if (opts.type=='setspan') {
+            $('.setspan').addClass("active")
         }
     }
 }
@@ -593,30 +592,43 @@ OverlayControl.prototype.hardRefresh = function() {
         function doSetSpanStart() {
             let f = videoControl.getCurrentFrame()
             obs.span.f1 = f
-            $('#alerttext').html('Set Start DONE')
-            overlay.setInteractionMode('main')
+            //$('#alerttext').html('Set Start DONE')
+            //overlay.setInteractionMode('main')
             overlay.hardRefresh()
             refreshChronogram();
+        }
+        function gotoStart() {
+            gotoEvent(obs.span.f1, id)
+        }
+        function gotoAnnotation() {
+            gotoEvent(obs.frame, id)
+        }
+        function gotoEnd() {
+            gotoEvent(obs.span.f2, id)
         }
         function doSetSpanEnd() {
             let f = videoControl.getCurrentFrame()
             obs.span.f2 = f
-            $('#alerttext').html('Set Start DONE')
-            overlay.setInteractionMode('main')
+            //$('#alerttext').html('Set Start DONE')
+            //overlay.setInteractionMode('main')
             overlay.hardRefresh()
             refreshChronogram();
         }
         function cancelSetSpan() {
-            $('#alerttext').html('Set Start canceled')
+            $('#alerttext').html('Pick frame CLOSED')
             overlay.setInteractionMode('main')
         }
 
         //printMessage(
-        $('#alerttext').html("PICK FRAME: set start for "+id+" @ frame "+frame+": ")
-        .append($('<button>Set Start</button>').click(doSetSpanStart))
-        .append($('<button>Set End</button>').click(doSetSpanEnd))
+        $('#alerttext').html("PICK FRAME: setting timespan for ID="+id+" at frame="+frame+": ")
+        .append($('<button class="btn btn-obs-expand btn-sm">Set Start</button>').click(doSetSpanStart))
+        .append($('<button class="btn btn-obs-expand btn-sm">Set End</button>').click(doSetSpanEnd))
         .append($(document.createTextNode(' ')))
-        .append($('<button>CANCEL</button>').click(cancelSetSpan))
+        .append($('<button>CLOSE</button>').click(cancelSetSpan))
+        .append($('<br>'))
+        .append($('<button class="btn btn-default  btn-xs">Goto Start</button>').click(gotoStart))
+        .append($('<button class="btn btn-default  btn-xs">Goto Event</button>').click(gotoAnnotation))
+        .append($('<button class="btn btn-default  btn-xs">Goto End</button>').click(gotoEnd))
     } else {
         // Default behavior
         selectBeeByID(defaultSelectedBee);
@@ -1277,7 +1289,7 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
             let f1 = Number(obs.span.f1)
             let f2 = Number(obs.span.f2)
             if (f2!=f1) {
-                spannotes = '['+df1+'-'+df2+']'
+                spannotes = '['+f1+'-'+f2+']'
             }
             font = ''+(overlay.opts.ID_fontSize/2)+'px Arial' 
             ctx.font = font

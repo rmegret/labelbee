@@ -2003,12 +2003,8 @@ function modifyCurrentObsSpan(mode) {
         if (obs.span.f2<obs.frame) obs.span.f2=obs.frame
     }
 
-    if (mode=='setspan-start') {
-        overlay.setInteractionMode('pick-frame',{type:'setspan-start'})
-        return
-    }
-    if (mode=='setspan-end') {
-        overlay.setInteractionMode('pick-frame',{type:'setspan-end'})
+    if (mode=='setspan') {
+        overlay.setInteractionMode('pick-frame',{type:'setspan'})
         return
     }
 
