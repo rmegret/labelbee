@@ -604,8 +604,8 @@ VideoManager.prototype.videoSelected = async function(id) {
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   videoinfo = {
-    name: "data/videos/Gurabo/C01_170805083044.mp4".split('/').pop(),//videoInfoJSON["videoURL"].split('/').reverse()[0],
-    videoURL: "data/videos/Gurabo/C01_170805083044.mp4",//videoInfoJSON["videoURL"],
+    name: "/data/videos/Gurabo/C01_170805083044.mp4".split('/').pop(),//videoInfoJSON["videoURL"].split('/').reverse()[0],
+    videoURL: "/data/videos/Gurabo/C01_170805083044.mp4",//videoInfoJSON["videoURL"],
     videofps: videoInfoJSON["videofps"],
     realfps: videoInfoJSON["realfps"],
     starttime: videoInfoJSON["starttime"],
