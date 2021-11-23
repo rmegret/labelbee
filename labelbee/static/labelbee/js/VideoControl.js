@@ -683,7 +683,6 @@ VideoControl.prototype.onVideoLoaded2 = async function(){
   this.loadPreviewVideo();
   $(this).trigger("video:loaded");
   this.hardRefresh();
-
 }
 
 // {
