@@ -604,8 +604,8 @@ VideoManager.prototype.videoSelected = async function(id) {
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   videoinfo = {
-    name: videoInfoJSON["videoURL"].split('/').reverse()[0],
-    videoURL: videoInfoJSON["videoURL"],
+    name: "data/videos/Gurabo/C01_170805083044.mp4".split('/').pop(),//videoInfoJSON["videoURL"].split('/').reverse()[0],
+    videoURL: "data/videos/Gurabo/C01_170805083044.mp4",//videoInfoJSON["videoURL"],
     videofps: videoInfoJSON["videofps"],
     realfps: videoInfoJSON["realfps"],
     starttime: videoInfoJSON["starttime"],
@@ -624,4 +624,6 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
   videoControl.loadVideo2(videoinfo.videoURL);
+
+  // "https://bigdbee.hpcf.upr.edu/mnt/storage/Gurabo/datasets/gurabo10avi/mp4/col01/3_01_R_190715140000.mp4"
 }
