@@ -664,7 +664,7 @@ VideoControl.prototype.maxframe = function () {
 
 VideoControl.prototype.loadVideo2 = function(videoURL){
   if (logging.videoEvents) console.log("loadVideo2: url=", videoURL);
-  this.name = videoURL.split('/').reverse()[0];
+  this.name = videoinfo.name;
   this.video.src = videoURL;
   videoControl.onVideoLoaded2();
   this.setPreviewVideoStatus("undefined");
