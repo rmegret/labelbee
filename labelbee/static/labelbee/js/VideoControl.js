@@ -674,12 +674,12 @@ VideoControl.prototype.loadVideo2 = function(videoURL){
 VideoControl.prototype.onVideoLoaded2 = async function(){
   console.log("onVideoLoaded2: VIDEO loaded ", this.video.src);
   statusWidget.statusUpdate("videoLoad", true, []);
+  videoControl.video2.frameRate = videoinfo.videofps
   this.isValidVideo = true;
   this.onVideoSizeChanged();
   let name = videoinfo.name;
   $("#videoName").html(name);
   $("a.videolink").attr("href", name);
-  let videourl = videoinfo.videoURL;
   this.loadPreviewVideo();
   $(this).trigger("video:loaded");
   this.hardRefresh();
