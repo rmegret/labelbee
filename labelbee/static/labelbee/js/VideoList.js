@@ -604,6 +604,7 @@ VideoManager.prototype.videoSelected = async function(id) {
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   videoinfo = {
+    name: videoInfoJSON["videoURL"].split('/').reverse()[0],
     videoURL: videoInfoJSON["videoURL"],
     videofps: videoInfoJSON["videofps"],
     realfps: videoInfoJSON["realfps"],
