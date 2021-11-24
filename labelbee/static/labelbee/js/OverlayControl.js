@@ -579,7 +579,17 @@ OverlayControl.prototype.hardRefresh = function() {
     
         // Poke directly in the main datastructure as the active object
         // does not copy this field. // TODO: cleanme
-        let obs=Tracks[frame][id]
+        let obs=getObsHandle(frame,id) //Tracks[frame][id]
+        if (!obs) {
+            console.log('overlay.hardRefresh: ERROR, in pick-frame without valid obs')
+            overlay.setInteractionMode('main')
+            selectBeeByID(defaultSelectedBee);
+            this.refreshOverlay()
+    
+            updateDeleteButton()
+            updateUndoButton()
+            return
+        }
         if (! ('span' in obs)) {
             obs.span = {'f1':frame, 'f2':frame}
         }
