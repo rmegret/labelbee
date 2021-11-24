@@ -16,4 +16,5 @@ labelbee/static/data
 labelbee/local_settings.py
 ~$*
 labelbee-comments/
-
+gunicorn_error_logs.log
+labelbee.pid
