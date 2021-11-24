@@ -42,10 +42,10 @@
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
- | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
@@ -60,31 +60,15 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.models.User.active">active (labelbee.models.User attribute)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.add_dataset_page">add_dataset_page() (in module labelbee.views)</a>
-</li>
       <li><a href="labelbee.html#labelbee.manage_commands.add_students">add_students() (in module labelbee.manage_commands)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.manage_commands.add_users">add_users() (in module labelbee.manage_commands)</a>
-
-      <ul>
-        <li><a href="labelbee.html#labelbee.views.add_users">(in module labelbee.views)</a>
-</li>
-      </ul></li>
-      <li><a href="labelbee.html#labelbee.views.add_video">add_video() (in module labelbee.views)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="labelbee.html#labelbee.manage_commands.add_users">add_users() (in module labelbee.manage_commands)</a>
+</li>
       <li><a href="labelbee.html#labelbee.db_functions.add_video_data">add_video_data() (in module labelbee.db_functions)</a>
 </li>
       <li><a href="labelbee.html#labelbee.db_functions.add_video_to_dataset">add_video_to_dataset() (in module labelbee.db_functions)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.admin_page">admin_page() (in module labelbee.views)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.after_request">after_request() (in module labelbee.views)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.ajaxlogin">ajaxlogin() (in module labelbee.views)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.ajaxlogout">ajaxlogout() (in module labelbee.views)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -100,8 +84,6 @@
 </li>
       <li><a href="labelbee.html#labelbee.models.Video.corrupted">corrupted (labelbee.models.Video attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.user_management.create_user">create_user() (in module labelbee.user_management)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.DataSet.created_by">created_by (labelbee.models.DataSet attribute)</a>
@@ -110,6 +92,14 @@
         <li><a href="labelbee.html#labelbee.models.VideoData.created_by">(labelbee.models.VideoData attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="labelbee.html#labelbee.models.VideoData.created_by_id">created_by_id (labelbee.models.VideoData attribute)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.VideoData.created_from_id">created_from_id (labelbee.models.VideoData attribute)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.DataSet.creator">creator (labelbee.models.DataSet attribute)</a>
+</li>
       <li><a href="labelbee.html#labelbee.models.CustomUserManager.customize">customize() (labelbee.models.CustomUserManager method)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.CustomUserManager">CustomUserManager (class in labelbee.models)</a>
@@ -120,9 +110,13 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.models.Video.data_set">data_set (labelbee.models.Video attribute)</a>
+      <li><a href="labelbee.html#labelbee.models.VideoData.data">data (labelbee.models.VideoData attribute)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.User.data_set">data_set (labelbee.models.User attribute)</a>
 
       <ul>
+        <li><a href="labelbee.html#labelbee.models.Video.data_set">(labelbee.models.Video attribute)</a>
+</li>
         <li><a href="labelbee.html#labelbee.models.VideoDataSet.data_set">(labelbee.models.VideoDataSet attribute)</a>
 </li>
       </ul></li>
@@ -130,19 +124,21 @@
 </li>
       <li><a href="labelbee.html#labelbee.models.DataSet">DataSet (class in labelbee.models)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.db_functions.dataset_list">dataset_list() (in module labelbee.db_functions)</a>
+      <li><a href="labelbee.html#labelbee.models.Video.dataset">dataset (labelbee.models.Video attribute)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.datasets_page">datasets_page() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.db_functions.dataset_list">dataset_list() (in module labelbee.db_functions)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.views.delete_dataset">delete_dataset() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.models.DataSetSchema">DataSetSchema (class in labelbee.models)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.DataSetSchema.Meta">DataSetSchema.Meta (class in labelbee.models)</a>
 </li>
       <li><a href="labelbee.html#labelbee.db_functions.delete_dataset_by_id">delete_dataset_by_id() (in module labelbee.db_functions)</a>
 </li>
       <li><a href="labelbee.html#labelbee.db_functions.delete_user">delete_user() (in module labelbee.db_functions)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.delete_users">delete_users() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.db_functions.delete_video">delete_video() (in module labelbee.db_functions)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.DataSet.description">description (labelbee.models.DataSet attribute)</a>
 </li>
@@ -158,29 +154,17 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.db_functions.edit_dataset">edit_dataset() (in module labelbee.db_functions)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.edit_dataset_page">edit_dataset_page() (in module labelbee.views)</a>
-</li>
       <li><a href="labelbee.html#labelbee.user_management.edit_user">edit_user() (in module labelbee.user_management)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.edit_users">edit_users() (in module labelbee.views)</a>
 </li>
       <li><a href="labelbee.html#labelbee.db_functions.edit_video">edit_video() (in module labelbee.db_functions)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.db_functions.edit_video_data">edit_video_data() (in module labelbee.db_functions)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.views.edit_video_data_page">edit_video_data_page() (in module labelbee.views)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.edit_video_page">edit_video_page() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.db_functions.edit_video_data">edit_video_data() (in module labelbee.db_functions)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.User.email">email (labelbee.models.User attribute)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.User.email_confirmed_at">email_confirmed_at (labelbee.models.User attribute)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.events_get_list">events_get_list() (in module labelbee.views)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.events_post">events_post() (in module labelbee.views)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -258,8 +242,6 @@
 </li>
       <li><a href="labelbee.html#labelbee.models.Video.height">height (labelbee.models.Video attribute)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.home_page">home_page() (in module labelbee.views)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -282,6 +264,10 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="labelbee.html#labelbee.db_functions.import_from_csv">import_from_csv() (in module labelbee.db_functions)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.user_management.import_users">import_users() (in module labelbee.user_management)</a>
+</li>
       <li><a href="labelbee.html#labelbee.init_app.init_app">init_app() (in module labelbee.init_app)</a>
 </li>
       <li><a href="labelbee.html#labelbee.manage_commands.init_db">init_db() (in module labelbee.manage_commands)</a>
@@ -291,14 +277,6 @@
       <li><a href="labelbee.html#labelbee.db_functions.injest_tags">injest_tags() (in module labelbee.db_functions)</a>
 </li>
       <li><a href="labelbee.html#labelbee.db_functions.injest_videos">injest_videos() (in module labelbee.db_functions)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="K">K</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.views.keypointlabels_get">keypointlabels_get() (in module labelbee.views)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -350,6 +328,8 @@
         <li><a href="labelbee.html#module-labelbee.local_settings_example">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     labelbee.manage_commands
 
@@ -364,8 +344,6 @@
         <li><a href="labelbee.html#module-labelbee.models">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     labelbee.settings
 
@@ -380,17 +358,6 @@
         <li><a href="labelbee.html#module-labelbee.user_management">module</a>
 </li>
       </ul></li>
-      <li>
-    labelbee.views
-
-      <ul>
-        <li><a href="labelbee.html#module-labelbee.views">module</a>
-</li>
-      </ul></li>
-      <li><a href="labelbee.html#labelbee.views.labelbee_user_page">labelbee_user_page() (in module labelbee.views)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.labellist_get">labellist_get() (in module labelbee.views)</a>
-</li>
       <li><a href="labelbee.html#labelbee.models.MyRegisterForm.last_name">last_name (labelbee.models.MyRegisterForm attribute)</a>
 
       <ul>
@@ -399,12 +366,6 @@
         <li><a href="labelbee.html#labelbee.models.UserProfileForm.last_name">(labelbee.models.UserProfileForm attribute)</a>
 </li>
       </ul></li>
-      <li><a href="labelbee.html#labelbee.views.list_users">list_users() (in module labelbee.views)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.load_json">load_json() (in module labelbee.views)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.loadtrack">loadtrack() (in module labelbee.views)</a>
-</li>
       <li><a href="labelbee.html#labelbee.models.Video.location">location (labelbee.models.Video attribute)</a>
 </li>
   </ul></td>
@@ -413,8 +374,18 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.views.manage_users_page">manage_users_page() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.models.DataSetSchema.Meta.model">model (labelbee.models.DataSetSchema.Meta attribute)</a>
+
+      <ul>
+        <li><a href="labelbee.html#labelbee.models.RoleSchema.Meta.model">(labelbee.models.RoleSchema.Meta attribute)</a>
 </li>
+        <li><a href="labelbee.html#labelbee.models.UserSchema.Meta.model">(labelbee.models.UserSchema.Meta attribute)</a>
+</li>
+        <li><a href="labelbee.html#labelbee.models.VideoDataSchema.Meta.model">(labelbee.models.VideoDataSchema.Meta attribute)</a>
+</li>
+        <li><a href="labelbee.html#labelbee.models.VideoSchema.Meta.model">(labelbee.models.VideoSchema.Meta attribute)</a>
+</li>
+      </ul></li>
       <li>
     module
 
@@ -439,8 +410,6 @@
 </li>
         <li><a href="labelbee.html#module-labelbee.user_management">labelbee.user_management</a>
 </li>
-        <li><a href="labelbee.html#module-labelbee.views">labelbee.views</a>
-</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -462,24 +431,48 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.db_functions.new_dataset">new_dataset() (in module labelbee.db_functions)</a>
 </li>
+      <li><a href="labelbee.html#labelbee.models.Video.notes">notes (labelbee.models.Video attribute)</a>
+
+      <ul>
+        <li><a href="labelbee.html#labelbee.models.VideoData.notes">(labelbee.models.VideoData attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="labelbee.html#labelbee.models.DataSetSchema.opts">opts (labelbee.models.DataSetSchema attribute)</a>
+
+      <ul>
+        <li><a href="labelbee.html#labelbee.models.RoleSchema.opts">(labelbee.models.RoleSchema attribute)</a>
+</li>
+        <li><a href="labelbee.html#labelbee.models.UserSchema.opts">(labelbee.models.UserSchema attribute)</a>
+</li>
+        <li><a href="labelbee.html#labelbee.models.VideoDataSchema.opts">(labelbee.models.VideoDataSchema attribute)</a>
+</li>
+        <li><a href="labelbee.html#labelbee.models.VideoSchema.opts">(labelbee.models.VideoSchema attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.views.parse_trackfilename">parse_trackfilename() (in module labelbee.views)</a>
-</li>
       <li><a href="labelbee.html#labelbee.models.User.password">password (labelbee.models.User attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.models.Video.path">path (labelbee.models.Video attribute)</a>
 
       <ul>
         <li><a href="labelbee.html#labelbee.models.VideoData.path">(labelbee.models.VideoData attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="labelbee.html#labelbee.db_functions.populate_datasets">populate_datasets() (in module labelbee.db_functions)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -490,13 +483,17 @@
 </li>
       <li><a href="labelbee.html#labelbee.init_app.ReverseProxied">ReverseProxied (class in labelbee.init_app)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.models.Role">Role (class in labelbee.models)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.models.UsersRoles.role_id">role_id (labelbee.models.UsersRoles attribute)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.User.roles">roles (labelbee.models.User attribute)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.RoleSchema">RoleSchema (class in labelbee.models)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.RoleSchema.Meta">RoleSchema.Meta (class in labelbee.models)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -506,16 +503,22 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.db_functions.search_video">search_video() (in module labelbee.db_functions)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.send_data">send_data() (in module labelbee.views)</a>
-</li>
-      <li><a href="labelbee.html#labelbee.views.send_data_">send_data_() (in module labelbee.views)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.flask_range_requests.send_from_directory_partial">send_from_directory_partial() (in module labelbee.flask_range_requests)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.serve_files">serve_files() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.models.DataSetSchema.Meta.sqla_session">sqla_session (labelbee.models.DataSetSchema.Meta attribute)</a>
+
+      <ul>
+        <li><a href="labelbee.html#labelbee.models.RoleSchema.Meta.sqla_session">(labelbee.models.RoleSchema.Meta attribute)</a>
 </li>
+        <li><a href="labelbee.html#labelbee.models.UserSchema.Meta.sqla_session">(labelbee.models.UserSchema.Meta attribute)</a>
+</li>
+        <li><a href="labelbee.html#labelbee.models.VideoDataSchema.Meta.sqla_session">(labelbee.models.VideoDataSchema.Meta attribute)</a>
+</li>
+        <li><a href="labelbee.html#labelbee.models.VideoSchema.Meta.sqla_session">(labelbee.models.VideoSchema.Meta attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.models.User.studentnum">studentnum (labelbee.models.User attribute)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.UserProfileForm.submit">submit (labelbee.models.UserProfileForm attribute)</a>
@@ -544,21 +547,23 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="labelbee.html#labelbee.db_functions.update_paths">update_paths() (in module labelbee.db_functions)</a>
+</li>
       <li><a href="labelbee.html#labelbee.models.User">User (class in labelbee.models)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.UsersRoles.user_id">user_id (labelbee.models.UsersRoles attribute)</a>
 </li>
       <li><a href="labelbee.html#labelbee.db_functions.user_list">user_list() (in module labelbee.db_functions)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.user_page">user_page() (in module labelbee.views)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.views.user_profile_page">user_profile_page() (in module labelbee.views)</a>
-</li>
       <li><a href="labelbee.html#labelbee.models.UserProfileForm">UserProfileForm (class in labelbee.models)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.Role.users">users (labelbee.models.Role attribute)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.UserSchema">UserSchema (class in labelbee.models)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.UserSchema.Meta">UserSchema.Meta (class in labelbee.models)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.UsersRoles">UsersRoles (class in labelbee.models)</a>
 </li>
@@ -568,8 +573,6 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.views.version_page">version_page() (in module labelbee.views)</a>
-</li>
       <li><a href="labelbee.html#labelbee.models.Video">Video (class in labelbee.models)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.VideoData.video">video (labelbee.models.VideoData attribute)</a>
@@ -578,39 +581,45 @@
         <li><a href="labelbee.html#labelbee.models.VideoDataSet.video">(labelbee.models.VideoDataSet attribute)</a>
 </li>
       </ul></li>
-      <li><a href="labelbee.html#labelbee.views.video_data_details_page">video_data_details_page() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.models.User.video_data">video_data (labelbee.models.User attribute)</a>
+
+      <ul>
+        <li><a href="labelbee.html#labelbee.models.Video.video_data">(labelbee.models.Video attribute)</a>
 </li>
+      </ul></li>
       <li><a href="labelbee.html#labelbee.db_functions.video_data_list">video_data_list() (in module labelbee.db_functions)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.video_data_page">video_data_page() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.models.VideoData.video_id">video_id (labelbee.models.VideoData attribute)</a>
+
+      <ul>
+        <li><a href="labelbee.html#labelbee.models.VideoDataSet.video_id">(labelbee.models.VideoDataSet attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.models.VideoDataSet.video_id">video_id (labelbee.models.VideoDataSet attribute)</a>
-</li>
       <li><a href="labelbee.html#labelbee.db_functions.video_info">video_info() (in module labelbee.db_functions)</a>
 </li>
       <li><a href="labelbee.html#labelbee.db_functions.video_list">video_list() (in module labelbee.db_functions)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.VideoData">VideoData (class in labelbee.models)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.models.VideoDataSet">VideoDataSet (class in labelbee.models)</a>
+      <li><a href="labelbee.html#labelbee.models.VideoDataSchema">VideoDataSchema (class in labelbee.models)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.videolist_get">videolist_get() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.models.VideoDataSchema.Meta">VideoDataSchema.Meta (class in labelbee.models)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.VideoDataSet">VideoDataSet (class in labelbee.models)</a>
 </li>
       <li><a href="labelbee.html#labelbee.models.DataSet.videos">videos (labelbee.models.DataSet attribute)</a>
 </li>
-      <li><a href="labelbee.html#labelbee.views.videos_page">videos_page() (in module labelbee.views)</a>
+      <li><a href="labelbee.html#labelbee.models.VideoSchema">VideoSchema (class in labelbee.models)</a>
+</li>
+      <li><a href="labelbee.html#labelbee.models.VideoSchema.Meta">VideoSchema.Meta (class in labelbee.models)</a>
 </li>
   </ul></td>
 </tr></table>
 
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="labelbee.html#labelbee.views.whoami">whoami() (in module labelbee.views)</a>
-</li>
-  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="labelbee.html#labelbee.models.Video.width">width (labelbee.models.Video attribute)</a>
 </li>

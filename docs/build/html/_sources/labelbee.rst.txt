@@ -79,7 +79,7 @@ labelbee.user\_management module
 labelbee.views module
 ---------------------
 
-.. automodule:: labelbee.views
+.. autoflask:: labelbee.views
    :members:
    :undoc-members:
    :show-inheritance:
