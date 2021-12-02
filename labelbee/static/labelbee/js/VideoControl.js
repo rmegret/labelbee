@@ -3,7 +3,8 @@
 // ## VideoControl
 // Video Control: frame/time conversion, seek
 
-// import {VideoFrame} from "extern/VideoFrame.js";
+//import {VideoFrame} from "extern/VideoFrame.js";
+//var LRUCache = require("extern/lru_cache-master/index").LRUCache
 
 function VideoControl(videoTagId) {
     if (this === window) { 
@@ -52,7 +53,194 @@ function VideoControl(videoTagId) {
     let videoControl = this;
     this.previewVideo.addEventListener('timeupdate', 
           function() {videoControl.onPreviewFrameChanged()}, false);
+
+    this.videoCache = new VideoCache(this)
 }
+
+/**
+  * VideoCache provides random access to individual frames in a video
+  * @constructor 
+*/
+function VideoCache(videoControl, videoCacheTagId) {
+    let videoCache = this;
+    this.video = document.createElement('video');
+    $(this.video).addClass('videoCache')
+    //this.video.addEventListener('timeupdate', 
+    //      function() {videoCache.onFrameChanged()}, false);
+    this.videoControl=videoControl
+    this.lrucache = new LRUCache(200)
+    this.canvas = document.createElement('canvas'); // Precreated canvas
+    this.ctx = this.canvas.getContext('2d');
+}
+VideoCache.prototype = {} // Prepare for all methods
+VideoCache.prototype.loadVideo = function(url) {
+    this.isValidVideo = false;
+    this.name = url;
+    this.video.src = url;
+    // Update of display handled in callback onVideoLoaded
+}
+VideoCache.prototype.onVideoLoaded = function(event) {
+    if (logging.videoEvents)
+        console.log('VideoCache.onVideoLoaded', event)
+        
+    console.log('VideoCache.onVideoLoaded: VIDEO loaded ',this.video.src)
+    this.isValidVideo = true;
+    $( this ).trigger('video:loaded') 
+}
+VideoCache.prototype.preloadFrames = async function(videoUrl, frames, fps) {
+    let images = []
+    console.log('Preloading ',frames)
+    for (let frame of frames) {
+        if (frame<0) continue
+        let img = await this.getFrameImage(videoUrl, frame, fps)
+        console.log('Preloaded frame ',frame)
+    }
+    console.log('Preload DONE')
+}
+VideoCache.prototype.getFrameImageSync = function(videoUrl, frame, fps) {
+    let key = videoUrl+':'+frame
+
+    let image = this.lrucache.get(key)
+    if (image) {
+        console.log('VideoCache: found in cache: '+key)
+        return image
+    }
+    console.log('VideoCache: not found in cache: '+key)
+    return undefined
+}
+VideoCache.prototype.getFrame = async function(videoUrl, frame, fps) {
+    return new Promise(async (resolve) => {
+  
+      // fully download it first (no buffering):
+      //let videoBlob = await fetch(videoUrl).then(r => r.blob());
+      //let videoObjectUrl = URL.createObjectURL(videoBlob);
+      let video = this.video
+  
+      let seekResolve;
+      video.addEventListener('seeked', async function() {
+        if(seekResolve) seekResolve();
+      });
+  
+      if (video.currentSrc != videoUrl)
+        video.src = videoUrl;
+  
+      // workaround chromium metadata bug (https://stackoverflow.com/q/38062864/993683)
+      while((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
+        await new Promise(r => setTimeout(r, 1000));
+        video.currentTime = 10000000*Math.random();
+      }
+      let duration = video.duration;
+  
+      let frames = [];
+      let interval = 1 / fps;
+      let currentTime = frame / fps + 0.00001;
+  
+      video.currentTime = currentTime;
+      await new Promise(r => seekResolve=r);
+      resolve(video);
+    });
+  }
+VideoCache.prototype.getFrameDataURL = async function(videoUrl, frame, fps) {
+    return new Promise(async (resolve) => {
+  
+      // fully download it first (no buffering):
+      //let videoBlob = await fetch(videoUrl).then(r => r.blob());
+      //let videoObjectUrl = URL.createObjectURL(videoBlob);
+      let video = this.video
+  
+      let seekResolve;
+      video.addEventListener('seeked', async function() {
+        if(seekResolve) seekResolve();
+      });
+  
+      video.src = videoUrl;
+  
+      // workaround chromium metadata bug (https://stackoverflow.com/q/38062864/993683)
+      while((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
+        await new Promise(r => setTimeout(r, 1000));
+        video.currentTime = 10000000*Math.random();
+      }
+      let duration = video.duration;
+  
+      let canvas = document.createElement('canvas');
+      let context = canvas.getContext('2d');
+      let [w, h] = [video.videoWidth, video.videoHeight]
+      canvas.width =  w;
+      canvas.height = h;
+  
+      let frames = [];
+      let interval = 1 / fps;
+      let currentTime = frame / fps;
+  
+      //while(currentTime < duration) {
+        video.currentTime = currentTime;
+        await new Promise(r => seekResolve=r);
+  
+        context.drawImage(video, 0, 0, w, h);
+        let base64ImageData = canvas.toDataURL('image/jpeg');
+        frames.push(base64ImageData);
+  
+      //  currentTime += interval;
+      //}
+      resolve(frames);
+    });
+  }
+  VideoCache.prototype.getFrameImage = async function(videoUrl, frame, fps) {
+    let key = videoUrl+':'+frame
+
+    let image = this.lrucache.get(key)
+    if (image) {
+        console.log('VideoCache: found '+key+' in cache')
+        return image
+    }
+
+    let vid = await this.getFrame(videoUrl, frame, fps)
+
+    let canvas = this.canvas
+    let context = this.ctx
+    let [w, h] = [video.videoWidth, video.videoHeight]
+    if ((w != canvas.width) || (h != canvas.height)) {
+        canvas.width =  w;
+        canvas.height = h;
+    }
+
+    context.drawImage(vid, 0, 0, w, h);
+    let base64ImageData = canvas.toDataURL('image/jpeg');
+
+    image = new Image();
+    image.src = base64ImageData;
+    await image.decode();
+
+    this.lrucache.set(key, image)
+    console.log('VideoCache: put '+key+' in cache')
+
+    return image
+  }
+  VideoCache.prototype.getFrameCropDataURL = async function(videoUrl, frame, fps, crop) {
+    let key = videoUrl+':'+frame
+
+    let image = this.lrucache.get(key)
+    if (image) {
+        console.log('VideoCache: found '+key+' in cache')
+        vid = image
+    } else {
+        vid = await this.getFrame(videoUrl, frame, fps)
+    }
+
+    let canvas = document.createElement('canvas');
+    let context = canvas.getContext('2d');
+    let [w, h] = [video.videoWidth, video.videoHeight]
+    if ((w != canvas.width) || (h != canvas.height)) {
+        canvas.width =  w;
+        canvas.height = h;
+    }
+
+    context.drawImage(vid, crop.x, crop.y, crop.w, crop.h, 0, 0, w, h);
+    let base64ImageData = canvas.toDataURL('image/jpeg');
+
+    return base64ImageData
+  }
+/* END VIDEOCACHE */
 
 VideoControl.prototype = {} // Prepare for all VideoControl methods
 

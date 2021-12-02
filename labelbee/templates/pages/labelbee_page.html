@@ -26,6 +26,9 @@
  <!--  <script type="text/javascript" src="js/extern/jquery.js"></script> -->
   <script type="text/javascript" src="js/extern/bootstrap.js"></script>
   <script type="text/javascript" src="js/extern/VideoFrame.js"></script>
+
+  <!-- <script data-main="js/extern/main" src="js/extern/require.js"></script> -->
+  <script type="text/javascript" src="js/extern/lru_cache-master/script.js"></script>
   
   <script type="text/javascript" src="js/extern/fabric/dist/fabric.js"></script>
 <!--   <script type="text/javascript" src="js/extern/fabric.canvasex.js"></script> -->
@@ -294,6 +297,7 @@
                   <button onclick="overlay.optsClick('showNotes')" type="button" class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showNotes" title="Show Notes in the overlay">Show Notes</button>
                   <button onclick="overlay.optsClick('showSpan')" type="button" class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showSpan" title="Show Events Time Span in the overlay">Show Timespan</button>
                   <button onclick="overlay.optsClick('resizeAroundCenter')" type="button" class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-resizeAroundCenter" title="Rectangle resize is around the box center">Resize around center</button>
+                  <button onclick="overlay.optsClick('showImageDiff')" type="button" class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showImageDiff" title="Show image difference">Image Diff</button>
                 </span>
               </div>
 
@@ -343,6 +347,7 @@
               <!-- <button onclick="modifyCurrentObsSpan('setspan-start')" type="button" class="btn btn-blue-toggle btn-xs setspan-start" title="Set span left">Set Start</button> -->
               <button onclick="modifyCurrentObsSpan('restrictleft')" type="button" class="btn btn-obs-expand btn-xs" title="Restrict annotation left"> <span class="glyphicon glyphicon-chevron-right small"></span>-</button>
               <button onclick="modifyCurrentObsSpan('setspan')" type="button" class="btn btn-blue-toggle btn-xs setspan" title="Set timespan for this event">Set Span</button>
+              <button onclick="overlay.drawTimelineCurrentObject()" type="button" class="btn btn-blue-toggle btn-xs small" title="Show video around this event">Draw timeline<br>(Experimental)</button>
               <button onclick="modifyCurrentObsSpan('restrictright')" type="button" class="btn btn-obs-expand btn-xs" title="Restrict annotation right">-<span class="glyphicon glyphicon-chevron-left small"></span></button>
               <!-- <button onclick="modifyCurrentObsSpan('setspan-end')" type="button" class="btn btn-blue-toggle btn-xs setspan-end" title="Set span right">Set End</button> -->
               <button onclick="modifyCurrentObsSpan('extendright')" type="button" class="btn btn-obs-expand btn-xs" title="Extend annotation right">+<span class="glyphicon glyphicon-chevron-right small"></span></button>
@@ -364,7 +369,7 @@
               <button onclick="gotoLastEvent()" type="button" class="btn btn-default btn-xs" title="Go to last event">Last <span class="glyphicon  glyphicon-fast-forward small"></span></button>
               </span>          
               </div>
-              
+
               <div class='block inline-collapsible'>
               <div class="block-header small">Filter:</div>
               <span class="block-content">

@@ -21,6 +21,9 @@ function OverlayControl(canvasTagId) {
     overlay.canvas = document.getElementById(canvasTagId);
     overlay.ctx = overlay.canvas.getContext('2d');
 
+    overlay.canvas2 = $('<canvas/>')[0]
+    overlay.ctx2 = overlay.canvas2.getContext('2d');
+
     overlay.trackWindow = {
         range: 200,
         direction: 'Bidirectional',
@@ -77,7 +80,8 @@ function OverlayControl(canvasTagId) {
         ID_color: 'yellow',
         clickModeSelectMultiframe: false,
         clickModeNewAnnotation: false,
-        predictIdClickRadius: 120
+        predictIdClickRadius: 120,
+        showImageDiff: false
     }
     overlay.updateOptsButtons()
 
@@ -194,11 +198,12 @@ OverlayControl.prototype.optsClick = function(option) {
     this.opts[option] = !this.opts[option]
     this.updateOptsButtons()
     
-    this.refreshOverlay()
+    //this.refreshOverlay()
+    this.hardRefresh()
 }
 OverlayControl.prototype.updateOptsButtons = function() {
     console.log('overlay.updateDisableAngleButton')
-    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation']) {
+    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','showImageDiff']) {
         console.log(option)
         if ( this.opts[option] ) {
             $(".overlayOpts-"+option).addClass("active")
@@ -559,7 +564,63 @@ OverlayControl.prototype.videoToCanvasRect = function(rect) {
 }
 
 // #MARK # OVERLAY REFRESH
+OverlayControl.prototype.getFrameCropCurrentObject = async function(framedelta, size, displaySize) {
+    let rect = this.getActiveObject()
+    if (!rect) {
+        printMessage("Timeline: please select an annotation")
+        return
+    }
+    let obs = rect.obs
+    if (!obs) {
+        printMessage("Timeline: annotation missing obs internal data. Try changing frame")
+        return
+    }
+    if (!size) {
+        size = obs.width>obs.height ? obs.width : obs.height
+        size *= 4
+    }
+    if (!displaySize) {
+        displaySize = 300
+    }
+    let w = size
+    let h = size
 
+    let cx = obs.x + obs.width/2
+    let cy = obs.y + obs.height/2
+    let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
+    let frame = Number(obs.frame)+Number(framedelta)
+    let data = undefined
+    if (frame>=0) {
+        data = await videoControl.videoCache.getFrameCropDataURL(videoControl.video.src, frame, 20, crop)
+        //console.log(videoControl.video.src, frame)
+        //console.log(crop)
+        //console.log(data)
+    }
+
+    let div = $('<div style="display: inline-block"><small>Frame '+frame+'</small><br></div>')
+    let img = $('<img/>')[0]
+    img.src = data
+    div.append(img)
+    $('#alerttext').append(div)
+    img.width = displaySize
+    img.height = displaySize
+}
+OverlayControl.prototype.drawTimelineCurrentObject = async function() {
+    let frames =  [-16,-8,-4,-2,-1,0,1,2,4,8,16]
+    videoControl.pause()
+    printMessage("Paused, need to preload video frames")
+    await videoControl.videoCache.preloadFrames(videoControl.video.src, frames, videoinfo.videofps)
+        .then(function() {
+            printMessage("Preload done")
+            overlay.hardRefresh()
+        })
+    console.log('Creating timeline...')
+    printMessage("Timeline:<br>")
+    for (i of frames) {
+        console.log(i); 
+        await this.getFrameCropCurrentObject(i, undefined, 200)
+    }
+}
 OverlayControl.prototype.hardRefresh = function() {
     // Recreate overlay from Tracks
 
@@ -653,6 +714,75 @@ OverlayControl.prototype.hardRefresh = function() {
     //zoomOverlay.refreshZoom()
 }
 
+OverlayControl.prototype.diffImage = function(canvas2, canvas1, gain) {
+    if (!gain) gain=1.0
+
+    let w = canvas1.width, h = canvas1.height
+    let ctx1 = canvas1.getContext('2d');
+    let ctx2 = canvas2.getContext('2d');
+
+    let imgData1 = ctx1.getImageData(0,0,w,h);
+    let imgData2 = ctx2.getImageData(0,0,w,h);
+
+    let data1 = imgData1.data
+    let data2 = imgData2.data
+
+    for (var offset = 0; offset < data1.length; offset += 4) {
+        let dr = data1[offset] - data2[offset]
+        let dg = data1[offset+1] - data2[offset+1]
+        let db = data1[offset+2] - data2[offset+2]
+        //let D = (Math.abs(dr)+Math.abs(dg)+Math.abs(db))/3.0*gain
+        data1[offset] = data1[offset]*0.2 + 0.8*(dr*gain+128)
+        data1[offset+1] = data1[offset+1]*0.2 + 0.8*(dg*gain+128)
+        data1[offset+2] = data1[offset+2]*0.2 + 0.8*(db*gain+128)
+    }
+
+    ctx1.putImageData(imgData1, 0, 0);
+    console.log('diffImage DONE')
+} 
+
+OverlayControl.prototype.redrawVideoFrameDiff = function() {
+    var overlay = this;
+    
+    let w = overlay.canvas.width
+    let h = overlay.canvas.height
+    
+    let video = videoControl.video
+
+    function interval(start, end) {
+        return Array.from({length: end-start+1}, (x, i) => start+i);
+    }
+
+    overlay.canvas2.width = w
+    overlay.canvas2.height = h
+    let ctx2 = overlay.canvas2.getContext('2d');
+
+    let frame=videoControl.currentFrame
+    let img1 = videoControl.videoCache.getFrameImageSync(video.src, frame, videoinfo.videofps)
+    let img2 = videoControl.videoCache.getFrameImageSync(video.src, frame-1, videoinfo.videofps)
+    if ((!img1) || (!img2)) {
+        videoControl.pause()
+        videoControl.videoCache.preloadFrames(videoControl.video.src, interval(frame-20, frame+20), videoinfo.videofps)
+            .then(function() {
+                printMessage("Preload done")
+                overlay.hardRefresh()
+            })
+        printMessage("Paused, need to preload video frames")
+    }
+    if (img1)
+        overlay.ctx.drawImage(img1, 
+            canvasTransform[4], canvasTransform[5],
+            canvasTransform[0]*w, canvasTransform[3]*h,
+            0, 0, w, h);
+    if (img2)
+        overlay.ctx2.drawImage(img2, 
+            canvasTransform[4], canvasTransform[5],
+            canvasTransform[0]*w, canvasTransform[3]*h,
+            0, 0, w, h);
+    
+    overlay.diffImage(overlay.canvas2,overlay.canvas, 3.0)
+}
+
 OverlayControl.prototype.redrawVideoFrame = function() {
     var overlay = this;
     
@@ -685,16 +815,19 @@ OverlayControl.prototype.redrawVideoFrame = function() {
     if (videoControl.currentMode == 'video') {
         let video = videoControl.video; // same as $('#video')[0]
         if (videoControl.flagCopyVideoToCanvas) {
-          // Copy video to canvas for fully synchronous display
-          //ctx.drawImage(video, 0, 0, video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor);
-          overlay.ctx.drawImage(video, 
-                        canvasTransform[4], canvasTransform[5],
-                        canvasTransform[0]*w, canvasTransform[3]*h,
-                        0, 0, w, h);
+            if (overlay.opts.showImageDiff) {
+                overlay.redrawVideoFrameDiff() // Caution: async
+            } else {
+                // Copy video to canvas for fully synchronous display
+                overlay.ctx.drawImage(video, 
+                            canvasTransform[4], canvasTransform[5],
+                            canvasTransform[0]*w, canvasTransform[3]*h,
+                            0, 0, w, h);
+            }
         } else {
-          // Rely on video under canvas. More efficient (one copy less), but
-          // may have some time discrepency between video and overlay
-          overlay.ctx.clearRect(0,0,video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor)
+            // Rely on video under canvas. More efficient (one copy less), but
+            // may have some time discrepency between video and overlay
+            overlay.ctx.clearRect(0,0,video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor)
         }
     } else if (videoControl.currentMode == 'preview') {
         let video = videoControl.video; // same as $('#video')[0]
