@@ -497,19 +497,49 @@ VideoManager.prototype.updateVideoInfoForm = function () {
 };
 
 VideoManager.prototype.videoListFromDB = function () {
-  this.div = $("from-server-dialog");
-  this.div.find(".modal-body").html("[...]");
-    
-  this.div.find(".modal-message h4").css("color","black");
-  this.div.find(".modal-message h4")
-    .html("<div>Loading video list from server. Please wait...</div>");
+  this.div = $("#from-server-dialog");
+  var div = this.div;
+  console.log("VideoManager.videoListFromDB: Loading video list from server.")
+
+  // Initializing modal
+  this.initDialog = function () {
+    div.modal({
+      show: false,
+      autoOpen: false,
+      modal: true,
+      open: function () {
+        $("body").css("overflow", "auto");
+      },
+      close: function () {
+        $("body").css("overflow", "auto");
+      },
+    });
+    div.find(".modal-dialog").draggable({
+      handle: ".modal-header",
+    });
+    div.find(".modal-content").resizable({
+      alsoResize: ".modal-content",
+      minHeight: 300,
+      minWidth: 300,
+    });
+    div.find(".modal-title").html("Load Video");
+    div.find(".modal-body").html("[...]");
+
+    div.find(".modal-message h4").css("color","black");
+    div.find(".modal-message h4")
+      .html("<div>Loading video list from server. Please wait...</div>");
+  };
+  this.initDialog();
+  // Producing video list table
   this.receivedVideoSelection();
-  this.div.modal("show");
+  div.modal("show");
+
 }
 
 VideoManager.prototype.receivedVideoSelection = async function(){
+  var div = this.div
   $.ajax({
-    url: url_for("/rest/v2/videodata"),
+    url: url_for("/rest/v2/videolist"),
     method: 'get',
     data: "", 
     dataType: 'json',
@@ -518,6 +548,7 @@ VideoManager.prototype.receivedVideoSelection = async function(){
         $(".modal-message h4").html("VideoManager.receivedVideoSelection ERROR: Unable to retrieve video list from server.");
       },
     success: function(json){
+      console.log("VideoManager.receivedVideoSelection: Successfully loaded video list from server.")
       html =
       "<table id='VideoListFromServerTable' style='width:100%'>" +
       "<thead>" +
@@ -527,11 +558,11 @@ VideoManager.prototype.receivedVideoSelection = async function(){
       "<th>Location</th></thead>" +
       "</table>";
 
-      html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
+      html += "<br><br><h4>WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.<h4>";
       div.find(".modal-body").html(html);
       div.find(".modal-message h4").html("");
 
-      this.div.find("#TagOrEventFileListFromServer").DataTable({
+      div.find("#VideoListFromServerTable").DataTable({
         data: json["data"],
         columns:[
           {data:"id", render: function(id){
@@ -550,25 +581,31 @@ VideoManager.prototype.receivedVideoSelection = async function(){
 
 VideoManager.prototype.videoSelected = async function(id) {
   this.currentVideoID = id;
+
   $.ajax({
     url: url_for("/rest/v2/get_video_info/" + id),
     method: 'get',
     data: "", 
     dataType: 'json',
     error: function (){
+        console.log("VideoManager.videoSelected ERROR: Unable to retrieve " +
+        "selected video's information from server.")
         this.div.find(".modal-message h4").css("color","red");
-        this.div.find(".modal-message h4").html("VideoManager.receivedVideoSelection ERROR: Unable to retrieve " +
+        this.div.find(".modal-message h4").html("VideoManager.videoSelected ERROR: Unable to retrieve " +
         "selected video's information from server.");
       },
-    success: function(json){
-      this.setVideoInfo(json);
+    success: function(videoInfoJSON){
+      console.log()
+      videoManager.setVideoInfo(videoInfoJSON);
+      console.log("VideoManager.videoSelected: Loaded video information: ", videoInfoJSON)
     }
   });
 }
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   videoinfo = {
-    videoURL: videoInfoJSON["videoURL"],
+    name: videoInfoJSON["name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4".split('/').pop(),
+    videoPath: "/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",//videoInfoJSON["videoURL"],
     videofps: videoInfoJSON["videofps"],
     realfps: videoInfoJSON["realfps"],
     starttime: videoInfoJSON["starttime"],
@@ -586,6 +623,41 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   }
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
-  
-
+  videoControl.loadVideo2(videoinfo.videoPath);
 }
+
+
+//"/mnt/storage/Gurabo/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4"
+//"/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4"
+//"https://bigdbee.hpcf.upr.edu/webapp-test/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4"
+//Received from flask(Used in url_for()):
+//  "https://bigdbee.hpcf.upr.edu/"
+
+//What I should receive from the endpoint:
+//
+//"1_02_R_190718050000.mp4"
+
+
+
+//To implement recent video list:
+  //Need to modify existing endpoint or create a new one that accepts multiple video IDs at the same time
+  // and returns the meta information
+  // 
+
+// Simple information menu
+// Id, file name, path, timestamp, colony, notes, dataset
+
+// Advanced information
+// Previous, plus frames, height, width, fps, realfps
+
+// Information menu:
+// Add button that shows raw or formatted information obtained from the endpoint
+
+// For currently loaded video,
+// Button/interface to be able to see all the meta information for currently selected video
+
+// Combine recent and advanced tag/event loading menus, use checkbox to switch between them
+
+// Remove V1 save tags/events buttons
+
+// Erase events should reset basedon 
