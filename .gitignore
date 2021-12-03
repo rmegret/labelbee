@@ -19,3 +19,6 @@ labelbee-comments/
 
 joelNotes
 testing/
+gunicorn_error_logs.log
+labelbee.pid
+

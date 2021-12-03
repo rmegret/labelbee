@@ -32,12 +32,12 @@ from labelbee.models import (
 )
 from labelbee.db_functions import (
     add_video_data,
-    add_video_to_dataset,
     delete_dataset_by_id,
     delete_user,
     delete_video,
     edit_dataset,
     edit_video,
+    fix_datasets,
     get_dataset_by_id,
     get_video_by_id,
     new_dataset,
@@ -593,15 +593,18 @@ def send_data_():
 @app.route("/rest/auth/login", methods=["GET", "POST"])
 def ajaxlogin():
     """
-    API endpoint for authentification
+    API GET endpoint for authentification
 
     Usage
     -----
-    - GET: Log in with a get request using an email and password
+    :param URL: /rest/auth/login
+    :reqheader email: email used to log in
+    :reqheader password: password used to log in
 
     Returns
     -------
-    CSRF token
+    :return: JSON object with the following fields:
+    :rtype: JSON object
     """
 
     email = request.form.get("email")
@@ -1111,7 +1114,8 @@ def get_videoinfo_v2(videoid):
     video = video_schema.dump(video)
     videoinfo = {
         "video_id": video["id"],
-        "videoURL": video["path"] + "/" + video["file_name"],
+        "path": video["path"],
+        "file_name": video["file_name"],
         "videofps": video["fps"],
         "realfps": video["realfps"],
         "starttime": video["timestamp"],
@@ -1193,6 +1197,17 @@ def populate_datasets_endpoint():
         raise Forbidden("/rest/v2/populate_datasets POST: admin required !")
 
     populate_datasets()
+    return jsonify({"data": "OK"})
+
+
+@app.route("/rest/v2/fix_datasets", methods=["GET"])
+def fix_datasets_endpoint():
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/fix_datasets POST: login required !")
+    if not current_user.has_roles("admin"):
+        raise Forbidden("/rest/v2/fix_datasets POST: admin required !")
+
+    fix_datasets()
     return jsonify({"data": "OK"})
 
 

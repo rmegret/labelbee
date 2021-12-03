@@ -9,7 +9,7 @@ from csv import DictReader
 from datetime import datetime
 
 from werkzeug.datastructures import FileStorage
-from labelbee.models import Video, VideoData, DataSet, VideoDataSet, User
+from labelbee.models import Video, VideoData, DataSet, User
 from labelbee.init_app import db, app
 from typing import List
 
@@ -223,12 +223,23 @@ def update_paths() -> None:
     with app.app_context():
         videos = Video.query.all()
         for video in videos:
-            if not video.path.startswith("/mnt/storage"):
-                video.path = f"/mnt/storage/Gurabo/datasets/{video.path}"
+            if video.path.startswith("/mnt/storage"):
+                temp = video.path.split("/")
+                # print(video.path)
+                # print(temp)
+                # print(f"/{'/'.join(temp[4:])}")
+                video.path = f"/{ '/'.join(temp[4:]) }"
         video_data = VideoData.query.all()
         for video_datum in video_data:
-            if not video_datum.path.startswith("/mnt/storage"):
-                video_datum.path = f"/mnt/storage/Gurabo/datasets/{video_datum.path}"
+            if video_datum.path.startswith("/mnt/storage"):
+                temp = video_datum.path.split("/")
+                # print(video_datum.path)
+                # print(temp)
+                # print(f"/{ '/'.join(temp[4:]) }")
+                # break
+                video_datum.path = f"/{ '/'.join(temp[4:]) }"
+                # video_datum.path = f"/mnt/storage/Gurabo/datasets/{video_datum.path}"
+
         db.session.commit()
 
 
@@ -339,14 +350,7 @@ def video_list(dataset: int = None) -> List[Video]:
     """
 
     if dataset:
-        return (
-            Video.query.join(VideoDataSet)
-            .filter(
-                VideoDataSet.ds_id == dataset,
-                Video.id == VideoDataSet.video_id,
-            )
-            .all()
-        )
+        return Video.query.filter(Video.dataset == dataset).all()
     else:
         return Video.query.all()
 
@@ -388,7 +392,6 @@ def new_dataset(name: str, description: str, user: User):
         name="New Dataset" if name.strip() == "" else name,
         description=description,
         created_by=user.id,
-        timestamp=datetime.utcnow(),
     )
     db.session.add(dataset)
     db.session.commit()
@@ -444,19 +447,21 @@ def delete_dataset_by_id(datasetid: int) -> None:
         db.session.commit()
 
 
+# Old deprecated function from when dataset was a custom folder of videos
+
 # Add video to a dataset using video id and dataset id
-def add_video_to_dataset(videoid: int, datasetid: int) -> None:
-    """Add a video to a dataset.
+# def add_video_to_dataset(videoid: int, datasetid: int) -> None:
+#     """Add a video to a dataset.
 
-    :param videoid: The id of the video to add.
-    :type videoid: int
-    :param datasetid: The id of the dataset to add the video to.
-    :type datasetid: int
-    """
+#     :param videoid: The id of the video to add.
+#     :type videoid: int
+#     :param datasetid: The id of the dataset to add the video to.
+#     :type datasetid: int
+#     """
 
-    video_data_set = VideoDataSet(video_id=videoid, ds_id=datasetid)
-    db.session.add(video_data_set)
-    db.session.commit()
+#     video_data_set = VideoDataSet(video_id=videoid, ds_id=datasetid)
+#     db.session.add(video_data_set)
+#     db.session.commit()
 
 
 def edit_dataset(datasetid: int, name: str, description: str) -> None:
@@ -665,4 +670,18 @@ def delete_user(userid: int) -> None:
     user = User.query.filter(User.id == userid).first()
     if user:
         db.session.delete(user)
+        db.session.commit()
+
+
+def fix_datasets() -> None:
+    """Fix datasets."""
+
+    print("Fixing datasets")
+    with app.app_context():
+        for video in Video.query.all():
+            if video.dataset == "gurabo1":
+                video.dataset = 1
+            elif video.dataset == "gurabo10":
+                video.dataset = 2
+
         db.session.commit()
