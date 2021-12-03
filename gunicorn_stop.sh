@@ -1,4 +1,4 @@
 #!/bin/bash
 
-killall gunicorn 
+kill $(cat labelbee.pid)
 

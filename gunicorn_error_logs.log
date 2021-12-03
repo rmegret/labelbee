@@ -1,40 +1,114 @@
-[2021-07-22 15:52:55 -0400] [2168] [INFO] Starting gunicorn 20.1.0
-[2021-07-22 15:52:55 -0400] [2168] [INFO] Listening at: http://127.0.0.1:8090 (2168)
-[2021-07-22 15:52:55 -0400] [2168] [INFO] Using worker: sync
-[2021-07-22 15:52:55 -0400] [2171] [INFO] Booting worker with pid: 2171
-[2021-07-22 15:52:55 -0400] [2171] [ERROR] Exception in worker process
+[2021-11-04 15:23:27 -0400] [17457] [INFO] Starting gunicorn 20.1.0
+[2021-11-04 15:23:27 -0400] [17457] [INFO] Listening at: http://127.0.0.1:8090 (17457)
+[2021-11-04 15:23:27 -0400] [17457] [INFO] Using worker: gthread
+[2021-11-04 15:23:27 -0400] [17460] [INFO] Booting worker with pid: 17460
+[2021-11-04 15:23:36 -0400] [17460] [ERROR] Error handling request /rest/v2/update_paths
 Traceback (most recent call last):
-  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/arbiter.py", line 589, in spawn_worker
-    worker.init_process()
-  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/workers/base.py", line 134, in init_process
-    self.load_wsgi()
-  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/workers/base.py", line 146, in load_wsgi
-    self.wsgi = self.app.wsgi()
-  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/app/base.py", line 67, in wsgi
-    self.callable = self.load()
-  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/app/wsgiapp.py", line 58, in load
-    return self.load_wsgiapp()
-  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/app/wsgiapp.py", line 48, in load_wsgiapp
-    return util.import_app(self.app_uri)
-  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/util.py", line 359, in import_app
-    mod = importlib.import_module(module)
-  File "/usr/lib64/python3.6/importlib/__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 978, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 961, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 948, in _find_and_load_unlocked
-ModuleNotFoundError: No module named 'manage'
-[2021-07-22 15:52:55 -0400] [2171] [INFO] Worker exiting (pid: 2171)
-[2021-07-22 15:52:55 -0400] [2168] [INFO] Shutting down: Master
-[2021-07-22 15:52:55 -0400] [2168] [INFO] Reason: Worker failed to boot.
-[2021-09-17 00:26:33 -0400] [9141] [INFO] Starting gunicorn 20.1.0
-[2021-09-17 00:26:33 -0400] [9141] [INFO] Listening at: http://127.0.0.1:8090 (9141)
-[2021-09-17 00:26:33 -0400] [9141] [INFO] Using worker: gthread
-[2021-09-17 00:26:33 -0400] [9144] [INFO] Booting worker with pid: 9144
-[2021-09-17 00:27:44 -0400] [9141] [INFO] Handling signal: term
-[2021-09-17 00:27:44 -0400] [9144] [INFO] Worker exiting (pid: 9144)
-[2021-09-17 00:27:45 -0400] [9141] [INFO] Shutting down: Master
-[2021-09-17 00:28:26 -0400] [9251] [INFO] Starting gunicorn 20.1.0
-[2021-09-17 00:28:26 -0400] [9251] [INFO] Listening at: http://127.0.0.1:8090 (9251)
-[2021-09-17 00:28:26 -0400] [9251] [INFO] Using worker: gthread
-[2021-09-17 00:28:26 -0400] [9254] [INFO] Booting worker with pid: 9254
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/workers/gthread.py", line 271, in handle
+    keepalive = self.handle_request(req, conn)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/workers/gthread.py", line 323, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 2088, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/home/dsuazo/flasktest/labelbee/labelbee/init_app.py", line 63, in __call__
+    return self.app(environ, start_response)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 2073, in wsgi_app
+    response = self.handle_exception(e)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 2070, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 1515, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 1513, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 1499, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "/home/dsuazo/flasktest/labelbee/labelbee/views.py", line 1143, in update_paths
+    update_paths()
+  File "/home/dsuazo/flasktest/labelbee/labelbee/views.py", line 1143, in update_paths
+    update_paths()
+  File "/home/dsuazo/flasktest/labelbee/labelbee/views.py", line 1143, in update_paths
+    update_paths()
+  [Previous line repeated 960 more times]
+  File "/home/dsuazo/flasktest/labelbee/labelbee/views.py", line 1138, in update_paths
+    if not current_user.is_authenticated:
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/werkzeug/local.py", line 422, in __get__
+    obj = instance._get_current_object()
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/werkzeug/local.py", line 544, in _get_current_object
+    return self.__local()  # type: ignore
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask_login/utils.py", line 26, in <lambda>
+    current_user = LocalProxy(lambda: _get_user())
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask_login/utils.py", line 345, in _get_user
+    if has_request_context() and not hasattr(_request_ctx_stack.top, 'user'):
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/ctx.py", line 206, in has_request_context
+    return _request_ctx_stack.top is not None
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/werkzeug/local.py", line 247, in top
+    return self._local.stack[-1]
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/werkzeug/local.py", line 151, in __getattr__
+    values = self._storage.get({})
+RecursionError: maximum recursion depth exceeded
+[2021-11-04 15:24:00 -0400] [17457] [INFO] Handling signal: term
+[2021-11-04 15:24:01 -0400] [17460] [INFO] Worker exiting (pid: 17460)
+[2021-11-04 15:24:01 -0400] [17457] [INFO] Shutting down: Master
+[2021-11-04 15:24:26 -0400] [17509] [INFO] Starting gunicorn 20.1.0
+[2021-11-04 15:24:26 -0400] [17509] [INFO] Listening at: http://127.0.0.1:8090 (17509)
+[2021-11-04 15:24:26 -0400] [17509] [INFO] Using worker: gthread
+[2021-11-04 15:24:26 -0400] [17512] [INFO] Booting worker with pid: 17512
+[2021-11-04 15:42:33 -0400] [17512] [ERROR] Error handling request /rest/v2/import_from_csv
+Traceback (most recent call last):
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/workers/gthread.py", line 271, in handle
+    keepalive = self.handle_request(req, conn)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/gunicorn/workers/gthread.py", line 323, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 2088, in __call__
+    return self.wsgi_app(environ, start_response)
+  File "/home/dsuazo/flasktest/labelbee/labelbee/init_app.py", line 63, in __call__
+    return self.app(environ, start_response)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 2073, in wsgi_app
+    response = self.handle_exception(e)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 2070, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 1515, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 1513, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/flask/app.py", line 1499, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "/home/dsuazo/flasktest/labelbee/labelbee/views.py", line 1125, in import_from_csv_v2
+    csv_file = request.files["csv_file"]
+  File "/home/dsuazo/flasktest/labelbee/env/lib64/python3.6/site-packages/werkzeug/datastructures.py", line 377, in __getitem__
+    raise exceptions.BadRequestKeyError(key)
+werkzeug.exceptions.BadRequestKeyError: 400 Bad Request: The browser (or proxy) sent a request that this server could not understand.
+KeyError: 'csv_file'
+[2021-11-04 16:19:49 -0400] [17512] [INFO] Worker exiting (pid: 17512)
+[2021-11-04 16:19:49 -0400] [18248] [INFO] Booting worker with pid: 18248
+[2021-11-04 16:20:04 -0400] [17509] [INFO] Handling signal: term
+[2021-11-04 16:20:05 -0400] [18248] [INFO] Worker exiting (pid: 18248)
+[2021-11-04 16:20:05 -0400] [17509] [INFO] Shutting down: Master
+[2021-11-22 13:14:50 -0400] [6893] [INFO] Starting gunicorn 20.1.0
+[2021-11-22 13:14:50 -0400] [6893] [INFO] Listening at: http://127.0.0.1:8090 (6893)
+[2021-11-22 13:14:50 -0400] [6893] [INFO] Using worker: gthread
+[2021-11-22 13:14:50 -0400] [6896] [INFO] Booting worker with pid: 6896
+[2021-11-22 13:16:09 -0400] [6893] [INFO] Handling signal: term
+[2021-11-22 13:16:09 -0400] [6896] [INFO] Worker exiting (pid: 6896)
+[2021-11-22 13:16:09 -0400] [6893] [INFO] Shutting down: Master
+[2021-11-22 13:16:53 -0400] [6937] [INFO] Starting gunicorn 20.1.0
+[2021-11-22 13:16:53 -0400] [6937] [INFO] Listening at: http://127.0.0.1:8090 (6937)
+[2021-11-22 13:16:53 -0400] [6937] [INFO] Using worker: gthread
+[2021-11-22 13:16:53 -0400] [6940] [INFO] Booting worker with pid: 6940
+[2021-11-22 13:17:39 -0400] [6937] [INFO] Handling signal: term
+[2021-11-22 13:17:39 -0400] [6940] [INFO] Worker exiting (pid: 6940)
+[2021-11-22 13:17:40 -0400] [6937] [INFO] Shutting down: Master
+[2021-11-22 13:19:48 -0400] [6971] [INFO] Starting gunicorn 20.1.0
+[2021-11-22 13:19:48 -0400] [6971] [INFO] Listening at: http://127.0.0.1:8090 (6971)
+[2021-11-22 13:19:48 -0400] [6971] [INFO] Using worker: gthread
+[2021-11-22 13:19:48 -0400] [6974] [INFO] Booting worker with pid: 6974
+[2021-11-22 13:19:59 -0400] [6971] [INFO] Handling signal: term
+[2021-11-22 13:19:59 -0400] [6974] [INFO] Worker exiting (pid: 6974)
+[2021-11-22 13:20:00 -0400] [6971] [INFO] Shutting down: Master
+[2021-11-22 13:20:00 -0400] [6982] [INFO] Starting gunicorn 20.1.0
+[2021-11-22 13:20:00 -0400] [6982] [INFO] Listening at: http://127.0.0.1:8090 (6982)
+[2021-11-22 13:20:00 -0400] [6982] [INFO] Using worker: gthread
+[2021-11-22 13:20:00 -0400] [6985] [INFO] Booting worker with pid: 6985
+[2021-11-22 13:20:25 -0400] [6982] [INFO] Handling signal: term
+[2021-11-22 13:20:26 -0400] [6985] [INFO] Worker exiting (pid: 6985)
+[2021-11-22 13:20:26 -0400] [6982] [INFO] Shutting down: Master

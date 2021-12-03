@@ -6,6 +6,7 @@ import re
 from flask_user import UserMixin, UserManager
 from flask_user.forms import RegisterForm
 from flask_wtf import FlaskForm
+from sqlalchemy.orm import backref
 from wtforms import StringField, SubmitField, validators
 from labelbee.init_app import db, ma
 from marshmallow import validate, fields
@@ -56,16 +57,6 @@ class UsersRoles(db.Model):
     role_id = db.Column(db.Integer(), db.ForeignKey("roles.id", ondelete="CASCADE"))
 
 
-class VideoDataSet(db.Model):
-    __tablename__ = "video_data_set"
-    ds_id = db.Column(
-        db.Integer(), db.ForeignKey("data_set.id", ondelete="CASCADE"), primary_key=True
-    )
-    video_id = db.Column(
-        db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"), primary_key=True
-    )
-
-
 class Video(db.Model):
     __tablename__ = "videos"
     __table_args__ = (db.UniqueConstraint("file_name", "path"),)
@@ -75,8 +66,8 @@ class Video(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.Integer(), nullable=False)
     colony = db.Column(db.String(50))
-    dataset = db.Column(db.String(50))
     notes = db.Column(db.Text())
+    dataset = db.Column(db.Integer, db.ForeignKey("data_set.id"))
 
     frames = db.Column(db.Integer(), nullable=False)
     height = db.Column(db.Integer(), nullable=False)
@@ -95,13 +86,6 @@ class Video(db.Model):
     hasframeN_2s = db.Column(db.Boolean())
     hasframeN_1s = db.Column(db.Boolean())
     hasframeN = db.Column(db.Boolean())
-
-    data_set = db.relationship(
-        "VideoDataSet",
-        backref=db.backref("video", lazy=True),
-        lazy=True,
-        cascade="delete, delete-orphan",
-    )
 
 
 class VideoData(db.Model):
@@ -131,16 +115,10 @@ class DataSet(db.Model):
     description = db.Column(db.Text())
     created_by = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
     creator = db.relationship("User", backref="data_set")
-    timestamp = db.Column(db.DateTime, nullable=False)
 
     # Properly link the data_set to videos
     # https://flask-sqlalchemy.palletsprojects.com/en/2.x/models/
-    videos = db.relationship(
-        "VideoDataSet",
-        backref=db.backref("data_set", lazy=True),
-        lazy=True,
-        cascade="delete, delete-orphan",
-    )
+    videos = db.relationship("Video", backref="data_set", lazy=True)
 
 
 class RoleSchema(ma.SQLAlchemySchema):
@@ -205,14 +183,6 @@ class VideoDataSchema(ma.SQLAlchemySchema):
     notes = fields.String()
     created_from_id = fields.Integer()
 
-    # id = fields.Integer(dump_only=True)
-    # file_name = FileName(required=True)
-    # path = Path(required=True)
-    # timestamp = fields.DateTime(required=True)
-    # data_type = fields.String(required=True, validate=validate.OneOf(["tag"]))
-    # video = fields.Integer()
-    # created_by_id = fields.Integer()
-
 
 class UserSchema(ma.SQLAlchemySchema):
     class Meta:
@@ -224,13 +194,6 @@ class UserSchema(ma.SQLAlchemySchema):
     last_name = fields.String(required=True)
     studentnum = fields.String()
     clase = fields.String()
-
-    # id = fields.Integer(dump_only=True)
-    # email = fields.Email(required=True)
-    # first_name = fields.String(required=True)
-    # last_name = fields.String(required=True)
-    # studentnum = fields.Integer()
-    # clase = fields.String()
 
 
 class DataSetSchema(ma.SQLAlchemySchema):
