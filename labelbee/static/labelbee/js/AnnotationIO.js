@@ -1804,7 +1804,7 @@ function RecentTagOrEventFromServerDialog() {
     if (!getParams){
       console.log("Error obtaining any parameters from URL");
     }
-    this.videoID = getParams.get('video')
+    this.videoID = videoManager.currentVideoID
     if (!this.videoID){
       console.log("Error obtaining GET parameter \"video\"");
     }

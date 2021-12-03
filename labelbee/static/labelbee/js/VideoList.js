@@ -604,8 +604,8 @@ VideoManager.prototype.videoSelected = async function(id) {
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   videoinfo = {
-    name: "/webapp-test/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4".split('/').pop(),//videoInfoJSON["videoURL"].split('/').reverse()[0],
-    videoURL: "/webapp-test/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",//videoInfoJSON["videoURL"],
+    name: videoInfoJSON["name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4".split('/').pop(),
+    videoPath: "/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",//videoInfoJSON["videoURL"],
     videofps: videoInfoJSON["videofps"],
     realfps: videoInfoJSON["realfps"],
     starttime: videoInfoJSON["starttime"],
@@ -623,11 +623,41 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   }
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
-  videoControl.loadVideo2(videoinfo.videoURL);
+  videoControl.loadVideo2(videoinfo.videoPath);
 }
 
 
-//"/mnt/storage/Gurabo/datasets/gurabo10avi/mp4/col10"
+//"/mnt/storage/Gurabo/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4"
+//"/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4"
 //"https://bigdbee.hpcf.upr.edu/webapp-test/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4"
+//Received from flask(Used in url_for()):
+//  "https://bigdbee.hpcf.upr.edu/"
 
+//What I should receive from the endpoint:
+//
 //"1_02_R_190718050000.mp4"
+
+
+
+//To implement recent video list:
+  //Need to modify existing endpoint or create a new one that accepts multiple video IDs at the same time
+  // and returns the meta information
+  // 
+
+// Simple information menu
+// Id, file name, path, timestamp, colony, notes, dataset
+
+// Advanced information
+// Previous, plus frames, height, width, fps, realfps
+
+// Information menu:
+// Add button that shows raw or formatted information obtained from the endpoint
+
+// For currently loaded video,
+// Button/interface to be able to see all the meta information for currently selected video
+
+// Combine recent and advanced tag/event loading menus, use checkbox to switch between them
+
+// Remove V1 save tags/events buttons
+
+// Erase events should reset basedon 
