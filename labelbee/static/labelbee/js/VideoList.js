@@ -68,6 +68,10 @@ function VideoManager() {
     },
     dialogName: "Load Video List from Server",
   });
+
+  // Default currentVideoID value
+  // Indicates that no video has been chosen
+  this.currentVideoID = 0;
 }
 
 VideoManager.prototype = {};

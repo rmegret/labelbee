@@ -1559,8 +1559,14 @@ function FromServerDialog() {
     'Show advanced loading menu </label>';
     this.setCheckboxes(checkboxHTML);
     this.setBody("[...]")
-    this.setMessage("Loading most recent ", data_type, "file information. Please wait...");
+    this.setMessage("black", "Loading most recent ", data_type, "file information. Please wait...");
+    
+    if (!videoManager.currentVideoID){
+      this.setMessage("red", "No video has been selected. Please select a video before attempting to load tag/event files.");
+    }
 
+    // Display Modal
+    div.modal("show");
     // Load first tag/event file information through GET request
     $.ajax({
       url: url_for("rest/v2/videodata"),
