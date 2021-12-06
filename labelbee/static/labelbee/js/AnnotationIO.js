@@ -2013,7 +2013,7 @@ function FromServerDialog() {
     if(this.data_type== "tag"){      // Case: tag file
       success = tagsFromServer(tag_event_ID, this.div);
       if(success){
-        theDialog.basedOn = tag_event_ID;
+        fromServerDialog.basedOn = tag_event_ID;
         div.find(".modal-message h4").css("color","black");
         div.find('.modal-message h4').html("Tags loaded successfully.")        
       }
@@ -2056,7 +2056,7 @@ function FromServerDialog() {
 
           // Close dialogue window
           if(success){
-            theDialog.basedOn = tag_event_ID;
+            fromServerDialog.basedOn = tag_event_ID;
             div.find(".modal-message h4").css("color","black");
             div.find(".modal-message h4").html("Events loaded.");
           }
