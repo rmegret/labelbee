@@ -2285,12 +2285,13 @@ function eventsToServer(format) {
   //   data = convertTracksToV1();
   // }
   data = {
-      video_id: "9371",
+      video_id: videoManager.currentVideoID,
       created_by_id: "1",
       data_type:"tag",
       path:"testPath",
       file_name:"testFileName",
-      // data: convertTracksToV2()
+      created_from = basedOn,
+      data: convertTracksToV2()
     }
   $.ajax({
     url: url_for(route), //server url

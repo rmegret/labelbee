@@ -666,7 +666,6 @@ VideoControl.prototype.loadVideo2 = function(videoURL){
   if (logging.videoEvents) console.log("loadVideo2: url=", videoURL);
   this.name = videoinfo.name;
   this.video.src = videoURL;
-  // videoControl.onVideoLoaded2();
 }
 
 VideoControl.prototype.onVideoLoaded2 = async function(){
