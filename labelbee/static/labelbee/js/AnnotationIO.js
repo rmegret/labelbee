@@ -1552,7 +1552,7 @@ function FromServerDialog() {
   // }
 
   this.openRecentLoadingDialog = function(data_type){
-    this.setTitle("Most recent " + data_type + " file for " + videoinfo.name);
+    this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
     '<label id="checkboxes"> '+ 
     '<input type="checkbox" id="showAdvancedMenu"> '+ 
@@ -1562,6 +1562,7 @@ function FromServerDialog() {
     this.setMessage("black", "Loading most recent " + data_type + "file information. Please wait...");
     
     if (!videoManager.currentVideoID){
+      this.setTitle("No video loaded!");
       this.setMessage("red", "No video has been selected. Please select a video before attempting to load tag/event files.");
     }
 

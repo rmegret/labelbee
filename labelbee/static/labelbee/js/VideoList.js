@@ -44,6 +44,7 @@ function VideoManager() {
 
   videoinfo = {
     name: "No video loaded",
+    videoPath: "",
     videofps: 20, // Should be equal to realfps (unless broken encoder)
     realfps: 20, //realfps = 20.0078;
     starttime: "2016-07-15T09:59:59.360",
