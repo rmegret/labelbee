@@ -1501,7 +1501,7 @@ function FromServerDialog() {
   };
 
   this.openRecentLoadingDialog = function(data_type){
-    videoManager.currentVideoID = 9371; // ONLY FOR DEV PURPOSES! COMMENT WHEN DEPLOYING TO LIVE SERVICE
+    // videoManager.currentVideoID = 9371; // ONLY FOR DEV PURPOSES! COMMENT WHEN DEPLOYING TO LIVE SERVICE
     this.data_type = data_type;
     this.resetAllHTML();
     this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
