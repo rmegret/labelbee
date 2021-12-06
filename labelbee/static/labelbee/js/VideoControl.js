@@ -667,12 +667,12 @@ VideoControl.prototype.loadVideo2 = function(videoURL){
   this.name = videoinfo.name;
   this.video.src = videoURL;
   // videoControl.onVideoLoaded2();
-  // this.setPreviewVideoStatus("undefined");
-  // statusWidget.statusRequest("videoLoad", []);
 }
 
 VideoControl.prototype.onVideoLoaded2 = async function(){
   console.log("onVideoLoaded2: VIDEO loaded ", this.video.src);
+  this.setPreviewVideoStatus("undefined");
+  statusWidget.statusRequest("videoLoad", []);
   statusWidget.statusUpdate("videoLoad", true, []);
   videoControl.video2.frameRate = videoinfo.videofps
   this.isValidVideo = true;
