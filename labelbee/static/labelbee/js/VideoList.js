@@ -508,6 +508,7 @@ VideoManager.prototype.videoListFromDB = function () {
   fromServerDialog.setTitle("Load Video");
   fromServerDialog.setBody("[...]");
   fromServerDialog.setMessage("black","Loading video list from server. Please wait...")
+  fromServerDialog.closeDialog();
   fromServerDialog.openDialog();
   // Producing video list table
   this.receivedVideoSelection();
