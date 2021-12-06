@@ -1104,63 +1104,6 @@ function EventsFromServerDialog() {
       ),
       success: function(json){
       console.log("EventsFromServerDialog: (ajax) Load"+ this.dataType +"files data from server: Success", json);
-
-        // theDialog.json = json["data"];
-        // Building table HTML 
-        // NO LONGER USED AFTER SWITCHING TO JQUERY DATATABLES() METHOD TO CONSTRUCT TABLE
-        // if (showNotes) {
-          // html += "<th>Notes</th>";
-        // }
-        // if (showMetadata) {
-          // html += "<th>Info</th>";
-
-          // html += "<th>Based on</th>";
-        // }
-        // html += "</thead><tbody>";
-        // for(let i in json["data"]){
-          // fileData = json["data"][i];
-          // console.log(fileData);
-          // if (showNotes) {
-          //   let notes = "";
-          //   let metadata = item["metadata"];
-          //   if (metadata && metadata["notes"]) {
-          //     notes = metadata["notes"];
-          //   }
-          //   html += '<td class="metadata-notes">' + notes + "</td>";
-          // }
-          // if (showMetadata) {
-          //   let info = "";
-          //   let basedon = "";
-          //   let metadata = item["metadata"];
-          //   if (metadata) {
-          //     info +=
-          //       '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
-          //       k +
-          //       ')">Show</button>';
-          //     var history = metadata["history"];
-          //     if (history) {
-          //       for (let h of history) {
-          //         if (h["filename"]) {
-          //           let kk = json.find(
-          //             (el) => el["filename"] == h["filename"]
-          //           );
-          //           if (kk != null)
-          //             basedon +=
-          //               '<div class="basedon" data-basedon="' +
-          //               kk.k +
-          //               '">' +
-          //               kk.k +
-          //               "</div>";
-          //         }
-          //       }
-          //     }
-          //   }
-          //   html += "<td>" + info + "</td>";
-          //   html += "<td>" + item["filename"] + "</td>";
-          //   html += "<td>" + basedon + "</td>";
-          // }
-          // html += "</tr>";
-        // }
         html =
         "<table id='TagOrEventFileListFromServer' style='width:100%'>" +
         "<thead>" +
@@ -1660,8 +1603,57 @@ function FromServerDialog() {
       "</select>";  
     this.setCheckboxes(checkboxHTML);
     div.find('#DropdownElement').val(data_type);
-    
-  }
+
+    // Loading video tag/event data
+    // GET request that sends a video ID and data_type to receive a json
+    // json includes information about all event files related to the current video 
+    // videoID obtained from URL as GET parameter, dataType entered as argument when called in labelbee_page.html
+    $.ajax({
+      url: url_for("rest/v2/videodata"),
+      method: 'get',
+      data: {video_id : this.videoID, data_type: dataType, allusers:this.showAll}, 
+      dataType: 'json',
+      error: typesetAjaxError(
+        "ERROR in EventsFromServer dialog",
+        function (html) {
+          theDialog.setMessage(html);
+        }
+      ),
+      success: function(json){
+      console.log("fromServerDialog: (ajax) Load"+ this.dataType +"files data from server: Success", json);
+        html =
+        "<table id='TagOrEventFileListFromServer' style='width:100%'>" +
+        "<thead>" +
+        "<th></th>" +
+        "<th>File Name</th>" +
+        "<th>Created on</th>" +
+        "<th>Owner</th></thead>" +
+        "</table>";
+        html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
+        // console.log("HTML produced from database response:\n", html);
+        
+        // Creating table with only headers
+        theDialog.setBody(html);
+        theDialog.setMessage("");
+        // Filling empty table using data from json
+        div.find("#TagOrEventFileListFromServer").DataTable({
+          data: json["data"],
+          columns:[
+            {data:"id", render: function(id){
+              return "<button onclick='eventsFromServerDialog.loadEvents("+id+")'>Load</button>";
+            }},
+            {data:"file_name"},
+            {data:"timestamp", render: function(timestamp){
+              return timestamp.split('T').join(' ');
+            }},
+            {data:"created_by", render:function(created_by, type, full){
+              return '[' + full.created_by_id + '] ' + created_by;
+            }}
+          ]
+        });
+      }
+    });
+  };
   // this.updateDialog = function (dataType) {
     
   //   // Loading video tag/event data
