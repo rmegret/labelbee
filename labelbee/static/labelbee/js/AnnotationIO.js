@@ -1588,11 +1588,11 @@ function FromServerDialog() {
   }
 
   this.showAdvancedLoadingDialog = function(allusers) {
-    $("#showAdvancedMenu").prop('checked', true);
+    
     this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
     '<label> '+ 
-    '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog('+ this.data_type +')"> '+ 
+    '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog("'+ this.data_type +'")"> '+ 
     'Show advanced loading menu </label>' +
     '<label> '+ 
     '<input type="checkbox" id="showAllUsers" onclick="fromServerDialog.showAdvancedLoadingDialog(true)> '+ 
@@ -1602,6 +1602,7 @@ function FromServerDialog() {
         "<option value='event'>event</option>" +
       "</select>";  
     this.setCheckboxes(checkboxHTML);
+    div.find("#showAdvancedMenu").prop('checked', true);
     div.find('#DropdownElement').val(this.data_type);
 
     // Loading video tag/event data
