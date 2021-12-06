@@ -716,8 +716,8 @@
                         <input id="save" onclick="saveEventsToFile('v2')" type="button" value="Save Events (JSON v2)"
                           class="btn btn-success btn-sm" title="Save to new JSON format (Oct 2018)">
 
-                        <input id="save" onclick="saveEventsToFile('v1')" type="button" value="Save Events (v1)"
-                          class="btn btn-default btn-xs" title="Save to old JSON format (2017-2018)">
+                        <!-- <input id="save" onclick="saveEventsToFile('v1')" type="button" value="Save Events (v1)"
+                          class="btn btn-default btn-xs" title="Save to old JSON format (2017-2018)"> -->
 
                         <input id="saveCSV" onclick="saveEventsToCSV()" type="button" value="Export Events (CSV)"
                           class="btn btn-default btn-xs">
@@ -746,7 +746,7 @@
 
                       <label>Events:</label>
                       <br>
-                      <input type="button" onclick="fromServerDialog.openDialog('event')" class="btn btn-primary btn-sm"
+                      <input type="button" onclick="fromServerDialog.openRecentLoadingDialog('event')" class="btn btn-primary btn-sm"
                         value="Load Recent Events">
                       <br>
                       <input type="button" onclick="eventsFromServerDialog.openDialog('event')" class="btn btn-primary btn-xs"
