@@ -1573,12 +1573,12 @@ function FromServerDialog() {
       this.resetAllHTML();
       this.setTitle("No video loaded!");
       this.setMessage("red", "No video has been selected. Please select a video before attempting to load tag/event files.");
-      div.modal("show");
+      this.openDialog();
       return
     }
 
     // Display Modal
-    div.modal("show");
+    this.openDialog();
     // Load first tag/event file information through GET request
     $.ajax({
       url: url_for("rest/v2/videodata"),

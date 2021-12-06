@@ -510,7 +510,7 @@ VideoManager.prototype.videoListFromDB = function () {
   fromServerDialog.setMessage("black","Loading video list from server. Please wait...")
   fromServerDialog.openDialog();
   // Producing video list table
-  // this.receivedVideoSelection();
+  this.receivedVideoSelection();
 
   // Initializing modal
   // this.initDialog = function () {
