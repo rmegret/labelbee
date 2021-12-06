@@ -2278,41 +2278,20 @@ function eventsToServer(format) {
   }
 
   let data;
-  // if (format == "v2") {
-  //   data = convertTracksToV2();
-  // } 
-  // else {
-  //   data = convertTracksToV1();
-  // }
-  // data = {
-  //     video_id: videoManager.currentVideoID,
-  //     created_by_id: "1",
-  //     data_type:"tag",
-  //     path:"testPath",
-  //     file_name:"testFileName",
-  //     created_from: fromServerDialog.basedOn,
-  //     data: {
-  //       "created_by_id": "1",
-  //       "data_type": "tag",
-  //       "file_name": "test_tag2.json",
-  //       "path": "/test_colony",
-  //       "video_id": 1,
-  //       "data": "testdata"
-  //     }
-  // }
-  data = {
-    "created_by_id": "1",
-    "data_type": "tag",
-    "file_name": "test_tag2.json",
-    "path": "/test_colony",
-    "video_id": 1,
-    "data": "testdata"
+
+  dataToSend = {
+    created_by_id: "1",
+    data_type: "tag",
+    file_name: "test_tag2.json",
+    path: "/test_colony",
+    video_id: 1,
+    data: "testdata"
   }
   $.ajax({
     url: url_for(route), //server url
     type: "POST", //passing data as post method
     contentType: "application/json", // returning data as json
-    data: JSON.stringify(data) , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
+    data: dataToSend, //JSON.stringify(data) , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
     success: function (json) {
       alert("Save Events JSON (" + format + ") to server: Success " + json['data']['data']['created_by_id']); //response from the server given as alert message
       console.log(json)
