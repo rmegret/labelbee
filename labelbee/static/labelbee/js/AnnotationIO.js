@@ -1603,7 +1603,7 @@ function FromServerDialog() {
       checkboxHTML += '(true);"> ' 
     }
     checkboxHTML += 'Show files from all users</label> <br>' +
-    "<label>Select type of event: </label><select id='DropdownElement' "+
+    "<label>Select type of event: </label> &nbsp; <select id='DropdownElement' "+
     "onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
         "<option value='tag'>tag</option>" +
         "<option value='event'>event</option>" +

@@ -164,9 +164,9 @@ function init(videoID, tagID) {
 
   /* Set defaults */
 
-  // if (video_data !== "None" && tag_file !== "None") {
-  //   videoManager.addDefaultVideo(video_data, tag_file);
-  // }
+  if (video_data !== "None" && tag_file !== "None") {
+    videoManager.addDefaultVideo(video_data, tag_file);
+  }
   videoManager.selectVideoByID(0);
 
   //Will trigger videoControl.onVideoLoaded
