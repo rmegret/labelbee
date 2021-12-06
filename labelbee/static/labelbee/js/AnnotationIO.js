@@ -1612,7 +1612,7 @@ function FromServerDialog() {
     $.ajax({
       url: url_for("rest/v2/videodata"),
       method: 'get',
-      data: {video_id : videoManager.currentVideoID, data_type: this.dataType, allusers: allusers}, 
+      data: {video_id : videoManager.currentVideoID, data_type: theDialog.dataType, allusers: allusers}, 
       dataType: 'json',
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
@@ -1621,7 +1621,7 @@ function FromServerDialog() {
         }
       ),
       success: function(json){
-      console.log("fromServerDialog: (ajax) Load"+ this.dataType +"files data from server: Success", json);
+      console.log("fromServerDialog: (ajax) Load "+ theDialog.dataType + "files data from server: Success", json);
         html =
         "<table id='TagOrEventFileListFromServer' style='width:100%'>" +
         "<thead>" +
@@ -1630,7 +1630,7 @@ function FromServerDialog() {
         "<th>Created on</th>" +
         "<th>Owner</th></thead>" +
         "</table>";
-        html += "<br><br><h4>WARNING: If another " + this.data_type + " file is currently loaded, unsaved changes may be lost.<h4>";
+        html += "<br><br><h4>WARNING: If another " + theDialog.data_type + " file is currently loaded, unsaved changes may be lost.<h4>";
         // console.log("HTML produced from database response:\n", html);
         
         // Creating table with only headers
