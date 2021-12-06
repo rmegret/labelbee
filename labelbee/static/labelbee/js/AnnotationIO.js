@@ -1542,16 +1542,15 @@ function FromServerDialog() {
     return
   }
 
-  // this.testDialog = function(){
-  //   this.setTitle("testTitle");
-  //   checkboxHTML = '<label id="checkboxes"><input type="checkbox" id="showAllUsers"> Show files from all users </label>'
-  //   this.setCheckboxes(checkboxHTML);
-  //   this.setMessage("testMessage");
-  //   this.setBody("testBody");
-  //   div.modal("show");
-  // }
+  this.resetAllHTML = function(){
+    this.setTitle("");
+    this.setCheckboxes("");
+    this.setMessage("");
+    this.setBody("");
+  }
 
   this.openRecentLoadingDialog = function(data_type){
+    this.resetAllHTML();
     this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
     '<label id="checkboxes"> '+ 
@@ -1607,7 +1606,7 @@ function FromServerDialog() {
           html += "</tr>";
           html += "</tbody></table><br>";
           html += "<h4>Do you wish to load this " + data_type + " file?</h4>";
-          html += '<button onclick="FromServerDialog.loadEvents(\'0\')" class="btn btn-success btn-lg">Yes</button> '
+          html += '<button onclick="fromServerDialog.loadEvents(\'0\')" class="btn btn-success btn-lg">Yes</button> '
           html += '<button type="button" class="btn btn-danger btn-lg" data-dismiss="modal">No</button>';
           html += "<br><br><h4>WARNING: If another " + data_type + " file is currently loaded, unsaved changes may be lost.<h4>";
           
