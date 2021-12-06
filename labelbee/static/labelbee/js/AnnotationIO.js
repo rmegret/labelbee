@@ -1612,7 +1612,7 @@ function FromServerDialog() {
     $.ajax({
       url: url_for("rest/v2/videodata"),
       method: 'get',
-      data: {video_id : videoManager.currentVideoID, data_type: theDialog.dataType, allusers: allusers}, 
+      data: {video_id : videoManager.currentVideoID, data_type: theDialog.data_type, allusers: allusers}, 
       dataType: 'json',
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
@@ -1621,7 +1621,7 @@ function FromServerDialog() {
         }
       ),
       success: function(json){
-      console.log("fromServerDialog: (ajax) Load "+ theDialog.dataType + "files data from server: Success", json);
+      console.log("fromServerDialog: (ajax) Load "+ theDialog.data_type + "files data from server: Success", json);
         html =
         "<table id='TagOrEventFileListFromServer' style='width:100%'>" +
         "<thead>" +
