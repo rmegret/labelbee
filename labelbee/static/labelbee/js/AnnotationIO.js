@@ -1558,6 +1558,7 @@ function FromServerDialog() {
   };
 
   this.openRecentLoadingDialog = function(data_type){
+    videoManager.currentVideoID = 9371; // ONLY FOR DEV PURPOSES! COMMENT WHEN DEPLOYING TO LIVE SERVICE
     $("#showAdvancedMenu").prop('checked', false);
     this.data_type = data_type;
     this.resetAllHTML();
@@ -1569,6 +1570,15 @@ function FromServerDialog() {
     "<option value='tag' selected='selected'>tag</option>" +
     "<option value='event'>event</option>" +
     "</select>";
+    console.log(checkBoxHTML);
+    // $("#EventDropdownMenu").html(
+    //   "Select type of event: " +
+    //   "<select id='EventDropdownElement' onchange='eventsFromServerDialog.updateDialog(this.value);'>" +
+    //     "<option value='tag'>tag</option>" +
+    //     "<option value='event' selected='selected'>event</option>" +
+    //     "<option value='flowers'>flowers</option>"+
+    //   "</select>");
+
     this.setCheckboxes(checkboxHTML);
     this.setBody("[...]")
     this.setMessage("black", "Loading most recent " + data_type + " file information. Please wait...");
