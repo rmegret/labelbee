@@ -545,15 +545,13 @@ VideoManager.prototype.videoListFromDB = function () {
 }
 
 VideoManager.prototype.receivedVideoSelection = async function(){
-  var div = this.div
   $.ajax({
     url: url_for("/rest/v2/videolist"),
     method: 'get',
     data: "", 
     dataType: 'json',
     error: function (){
-        $(".modal-message h4").css("color","red");
-        $(".modal-message h4").html("VideoManager.receivedVideoSelection ERROR: Unable to retrieve video list from server.");
+        fromServerDialog.setMessage("red", "VideoManager.receivedVideoSelection ERROR: Unable to retrieve video list from server.")
       },
     success: function(json){
       console.log("VideoManager.receivedVideoSelection: Successfully loaded video list from server.")
@@ -567,10 +565,10 @@ VideoManager.prototype.receivedVideoSelection = async function(){
       "</table>";
 
       html += "<br><br><h4>WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.<h4>";
-      div.find(".modal-body").html(html);
-      div.find(".modal-message h4").html("");
+      fromServerDialog.setBody(html);
+      fromServerDialog.setMessate("black","");
 
-      div.find("#VideoListFromServerTable").DataTable({
+      $("#VideoListFromServerTable").DataTable({
         data: json["data"],
         columns:[
           {data:"id", render: function(id){
