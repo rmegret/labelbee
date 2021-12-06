@@ -1593,7 +1593,7 @@ function FromServerDialog() {
     let checkboxHTML = 
     '<label> '+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog(\''+ this.data_type +'\');"> '+ 
-    'Show advanced loading menu</label>\t\t' +
+    'Show advanced loading menu</label> &nbsp; &nbsp;' +
     '<label>'+ 
     '<input type="checkbox" id="showAllUsers" onclick="fromServerDialog.showAdvancedLoadingDialog'
     if (allusers){
