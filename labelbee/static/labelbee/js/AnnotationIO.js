@@ -1570,7 +1570,7 @@ function FromServerDialog() {
     "<option value='tag' selected='selected'>tag</option>" +
     "<option value='event'>event</option>" +
     "</select>";
-    console.log(checkBoxHTML);
+    console.log(checkboxHTML);
     // $("#EventDropdownMenu").html(
     //   "Select type of event: " +
     //   "<select id='EventDropdownElement' onchange='eventsFromServerDialog.updateDialog(this.value);'>" +
