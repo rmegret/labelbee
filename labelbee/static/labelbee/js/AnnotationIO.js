@@ -1611,7 +1611,7 @@ function FromServerDialog() {
     $.ajax({
       url: url_for("rest/v2/videodata"),
       method: 'get',
-      data: {video_id : this.videoID, data_type: this.dataType, allusers: allusers}, 
+      data: {video_id : videoManager.currentVideoID, data_type: this.dataType, allusers: allusers}, 
       dataType: 'json',
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
