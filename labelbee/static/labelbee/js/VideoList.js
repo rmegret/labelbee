@@ -561,7 +561,8 @@ VideoManager.prototype.receivedVideoSelection = async function(){
       "<th></th>" +
       "<th>File Name</th>" +
       "<th>Created on</th>" +
-      "<th>Video ID</th></thead>" +
+      "<th>Video ID</th>" +
+      "<th>Colony</th></thead>"
       "</table>";
 
       html += "<br><br><h4>WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.<h4>";
@@ -578,7 +579,8 @@ VideoManager.prototype.receivedVideoSelection = async function(){
           {data:"timestamp", render: function(timestamp){
             return timestamp.split('T').join(' ');
           }},
-          {data:"id"}
+          {data:"id"},
+          {data:"colony"}
         ]
       });
     }
