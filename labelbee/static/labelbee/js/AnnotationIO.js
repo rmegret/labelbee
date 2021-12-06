@@ -1562,6 +1562,7 @@ function FromServerDialog() {
     this.setMessage("black", "Loading most recent " + data_type + "file information. Please wait...");
     
     if (!videoManager.currentVideoID){
+      this.resetAllHTML();
       this.setTitle("No video loaded!");
       this.setMessage("red", "No video has been selected. Please select a video before attempting to load tag/event files.");
       div.modal("show");
