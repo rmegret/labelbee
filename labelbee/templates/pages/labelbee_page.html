@@ -567,6 +567,8 @@
                 <label>Video Info</label>
                 <div>
                   <div class='subpanel'>
+                    <input id="videoListFromDB" onclick="videoManager.videoListFromDB()" type="button" 
+                        class="btn btn-default btn-sm" value="Load Video">
                     <button class="btn btn-default" onclick="videoManager.videoListFromDB()">Load Video</button> 
                     <label class="primary">Current Video
                       <a class="videolink" href="undefined" target="_blank">[Raw File]</a>
@@ -690,8 +692,8 @@
                           Tags</label>
                         <input id="loadtags" type="file" style="display:none">
 
-                        <input id="savetags" onclick="saveTagsToFile('v1')" type="button" value="Save Tags"
-                          class="btn btn-default btn-xs" title="Save raw JSON">
+                        <!-- <input id="savetags" onclick="saveTagsToFile('v1')" type="button" value="Save Tags"
+                          class="btn btn-default btn-xs" title="Save raw JSON"> -->
 
                         <input id="savetags" onclick="saveTagsToFile('v2')" type="button" value="Save Tags (v2)"
                           class="btn btn-default btn-xs" title="Save Tag JSON v2">
