@@ -1563,21 +1563,27 @@ function FromServerDialog() {
     this.data_type = data_type;
     this.resetAllHTML();
     this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
-    let checkboxHTML = '<label>'+ 
-    '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)> '+ 
-    'Show advanced loading menu </label> <br>' + 
-    "<select id='EventDropdownElement' onchange='fromServerDialog.openRecentLoadingDialog(this.value);'>" +
-    "<option value='tag' selected='selected'>tag</option>" +
-    "<option value='event'>event</option>" +
+    let checkboxHTML = "Select type of event: " +
+    "<select id='EventDropdownElement' onchange='eventsFromServerDialog.updateDialog(this.value);'>" +
+      "<option value='tag'>tag</option>" +
+      "<option value='event' selected='selected'>event</option>" +
+      "<option value='flowers'>flowers</option>"+
     "</select>";
+    // '<label>'+ 
+    // '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)> '+ 
+    // 'Show advanced loading menu </label> <br>' + 
+    // "<select id='EventDropdownElement' onchange='fromServerDialog.openRecentLoadingDialog(this.value);'>" +
+    // "<option value='tag' selected='selected'>tag</option>" +
+    // "<option value='event'>event</option>" +
+    // "</select>";
     console.log(checkboxHTML);
     // $("#EventDropdownMenu").html(
-    //   "Select type of event: " +
-    //   "<select id='EventDropdownElement' onchange='eventsFromServerDialog.updateDialog(this.value);'>" +
-    //     "<option value='tag'>tag</option>" +
-    //     "<option value='event' selected='selected'>event</option>" +
-    //     "<option value='flowers'>flowers</option>"+
-    //   "</select>");
+      // "Select type of event: " +
+      // "<select id='EventDropdownElement' onchange='eventsFromServerDialog.updateDialog(this.value);'>" +
+      //   "<option value='tag'>tag</option>" +
+      //   "<option value='event' selected='selected'>event</option>" +
+      //   "<option value='flowers'>flowers</option>"+
+      // "</select>");
 
     this.setCheckboxes(checkboxHTML);
     this.setBody("[...]")
