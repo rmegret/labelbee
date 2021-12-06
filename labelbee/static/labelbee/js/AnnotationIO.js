@@ -1567,7 +1567,7 @@ function FromServerDialog() {
     'Show advanced loading menu </label>';
     this.setCheckboxes(checkboxHTML);
     this.setBody("[...]")
-    this.setMessage("black", "Loading most recent " + data_type + "file information. Please wait...");
+    this.setMessage("black", "Loading most recent " + data_type + " file information. Please wait...");
     
     if (!videoManager.currentVideoID){
       this.resetAllHTML();
@@ -1579,6 +1579,7 @@ function FromServerDialog() {
 
     // Display Modal
     this.openDialog();
+
     // Load first tag/event file information through GET request
     $.ajax({
       url: url_for("rest/v2/videodata"),
@@ -1602,6 +1603,10 @@ function FromServerDialog() {
           "<th>Owner</th>";
           html += "</thead><tbody>";
           fileData = json["data"][0];
+          if (fileData == null){
+            fromServerDialog.setMessage("red","Current user has not recently opened any " + data_type + " files for the current video.\
+             Use the advanced loading menu to load a file.");
+          }
           html +=
             '<tr data-row="' +
             0 +
