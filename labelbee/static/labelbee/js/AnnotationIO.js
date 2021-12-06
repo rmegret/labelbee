@@ -1563,13 +1563,13 @@ function FromServerDialog() {
     this.resetAllHTML();
     this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
-    '<label> '+ 
+    '<label>'+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)> '+ 
-    'Show advanced loading menu </label>' + 
-    "<select id='EventDropdownElement' onchange='fromServerDialog.openRecentLoadingDialog(this.value);'>" +
-    "<option value='tag' selected='selected'>tag</option>" +
-    "<option value='event'>event</option>" +
-    "</select>";
+    'Show advanced loading menu </label> <br>';//  + 
+    //"<select id='EventDropdownElement' onchange='fromServerDialog.openRecentLoadingDialog(this.value);'>" +
+    //"<option value='tag' selected='selected'>tag</option>" +
+    //"<option value='event'>event</option>" +
+    //"</select>";
     this.setCheckboxes(checkboxHTML);
     this.setBody("[...]")
     this.setMessage("black", "Loading most recent " + data_type + " file information. Please wait...");
