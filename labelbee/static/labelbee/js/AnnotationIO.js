@@ -1587,7 +1587,7 @@ function FromServerDialog() {
     });
   }
 
-  this.showAdvancedLoadingDialog = function(allUsers) {
+  this.showAdvancedLoadingDialog = function(allusers) {
     $("#showAdvancedMenu").prop('checked', true);
     this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
@@ -1602,7 +1602,7 @@ function FromServerDialog() {
         "<option value='event'>event</option>" +
       "</select>";  
     this.setCheckboxes(checkboxHTML);
-    div.find('#DropdownElement').val(data_type);
+    div.find('#DropdownElement').val(this.data_type);
 
     // Loading video tag/event data
     // GET request that sends a video ID and data_type to receive a json
@@ -1611,7 +1611,7 @@ function FromServerDialog() {
     $.ajax({
       url: url_for("rest/v2/videodata"),
       method: 'get',
-      data: {video_id : this.videoID, data_type: dataType, allusers:this.showAll}, 
+      data: {video_id : this.videoID, data_type: this.dataType, allusers: allusers}, 
       dataType: 'json',
       error: typesetAjaxError(
         "ERROR in EventsFromServer dialog",
@@ -1629,7 +1629,7 @@ function FromServerDialog() {
         "<th>Created on</th>" +
         "<th>Owner</th></thead>" +
         "</table>";
-        html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
+        html += "<br><br><h4>WARNING: If another " + this.data_type + " file is currently loaded, unsaved changes may be lost.<h4>";
         // console.log("HTML produced from database response:\n", html);
         
         // Creating table with only headers
