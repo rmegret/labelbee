@@ -15,7 +15,7 @@ function initAnnotationIO() {
 
   eventsFromServerDialog = new EventsFromServerDialog();
   labelListFromServerDialog = new LabelListFromServerDialog();
-  recentTagOrEventFromServerDialog = new RecentTagOrEventFromServerDialog();
+  fromServerDialog = new fromServerDialog();
 
   $("#events-notes").on("input", onChanged_events_notes);
 }
@@ -1515,12 +1515,42 @@ function EventsFromServerDialog() {
 
 }
 
-function RecentTagOrEventFromServerDialog() {
+function FromServerDialog() {
   var theDialog = this;
   this.div = $("#from-server-dialog");
   var div = this.div;
   this.dataType = null;
 
+  this.setTitle = function(html){
+    div.find(".modal-title").html(html);
+    return
+  }
+
+  this.setCheckboxes = function(html){
+    div.find(".checkboxes").html(html);
+    return
+  }
+
+  this.setBody = function(html){
+    div.find(".modal-body").html(html);
+    return
+  }
+
+  this.setMessage = function(html){
+    div.find(".modal-message").html(html);
+    return
+  }
+
+  this.testDialog = function(){
+    this.setTitle("testTitle");
+    checkboxHTML = '<label id="checkboxes"><input type="checkbox" id="showAllUsers"> Show files from all users </label>'
+    this.setCheckboxes(checkboxHTML);
+    this.setMessage("testMessage");
+    this.setBody("testBody");
+    div.modal("show");
+  }
+
+  
   this.updateDialog = function (dataType) {
     
     // Loading video tag/event data

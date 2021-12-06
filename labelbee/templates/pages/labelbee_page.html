@@ -736,7 +736,7 @@
                       <meta name="csrf-token" content="{{ csrf_token() }}">
                       <label>Tags:</label>
                       <br>
-                      <input id="tagsFromServer" onclick="recentTagOrEventFromServerDialog.openDialog('tag')" type="button" 
+                      <input id="tagsFromServer" onclick="fromServerDialog.testDialog()" type="button" 
                         class="btn btn-default btn-sm" value="Load Recent Tags">
                       <br>
                       <input id="tagsFromServerAdvanced" onclick="eventsFromServerDialog.openDialog('tag')" type="button" value="Load Tags (Advanced)"
@@ -745,7 +745,7 @@
 
                       <label>Events:</label>
                       <br>
-                      <input type="button" onclick="recentTagOrEventFromServerDialog.openDialog('event')" class="btn btn-primary btn-sm"
+                      <input type="button" onclick="fromServerDialog.openDialog('event')" class="btn btn-primary btn-sm"
                         value="Load Recent Events">
                       <br>
                       <input type="button" onclick="eventsFromServerDialog.openDialog('event')" class="btn btn-primary btn-xs"
@@ -760,20 +760,26 @@
                       <input id="eventsToServer" onclick="eventsToServer('v1')" type="button"
                         value="Save Events (JSON v1)" class="btn btn-green-toggle btn-xs require-server">
                     
-                      <!-- #### Loading Recent From Server Modal  -->
+                      <!-- #### Loading From Server Modal  -->
                       <div class="modal fade" id="from-server-dialog" role="dialog">
                         <div class="modal-dialog modal-lg">
                           <div class="modal-content" style="overflow:auto;">
                             <div class="modal-header">
                               <button type="button" class="close" data-dismiss="modal">&times;</button>
-                              <h4 class="modal-title"></h4>
+                              <h4 class="modal-title">
+                                <!-- To be filled up by FromServerDialog.setTitle() method  -->
+                              </h4>
+                              <div class="checkboxes">
+                                <!--  To be filled up by FromServerDialog.setCheckboxes() method -->
+                              </div>
                             </div>
                             <div class="modal-body">
-                              <!-- To be filled up by AJAX request -->
+                              <!-- To be filled up by FromServerDialog.setBody() method -->
                             </div>
-                            <div class="modal-message">
-                              <h4></h4>
-                              <!-- Filled up by javascript -->
+                            <div>
+                              <h4 class="modal-message">
+                                <!-- To be filled up by FromServerDialog.setMessage() method -->
+                              </h4>
                             </div>
                             <div class="modal-footer">
                               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -789,10 +795,12 @@
                             <div class="modal-header">
                               <button type="button" class="close" data-dismiss="modal">&times;</button>
                               <h4 class="modal-title"></h4>
-                              <label> 
-                                <input type="checkbox" id="showAllUsers" onclick="eventsFromServerDialog.clickedShowAllUsers()">
-                                Show files from all users 
-                              </label>
+                              <div id="checkboxes">
+                                <label id="checkboxes">
+                                  <input type="checkbox" id="showAllUsers" onclick="eventsFromServerDialog.clickedShowAllUsers()">
+                                  Show files from all users 
+                                </label>
+                              </div>
                               <br>
                               <div id="EventDropdownMenu">
                                 <!--  -->
