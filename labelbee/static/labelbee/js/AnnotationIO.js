@@ -1502,7 +1502,6 @@ function FromServerDialog() {
 
   this.openRecentLoadingDialog = function(data_type){
     videoManager.currentVideoID = 9371; // ONLY FOR DEV PURPOSES! COMMENT WHEN DEPLOYING TO LIVE SERVICE
-    $("#showAdvancedMenu").prop('checked', false);
     this.data_type = data_type;
     this.resetAllHTML();
     this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
@@ -1515,6 +1514,7 @@ function FromServerDialog() {
     "<option value='event'>event</option>" +
     "</select>";
     this.setCheckboxes(checkboxHTML);
+    div.find("#showAdvancedMenu").prop('checked', false);
     div.find('#DropdownElement').val(data_type);
     this.setBody("[...]")
     this.setMessage("black", "Loading most recent " + data_type + " file information. Please wait...");
@@ -1588,7 +1588,7 @@ function FromServerDialog() {
   }
 
   this.showAdvancedLoadingDialog = function(allusers) {
-    
+    this.resetAllHTML();
     this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
     '<label> '+ 
@@ -1603,6 +1603,9 @@ function FromServerDialog() {
       "</select>";  
     this.setCheckboxes(checkboxHTML);
     div.find("#showAdvancedMenu").prop('checked', true);
+    if (allusers){
+      div.find("#showAllUsers").prop('checked', true);
+    }
     div.find('#DropdownElement').val(this.data_type);
 
     // Loading video tag/event data
