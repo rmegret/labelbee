@@ -504,7 +504,7 @@ VideoManager.prototype.updateVideoInfoForm = function () {
 VideoManager.prototype.videoListFromDB = function () {
   console.log("VideoManager.videoListFromDB: Loading video list from server.")
 
-  fromServerDialog.resetHTML();
+  fromServerDialog.resetAllHTML();
   fromServerDialog.setTitle("Load Video");
   fromServerDialog.setBody("[...]");
   fromServerDialog.setMessage("black","Loading video list from server. Please wait...")
