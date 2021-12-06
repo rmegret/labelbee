@@ -1606,6 +1606,7 @@ function FromServerDialog() {
           if (fileData == null){
             fromServerDialog.setMessage("red","Current user has not recently opened any " + data_type + " files for the current video.\
              Use the advanced loading menu to load a file.");
+             return
           }
           html +=
             '<tr data-row="' +
