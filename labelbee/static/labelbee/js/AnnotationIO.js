@@ -15,7 +15,7 @@ function initAnnotationIO() {
 
   eventsFromServerDialog = new EventsFromServerDialog();
   labelListFromServerDialog = new LabelListFromServerDialog();
-  fromServerDialog = new fromServerDialog();
+  fromServerDialog = new FromServerDialog();
 
   $("#events-notes").on("input", onChanged_events_notes);
 }
@@ -1550,7 +1550,7 @@ function FromServerDialog() {
     div.modal("show");
   }
 
-  
+
   this.updateDialog = function (dataType) {
     
     // Loading video tag/event data
