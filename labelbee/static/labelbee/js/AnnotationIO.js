@@ -1563,12 +1563,10 @@ function FromServerDialog() {
     this.data_type = data_type;
     this.resetAllHTML();
     this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
-    let checkboxHTML = "Select type of event: " +
-    "<select id='EventDropdownElement' onchange='eventsFromServerDialog.updateDialog(this.value);'>" +
-      "<option value='tag'>tag</option>" +
-      "<option value='event' selected='selected'>event</option>" +
-      "<option value='flowers'>flowers</option>"+
-    "</select>";
+    let checkboxHTML = '<label>' +
+    '<input type="checkbox" id="showAllUsers" onclick="eventsFromServerDialog.clickedShowAllUsers()">'
+    'Show files from all users' +
+    '</label>';
     // '<label>'+ 
     // '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)> '+ 
     // 'Show advanced loading menu </label> <br>' + 
