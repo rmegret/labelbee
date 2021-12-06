@@ -1550,7 +1550,6 @@ function FromServerDialog() {
     div.modal("show");
   }
 
-
   this.updateDialog = function (dataType) {
     
     // Loading video tag/event data
@@ -1829,11 +1828,6 @@ function FromServerDialog() {
   this.openDialog = function (dataType) {
     console.log("RecentTagOrEventFromServerDialog.openDialog('"+dataType+"')");
     this.dataType = dataType;
-    //Extracting GET parameters from URL
-    var getParams = new URLSearchParams(window.location.search);
-    if (!getParams){
-      console.log("Error obtaining any parameters from URL");
-    }
     this.videoID = videoManager.currentVideoID
     if (!this.videoID){
       console.log("Error obtaining GET parameter \"video\"");

@@ -581,7 +581,7 @@ VideoManager.prototype.receivedVideoSelection = async function(){
 
 VideoManager.prototype.videoSelected = async function(id) {
   this.currentVideoID = id;
-
+  console.log("Current video ID: ", this.currentVideoID)
   $.ajax({
     url: url_for("/rest/v2/get_video_info/" + id),
     method: 'get',
@@ -604,7 +604,7 @@ VideoManager.prototype.videoSelected = async function(id) {
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   videoinfo = {
-    name: videoInfoJSON["name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4".split('/').pop(),
+    name: videoInfoJSON["file_name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4".split('/').pop(),
     videoPath: "/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",//videoInfoJSON["videoURL"],
     videofps: videoInfoJSON["videofps"],
     realfps: videoInfoJSON["realfps"],
