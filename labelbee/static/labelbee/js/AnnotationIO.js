@@ -1582,24 +1582,6 @@ function FromServerDialog() {
       return
     }
 
-    this.showAdvancedLoadingDialog = function(allUsers) {
-      $("#showAdvancedMenu").prop('checked', true);
-      this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
-      let checkboxHTML = 
-      '<label id="checkboxes"> '+ 
-      '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog('+ this.data_type +')> '+ 
-      'Show advanced loading menu </label>' +
-      '<label id="checkboxes"> '+ 
-      '<input type="checkbox" id="showAllUsers" onclick="fromServerDialog.showAdvancedLoadingDialog(true)> '+ 
-      'Show files from all users</label> <br>' +
-      "<select id='EventDropdownElement' onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
-          "<option value='tag' selected='selected'>tag</option>" +
-          "<option value='event'>event</option>" +
-        "</select>";  
-      this.setCheckboxes(checkboxHTML);
-
-    }
-
     // Display Modal
     this.openDialog();
 
@@ -1656,10 +1638,26 @@ function FromServerDialog() {
 
           // Reset message
           theDialog.setMessage("black", "");
-
-
       }
     });
+  }
+
+  this.showAdvancedLoadingDialog = function(allUsers) {
+    $("#showAdvancedMenu").prop('checked', true);
+    this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
+    let checkboxHTML = 
+    '<label id="checkboxes"> '+ 
+    '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog('+ this.data_type +')> '+ 
+    'Show advanced loading menu </label>' +
+    '<label id="checkboxes"> '+ 
+    '<input type="checkbox" id="showAllUsers" onclick="fromServerDialog.showAdvancedLoadingDialog(true)> '+ 
+    'Show files from all users</label> <br>' +
+    "<select id='EventDropdownElement' onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
+        "<option value='tag' selected='selected'>tag</option>" +
+        "<option value='event'>event</option>" +
+      "</select>";  
+    this.setCheckboxes(checkboxHTML);
+
   }
   // this.updateDialog = function (dataType) {
     
