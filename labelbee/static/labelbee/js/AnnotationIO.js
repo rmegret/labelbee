@@ -1557,7 +1557,7 @@ function FromServerDialog() {
     '<label id="checkboxes"> '+ 
     '<input type="checkbox" id="showAdvancedMenu"> '+ 
     'Show advanced loading menu </label>';
-    this.setCheckboxes(checkBoxHTML);
+    this.setCheckboxes(checkboxHTML);
     this.setBody("[...]")
     this.setMessage("Loading most recent ", dataType, "file information. Please wait...");
 
