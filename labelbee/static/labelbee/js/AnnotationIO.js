@@ -2290,7 +2290,7 @@ function eventsToServer(format) {
       data_type:"tag",
       path:"testPath",
       file_name:"testFileName",
-      created_from = basedOn,
+      created_from = fromServerDialog.basedOn,
       data: "test"
     }
   $.ajax({
