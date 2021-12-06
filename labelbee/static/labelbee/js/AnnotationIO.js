@@ -1509,7 +1509,7 @@ function FromServerDialog() {
     '<label>'+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)">'+ 
     'Show advanced loading menu </label> <br>' + 
-    "<select id='DropdownElement' onchange='fromServerDialog.openRecentLoadingDialog(this.value);'>" +
+    "Select type of event: <select id='DropdownElement' onchange='fromServerDialog.openRecentLoadingDialog(this.value);'>" +
     "<option value='tag'>tag</option>" +
     "<option value='event'>event</option>" +
     "</select>";
@@ -1603,7 +1603,7 @@ function FromServerDialog() {
       checkboxHTML += '(true);"> ' 
     }
     checkboxHTML += 'Show files from all users</label> <br>' +
-    "<select id='DropdownElement' onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
+    "Select type of event: <select id='DropdownElement' onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
         "<option value='tag'>tag</option>" +
         "<option value='event'>event</option>" +
       "</select>";  
