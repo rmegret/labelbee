@@ -2280,12 +2280,12 @@ function eventsToServer(format) {
   let data;
 
   dataToSend = {
-    created_by_id: "1",
-    data_type: "tag",
-    file_name: "test_tag2.json",
-    path: "/test_colony",
-    video_id: 1,
-    data: "testdata"
+    "created_by_id": "1",
+    "data_type": "tag",
+    "file_name": "test_tag2.json",
+    "path": "/test_colony",
+    "video_id": 1,
+    "data": "testdata"
   }
   $.ajax({
     url: url_for(route), //server url
