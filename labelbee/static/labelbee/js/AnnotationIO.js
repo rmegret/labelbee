@@ -2284,21 +2284,29 @@ function eventsToServer(format) {
   // else {
   //   data = convertTracksToV1();
   // }
+  // data = {
+  //     video_id: videoManager.currentVideoID,
+  //     created_by_id: "1",
+  //     data_type:"tag",
+  //     path:"testPath",
+  //     file_name:"testFileName",
+  //     created_from: fromServerDialog.basedOn,
+  //     data: {
+  //       "created_by_id": "1",
+  //       "data_type": "tag",
+  //       "file_name": "test_tag2.json",
+  //       "path": "/test_colony",
+  //       "video_id": 1,
+  //       "data": "testdata"
+  //     }
+  // }
   data = {
-      video_id: videoManager.currentVideoID,
-      created_by_id: "1",
-      data_type:"tag",
-      path:"testPath",
-      file_name:"testFileName",
-      created_from: fromServerDialog.basedOn,
-      data: {
-        "created_by_id": "1",
-        "data_type": "tag",
-        "file_name": "test_tag2.json",
-        "path": "/test_colony",
-        "video_id": 1,
-        "data": "testdata"
-      }
+    "created_by_id": "1",
+    "data_type": "tag",
+    "file_name": "test_tag2.json",
+    "path": "/test_colony",
+    "video_id": 1,
+    "data": "testdata"
   }
   $.ajax({
     url: url_for(route), //server url
