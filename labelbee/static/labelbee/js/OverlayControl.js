@@ -81,7 +81,8 @@ function OverlayControl(canvasTagId) {
         clickModeSelectMultiframe: false,
         clickModeNewAnnotation: false,
         predictIdClickRadius: 120,
-        showImageDiff: false
+        showImageDiff: false,
+        showPredictedStatus : false
     }
     overlay.updateOptsButtons()
 
@@ -203,7 +204,7 @@ OverlayControl.prototype.optsClick = function(option) {
 }
 OverlayControl.prototype.updateOptsButtons = function() {
     console.log('overlay.updateDisableAngleButton')
-    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','showImageDiff']) {
+    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','showImageDiff','showPredictedStatus']) {
         console.log(option)
         if ( this.opts[option] ) {
             $(".overlayOpts-"+option).addClass("active")
@@ -1378,6 +1379,17 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
     //console.log('identifyBeeRect ctx=',ctx, x,y)
 
     ctx.save()
+
+    let obs=rect.obs
+
+    if (overlay.opts.showPredictedStatus) {
+        let obs = getObsHandle(rect.obs.frame,rect.obs.ID)//rect.obs
+        if (obs.predicted) {
+            ctx.globalAlpha = 0.25
+        } else {
+            ctx.globalAlpha = 1.0
+        }
+    }
     
     // Compensate rotation to have upright labels
     ctx.rotate(-rect.angle/180*Math.PI)
@@ -1396,8 +1408,6 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
             ctx.stroke();
         }
     }
-
-    let obs=rect.obs
 
     if (overlay.opts.showID) {
         //ctx.font = "20px Arial";
