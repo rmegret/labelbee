@@ -1564,6 +1564,7 @@ function FromServerDialog() {
     if (!videoManager.currentVideoID){
       this.setTitle("No video loaded!");
       this.setMessage("red", "No video has been selected. Please select a video before attempting to load tag/event files.");
+      return
     }
 
     // Display Modal
@@ -2304,6 +2305,10 @@ function tagsFromServer(tagFileID, div) {
     .done(function (data) {
       tags = data["data"]["data"];
       console.log("Loaded tag data:", tags)
+      if (tags == null){
+        fromServerDialog.setMessage("red", "ERROR: Tag data stored in server is null.");
+        return
+      }
       return setTags(tags, div);
     });
 }
