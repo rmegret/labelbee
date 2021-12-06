@@ -2291,7 +2291,7 @@ function eventsToServer(format) {
     url: url_for(route), //server url
     type: "POST", //passing data as post method
     contentType: "application/json", // returning data as json
-    data: JSON.stringify(dataToSend), //JSON.stringify(data) , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
+    data: {data:dataToSend}, //JSON.stringify(data) , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
     success: function (json) {
       alert("Save Events JSON (" + format + ") to server: Success " + json['data']['data']['created_by_id']); //response from the server given as alert message
       console.log(json)
