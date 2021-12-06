@@ -1550,6 +1550,7 @@ function FromServerDialog() {
   }
 
   this.openRecentLoadingDialog = function(data_type){
+    this.data_type = data_type;
     this.resetAllHTML();
     this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
@@ -1968,7 +1969,7 @@ function FromServerDialog() {
     div.find(".modal-message h4").css("color","black");
     div.find(".modal-message h4").html("Loading " + this.dataType + "s from database for file ID " + tag_event_ID + "...");
     // Load tag or event file
-    if(this.dataType== "tag"){      // Case: tag file
+    if(this.data_type== "tag"){      // Case: tag file
       success = tagsFromServer(tag_event_ID, this.div);
       if(success){
         div.find(".modal-message h4").css("color","black");
