@@ -1596,7 +1596,7 @@ function FromServerDialog() {
     'Show advanced loading menu </label>\t' +
     '<label>'+ 
     '<input type="checkbox" id="showAllUsers" onclick="fromServerDialog.showAdvancedLoadingDialog'
-    if (allUsers){
+    if (allusers){
       checkboxHTML += '"(false);"> ' 
     }
     else{
