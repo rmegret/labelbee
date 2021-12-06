@@ -1550,11 +1550,11 @@ function FromServerDialog() {
   }
 
   this.openDialog = function(){
-    div.modal("show");
+    theDialog.modal("show");
   }
 
   this.closeDialog = function () {
-    div.modal("hide");
+    theDialog.modal("hide");
   };
 
   this.openRecentLoadingDialog = function(data_type){
