@@ -2291,7 +2291,7 @@ function eventsToServer(format) {
       path:"testPath",
       file_name:"testFileName",
       created_from = basedOn,
-      data: convertTracksToV2()
+      data: "test"
     }
   $.ajax({
     url: url_for(route), //server url
