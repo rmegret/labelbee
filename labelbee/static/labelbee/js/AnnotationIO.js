@@ -1564,6 +1564,7 @@ function FromServerDialog() {
     if (!videoManager.currentVideoID){
       this.setTitle("No video loaded!");
       this.setMessage("red", "No video has been selected. Please select a video before attempting to load tag/event files.");
+      div.modal("show");
       return
     }
 
