@@ -736,7 +736,7 @@
                       <meta name="csrf-token" content="{{ csrf_token() }}">
                       <label>Tags:</label>
                       <br>
-                      <input id="tagsFromServer" onclick="fromServerDialog.testDialog()" type="button" 
+                      <input id="tagsFromServer" onclick="fromServerDialog.openRecentLoadingDialog('tag')" type="button" 
                         class="btn btn-default btn-sm" value="Load Recent Tags">
                       <br>
                       <input id="tagsFromServerAdvanced" onclick="eventsFromServerDialog.openDialog('tag')" type="button" value="Load Tags (Advanced)"

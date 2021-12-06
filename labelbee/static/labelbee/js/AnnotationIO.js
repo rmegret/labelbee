@@ -1536,20 +1536,84 @@ function FromServerDialog() {
     return
   }
 
-  this.setMessage = function(html){
+  this.setMessage = function(color, html){
+    div.find(".modal-message").css("color",color);
     div.find(".modal-message").html(html);
     return
   }
 
-  this.testDialog = function(){
-    this.setTitle("testTitle");
-    checkboxHTML = '<label id="checkboxes"><input type="checkbox" id="showAllUsers"> Show files from all users </label>'
-    this.setCheckboxes(checkboxHTML);
-    this.setMessage("testMessage");
-    this.setBody("testBody");
-    div.modal("show");
-  }
+  // this.testDialog = function(){
+  //   this.setTitle("testTitle");
+  //   checkboxHTML = '<label id="checkboxes"><input type="checkbox" id="showAllUsers"> Show files from all users </label>'
+  //   this.setCheckboxes(checkboxHTML);
+  //   this.setMessage("testMessage");
+  //   this.setBody("testBody");
+  //   div.modal("show");
+  // }
 
+  this.openRecentLoadingDialog = function(data_type){
+    this.setTitle("Most recent ", data_type, " file for ", videoinfo.name);
+    let checkboxHTML = 
+    '<label id="checkboxes"> '+ 
+    '<input type="checkbox" id="showAdvancedMenu"> '+ 
+    'Show advanced loading menu </label>';
+    this.setCheckboxes(checkBoxHTML);
+    this.setBody("[...]")
+    this.setMessage("Loading most recent ", dataType, "file information. Please wait...");
+
+    // Load first tag/event file information through GET request
+    $.ajax({
+      url: url_for("rest/v2/videodata"),
+      method: 'get',
+      data: {video_id : videoManager.currentVideoID, data_type: data_type}, 
+      dataType: 'json',
+      error: typesetAjaxError(
+        "ERROR in FromServerDialog.openRecentLoadingDialog",
+        function (html) {
+          this.setMessage("red", html)
+        }
+      ),
+      success: function(json){
+          console.log("FromServerDialog.openRecentLoadingDialog: (ajax) Load most recent "+ data_Type +"file from server: Success", json);
+          theDialog.json = json["data"];
+          let html = "";
+          html +=
+          "<table id='RecentFromServerTable' style='width:100%'><thead>" +
+          "<th>File Name</th>" +
+          "<th>Created on</th>" +
+          "<th>Owner</th>";
+          html += "</thead><tbody>";
+          fileData = json["data"][0];
+          html +=
+            '<tr data-row="' +
+            0 +
+            '">' +
+            "<td>" +
+            fileData["file_name"] +
+            "</td>" +
+            "<td>" +
+            fileData["timestamp"].split("T").join(' ') +
+            "</td>" +
+            "<td>" +
+            '['+fileData["created_by_id"]+'] ' + fileData["created_by"] +
+            "</td>";
+          html += "</tr>";
+          html += "</tbody></table><br>";
+          html += "<h4>Do you wish to load this " + dataType + " file?</h4>";
+          html += '<button onclick="FromServerDialog.loadEvents(\'0\')" class="btn btn-success btn-lg">Yes</button> '
+          html += '<button type="button" class="btn btn-danger btn-lg" data-dismiss="modal">No</button>';
+          html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
+          
+          // Display table with file information
+          theDialog.setBody(html);
+
+          // Reset message
+          theDialog.setMessage("black", "");
+
+
+      }
+    });
+  }
   this.updateDialog = function (dataType) {
     
     // Loading video tag/event data
