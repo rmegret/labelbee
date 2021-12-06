@@ -1558,13 +1558,18 @@ function FromServerDialog() {
   };
 
   this.openRecentLoadingDialog = function(data_type){
+    $("#showAdvancedMenu").prop('checked', false);
     this.data_type = data_type;
     this.resetAllHTML();
     this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
     '<label id="checkboxes"> '+ 
-    '<input type="checkbox" id="showAdvancedMenu"> '+ 
-    'Show advanced loading menu </label>';
+    '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)> '+ 
+    'Show advanced loading menu </label>' + 
+    "<select id='EventDropdownElement' onchange='fromServerDialog.openRecentLoadingDialog(this.value);'>" +
+    "<option value='tag' selected='selected'>tag</option>" +
+    "<option value='event'>event</option>" +
+    "</select>";
     this.setCheckboxes(checkboxHTML);
     this.setBody("[...]")
     this.setMessage("black", "Loading most recent " + data_type + " file information. Please wait...");
@@ -1575,6 +1580,24 @@ function FromServerDialog() {
       this.setMessage("red", "No video has been selected. Please select a video before attempting to load tag/event files.");
       this.openDialog();
       return
+    }
+
+    this.showAdvancedLoadingDialog = function(allUsers) {
+      $("#showAdvancedMenu").prop('checked', true);
+      this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
+      let checkboxHTML = 
+      '<label id="checkboxes"> '+ 
+      '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog('+ this.data_type +')> '+ 
+      'Show advanced loading menu </label>' +
+      '<label id="checkboxes"> '+ 
+      '<input type="checkbox" id="showAllUsers" onclick="fromServerDialog.showAdvancedLoadingDialog(true)> '+ 
+      'Show files from all users</label> <br>' +
+      "<select id='EventDropdownElement' onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
+          "<option value='tag' selected='selected'>tag</option>" +
+          "<option value='event'>event</option>" +
+        "</select>";  
+      this.setCheckboxes(checkboxHTML);
+
     }
 
     // Display Modal
@@ -1605,7 +1628,7 @@ function FromServerDialog() {
           fileData = json["data"][0];
           if (fileData == null){
             fromServerDialog.setMessage("red","Current user has not recently opened any " + data_type + " files for the current video.\
-             Use the advanced loading menu to load a file.");
+            \nUse the advanced loading menu to load a file.");
              return
           }
           html +=
