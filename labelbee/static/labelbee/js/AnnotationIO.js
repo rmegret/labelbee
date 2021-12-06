@@ -1623,320 +1623,320 @@ function FromServerDialog() {
       }
     });
   }
-  this.updateDialog = function (dataType) {
+  // this.updateDialog = function (dataType) {
     
-    // Loading video tag/event data
-    // GET request that sends a video ID and data_type to receive a json
-    // json includes information about all event files related to the current video 
-    // videoID obtained from URL as GET parameter, dataType entered as argument when called in labelbee_page.html
-    $.ajax({
-      url: url_for("rest/v2/videodata"),
-      method: 'get',
-      data: {video_id : this.videoID, data_type: dataType}, 
-      dataType: 'json',
-      error: typesetAjaxError(
-        "ERROR in EventsFromServer dialog",
-        function (html) {
-          div.find(".modal-message h4").css("color","red");
-          div.find(".modal-message h4").html(html);
-        }
-      ),
-      success: function(json){
-        try {
-          console.log("recentTagOrEventFromServerDialog: (ajax) Load most recent "+ dataType +"file from server: Success", json);
+  //   // Loading video tag/event data
+  //   // GET request that sends a video ID and data_type to receive a json
+  //   // json includes information about all event files related to the current video 
+  //   // videoID obtained from URL as GET parameter, dataType entered as argument when called in labelbee_page.html
+  //   $.ajax({
+  //     url: url_for("rest/v2/videodata"),
+  //     method: 'get',
+  //     data: {video_id : this.videoID, data_type: dataType}, 
+  //     dataType: 'json',
+  //     error: typesetAjaxError(
+  //       "ERROR in EventsFromServer dialog",
+  //       function (html) {
+  //         div.find(".modal-message h4").css("color","red");
+  //         div.find(".modal-message h4").html(html);
+  //       }
+  //     ),
+  //     success: function(json){
+  //       try {
+  //         console.log("recentTagOrEventFromServerDialog: (ajax) Load most recent "+ dataType +"file from server: Success", json);
 
-          theDialog.json = json["data"];
-          // Building table HTML
-          let html = "";
-          html +=
-          "<table id='RecentFromServerTable' style='width:100%'><thead>" +
-          "<th>File Name</th>" +
-          "<th>Created on</th>" +
-          "<th>Owner</th>";
-          // if (showNotes) {
-            // html += "<th>Notes</th>";
-          // }
-          // if (showMetadata) {
-            // html += "<th>Info</th>";
+  //         theDialog.json = json["data"];
+  //         // Building table HTML
+  //         let html = "";
+  //         html +=
+  //         "<table id='RecentFromServerTable' style='width:100%'><thead>" +
+  //         "<th>File Name</th>" +
+  //         "<th>Created on</th>" +
+  //         "<th>Owner</th>";
+  //         // if (showNotes) {
+  //           // html += "<th>Notes</th>";
+  //         // }
+  //         // if (showMetadata) {
+  //           // html += "<th>Info</th>";
 
-            // html += "<th>Based on</th>";
-          // }
-          html += "</thead><tbody>";
-          fileData = json["data"][0];
-          // console.log(fileData);
-          html +=
-            '<tr data-row="' +
-            0 +
-            '">' +
-            "<td>" +
-            fileData["file_name"] +
-            "</td>" +
-            "<td>" +
-            fileData["timestamp"].split("T").join(' ') +
-            "</td>" +
-            "<td>" +
-            '['+fileData["created_by_id"]+'] ' + fileData["created_by"] +
-            "</td>";
-          html += "</tr>";
-            // if (showNotes) {
-            //   let notes = "";
-            //   let metadata = item["metadata"];
-            //   if (metadata && metadata["notes"]) {
-            //     notes = metadata["notes"];
-            //   }
-            //   html += '<td class="metadata-notes">' + notes + "</td>";
-            // }
-            // if (showMetadata) {
-            //   let info = "";
-            //   let basedon = "";
-            //   let metadata = item["metadata"];
-            //   if (metadata) {
-            //     info +=
-            //       '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
-            //       k +
-            //       ')">Show</button>';
-            //     var history = metadata["history"];
-            //     if (history) {
-            //       for (let h of history) {
-            //         if (h["filename"]) {
-            //           let kk = json.find(
-            //             (el) => el["filename"] == h["filename"]
-            //           );
-            //           if (kk != null)
-            //             basedon +=
-            //               '<div class="basedon" data-basedon="' +
-            //               kk.k +
-            //               '">' +
-            //               kk.k +
-            //               "</div>";
-            //         }
-            //       }
-            //     }
-            //   }
-            //   html += "<td>" + info + "</td>";
-            //   html += "<td>" + item["filename"] + "</td>";
-            //   html += "<td>" + basedon + "</td>";
-            // }
-          html += "</tbody></table><br>";
-          html += "<h4>Do you wish to load this " + dataType + " file?</h4>";
-          html += '<button onclick="recentTagOrEventFromServerDialog.loadEvents(\'0\')" class="btn btn-success btn-lg">Yes</button> '
-          html += '<button type="button" class="btn btn-danger btn-lg" data-dismiss="modal">No</button>';
-          html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
-          // console.log("HTML produced from database response:\n", html);
+  //           // html += "<th>Based on</th>";
+  //         // }
+  //         html += "</thead><tbody>";
+  //         fileData = json["data"][0];
+  //         // console.log(fileData);
+  //         html +=
+  //           '<tr data-row="' +
+  //           0 +
+  //           '">' +
+  //           "<td>" +
+  //           fileData["file_name"] +
+  //           "</td>" +
+  //           "<td>" +
+  //           fileData["timestamp"].split("T").join(' ') +
+  //           "</td>" +
+  //           "<td>" +
+  //           '['+fileData["created_by_id"]+'] ' + fileData["created_by"] +
+  //           "</td>";
+  //         html += "</tr>";
+  //           // if (showNotes) {
+  //           //   let notes = "";
+  //           //   let metadata = item["metadata"];
+  //           //   if (metadata && metadata["notes"]) {
+  //           //     notes = metadata["notes"];
+  //           //   }
+  //           //   html += '<td class="metadata-notes">' + notes + "</td>";
+  //           // }
+  //           // if (showMetadata) {
+  //           //   let info = "";
+  //           //   let basedon = "";
+  //           //   let metadata = item["metadata"];
+  //           //   if (metadata) {
+  //           //     info +=
+  //           //       '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
+  //           //       k +
+  //           //       ')">Show</button>';
+  //           //     var history = metadata["history"];
+  //           //     if (history) {
+  //           //       for (let h of history) {
+  //           //         if (h["filename"]) {
+  //           //           let kk = json.find(
+  //           //             (el) => el["filename"] == h["filename"]
+  //           //           );
+  //           //           if (kk != null)
+  //           //             basedon +=
+  //           //               '<div class="basedon" data-basedon="' +
+  //           //               kk.k +
+  //           //               '">' +
+  //           //               kk.k +
+  //           //               "</div>";
+  //           //         }
+  //           //       }
+  //           //     }
+  //           //   }
+  //           //   html += "<td>" + info + "</td>";
+  //           //   html += "<td>" + item["filename"] + "</td>";
+  //           //   html += "<td>" + basedon + "</td>";
+  //           // }
+  //         html += "</tbody></table><br>";
+  //         html += "<h4>Do you wish to load this " + dataType + " file?</h4>";
+  //         html += '<button onclick="recentTagOrEventFromServerDialog.loadEvents(\'0\')" class="btn btn-success btn-lg">Yes</button> '
+  //         html += '<button type="button" class="btn btn-danger btn-lg" data-dismiss="modal">No</button>';
+  //         html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
+  //         // console.log("HTML produced from database response:\n", html);
           
-          // Filling html with ajax result
-          div.find(".modal-body").html(html);
-          div.find(".modal-message h4").html("");
-        }
-        catch{
-          div.find(".modal-body").html("<h3 style='color:red;'>Current user has not recently worked with "+dataType+"s.<br>\
-          Please use the advanced " + dataType + " loading menu.</h3>")
-          div.find(".modal-message h4").html("")
-        }
-      }
-    });
+  //         // Filling html with ajax result
+  //         div.find(".modal-body").html(html);
+  //         div.find(".modal-message h4").html("");
+  //       }
+  //       catch{
+  //         div.find(".modal-body").html("<h3 style='color:red;'>Current user has not recently worked with "+dataType+"s.<br>\
+  //         Please use the advanced " + dataType + " loading menu.</h3>")
+  //         div.find(".modal-message h4").html("")
+  //       }
+  //     }
+  //   });
     
 
-      // $.ajax({
-      //   url: url_for("/rest/events/"),
-      //   type: "GET",
-      //   contentType: "application/json",
-      //   //data:{format:'json'}, // Without 'video', list all videos
-      //   data: data,
-      //   success: function (json) {
-      //     // Get the file list in JSON format
+  //     // $.ajax({
+  //     //   url: url_for("/rest/events/"),
+  //     //   type: "GET",
+  //     //   contentType: "application/json",
+  //     //   //data:{format:'json'}, // Without 'video', list all videos
+  //     //   data: data,
+  //     //   success: function (json) {
+  //     //     // Get the file list in JSON format
 
-      //     console.log("EventsFromServerDialog: ajax SUCCESS\ntracksList=", json);
-      //     theDialog.json = json;
+  //     //     console.log("EventsFromServerDialog: ajax SUCCESS\ntracksList=", json);
+  //     //     theDialog.json = json;
 
-      //     let html = "";
-      //     if (false) {
-      //       for (let item of json) {
-      //         html +=
-      //           '<button onclick="eventsFromServer(' +
-      //           "'" +
-      //           item["uri"] +
-      //           "'" +
-      //           ')">' +
-      //           item["filename"] +
-      //           "</button> <br>";
-      //       }
-      //     } else {
-      //       html +=
-      //         "<table class='eventFiles'><thead>" +
-      //         "<th></th>" +
-      //         "<th>Video</th>" +
-      //         "<th>Created on</th>" +
-      //         "<th>Owner</th>";
-      //       if (showNotes) {
-      //         html += "<th>Notes</th>";
-      //       }
-      //       if (showMetadata) {
-      //         html += "<th>Info</th>";
-      //         html += "<th>Filename</th>";
-      //         html += "<th>Based on</th>";
-      //       }
-      //       html += "</thead><tbody>";
-      //       function boldize(text, flag) {
-      //         if (flag) {
-      //           return "<b>" + text + "</b>";
-      //         } else return text;
-      //       }
-      //       function formattimestamp(timestamp) {
-      //         if (timestamp.length == 12) {
-      //           return (
-      //             "20" +
-      //             timestamp.slice(0, 2) +
-      //             "-" +
-      //             timestamp.slice(2, 4) +
-      //             "-" +
-      //             timestamp.slice(4, 6) +
-      //             " " +
-      //             timestamp.slice(6, 8) +
-      //             ":" +
-      //             timestamp.slice(8, 10) +
-      //             ":" +
-      //             timestamp.slice(10, 12)
-      //           );
-      //         } else return timestamp;
-      //       }
-      //       for (let k in json) {
-      //         json[k].k = k;
-      //       }
-      //       for (let k in json) {
-      //         var item = json[k];
-      //         html +=
-      //           '<tr data-row="' +
-      //           k +
-      //           '">' +
-      //           '<td id="' +
-      //           item["filename"] +
-      //           '"><button onclick="eventsFromServerDialog.loadEvents(' +
-      //           k +
-      //           ')">' +
-      //           k +
-      //           " Load</button></td>" +
-      //           "<td>" +
-      //           boldize(item["video"], item["video"] == videoinfo.videoName) +
-      //           "</td>" +
-      //           "<td>" +
-      //           formattimestamp(item["timestamp"]) +
-      //           "</td>" +
-      //           "<td>U" +
-      //           item["user_id"] +
-      //           " " +
-      //           item["user_name"] +
-      //           " </td>";
-      //         if (showNotes) {
-      //           let notes = "";
-      //           let metadata = item["metadata"];
-      //           if (metadata && metadata["notes"]) {
-      //             notes = metadata["notes"];
-      //           }
-      //           html += '<td class="metadata-notes">' + notes + "</td>";
-      //         }
-      //         if (showMetadata) {
-      //           let info = "";
-      //           let basedon = "";
-      //           let metadata = item["metadata"];
-      //           if (metadata) {
-      //             info +=
-      //               '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
-      //               k +
-      //               ')">Show</button>';
-      //             var history = metadata["history"];
-      //             if (history) {
-      //               for (let h of history) {
-      //                 if (h["filename"]) {
-      //                   let kk = json.find(
-      //                     (el) => el["filename"] == h["filename"]
-      //                   );
-      //                   if (kk != null)
-      //                     basedon +=
-      //                       '<div class="basedon" data-basedon="' +
-      //                       kk.k +
-      //                       '">' +
-      //                       kk.k +
-      //                       "</div>";
-      //                 }
-      //               }
-      //             }
-      //           }
-      //           html += "<td>" + info + "</td>";
-      //           html += "<td>" + item["filename"] + "</td>";
-      //           html += "<td>" + basedon + "</td>";
-      //         }
-      //         html += "</tr>";
-      //       }
-      //       html += "</tbody></table>";
-      //     }
-      //     div.find(".modal-body").html(html);
-      //     div.find(".modal-message").html("");
+  //     //     let html = "";
+  //     //     if (false) {
+  //     //       for (let item of json) {
+  //     //         html +=
+  //     //           '<button onclick="eventsFromServer(' +
+  //     //           "'" +
+  //     //           item["uri"] +
+  //     //           "'" +
+  //     //           ')">' +
+  //     //           item["filename"] +
+  //     //           "</button> <br>";
+  //     //       }
+  //     //     } else {
+  //     //       html +=
+  //     //         "<table class='eventFiles'><thead>" +
+  //     //         "<th></th>" +
+  //     //         "<th>Video</th>" +
+  //     //         "<th>Created on</th>" +
+  //     //         "<th>Owner</th>";
+  //     //       if (showNotes) {
+  //     //         html += "<th>Notes</th>";
+  //     //       }
+  //     //       if (showMetadata) {
+  //     //         html += "<th>Info</th>";
+  //     //         html += "<th>Filename</th>";
+  //     //         html += "<th>Based on</th>";
+  //     //       }
+  //     //       html += "</thead><tbody>";
+  //     //       function boldize(text, flag) {
+  //     //         if (flag) {
+  //     //           return "<b>" + text + "</b>";
+  //     //         } else return text;
+  //     //       }
+  //     //       function formattimestamp(timestamp) {
+  //     //         if (timestamp.length == 12) {
+  //     //           return (
+  //     //             "20" +
+  //     //             timestamp.slice(0, 2) +
+  //     //             "-" +
+  //     //             timestamp.slice(2, 4) +
+  //     //             "-" +
+  //     //             timestamp.slice(4, 6) +
+  //     //             " " +
+  //     //             timestamp.slice(6, 8) +
+  //     //             ":" +
+  //     //             timestamp.slice(8, 10) +
+  //     //             ":" +
+  //     //             timestamp.slice(10, 12)
+  //     //           );
+  //     //         } else return timestamp;
+  //     //       }
+  //     //       for (let k in json) {
+  //     //         json[k].k = k;
+  //     //       }
+  //     //       for (let k in json) {
+  //     //         var item = json[k];
+  //     //         html +=
+  //     //           '<tr data-row="' +
+  //     //           k +
+  //     //           '">' +
+  //     //           '<td id="' +
+  //     //           item["filename"] +
+  //     //           '"><button onclick="eventsFromServerDialog.loadEvents(' +
+  //     //           k +
+  //     //           ')">' +
+  //     //           k +
+  //     //           " Load</button></td>" +
+  //     //           "<td>" +
+  //     //           boldize(item["video"], item["video"] == videoinfo.videoName) +
+  //     //           "</td>" +
+  //     //           "<td>" +
+  //     //           formattimestamp(item["timestamp"]) +
+  //     //           "</td>" +
+  //     //           "<td>U" +
+  //     //           item["user_id"] +
+  //     //           " " +
+  //     //           item["user_name"] +
+  //     //           " </td>";
+  //     //         if (showNotes) {
+  //     //           let notes = "";
+  //     //           let metadata = item["metadata"];
+  //     //           if (metadata && metadata["notes"]) {
+  //     //             notes = metadata["notes"];
+  //     //           }
+  //     //           html += '<td class="metadata-notes">' + notes + "</td>";
+  //     //         }
+  //     //         if (showMetadata) {
+  //     //           let info = "";
+  //     //           let basedon = "";
+  //     //           let metadata = item["metadata"];
+  //     //           if (metadata) {
+  //     //             info +=
+  //     //               '<button class="btn btn-xs" onclick="eventsFromServerDialog.showMetadata(' +
+  //     //               k +
+  //     //               ')">Show</button>';
+  //     //             var history = metadata["history"];
+  //     //             if (history) {
+  //     //               for (let h of history) {
+  //     //                 if (h["filename"]) {
+  //     //                   let kk = json.find(
+  //     //                     (el) => el["filename"] == h["filename"]
+  //     //                   );
+  //     //                   if (kk != null)
+  //     //                     basedon +=
+  //     //                       '<div class="basedon" data-basedon="' +
+  //     //                       kk.k +
+  //     //                       '">' +
+  //     //                       kk.k +
+  //     //                       "</div>";
+  //     //                 }
+  //     //               }
+  //     //             }
+  //     //           }
+  //     //           html += "<td>" + info + "</td>";
+  //     //           html += "<td>" + item["filename"] + "</td>";
+  //     //           html += "<td>" + basedon + "</td>";
+  //     //         }
+  //     //         html += "</tr>";
+  //     //       }
+  //     //       html += "</tbody></table>";
+  //     //     }
+  //     //     div.find(".modal-body").html(html);
+  //     //     div.find(".modal-message").html("");
 
-      //     div
-      //       .find(".modal-body div.basedon")
-      //       .mouseover(function () {
-      //         var k = $(this).attr("data-basedon");
-      //         div
-      //           .find('.modal-body tr[data-row="' + k + '"]')
-      //           .toggleClass("active", true);
-      //       })
-      //       .mouseout(function () {
-      //         div.find(".modal-body tr").toggleClass("active", false);
-      //       });
+  //     //     div
+  //     //       .find(".modal-body div.basedon")
+  //     //       .mouseover(function () {
+  //     //         var k = $(this).attr("data-basedon");
+  //     //         div
+  //     //           .find('.modal-body tr[data-row="' + k + '"]')
+  //     //           .toggleClass("active", true);
+  //     //       })
+  //     //       .mouseout(function () {
+  //     //         div.find(".modal-body tr").toggleClass("active", false);
+  //     //       });
 
-          // Nothing else to do here:
-          // The modal #loadTracksFromServerDialog is supposed to be open
-          // and filled with links to each Track file
-          // Clicking on one of the link will trigger eventsFromServer()
-        // },
-      //   error: typesetAjaxError(
-      //     "ERROR in EventsFromServer dialog",
-      //     function (html) {
-      //       div.find(".modal-message").html(html);
-      //     }
-      //   ),
-      // });
-    };
-  this.openDialog = function (dataType) {
-    console.log("RecentTagOrEventFromServerDialog.openDialog('"+dataType+"')");
-    this.dataType = dataType;
-    this.videoID = videoManager.currentVideoID
-    if (!this.videoID){
-      console.log("Error obtaining GET parameter \"video\"");
-    }
-    else{
-      console.log("RecentTagOrEventFromServerDialog: Video ID obtained from URL:", this.videoID);
-    }
+  //         // Nothing else to do here:
+  //         // The modal #loadTracksFromServerDialog is supposed to be open
+  //         // and filled with links to each Track file
+  //         // Clicking on one of the link will trigger eventsFromServer()
+  //       // },
+  //     //   error: typesetAjaxError(
+  //     //     "ERROR in EventsFromServer dialog",
+  //     //     function (html) {
+  //     //       div.find(".modal-message").html(html);
+  //     //     }
+  //     //   ),
+  //     // });
+  //   };
+  // this.openDialog = function (dataType) {
+  //   console.log("RecentTagOrEventFromServerDialog.openDialog('"+dataType+"')");
+  //   this.dataType = dataType;
+  //   this.videoID = videoManager.currentVideoID
+  //   if (!this.videoID){
+  //     console.log("Error obtaining GET parameter \"video\"");
+  //   }
+  //   else{
+  //     console.log("RecentTagOrEventFromServerDialog: Video ID obtained from URL:", this.videoID);
+  //   }
 
-    // Loading video file name for dialog window title
-    // WILL BE REPLACED ONCE NEW VIDEOLIST IMPLEMENTATION IS WORKING
-    $.ajax({
-      url: url_for("/rest/v2/get_video/" + this.videoID),
-      method: 'get',
-      data: "", 
-      dataType: 'json',
-      error: function (){
-          div.find(".modal-message h4").css("color","red");
-          div.find(".modal-message h4").html("ERROR: Invalid Video ID.");
-        },
-      success: function(json){
-        div
-          .find(".modal-title")
-          .html("Most Recent " + dataType.charAt(0).toUpperCase() + dataType.slice(1) + " File for " + json["data"]["file_name"]);
-      }
-    });
+  //   // Loading video file name for dialog window title
+  //   // WILL BE REPLACED ONCE NEW VIDEOLIST IMPLEMENTATION IS WORKING
+  //   $.ajax({
+  //     url: url_for("/rest/v2/get_video/" + this.videoID),
+  //     method: 'get',
+  //     data: "", 
+  //     dataType: 'json',
+  //     error: function (){
+  //         div.find(".modal-message h4").css("color","red");
+  //         div.find(".modal-message h4").html("ERROR: Invalid Video ID.");
+  //       },
+  //     success: function(json){
+  //       div
+  //         .find(".modal-title")
+  //         .html("Most Recent " + dataType.charAt(0).toUpperCase() + dataType.slice(1) + " File for " + json["data"]["file_name"]);
+  //     }
+  //   });
     
-    div.find(".modal-body").html("[...]");
+  //   div.find(".modal-body").html("[...]");
     
-    div.find(".modal-message h4").css("color","black");
-    div.find(".modal-message h4")
-      .html("<div>Loading Tracks file list from server. Please wait...</div>"); //MODIFY DEPENDING ON TYPE OF FILE BEING LOADED
+  //   div.find(".modal-message h4").css("color","black");
+  //   div.find(".modal-message h4")
+  //     .html("<div>Loading Tracks file list from server. Please wait...</div>"); //MODIFY DEPENDING ON TYPE OF FILE BEING LOADED
 
-    this.updateDialog(dataType);
+  //   this.updateDialog(dataType);
 
-    div.modal("show");
-  };
+  //   div.modal("show");
+  // };
   this.initDialog = function () {
     div.modal({
       show: false,
