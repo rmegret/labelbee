@@ -1574,7 +1574,7 @@ function FromServerDialog() {
         }
       ),
       success: function(json){
-          console.log("FromServerDialog.openRecentLoadingDialog: (ajax) Load most recent "+ data_Type +"file from server: Success", json);
+          console.log("FromServerDialog.openRecentLoadingDialog: (ajax) Load most recent "+ data_type +"file from server: Success", json);
           theDialog.json = json["data"];
           let html = "";
           html +=
@@ -1599,10 +1599,10 @@ function FromServerDialog() {
             "</td>";
           html += "</tr>";
           html += "</tbody></table><br>";
-          html += "<h4>Do you wish to load this " + dataType + " file?</h4>";
+          html += "<h4>Do you wish to load this " + data_type + " file?</h4>";
           html += '<button onclick="FromServerDialog.loadEvents(\'0\')" class="btn btn-success btn-lg">Yes</button> '
           html += '<button type="button" class="btn btn-danger btn-lg" data-dismiss="modal">No</button>';
-          html += "<br><br><h4>WARNING: If another " + dataType + " file is currently loaded, unsaved changes may be lost.<h4>";
+          html += "<br><br><h4>WARNING: If another " + data_type + " file is currently loaded, unsaved changes may be lost.<h4>";
           
           // Display table with file information
           theDialog.setBody(html);
