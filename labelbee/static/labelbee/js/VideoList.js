@@ -565,7 +565,7 @@ VideoManager.prototype.receivedVideoSelection = async function(){
       "<th>Colony</th></thead>"
       "</table>";
 
-      html += "<br><br><h4>WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.<h4>";
+      fromServerDialog.setMessage("black","WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.");
       fromServerDialog.setBody(html);
       fromServerDialog.setMessage("black","");
 
