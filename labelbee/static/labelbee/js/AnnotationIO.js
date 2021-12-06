@@ -2291,8 +2291,15 @@ function eventsToServer(format) {
       path:"testPath",
       file_name:"testFileName",
       created_from: fromServerDialog.basedOn,
-      data: "test"
-    }
+      data: {
+        "created_by_id": "1",
+        "data_type": "tag",
+        "file_name": "test_tag2.json",
+        "path": "/test_colony",
+        "video_id": 1,
+        "data": "testdata"
+      }
+  }
   $.ajax({
     url: url_for(route), //server url
     type: "POST", //passing data as post method
