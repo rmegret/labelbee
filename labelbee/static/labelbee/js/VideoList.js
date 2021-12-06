@@ -559,10 +559,9 @@ VideoManager.prototype.receivedVideoSelection = async function(){
       "<table id='VideoListFromServerTable' style='width:100%'>" +
       "<thead>" +
       "<th></th>" +
-      "<th>Video ID</th>"
       "<th>File Name</th>" +
       "<th>Created on</th>" +
-      // "<th>Location</th></thead>" +
+      "<th>Video ID</th></thead>" +
       "</table>";
 
       html += "<br><br><h4>WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.<h4>";
@@ -575,12 +574,11 @@ VideoManager.prototype.receivedVideoSelection = async function(){
           {data:"id", render: function(id){
             return "<button onclick='videoManager.videoSelected("+id+")'>Load</button>";
           }},
-          {data:"id"},
           {data:"file_name"},
           {data:"timestamp", render: function(timestamp){
             return timestamp.split('T').join(' ');
           }},
-          // {data:"location"}
+          {data:"id"}
         ]
       });
     }
