@@ -1549,6 +1549,14 @@ function FromServerDialog() {
     this.setBody("");
   }
 
+  this.openDialog = function(){
+    div.modal("show");
+  }
+
+  this.closeDialog = function () {
+    div.modal("hide");
+  };
+
   this.openRecentLoadingDialog = function(data_type){
     this.data_type = data_type;
     this.resetAllHTML();
@@ -1958,9 +1966,6 @@ function FromServerDialog() {
       minHeight: 300,
       minWidth: 300,
     });
-  };
-  this.closeDialog = function () {
-    div.modal("hide");
   };
 
   this.loadEvents = function (k) {

@@ -502,43 +502,45 @@ VideoManager.prototype.updateVideoInfoForm = function () {
 };
 
 VideoManager.prototype.videoListFromDB = function () {
-  this.div = $("#from-server-dialog");
-  var div = this.div;
   console.log("VideoManager.videoListFromDB: Loading video list from server.")
 
-  // Initializing modal
-  this.initDialog = function () {
-    div.modal({
-      show: false,
-      autoOpen: false,
-      modal: true,
-      open: function () {
-        $("body").css("overflow", "auto");
-      },
-      close: function () {
-        $("body").css("overflow", "auto");
-      },
-    });
-    div.find(".modal-dialog").draggable({
-      handle: ".modal-header",
-    });
-    div.find(".modal-content").resizable({
-      alsoResize: ".modal-content",
-      minHeight: 300,
-      minWidth: 300,
-    });
-    div.find(".modal-title").html("Load Video");
-    div.find(".modal-body").html("[...]");
-
-    div.find(".modal-message h4").css("color","black");
-    div.find(".modal-message h4")
-      .html("<div>Loading video list from server. Please wait...</div>");
-  };
-  this.initDialog();
+  fromServerDialog.resetHTML();
+  fromServerDialog.setTitle("Load Video");
+  fromServerDialog.setBody("[...]");
+  fromServerDialog.setMessage("black","Loading video list from server. Please wait...")
+  fromServerDialog.openDialog();
   // Producing video list table
   this.receivedVideoSelection();
-  div.modal("show");
 
+  // Initializing modal
+  // this.initDialog = function () {
+  //   div.modal({
+  //     show: false,
+  //     autoOpen: false,
+  //     modal: true,
+  //     open: function () {
+  //       $("body").css("overflow", "auto");
+  //     },
+  //     close: function () {
+  //       $("body").css("overflow", "auto");
+  //     },
+  //   });
+  //   div.find(".modal-dialog").draggable({
+  //     handle: ".modal-header",
+  //   });
+  //   div.find(".modal-content").resizable({
+  //     alsoResize: ".modal-content",
+  //     minHeight: 300,
+  //     minWidth: 300,
+  //   });
+  //   div.find(".modal-title").html("Load Video");
+  //   div.find(".modal-body").html("[...]");
+
+  //   div.find(".modal-message h4").css("color","black");
+  //   div.find(".modal-message h4")
+  //     .html("<div>Loading video list from server. Please wait...</div>");
+  // };
+  // this.initDialog();
 }
 
 VideoManager.prototype.receivedVideoSelection = async function(){
