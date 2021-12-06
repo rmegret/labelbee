@@ -1593,8 +1593,8 @@ function FromServerDialog() {
     let checkboxHTML = 
     '<label> '+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog("'+ this.data_type +'");"> '+ 
-    'Show advanced loading menu </label>' +
-    '  <label>'+ 
+    'Show advanced loading menu </label>\t' +
+    '<label>'+ 
     '<input type="checkbox" id="showAllUsers" onclick="fromServerDialog.showAdvancedLoadingDialog(true);"> '+ 
     'Show files from all users</label> <br>' +
     "<select id='DropdownElement' onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
