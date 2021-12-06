@@ -1559,7 +1559,7 @@ function FromServerDialog() {
     'Show advanced loading menu </label>';
     this.setCheckboxes(checkboxHTML);
     this.setBody("[...]")
-    this.setMessage("Loading most recent ", dataType, "file information. Please wait...");
+    this.setMessage("Loading most recent ", data_type, "file information. Please wait...");
 
     // Load first tag/event file information through GET request
     $.ajax({
