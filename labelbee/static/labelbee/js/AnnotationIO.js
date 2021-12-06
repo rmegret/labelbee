@@ -1563,7 +1563,7 @@ function FromServerDialog() {
     this.resetAllHTML();
     this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
-    '<label id="checkboxes"> '+ 
+    '<label> '+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)> '+ 
     'Show advanced loading menu </label>' + 
     "<select id='EventDropdownElement' onchange='fromServerDialog.openRecentLoadingDialog(this.value);'>" +
@@ -1646,10 +1646,10 @@ function FromServerDialog() {
     $("#showAdvancedMenu").prop('checked', true);
     this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
-    '<label id="checkboxes"> '+ 
+    '<label> '+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog('+ this.data_type +')> '+ 
     'Show advanced loading menu </label>' +
-    '<label id="checkboxes"> '+ 
+    '<label> '+ 
     '<input type="checkbox" id="showAllUsers" onclick="fromServerDialog.showAdvancedLoadingDialog(true)> '+ 
     'Show files from all users</label> <br>' +
     "<select id='EventDropdownElement' onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
