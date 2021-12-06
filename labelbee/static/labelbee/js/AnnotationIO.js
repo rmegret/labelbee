@@ -1571,9 +1571,8 @@ function FromServerDialog() {
     "<option value='tag'>tag</option>" +
     "<option value='event'>event</option>" +
     "</select>";
-    console.log(checkboxHTML);
     this.setCheckboxes(checkboxHTML);
-    $('#DropdownElement').val(data_type);
+    div.find('#DropdownElement').val(data_type);
     this.setBody("[...]")
     this.setMessage("black", "Loading most recent " + data_type + " file information. Please wait...");
     
@@ -1650,17 +1649,18 @@ function FromServerDialog() {
     this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
     let checkboxHTML = 
     '<label> '+ 
-    '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog('+ this.data_type +')> '+ 
+    '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog('+ this.data_type +')"> '+ 
     'Show advanced loading menu </label>' +
     '<label> '+ 
     '<input type="checkbox" id="showAllUsers" onclick="fromServerDialog.showAdvancedLoadingDialog(true)> '+ 
     'Show files from all users</label> <br>' +
-    "<select id='EventDropdownElement' onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
-        "<option value='tag' selected='selected'>tag</option>" +
+    "<select id='DropdownElement' onchange='fromServerDialog.data_type = this.value; fromServerDialog.showAdvancedLoadingDialog(false);'>" +
+        "<option value='tag'>tag</option>" +
         "<option value='event'>event</option>" +
       "</select>";  
     this.setCheckboxes(checkboxHTML);
-
+    div.find('#DropdownElement').val(data_type);
+    
   }
   // this.updateDialog = function (dataType) {
     
