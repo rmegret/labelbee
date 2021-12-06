@@ -566,7 +566,7 @@ VideoManager.prototype.receivedVideoSelection = async function(){
 
       html += "<br><br><h4>WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.<h4>";
       fromServerDialog.setBody(html);
-      fromServerDialog.setMessate("black","");
+      fromServerDialog.setMessage("black","");
 
       $("#VideoListFromServerTable").DataTable({
         data: json["data"],
