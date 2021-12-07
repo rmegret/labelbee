@@ -482,7 +482,11 @@
                       </label>
                       <br>
                       <div id="videoName" class="small">-</div>
-                      <div class="currentFrameDiv">-</div>
+                      <div>
+                      <div style="display:inline;" class="currentFrameDiv">-</div> 
+                      <input onclick="overlay.exportFrame()" type="button" value="Export frame" class="btn btn-default btn-xs" style="display:inline;" title="Export current frame to new window">
+                      <input onclick="overlay.openVideoNewTab()" type="button" value="Open Video" class="btn btn-default btn-xs" style="display:inline;" title="Open current video in new window">
+                      </div>
                       <div id="vidTime">Video Time:</div>
                       <div id="realTime">Real Time:</div>
                       <select id="selectboxVideo" name="video" onchange="videoManager.onSelectboxVideoChanged()" class="">

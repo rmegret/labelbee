@@ -716,6 +716,21 @@ OverlayControl.prototype.hardRefresh = function() {
     //zoomOverlay.refreshZoom()
 }
 
+OverlayControl.prototype.openVideoNewTab = async function() {
+    console.log('overlay.openVideoNewTab')
+    let videoUrl = videoControl.video.src
+    var newTab = window.open(videoUrl);
+}
+OverlayControl.prototype.exportFrame = async function() {
+    console.log('overlay.exportFrame')
+    let videoUrl = videoControl.video.src
+    let frame = videoControl.currentFrame
+    console.log('overlay.exportFrame: ', videoUrl, frame)
+    let img = await videoCache.getFrameImageAsync(videoUrl, frame, videoinfo.videofps)
+    var newTab = window.open();
+    newTab.document.body.innerHTML = 'Extracted Frame '+frame+' from <a href="+videoUrl+">'+videoUrl+'</a><br><div><img src="'+img.src+'" style="max-width:100%; max-height:95%;"></div>';
+    newTab.document.title = 'Frame '+frame+', video '+videoUrl
+}
 OverlayControl.prototype.diffImage = function(canvas2, canvas1, gain) {
     if (!gain) gain=1.0
 
