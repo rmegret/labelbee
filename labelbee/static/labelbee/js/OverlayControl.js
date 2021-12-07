@@ -600,7 +600,8 @@ OverlayControl.prototype.getFrameCropCurrentObject = async function(framedelta, 
 
     let div = $('<div style="display: inline-block"><small>Frame '+frame+'</small><br></div>')
     let img = $('<img/>')[0]
-    img.src = data
+    if (data)
+        img.src = data
     div.append(img)
     $('#alerttext').append(div)
     img.width = displaySize
@@ -739,7 +740,7 @@ OverlayControl.prototype.diffImage = function(canvas2, canvas1, gain) {
     }
 
     ctx1.putImageData(imgData1, 0, 0);
-    console.log('diffImage DONE')
+    //console.log('diffImage DONE')
 } 
 
 OverlayControl.prototype.redrawVideoFrameDiff = function() {
@@ -758,18 +759,26 @@ OverlayControl.prototype.redrawVideoFrameDiff = function() {
     overlay.canvas2.height = h
     let ctx2 = overlay.canvas2.getContext('2d');
 
+    let videoUrl = video.src
     let frame=videoControl.currentFrame
-    let img1 = videoControl.videoCache.getFrameImageSync(video.src, frame, videoinfo.videofps)
-    let img2 = videoControl.videoCache.getFrameImageSync(video.src, frame-1, videoinfo.videofps)
-    if ((!img1) || (!img2)) {
-        videoControl.pause()
-        videoControl.videoCache.preloadFrames(videoControl.video.src, interval(frame-20, frame+20), videoinfo.videofps)
-            .then(function() {
-                printMessage("Preload done")
-                overlay.hardRefresh()
-            })
+
+    // Load async if frames not found
+    let state1 = videoCache.getFrameState(videoUrl, frame)
+    let state2 = videoCache.getFrameState(videoUrl, frame-1)
+    if ((!state1) || ((frame-1>=0)&&!state2)) {
+        // CAUTION: risk of infinite async loop if test always fail!
+        //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), videoinfo.videofps)
+        videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), videoinfo.videofps)
+        .then(function() {
+            printMessage("Preload done")
+            //overlay.hardRefresh()
+        })
+        //videoControl.pause() // pause after to avoid infinite loop?
         printMessage("Paused, need to preload video frames")
     }
+
+    let img1 = videoControl.videoCache.getFrameImageSync(videoUrl, frame)
+    let img2 = videoControl.videoCache.getFrameImageSync(videoUrl, frame-1)
     if (img1)
         overlay.ctx.drawImage(img1, 
             canvasTransform[4], canvasTransform[5],
@@ -784,6 +793,30 @@ OverlayControl.prototype.redrawVideoFrameDiff = function() {
     overlay.diffImage(overlay.canvas2,overlay.canvas, 3.0)
 }
 
+OverlayControl.prototype.drawImageToCanvas = function(img) {
+    let overlay = this
+    let w = overlay.canvas.width
+    let h = overlay.canvas.height
+    function drawDataURIOnCanvas(strDataURI, canvas) {
+        "use strict";
+        let img = new window.Image();
+        img.addEventListener("load", function () {
+            overlay.ctx.drawImage(img, 
+                canvasTransform[4], canvasTransform[5],
+                canvasTransform[0]*w, canvasTransform[3]*h,
+                0, 0,w,h);
+        });
+        img.setAttribute("src", strDataURI);
+    }
+
+    if($.type(img) === "string") {
+        drawDataURIOnCanvas(img)
+    } else
+        overlay.ctx.drawImage(img, 
+            canvasTransform[4], canvasTransform[5],
+            canvasTransform[0]*w, canvasTransform[3]*h,
+            0, 0, w, h);
+}
 OverlayControl.prototype.redrawVideoFrame = function() {
     var overlay = this;
     

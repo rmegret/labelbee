@@ -46,7 +46,7 @@ LRUCache.prototype.put = function (key, value) {
  }
  // add new entry to the end of the linked list -- it's now the freshest entry.
  this.tail = entry
- if (this.size === this.limit) {
+ if (this.size >= this.limit) {
    // we hit the limit -- remove the head
    this.size++
    return this.shift()
@@ -54,6 +54,17 @@ LRUCache.prototype.put = function (key, value) {
    // increase the size counter
    this.size++
  }
+}
+
+LRUCache.prototype.setLimit = function (limit) {
+  this.limit = limit
+
+  let count = 0
+  while (this.size >= this.limit) {
+    this.shift()
+    count++
+  }
+  console.log('LRUCache: purged '+count+' elements from cache')
 }
 
 /**
