@@ -82,7 +82,10 @@ function OverlayControl(canvasTagId) {
         clickModeNewAnnotation: false,
         predictIdClickRadius: 120,
         showImageDiff: false,
-        showPredictedStatus : false
+        showPredictedStatus : false,
+        timelineZoom : 4.0,
+        timelineMaxDelta : 3,
+        timelineDisplaySize : 300,
     }
     overlay.updateOptsButtons()
 
@@ -173,6 +176,7 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
         this.interaction.opts.obs = obs
         this.interaction.opts.id = obs.ID
         this.interaction.opts.frame = frame
+        this.interaction.opts.showTimeline = false // Hide timeline by default
     } else {
         console.log('overlay.setInteractionMode')
     }
@@ -565,6 +569,20 @@ OverlayControl.prototype.videoToCanvasRect = function(rect) {
 }
 
 // #MARK # OVERLAY REFRESH
+OverlayControl.prototype.getFrameCropImg = async function(frame, crop) {
+    let data = undefined
+    if (frame>=0) {
+        data = await videoCache.getFrameCropDataURL(videoControl.video.src, frame, videoinfo.videofps, crop)
+        //console.log(videoControl.video.src, frame)
+        //console.log(crop)
+        //console.log(data)
+    }
+
+    let img = $('<img/>')[0]
+    if (data)
+        img.src = data
+    return img
+}
 OverlayControl.prototype.getFrameCropCurrentObject = async function(framedelta, size, displaySize) {
     let rect = this.getActiveObject()
     if (!rect) {
@@ -619,8 +637,80 @@ OverlayControl.prototype.drawTimelineCurrentObject = async function() {
     console.log('Creating timeline...')
     printMessage("Timeline:<br>")
     for (i of frames) {
-        console.log(i); 
+        //console.log(i); 
         await this.getFrameCropCurrentObject(i, undefined, 200)
+    }
+}
+OverlayControl.prototype.drawTimelinePickFrameMode = async function(size, displaySize) {
+    let overlay = this
+    let centerframe = videoControl.currentFrame
+    
+    function intervalRange(start, end) {
+        return Array.from({length: end-start+1}, (x, i) => start+i);
+    }
+    let deltas =  intervalRange(-overlay.opts.timelineMaxDelta, overlay.opts.timelineMaxDelta)  //[-3,-2,-1,0,1,2,3,4]
+    videoControl.pause()
+    printMessage("Paused, need to preload video frames")
+    console.log('Creating timeline...')
+
+    if (this.interaction.mode != 'pick-frame') {
+        console.log('Not picking frame... ABORT')
+        return
+    }
+
+    let id = overlay.interaction.opts.id
+    let frame0 = overlay.interaction.opts.frame
+    let obs=getObsHandle(frame0,id) 
+    if (!obs) {
+        printMessage("Timeline: didn't find annotation to pick frame for")
+        return
+    }
+    if (!size) {
+        size = obs.width>obs.height ? obs.width : obs.height
+        size *= overlay.opts.timelineZoom
+        size = Math.round(size)
+    }
+    if (!displaySize) {
+        displaySize = overlay.opts.timelineDisplaySize
+    }
+    let w = size
+    let h = size
+    let cx = obs.x + obs.width/2
+    let cy = obs.y + obs.height/2
+    let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
+    
+    $('#pick-frame-timeline').html("Timeline:<br>")
+    for (var delta of deltas) {
+        //console.log(i); 
+        let frame = Number(centerframe)+Number(delta)
+        let img = await this.getFrameCropImg(frame, crop)
+        img.width = displaySize
+        img.height = displaySize
+        if (img) {
+            let extra=''
+            let pref=''
+            let div = $('<div style="display: inline-block"></div>')
+            div.addClass('timeline')
+            $('#pick-frame-timeline').append(div)
+            if (frame == frame0) {
+                div.addClass('selected')
+                extra+=' Event'
+            }
+            if (frame == obs.span.f1) {
+                div.addClass('selected-f1')
+                extra+=' Start'
+            }
+            if (frame == obs.span.f2) {
+                div.addClass('selected-f2')
+                extra+=' End'
+            }
+            if (frame == centerframe) {
+                pref+='Current '
+            }
+            div.click(()=>gotoEvent(frame, id))
+            div.html('<small>'+pref+'Frame '+frame+extra+'</small><br>')
+            div.append(img)
+        }
     }
 }
 OverlayControl.prototype.hardRefresh = function() {
@@ -688,12 +778,30 @@ OverlayControl.prototype.hardRefresh = function() {
             refreshChronogram();
         }
         function cancelSetSpan() {
-            $('#alerttext').html('Pick frame CLOSED')
+            $('#pickframediv').html('Pick frame CLOSED')
             overlay.setInteractionMode('main')
         }
 
+        function timelineButtonCallback(param, value) {
+            if (param == 'timelineZoom')
+                overlay.opts.timelineZoom *= value
+            else if (param == 'timelineDisplaySize') {
+                overlay.opts.timelineDisplaySize = Math.round(overlay.opts.timelineDisplaySize * value)
+                if (overlay.opts.timelineDisplaySize>1000) overlay.opts.timelineDisplaySize=1000
+                if (overlay.opts.timelineDisplaySize<50) overlay.opts.timelineDisplaySize=50
+            } else if (param == 'timelineMaxDelta') {
+                overlay.opts.timelineMaxDelta = Math.round(overlay.opts.timelineMaxDelta + value)
+                if (overlay.opts.timelineMaxDelta>10) overlay.opts.timelineMaxDelta=10
+                if (overlay.opts.timelineMaxDelta<1) overlay.opts.timelineMaxDelta=1
+            }
+                
+            if (overlay.interaction.opts.showTimeline) {
+                overlay.drawTimelinePickFrameMode()
+            }
+        }
+
         //printMessage(
-        $('#alerttext').html("PICK FRAME: setting timespan for ID="+id+" at frame="+frame+": ")
+        $('#pickframediv').html("PICK FRAME: setting timespan for ID="+id+" at frame="+frame+": ")
         .append($('<button class="btn btn-obs-expand btn-sm">Set Start</button>').click(doSetSpanStart))
         .append($('<button class="btn btn-obs-expand btn-sm">Set End</button>').click(doSetSpanEnd))
         .append($(document.createTextNode(' ')))
@@ -702,6 +810,29 @@ OverlayControl.prototype.hardRefresh = function() {
         .append($('<button class="btn btn-default  btn-xs">Goto Start</button>').click(gotoStart))
         .append($('<button class="btn btn-default  btn-xs">Goto Event</button>').click(gotoAnnotation))
         .append($('<button class="btn btn-default  btn-xs">Goto End</button>').click(gotoEnd))
+        .append($('<br>'))
+        .append($('<button class="btn btn-xs button-showtimeline btn-blue-toggle">Show Timeline</button>').click(
+                function() {
+                    overlay.interaction.opts.showTimeline = !overlay.interaction.opts.showTimeline
+                    $('.button-showtimeline').toggleClass('active', overlay.interaction.opts.showTimeline)
+                    if (overlay.interaction.opts.showTimeline) {
+                        overlay.drawTimelinePickFrameMode() // Create timeline
+                    } else {
+                        $('#pick-frame-timeline').html('') // Destroy timeline
+                    }
+                }
+                ))
+                .append($('<button class="btn btn-xs">Zoom+</button>').click( ()=>timelineButtonCallback('timelineZoom', 1/1.5) ))
+                .append($('<button class="btn btn-xs">Zoom-</button>').click(  ()=>timelineButtonCallback('timelineZoom', 1.5)  ))
+                .append($('<button class="btn btn-xs">Size+</button>').click( ()=>timelineButtonCallback('timelineDisplaySize', 1.5) ))
+                .append($('<button class="btn btn-xs">Size-</button>').click(  ()=>timelineButtonCallback('timelineDisplaySize', 1/1.5)  ))
+                .append($('<button class="btn btn-xs">Frames+</button>').click( ()=>timelineButtonCallback('timelineMaxDelta', 1) ))
+                .append($('<button class="btn btn-xs">Frames-</button>').click(  ()=>timelineButtonCallback('timelineMaxDelta', -1)  ))
+        .append($('<div id="pick-frame-timeline"></div>'))
+        $('.button-showtimeline').toggleClass('active', overlay.interaction.opts.showTimeline)
+
+        if (overlay.interaction.opts.showTimeline)
+            overlay.drawTimelinePickFrameMode()
     } else {
         // Default behavior
         selectBeeByID(defaultSelectedBee);

@@ -428,7 +428,7 @@ VideoCache.prototype.seekWithCallback = async function(videoUrl, frame, fps, fra
     let key = videoUrl+':'+frame
 
     let image = await this.getFrameImageAsync(videoUrl, frame, fps)
-    console.log('videoCache.getFrameCropDataURL: got image ', image)
+    //console.log('videoCache.getFrameCropDataURL: got image ', image)
     if (!image) return undefined
 
     let canvas = document.createElement('canvas');

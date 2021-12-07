@@ -833,3 +833,18 @@ li.ui-tabs-active > .ui-tabs-anchor {
 .ui-front {
     z-index: 2000;
 }
+
+.timeline.selected {
+  border: solid red 1px;
+}
+.timeline.selected-f1 {
+  border: solid green 1px;
+}
+.timeline.selected-f2 {
+  border: solid blue 1px;
+}
+.timeline {
+  border: solid black 1px;
+  padding: 1px;
+  margin: 1px;
+}
