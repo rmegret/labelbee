@@ -713,6 +713,169 @@ OverlayControl.prototype.drawTimelinePickFrameMode = async function(size, displa
         }
     }
 }
+OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displaySize) {
+    let overlay = this
+    
+    videoControl.pause()
+    printMessage("Paused, need to preload video frames")
+    console.log('Creating pick flower image ...')
+
+    if (this.interaction.mode != 'pick-frame') {
+        console.log('Not picking frame... ABORT')
+        return
+    }
+
+    let id = overlay.interaction.opts.id
+    let frame0 = overlay.interaction.opts.frame
+    let obs=getObsHandle(frame0,id) 
+    let currentObs = obs
+    if (!obs) {
+        printMessage("Timeline: didn't find annotation to pick flower for")
+        return
+    }
+    if (!currentObs.visit) currentObs.visit={}
+    if (!size) {
+        size = obs.width>obs.height ? obs.width : obs.height
+        size *= overlay.opts.timelineZoom
+        size = Math.round(size)
+    }
+    if (!displaySize) {
+        displaySize = overlay.opts.timelineDisplaySize
+    }
+    let w = size
+    let h = size
+    let cx = obs.x + obs.width/2
+    let cy = obs.y + obs.height/2
+    let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
+    
+    //$('#pickflowerdiv').html("Pick Flower for id="+id+" in frame="+frame0+"<br>")
+
+    let frame = frame0
+    let img = await this.getFrameCropImg(frame, crop)
+    //img.width = displaySize
+    //img.height = displaySize
+    if (img) {
+        let canvas = document.createElement('canvas'); // Precreated canvas
+        let ctx = canvas.getContext('2d');
+        canvas.width = w; canvas.height = h // pixel size
+        $(canvas).css({width: displaySize, height: displaySize}) // Display size
+        ctx.drawImage(img, 0, 0)
+
+        let div = $('<div style="display: inline-block"></div>')
+        //div.addClass('timeline')
+        $('#pickflowerdiv').append(div)
+        let text = $("<small>Pick Flower for id="+id+" in frame="+frame+"<br>")
+            .append($('<button class="btn btn-default btn-xs" style="inline">No visit</button>').click(removeVisit))
+        div.append(text)//html("<small>Pick Flower for id="+id+" in frame="+frame+"<br>")
+        //div.append(img)
+        div.append(canvas)
+
+        function isFlower(obs) {
+            return String(obs.ID).startsWith('F')
+        }
+        let flowers = Object.values(Tracks[0]).filter(isFlower)
+
+        function drawCenter(obs, selected) {
+            let x0 = crop.x
+            let y0 = crop.y
+
+            let x = obs.x+obs.width/2 - x0 // cx not reliable??
+            let y = obs.y+obs.height/2 - y0
+
+            let color = 'yellow'
+            let radius = 10
+
+            if (obs.ID == currentObs.visit.flowerid) {
+                color = 'green'
+            }
+            if (selected) {
+                color = 'green'
+                radius = 20
+            }
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.closePath();
+            ctx.fill();    
+
+            ctx.font = "10px Arial";
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.fillText(String(obs.ID), x, y - radius - 3);
+        }
+        function closestFlower(flowers, pt, maxdist) {
+            function euclid(pt1,pt2) {
+                return Math.sqrt((pt1.x-pt2.x)**2+(pt1.y-pt2.y)**2)
+            }
+            let dist = maxdist
+            let pickedObs = undefined
+            for (let obs of flowers) {
+                let ptf = {x:obs.x+obs.width/2, y: obs.y+obs.height/2}
+                let d = euclid(pt,ptf)
+                //console.log('d=',d,'pickedObs',pickedObs)
+                if (d<dist) {
+                    dist=d; pickedObs = obs
+                }
+            }
+            return pickedObs
+        }
+        function drawFlowers(flowers, selectedID) {
+            ctx.drawImage(img, 0, 0)
+            for (let obs of flowers) {
+                //console.log('Draw',obs)
+                let selected = (obs.ID==selectedID)
+                drawCenter(obs, selected)
+            }
+        }
+        function canvasPtToVideoPt(ptGUI) {
+            let pt = {x: ptGUI.x/displaySize*w+crop.x, y: ptGUI.y/displaySize*h+crop.y}
+            return pt
+        }
+        function pickFlower_mouseMove(option) {
+            console.log(option)
+            let ptGUI = {x: option.offsetX, y: option.offsetY}
+            let pt = canvasPtToVideoPt( ptGUI )
+            console.log(ptGUI, pt)
+
+            let pickedObs = closestFlower(flowers, pt, 200)
+            drawFlowers(flowers, pickedObs?pickedObs.ID:undefined)
+
+            // ctx.beginPath();
+            // ctx.arc(pt.x-crop.x, pt.y-crop.y, radius, 0, Math.PI * 2);
+            // ctx.fillStyle = 'red';
+            // ctx.closePath();
+            // ctx.fill();    
+
+        }
+        function pickFlower_mouseClick(option) {
+            console.log(option)
+            let ptGUI = {x: option.offsetX, y: option.offsetY}
+            let pt = canvasPtToVideoPt( ptGUI )
+
+            let pickedObs = closestFlower(flowers, pt, 200)
+
+            if (pickedObs) {
+                console.log('Change visited flower for ',currentObs, 'to flower', pickedObs)
+                if (!currentObs.visit) currentObs.visit={}
+                currentObs.visit.flowerid = pickedObs.ID
+            }
+            drawFlowers(flowers, currentObs.visit.flowerid)
+        }
+        function pickFlower_mouseLeave(option) {
+            drawFlowers(flowers, currentObs.visit.flowerid)
+        }
+        function removeVisit() {
+            currentObs.visit.flowerid = undefined
+            drawFlowers(flowers, currentObs.visit.flowerid)
+        }
+
+        $(canvas).click(pickFlower_mouseClick)
+        $(canvas).mousemove(pickFlower_mouseMove)
+        $(canvas).mouseleave(pickFlower_mouseLeave)
+        drawFlowers(flowers, currentObs.visit.flowerid)
+    }
+}
 OverlayControl.prototype.hardRefresh = function() {
     // Recreate overlay from Tracks
 
@@ -828,6 +991,7 @@ OverlayControl.prototype.hardRefresh = function() {
                 .append($('<button class="btn btn-xs">Size-</button>').click(  ()=>timelineButtonCallback('timelineDisplaySize', 1/1.5)  ))
                 .append($('<button class="btn btn-xs">Frames+</button>').click( ()=>timelineButtonCallback('timelineMaxDelta', 1) ))
                 .append($('<button class="btn btn-xs">Frames-</button>').click(  ()=>timelineButtonCallback('timelineMaxDelta', -1)  ))
+                .append($('<button class="btn btn-xs button-showPickFlower btn-blue-toggle">Pick Flower</button>').click(  ()=>overlay.pickFlowerButtonCallback()  ))
         .append($('<div id="pick-frame-timeline"></div>'))
         $('.button-showtimeline').toggleClass('active', overlay.interaction.opts.showTimeline)
 
@@ -846,6 +1010,17 @@ OverlayControl.prototype.hardRefresh = function() {
     
     //zoomOverlay.refreshZoom()
 }
+OverlayControl.prototype.pickFlowerButtonCallback = function(param, value) {
+    let overlay = this
+    overlay.interaction.opts.showPickFlower = !overlay.interaction.opts.showPickFlower
+    $('.button-showPickFlower').toggleClass('active', overlay.interaction.opts.showPickFlower)
+    if (overlay.interaction.opts.showPickFlower) {
+        overlay.drawImagePickFlowerMode() // Create image to pick
+    } else {
+        $('#pickflowerdiv').html('') // Destroy display
+    }
+}
+
 
 OverlayControl.prototype.openVideoNewTab = async function() {
     console.log('overlay.openVideoNewTab')
