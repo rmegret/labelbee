@@ -386,6 +386,7 @@ VideoControl.prototype.onVideoLoaded = function (event) {
   if (logging.videoEvents) console.log("onVideoLoaded", event);
 
   console.log("onVideoLoaded: VIDEO loaded ", this.video.src);
+  fromServerDialog.closeDialog();
   statusWidget.statusUpdate("videoLoad", true, []);
 
   this.isValidVideo = true;
@@ -415,7 +416,7 @@ VideoControl.prototype.onVideoLoaded = function (event) {
 VideoControl.prototype.onVideoError = function (event) {
   if (logging.videoEvents) console.log("onVideoError", event);
   console.log("onVideoError: could not load ", this.video.src);
-
+  fromServerDialog.setMessage("red","onVideoError: could not load \n" + this.video.src);
   statusWidget.statusUpdate("videoLoad", false, []);
 
   this.isValidVideo = false;

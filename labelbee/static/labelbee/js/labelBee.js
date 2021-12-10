@@ -11,6 +11,8 @@ var canvas,
   dragging = false,
   final_id = 0;
 var x, y, cx, cy, width, height;
+var user_id;
+
 //var vis;
 
 /** Debugging levels */
@@ -164,10 +166,12 @@ function init(videoID, tagID) {
 
   /* Set defaults */
 
-  if (video_data !== "None" && tag_file !== "None") {
-    videoManager.addDefaultVideo(video_data, tag_file);
-  }
-  videoManager.selectVideoByID(0);
+
+  // ASK REMI IF WE SHOULD BE LOADING ANY DEFAULT VIDEOS
+  // if (video_data !== "None" && tag_file !== "None") {
+  // videoManager.addDefaultVideo(video_data, tag_file); 
+  // }
+  // videoManager.selectVideoByID(0);
 
   //Will trigger videoControl.onVideoLoaded
   onTrackWindowChanged(); // to compute track window params

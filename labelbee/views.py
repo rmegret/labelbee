@@ -607,9 +607,9 @@ def ajaxlogin():
     :rtype: JSON object
     """
 
-    email = request.form.get("email")
-    password = request.form.get("password")
-
+    email = request.args.get("email")
+    password = request.args.get("password")
+    print(email, password)
     # print(email,password)
 
     user = User.query.filter_by(email=email).first()
@@ -1044,7 +1044,11 @@ def add_video_data_v2():
         raise Forbidden("/rest/v2/add_video_data POST: admin required !")
 
     video_data_schema = VideoDataSchema()
-    newdata = video_data_schema.loads(request.form.get("data"))
+    requestJSON = json.dumps(request.get_json()["data"])
+    print(request.get_json())
+    # requestJSON = request.form.get("data")
+    print(f"JSON obtained from POST request: {requestJSON}")
+    newdata = video_data_schema.loads(requestJSON)
 
     if "video_id" not in newdata:
         raise BadRequest("/rest/v2/add_video_data POST: video_id required !")
@@ -1071,7 +1075,6 @@ def add_video_data_v2():
             created_from=newdata.setdefault("created_from", None),
         )
     )
-
     return jsonify({"data": video_data})
 
 
