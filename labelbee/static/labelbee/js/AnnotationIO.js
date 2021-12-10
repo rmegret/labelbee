@@ -2278,18 +2278,28 @@ function eventsToServer(format) {
   }
 
   dataToSend = {
-    "created_by_id": "1",
-    "data_type": "tag",
-    "file_name": "test_tag2.json",
-    "path": "/test_colony",
-    "video_id": 1,
-    "data": "testdata"
+    video_id: "1",
+    created_by_id: "1",
+    data_type:"tag",
+    path:"/testPath",
+    file_name:"testFileName.json",
+    data:"testData"
+    // data: convertTracksToV2()
   }
+
+  // dataToSend = {
+  //   created_by_id: "1",
+  //   data_type: "tag",
+  //   file_name: "test_tag2.json",
+  //   path: "/test_colony",
+  //   video_id: 1,
+  //   data: "testdata"
+  // }
   $.ajax({
     url: url_for(route), //server url
     type: "POST", //passing data as post method
     contentType: "application/json", // returning data as json
-    data: {data:dataToSend}, //JSON.stringify(data) , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
+    data: JSON.stringify(dataToSend) , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
     success: function (json) {
       alert("Save Events JSON (" + format + ") to server: Success " + json['data']['data']['created_by_id']); //response from the server given as alert message
       console.log(json)
