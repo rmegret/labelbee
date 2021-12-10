@@ -661,3 +661,55 @@ VideoControl.prototype.onVideoInfoChanged = function () {
 VideoControl.prototype.maxframe = function () {
   return Math.floor(videoinfo.duration * videoinfo.videofps);
 };
+
+VideoControl.prototype.loadVideo2 = function(videoURL){
+  if (logging.videoEvents) console.log("loadVideo2: url=", videoURL);
+  this.name = videoinfo.name;
+  this.video.src = videoURL;
+}
+
+VideoControl.prototype.onVideoLoaded2 = async function(){
+  console.log("onVideoLoaded2: VIDEO loaded ", this.video.src);
+  this.setPreviewVideoStatus("undefined");
+  statusWidget.statusRequest("videoLoad", []);
+  statusWidget.statusUpdate("videoLoad", true, []);
+  videoControl.video2.frameRate = videoinfo.videofps
+  this.isValidVideo = true;
+  this.onVideoSizeChanged();
+  let name = videoinfo.name;
+  $("#videoName").html(name);
+  $("a.videolink").attr("href", name);
+  this.loadPreviewVideo();
+  $(this).trigger("video:loaded");
+  this.hardRefresh();
+}
+
+// {
+//   if (logging.videoEvents) console.log("onVideoLoaded", event);
+
+//   statusWidget.statusUpdate("videoLoad", true, []);
+
+//   this.isValidVideo = true;
+
+//   this.onVideoSizeChanged();
+
+//   videoinfo.duration = this.video.duration;
+//   videoinfo.name = this.video.src;
+
+//   let name = videoinfo.name;
+//   $("#videoName").html(name);
+
+//   $("a.videolink").attr("href", name);
+
+//   let videourl = videoinfo.videoURL;
+
+//   this.loadVideoInfo(videourl + ".info.json");
+//   this.loadPreviewVideo();
+
+//   $(this).trigger("video:loaded");
+
+//   this.hardRefresh();
+
+//   statusWidget.statusRequest("tagsLoad", []);
+//   tagsFromServer(videoinfo.tags.videoTagURL, true); // quiet
+// }

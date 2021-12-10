@@ -567,7 +567,8 @@
                 <label>Video Info</label>
                 <div>
                   <div class='subpanel'>
-                    <!-- <button class="btn btn-default" onclick="videoListFromServerDialog.open">Load Video</button>  -->
+                    <button class="btn btn-default" onclick="videoManager.videoListFromDB()">Load Video</button> 
+                    <br>
                     <label class="primary">Current Video
                       <a class="videolink" href="undefined" target="_blank">[Raw File]</a>
                     </label>
@@ -690,8 +691,8 @@
                           Tags</label>
                         <input id="loadtags" type="file" style="display:none">
 
-                        <input id="savetags" onclick="saveTagsToFile('v1')" type="button" value="Save Tags"
-                          class="btn btn-default btn-xs" title="Save raw JSON">
+                        <!-- <input id="savetags" onclick="saveTagsToFile('v1')" type="button" value="Save Tags"
+                          class="btn btn-default btn-xs" title="Save raw JSON"> -->
 
                         <input id="savetags" onclick="saveTagsToFile('v2')" type="button" value="Save Tags (v2)"
                           class="btn btn-default btn-xs" title="Save Tag JSON v2">
@@ -715,8 +716,8 @@
                         <input id="save" onclick="saveEventsToFile('v2')" type="button" value="Save Events (JSON v2)"
                           class="btn btn-success btn-sm" title="Save to new JSON format (Oct 2018)">
 
-                        <input id="save" onclick="saveEventsToFile('v1')" type="button" value="Save Events (v1)"
-                          class="btn btn-default btn-xs" title="Save to old JSON format (2017-2018)">
+                        <!-- <input id="save" onclick="saveEventsToFile('v1')" type="button" value="Save Events (v1)"
+                          class="btn btn-default btn-xs" title="Save to old JSON format (2017-2018)"> -->
 
                         <input id="saveCSV" onclick="saveEventsToCSV()" type="button" value="Export Events (CSV)"
                           class="btn btn-default btn-xs">
@@ -734,53 +735,33 @@
                     <label>Server storage</label>
                     <div>
                       <meta name="csrf-token" content="{{ csrf_token() }}">
-                      <label>Tags:</label>
+                      <label>Loading:</label>
                       <br>
-                      <input id="tagsFromServer" onclick="recentTagOrEventFromServerDialog.openDialog('tag')" type="button" 
-                        class="btn btn-default btn-sm" value="Load Recent Tags">
+                      <input id="tagsFromServer" onclick="fromServerDialog.openRecentLoadingDialog('tag')" type="button" 
+                        class="btn btn-default btn-sm" value="Load Tags/Events">
                       <br>
-                      <input id="tagsFromServerAdvanced" onclick="eventsFromServerDialog.openDialog('tag')" type="button" value="Load Tags (Advanced)"
+                      <!-- <input id="tagsFromServerAdvanced" onclick="fromServerDialog.showAdvancedLoadingDialog(false)" type="button" value="Load Tags (Advanced)"
                       class="btn btn-default btn-xs">  
-                      <br>
+                      <br> -->
 
-                      <label>Events:</label>
+                      <!-- <label>Events:</label>
                       <br>
-                      <input type="button" onclick="recentTagOrEventFromServerDialog.openDialog('event')" class="btn btn-primary btn-sm"
+                      <input type="button" onclick="fromServerDialog.openRecentLoadingDialog('event')" class="btn btn-primary btn-sm"
                         value="Load Recent Events">
                       <br>
-                      <input type="button" onclick="eventsFromServerDialog.openDialog('event')" class="btn btn-primary btn-xs"
+                      <input type="button" onclick="eventsFromServerDialog.openDialog('tag')" class="btn btn-primary btn-xs"
                       value="Load Events (Advanced)">
-                      <br>
+                      <br> -->
 
                       <label>Saving:</label>
                       <br>
                       <input id="eventsToServerV2" onclick="eventsToServer('v2')" type="button"
                         value="Save Events (JSON v2)" class="btn btn-success btn-sm require-server">
-                      <br>
+                      <!-- <br>
                       <input id="eventsToServer" onclick="eventsToServer('v1')" type="button"
-                        value="Save Events (JSON v1)" class="btn btn-green-toggle btn-xs require-server">
-                    
-                      <!-- #### Loading Recent From Server Modal  -->
-                      <div class="modal fade" id="from-server-dialog" role="dialog">
-                        <div class="modal-dialog modal-lg">
-                          <div class="modal-content" style="overflow:auto;">
-                            <div class="modal-header">
-                              <button type="button" class="close" data-dismiss="modal">&times;</button>
-                              <h4 class="modal-title"></h4>
-                            </div>
-                            <div class="modal-body">
-                              <!-- To be filled up by AJAX request -->
-                            </div>
-                            <div class="modal-message">
-                              <h4></h4>
-                              <!-- Filled up by javascript -->
-                            </div>
-                            <div class="modal-footer">
-                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                        value="Save Events (JSON v1)" class="btn btn-green-toggle btn-xs require-server"> -->
+
+
 
                       <!-- #### Tag/Event Menu Loading Modal  -->
                       <div class="modal fade" id="dialog-event-from-server" role="dialog">
@@ -789,10 +770,12 @@
                             <div class="modal-header">
                               <button type="button" class="close" data-dismiss="modal">&times;</button>
                               <h4 class="modal-title"></h4>
-                              <label> 
-                                <input type="checkbox" id="showAllUsers" onclick="eventsFromServerDialog.clickedShowAllUsers()">
-                                Show files from all users 
-                              </label>
+                              <div id="checkboxes">
+                                <label id="checkboxes">
+                                  <input type="checkbox" id="showAllUsers" onclick="eventsFromServerDialog.clickedShowAllUsers()">
+                                  Show files from all users 
+                                </label>
+                              </div>
                               <br>
                               <div id="EventDropdownMenu">
                                 <!--  -->
@@ -1345,6 +1328,33 @@
     var http_script_name_0 = '{{ http_script_name }}';
 
   </script>
+
+<div class="modal fade" id="from-server-dialog" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" style="overflow:auto;">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">
+          <!-- To be filled up by FromServerDialog.setTitle() method  -->
+        </h4>
+        <div class="checkboxes">
+          <!--  To be filled up by FromServerDialog.setCheckboxes() method -->
+        </div>
+      </div>
+      <div class="modal-body">
+        <!-- To be filled up by FromServerDialog.setBody() method -->
+      </div>
+      <div>
+        <h4 class="modal-message">
+          <!-- To be filled up by FromServerDialog.setMessage() method -->
+        </h4>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 </body>
