@@ -1122,7 +1122,7 @@ function FromServerDialog() {
       error: typesetAjaxError(
         "ERROR in FromServerDialog.openRecentLoadingDialog",
         function (html) {
-          this.setMessage("red", html)
+          theDialog.setMessage("red", html)
         }
       ),
       success: function(json){
@@ -1543,20 +1543,20 @@ function eventsToServer(format) {
   console.log("eventsToServer");
 
   // Hardcoded test data
-  dataToSend = {
-    video_id: "1",
-    created_by_id: "1",
-    data_type:"event",
-    data:"testData"
-  }
-
   // dataToSend = {
-  //   video_id: videoManager.currentVideoID,
-  //   created_by_id: user_id,
-  //   data_type: "event",
-  //   data: convertTracksToV2(),
-  //   created_from_id: fromServerDialog.basedOn
+  //   video_id: "1",
+  //   created_by_id: "1",
+  //   data_type:"event",
+  //   data:"testData"
   // }
+
+  dataToSend = {
+    video_id: videoManager.currentVideoID,
+    created_by_id: user_id,
+    data_type: "event",
+    data: convertTracksToV2(),
+    created_from_id: fromServerDialog.basedOn
+  }
 
   $.ajax({
     url: url_for(route), //server url
