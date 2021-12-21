@@ -10,6 +10,8 @@ class Path(fields.Field):
                 value = str(value.decode("utf-8"))
             elif isinstance(value, str):
                 pass
+            elif value is None:
+                return None
             else:
                 raise ValidationError("File name must be a string")
         except:
@@ -35,6 +37,8 @@ class FileName(fields.Field):
                 value = str(value.decode("utf-8"))
             elif isinstance(value, str):
                 pass
+            elif value is None:
+                return None
             else:
                 raise ValidationError("File name must be a string")
         except:

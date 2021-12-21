@@ -92,8 +92,8 @@ class VideoData(db.Model):
     __tablename__ = "video_data"
     __table_args__ = (db.UniqueConstraint("file_name", "path"),)
     id = db.Column(db.Integer(), primary_key=True)
-    file_name = db.Column(db.String(200), nullable=False, server_default=u"")
-    path = db.Column(db.String(100), nullable=False, server_default=u"")
+    file_name = db.Column(db.String(200), nullable=True)
+    path = db.Column(db.String(100), nullable=True)
     timestamp = db.Column(db.DateTime, nullable=False)
     data_type = db.Column(db.String(25))
     data = db.Column(db.Text())
