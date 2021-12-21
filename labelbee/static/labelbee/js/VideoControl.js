@@ -671,6 +671,7 @@ VideoControl.prototype.loadVideo2 = function(videoURL){
 
 VideoControl.prototype.onVideoLoaded2 = async function(){
   console.log("onVideoLoaded2: VIDEO loaded ", this.video.src);
+  fromServerDialog.closeDialog()
   this.setPreviewVideoStatus("undefined");
   statusWidget.statusRequest("videoLoad", []);
   statusWidget.statusUpdate("videoLoad", true, []);
