@@ -1044,11 +1044,10 @@ def add_video_data_v2():
         raise Forbidden("/rest/v2/add_video_data POST: admin required !")
 
     video_data_schema = VideoDataSchema()
-    requestJSON = json.dumps(request.get_json()["data"])
-    print(request.get_json())
-    # requestJSON = request.form.get("data")
-    print(f"JSON obtained from POST request: {requestJSON}")
-    newdata = video_data_schema.loads(requestJSON)
+    form_data = request.form
+    form_data = json.dumps(form_data)
+    print(f"Information obtained from POST request: {form_data}")
+    newdata = video_data_schema.loads(form_data)
 
     if "video_id" not in newdata:
         raise BadRequest("/rest/v2/add_video_data POST: video_id required !")
