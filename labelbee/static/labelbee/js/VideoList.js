@@ -523,7 +523,7 @@ VideoManager.prototype.videoListFromDB = function () {
 VideoManager.prototype.makeVideoListTable = function (json){
   // Default table structure
   html =
-    "<button onclick='videoManager.receiveVideoselection();'>Refresh Video List</button>" +
+    "<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br>" +
     "<table id='VideoListFromServerTable' style='width:100%'>" +
     "<thead>" +
     "<th></th>" +
@@ -568,6 +568,7 @@ VideoManager.prototype.receiveVideoSelection = function(){
     dataType: 'json',
     error: function (){
         // Display error message in dialog menu
+        fromServerDialog.setBody("<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br>") 
         fromServerDialog.setMessage("red", "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.")
         theManager.videoListJSON = "Error";
       },
