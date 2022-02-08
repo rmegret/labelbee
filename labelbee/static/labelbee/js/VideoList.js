@@ -512,7 +512,7 @@ VideoManager.prototype.videoListFromDB = function () {
   // fromServerDialog.closeDialog();
   if (this.videoListJSON == "Error"){
     fromServerDialog.setBody("<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br>");
-    fromServerDialog.setMessage("red", "Error loading video list from server. Press the reload button to try again.");
+    fromServerDialog.setMessage("red", "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.\nPress the reload button to try again.");
   }
   else if (this.videoListJSON != null){
     this.makeVideoListTable(this.videoListJSON);
