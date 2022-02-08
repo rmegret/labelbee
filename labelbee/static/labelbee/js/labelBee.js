@@ -191,6 +191,9 @@ function init(videoID, tagID) {
   setTracks([]);
 
   loginDialog = new LoginDialog();
+
+  // Preload video list
+  videoManager.receiveVideoSelection();
 }
 
 function printMessage(html, color) {
