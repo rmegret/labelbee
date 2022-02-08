@@ -73,6 +73,9 @@ function VideoManager() {
   // Default currentVideoID value
   // Indicates that no video has been chosen
   this.currentVideoID = 0;
+
+  // Video list will be contained here after initial load
+  this.videoListJSON = null;
 }
 
 VideoManager.prototype = {};
@@ -508,51 +511,75 @@ VideoManager.prototype.videoListFromDB = function () {
   fromServerDialog.setTitle("Load Video");
   fromServerDialog.setBody("[...]");
   fromServerDialog.setMessage("black","Loading video list from server. Please wait...")
-  fromServerDialog.closeDialog();
+  // fromServerDialog.closeDialog();
+  if (this.videoListJSON == "Error"){
+    fromServerDialog.setMessage("red", "Error loading video list from server. Press the reload button to try again.");
+  }
+  else if (this.videoListJSON != null){
+    this.makeVideoListTable(this.videoListJSON);
+  }
+
   fromServerDialog.openDialog();
   // Producing video list table
   this.receivedVideoSelection();
 }
 
-VideoManager.prototype.receivedVideoSelection = async function(){
-  var div = this.div
+VideoManager.prototype.makeVideoListTable = function (json){
+  // Default table structure
+  html =
+    "<table id='VideoListFromServerTable' style='width:100%'>" +
+    "<thead>" +
+    "<th></th>" +
+    "<th>File Name</th>" +
+    "<th>Created on</th>" +
+    "<th>Video ID</th>" +
+    "<th>Colony</th></thead>"
+    "</table>";
+
+  // Set dialog message and insert table skeleton into modal
+  fromServerDialog.setMessage("black","WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.");
+  fromServerDialog.setBody(html);
+
+  // Convert html table to bootstrap table, insert json contents
+  $("#VideoListFromServerTable").DataTable({
+    data: json["data"],
+    columns:[
+      {data:"id", render: function(id){
+        return "<button onclick='videoManager.videoSelected("+id+")'>Load</button>";
+      }},
+      {data:"file_name"},
+      {data:"timestamp", render: function(timestamp){
+        return timestamp.split('T').join(' ');
+      }},
+      {data:"id"},
+      {data:"colony"}
+    ]
+  });
+}
+
+VideoManager.prototype.receiveVideoSelection = async function(){
+  // Set dialog message to indicate list is loading 
+  fromServerDialog.setMessage("black","Loading video list from server. Please wait...");
+  // Used to access videoManager object inside ajax function
+  theManager = this;
+
+  // Request to server to obtain video list
   $.ajax({
     url: url_for("/rest/v2/videolist"),
     method: 'get',
     data: "", 
     dataType: 'json',
     error: function (){
+        // Display error message in dialog menu
         fromServerDialog.setMessage("red", "VideoManager.receivedVideoSelection ERROR: Unable to retrieve video list from server.")
+        theManager.videoListJSON = "Error";
       },
     success: function(json){
+      // Save video list json to prevent having to reload the list next time menu is opened
+      theManager.videoListJSON = json;
       console.log("VideoManager.receivedVideoSelection: Successfully loaded video list from server.")
-      html =
-      "<table id='VideoListFromServerTable' style='width:100%'>" +
-      "<thead>" +
-      "<th></th>" +
-      "<th>File Name</th>" +
-      "<th>Created on</th>" +
-      "<th>Video ID</th>" +
-      "<th>Colony</th></thead>"
-      "</table>";
-
-      fromServerDialog.setMessage("black","WARNING: If another video is currently loaded, unsaved event/tag changes may be lost.");
-      fromServerDialog.setBody(html);
-
-      $("#VideoListFromServerTable").DataTable({
-        data: json["data"],
-        columns:[
-          {data:"id", render: function(id){
-            return "<button onclick='videoManager.videoSelected("+id+")'>Load</button>";
-          }},
-          {data:"file_name"},
-          {data:"timestamp", render: function(timestamp){
-            return timestamp.split('T').join(' ');
-          }},
-          {data:"id"},
-          {data:"colony"}
-        ]
-      });
+      // Display video list bootstrap table in dialog menu
+      theManager.makeVideoListTable(json);
     }
   });
 }
@@ -568,14 +595,12 @@ VideoManager.prototype.videoSelected = async function(id) {
     error: function (){
         console.log("VideoManager.videoSelected ERROR: Unable to retrieve " +
         "selected video's information from server.")
-        this.div.find(".modal-message h4").css("color","red");
-        this.div.find(".modal-message h4").html("VideoManager.videoSelected ERROR: Unable to retrieve " +
+        fromServerDialog.setMessage("red", "VideoManager.videoSelected ERROR: Unable to retrieve " +
         "selected video's information from server.");
       },
     success: function(videoInfoJSON){
-      console.log()
       videoManager.setVideoInfo(videoInfoJSON);
-      console.log("VideoManager.videoSelected: Loaded video information: ", videoInfoJSON)
+      console.log("VideoManager.videoSelected: Loaded video information: ", videoInfoJSON);
     }
   });
 }
