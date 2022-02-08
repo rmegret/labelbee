@@ -564,7 +564,7 @@ VideoManager.prototype.receiveVideoSelection = function(){
   theManager = this;
   // Request to server to obtain video list
   $.ajax({
-    url: url_for("/rest/v2/videolist1123"),
+    url: url_for("/rest/v2/videolist"),
     method: 'get',
     data: "", 
     dataType: 'json',
