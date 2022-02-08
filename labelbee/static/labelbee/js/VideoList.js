@@ -556,8 +556,8 @@ VideoManager.prototype.makeVideoListTable = function (json){
   });
 }
 
-VideoManager.prototype.receiveVideoSelection = async function(){
-  console.log("VideoManager.videoListFromDB: Loading video list from server.")
+VideoManager.prototype.receiveVideoSelection = function(){
+  console.log("VideoManager.receiveVideoSelection: Loading video list from server.")
   // Set dialog message to indicate list is loading 
   fromServerDialog.setMessage("black","Loading video list from server. Please wait...");
   // Used to access videoManager object inside ajax function
