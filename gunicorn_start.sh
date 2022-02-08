@@ -5,7 +5,7 @@ export DB_URL=136.145.54.43/videos
 export DB_PASSWORD=9gji1=Y.6?4vJy
 export DB_USER=labelbeeflask
 
-source /var/www/flasktest/labelbee/bin/env/activate
+source /var/www/flasktest/labelbee/env/bin/activate
 
 cd /var/www/flasktest/labelbee/
 
