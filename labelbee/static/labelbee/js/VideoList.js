@@ -76,9 +76,6 @@ function VideoManager() {
 
   // Video list will be contained here after initial load
   this.videoListJSON = null;
-
-  // Start video list preload
-  this.receiveVideoSelection();
 }
 
 VideoManager.prototype = {};
