@@ -76,6 +76,9 @@ function VideoManager() {
 
   // Video list will be contained here after initial load
   this.videoListJSON = null;
+
+  // Start video list preload
+  this.receiveVideoSelection();
 }
 
 VideoManager.prototype = {};
@@ -505,8 +508,6 @@ VideoManager.prototype.updateVideoInfoForm = function () {
 };
 
 VideoManager.prototype.videoListFromDB = function () {
-  console.log("VideoManager.videoListFromDB: Loading video list from server.")
-
   fromServerDialog.resetAllHTML();
   fromServerDialog.setTitle("Load Video");
   fromServerDialog.setBody("[...]");
@@ -520,8 +521,6 @@ VideoManager.prototype.videoListFromDB = function () {
   }
 
   fromServerDialog.openDialog();
-  // Producing video list table
-  this.receivedVideoSelection();
 }
 
 VideoManager.prototype.makeVideoListTable = function (json){
@@ -558,11 +557,11 @@ VideoManager.prototype.makeVideoListTable = function (json){
 }
 
 VideoManager.prototype.receiveVideoSelection = async function(){
+  console.log("VideoManager.videoListFromDB: Loading video list from server.")
   // Set dialog message to indicate list is loading 
   fromServerDialog.setMessage("black","Loading video list from server. Please wait...");
   // Used to access videoManager object inside ajax function
   theManager = this;
-
   // Request to server to obtain video list
   $.ajax({
     url: url_for("/rest/v2/videolist"),
@@ -571,13 +570,13 @@ VideoManager.prototype.receiveVideoSelection = async function(){
     dataType: 'json',
     error: function (){
         // Display error message in dialog menu
-        fromServerDialog.setMessage("red", "VideoManager.receivedVideoSelection ERROR: Unable to retrieve video list from server.")
+        fromServerDialog.setMessage("red", "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.")
         theManager.videoListJSON = "Error";
       },
     success: function(json){
       // Save video list json to prevent having to reload the list next time menu is opened
       theManager.videoListJSON = json;
-      console.log("VideoManager.receivedVideoSelection: Successfully loaded video list from server.")
+      console.log("VideoManager.receiveVideoSelection: Successfully loaded video list from server.")
       // Display video list bootstrap table in dialog menu
       theManager.makeVideoListTable(json);
     }
