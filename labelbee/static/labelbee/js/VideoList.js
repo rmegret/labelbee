@@ -523,7 +523,7 @@ VideoManager.prototype.videoListFromDB = function () {
 VideoManager.prototype.makeVideoListTable = function (json){
   // Default table structure
   html =
-    "<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br>" +
+    "<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br><br>" +
     "<table id='VideoListFromServerTable' style='width:100%'>" +
     "<thead>" +
     "<th></th>" +
