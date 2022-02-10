@@ -1060,7 +1060,7 @@ def add_video_data_v2():
 
     video = get_video_by_id(newdata["video_id"])
     created_by = get_user_by_id(newdata["created_by_id"])
-    print("Before video_data_schema.dump")
+    print("Before video_data_schema.dump", flush=True)
     video_data = video_data_schema.dump(
         add_video_data(
             file_name=newdata.setdefault("file_name", None),
@@ -1074,7 +1074,7 @@ def add_video_data_v2():
             created_from=newdata.setdefault("created_from", None),
         )
     )
-    print("After video_data_schema.dump")
+    print("After video_data_schema.dump", flush=True)
 
     return jsonify({"data": video_data})
 
