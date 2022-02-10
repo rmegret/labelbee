@@ -14,6 +14,7 @@ from flask_user import current_user, login_required, roles_accepted
 from flask_login import logout_user, login_user
 from flask_wtf.csrf import generate_csrf
 from werkzeug.exceptions import BadRequest, Forbidden
+import sys
 import json
 
 import os
