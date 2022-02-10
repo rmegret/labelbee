@@ -1046,7 +1046,7 @@ def add_video_data_v2():
     video_data_schema = VideoDataSchema()
     form_data = request.data
     # form_data = json.dumps(form_data)
-    print(f"Information obtained from POST request: {form_data}")
+    print(f"Information obtained from POST request: {form_data}", file=sys.stderr)
     newdata = video_data_schema.loads(form_data)
 
     if "video_id" not in newdata:
