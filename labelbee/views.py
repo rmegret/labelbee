@@ -1045,7 +1045,7 @@ def add_video_data_v2():
 
     video_data_schema = VideoDataSchema()
     form_data = request.form
-    # form_data = json.dumps(form_data)
+    form_data = json.dumps(form_data)
     print(f"Information obtained from POST request: {form_data}")
     newdata = video_data_schema.loads(form_data)
 
@@ -1060,7 +1060,6 @@ def add_video_data_v2():
 
     video = get_video_by_id(newdata["video_id"])
     created_by = get_user_by_id(newdata["created_by_id"])
-    print("Before video_data_schema.dump", flush=True)
     video_data = video_data_schema.dump(
         add_video_data(
             file_name=newdata.setdefault("file_name", None),
@@ -1074,8 +1073,6 @@ def add_video_data_v2():
             created_from=newdata.setdefault("created_from", None),
         )
     )
-    print("After video_data_schema.dump", flush=True)
-
     return jsonify({"data": video_data})
 
 
