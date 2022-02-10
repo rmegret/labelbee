@@ -1561,7 +1561,7 @@ function eventsToServer(format) {
   $.ajax({
     url: url_for(route), //server url
     type: "POST", //passing data as post method
-    data: dataToSend , //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
+    data: JSON.stringify(dataToSend), //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
     dataType: 'json',
     success: function (json) {
       console.log(json)
