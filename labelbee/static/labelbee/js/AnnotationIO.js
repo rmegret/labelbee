@@ -1230,11 +1230,14 @@ function FromServerDialog() {
         theDialog.setBody(html);
         theDialog.setMessage("");
         // Filling empty table using data from json
+        idx = 0
         div.find("#TagOrEventFileListFromServer").DataTable({
           data: json["data"],
           columns:[
             {data:"id", render: function(id){
-              return '<button onclick="fromServerDialog.loadEvents(\''+id+'\')">Load</button>';
+              buttonHTML = '<button onclick="fromServerDialog.loadEvents(\''+idx+'\')">Load</button>';
+              idx += 1;
+              return buttonHTML;
             }},
             {data:"file_name"},
             {data:"timestamp", render: function(timestamp){
