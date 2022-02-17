@@ -1554,7 +1554,7 @@ function eventsToServer(format) {
     video_id: videoManager.currentVideoID,
     created_by_id: user_id,
     data_type: "event",
-    data: convertTracksToV2(),
+    data: JSON.stringify(convertTracksToV2()),
     created_from_id: fromServerDialog.basedOn
   }
 
