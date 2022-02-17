@@ -179,7 +179,7 @@ class VideoDataSchema(ma.SQLAlchemySchema):
     )
     video_id = fields.Integer()
     created_by_id = fields.Integer()
-    data = fields.String()
+    data = fields.Dict()
     notes = fields.String()
     created_from_id = fields.Integer()
 
