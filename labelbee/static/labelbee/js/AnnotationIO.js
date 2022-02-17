@@ -1214,6 +1214,7 @@ function FromServerDialog() {
         }
       ),
       success: function(json){
+      theDialog.json = json["data"];
       console.log("fromServerDialog: (ajax) Load "+ theDialog.data_type + "files data from server: Success", json);
         html =
         "<table id='TagOrEventFileListFromServer' style='width:100%'>" +
