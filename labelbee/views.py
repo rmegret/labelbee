@@ -1048,6 +1048,7 @@ def add_video_data_v2():
     form_data = request.form
     # form_data = json.dumps(form_data)
     app.logger.error(f"Information obtained from POST request: {form_data}")
+    form_data = json.dumps(form_data)
     newdata = video_data_schema.loads(form_data)
 
     if "video_id" not in newdata:
