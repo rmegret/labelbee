@@ -186,8 +186,4 @@ def init_email_error_handler(app):
     mail_handler.setLevel(logging.ERROR)
     app.logger.addHandler(mail_handler)
 
-    # Setup logging
     # Log errors using: app.logger.error('Some error message')
-    # Log debug output using: app.logger.debug('Some debug message')
-    app.logger.addHandler(logging.StreamHandler(sys.stdout))
-    app.logger.setLevel(logging.DEBUG)
