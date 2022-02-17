@@ -1274,7 +1274,7 @@ function FromServerDialog() {
   };
 
   this.loadEvents = function (k) {
-    console.log(theDialog.json[k]);
+    console.log(theDialog.json);
     var tag_event_ID = theDialog.json[k]["id"];
     //MODIFY CONSOLE MESSAGE DEPENDING ON FILE
     console.log("RecentTagOrEventFromServerDialog: importing " + this.dataType + "s from database for file ID '" + tag_event_ID + "'...");
