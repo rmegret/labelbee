@@ -1234,7 +1234,7 @@ function FromServerDialog() {
           data: json["data"],
           columns:[
             {data:"id", render: function(id){
-              return '<button onclick="fromServerDialog.loadEvents(\'"+id+"\')">Load</button>';
+              return '<button onclick="fromServerDialog.loadEvents(\''+id+'\')">Load</button>';
             }},
             {data:"file_name"},
             {data:"timestamp", render: function(timestamp){
