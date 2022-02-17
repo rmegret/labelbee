@@ -1047,6 +1047,8 @@ def add_video_data_v2():
     video_data_schema = VideoDataSchema()
     form_data = request.form
     # form_data = json.dumps(form_data)
+    print(f"Information obtained from POST request: {form_data}")
+    app.logger.error(f"Information obtained from POST request: {form_data}")
     app.logger.debug(f"Information obtained from POST request: {form_data}")
     newdata = video_data_schema.loads(form_data)
 
