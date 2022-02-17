@@ -1465,14 +1465,13 @@ function eventsFromServer(url) {
 
   $.ajax({
     url: url, //server url
-    type: "GET", //passing data as post method
-    contentType: "application/json", // returning data as json
+    type: "GET", 
+    contentType: "application/json", 
     data: "",
     success: function (json) {
-      //alert("success");  //response from the server given as alert message
-
+      //alert("success");  
       console.log("eventsFromServer: SUCCESS\njson=", json);
-      let obj = JSON.parse(json);
+      let obj = json; //JSON.parse(json);
 
       setTracks(obj);
 
