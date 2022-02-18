@@ -783,14 +783,14 @@ OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displayS
             let y = obs.y+obs.height/2 - y0
 
             let color = 'yellow'
-            let radius = 10
+            let radius = 2
 
             if (obs.ID == currentObs.visit.flowerid) {
                 color = 'green'
             }
             if (selected) {
                 color = 'green'
-                radius = 20
+                radius = 4
             }
 
             ctx.beginPath();
@@ -799,10 +799,10 @@ OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displayS
             ctx.closePath();
             ctx.fill();    
 
-            ctx.font = "10px Arial";
+            ctx.font = "7px Arial";
             ctx.fillStyle = color;
             ctx.textAlign = 'center';
-            ctx.fillText(String(obs.ID), x, y - radius - 3);
+            ctx.fillText(String(obs.ID), x, y - radius - 1);
         }
         function closestFlower(flowers, pt, maxdist) {
             function euclid(pt1,pt2) {
@@ -861,6 +861,7 @@ OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displayS
                 currentObs.visit.flowerid = pickedObs.ID
             }
             drawFlowers(flowers, currentObs.visit.flowerid)
+            drawFlowersMainCanvas(flowers, currentObs.visit.flowerid)
         }
         function pickFlower_mouseLeave(option) {
             drawFlowers(flowers, currentObs.visit.flowerid)
@@ -868,6 +869,19 @@ OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displayS
         function removeVisit() {
             currentObs.visit.flowerid = undefined
             drawFlowers(flowers, currentObs.visit.flowerid)
+        }
+        function drawFlowersMainCanvas(flowers, selectedID) {
+            //overlay.ctx.drawImage(img, 0, 0)
+            let ctx = overlay.ctx
+            for (let obs of flowers) {
+                //console.log('Draw',obs)
+                let isSelected = (obs.ID==selectedID)
+                //drawCenter(obs, selected)
+                let rect = overlay.obsToCanvasRect(obs)
+                let x = rect.left+rect.width/2
+                let y = rect.top+rect.height/2
+                identifyBeeRect(ctx, rect, radius, isSelected)
+            }
         }
 
         $(canvas).click(pickFlower_mouseClick)

@@ -18,6 +18,7 @@ function initChrono() {
     flag_excludeID = false
     flag_autoEventMode = false
     flag_hideInvalid = false
+    flag_hideFlowers = false
     
     flag_showPartsOnChrono = false
     flag_showIndividualEvents = true
@@ -924,6 +925,13 @@ function click_hideInvalid() {
         $("#hideInvalidButton").addClass("active")      
         flag_hideInvalid = true;
     }    
+    refreshChronogram()
+}
+
+function click_hideFlowers() {
+    let button = $("#hideFlowersButton")
+    flag_hideFlowers = !button.hasClass("active");
+    button.toggleClass( "active", flag_hideFlowers )
     refreshChronogram()
 }
 
@@ -2144,6 +2152,9 @@ function refreshChronogram() {
                 if (flag_hideInvalid) {
                     if (hasLabel(obs,'falsealarm') ||
                         hasLabel(obs,'wrongid')    ) continue;
+                }
+                if (flag_hideFlowers) {
+                    if (String(id).startsWith('F')) continue;
                 }
 
                 let b=obs.bool_acts
