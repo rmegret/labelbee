@@ -94,16 +94,36 @@ function init() {
     $(".inline-collapsible > .block-header").on("click",function (e) {
         //console.log(e)
         let header = $(e.currentTarget) //$(".block-header", $(e.currentTarget).parent())
-        let content = $("> .block-content", header.parent())
-        content.toggle()
-        header.toggleClass("collapsed",content.is(":hidden"))
-        header.parent().toggleClass("collapsed",content.is(":hidden"))
-        if (header.hasClass("collapsed")) {
-            header.parent().trigger("collapsiblecollapse",e)
+        let block = header.parent()
+        //let content = $("> .block-content", header.parent())
+        //content.toggle()
+        //header.toggleClass("collapsed",content.is(":hidden"))
+        //header.parent().toggleClass("collapsed",content.is(":hidden"))
+        //if (header.hasClass("collapsed")) {
+        block.toggleClass("collapsed")
+        if (!block.hasClass("collapsed")) {
+            //block.trigger("collapsiblecollapse",e)
         } else {
-            header.parent().trigger("collapsibleexpand",e)
+            //block.trigger("collapsibleexpand",e)
         }
         console.log('DONE\n\n')
+      })
+    function refreshCollapsible(block) {
+        let collapsed = block.hasClass("collapsed")
+        let content = $("> .block-content", block)
+        let header = $("> .block-header", block)
+        content.toggle(!collapsed)
+        header.toggleClass("collapsed",collapsed)
+    }
+    $(".inline-collapsible").on("collapsibleexpand",function (e) {
+        console.log('collapsible',e)
+        let block = $(e.currentTarget)
+        refreshCollapsible(block)
+      })
+    $(".inline-collapsible").on("collapsiblecollapse",function (e) {
+        console.log('collapsible',e)
+        let block = $(e.currentTarget)
+        refreshCollapsible(block)
       })
       
     $( ".sortable" ).sortable({

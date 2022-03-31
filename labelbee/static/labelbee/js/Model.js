@@ -40,6 +40,7 @@ function deepcopy(obj) {
 }
 
 function copyObs(obs, tmpObs) {
+    // Shallow copy: internal handles such aslabels or parts point to same thing...
     obs.ID = tmpObs.ID;
     obs.time = tmpObs.time;
     obs.frame = tmpObs.frame;
@@ -52,17 +53,23 @@ function copyObs(obs, tmpObs) {
     obs.height = tmpObs.height
     //obs.marked = tmpObs.marked;
     //obs.permanent = tmpObs.permanent;
-    obs.bool_acts = []
-    obs.bool_acts[0] = tmpObs.bool_acts[0];
-    obs.bool_acts[1] = tmpObs.bool_acts[1];
-    obs.bool_acts[2] = tmpObs.bool_acts[2];
-    obs.bool_acts[3] = tmpObs.bool_acts[3];
+    if (tmpObs.bool_acts) {
+        obs.bool_acts = []
+        obs.bool_acts[0] = tmpObs.bool_acts[0];
+        obs.bool_acts[1] = tmpObs.bool_acts[1];
+        obs.bool_acts[2] = tmpObs.bool_acts[2];
+        obs.bool_acts[3] = tmpObs.bool_acts[3];
+    } else {
+        obs.bool_acts = [false, false, false, false]
+    }
     obs.angle = tmpObs.angle;
     obs.notes = tmpObs.notes;
     obs.labels = tmpObs.labels;
     obs.parts = tmpObs.parts;
     obs.newid = tmpObs.newid; // in case of wrongid
     obs.fix = deepcopy(tmpObs.fix);
+    if (tmpObs.visit) 
+        obs.visit = tmpObs.visit
 }
 function hasParts(obs) {
     return (!!obs.parts && obs.parts.length>0)

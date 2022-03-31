@@ -588,15 +588,24 @@ function deleteSelected() {
     if (activeObject) {
         overlay.canvas1.remove(activeObject);
         console.log("deleteObjects ",activeObject.id);
-        if (obsDoesExist(getCurrentFrame(), activeObject.id)) {
-            obs = cloneObs(Tracks[getCurrentFrame()][activeObject.id])
-            delete Tracks[getCurrentFrame()][activeObject.id];
-            undoPush('delete', obs)
-        }
-
-        videoControl.refresh()
-        refreshChronogram();
+        deleteEvent(getCurrentFrame(), activeObject.id)
+        //videoControl.refresh()
+        //refreshChronogram();
     }
+}
+
+function deleteEvent(frame, id) { 
+    if (!obsDoesExist(frame, id)) {    
+        console.log('deleteEvent: Event not found (frame,id)=',frame,id)
+        return false
+    }
+    obs = cloneObs(Tracks[frame][id])
+    delete Tracks[frame][id];
+    undoPush('delete', obs)
+
+    videoControl.refresh()
+    refreshChronogram();
+    return true
 }
 
 function undoAction() {

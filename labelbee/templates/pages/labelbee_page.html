@@ -144,7 +144,7 @@
           
           <div id="beeidpanel" class="block inline-collapsible">
           <div class="block-header small">BeeID:</div>
-          <div class="block-content" style="display:inline">
+          <div class="block-content display-inline">
             <input type="text" size="5" value="" id="I" onkeypress="onKeyDown_IDEdit(event)" class="small"></input>
             <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button" class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
             <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-warning btn-xs" style="position: inline" id="deleteButton">
@@ -158,7 +158,7 @@
             
           <div class='block inline-collapsible'>
             <div class="block-header small">BoundingBox angle:</div>
-            <span class="block-content">
+            <span class="block-content display-inline">
               <input value="Disable" onclick="overlay.onClickDisableAngle()" type="button" class="guiAngle-disableAngle btn btn-pink-toggle btn-xs" title="Does not allow event to have angle by default">
             
               <button value="Reset to 0" onclick="overlay.onClickResetAngle()" type="button" class="btn btn-default btn-xs" title="Reset event angle to 0">Reset angle to 0</button>
@@ -170,7 +170,7 @@
    
          <div id="labeltoggle" class="block inline-collapsible">
          <div class="block-header small">Labels:</div>
-          <div class="block-content" style="display:inline">
+          <div class="block-content">
             <div style="display:inline" id="labeltoggle-panel">
               <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle fanning" thelabel="fanning" title="Toogle label">fanning</button>
               <button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle pollen" thelabel="pollen" title="Toogle label">pollen <span class="glyphicon glyphicon-pollen small"></span></button>
@@ -258,6 +258,28 @@
             <div class="block-content">
               <div id='alertextwrapper'>
                 <div id="alerttext"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div id="timeline" class="block inline-collapsible">
+            <div class="block-header small">
+              Timeline
+            </div>
+            <div class="block-content">
+              <div id='timelineblockwrapper'>
+                <div id="timelineblockdiv"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="visitblock" class="block inline-collapsible">
+            <div class="block-header small">
+              Visit Mode
+            </div>
+            <div class="block-content">
+              <div id='visitblockblockwrapper'>
+                <div id="visitblockdiv"></div>
               </div>
             </div>
           </div>

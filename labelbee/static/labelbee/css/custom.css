@@ -466,6 +466,15 @@ td.col_elapsed {
 .block-header.collapsed > span.collapse-arrow:before {
   content: "\25B8";
 }
+.block.collapsed>.block-content {
+  display: none;
+}
+.block:not(.collapsed)>.block-content {
+  display: inline-block;
+}
+.block:not(.collapsed)>.block-content.display-inline {
+  display: inline;
+}
 
 input[type=text] {
     border: 1px solid;
