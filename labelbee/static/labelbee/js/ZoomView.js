@@ -2107,12 +2107,13 @@ ZoomOverlay.prototype.exportZoomImage = function () {
         link.remove()
       }
 
-    var win = window.open("", "Export zoom image")
-    win.document.body.innerHTML = content;
     getDataURI(content)
     //win.document.body.innerHTML += `<a href="pageDataURI">Right click "Save As..." to save</a>`
     // Due to security limitations, can not save the produced HTML page. Need to save from the
     // original webapp page.
+    
+    //let win = window.open("", "_blank")
+    //win.document.body.innerHTML = content;
 }
 ZoomOverlay.prototype.refreshTagImage = function() {
     this.refreshZoom(); // Lazy
