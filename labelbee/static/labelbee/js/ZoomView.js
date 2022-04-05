@@ -2064,6 +2064,56 @@ ZoomOverlay.prototype.refreshZoom = function() {
     
     this.refreshInfo()
 }
+ZoomOverlay.prototype.exportZoomImage = function () {
+    let dataurl = this.canvas.toDataURL("image/png")
+    let rect = getSelectedRect()
+    let obs = rect?.obs
+    let json = JSON.stringify(obs, undefined, 2)
+    let labels = obs?.labels
+    let frame = obs?.frame ?? ""
+    let x = Math.round(obs?.x+obs?.width/2) ?? ""
+    let y = Math.round(obs?.y+obs?.height/2) ?? ""
+    let scale = this.scale
+    let videourl = videoControl.video.src
+
+    let content = `<table>
+    <tr style="vertical-align:top">
+    <td>
+    <img src='${dataurl}'>
+    </td>
+    <td>
+    <div>Labels: ${labels}</div>
+    </td>
+    </tr>
+    </table>
+    <br>
+    <div>Scale:${scale}<div>
+    <div>Video: <tt>${videourl}</tt><div>
+    <div>Annotation:<pre>${json}</pre></div>`
+
+    
+    function getDataURI(content) {
+        var htmlContent = ['<html><body>'+content+'</body></html>'];
+        var bl = new Blob(htmlContent, {type: "text/html"});
+        let blobUrl = URL.createObjectURL(bl);
+
+        var link = document.createElement("a"); // Or maybe get it from the current document
+        link.href = blobUrl;
+        link.download = `crop_f${frame}_cx${x}_cy${y}_${labels}.html`;
+        link.innerHTML = "Click here to download the HTML page";
+
+        document.body.appendChild(link); // Or append it whereever you want
+        link.click() //can add an id to be specific if multiple anchor tag, and use #id
+        link.remove()
+      }
+
+    var win = window.open("", "Export zoom image")
+    win.document.body.innerHTML = content;
+    getDataURI(content)
+    //win.document.body.innerHTML += `<a href="pageDataURI">Right click "Save As..." to save</a>`
+    // Due to security limitations, can not save the produced HTML page. Need to save from the
+    // original webapp page.
+}
 ZoomOverlay.prototype.refreshTagImage = function() {
     this.refreshZoom(); // Lazy
 }
