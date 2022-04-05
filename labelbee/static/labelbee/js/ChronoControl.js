@@ -421,6 +421,8 @@ function gotoEvent(frame, id) {
     
     frame = Number(frame)
  
+    let obs = getObsHandle(frame, id)
+
     defaultSelectedBee = id
     if (frame==getCurrentFrame()) {
         // Try to select the bee in current frame
@@ -433,6 +435,14 @@ function gotoEvent(frame, id) {
         videoControl.seekFrame(frame)
         // external controller logic is supposed to call back updateTimeMark
         // to update the view
+    }
+    
+    if (overlay.opts.clickModeAutoCentering) {
+        // Animate the AutoCentering button to remind the user of current mode
+        $('.overlayOpts-clickModeAutoCentering').effect({'effect':"highlight","duration":200,"color":"#ffff00"})
+        //$('.overlayOpts-clickModeAutoCentering').effect({'effect':"pulsate","duration":100,"times":2})
+        console.log("gotoEvent: clickModeAutoCentering, obs", obs)
+        autoCentering(obs)
     }
 }
 

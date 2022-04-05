@@ -80,6 +80,7 @@ function OverlayControl(canvasTagId) {
         ID_color: 'yellow',
         clickModeSelectMultiframe: false,
         clickModeNewAnnotation: false,
+        clickModeAutoCentering: false,
         predictIdClickRadius: 120,
         showImageDiff: false,
         showPredictedStatus : false,
@@ -718,7 +719,7 @@ OverlayControl.prototype.optsClick = function(option) {
 }
 OverlayControl.prototype.updateOptsButtons = function() {
     console.log('overlay.updateDisableAngleButton')
-    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','showImageDiff','showPredictedStatus']) {
+    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering','showImageDiff','showPredictedStatus']) {
         console.log(option)
         if ( this.opts[option] ) {
             $(".overlayOpts-"+option).addClass("active")
@@ -1030,6 +1031,28 @@ OverlayControl.prototype.canvasTransformPan = function(dx, dy) {
     canvasTransform[5] -= dy * canvasTransform[3]
     
     overlay.canvasTransform_Fix()
+    
+    overlay.hardRefresh()
+}
+OverlayControl.prototype.canvasTransformCenter = function(cx, cy) {
+    // cx,cy: new center in video coordinates
+    let overlay = this
+
+    if ((cx === undefined) || (cy === undefined)) {
+        console.log('canvasTransformCenter: ABORT, center undefined',cx,cy)
+        return
+    }
+
+    let w1 = overlay.canvas.width
+    let h1 = overlay.canvas.height
+
+    let sx = canvasTransform[0]   // canvas->video
+    let sy = canvasTransform[3]
+    
+    canvasTransform[4] = cx - sx*w1/2   // tx   canvas->video
+    canvasTransform[5] = cy - sy*h1/2   // ty
+    
+    overlay.canvasTransform_Fix() // Avoid being outside of video
     
     overlay.hardRefresh()
 }
@@ -4075,6 +4098,16 @@ function onObjectSelected(option) {
             overlay.visitWidget.selectVisit(obs)
         }
     }
+}
+
+function autoCentering(obs) {
+    if (!obs) {
+        console.log('autoCentering: ABORT, no suitable obs:',obs)
+        return
+    }
+    console.log('autoCentering: obs=',obs)
+    let cx = obs.x+obs.width/2, cy = obs.y+obs.height/2
+    overlay.canvasTransformCenter(cx,cy)
 }
 
 function onObjectDeselected(option) {
