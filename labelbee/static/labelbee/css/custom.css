@@ -329,7 +329,6 @@ button > p.multiline {
     box-shadow: 0 0 2px 1px #007fff;
 }
 
-}
 .subpanel.ui-accordion  .ui-accordion-header {
   display: block;
   cursor: pointer;
@@ -465,6 +464,15 @@ td.col_elapsed {
 }
 .block-header.collapsed > span.collapse-arrow:before {
   content: "\25B8";
+}
+.block.collapsed>.block-content {
+  display: none;
+}
+.block:not(.collapsed)>.block-content {
+  display: inline-block;
+}
+.block:not(.collapsed)>.block-content.display-inline {
+  display: inline;
 }
 
 input[type=text] {
@@ -836,4 +844,18 @@ li.ui-tabs-active > .ui-tabs-anchor {
 
 table, th, td {
   border: 1px solid black;
+}
+.timeline.selected {
+  border: solid red 1px;
+}
+.timeline.selected-f1 {
+  border: solid green 1px;
+}
+.timeline.selected-f2 {
+  border: solid blue 1px;
+}
+.timeline {
+  border: solid black 1px;
+  padding: 1px;
+  margin: 1px;
 }

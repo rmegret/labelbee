@@ -17,6 +17,7 @@ function initChrono() {
   flag_excludeID = false;
   flag_autoEventMode = false;
   flag_hideInvalid = false;
+  flag_hideFlowers = false
 
   flag_showPartsOnChrono = false;
   flag_showIndividualEvents = true;
@@ -427,8 +428,10 @@ function gotoEvent(frame, id) {
 
   frame = Number(frame);
 
-  defaultSelectedBee = id;
-  if (frame == getCurrentFrame()) {
+  let obs = getObsHandle(frame, id)
+
+  defaultSelectedBee = id
+  if (frame==getCurrentFrame()) {
     // Try to select the bee in current frame
     selectBeeByID(id);
   } else {
@@ -439,6 +442,14 @@ function gotoEvent(frame, id) {
     videoControl.seekFrame(frame);
     // external controller logic is supposed to call back updateTimeMark
     // to update the view
+  }
+    
+  if (overlay.opts.clickModeAutoCentering) {
+      // Animate the AutoCentering button to remind the user of current mode
+      $('.overlayOpts-clickModeAutoCentering').effect({'effect':"highlight","duration":200,"color":"#ffff00"})
+      //$('.overlayOpts-clickModeAutoCentering').effect({'effect':"pulsate","duration":100,"times":2})
+      console.log("gotoEvent: clickModeAutoCentering, obs", obs)
+      autoCentering(obs)
   }
 }
 
@@ -949,6 +960,13 @@ function click_hideInvalid() {
     flag_hideInvalid = true;
   }
   refreshChronogram();
+}
+
+function click_hideFlowers() {
+    let button = $("#hideFlowersButton")
+    flag_hideFlowers = !button.hasClass("active");
+    button.toggleClass( "active", flag_hideFlowers )
+    refreshChronogram()
 }
 
 /* Callback to react to change in chronogramData */
@@ -2094,8 +2112,11 @@ function updateObsTable() {
 }
 
 function modifyCurrentObsSpan(mode) {
-  let r = getSelectedRect();
-  if (!r) return;
+  let r = getSelectedRect()
+  if (!r) {
+      console.log('modifyCurrentObsSpan: CANCELED, no event selected')
+      return;
+  }
 
   let frame = r.obs.frame;
   let id = r.obs.ID;
@@ -2133,8 +2154,14 @@ function modifyCurrentObsSpan(mode) {
     obs.span.f2 = obs.span.f2 - 10;
     if (obs.span.f2 < obs.frame) obs.span.f2 = obs.frame;
   }
-  updateTagsLabels();
-  drawChrono();
+
+  if (mode=='setspan') {
+      overlay.setInteractionMode('pick-frame',{type:'setspan'})
+      return
+  }
+
+  updateTagsLabels()
+  drawChrono()
 }
 
 /* Augment tags with labels */
@@ -2254,8 +2281,8 @@ function refreshChronogram() {
   if (showObsChrono) {
     for (let F in Tracks) {
       for (let id in Tracks[F]) {
-        let obs = Tracks[F][id];
-        let labelArray = obs.labels.split(",");
+        let obs=Tracks[F][id]
+        let labelArray = (obs.labels || '').split(",")
 
         if (flag_restrictID) {
           if ($.inArray(String(id), restrictIDArray) < 0) continue;
@@ -2266,6 +2293,9 @@ function refreshChronogram() {
         if (flag_hideInvalid) {
           if (hasLabel(obs, "falsealarm") || hasLabel(obs, "wrongid")) continue;
         }
+                if (flag_hideFlowers) {
+                    if (String(id).startsWith('F')) continue;
+                }
 
         let b = obs.bool_acts;
         let b0 = b[0];

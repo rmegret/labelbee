@@ -1,0 +1,24 @@
+Version 1.0.2 (Released 2016-03-29)
+===================================
+* Update copyright to 2016
+* Update some docs references to js-lru and lru-core.js
+
+Version 1.0.1 (Released 2016-03-29)
+===================================
+* Add links to Changelog
+* Rename lru-core to core.js, for inclusion via require('lru_cache/core')
+* Rename npm package and github to lru_cache, to match the main object
+https://github.com/Empact/lru_cache
+http://npmjs.com/package/lru_cache
+
+Version 1.0.0 (Released 2016-03-29)
+===================================
+Bugs
+* Fix that shift didn't update size
+* Fix that shift didn't properly handle the last element
+https://github.com/rsms/js-lru/issues/6
+
+Features
+* Enable the user to require lru-core, which is a minimal set of functionality
+* Publish to npm under lru-js
+https://github.com/rsms/js-lru/issues/7

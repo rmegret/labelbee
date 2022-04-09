@@ -24,6 +24,9 @@ function OverlayControl(canvasTagId) {
   overlay.canvas = document.getElementById(canvasTagId);
   overlay.ctx = overlay.canvas.getContext("2d");
 
+    overlay.canvas2 = $('<canvas/>')[0]
+    overlay.ctx2 = overlay.canvas2.getContext('2d');
+
   overlay.trackWindow = {
     range: 200,
     direction: "Bidirectional",
@@ -59,23 +62,53 @@ function OverlayControl(canvasTagId) {
   showObsTracks = true;
   showObsChrono = true;
   showTags = true;
-  showTagsTracks = true;
-  showSelectedTagsTracks = true;
-  showTagsOrientation = false;
-  showTagsChrono = true;
-  $("#showObs").prop("checked", showObs);
-  $("#showObsTracks").prop("checked", showObsTracks);
-  $("#showTags").prop("checked", showTags);
-  $("#showTagsTracks").prop("checked", showTagsTracks);
-  $("#showSelectedTagsTracks").prop("checked", showTagsTracks);
-  $("#showTagsOrientation").prop("checked", showTagsOrientation);
-  $("#showTagsChrono").prop("checked", showTagsChrono);
-  $("#showObsChrono").prop("checked", showObsChrono);
+  showTagsTracks = true
+  showSelectedTagsTracks = true
+  showTagsOrientation = false
+  showTagsChrono = true
+  $('#showObs').prop('checked',showObs)
+  $('#showObsTracks').prop('checked',showObsTracks)
+  $('#showTags').prop('checked',showTags)
+  $('#showTagsTracks').prop('checked',showTagsTracks)
+  $('#showSelectedTagsTracks').prop('checked',showTagsTracks)
+  $('#showTagsOrientation').prop('checked',showTagsOrientation)
+  $('#showTagsChrono').prop('checked',showTagsChrono)
+  $('#showObsChrono').prop('checked',showObsChrono)
 
-  overlay.tagMarkerOptions = ["quad", "cross", "circle"];
-  overlay.selectboxTagMarkerInit();
-  overlay.tagMarker = "quad";
-  overlay.selectboxTagMarkerUpdate();
+  overlay.opts = {
+      showRect: true,
+      showID: true,
+      showLabels: true,
+      labelFormatter: function(obs) {return activityString(obs)},
+      showNotes: true,
+      showSpan: false,
+      resizeAroundCenter: false,
+      ID_dotRadius: 4, // Radius of dot center
+      ID_fontSize: 20,
+      ID_color: 'yellow',
+      clickModeSelectMultiframe: false,
+      clickModeNewAnnotation: false,
+      clickModeAutoCentering: false,
+      predictIdClickRadius: 120,
+      showImageDiff: false,
+      showPredictedStatus : false,
+      timelineZoom : 4.0,
+      timelineMaxDelta : 3,
+      timelineDisplaySize : 300,
+  }
+  overlay.updateOptsButtons()
+
+  overlay.interaction = {
+      mode: 'main', // 'pick-frame'
+      opts: {}
+  }
+  overlay.timeline = new TimelineWidget(overlay)
+  overlay.visitWidget = new VisitWidget(overlay)
+  
+  overlay.tagMarkerOptions = ['quad','cross','circle']
+  overlay.selectboxTagMarkerInit()
+  overlay.tagMarker = 'quad'
+  overlay.selectboxTagMarkerUpdate()
 
   /* Overlay and selection */
 
@@ -125,6 +158,594 @@ function OverlayControl(canvasTagId) {
   overlay.updateDisableAngleButton();
 }
 OverlayControl.prototype = {};
+
+
+
+OverlayControl.prototype.setInteractionMode = function(mode, opts) {
+    console.log('overlay.setInteractionMode', mode, opts)
+    
+    if (mode!=this.interaction.mode) {
+        // Close previous mode
+    }
+    
+    if (mode=='main') {
+        this.interaction.mode = 'main'
+        this.interaction.opts = opts
+    } else if (mode=='pick-frame') {
+        // For the moment, does not check opts.type, since we have only setspan
+
+        let activeObj = this.getActiveObject()
+        if (!activeObj) {
+            console.log('overlay.setInteractionMode: CANCELED, no active object')
+            return;
+        }
+        let obs = activeObj.obs
+        if (!obs) {
+            console.log('overlay.setInteractionMode: CANCELED, no obs')
+            return;
+        }
+        let frame = videoControl.getCurrentFrame()
+
+        this.interaction.mode = 'pick-frame'
+        this.interaction.opts = opts
+        this.interaction.opts.obs = obs
+        this.interaction.opts.id = obs.ID
+        this.interaction.opts.frame = frame
+        this.interaction.opts.showTimeline = false // Hide timeline by default
+    } else if (mode=='edit-visit') {
+        console.log('overlay.setInteractionMode', 'changing to edit-visit')
+        if (!opts) opts = {}
+
+        this.interaction.mode = 'edit-visit'
+        this.interaction.opts = opts
+    } else {
+        console.log('overlay.setInteractionMode', 'MODE NOT IMPLEMENTED')
+    }
+    this.refreshInteraction()
+    this.hardRefresh()
+}
+OverlayControl.prototype.refreshInteraction = function() {
+    console.log('overlay.refreshInteration',this.interaction)
+    let mode = this.interaction.mode
+    let opts = this.interaction.opts
+    
+    $('.setspan').removeClass("active") 
+    $('.edit-visit').removeClass("active")
+
+    if (mode=='pick-frame') {
+        if (opts.type=='setspan') {
+            $('.setspan').addClass("active")
+        }
+    }
+    if (mode=='edit-visit') {
+        $('.edit-visit').addClass("active")
+    }
+}
+
+/** TIMELINE WIDGET */
+TimelineWidget = function(overlay) {
+    this.overlay = overlay
+
+    this.frame = undefined
+    this.deltas = [-3,-2,-1,0,+1,+2,+3]
+    this.displaySize = 200
+    this.zoomScale = 4
+    this.divs = undefined
+    this.imgs = undefined
+    this.counter = 0
+    this.crop = {}
+
+    this.create()
+}
+/* Model */
+TimelineWidget.prototype.setCenterFrame = function (frame0) {
+    this.frame0 = frame0
+    this.redraw()
+}
+TimelineWidget.prototype.setCrop = function (crop) {
+    this.crop = crop
+    this.redraw()
+}
+TimelineWidget.prototype.setCropFromObs = function (obs, size) {    
+    if (!size) {
+        size = obs.width>obs.height ? obs.width : obs.height
+        size *= this.zoomScale
+    }
+
+    let w = size
+    let h = size
+
+    let cx = obs.x + obs.width/2
+    let cy = obs.y + obs.height/2
+    let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
+
+    this.setCrop(crop)
+}
+TimelineWidget.prototype.setDisplaySize = function (displaySize) {
+    this.displaySize = displaySize
+    this.update()
+}
+/* View */
+TimelineWidget.prototype.create = function () {
+    let overlay = this.overlay
+    let root = $('#timelineblockdiv')
+
+    root.html("TIMELINE: ")
+
+    let list = $('<div id="frames-list"></div>')
+    this.divs={}
+    this.imgs={}
+    for (delta of this.deltas) {
+        let frame = "???"
+        let div = $('<div frame-delta="'+delta+'" style="display: inline-block"><small>Frame '+frame+'</small><br></div>')
+        let img = $('<img/>')[0]
+        div.append(img)
+        list.append(div)
+        this.divs[delta]=div.get(0)
+        this.imgs[delta]=img
+    }
+
+    root.append(list)
+        .append($('<button class="btn btn-xs">Zoom+</button>').click( ()=>this.onClick('timelineZoom', 1/1.5) ))
+        .append($('<button class="btn btn-xs">Zoom-</button>').click(  ()=>this.onClick('timelineZoom', 1.5)  ))
+        .append($('<button class="btn btn-xs">Size+</button>').click( ()=>this.onClick('timelineDisplaySize', 1.5) ))
+        .append($('<button class="btn btn-xs">Size-</button>').click(  ()=>this.onClick('timelineDisplaySize', 1/1.5)  ))
+        //.append($('<button class="btn btn-xs">Frames+</button>').click( ()=>this.onClick('timelineMaxDelta', 1) ))
+        //.append($('<button class="btn btn-xs">Frames-</button>').click(  ()=>this.onClick('timelineMaxDelta', -1)  ))
+}
+TimelineWidget.prototype.update = function () {
+    let overlay = this.overlay
+    let list = $('<div id="frames-list"></div>')
+    $('#timelineblockdiv').html("TIMELINE: ")
+        .append(list)
+    this.divs={}
+    for (delta of this.deltas) {
+        let img = this.imgs[delta]
+        img.width = this.displaySize
+        img.height = this.displaySize
+    }
+}
+TimelineWidget.prototype.redraw = async function () {
+    let overlay = this.overlay
+    this.counter = (this.counter+1) % 9000000000  // Large enough to not have collision
+    const c = this.counter
+    for (delta of this.deltas) {
+        let frame = this.frame0 + delta
+        //console.log(frame); 
+        let data = undefined
+        data = await videoControl.videoCache.getFrameCropDataURL(videoControl.video.src, frame, 20, this.crop)
+        if (this.counter != c) {
+            // Abort if not the latest update
+            return
+        }
+        let img = this.imgs[delta]
+        if (data && img)
+            img.src = data
+    }
+}
+/* Controller */
+TimelineWidget.prototype.onClick = function (param, value) {
+    if (param == 'timelineZoom') {
+        this.zoom *= value
+        this.redraw()
+    } else if (param == 'timelineDisplaySize') {
+        const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+        this.displaySize = clamp( Math.round(this.displaySize * value), 50,1000)
+        this.update()
+    } else if (param == 'timelineMaxDelta') {
+        // Not implemented
+    }
+}
+
+
+VisitWidget = function(overlay) {
+    this.overlay = overlay
+    
+    this.pollinator = undefined // obs
+    this.flower = undefined // obs
+    
+    this.visit = undefined // visit obs
+    this.id = undefined
+    this.frame = undefined
+
+    this.create()
+}
+VisitWidget.prototype.pickMode = function(mode) {
+    console.log('VisitWidget.pickMode', mode)
+    if (mode == 'pollinator') {
+        this.overlay.setInteractionMode('edit-visit',{pickMode:'pollinator'})
+    } else if (mode == 'flower') {
+        this.overlay.setInteractionMode('edit-visit',{pickMode:'flower'})
+    } else {
+        console.log('pickMode ABORT: Unknown pick mode', mode)
+        return
+    }
+    this.update()
+}
+VisitWidget.prototype.gotoObs = function(mode) {
+    console.log('VisitWidget.selectObs', mode)
+    if (mode == 'pollinator') {
+        if (!this.pollinator) return
+        selectBeeByIDandFrame(this.pollinator.ID, this.pollinator.frame)
+    } else if (mode == 'flower') {
+        if (!this.flower) return
+        selectBeeByIDandFrame(this.flower.ID,this.flower.frame)
+    } else if (mode == 'visit') {
+        if (!this.visit) return
+        selectBeeByIDandFrame(this.visit.ID,this.visit.frame)
+    } else {
+        console.log('pickMode ABORT: Unknown pick mode', mode)
+        return
+    }
+    this.update()
+}
+VisitWidget.prototype.selectVisit = function(obs) {
+    this.visit = obs
+    default_id = obs.ID
+    this.update()
+}
+VisitWidget.prototype.newVisit = function() {
+    if (!this.pollinator || !this.flower) {
+        console.log('VisitWidget.newVisit CANCELED, missing data',this.pollinator, this.flower)
+        return
+    }
+
+    let pollinator_id = this.pollinator.ID
+    let flower_id = this.flower.ID
+    let id = "V-"+pollinator_id+"-"+flower_id
+    let frame= getCurrentFrame()
+    let time = videoControl.getCurrentVideoTime()
+
+    let x1 = this.pollinator.x+this.pollinator.width/2
+    let y1 = this.pollinator.y+this.pollinator.height/2
+    let x2 = this.flower.x+this.flower.width/2
+    let y2 = this.flower.y+this.flower.height/2
+    let cx = (x1+x2)/2
+    let cy = (y1+y2)/2
+    let w = default_width
+    let h = default_height
+
+    // Create the new event in memory, then refresh
+    let tmpObs = {
+        ID: id,
+        frame: frame,
+        time: time,
+        x: cx-w/2,
+        y: cy-h/2,
+        cx: cx,
+        cy: cy,
+        width: w,
+        height: h,
+        angle: 0,
+        notes: '',
+        labels: '',
+        visit: {pollinator: pollinator_id, flower: flower_id},
+        span: {'f1':frame, 'f2':frame}
+    }
+    storeObs(tmpObs);
+    
+    this.visit = getObsHandle(frame, id)
+    default_id = id
+
+    overlay.hardRefresh()
+    refreshChronogram()
+
+    //submit_bee();
+    //rect.obs.visit = {pollinator: pollinator_id, flower: flower_id}
+
+    this.update()
+}
+VisitWidget.prototype.deleteVisit = function() {
+    let visit = this.visit
+    if (!visit) {
+        console.log('deleteVisit: no visit selected')
+        return
+    }
+    this.visit = undefined
+    deleteEvent(visit.frame, visit.ID)
+    this.update()
+}
+VisitWidget.prototype.close = function() {
+    this.visit = undefined
+    this.pollinator = undefined
+    this.flower = undefined
+    this.id = undefined
+    this.frame = undefined
+    this.update()
+}
+VisitWidget.prototype.create = function() {
+    let overlay = this.overlay
+    $('#visitblockdiv').html("EDIT VISIT: ")
+            .append($('<button>DISMISS</button>').click(()=>this.close()))
+        .append("<br>visit event, frame <span id='frame'></span>, id <span id='visit_id'></span>&nbsp;")
+            .append($('<button class="btn btn-default btn-xs goto-visit">Goto</button>').click(()=>this.gotoObs('visit')))
+            .append($('<button class="btn btn-default btn-xs new-visit">Create</button>').click(()=>this.newVisit()))
+            .append($('<button class="btn btn-default btn-xs delete-visit">Delete</button>').click(()=>this.deleteVisit()))
+        .append('<br>')
+        .append('Pollinator: <span id="pollinator_id"></span>&nbsp;&nbsp;')
+            .append($('<button class="btn btn-default btn-blue-toggle btn-xs select-pollinator">Goto</button>').click(()=>this.gotoObs('pollinator')))
+            .append($('<button class="btn btn-default btn-blue-toggle btn-xs pick-pollinator">Pick</button>').click(()=>this.pickMode('pollinator')))
+        .append('&nbsp;-&nbsp;Flower: <span id="flower_id"></span>&nbsp;')
+            .append($('<button class="btn btn-default btn-blue-toggle btn-xs select-flower">Goto</button>').click(()=>this.gotoObs('flower')))
+            .append($('<button class="btn btn-default btn-blue-toggle btn-xs pick-flower">Pick</button>').click(()=>this.pickMode('flower')))
+        .append('<br>')
+        .append('Span: Start frame: <span id="start-frame"></span>&nbsp;')
+            .append($('<button class="btn btn-default btn-xs goto-start-frame">Goto</button>').click(()=>this.gotoSpanFrame('start')))
+            .append($('<button class="btn btn-default btn-xs set-start-frame">Set</button>').click(()=>this.setSpanFrame('start')))
+        .append('&nbsp;-&nbsp;End frame: <span id="end-frame"></span>&nbsp;')
+            .append($('<button class="btn btn-default btn-xs goto-end-frame">Goto</button>').click(()=>this.gotoSpanFrame('end')))
+            .append($('<button class="btn btn-default btn-xs set-end-frame">Set</button>').click(()=>this.setSpanFrame('end')))
+}
+VisitWidget.prototype.setFlower = function(obs) {
+    console.log('VisitWidget.setFlower',obs); 
+    if (!obs) {
+        console.log('VisitWidget.setFlower, no obs',obs); 
+        overlay.setInteractionMode('main')
+        this.update()
+        return
+    }
+    if (!String(obs.ID).startsWith('F')) {
+        console.log('VisitWidget.setFlower, not a flower',obs); 
+        overlay.setInteractionMode('main')
+        this.update()
+        return
+    }
+    this.flower = obs
+    overlay.setInteractionMode('main')
+    this.update()
+}
+VisitWidget.prototype.setPollinator = function(obs) {
+    console.log('VisitWidget.setPollinator',obs); 
+    if (!obs) {
+        console.log('VisitWidget.setPollinator, no obs',obs);
+        overlay.setInteractionMode('main')
+        this.update()
+        return
+    }
+    if (!String(obs.ID).startsWith('P')) {
+        console.log('VisitWidget.setPollinator, not a pollinator',obs); 
+        overlay.setInteractionMode('main')
+        this.update()
+        return
+    }
+    this.pollinator = obs
+    overlay.setInteractionMode('main')
+    this.update()
+}
+VisitWidget.prototype.setFlower = function(obs) {
+    console.log('VisitWidget.setFlower',obs); 
+    if (!obs) {
+        console.log('VisitWidget.setFlower, no obs',obs); 
+        overlay.setInteractionMode('main')
+        this.update()
+        return
+    }
+    if (!String(obs.ID).startsWith('F')) {
+        console.log('VisitWidget.setFlower, not a flower',obs); 
+        overlay.setInteractionMode('main')
+        this.update()
+        return
+    }
+    this.flower = obs
+    overlay.setInteractionMode('main')
+    this.update()
+}
+VisitWidget.prototype.setSpanFrame = function(mode) {
+    console.log('VisitWidget.setSpanFrame'); 
+    let visit = this.visit
+    if (!visit) {
+        console.log('VisitWidget.setSpanFrame, no visit'); 
+        return
+    }
+    let frame = videoControl.getCurrentFrame()
+    if (! ('span' in visit)) {
+        // Fix visit if does not contain span info already
+        visit.span = {'f1':visit.frame, 'f2':visit.frame}
+    }
+    if (mode=='start') {
+        if (frame > visit.frame) {
+            console.log('VisitWidget.setSpanFrame: ABORT, current frame > visit frame',frame,visit.frame); 
+            this.update()
+            return
+        }
+        visit.span.f1 = frame
+    }
+    if (mode=='end') {
+        if (frame < visit.frame) {
+            console.log('VisitWidget.setSpanFrame: ABORT, current frame < visit frame',frame,visit.frame); 
+            this.update()
+            return
+        }
+        visit.span.f2 = frame
+    }
+    this.update()
+    refreshChronogram()
+}
+VisitWidget.prototype.gotoSpanFrame = function(mode) {
+    console.log('VisitWidget.gotoSpanFrame'); 
+    let visit = this.visit
+    if (!visit) {
+        console.log('VisitWidget.gotoSpanFrame, no visit'); 
+        return
+    }
+    if (!('span' in visit)) {
+        console.log('VisitWidget.gotoSpanFrame, no visit span'); 
+        return
+    }
+    if (mode=='start') {
+        selectBeeByIDandFrame(visit.ID,visit.span.f1)
+    }
+    if (mode=='end') {
+        selectBeeByIDandFrame(visit.ID,visit.span.f2)
+    }
+}
+VisitWidget.prototype.update = function() {
+    if (this.visit) {
+        this.pollinator = getObsHandle(this.visit.frame, this.visit.visit.pollinator)
+        this.flower = getObsHandle(this.visit.frame, this.visit.visit.flower)
+    }
+
+    let visit_id = this?.visit?.ID
+    let frame = this?.visit?.frame ?? this?.pollinator?.frame ?? this?.flower?.frame ?? undefined
+
+    let pollinator_id = this?.pollinator?.ID ?? this?.visit?.visit?.pollinator
+    let flower_id = this?.flower?.ID ?? this?.visit?.visit?.flower
+
+    if (!this.visit) {
+        let id = "V-"+pollinator_id+"-"+flower_id
+        this.visit = getObsHandle(frame, id)
+    }
+    this.frame = frame
+    $('#visitblockdiv > #pollinator_id').html(pollinator_id ?? "??")
+    $('#visitblockdiv > #flower_id').html(flower_id ?? "??")
+    $('#visitblockdiv > #frame').html(frame ?? "??")
+    $('#visitblockdiv > #visit_id').html(visit_id ?? "??")
+    $('#visitblockdiv > #start-frame').html(this?.visit?.span?.f1 ?? "??")
+    $('#visitblockdiv > #end-frame').html(this?.visit?.span?.f2 ?? "??")
+    if (this.overlay?.interaction?.mode == 'edit-visit') {
+        let pickMode = this.overlay.interaction.opts.pickMode
+        $('#visitblockdiv > .btn.pick-pollinator').toggleClass("active",pickMode =='pollinator')
+        $('#visitblockdiv > .btn.pick-flower').toggleClass("active",pickMode =='flower')
+    } else {
+        $('#visitblockdiv > .btn.pick-pollinator').toggleClass("active",false)
+        $('#visitblockdiv > .btn.pick-flower').toggleClass("active",false)
+    }
+
+    $('#visitblockdiv > .btn.new-visit').prop('disabled', !!(this.visit) || (!this.pollinator || !this.flower))
+    $('#visitblockdiv > .btn.delete-visit').prop('disabled', (!this.visit))
+
+    $('#visitblockdiv > .btn.select-pollinator').prop('disabled', (!this.pollinator))
+    $('#visitblockdiv > .btn.select-flower').prop('disabled', (!this.flower))
+
+    $('#visitblockdiv > .btn.pick-pollinator').prop('disabled', !!(this.visit))
+    $('#visitblockdiv > .btn.pick-flower').prop('disabled', !!(this.visit))
+
+}
+VisitWidget.prototype.open = function() {
+    let overlay = this.overlay
+    let centerframe = videoControl.currentFrame
+
+    if (this.interaction.mode != 'edit-visit') {
+        console.log('Not editiing visit... ABORT')
+        return
+    }
+
+
+    let activeObj = this.getActiveObject()
+    if (!activeObj) {
+        console.log('overlay.setInteractionMode: CANCELED, no active object')
+        return;
+    }
+    let obs = activeObj.obs
+    if (!obs) {
+        console.log('overlay.setInteractionMode: CANCELED, no obs')
+        return;
+    }
+    let frame = videoControl.getCurrentFrame()
+
+    
+    this.interaction.opts.obs = obs
+    this.interaction.opts.id = obs.ID
+    this.interaction.opts.frame = frame
+    this.interaction.opts.showTimeline = false // Hide timeline by default
+
+
+    function intervalRange(start, end) {
+        return Array.from({length: end-start+1}, (x, i) => start+i);
+    }
+    let deltas =  intervalRange(-overlay.opts.timelineMaxDelta, overlay.opts.timelineMaxDelta)  //[-3,-2,-1,0,1,2,3,4]
+    videoControl.pause()
+    printMessage("Paused, need to preload video frames")
+    console.log('Creating timeline...')
+
+
+    // let id = overlay.interaction.opts.id
+    // let frame0 = overlay.interaction.opts.frame
+    // let obs=getObsHandle(frame0,id) 
+    // if (!obs) {
+    //     printMessage("Timeline: didn't find annotation to pick frame for")
+    //     return
+    // }
+    // if (!size) {
+    //     size = obs.width>obs.height ? obs.width : obs.height
+    //     size *= overlay.opts.timelineZoom
+    //     size = Math.round(size)
+    // }
+    // if (!displaySize) {
+    //     displaySize = overlay.opts.timelineDisplaySize
+    // }
+    // let w = size
+    // let h = size
+    // let cx = obs.x + obs.width/2
+    // let cy = obs.y + obs.height/2
+    // let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
+    
+    // $('#pick-frame-timeline').html("Timeline:<br>")
+    // for (var delta of deltas) {
+    //     //console.log(i); 
+    //     let frame = Number(centerframe)+Number(delta)
+    //     let img = await this.getFrameCropImg(frame, crop)
+    //     img.width = displaySize
+    //     img.height = displaySize
+    //     if (img) {
+    //         let extra=''
+    //         let pref=''
+    //         let div = $('<div style="display: inline-block"></div>')
+    //         div.addClass('timeline')
+    //         $('#pick-frame-timeline').append(div)
+    //         if (frame == frame0) {
+    //             div.addClass('selected')
+    //             extra+=' Event'
+    //         }
+    //         if (frame == obs.span.f1) {
+    //             div.addClass('selected-f1')
+    //             extra+=' Start'
+    //         }
+    //         if (frame == obs.span.f2) {
+    //             div.addClass('selected-f2')
+    //             extra+=' End'
+    //         }
+    //         if (frame == centerframe) {
+    //             pref+='Current '
+    //         }
+    //         div.click(()=>gotoEvent(frame, id))
+    //         div.html('<small>'+pref+'Frame '+frame+extra+'</small><br>')
+    //         div.append(img)
+    //     }
+    // }
+
+}
+
+OverlayControl.prototype.optsClick = function(option) {
+    console.log('overlay.onClickDisableAngle')
+    
+    this.opts[option] = !this.opts[option]
+    this.updateOptsButtons()
+    
+    //this.refreshOverlay()
+    this.hardRefresh()
+}
+OverlayControl.prototype.updateOptsButtons = function() {
+    console.log('overlay.updateDisableAngleButton')
+    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering','showImageDiff','showPredictedStatus']) {
+        console.log(option)
+        if ( this.opts[option] ) {
+            $(".overlayOpts-"+option).addClass("active")
+        } else {
+            $(".overlayOpts-"+option).removeClass("active")      
+        }
+    }
+    $('#overlayOpts-ID_dotRadius').val(String(this.opts.ID_dotRadius))
+    $('#overlayOpts-ID_fontSize').val(String(this.opts.ID_fontSize))
+    $('#overlayOpts-ID_color').val(String(this.opts.ID_color))
+}
+function onOverlayParamsChanged(event) {
+    console.log('onOverlayParamsChanged')
+    overlay.opts.ID_dotRadius = Number($('#overlayOpts-ID_dotRadius').val())
+    overlay.opts.ID_fontSize = Number($('#overlayOpts-ID_fontSize').val())
+    overlay.opts.ID_color = $('#overlayOpts-ID_color').val()
+    overlay.refreshOverlay()
+}
 
 function selectboxSetOptions(selectbox, options, names) {
   selectbox.find("option").remove();
@@ -438,6 +1059,28 @@ OverlayControl.prototype.canvasTransformPan = function (dx, dy) {
 
   overlay.hardRefresh();
 };
+OverlayControl.prototype.canvasTransformCenter = function (cx, cy) {
+  // cx,cy: new center in video coordinates
+  let overlay = this
+
+  if ((cx === undefined) || (cy === undefined)) {
+    console.log('canvasTransformCenter: ABORT, center undefined', cx, cy)
+    return
+  }
+
+  let w1 = overlay.canvas.width
+  let h1 = overlay.canvas.height
+
+  let sx = canvasTransform[0]   // canvas->video
+  let sy = canvasTransform[3]
+
+  canvasTransform[4] = cx - sx * w1 / 2   // tx   canvas->video
+  canvasTransform[5] = cy - sy * h1 / 2   // ty
+
+  overlay.canvasTransform_Fix() // Avoid being outside of video
+
+  overlay.hardRefresh()
+}
 
 OverlayControl.prototype.obsToCanvasRect = function (obs) {
   let overlay = this;
@@ -484,7 +1127,327 @@ OverlayControl.prototype.videoToCanvasRect = function (rect) {
 };
 
 // #MARK # OVERLAY REFRESH
+OverlayControl.prototype.getFrameCropImg = async function(frame, crop) {
+    let data = undefined
+    if (frame>=0) {
+        data = await videoCache.getFrameCropDataURL(videoControl.video.src, frame, videoinfo.videofps, crop)
+        //console.log(videoControl.video.src, frame)
+        //console.log(crop)
+        //console.log(data)
+    }
 
+    let img = $('<img/>')[0]
+    if (data)
+        img.src = data
+    return img
+}
+OverlayControl.prototype.getFrameCropCurrentObject = async function(framedelta, size, displaySize) {
+    let rect = this.getActiveObject()
+    if (!rect) {
+        printMessage("Timeline: please select an annotation")
+        return
+    }
+    let obs = rect.obs
+    if (!obs) {
+        printMessage("Timeline: annotation missing obs internal data. Try changing frame")
+        return
+    }
+    if (!size) {
+        size = obs.width>obs.height ? obs.width : obs.height
+        size *= 4
+    }
+    if (!displaySize) {
+        displaySize = 300
+    }
+    let w = size
+    let h = size
+
+    let cx = obs.x + obs.width/2
+    let cy = obs.y + obs.height/2
+    let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
+    let frame = Number(obs.frame)+Number(framedelta)
+    let data = undefined
+    if (frame>=0) {
+        data = await videoControl.videoCache.getFrameCropDataURL(videoControl.video.src, frame, 20, crop)
+        //console.log(videoControl.video.src, frame)
+        //console.log(crop)
+        //console.log(data)
+    }
+
+    let div = $('<div style="display: inline-block"><small>Frame '+frame+'</small><br></div>')
+    let img = $('<img/>')[0]
+    if (data)
+        img.src = data
+    div.append(img)
+    $('#alerttext').append(div)
+    img.width = displaySize
+    img.height = displaySize
+}
+OverlayControl.prototype.drawTimelineCurrentObject = async function() {
+    let frames =  [-16,-8,-4,-2,-1,0,1,2,4,8,16]
+    videoControl.pause()
+    printMessage("Paused, need to preload video frames")
+    await videoControl.videoCache.preloadFrames(videoControl.video.src, frames, videoinfo.videofps)
+        .then(function() {
+            printMessage("Preload done")
+            overlay.hardRefresh()
+        })
+    console.log('Creating timeline...')
+    printMessage("Timeline:<br>")
+    for (i of frames) {
+        //console.log(i); 
+        await this.getFrameCropCurrentObject(i, undefined, 200)
+    }
+}
+OverlayControl.prototype.drawTimelinePickFrameMode = async function(size, displaySize) {
+    let overlay = this
+    let centerframe = videoControl.currentFrame
+    
+    function intervalRange(start, end) {
+        return Array.from({length: end-start+1}, (x, i) => start+i);
+    }
+    let deltas =  intervalRange(-overlay.opts.timelineMaxDelta, overlay.opts.timelineMaxDelta)  //[-3,-2,-1,0,1,2,3,4]
+    videoControl.pause()
+    printMessage("Paused, need to preload video frames")
+    console.log('Creating timeline...')
+
+    if (this.interaction.mode != 'pick-frame') {
+        console.log('Not picking frame... ABORT')
+        return
+    }
+
+    let id = overlay.interaction.opts.id
+    let frame0 = overlay.interaction.opts.frame
+    let obs=getObsHandle(frame0,id) 
+    if (!obs) {
+        printMessage("Timeline: didn't find annotation to pick frame for")
+        return
+    }
+    if (!size) {
+        size = obs.width>obs.height ? obs.width : obs.height
+        size *= overlay.opts.timelineZoom
+        size = Math.round(size)
+    }
+    if (!displaySize) {
+        displaySize = overlay.opts.timelineDisplaySize
+    }
+    let w = size
+    let h = size
+    let cx = obs.x + obs.width/2
+    let cy = obs.y + obs.height/2
+    let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
+    
+    $('#pick-frame-timeline').html("Timeline:<br>")
+    for (var delta of deltas) {
+        //console.log(i); 
+        let frame = Number(centerframe)+Number(delta)
+        let img = await this.getFrameCropImg(frame, crop)
+        img.width = displaySize
+        img.height = displaySize
+        if (img) {
+            let extra=''
+            let pref=''
+            let div = $('<div style="display: inline-block"></div>')
+            div.addClass('timeline')
+            $('#pick-frame-timeline').append(div)
+            if (frame == frame0) {
+                div.addClass('selected')
+                extra+=' Event'
+            }
+            if (frame == obs.span.f1) {
+                div.addClass('selected-f1')
+                extra+=' Start'
+            }
+            if (frame == obs.span.f2) {
+                div.addClass('selected-f2')
+                extra+=' End'
+            }
+            if (frame == centerframe) {
+                pref+='Current '
+            }
+            div.click(()=>gotoEvent(frame, id))
+            div.html('<small>'+pref+'Frame '+frame+extra+'</small><br>')
+            div.append(img)
+        }
+    }
+}
+OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displaySize) {
+    let overlay = this
+    
+    videoControl.pause()
+    printMessage("Paused, need to preload video frames")
+    console.log('Creating pick flower image ...')
+
+    if (this.interaction.mode != 'pick-frame') {
+        console.log('Not picking frame... ABORT')
+        return
+    }
+
+    let id = overlay.interaction.opts.id
+    let frame0 = overlay.interaction.opts.frame
+    let obs=getObsHandle(frame0,id) 
+    let currentObs = obs
+    if (!obs) {
+        printMessage("Timeline: didn't find annotation to pick flower for")
+        return
+    }
+    if (!currentObs.visit) currentObs.visit={}
+    if (!size) {
+        size = obs.width>obs.height ? obs.width : obs.height
+        size *= overlay.opts.timelineZoom
+        size = Math.round(size)
+    }
+    if (!displaySize) {
+        displaySize = overlay.opts.timelineDisplaySize
+    }
+    let w = size
+    let h = size
+    let cx = obs.x + obs.width/2
+    let cy = obs.y + obs.height/2
+    let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
+    
+    //$('#pickflowerdiv').html("Pick Flower for id="+id+" in frame="+frame0+"<br>")
+
+    let frame = frame0
+    let img = await this.getFrameCropImg(frame, crop)
+    //img.width = displaySize
+    //img.height = displaySize
+    if (img) {
+        let canvas = document.createElement('canvas'); // Precreated canvas
+        let ctx = canvas.getContext('2d');
+        canvas.width = w; canvas.height = h // pixel size
+        $(canvas).css({width: displaySize, height: displaySize}) // Display size
+        ctx.drawImage(img, 0, 0)
+
+        let div = $('<div style="display: inline-block"></div>')
+        //div.addClass('timeline')
+        $('#pickflowerdiv').append(div)
+        let text = $("<small>Pick Flower for id="+id+" in frame="+frame+"<br>")
+            .append($('<button class="btn btn-default btn-xs" style="inline">No visit</button>').click(removeVisit))
+        div.append(text)//html("<small>Pick Flower for id="+id+" in frame="+frame+"<br>")
+        //div.append(img)
+        div.append(canvas)
+
+        function isFlower(obs) {
+            return String(obs.ID).startsWith('F')
+        }
+        let flowers = Object.values(Tracks[0]).filter(isFlower)
+
+        function drawCenter(obs, selected) {
+            let x0 = crop.x
+            let y0 = crop.y
+
+            let x = obs.x+obs.width/2 - x0 // cx not reliable??
+            let y = obs.y+obs.height/2 - y0
+
+            let color = 'yellow'
+            let radius = 2
+
+            if (obs.ID == currentObs.visit.flowerid) {
+                color = 'green'
+            }
+            if (selected) {
+                color = 'green'
+                radius = 4
+            }
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.closePath();
+            ctx.fill();    
+
+            ctx.font = "7px Arial";
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.fillText(String(obs.ID), x, y - radius - 1);
+        }
+        function closestFlower(flowers, pt, maxdist) {
+            function euclid(pt1,pt2) {
+                return Math.sqrt((pt1.x-pt2.x)**2+(pt1.y-pt2.y)**2)
+            }
+            let dist = maxdist
+            let pickedObs = undefined
+            for (let obs of flowers) {
+                let ptf = {x:obs.x+obs.width/2, y: obs.y+obs.height/2}
+                let d = euclid(pt,ptf)
+                //console.log('d=',d,'pickedObs',pickedObs)
+                if (d<dist) {
+                    dist=d; pickedObs = obs
+                }
+            }
+            return pickedObs
+        }
+        function drawFlowers(flowers, selectedID) {
+            ctx.drawImage(img, 0, 0)
+            for (let obs of flowers) {
+                //console.log('Draw',obs)
+                let selected = (obs.ID==selectedID)
+                drawCenter(obs, selected)
+            }
+        }
+        function canvasPtToVideoPt(ptGUI) {
+            let pt = {x: ptGUI.x/displaySize*w+crop.x, y: ptGUI.y/displaySize*h+crop.y}
+            return pt
+        }
+        function pickFlower_mouseMove(option) {
+            console.log(option)
+            let ptGUI = {x: option.offsetX, y: option.offsetY}
+            let pt = canvasPtToVideoPt( ptGUI )
+            console.log(ptGUI, pt)
+
+            let pickedObs = closestFlower(flowers, pt, 200)
+            drawFlowers(flowers, pickedObs?pickedObs.ID:undefined)
+
+            // ctx.beginPath();
+            // ctx.arc(pt.x-crop.x, pt.y-crop.y, radius, 0, Math.PI * 2);
+            // ctx.fillStyle = 'red';
+            // ctx.closePath();
+            // ctx.fill();    
+
+        }
+        function pickFlower_mouseClick(option) {
+            console.log(option)
+            let ptGUI = {x: option.offsetX, y: option.offsetY}
+            let pt = canvasPtToVideoPt( ptGUI )
+
+            let pickedObs = closestFlower(flowers, pt, 200)
+
+            if (pickedObs) {
+                console.log('Change visited flower for ',currentObs, 'to flower', pickedObs)
+                if (!currentObs.visit) currentObs.visit={}
+                currentObs.visit.flowerid = pickedObs.ID
+            }
+            drawFlowers(flowers, currentObs.visit.flowerid)
+            drawFlowersMainCanvas(flowers, currentObs.visit.flowerid)
+        }
+        function pickFlower_mouseLeave(option) {
+            drawFlowers(flowers, currentObs.visit.flowerid)
+        }
+        function removeVisit() {
+            currentObs.visit.flowerid = undefined
+            drawFlowers(flowers, currentObs.visit.flowerid)
+        }
+        function drawFlowersMainCanvas(flowers, selectedID) {
+            //overlay.ctx.drawImage(img, 0, 0)
+            let ctx = overlay.ctx
+            for (let obs of flowers) {
+                //console.log('Draw',obs)
+                let isSelected = (obs.ID==selectedID)
+                //drawCenter(obs, selected)
+                let rect = overlay.obsToCanvasRect(obs)
+                let x = rect.left+rect.width/2
+                let y = rect.top+rect.height/2
+                identifyBeeRect(ctx, rect, radius, isSelected)
+            }
+        }
+
+        $(canvas).click(pickFlower_mouseClick)
+        $(canvas).mousemove(pickFlower_mouseMove)
+        $(canvas).mouseleave(pickFlower_mouseLeave)
+        drawFlowers(flowers, currentObs.visit.flowerid)
+    }
+}
 OverlayControl.prototype.hardRefresh = function () {
   // Recreate overlay from Tracks
 
@@ -495,7 +1458,123 @@ OverlayControl.prototype.hardRefresh = function () {
 
   overlay.canvas1.clear();
   createRectsFromTracks();
-  selectBeeByID(defaultSelectedBee);
+
+  if (this.interaction.mode == 'pick-frame') {
+    let overlay = this
+    selectBeeByID(this.interaction.opts.id)
+    let id = overlay.interaction.opts.id
+    let frame = overlay.interaction.opts.frame
+
+    // Poke directly in the main datastructure as the active object
+    // does not copy this field. // TODO: cleanme
+    let obs = getObsHandle(frame, id) //Tracks[frame][id]
+    if (!obs) {
+      console.log('overlay.hardRefresh: ERROR, in pick-frame without valid obs')
+      overlay.setInteractionMode('main')
+      selectBeeByID(defaultSelectedBee);
+      this.refreshOverlay()
+
+      updateDeleteButton()
+      updateUndoButton()
+      return
+    }
+    if (!('span' in obs)) {
+      obs.span = { 'f1': frame, 'f2': frame }
+    }
+
+    function doSwap2(interval, old_id, new_id) {
+      obs_swapID(interval, old_id, new_id)
+      videoControl.refresh() // Just refresh
+      refreshChronogram();
+    }
+    function doSetSpanStart() {
+      let f = videoControl.getCurrentFrame()
+      obs.span.f1 = f
+      //$('#alerttext').html('Set Start DONE')
+      //overlay.setInteractionMode('main')
+      overlay.hardRefresh()
+      refreshChronogram();
+    }
+    function gotoStart() {
+      gotoEvent(obs.span.f1, id)
+    }
+    function gotoAnnotation() {
+      gotoEvent(obs.frame, id)
+    }
+    function gotoEnd() {
+      gotoEvent(obs.span.f2, id)
+    }
+    function doSetSpanEnd() {
+      let f = videoControl.getCurrentFrame()
+      obs.span.f2 = f
+      //$('#alerttext').html('Set Start DONE')
+      //overlay.setInteractionMode('main')
+      overlay.hardRefresh()
+      refreshChronogram();
+    }
+    function cancelSetSpan() {
+      $('#pickframediv').html('Pick frame CLOSED')
+      overlay.setInteractionMode('main')
+    }
+
+    function timelineButtonCallback(param, value) {
+      if (param == 'timelineZoom')
+        overlay.opts.timelineZoom *= value
+      else if (param == 'timelineDisplaySize') {
+        overlay.opts.timelineDisplaySize = Math.round(overlay.opts.timelineDisplaySize * value)
+        if (overlay.opts.timelineDisplaySize > 1000) overlay.opts.timelineDisplaySize = 1000
+        if (overlay.opts.timelineDisplaySize < 50) overlay.opts.timelineDisplaySize = 50
+      } else if (param == 'timelineMaxDelta') {
+        overlay.opts.timelineMaxDelta = Math.round(overlay.opts.timelineMaxDelta + value)
+        if (overlay.opts.timelineMaxDelta > 10) overlay.opts.timelineMaxDelta = 10
+        if (overlay.opts.timelineMaxDelta < 1) overlay.opts.timelineMaxDelta = 1
+      }
+
+      if (overlay.interaction.opts.showTimeline) {
+        overlay.drawTimelinePickFrameMode()
+      }
+    }
+
+    //printMessage(
+    $('#pickframediv').html("PICK FRAME: setting timespan for ID=" + id + " at frame=" + frame + ": ")
+      .append($('<button class="btn btn-obs-expand btn-sm">Set Start</button>').click(doSetSpanStart))
+      .append($('<button class="btn btn-obs-expand btn-sm">Set End</button>').click(doSetSpanEnd))
+      .append($(document.createTextNode(' ')))
+      .append($('<button>CLOSE</button>').click(cancelSetSpan))
+      .append($('<br>'))
+      .append($('<button class="btn btn-default  btn-xs">Goto Start</button>').click(gotoStart))
+      .append($('<button class="btn btn-default  btn-xs">Goto Event</button>').click(gotoAnnotation))
+      .append($('<button class="btn btn-default  btn-xs">Goto End</button>').click(gotoEnd))
+      .append($('<br>'))
+      .append($('<button class="btn btn-xs button-showtimeline btn-blue-toggle">Show Timeline</button>').click(
+        function () {
+          overlay.interaction.opts.showTimeline = !overlay.interaction.opts.showTimeline
+          $('.button-showtimeline').toggleClass('active', overlay.interaction.opts.showTimeline)
+          if (overlay.interaction.opts.showTimeline) {
+            overlay.drawTimelinePickFrameMode() // Create timeline
+          } else {
+            $('#pick-frame-timeline').html('') // Destroy timeline
+          }
+        }
+      ))
+      .append($('<button class="btn btn-xs">Zoom+</button>').click(() => timelineButtonCallback('timelineZoom', 1 / 1.5)))
+      .append($('<button class="btn btn-xs">Zoom-</button>').click(() => timelineButtonCallback('timelineZoom', 1.5)))
+      .append($('<button class="btn btn-xs">Size+</button>').click(() => timelineButtonCallback('timelineDisplaySize', 1.5)))
+      .append($('<button class="btn btn-xs">Size-</button>').click(() => timelineButtonCallback('timelineDisplaySize', 1 / 1.5)))
+      .append($('<button class="btn btn-xs">Frames+</button>').click(() => timelineButtonCallback('timelineMaxDelta', 1)))
+      .append($('<button class="btn btn-xs">Frames-</button>').click(() => timelineButtonCallback('timelineMaxDelta', -1)))
+      .append($('<button class="btn btn-xs button-showPickFlower btn-blue-toggle">Pick Flower</button>').click(() => overlay.pickFlowerButtonCallback()))
+      .append($('<div id="pick-frame-timeline"></div>'))
+    $('.button-showtimeline').toggleClass('active', overlay.interaction.opts.showTimeline)
+
+    if (overlay.interaction.opts.showTimeline)
+      overlay.drawTimelinePickFrameMode()
+  } else if (this.interaction.mode == 'edit-visit') {
+    selectBeeByID(defaultSelectedBee);
+  } else {
+    // Default behavior
+    selectBeeByID(defaultSelectedBee);
+  }
   // zoomOverlay supposed to be updated by event triggered by selectBeeByID
 
   this.refreshOverlay();
@@ -505,8 +1584,135 @@ OverlayControl.prototype.hardRefresh = function () {
 
   //zoomOverlay.refreshZoom()
 };
+OverlayControl.prototype.pickFlowerButtonCallback = function (param, value) {
+  let overlay = this
+  overlay.interaction.opts.showPickFlower = !overlay.interaction.opts.showPickFlower
+  $('.button-showPickFlower').toggleClass('active', overlay.interaction.opts.showPickFlower)
+  if (overlay.interaction.opts.showPickFlower) {
+    overlay.drawImagePickFlowerMode() // Create image to pick
+  } else {
+    $('#pickflowerdiv').html('') // Destroy display
+  }
+};
 
-OverlayControl.prototype.redrawVideoFrame = function () {
+
+OverlayControl.prototype.openVideoNewTab = async function() {
+    console.log('overlay.openVideoNewTab')
+    let videoUrl = videoControl.video.src
+    var newTab = window.open(videoUrl);
+}
+OverlayControl.prototype.exportFrame = async function() {
+    console.log('overlay.exportFrame')
+    let videoUrl = videoControl.video.src
+    let frame = videoControl.currentFrame
+    console.log('overlay.exportFrame: ', videoUrl, frame)
+    let img = await videoCache.getFrameImageAsync(videoUrl, frame, videoinfo.videofps)
+    var newTab = window.open();
+    newTab.document.body.innerHTML = 'Extracted Frame '+frame+' from <a href="+videoUrl+">'+videoUrl+'</a><br><div><img src="'+img.src+'" style="max-width:100%; max-height:95%;"></div>';
+    newTab.document.title = 'Frame '+frame+', video '+videoUrl
+}
+OverlayControl.prototype.diffImage = function(canvas2, canvas1, gain) {
+    if (!gain) gain=1.0
+
+    let w = canvas1.width, h = canvas1.height
+    let ctx1 = canvas1.getContext('2d');
+    let ctx2 = canvas2.getContext('2d');
+
+    let imgData1 = ctx1.getImageData(0,0,w,h);
+    let imgData2 = ctx2.getImageData(0,0,w,h);
+
+    let data1 = imgData1.data
+    let data2 = imgData2.data
+
+    for (var offset = 0; offset < data1.length; offset += 4) {
+        let dr = data1[offset] - data2[offset]
+        let dg = data1[offset+1] - data2[offset+1]
+        let db = data1[offset+2] - data2[offset+2]
+        //let D = (Math.abs(dr)+Math.abs(dg)+Math.abs(db))/3.0*gain
+        data1[offset] = data1[offset]*0.2 + 0.8*(dr*gain+128)
+        data1[offset+1] = data1[offset+1]*0.2 + 0.8*(dg*gain+128)
+        data1[offset+2] = data1[offset+2]*0.2 + 0.8*(db*gain+128)
+    }
+
+    ctx1.putImageData(imgData1, 0, 0);
+    //console.log('diffImage DONE')
+} 
+
+OverlayControl.prototype.redrawVideoFrameDiff = function() {
+    var overlay = this;
+    
+    let w = overlay.canvas.width
+    let h = overlay.canvas.height
+    
+    let video = videoControl.video
+
+    function interval(start, end) {
+        return Array.from({length: end-start+1}, (x, i) => start+i);
+    }
+
+    overlay.canvas2.width = w
+    overlay.canvas2.height = h
+    let ctx2 = overlay.canvas2.getContext('2d');
+
+    let videoUrl = video.src
+    let frame=videoControl.currentFrame
+
+    // Load async if frames not found
+    let state1 = videoCache.getFrameState(videoUrl, frame)
+    let state2 = videoCache.getFrameState(videoUrl, frame-1)
+    if ((!state1) || ((frame-1>=0)&&!state2)) {
+        // CAUTION: risk of infinite async loop if test always fail!
+        //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), videoinfo.videofps)
+        videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), videoinfo.videofps)
+        .then(function() {
+            printMessage("Preload done")
+            //overlay.hardRefresh()
+        })
+        //videoControl.pause() // pause after to avoid infinite loop?
+        printMessage("Paused, need to preload video frames")
+    }
+
+    let img1 = videoControl.videoCache.getFrameImageSync(videoUrl, frame)
+    let img2 = videoControl.videoCache.getFrameImageSync(videoUrl, frame-1)
+    if (img1)
+        overlay.ctx.drawImage(img1, 
+            canvasTransform[4], canvasTransform[5],
+            canvasTransform[0]*w, canvasTransform[3]*h,
+            0, 0, w, h);
+    if (img2)
+        overlay.ctx2.drawImage(img2, 
+            canvasTransform[4], canvasTransform[5],
+            canvasTransform[0]*w, canvasTransform[3]*h,
+            0, 0, w, h);
+    
+    overlay.diffImage(overlay.canvas2,overlay.canvas, 3.0)
+}
+
+OverlayControl.prototype.drawImageToCanvas = function(img) {
+    let overlay = this
+    let w = overlay.canvas.width
+    let h = overlay.canvas.height
+    function drawDataURIOnCanvas(strDataURI, canvas) {
+        "use strict";
+        let img = new window.Image();
+        img.addEventListener("load", function () {
+            overlay.ctx.drawImage(img, 
+                canvasTransform[4], canvasTransform[5],
+                canvasTransform[0]*w, canvasTransform[3]*h,
+                0, 0,w,h);
+        });
+        img.setAttribute("src", strDataURI);
+    }
+
+    if($.type(img) === "string") {
+        drawDataURIOnCanvas(img)
+    } else
+        overlay.ctx.drawImage(img, 
+            canvasTransform[4], canvasTransform[5],
+            canvasTransform[0]*w, canvasTransform[3]*h,
+            0, 0, w, h);
+}
+OverlayControl.prototype.redrawVideoFrame = function() {
   var overlay = this;
 
   let w = overlay.canvas.width;
@@ -537,25 +1743,20 @@ OverlayControl.prototype.redrawVideoFrame = function () {
   if (videoControl.currentMode == "video") {
     let video = videoControl.video; // same as $('#video')[0]
     if (videoControl.flagCopyVideoToCanvas) {
-      // Copy video to canvas for fully synchronous display
-      //ctx.drawImage(video, 0, 0, video.videoWidth * extraScale / transformFactor, video.videoHeight * extraScale / transformFactor);
-      overlay.ctx.drawImage(
-        video,
-        canvasTransform[4],
-        canvasTransform[5],
-        canvasTransform[0] * w,
-        canvasTransform[3] * h,
-        0,
-        0,
-        w,
-        h
-      );
+      if (overlay.opts.showImageDiff) {
+        overlay.redrawVideoFrameDiff() // Caution: async
+      } else {
+        // Copy video to canvas for fully synchronous display
+        overlay.ctx.drawImage(video,
+          canvasTransform[4], canvasTransform[5],
+          canvasTransform[0] * w, canvasTransform[3] * h,
+          0, 0, w, h);
+      }
     } else {
       // Rely on video under canvas. More efficient (one copy less), but
       // may have some time discrepency between video and overlay
       overlay.ctx.clearRect(
-        0,
-        0,
+        0, 0,
         (video.videoWidth * extraScale) / transformFactor,
         (video.videoHeight * extraScale) / transformFactor
       );
@@ -572,10 +1773,7 @@ OverlayControl.prototype.redrawVideoFrame = function () {
       canvasTransform[5] / previewScaleY,
       (canvasTransform[0] * w) / previewScaleX,
       (canvasTransform[3] * h) / previewScaleY,
-      0,
-      0,
-      w,
-      h
+      0, 0,  w, h
     );
 
     //         overlay.canvas1.clear();
@@ -621,15 +1819,55 @@ function refreshRectFromObs() {
     refreshRectStyle(rect);
   }
   //refreshOverlay() // Avoid infinite cycle
-}
+};
 function refreshRectStyle(rect) {
-  let lockRotation = false;
-  if (!overlay.guiAngle.angleEnabled) {
-    lockRotation = true;
-  }
+  let lockRotation = true
+  if (overlay.opts.showRect) {
+    lockRotation = false
+    if (!overlay.guiAngle.angleEnabled) {
+      lockRotation = true;
+    }
 
-  rect.setControlVisible("mtr", !lockRotation); // Remove rotation handle
+    //rect.setControlVisible('mtr', !lockRotation)  // Remove rotation handle
+    rect.setControlsVisibility({
+      mtr: !lockRotation,
+      mt: false, // middle top disable
+      mb: false, // midle bottom
+      ml: false, // middle left
+      mr: false, // middle right
+      tl: true,
+      bl: true,
+      tr: true,
+      br: true,
+    });
+    rect.lockScalingFlip = true
+    rect.lockScalingX = false
+    rect.lockScalingY = false
+    rect.hasControls = true
+    rect.hasBorders = true
+
+    if (overlay.opts.resizeAroundCenter) {
+      rect.centeredScaling = true
+    } else {
+      rect.centeredScaling = false
+    }
+  } else {
+    // rect.setControlsVisibility({
+    //     mtr: false,
+    //     mt: false, // middle top disable
+    //     mb: false, // midle bottom
+    //     ml: false, // middle left
+    //     mr: false, // middle right
+    // });
+    //rect.lockScalingFlip = true
+    //rect.lockScalingX = true
+    //rect.lockScalingY = true
+    rect.hasControls = false
+    rect.hasBorders = false
+  }
 }
+
+// OBS to Fabric BeeRect
 function updateRectFromObsGeometry(rect) {
   if (logging.overlay) console.log("updateRectFromObsGeometry: rect=", rect);
   let obs = rect.obs;
@@ -645,26 +1883,76 @@ function updateRectFromObsGeometry(rect) {
   //let cx = canvasRect.left;
   //let cy = canvasRect.top;
 
-  // CAUTION: rect.left/top are misnamed. When originX/originY='center', they
-  // Correspond to rectangle center
-  rect.setLeft(cx); // unrotated left (rotation around center)
-  rect.setTop(cy); // unrotated top
-  rect.setWidth(canvasRect.width);
-  rect.setHeight(canvasRect.height);
-  rect.setAngle(obs.angle);
-  rect.setCoords();
+  if (overlay.opts.showRect) {
+    // CAUTION: rect.left/top are misnamed. When originX/originY='center', they
+    // Correspond to rectangle center
+    rect.setLeft(cx)     // unrotated left (rotation around center)
+    rect.setTop(cy)      // unrotated top
+    rect.setWidth(canvasRect.width)
+    rect.setHeight(canvasRect.height)
+    rect.setAngle(obs.angle)
+    rect.setCoords()
+  } else {
+    rect.setWidth(overlay.opts.ID_dotRadius * 2)
+    rect.setHeight(overlay.opts.ID_dotRadius * 2)
+    rect.setLeft(cx)     // unrotated left (rotation around center)
+    rect.setTop(cy)      // unrotated top
+    rect.setAngle(0)
+    rect.setCoords()
+    // Rely on refreshRectStyle
+  }
 }
+
+// Fabric BeeRect to obs
+function updateRectObsGeometry(activeObject) {
+    if (logging.overlay)
+        console.log('updateRectObsGeometry: activeObject=',activeObject)
+    let obs = activeObject.obs
+        if (typeof obs === 'undefined') {
+            console.log('updateRectObsGeometry: activeObject.obs undefined')
+            return
+    }
+
+    let geom = rotatedRectGeometry(activeObject);
+    let videoRect = overlay.canvasToVideoRect(geom.unrotated)
+    
+    if (overlay.opts.showRect) {
+        // Update Observation attached to rectangle from current Rect size
+        obs.x = videoRect.left    // unrotated left (rotation around center)
+        obs.y = videoRect.top     // unrotated top
+        obs.width = videoRect.width
+        obs.height = videoRect.height
+        obs.angle = activeObject.angle    
+        obs.cx = (videoRect.left + videoRect.width / 2);
+        obs.cy = (videoRect.top + videoRect.height / 2);
+    } else {
+        // `Virtual rect, just update center, keep width, height, angle
+        // Update Observation attached to rectangle from current Rect size
+        //obs.x = videoRect.left    // unrotated left (rotation around center)
+        //obs.y = videoRect.top     // unrotated top
+        //obs.width = videoRect.width
+        //obs.height = videoRect.height
+        //obs.angle = activeObject.angle    
+        obs.cx = (videoRect.left + videoRect.width / 2);
+        obs.cy = (videoRect.top + videoRect.height / 2);
+        obs.x = obs.cx - obs.width/2;
+        obs.y = obs.cy - obs.height/2;
+    }
+}
+
 function createRectsFromTracks(F) {
   if (typeof F === "undefined") F = getCurrentFrame();
   let ids = getValidIDsForFrame(F);
   if (logging.overlay) {
     console.log("createRectsFromTracks: ", { frame: F, ids: ids });
   }
-  for (let id of ids) {
-    // For each valid bee ID, create a rect for it
-    let obs = getObsHandle(F, id, false);
-    addRectFromObs(obs);
+  overlay.canvas1.renderOnAddRemove = false  // Do not render all for each change
+  for (let id of ids) { // For each valid bee ID, create a rect for it
+    let obs = getObsHandle(F, id, false)
+    addRectFromObs(obs)
   }
+  overlay.canvas1.renderAll(); // Render only once at the end
+  overlay.canvas1.renderOnAddRemove = true
 }
 function addRectFromObs(inputObs, status) {
   if (typeof inputObs === "undefined") {
@@ -763,7 +2051,7 @@ fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
       this._drawParts(ctx);
     }
 
-    identifyBeeRect(ctx, this, 5);
+        identifyBeeRect(ctx, this, overlay.opts.ID_dotRadius, this.active);
   },
 
   _colormapping: function (label) {
@@ -887,23 +2175,6 @@ function findRect(id) {
   return undefined;
 }
 
-function updateRectObsGeometry(activeObject) {
-  if (logging.overlay)
-    console.log("updateRectObsGeometry: activeObject=", activeObject);
-
-  let geom = rotatedRectGeometry(activeObject);
-  let videoRect = overlay.canvasToVideoRect(geom.unrotated);
-
-  // Update Observation attached to rectangle from current Rect size
-  let obs = activeObject.obs;
-  obs.x = videoRect.left; // unrotated left (rotation around center)
-  obs.y = videoRect.top; // unrotated top
-  obs.width = videoRect.width;
-  obs.height = videoRect.height;
-  obs.angle = activeObject.angle;
-  obs.cx = videoRect.left + videoRect.width / 2;
-  obs.cy = videoRect.top + videoRect.height / 2;
-}
 function updateRectObsActivity(activeObject) {
   // Update Observation attached to rectangle from Form information
   let obs = activeObject.obs;
@@ -1028,11 +2299,17 @@ function identify(ctx, rect, radius) {
   ctx.fillText(acti, x, y + radius + 3);
   ctx.textBaseline = "alphabetic";
 }
-function identifyBeeRect(ctx, rect, radius) {
-  var color;
-  if (rect.status === "new") color = "green";
-  else if (rect.status === "db") color = "yellow";
-  else color = "red"; //problem
+
+// Main function to display annotation info
+function identifyBeeRect(ctx, rect, radius, isActive) {
+
+  var color = overlay.opts.ID_color
+  // if (rect.status === "new")
+  //     color = "green"
+  // else if (rect.status === "db")
+  //     color = "yellow"
+  // else
+  //     color = "red" //problem
 
   // Local coordinates ?
   let x = 0;
@@ -1041,6 +2318,17 @@ function identifyBeeRect(ctx, rect, radius) {
   //console.log('identifyBeeRect ctx=',ctx, x,y)
 
   ctx.save();
+
+  let obs = rect.obs
+
+  if (overlay.opts.showPredictedStatus) {
+    let obs = getObsHandle(rect.obs.frame, rect.obs.ID)//rect.obs
+    if (obs.predicted) {
+      ctx.globalAlpha = 0.25
+    } else {
+      ctx.globalAlpha = 1.0
+    }
+  }
 
   // Compensate rotation to have upright labels
   ctx.rotate((-rect.angle / 180) * Math.PI);
@@ -1051,45 +2339,90 @@ function identifyBeeRect(ctx, rect, radius) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.font = "20px Arial";
-  ctx.fillStyle = color;
-  ctx.textAlign = "center";
-  let obs = rect.obs;
-  if (hasLabel(obs, "wrongid")) {
-    if (obs.newid == null) {
-      ctx.fillStyle = "cyan";
-      ctx.fillText(String(obs.ID), x, y - radius - 3);
-    } else {
-      ctx.font = "14px Arial";
-      ctx.fillStyle = "cyan";
-      ctx.fillText(String(obs.ID), x, y - radius - 3);
-      ctx.font = "10px Arial";
-      ctx.fillStyle = color;
-      ctx.fillText(String(obs.newid), x, y - radius - 16);
+  if (!overlay.opts.showRect) {
+    if (isActive) {
+      // Compensate for the fact the selected rect will not have visible handles
+      ctx.strokeStyle = 'red'
+      ctx.lineWidth = 3
+      ctx.stroke();
     }
-  } else {
-    ctx.fillText(String(rect.id), x, y - radius - 3);
   }
 
-  let acti = activityString(rect.obs);
-
-  ctx.font = "10px Arial";
-  ctx.fillStyle = color;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillText(acti, x, y + radius + 3);
-  ctx.textBaseline = "alphabetic";
-
-  if (typeof rect.obs.notes !== "undefined") {
-    ctx.font = "10px Arial";
+  if (overlay.opts.showID) {
+    //ctx.font = "20px Arial";
+    font = '' + overlay.opts.ID_fontSize + 'px Arial'
+    ctx.font = font
     ctx.fillStyle = color;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    wrapText(ctx, rect.obs.notes, x, y + radius + 3 + 12, 80, 10);
+    ctx.textAlign = 'center';
+    if (hasLabel(obs, 'wrongid')) {
+      if (obs.newid == null) {
+        ctx.fillStyle = "cyan";
+        ctx.fillText(String(obs.ID), x, y - radius - 3);
+      } else {
+        ctx.font = "14px Arial";
+        ctx.fillStyle = "cyan";
+        ctx.fillText(String(obs.ID), x, y - radius - 3);
+        ctx.font = "10px Arial";
+        ctx.fillStyle = color;
+        ctx.fillText(String(obs.newid), x, y - radius - 16);
+      }
+    } else {
+      ctx.fillText(String(rect.id), x, y - radius - 3);
+    }
+  }
+
+  let labelOffset = radius + 3
+  if (overlay.opts.showSpan) {
+    //ctx.font = "10px Arial";
+    let obs = getObsHandle(rect.obs.frame, rect.obs.ID)//rect.obs
+    if ((obs) && ('span' in obs)) {
+      let spannotes = ''
+      let f = obs.frame
+      let f1 = Number(obs.span.f1)
+      let f2 = Number(obs.span.f2)
+      if (f2 != f1) {
+        spannotes = '[' + f1 + '-' + f2 + ']'
+      }
+      font = '' + (overlay.opts.ID_fontSize / 2) + 'px Arial'
+      ctx.font = font
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      wrapText(ctx, spannotes, x, y + labelOffset, 80, 10)
+      labelOffset += overlay.opts.ID_fontSize / 2
+    }
+  }
+  if (overlay.opts.showLabels) {
+    let acti = overlay.opts.labelFormatter(rect.obs)
+    //activityString(rect.obs)
+
+    //ctx.font = "10px Arial";
+    font = '' + (overlay.opts.ID_fontSize / 2) + 'px Arial'
+    ctx.font = font
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(acti, x, y + labelOffset);
+    ctx.textBaseline = 'alphabetic';
+    if (acti != '')
+      labelOffset += overlay.opts.ID_fontSize / 2
+  }
+  if (overlay.opts.showNotes) {
+    if (typeof rect.obs.notes !== 'undefined') {
+      //ctx.font = "10px Arial";
+      let notes = rect.obs.notes
+      font = '' + (overlay.opts.ID_fontSize / 2) + 'px Arial'
+      ctx.font = font
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      wrapText(ctx, notes, x, y + labelOffset, 80, 10)
+    }
+    labelOffset += overlay.opts.ID_fontSize / 2
   }
 
   ctx.restore();
-}
+};
 
 /* Obs tracks */
 function plotTracks(ctx) {
@@ -2253,6 +3586,27 @@ function predictId(frame, rect, mode) {
     reason: "default",
   };
 }
+function defaultIfIDExists(predictStruct) {
+    let id = predictStruct.id
+    if (id==null) {
+        return {
+            id: computeDefaultNewID(),
+            obs: undefined,
+            d: Infinity,
+            frame: undefined,
+            reason: 'notFound'
+        };
+    } 
+    if (findRect(id))
+        return {
+            id: computeDefaultNewID(),
+            predicted_id: id,
+            predicted_obs: obs,
+            reason: 'conflict'
+        };
+    else
+        return predictStruct;
+}
 function predictIdFromObsMultiframe(frameInterval, pt, mode) {
   let out = {
     id: undefined,
@@ -2270,7 +3624,7 @@ function predictIdFromObsMultiframe(frameInterval, pt, mode) {
         cy = obs.y + obs.height / 2;
       //console.log("id=",id,"obs=",obs)
       let d = dist(pt.x, pt.y, cx, cy);
-      if (d < predictIdClickRadius && d < out.d) {
+      if (d < overlay.opts.predictIdClickRadius && d < out.d) {
         out = { id: id, obs: obs, reason: "distance", d: d, frame: frame };
       }
     }
@@ -2278,7 +3632,6 @@ function predictIdFromObsMultiframe(frameInterval, pt, mode) {
   return out;
 }
 
-predictIdClickRadius = 60;
 function predictIdFromTags(frame, pt, mode) {
   var tmp = Tags[frame];
   if (tmp == null) return { id: undefined, tag: undefined, reason: "notFound" };
@@ -2287,8 +3640,8 @@ function predictIdFromTags(frame, pt, mode) {
     for (let k in frame_tags) {
       let tag = frame_tags[k];
       let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
-      if (d < predictIdClickRadius) {
-        return { id: tag.id, tag: tag, reason: "distance" };
+      if (d < overlay.opts.predictIdClickRadius) {
+        return { id: tag.id, tag: tag, reason: 'distance' };
       }
     }
   }
@@ -2311,14 +3664,8 @@ function predictIdFromTagsMultiframe(frameInterval, pt, mode) {
       for (let k in frame_tags) {
         let tag = frame_tags[k];
         let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
-        if (d < predictIdClickRadius && d < out.d) {
-          out = {
-            id: tag.id,
-            tag: tag,
-            reason: "distance",
-            d: d,
-            frame: frame,
-          };
+        if (d < overlay.opts.predictIdClickRadius && d < out.d) {
+          out = { id: tag.id, tag: tag, reason: 'distance', d: d, frame: frame };
         }
       }
     }
@@ -2348,7 +3695,7 @@ function computeDefaultNewID() {
     );
     console.log("   ids=", ids);
   }
-  return default_id;
+  return String(default_id)
 }
 
 // #MARK # LOW-LEVEL MOUSE EVENTS
@@ -2431,7 +3778,13 @@ function onMouseDown_predict(option) {
   }
 
   // predictId takes video/obs coordinates units
-  let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
+    //let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
+    let f = getCurrentFrame()
+    let interval = [f-overlay.trackWindow.backward, f+overlay.trackWindow.forward]
+    if (interval[0]<0) interval[0]=0
+    if (interval[1]>=videoinfo.nframes) interval[1]=videoinfo.nframes-1
+    let prediction = predictIdFromObsMultiframe(interval,videoXY, "distance")
+    prediction = defaultIfIDExists(prediction)
   let predictionTag = predictIdFromTags(getCurrentFrame(), videoXY, "distance");
   //$("#I").val(prediction.id)
 
@@ -2535,10 +3888,10 @@ function onMouseDown_predict(option) {
   //automatic_sub();
   submit_bee();
   // Fire mouse:down again, this time with the created target
-  overlay.canvas1.fire("mouse:down", {
-    target: rect,
-    e: option.e,
-  });
+  // overlay.canvas1.fire("mouse:down", {
+  //     target: rect,
+  //     e: option.e
+  // })
 }
 
 /* Create new rectangle interactively (dragging) */
@@ -2549,11 +3902,21 @@ function onMouseDown_interactiveRect(option) {
   var startX = option.e.offsetX,
     startY = option.e.offsetY;
 
-  let canvasXY = { x: startX, y: startX };
-  let clientXY = { x: option.e.clientX, y: option.e.clientY };
-  let videoXY = overlay.canvasToVideoPoint(canvasXY);
-  let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
-  $("#I").val(prediction.id);
+  let canvasXY = { x: startX, y: startY }
+  let clientXY = { x: option.e.clientX, y: option.e.clientY }
+  let videoXY = overlay.canvasToVideoPoint(canvasXY)
+  //let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
+
+  let f = getCurrentFrame()
+  let interval = [f - overlay.trackWindow.backward, f + overlay.trackWindow.forward]
+  if (interval[0] < 0) interval[0] = 0
+  if (interval[1] >= videoinfo.nframes) interval[1] = videoinfo.nframes - 1
+  let prediction = predictIdFromObsMultiframe(interval, videoXY, "distance")
+  prediction = defaultIfIDExists(prediction)
+  if (logging.mouseEvents)
+    console.log("onMouseDown_interactiveRect: prediction", prediction, 'from videoXY', videoXY)
+
+  $("#I").val(prediction.id)
 
   let id = prediction.id;
 
@@ -2574,7 +3937,7 @@ function onMouseDown_interactiveRect(option) {
 
     let delta = { x: e.clientX - clientXY.x, y: e.clientY - clientXY.y };
 
-    if (e.ctrlKey) {
+        if (overlay.opts.resizeAroundCenter) {
       let w = delta.x * 2,
         h = delta.y * 2;
       rect.set({
@@ -2598,6 +3961,7 @@ function onMouseDown_interactiveRect(option) {
       });
     }
     rect.setCoords();
+
     //canvas1.setActiveObject(rect); // WORKAROUND: activate again to avoid filled display bug
     overlay.canvas1.renderAll(); // Refresh rectangles drawing
 
@@ -2628,11 +3992,14 @@ function onMouseDown_interactiveRect(option) {
       default_width = activeObject.width;
       default_height = activeObject.height;
 
-      updateForm(activeObject);
-      $("#I")[0].focus(); // Set focus to allow easy ID typing
-      $("#I")[0].select();
+      // updateForm(activeObject)
+      // $('#I')[0].focus() // Set focus to allow easy ID typing
+      // $('#I')[0].select()
 
-      printMessage("Press enter to validate ID", "green");
+      // printMessage("Press enter to validate ID", "green")
+
+      updateForm(activeObject)
+      submit_bee()
     } else {
       // Not enough drag to define a new rectangle
       overlay.canvas1.deactivateAll();
@@ -2772,16 +4139,67 @@ function onMouseDown(option) {
 
   printMessage("");
 
-  if (typeof option.target != "undefined") {
-    if (option.e.altKey) {
-      onMouseDown_panning(option);
-    } else {
+  if (option.e.altKey) {
+    if (logging.mouseEvents)
+      console.log('onMouseDown: panning', option)
+    onMouseDown_panning(option)
+    return
+  }
+
+  // VisitWidget Interaction Mode
+  if (overlay.interaction.mode == 'edit-visit') {
+    if (overlay.interaction.opts.pickMode == 'pollinator') {
+      let target = option.target
+      if (typeof target == "undefined") {
+        return false
+      }
       // Clicked on an existing object
-      if (logging.mouseEvents)
-        console.log("onMouseDown: Clicked on object ", option.target);
-      // This is now handled by event onObjectSelected()
-      return false;
+      console.log('onMouseDown / edit-visit / pollinator: clicked', target)
+      overlay.visitWidget.setPollinator(target.obs)
+      return true
     }
+    if (overlay.interaction.opts.pickMode == 'flower') {
+      let target = option.target
+      if (typeof target == "undefined") {
+        return false
+      }
+      // Clicked on an existing object
+      console.log('onMouseDown / edit-visit / flower: clicked', target)
+      overlay.visitWidget.setFlower(target.obs)
+      return true
+    }
+    // Cancel if clicked in the background
+    overlay.setInteractionMode('main')
+    return false
+  }
+
+  if (overlay.opts.clickModeNewAnnotation) {
+    if ((typeof option.target != "undefined")
+      //&& (overlay.previouslySelected.id == option.target.id)
+    ) {
+      // Allow to move currentlu selected annotation
+      // Workaround: previouslySelected used because lastSelected is updated during mouseDown
+      return false
+    }
+    if (logging.mouseEvents)
+      console.log('onMouseDown: create object', option)
+    // By default, create new annotation
+    // Try to copy prediction
+    // or create box centered on click if none
+    onMouseDown_predict(option)
+    //printMessage('Note: Click creates new annotations. If you want to select instead, deselect option "Click Mode/New annotation"','blue')
+    // Animate the New annotation button to remind the user of current mode
+    $('.overlayOpts-clickModeNewAnnotation').effect({ 'effect': "highlight", "duration": 200, "color": "#ffff00" })
+    //$('.overlayOpts-clickModeNewAnnotation').effect({'effect':"pulsate","duration":100,"times":2})
+    return false
+  }
+
+  if (typeof option.target != "undefined") {
+    // Clicked on an existing object
+    if (logging.mouseEvents)
+      console.log("onMouseDown: Clicked on object ", option.target);
+    // This is now handled by event onObjectSelected()
+    return false;
   } else {
     // Clicked on the background
     if (logging.mouseEvents)
@@ -2793,13 +4211,13 @@ function onMouseDown(option) {
       onMouseDown_predict(option);
     } else if (option.e.ctrlKey) {
       // If CTRL key, draw the box directly. Try to predict ID using TopLeft corner
-      onMouseDown_interactiveRect(option);
-    } else if (option.e.altKey) {
-      // If ALT key, do panning
-      onMouseDown_panning(option);
-    } else {
+      onMouseDown_interactiveRect(option)
+    } else if (overlay.opts.clickModeSelectMultiframe) {
       // If no key, background click: try to select trajectory
-      onMouseDown_selectMultiframe(option);
+      onMouseDown_selectMultiframe(option)
+      //$('.overlayOpts-clickModeSelectMultiframe').effect({'effect':"highlight","duration":500,"color":"#ffff00"})
+    } else {
+      // Do nothing, just deselected
     }
   }
 }
@@ -2907,10 +4325,27 @@ function onObjectSelected(option) {
         overlay.getActiveObject().id
       );
     }
-    selectBee(option.target);
-    overlay.lastSelected = option.target;
-    updateDeleteButton();
+    overlay.previouslySelected = overlay.lastSelected
+    selectBee(option.target)
+    overlay.lastSelected = option.target
+    updateDeleteButton()
+
+    // If selected a "visit" event, slect it also in the visitWidget
+    let obs = getObsHandle(option.target.obs.frame, option.target.id)
+    if (obs && obs.visit) {
+      overlay.visitWidget.selectVisit(obs)
+    }
   }
+}
+
+function autoCentering(obs) {
+  if (!obs) {
+    console.log('autoCentering: ABORT, no suitable obs:', obs)
+    return
+  }
+  console.log('autoCentering: obs=', obs)
+  let cx = obs.x + obs.width / 2, cy = obs.y + obs.height / 2
+  overlay.canvasTransformCenter(cx, cy)
 }
 
 function onObjectDeselected(option) {

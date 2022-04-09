@@ -30,6 +30,9 @@
   <script type="text/javascript" src="js/extern/bootstrap.js"></script>
   <script type="text/javascript" src="js/extern/VideoFrame.js"></script>
 
+  <!-- <script data-main="js/extern/main" src="js/extern/require.js"></script> -->
+  <script type="text/javascript" src="js/extern/lru_cache-master/script.js"></script>
+
   <script type="text/javascript" src="js/extern/fabric/dist/fabric.js"></script>
   <!--   <script type="text/javascript" src="js/extern/fabric.canvasex.js"></script> -->
 
@@ -57,6 +60,7 @@
 </head>
 
 <script>
+  /* Call init with optional parameters from the URL */
   // let videoID = "{{video | safe}}";
   // let tagID = "{{video_data | safe}}";
   var p = window.location.search.substr(1).split("&");
@@ -163,7 +167,7 @@
 
               <div id="beeidpanel" class="block inline-collapsible">
                 <div class="block-header small">BeeID:</div>
-                <div class="block-content" style="display:inline">
+                <div class="block-content display-inline">
                   <input type="text" size="5" value="" id="I" onkeypress="onKeyDown_IDEdit(event)"
                     class="small"></input>
                   <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button"
@@ -179,12 +183,14 @@
                       class="btn btn-green-toggle btn-xs labeltoggle wrongid" thelabel="wrongid"
                       title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">wrongid
                     <span class="glyphicon glyphicon-remove small blue"></span></button>
+                    <button type="button" onclick="swapID_callback()" class="btn btn-info btn-xs"
+                      style="position: inline" id="swapID">SwapID</button>
                 </div>
               </div>
 
               <div class='block inline-collapsible'>
                 <div class="block-header small">BoundingBox angle:</div>
-                <span class="block-content">
+                <span class="block-content display-inline">
                   <input value="Disable" onclick="overlay.onClickDisableAngle()" type="button"
                     class="guiAngle-disableAngle btn btn-pink-toggle btn-xs"
                     title="Does not allow event to have angle by default">
@@ -200,7 +206,7 @@
 
               <div id="labeltoggle" class="block inline-collapsible">
                 <div class="block-header small">Labels:</div>
-                <div class="block-content" style="display:inline">
+                <div class="block-content">
                   <div style="display:inline" id="labeltoggle-panel">
                     <button onclick="onLabelToggled(event)" type="button"
                       class="btn btn-green-toggle btn-xs labeltoggle fanning" thelabel="fanning"
@@ -242,8 +248,6 @@
                     <label>Notes: </label><input type="textbox" value="" class="resizedTextbox" id="notes">
                   </div>
                 </div>
-
-                <p id="alerttext"></p>
               </div>
 
               <div id="dialog-form-mainLabelList" class="modal-dialog" title="Label List">
@@ -305,6 +309,61 @@
                 </div>
               </div>
 
+              <div id="alerttextblock" class="block inline-collapsible">
+                <div class="block-header small">
+                  Messages
+                </div>
+                <div class="block-content">
+                  <div id='alertextwrapper'>
+                    <div id="alerttext"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="timeline" class="block inline-collapsible">
+                <div class="block-header small">
+                  Timeline
+                </div>
+                <div class="block-content">
+                  <div id='timelineblockwrapper'>
+                    <div id="timelineblockdiv"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="visitblock" class="block inline-collapsible">
+                <div class="block-header small">
+                  Visit Mode
+                </div>
+                <div class="block-content">
+                  <div id='visitblockblockwrapper'>
+                    <div id="visitblockdiv"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="pickframeblock" class="block inline-collapsible">
+                <div class="block-header small">
+                  Pick-Frame Mode
+                </div>
+                <div class="block-content">
+                  <div id='pickframeblockwrapper'>
+                    <div id="pickframediv"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="pickflowerblock" class="block inline-collapsible">
+                <div class="block-header small">
+                  Pick-Flower Mode
+                </div>
+                <div class="block-content">
+                  <div id='pickflowerblockwrapper'>
+                    <div id="pickflowerdiv"></div>
+                  </div>
+                </div>
+              </div>
+
               <!-- # VIDEO CONTROL -->
 
               <div class="sortable">
@@ -318,7 +377,7 @@
                       type="button" class="btn btn-info btn-sm nopad"><span
                         class="glyphicon glyphicon-pause"></span><span
                         class="glyphicon glyphicon-play icon-flipped"></span></button>
-                    <span class="small">Speed </span><input type="text" class="btn-sm nopad" size="4" value="1"
+                    <span class="small">Speed </span><input type="text" class="btn-sm nopad small" size="4" value="1.0"
                       id="playRate" onchange="videoControl.playRateInputChanged()""></input>
                 <button value=" Play" onclick="videoControl.playPauseVideo()" id="play" type="button"
                       class="btn btn-success btn-sm nopad"><span class="glyphicon glyphicon-play"></span><span
@@ -334,6 +393,9 @@
                       class="btn btn-info btn-xs x-small nopad fwbut fwbut1" title="-1 frame"><span
                         class="glyphicon glyphicon-step-backward"></span></button>
 
+                    <input type="text" value="-" id="currentFrame" onchange="videoControl.onFrameTextChanged(event)"
+                      size="7" title="Frame">
+
                     <button value="Next frame" onclick="videoControl.forward(1)" type="button"
                       class="btn btn-info btn-xs x-small nopad fwbut fwbut1" title="+1 frame"><span
                         class="glyphicon glyphicon-step-forward"></span></button>
@@ -348,12 +410,60 @@
                 </div>
 
                 <div class='block inline-collapsible'>
+                  <div class="block-header small">Display:</div>
+                  <span class="block-content">
+                    <button onclick="overlay.optsClick('showRect')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showRect"
+                      title="Show Rectangle in the overlay">Show Rect</button>
+                    <button onclick="overlay.optsClick('showID')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showID"
+                      title="Show ID in the overlay">Show ID</button>
+                    <button onclick="overlay.optsClick('showLabels')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showLabels"
+                      title="Show Labels in the overlay (CAUTION: only applied to entering, leaving, pollen)">Show
+                      Labels</button>
+                    <button onclick="overlay.optsClick('showNotes')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showNotes"
+                      title="Show Notes in the overlay">Show Notes</button>
+                    <button onclick="overlay.optsClick('showPredictedStatus')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showPredictedStatus"
+                      title="Show annotations with predicted label as transparent">Transparent prediction</button>
+                    <button onclick="overlay.optsClick('showSpan')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showSpan"
+                      title="Show Events Time Span in the overlay">Show Timespan</button>
+                    <button onclick="overlay.optsClick('resizeAroundCenter')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-resizeAroundCenter"
+                      title="Rectangle resize is around the box center">Resize around center</button>
+                    <button onclick="overlay.optsClick('showImageDiff')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showImageDiff"
+                      title="Show image difference">Image Diff</button>
+                  </span>
+                </div>
+
+                <div class='block inline-collapsible'>
+                  <div class="block-header small">Click Mode:</div>
+                  <span class="block-content">
+                    <button onclick="overlay.optsClick('clickModeSelectMultiframe')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-clickModeSelectMultiframe"
+                      title="Click=Can select from different time">Select diff. time</button>
+                    <button onclick="overlay.optsClick('clickModeNewAnnotation')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-clickModeNewAnnotation"
+                      title="Click=New annotation">New annotation</button>
+                    <button onclick="overlay.optsClick('clickModeAutoCentering')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-clickModeAutoCentering"
+                      title="Automatic centering on selection">Auto centering</button>
+                  </span>
+                </div>
+
+                <div class='block inline-collapsible'>
                   <div class="block-header small">FocusInterval:</div>
                   <span class="block-content">
                     <button onclick="shiftTrackWindow(-0.75)" type="button" class="btn btn-window btn-xs"
                       title="Reduce track window"><span class="glyphicon glyphicon-step-backward small"></span></button>
                     <button onclick="shiftTrackWindow(0.75)" type="button" class="btn btn-window btn-xs"
                       title="Extend track window"><span class="glyphicon glyphicon-step-forward small"></span></button>
+                    <input id="focusTrackWindow" value="Follow" onclick="onClickFocusTrackWindow()" type="button"
+                      class="btn btn-pink-toggle btn-xs" title="Track window follows current frame">
 
                     <button value="win-" onclick="scaleTrackWindow(0.5)" type="button" class="btn btn-window btn-xs"
                       title="Reduce track window"><span class="glyphicon glyphicon-chevron-right small"></span>-<span
@@ -361,10 +471,15 @@
                     <button value="win+" onclick="scaleTrackWindow(2)" type="button" class="btn btn-window btn-xs"
                       title="Extend track window"><span class="glyphicon glyphicon-chevron-left small"></span>+<span
                         class="glyphicon glyphicon-chevron-right small"></span></button>
+                    <select id="selectboxTrackDir" name="selectboxTrackDir" title="Focus interval direction"
+                      onchange="onTrackWindowChanged(event)" class="small" style="display:inline-block;">
+                      <option value="Bidirectional" selected>Bidir</option>
+                      <option value="Forward">Fwd</option>
+                      <option value="Backward">Bwd</option>
+                    </select> <!-- selectboxVideo -->
 
-                    <input id="focusTrackWindow" value="FocusView" onclick="onClickFocusTrackWindow()" type="button"
-                      class="btn btn-pink-toggle btn-xs" title="Focus on Track window">
-
+                    <input type="text" value="5" size="4" id="trackWindow" class="small"
+                      onchange="onTrackWindowChanged(event)" title="Track window size from center in frames">
                     <button value="1s" onclick="setTrackWindow(20)" type="button" class="btn btn-default btn-xs"
                       title="Track window = 1s">1s</button>
                     <button value="10s" onclick="setTrackWindow(200)" type="button" class="btn btn-default btn-xs"
@@ -390,13 +505,19 @@
                     <button onclick="modifyCurrentObsSpan('extendleft')" type="button" class="btn btn-obs-expand btn-xs"
                       title="Extend annotation left"> <span
                         class="glyphicon glyphicon-chevron-left small"></span>+</button>
+                    <!-- <button onclick="modifyCurrentObsSpan('setspan-start')" type="button" class="btn btn-blue-toggle btn-xs setspan-start" title="Set span left">Set Start</button> -->
                     <button onclick="modifyCurrentObsSpan('restrictleft')" type="button"
                       class="btn btn-obs-expand btn-xs" title="Restrict annotation left"> <span
                         class="glyphicon glyphicon-chevron-right small"></span>-</button>
-                    <span class='small blue-text'>-span-</span>
+                    <button onclick="modifyCurrentObsSpan('setspan')" type="button"
+                      class="btn btn-blue-toggle btn-xs setspan" title="Set timespan for this event">Set Span</button>
+                    <button onclick="overlay.drawTimelineCurrentObject()" type="button"
+                      class="btn btn-blue-toggle btn-xs small" title="Show video around this event">Draw
+                      timeline<br>(Experimental)</button>
                     <button onclick="modifyCurrentObsSpan('restrictright')" type="button"
                       class="btn btn-obs-expand btn-xs" title="Restrict annotation right">-<span
                         class="glyphicon glyphicon-chevron-left small"></span></button>
+                    <!-- <button onclick="modifyCurrentObsSpan('setspan-end')" type="button" class="btn btn-blue-toggle btn-xs setspan-end" title="Set span right">Set End</button> -->
                     <button onclick="modifyCurrentObsSpan('extendright')" type="button"
                       class="btn btn-obs-expand btn-xs" title="Extend annotation right">+<span
                         class="glyphicon glyphicon-chevron-right small"></span></button>
@@ -455,8 +576,10 @@
                       title="Exclude these IDs (comma separated list, no spaces)">ExcludeID</button>
                     <button id="hideInvalidButton" onclick="click_hideInvalid()" type="button"
                       class="btn btn-orange-toggle btn-xs"
-                      title="Hide  markings as falsealarm or wrongid and their tag detection)">Hide
-                      FalseAlarms/WrongID</button>
+                      title="Hide markings as falsealarm or wrongid and their tag detection">Hide FA/WrongID</button>
+                    <button id="hideFlowersButton" onclick="click_hideFlowers()" type="button"
+                      class="btn btn-orange-toggle btn-xs" title="Hide annotations whose ID starts with F">Hide
+                      Flowers</button>
                   </span>
                 </div>
 
@@ -573,8 +696,14 @@
                     </label>
                     <br>
                     <div id="videoName" class="small">-</div>
-                    Frame <input type="text" value="-" id="currentFrame"
-                      onchange="videoControl.onFrameTextChanged(event)" size="8">
+                    <div>
+                      <div style="display:inline;" class="currentFrameDiv">-</div>
+                      <input onclick="overlay.exportFrame()" type="button" value="Export frame"
+                        class="btn btn-default btn-xs" style="display:inline;"
+                        title="Export current frame to new window">
+                      <input onclick="overlay.openVideoNewTab()" type="button" value="Open Video"
+                        class="btn btn-default btn-xs" style="display:inline;" title="Open current video in new window">
+                    </div>
                     <div id="vidTime">Video Time:</div>
                     <div id="realTime">Real Time:</div>
                     <select id="selectboxVideo" name="video" onchange="videoManager.onSelectboxVideoChanged()" class="">
@@ -751,6 +880,8 @@
                       <input type="button" onclick="eventsFromServerDialog.openDialog('tag')" class="btn btn-primary btn-xs"
                       value="Load Events (Advanced)">
                       <br>
+                      <!-- FIXME: eventsFromServerDialog not defined ?? -->
+                      <!-- NOTE: Moved #dialog-event-from-server to #from-server-dialog -->
 
                       <label>Saving:</label>
                       <br>
@@ -856,6 +987,8 @@
                         onclick="zoomOverlay.clickShowOverlay()">Overlay</label>
                     <label><input type="checkbox" checked="true" id="checkboxZoomToggleGrid"
                         onclick="zoomOverlay.clickToggleGrid()">Grid</label>
+                    <label><input type="checkbox" checked="true" id="checkboxZoomShowTagView"
+                        onclick="zoomOverlay.clickToggleShowTagView()">Tag</label>
                     <!--                     <label><input type="checkbox" checked="true" id="checkboxZoomShowDistractors" onclick="zoomOverlay.clickShowDistractors()">Alternate Tags</label> -->
                   </div>
 
@@ -870,6 +1003,8 @@
                       title="Rotate CCW" style="display:inline;">
                     <input value="⤾" onclick="zoomOverlay.rotateTag(+90)" type="button" class="btn btn-xs"
                       title="Rotate CW" style="display:inline;">
+                    <input value="Export Image" onclick="zoomOverlay.exportZoomImage()" type="button"
+                      class="btn btn-default btn-xs" title="Export Image" style="display:inline;">
                   </div>
 
                   <div style="clear:both;"></div>
@@ -886,7 +1021,7 @@
                         <div id='zoomInfo'>
                         </div>
                       </td>
-                      <td class="top-align">
+                      <td class="top-align" id="zoomTagView">
                         <div>
                           <div class='tagdivresizable'>
                             <div class="inline-block tagImageID">ID</div>
@@ -1012,52 +1147,33 @@
                   </div>
 
                   <div class='subpanel collapsible'>
-                    <label>Show/Hide</label>
+                    <label>Annotation overlay</label>
                     <div>
-                      <label>Overlay:</label>
                       <div class="checkbox">
                         <label><input type="checkbox" checked="false" id="showObs" onclick="onShowObsChanged()"
-                            class='btn-sm'>Show Events</label>
+                            class='btn-sm'>In current frame</label>
                       </div>
                       <div class="checkbox">
                         <label><input type="checkbox" checked="false" id="showObsTracks"
-                            onclick="onShowObsChanged()">Show Events Tracks</label>
+                            onclick="onShowObsChanged()">Tracks</label>
                       </div>
-                      <div class="checkbox">
-                        <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">Show
-                          Tags</label>
-                      </div>
-                      <div class="checkbox">
-                        <label><input type="checkbox" checked="true" id="showTagsTracks"
-                            onclick="onShowTagsTracksChanged()">Show Tag Tracks</label>
-                      </div>
-                      <div class="checkbox">
-                        <label><input type="checkbox" checked="true" id="showSelectedTagsTracks"
-                            onclick="onShowTagsTracksChanged()">Show Selected Track</label>
-                      </div>
-                      <div class="checkbox">
-                        <label><input type="checkbox" checked="true" id="showTagsOrientation"
-                            onclick="onShowTagsChanged()">Show Tags Orientation</label>
-                      </div>
-                      <div>Tag style
-                        <select id="selectboxTagMarker" name="tagMarker" onchange="overlay.selectboxTagMarkerChanged()"
-                          class=""></select>
-                      </div>
-
                       <div class="inline-block">
-                        Track window
-
-                        <input type="text" value="5" size="6" id="trackWindow" onchange="onTrackWindowChanged(event)">
-
-                        <select id="selectboxTrackDir" name="selectboxTrackDir" onchange="onTrackWindowChanged(event)"
-                          class="" style="display:inline-block;">
-                          <option value="Bidirectional" selected>Bidirectional</option>
-                          <option value="Forward">Forward</option>
-                          <option value="Backward">Backward</option>
-                        </select> <!-- selectboxVideo -->
+                        <b>ID Appearance</b><br>
+                        dotRadius <input type="text" value="5" size="4" id="overlayOpts-ID_dotRadius"
+                          onchange="onOverlayParamsChanged(event)">
+                        <br>
+                        fontSize <input type="text" value="5" size="4" id="overlayOpts-ID_fontSize"
+                          onchange="onOverlayParamsChanged(event)">
+                        <br>
+                        color <input type="text" value="7" size="4" id="overlayOpts-ID_color"
+                          onchange="onOverlayParamsChanged(event)">
                       </div>
-                      <hr>
-                      <label>Chronogram:</label>
+                    </div>
+                  </div>
+
+                  <div class='subpanel collapsible'>
+                    <label>Chronogram</label>
+                    <div>
                       <div class="checkbox">
                         <label><input type="checkbox" checked="true" id="showObsChrono"
                             onclick="onChronoParametersChanged()" />Show Events</label>
@@ -1074,11 +1190,35 @@
                         <label><input type="checkbox" checked="true" id="showTagsChrono"
                             onclick="onChronoParametersChanged()" />Show Tags</label>
                       </div>
+                    </div>
+                      </div>
 
+
+                  <div class='subpanel collapsible'>
+                    <label>Tags overlay</label>
+                    <div>
+                      <div class="checkbox">
+                        <label><input type="checkbox" checked="true" id="showTags" onclick="onShowTagsChanged()">In
+                          current frame</label>
+                      </div>
+                      <div class="checkbox">
+                        <label><input type="checkbox" checked="true" id="showTagsOrientation"
+                            onclick="onShowTagsChanged()">Tag Orientation</label>
+                      </div>
+                      <div class="checkbox">
+                        <label><input type="checkbox" checked="true" id="showTagsTracks"
+                            onclick="onShowTagsTracksChanged()">All tag tracks</label>
+                      </div>
+                      <div class="checkbox">
+                        <label><input type="checkbox" checked="true" id="showSelectedTagsTracks"
+                            onclick="onShowTagsTracksChanged()">Selected track</label>
+                      </div>
+                      <div>Tag style
+                        <select id="selectboxTagMarker" name="tagMarker" onchange="overlay.selectboxTagMarkerChanged()"
+                          class=""></select>
+                      </div>
                     </div>
                   </div>
-
-
                   <div class='subpanel collapsible'>
                     <label>Tag filtering</label>
                     <div>
@@ -1180,7 +1320,16 @@
 
                     </div>
                   </div>
-
+                  <div class='subpanel collapsible'>
+                    <label>Video caching</label>
+                    <div>
+                      <div class="inline-block">
+                        <b>Caching of video frames</b><br>
+                        Cache size (try 10 is interface is slow when using image diff) <input type="text" value="40"
+                          size="4" id="videoCacheSize" onchange="videoCache.onVideoCacheParamsChanged(event)">
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

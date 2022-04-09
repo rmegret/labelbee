@@ -96,18 +96,38 @@ function init(videoID, tagID) {
   );
   $(".inline-collapsible > .block-header").on("click", function (e) {
     //console.log(e)
-    let header = $(e.currentTarget); //$(".block-header", $(e.currentTarget).parent())
-    let content = $("> .block-content", header.parent());
-    content.toggle();
-    header.toggleClass("collapsed", content.is(":hidden"));
-    header.parent().toggleClass("collapsed", content.is(":hidden"));
-    if (header.hasClass("collapsed")) {
-      header.parent().trigger("collapsiblecollapse", e);
-    } else {
-      header.parent().trigger("collapsibleexpand", e);
-    }
-    console.log("DONE\n\n");
-  });
+      let header = $(e.currentTarget) //$(".block-header", $(e.currentTarget).parent())
+      let block = header.parent()
+      //let content = $("> .block-content", header.parent())
+      //content.toggle()
+      //header.toggleClass("collapsed",content.is(":hidden"))
+      //header.parent().toggleClass("collapsed",content.is(":hidden"))
+      //if (header.hasClass("collapsed")) {
+      block.toggleClass("collapsed")
+      if (!block.hasClass("collapsed")) {
+          //block.trigger("collapsiblecollapse",e)
+      } else {
+          //block.trigger("collapsibleexpand",e)
+      }
+      console.log('DONE\n\n')
+    })
+  function refreshCollapsible(block) {
+      let collapsed = block.hasClass("collapsed")
+      let content = $("> .block-content", block)
+      let header = $("> .block-header", block)
+      content.toggle(!collapsed)
+      header.toggleClass("collapsed",collapsed)
+  }
+  $(".inline-collapsible").on("collapsibleexpand",function (e) {
+      console.log('collapsible',e)
+      let block = $(e.currentTarget)
+      refreshCollapsible(block)
+    })
+  $(".inline-collapsible").on("collapsiblecollapse",function (e) {
+      console.log('collapsible',e)
+      let block = $(e.currentTarget)
+      refreshCollapsible(block)
+    })
 
   $(".sortable").sortable({
     connectWith: ".sortable",
@@ -137,9 +157,14 @@ function init(videoID, tagID) {
   // ## Keyboard control
 
   // REMI: use keyboard
-  //$(window).on("keydown", onKeyDown);
-  $("#left-side").attr("tabindex", "0");
-  $("#left-side").on("keydown", onKeyDown);
+  //$(window).on("keydown", onWindowKeyDown);
+  $('#left-side').attr("tabindex", "0")
+  $('#left-side').on("keydown", onKeyDown);
+  //$('#video').on("keydown", onKeyDown);
+  // Enable keyboard events from video wrapper
+  //let videocanvaswrapper = $('.canvaswrapper')[0]
+  //$(videocanvaswrapper).on('keydown',function(){console.log('KKEY')})
+  //$(videocanvaswrapper).attr('tabindex','0')
 
   // ## Misc init
 
@@ -147,6 +172,9 @@ function init(videoID, tagID) {
   // refresh();
   updateForm(null);
   defaultSelectedBee = undefined;
+    change_id_force = 'swap'  // What to do if conflict when changing id
+
+    $('#alerttextblock').resizable()
 
   //loadEventsFromFile0('data/Tracks-demo.json')
 
@@ -577,27 +605,32 @@ function FilePickerFromServerDialog() {
 // ## Keyboard
 
 function onKeyDown_IDEdit(event) {
-  if (logging.keyEvents) console.log("onKeyDown_IDEdit: event=", event);
-  var key = event.which || event.keyCode;
-  if (key == 13) {
-    // Enter
-    let frame = getCurrentFrame();
+  if (logging.keyEvents) console.log("onKeyDown_IDEdit: event=", event)
+  //var key = event.which || event.keyCode;
+  if (event.key == 'Enter') { // Enter
+    let frame = getCurrentFrame()
     let fieldID = document.getElementById("I");
     let new_id = fieldID.value;
 
     let activeObject = overlay.getActiveObject();
+
     if (!activeObject) return;
 
     if (activeObject.status === "new") {
-      activeObject.id = new_id;
-      printMessage("ID changed + submitted", "green");
-      submit_bee(activeObject);
-    } /* status=="db"*/ else {
-      let old_id = activeObject.id;
-      if (changeObservationID(frame, old_id, new_id)) {
+      activeObject.id = new_id
+      submit_bee(activeObject)
+      defaultSelectedBee = new_id
+      printMessage("ID changed + submitted", "green")
+    } else { /* status=="db"*/
+      let old_id = activeObject.id
+      if (logging.keyEvents)
+        console.log("onKeyDown_IDEdit: trying to change ID",
+          { object: activeObject, old_id: old_id, new_id: new_id })
+      if (changeObservationID(frame, old_id, new_id, change_id_force)) {
         // Successfull
-        activeObject.id = new_id;
-        printMessage("ID changed succesfully!", "green");
+        activeObject.id = new_id
+        defaultSelectedBee = new_id
+        printMessage("ID changed succesfully!", "green")
       } else {
         console.log("onKeyDown_IDEdit: unsuccessfull ID change", {
           object: activeObject,
@@ -606,6 +639,8 @@ function onKeyDown_IDEdit(event) {
         });
         printMessage("ID not changed", "orange");
       }
+
+      //console.log(defaultSelectedBee)
       videoControl.refresh();
       refreshChronogram();
     }
@@ -659,20 +694,34 @@ function onKeyDown(e) {
   if (logging.keyEvents) console.log("onKeyDown: e=", e);
 
   if (/textarea|select/i.test(e.target.nodeName) || e.target.type === "text") {
+    if (e.key == "Escape") {
+      if (logging.keyEvents)
+        console.log("onKeyDown: Escape in text field. focus back to canvas/left-side")
+      $('#left-side')[0].focus({ preventScroll: true }) // Use HTML5 API to prevent scroll
+      updateForm(overlay.getActiveObject())
+      e.stopPropagation();
+      return;
+    }
     if (logging.keyEvents)
       console.log("onKeyDown: coming from text field. stopped event");
     e.stopPropagation();
     return;
   }
 
-  if (e.target == document.getElementById("I")) {
-    if (e.keyCode == 32 || e.keyCode == 188 || e.keyCode == 190) {
-      console.log(
-        "onKeyDown: detected keydown happened in textfield #I with keyCode for navigation shortcuts. Canceling it and showing a message."
-      );
-      printMessage("Editing ID. Press ESC to exit...", "green");
-      return false;
+  var id_field = document.getElementById("I");
+  if (e.target == id_field) {
+    if (e.key == "Escape") { //(e.keyCode==27) {
+      console.log("onKeyDown: detected keydown ESC happened in textfield #I. Canceling edit.")
+      id_field.blur();
+      $('#left-side')[0].focus({ preventScroll: true })
+      updateForm(overlay.getActiveObject())
+      return false
     }
+    //if (e.keyCode==32 || e.keyCode==188 || e.keyCode==190) {
+    //  console.log("onKeyDown: detected keydown happened in textfield #I with keyCode for navigation shortcuts. Canceling it and showing a message.")
+    //  printMessage("Editing ID. Press ESC to exit...", "green")
+    //  return false
+    //}
   }
   if (e.target.type == "text") {
     if (logging.keyEvents) console.log("keyDown goes to text field");
@@ -683,7 +732,7 @@ function onKeyDown(e) {
     return false;
   }
   if (e.key == "p") {
-    $("#P").prop("checked", !$("#P").prop("checked"));
+    $("#P").prop("checked", !$().prop("checked"));
     $("#P").trigger("change");
     //automatic_sub();
     return false;
@@ -692,122 +741,70 @@ function onKeyDown(e) {
     videoControl.refresh();
     return false;
   }
-  switch (e.keyCode) {
-    /*        case 32: // Space
-            var id_field = document.getElementById("I");
+  // Prev Frame: <, arrow
+  if ((e.key == "ArrowLeft") || (e.keyCode == 188)) {
+    if (e.ctrlKey && e.shiftKey)
+      videoControl.rewind4();
+    else if (e.ctrlKey)
+      videoControl.rewind3();
+    else if (e.shiftKey)
+      videoControl.rewind2();
+    else
+      videoControl.rewind();
+    return false;
+  }
+  // Next Frame: >, arrow
+  if ((e.key == "ArrowRight") || (e.keyCode == 190)) {
+    if (e.ctrlKey && e.shiftKey)
+      videoControl.forward4();
+    else if (e.ctrlKey)
+      videoControl.forward3();
+    if (e.shiftKey)
+      videoControl.forward2();
+    else
+      videoControl.forward();
+    return false;
+  }
+  // Play/Pause: Space (32)
+  if ((e.key == " ")) {
+    if (e.ctrlKey) {
+      if (e.shiftKey) videoControl.playPauseVideoBackward(2);
+      else videoControl.playPauseVideo(2);
+    } else {
+      if (e.shiftKey) videoControl.playPauseVideoBackward();
+      else videoControl.playPauseVideo();
+    }
+    return false;
+  }
+  // Escape: Focus on ID field vs video control (27)
+  if ((e.key == "Escape")) {
+    var id_field = document.getElementById("I");
+    if ($(id_field).is(":focus")) {
+      id_field.selectionStart = id_field.selectionEnd;
+      id_field.blur();
+      $('#left-side')[0].focus({ preventScroll: true })
+      return false;
+    } else {
+      id_field.focus(); // Facilitate changing the id
+      id_field.select();
+      return false;
+    }
+        return false;
+    }
+    // Enter: Focus on ID field vs video control (27)
+    if ((e.key=="Enter")) { 
+        var id_field = document.getElementById("I");
+        if ($(id_field).is(':focus')) {
+            id_field.selectionStart = id_field.selectionEnd
+            id_field.blur();
+            $('#left-side')[0].focus({preventScroll:true})
+            return false;
+        } else {
             id_field.focus(); // Facilitate changing the id
             id_field.select();
-            return false; // Prevent the event to be used as input to the field
-            break;
-            */
-    case 32: // Space
-      if (e.ctrlKey) {
-        if (e.shiftKey) videoControl.playPauseVideoBackward(2);
-        else videoControl.playPauseVideo(2);
-      } else {
-        if (e.shiftKey) videoControl.playPauseVideoBackward();
-        else videoControl.playPauseVideo();
-      }
-      return false;
-    case 27: // Escape
-      //return true;
-      var id_field = document.getElementById("I");
-      if ($(id_field).is(":focus")) {
-        id_field.selectionStart = id_field.selectionEnd;
-        id_field.blur();
-        return false;
-      } else {
-        id_field.focus(); // Facilitate changing the id
-        id_field.select();
-        return false;
-      }
-      break;
-    //case 83: // key S
-    //    submit_bee();
-    //    if (logging.keyEvents)
-    //        console.log("onKeyDown: 'S' bound to submit_bee. Prevented key 'S' to propagate to textfield.")
-    //    return false; // Prevent using S in textfield
-    case 13: // Enter
-      if ($(document.activeElement)[0] == document.body) {
-        // No specific focus, process the key
-        submit_bee();
-      }
-      //onKeyDown_IDEdit(e) // Forward to IDedit keydown handler
-      //return false;
-      return true;
-    case 16: // Shift
-    case 17: // Ctrl
-    case 18: // Alt
-    case 19: // Pause/Break
-    case 20: // Caps Lock
-    case 35: // End
-    case 36: // Home
-      break;
-    case 188: // <
-      if (e.ctrlKey && e.shiftKey) videoControl.rewind4();
-      else if (e.ctrlKey) videoControl.rewind3();
-      else if (e.shiftKey) videoControl.rewind2();
-      else videoControl.rewind();
-      return false;
-    case 190: // >
-      if (e.ctrlKey && e.shiftKey) videoControl.forward4();
-      else if (e.ctrlKey) videoControl.forward3();
-      if (e.shiftKey) videoControl.forward2();
-      else videoControl.forward();
-      return false;
-    // Mac CMD Key
-    case 91: // Safari, Chrome
-    case 93: // Safari, Chrome
-    case 224: // Firefox
-      break;
-  }
-  /*
-    let obj = canvas1.getActiveObject();
-    if (obj) {
-        switch (e.keyCode) {
-            case 37: // Left
-                if (e.shiftKey && obj.width > 10) {
-                    obj.width -= 10;
-                    obj.left += 5;
-                } else
-                    obj.left -= 10;
-                obj.setCoords();
-                videoControl.refresh();
-                return false;
-            case 39: // Right
-                if (e.ctrlKey) {
-                    obj.set("width", parseFloat(obj.get("width")) + 10)
-                    obj.set("left", parseFloat(obj.get("left")) - 5)
-                } else
-                    obj.set("left", parseFloat(obj.get("left")) + 10)
-                obj.setCoords();
-                videoControl.refresh();
-                return false;
-            case 38: // Up
-                if (e.ctrlKey) {
-                    obj.set("height", parseFloat(obj.get("width")) + 10)
-                    obj.set("top", parseFloat(obj.get("top")) - 5)
-                } else
-                    obj.set("top", parseFloat(obj.get("top")) - 10)
-                obj.setCoords();
-                videoControl.refresh();
-                return false;
-            case 40: // Down
-                obj.set("top", parseFloat(obj.get("top")) + 10)
-                obj.setCoords();
-                videoControl.refresh();
-                return false;
+            return false;
         }
+        return false;
     }
-    */
-  /*
-    if (e.keyCode >= 48 && e.keyCode <= 57) { // Numbers from 0 to 9
-        if (!$("#I").is(':focus')) { // If ID not focused, focus it
-            $("#I")[0].focus()
-            $("#I")[0].select()
-                //$("#I").val(e.keyCode-48); // Type in the numerical character
-            return true; // Let keycode be transfered to field
-        }
-    }
-    */
+    // NOTE: Removed switch during merge
 }

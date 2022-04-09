@@ -38,6 +38,7 @@ function deepcopy(obj) {
 }
 
 function copyObs(obs, tmpObs) {
+  // Shallow copy: internal handles such aslabels or parts point to same thing...
   obs.ID = tmpObs.ID;
   obs.time = tmpObs.time;
   obs.frame = tmpObs.frame;
@@ -50,17 +51,23 @@ function copyObs(obs, tmpObs) {
   obs.height = tmpObs.height;
   //obs.marked = tmpObs.marked;
   //obs.permanent = tmpObs.permanent;
-  obs.bool_acts = [];
-  obs.bool_acts[0] = tmpObs.bool_acts[0];
-  obs.bool_acts[1] = tmpObs.bool_acts[1];
-  obs.bool_acts[2] = tmpObs.bool_acts[2];
-  obs.bool_acts[3] = tmpObs.bool_acts[3];
+  if (tmpObs.bool_acts) {
+    obs.bool_acts = []
+    obs.bool_acts[0] = tmpObs.bool_acts[0];
+    obs.bool_acts[1] = tmpObs.bool_acts[1];
+    obs.bool_acts[2] = tmpObs.bool_acts[2];
+    obs.bool_acts[3] = tmpObs.bool_acts[3];
+  } else {
+    obs.bool_acts = [false, false, false, false]
+  }
   obs.angle = tmpObs.angle;
   obs.notes = tmpObs.notes;
   obs.labels = tmpObs.labels;
   obs.parts = tmpObs.parts;
   obs.newid = tmpObs.newid; // in case of wrongid
   obs.fix = deepcopy(tmpObs.fix);
+  if (tmpObs.visit)
+    obs.visit = tmpObs.visit
 }
 function hasParts(obs) {
   return !!obs.parts && obs.parts.length > 0;
@@ -139,21 +146,38 @@ function storeObs(tmpObs) {
   if (logging.submitEvents) console.log("Submitting obs = ", obs);
 }
 
-function changeObservationID(frame, old_id, new_id) {
+/**
+ * 
+ * @param {*} frame 
+ * @param {*} old_id 
+ * @param {*} new_id 
+ * @param {(false|true|'swap')} force 
+ * @returns true if change was performed
+ */
+function changeObservationID(frame, old_id, new_id, force) {
   // REMI: modified to be be independent of View
+  if (old_id == new_id) {
+    console.log("changeObservationID: ABORT, old_id=", old_id, " same as new_id=", new_id);
+    return false
+  }
   if (Tracks[frame] != null) {
+    if (!force) {
+      if (Tracks[frame][new_id] != null) {
+        console.log("changeObservationID: ABORT, new_id=", new_id, " already exists");
+        return false
+      }
+    }
     if (Tracks[frame][old_id] != null) {
       if (logging.submitEvents)
-        console.log(
-          "changeObservationID: frame=",
-          frame,
-          "old_id=",
-          old_id,
-          " new_id=",
-          new_id
-        );
+        console.log("changeObservationID: frame=", frame, "old_id=", old_id, " new_id=", new_id);
+      let backup_new_id = Tracks[frame][new_id]
       Tracks[frame][new_id] = Tracks[frame][old_id];
-      delete Tracks[frame][old_id];
+      if ((backup_new_id) && (force == 'swap')) {
+        Tracks[frame][old_id] = backup_new_id
+        Tracks[frame][old_id].ID = old_id;
+      } else {
+        delete Tracks[frame][old_id];
+      }
       Tracks[frame][new_id].ID = new_id;
       return true;
     } else {
@@ -170,6 +194,60 @@ function changeObservationID(frame, old_id, new_id) {
     return false;
   }
 }
+function getFramesWithID(interval, id) {
+    let fmin = interval[0];
+    let fmax = interval[1];
+    if (fmax==-1) {
+        fmax = videoinfo.nframes-1
+    }
+    
+    var frames = []
+    for (let f=fmin; f<=fmax; f++) {
+        if (obsDoesExist(f, id)) {
+            frames.push(f)
+        }
+    }    
+    return frames;
+}
+function getFramesWithSwapID(interval, id, new_id) {
+    let fmin = interval[0];
+    let fmax = interval[1];
+    if (fmax==-1) {
+        fmax = videoinfo.nframes-1
+    }
+    
+    var frames = []
+    for (let f=fmin; f<=fmax; f++) {
+        if (obsDoesExist(f, id) && obsDoesExist(f, new_id)) {
+            frames.push(f)
+        }
+    }    
+    return frames;
+}
+function obs_swapID(interval, old_id, new_id) {
+    let fmin = interval[0];
+    let fmax = interval[1];
+    if (fmax==-1) {
+        fmax = videoinfo.nframes-1
+    }
+
+    for (let f=fmin; f<=fmax; f++) {
+        if (obsDoesExist(f, old_id)) {
+            let exist = obsDoesExist(f, new_id)
+            if (exist) {
+                if (logging.submitEvents) {
+                    console.log('swapID, existing event frame='+f+' id='+new_id+' swapped down to id='+old_id)
+                }
+                changeObservationID(f, new_id, 'SWAP_save_'+new_id)
+            }
+            changeObservationID(f, old_id, new_id)
+            if (exist) {
+                changeObservationID(f, 'SWAP_save_'+new_id, old_id)
+            }
+        }
+    }    
+}
+
 
 function printTracks() {
   //Just for debugging

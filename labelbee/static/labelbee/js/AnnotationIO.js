@@ -1515,29 +1515,21 @@ function typesetAjaxError(title, hook) {
   };
   return callback;
 }
-function showAjaxError(title, prehook) {
-  var callback = function (jqXHR, textStatus, errorThrown) {
-    console.log(
-      "AJAX ERROR: " + title,
-      jqXHR,
-      textStatus,
-      errorThrown,
-      jqXHR.responseText
-    );
-    if (prehook) {
-      prehook(jqXHR, textStatus, errorThrown);
+function showAjaxError(title, prehook, onlyConsole) {
+    var callback = function(jqXHR, textStatus, errorThrown) {
+        console.log('AJAX ERROR: '+title, jqXHR, textStatus, errorThrown, jqXHR.responseText)
+        if (prehook) {
+            prehook(jqXHR, textStatus, errorThrown)
+        }
+        if (!onlyConsole) {
+            mainAlert(title 
+                    +'<br>Status: '+ textStatus
+                    +'<br>Error: '+ errorThrown
+                    +'<br>'+ jqXHR.responseText
+            )
+        }
     }
-    mainAlert(
-      title +
-        "<br>Status: " +
-        textStatus +
-        "<br>Error: " +
-        errorThrown +
-        "<br>" +
-        jqXHR.responseText
-    );
-  };
-  return callback;
+    return callback
 }
 
 function eventsToServer(format) {

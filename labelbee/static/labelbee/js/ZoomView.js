@@ -103,42 +103,40 @@ function ZoomOverlay(canvas, canvasOverlay) {
   this.flagShowGrid = true;
   $("#buttonZoomShowGrid").toggleClass("active", this.flagShowGrid);
   this.flagShowZoom = true;
-  $("#checkboxShowZoom").prop("checked", this.flagShowZoom);
-  this.flagShowParts = false;
-  $("#buttonZoomShowParts").toggleClass("active", this.flagShowParts);
-  this.flagShowDistractors = false;
+  $('#checkboxShowZoom').prop('checked', this.flagShowZoom);
+  this.flagShowTagView = false
+  $('#checkboxZoomShowTagView').prop('checked', this.flagShowTagView)
+  if (!this.flagShowTagView)
+    $('#zoomTagView').hide()
+
+  this.flagShowParts = false
+  $('#buttonZoomShowParts').toggleClass('active', this.flagShowParts)
+  this.flagShowDistractors = false
   //$('#checkboxZoomShowDistractors').toggleClass('active', this.flagShowDistractors)
-  this.flagShowAlternateHamming = false;
-  this.flagShowAlternateHamming2 = true;
-  this.flagShowAlternateFocus = true;
+  this.flagShowAlternateHamming = false
+  this.flagShowAlternateHamming2 = true
+  this.flagShowAlternateFocus = true
 
-  this.currentTagBin = "";
-  this.loadTagCodesFromServer();
-  $("button.alternate-use-image").toggleClass(
-    "active",
-    this.flagShowAlternateHamming2
-  );
-  $("button.alternate-use-focus").toggleClass(
-    "active",
-    this.flagShowAlternateFocus
-  );
-  $("#videozoom_distractors").accordion(
-    "option",
-    "active",
-    this.flagShowDistractors
-  );
 
-  $("#partLabel").change(this.onPartLabelTextChanged); // bind ok
 
-  $("#videozoom").attr("tabindex", "0");
-  $("#videozoom").on("keydown", this.onKeyDown);
+  this.currentTagBin = ''
+  this.loadTagCodesFromServer()
+  $('button.alternate-use-image').toggleClass('active', this.flagShowAlternateHamming2)
+  $('button.alternate-use-focus').toggleClass('active', this.flagShowAlternateFocus)
+  $('#videozoom_distractors').accordion('option', 'active', this.flagShowDistractors)
 
-  $("#videozoom_distractors").on("accordionactivate", function (event, ui) {
-    //console.log(event,ui)
-    zoomOverlay.flagShowDistractors =
-      $("#videozoom_distractors").accordion("option", "active") !== false;
-    zoomOverlay.updateDistractors();
-  });
+  $('#partLabel').change(this.onPartLabelTextChanged); // bind ok
+
+  $('#videozoom').attr("tabindex", "0")
+  $('#videozoom').on("keydown", this.onKeyDown);
+
+  $("#videozoom_distractors").on("accordionactivate",
+    function (event, ui) {
+      //console.log(event,ui)
+      zoomOverlay.flagShowDistractors =
+        $("#videozoom_distractors").accordion("option", "active") !== false;
+      zoomOverlay.updateDistractors();
+    });
 
   $("#videozoom").accordion({
     activate: function (event, ui) {
@@ -587,21 +585,30 @@ ZoomOverlay.prototype.clickShowZoom = function () {
     this.syncFromTracks();
   }
 };
-ZoomOverlay.prototype.onToggleButtonShowAlternate = function (event) {
-  let button = $(event.currentTarget);
-  if (button.hasClass("alternate-use-image")) {
-    console.log("Toggle alternate-use-image/flagShowAlternateHamming2");
-    let active = !button.hasClass("active");
-    this.flagShowAlternateHamming2 = active;
-    button.toggleClass("active", active);
-    this.refreshZoom();
+ZoomOverlay.prototype.clickToggleShowTagView = function () {
+  this.flagShowTagView = $('#checkboxZoomShowTagView').is(':checked')
+  if (this.flagShowTagView) {
+    $('#zoomTagView').show()
+    this.refreshZoom()
+  } else {
+    $('#zoomTagView').hide()
   }
-  if (button.hasClass("alternate-use-focus")) {
-    console.log("Toggle alternate-use-focus/flagShowAlternateFocus");
-    let active = !button.hasClass("active");
-    this.flagShowAlternateFocus = active;
-    button.toggleClass("active", active);
-    this.refreshZoom();
+};
+ZoomOverlay.prototype.onToggleButtonShowAlternate = function (event) {
+  let button = $(event.currentTarget)
+  if (button.hasClass('alternate-use-image')) {
+    console.log('Toggle alternate-use-image/flagShowAlternateHamming2')
+    let active = !button.hasClass('active')
+    this.flagShowAlternateHamming2 = active
+    button.toggleClass('active', active)
+    this.refreshZoom()
+  }
+  if (button.hasClass('alternate-use-focus')) {
+    console.log('Toggle alternate-use-focus/flagShowAlternateFocus')
+    let active = !button.hasClass('active')
+    this.flagShowAlternateFocus = active
+    button.toggleClass('active', active)
+    this.refreshZoom()
   }
 };
 // ZoomOverlay.prototype.clickShowDistractors = function() {
@@ -1309,7 +1316,11 @@ function findAllHamming(bin, tagbin_list, maxH) {
 // }
 
 ZoomOverlay.prototype.updateTagView = function (tag) {
-  this.updateDistractors();
+  if (!this.showTagView) {
+    return
+  }
+
+  this.updateDistractors()
 
   if (!tag) return;
   if (!tag.p) return;
@@ -1569,7 +1580,7 @@ ZoomOverlay.prototype.loadTagCodesFromServer = function () {
 
       zoomOverlay.tagbin = obj;
     },
-    error: showAjaxError("tagCodesFromServer: ERROR"),
+    error: showAjaxError('tagCodesFromServer: ERROR', undefined, true) // Only console
   });
 };
 
@@ -2159,15 +2170,72 @@ ZoomOverlay.prototype.refreshZoom = function () {
 
   this.redraw();
 
-  this.refreshInfo();
+  this.refreshInfo()
 };
-ZoomOverlay.prototype.refreshTagImage = function () {
+ZoomOverlay.prototype.exportZoomImage = function () {
+  let dataurl = this.canvas.toDataURL("image/png")
+  let rect = getSelectedRect()
+  let obs = rect?.obs
+  let json = JSON.stringify(obs, undefined, 2)
+  let labels = obs?.labels
+  let frame = obs?.frame ?? ""
+  let x = Math.round(obs?.x + obs?.width / 2) ?? ""
+  let y = Math.round(obs?.y + obs?.height / 2) ?? ""
+  let scale = this.scale
+  let videourl = videoControl.video.src
+
+  let content = `<table>
+    <tr style="vertical-align:top">
+    <td>
+    <img src='${dataurl}'>
+    </td>
+    <td>
+    <div>Labels: ${labels}</div>
+    </td>
+    </tr>
+    </table>
+    <br>
+    <div>Scale:${scale}<div>
+    <div>Video: <tt>${videourl}</tt><div>
+    <div>Annotation:<pre>${json}</pre></div>`
+
+
+  function getDataURI(content) {
+    var htmlContent = ['<html><body>' + content + '</body></html>'];
+    var bl = new Blob(htmlContent, { type: "text/html" });
+    let blobUrl = URL.createObjectURL(bl);
+
+    var link = document.createElement("a"); // Or maybe get it from the current document
+    link.href = blobUrl;
+    link.download = `crop_f${frame}_cx${x}_cy${y}_${labels}.html`;
+    link.innerHTML = "Click here to download the HTML page";
+
+    document.body.appendChild(link); // Or append it whereever you want
+    link.click() //can add an id to be specific if multiple anchor tag, and use #id
+    link.remove()
+  }
+
+  getDataURI(content)
+  //win.document.body.innerHTML += `<a href="pageDataURI">Right click "Save As..." to save</a>`
+  // Due to security limitations, can not save the produced HTML page. Need to save from the
+  // original webapp page.
+
+  //let win = window.open("", "_blank")
+  //win.document.body.innerHTML = content;
+}
+ZoomOverlay.prototype.refreshTagImage = function() {
   this.refreshZoom(); // Lazy
 };
 ZoomOverlay.prototype.loadTagImage = function () {
   if (logging.zoomTag) console.log("ZoomOverlay.loadTagImage");
 
-  $(".tagImageID").html("ID=" + String(this.id));
+  if (!this.flagShowTagView) {
+    if (logging.zoomTag)
+      console.log('ZoomOverlay.loadTagImage: ABORTED, flagShowTagView is false')
+    return
+  }
+
+  $('.tagImageID').html("ID=" + String(this.id))
 
   let url = this.tagImgURL(this.id);
 
