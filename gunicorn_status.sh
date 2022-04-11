@@ -11,15 +11,20 @@ checkEnvVariable() {
 }
 
 # Define all vars in a script and source it
-# source env_config.sh
+# source gunicorn_config.sh
 
 checkEnvVariable LABELBEE_LOGDIR
 
 GUNICORN_PIDFILE="$LABELBEE_LOGDIR"/labelbee.pid
+GUNICORN_LOG="$LABELBEE_LOGDIR"/gunicorn_error_logs.log
 
 PID=$(<"$GUNICORN_PIDFILE")
+echo "### $GUNICORN_PIDFILE => PID=$PID"
 
-echo "Reload by sending -HUP to PID=$PID, from $GUNICORN_PIDFILE"
+#echo "### PS:"
+#pstree -alc $PID
+# if pstree not installed: sudo dnf install psmisc
 
-kill -HUP $PID
+echo "### tail $GUNICORN_LOG"
+tail "$GUNICORN_LOG"
 

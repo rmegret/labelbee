@@ -40,6 +40,5 @@ MAIL_PASSWORD = None
 MAIL_DEFAULT_SENDER = None
 
 ADMINS = [
-    '"Admin One" <ivan.rodriguez5@upr.edu>',
-    '"Admin Two" <danielsuazo9@gmail.com>',
+    '"Admin" <remi.megret@upr.edu>',
 ]

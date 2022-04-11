@@ -26,6 +26,8 @@ USER_REQUIRE_RETYPE_PASSWORD = True  # Prompt for `retype password` in:
 USER_ENABLE_USERNAME = False  # Register and Login with username
 USER_AFTER_LOGIN_ENDPOINT = 'user_page'
 USER_AFTER_LOGOUT_ENDPOINT = 'home_page'
+USER_EMAIL_SENDER_NAME = USER_APP_NAME
+USER_EMAIL_SENDER_EMAIL = "noreply@example.com"
 
 USER_AFTER_CHANGE_PASSWORD_ENDPOINT = 'user_page'
 USER_AFTER_CHANGE_USERNAME_ENDPOINT = 'user_page'
