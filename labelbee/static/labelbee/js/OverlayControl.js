@@ -91,6 +91,7 @@ function OverlayControl(canvasTagId) {
       clickModeAutoCentering: false,
       predictIdClickRadius: 120,
       showImageDiff: false,
+      useImageCache: false,
       showPredictedStatus : false,
       timelineZoom : 4.0,
       timelineMaxDelta : 3,
@@ -727,7 +728,7 @@ OverlayControl.prototype.optsClick = function(option) {
 }
 OverlayControl.prototype.updateOptsButtons = function() {
     console.log('overlay.updateDisableAngleButton')
-    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering','showImageDiff','showPredictedStatus']) {
+    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering','showImageDiff','useImageCache','showPredictedStatus']) {
         console.log(option)
         if ( this.opts[option] ) {
             $(".overlayOpts-"+option).addClass("active")
@@ -1669,7 +1670,7 @@ OverlayControl.prototype.redrawVideoFrameDiff = function() {
             //overlay.hardRefresh()
         })
         //videoControl.pause() // pause after to avoid infinite loop?
-        printMessage("Paused, need to preload video frames")
+        //printMessage("Paused, need to preload video frames")
     }
 
     let img1 = videoControl.videoCache.getFrameImageSync(videoUrl, frame)
@@ -1687,6 +1688,44 @@ OverlayControl.prototype.redrawVideoFrameDiff = function() {
     
     overlay.diffImage(overlay.canvas2,overlay.canvas, 3.0)
 }
+
+OverlayControl.prototype.redrawVideoFromCache = function() {
+  var overlay = this;
+  
+  let w = overlay.canvas.width
+  let h = overlay.canvas.height
+  
+  let video = videoControl.video
+
+  function interval(start, end) {
+      return Array.from({length: end-start+1}, (x, i) => start+i);
+  }
+
+  let videoUrl = video.src
+  let frame=videoControl.currentFrame
+
+  // Load async if frames not found
+  let state1 = videoCache.getFrameState(videoUrl, frame)
+  if (!state1) {
+      // CAUTION: risk of infinite async loop if test always fail!
+      //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), videoinfo.videofps)
+      videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), videoinfo.videofps)
+      .then(function() {
+          printMessage("Preload done")
+          //overlay.hardRefresh()
+      })
+      //videoControl.pause() // pause after to avoid infinite loop?
+      //printMessage("Paused, need to preload video frames")
+  }
+
+  let img1 = videoControl.videoCache.getFrameImageSync(videoUrl, frame)
+  if (img1)
+      overlay.ctx.drawImage(img1, 
+          canvasTransform[4], canvasTransform[5],
+          canvasTransform[0]*w, canvasTransform[3]*h,
+          0, 0, w, h);
+}
+
 
 OverlayControl.prototype.drawImageToCanvas = function(img) {
     let overlay = this
@@ -1746,11 +1785,15 @@ OverlayControl.prototype.redrawVideoFrame = function() {
       if (overlay.opts.showImageDiff) {
         overlay.redrawVideoFrameDiff() // Caution: async
       } else {
-        // Copy video to canvas for fully synchronous display
-        overlay.ctx.drawImage(video,
-          canvasTransform[4], canvasTransform[5],
-          canvasTransform[0] * w, canvasTransform[3] * h,
-          0, 0, w, h);
+        if (overlay.opts.showImageDiff) {
+          overlay.redrawVideoFromCache() // Caution: async
+        } else {
+          // Copy video to canvas for fully synchronous display
+          overlay.ctx.drawImage(video,
+            canvasTransform[4], canvasTransform[5],
+            canvasTransform[0] * w, canvasTransform[3] * h,
+            0, 0, w, h);
+        }
       }
     } else {
       // Rely on video under canvas. More efficient (one copy less), but

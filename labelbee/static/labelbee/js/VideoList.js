@@ -600,6 +600,7 @@ VideoManager.prototype.videoSelected = async function(id) {
       },
     success: function(videoInfoJSON){
       videoManager.setVideoInfo(videoInfoJSON);
+      fromServerDialog.setMessage("black", "Loading Video.")
       console.log("VideoManager.videoSelected: Loaded video information: ", videoInfoJSON);
     }
   });

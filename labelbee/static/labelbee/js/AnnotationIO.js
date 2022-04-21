@@ -610,7 +610,7 @@ function setTracks(obj) {
 
   if (!evts) {
     console.log("setTracks: ABORTED, wrong format.");
-    return 0;
+    return false;
   }
 
   Tracks = evts.data;
@@ -620,7 +620,7 @@ function setTracks(obj) {
 
   videoControl.onFrameChanged();
   refreshChronogram();
-  return 1;
+  return true;
 }
 function setEventsProp(option, value) {
   if (!TracksInfo) {
@@ -1071,7 +1071,7 @@ function FromServerDialog() {
   this.resetAllHTML = function(){
     this.setTitle("");
     this.setCheckboxes("");
-    this.setMessage("");
+    this.setMessage("black","");
     this.setBody("");
   }
 
@@ -1087,7 +1087,7 @@ function FromServerDialog() {
     // videoManager.currentVideoID = 9371; // ONLY FOR DEV PURPOSES! COMMENT WHEN DEPLOYING TO LIVE SERVICE
     this.data_type = data_type;
     this.resetAllHTML();
-    this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
+    this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath);
     let checkboxHTML = 
     '<label>'+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)">'+ 
@@ -1172,7 +1172,7 @@ function FromServerDialog() {
 
   this.showAdvancedLoadingDialog = function(allusers) {
     this.resetAllHTML();
-    this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
+    this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath);
     let checkboxHTML = 
     '<label> '+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog(\''+ this.data_type +'\');"> '+ 
@@ -1326,12 +1326,10 @@ function FromServerDialog() {
           videoControl.onFrameChanged();
 
           refreshChronogram();
-
-          // Close dialogue window
           if(success){
+            console.log("Loaded event. ID:", tag_event_ID)
             theDialog.basedOn = tag_event_ID;
-            div.find(".modal-message h4").css("color","black");
-            div.find(".modal-message h4").html("Events loaded.");
+            fromServerDialog.setMessage("black","Events loaded.");
           }
           else{
             div.find(".modal-message h4").css("color","red");

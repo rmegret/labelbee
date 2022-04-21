@@ -22,9 +22,9 @@
   <script type="text/javascript" src="js/extern/jsgrid-1.5.3/jsgrid.min.js"></script>
 
   <link href="css/bootstrap.css" rel="stylesheet">
-  <link href="css/dataTables.bootstrap.min.css" rel="stylesheet">
   <link href="css/buttons.dataTables.min.css" rel="stylesheet">
   <link href="css/jquery.dataTables.min.css" rel="stylesheet">
+  <link href="css/dataTables.bootstrap.min.css" rel="stylesheet">
 
   <!--  <script type="text/javascript" src="js/extern/jquery.js"></script> -->
   <script type="text/javascript" src="js/extern/bootstrap.js"></script>
@@ -39,8 +39,8 @@
   <script type="text/javascript" src="js/extern/D3/d3.js"></script>
   <script type="text/javascript" src="js/extern/marcj-css-element-queries-134443d/src/ResizeSensor.js"></script>
   <script type="text/javascript" src="js/extern/jquery.csv.js"></script>
-  <script type="text/javascript" src="js/extern/dataTables.bootstrap.min.js"></script>
   <script type="text/javascript" src="js/extern/jquery.dataTables.min.js"></script>
+  <script type="text/javascript" src="js/extern/dataTables.bootstrap.min.js"></script>
 
 
   <script type="text/javascript" src="js/extern/perspective-transform/perspective-transform.js"></script>
@@ -437,6 +437,9 @@
                     <button onclick="overlay.optsClick('showImageDiff')" type="button"
                       class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-showImageDiff"
                       title="Show image difference">Image Diff</button>
+                      <button onclick="overlay.optsClick('useImageCache')" type="button"
+                      class="btn btn-xs btn-blue-toggle overlayOpts overlayOpts-useImageCache"
+                      title="Use images from cache">Image Cache</button>
                   </span>
                 </div>
 
@@ -706,12 +709,12 @@
                     </div>
                     <div id="vidTime">Video Time:</div>
                     <div id="realTime">Real Time:</div>
-                    <select id="selectboxVideo" name="video" onchange="videoManager.onSelectboxVideoChanged()" class="">
+                    <select id="selectboxVideo" name="video" onchange="videoManager.onSelectboxVideoChanged()" class="hidden">
                       <option value="data/undefined.mp4" selected>Not yet initialized</option>
                     </select> <!-- selectboxVideo -->
                   </div>
 
-                  <div class='subpanel collapsible'>
+                  <div class='subpanel collapsible hidden'>
                     <label class="primary">Video List </label>
                     <div>
                       <div class="float-right"><input onclick="videoManager.checkVideoList()" type="button"
@@ -877,8 +880,6 @@
                       <input type="button" onclick="fromServerDialog.openRecentLoadingDialog('event')" class="btn btn-primary btn-sm"
                         value="Load Recent Events">
                       -->
-                      <input type="button" onclick="eventsFromServerDialog.openDialog('tag')" class="btn btn-primary btn-xs"
-                      value="Load Events (Advanced)">
                       <br>
                       <!-- FIXME: eventsFromServerDialog not defined ?? -->
                       <!-- NOTE: Moved #dialog-event-from-server to #from-server-dialog -->

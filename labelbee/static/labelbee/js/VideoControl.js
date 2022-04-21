@@ -1076,37 +1076,7 @@ VideoControl.prototype.onVideoLoaded2 = async function () {
   let name = videoinfo.name;
   $("#videoName").html(name);
   $("a.videolink").attr("href", name);
-  this.loadPreviewVideo();
+  // this.loadPreviewVideo();
   $(this).trigger("video:loaded");
   this.hardRefresh();
 }
-
-// {
-//   if (logging.videoEvents) console.log("onVideoLoaded", event);
-
-//   statusWidget.statusUpdate("videoLoad", true, []);
-
-//   this.isValidVideo = true;
-
-//   this.onVideoSizeChanged();
-
-//   videoinfo.duration = this.video.duration;
-//   videoinfo.name = this.video.src;
-
-//   let name = videoinfo.name;
-//   $("#videoName").html(name);
-
-//   $("a.videolink").attr("href", name);
-
-//   let videourl = videoinfo.videoURL;
-
-//   this.loadVideoInfo(videourl + ".info.json");
-//   this.loadPreviewVideo();
-
-//   $(this).trigger("video:loaded");
-
-//   this.hardRefresh();
-
-//   statusWidget.statusRequest("tagsLoad", []);
-//   tagsFromServer(videoinfo.tags.videoTagURL, true); // quiet
-// }
