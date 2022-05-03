@@ -13,6 +13,10 @@ from flask_marshmallow import Marshmallow
 from flask_user import UserManager
 from flask_wtf.csrf import CSRFProtect
 import sys
+import logging
+import os
+
+log_dir = os.environ.get("LABELBEE_LOGDIR")
 
 # Enable running in subdomain
 # http://flask.pocoo.org/snippets/35/
@@ -76,8 +80,15 @@ ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
 
 ####
 
-# Initialize Flask Application
+# Configure Logging
+app.logger.removeHandler(app.logger.handlers[0])
+app.logger.addHandler(logging.FileHandler(log_dir + "/gunicorn_error_logs.log"))
+app.logger.setLevel(logging.DEBUG)
+app.logger.handlers[0].setFormatter(logging.Formatter('[%(asctime)s] [%(filename)s] [%(levelname)s] %(message)s'))
+logger = logging.getLogger('labelbee.init_app')
 
+
+# Initialize Flask Application
 
 def init_app(app, extra_config_settings={}):
 
@@ -172,18 +183,18 @@ def init_email_error_handler(app):
     subject = app.config.get("APP_SYSTEM_ERROR_SUBJECT_LINE", "System Error")
 
     # Setup an SMTP mail handler for error-level messages
-    import logging
-    from logging.handlers import SMTPHandler
+    # import logging
+    # from logging.handlers import SMTPHandler
 
-    mail_handler = SMTPHandler(
-        mailhost=(host, port),  # Mail host and port
-        fromaddr=from_addr,  # From address
-        toaddrs=to_addr_list,  # To address
-        subject=subject,  # Subject line
-        credentials=(username, password),  # Credentials
-        secure=secure,
-    )
-    mail_handler.setLevel(logging.ERROR)
-    app.logger.addHandler(mail_handler)
+    # mail_handler = SMTPHandler(
+    #     mailhost=(host, port),  # Mail host and port
+    #     fromaddr=from_addr,  # From address
+    #     toaddrs=to_addr_list,  # To address
+    #     subject=subject,  # Subject line
+    #     credentials=(username, password),  # Credentials
+    #     secure=secure,
+    # )
+    # mail_handler.setLevel(logging.ERROR)
+    # app.logger.addHandler(mail_handler)
 
     # Log errors using: app.logger.error('Some error message')

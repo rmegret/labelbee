@@ -17,8 +17,8 @@ class Path(fields.Field):
         except:
             raise ValidationError("File name must be a string")
 
-        if value is None or value is "" or not value.startswith("/"):
-            return None
+        if value is None or value is "":
+            return value
         elif not value.startswith("/"):
             raise ValidationError("Path must start with /")
         elif value.endswith("/"):

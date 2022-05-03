@@ -21,8 +21,9 @@ import os
 from datetime import datetime
 import json
 import re
+import logging
 
-from labelbee.init_app import app, db, csrf
+from labelbee.init_app import app, db, csrf, logger
 from labelbee.models import (
     DataSetSchema,
     UserProfileForm,
@@ -56,7 +57,6 @@ from labelbee.db_functions import (
 )
 
 upload_dir = "labelbee/static/upload/"
-
 
 # -------------------------------------------
 # PAGES
@@ -591,7 +591,7 @@ def send_data_():
 # REST API for authentification
 
 
-@app.route("/rest/auth/login", methods=["GET", "POST"])
+@app.route("/rest/auth/login", methods=["POST"])
 def ajaxlogin():
     """
     API GET endpoint for authentification
@@ -608,10 +608,9 @@ def ajaxlogin():
     :rtype: JSON object
     """
 
-    email = request.args.get("email")
-    password = request.args.get("password")
-    print(email, password)
-    # print(email,password)
+    email = request.form.get("email")
+    password = request.form.get("password")
+    # logger.debug(email)
 
     user = User.query.filter_by(email=email).first()
 

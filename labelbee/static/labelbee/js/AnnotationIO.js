@@ -87,6 +87,7 @@ function LoginDialog() {
 
     div.dialog({
       autoOpen: false,
+      title: "Login",
       modal: true,
       buttons: {
         Ok: function () {
@@ -133,9 +134,11 @@ function try_logout() {
   }
 }
 
+user_data = {is_authenticated:false};
 function whoami() {
   $.getJSON(url_for("/rest/auth/whoami"), function (data) {
     console.log("whoami: data=", data);
+    user_data = data;
   })
     .done(function (data) {
       //$('#whoami').html(JSON.stringify(data))
