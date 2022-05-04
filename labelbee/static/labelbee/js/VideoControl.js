@@ -6,6 +6,7 @@
 //import {VideoFrame} from "extern/VideoFrame.js";
 //var LRUCache = require("extern/lru_cache-master/index").LRUCache
 
+
 function VideoControl(videoTagId) {
   if (this === window) {
     console.log(
@@ -1079,4 +1080,15 @@ VideoControl.prototype.onVideoLoaded2 = async function () {
   // this.loadPreviewVideo();
   $(this).trigger("video:loaded");
   this.hardRefresh();
+  
+  // HACKY SOLUTION
+  // Video image was blank after loading a video
+  // Using these two function calls to force display 
+  // of first frame
+  videoControl.forward(1);
+  setTimeout(() => { videoControl.rewind(0); }, 1500);
+
+  // Make initial video size larger when loading a video
+  $("#canvasresize")[0].style.height = "650px";
+  overlay.refreshCanvasSize();
 }

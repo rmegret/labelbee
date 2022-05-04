@@ -464,9 +464,9 @@ function resizeCanvas(w,h) {
     wrap.style.width = w.toString() + 'px'
     wrap.style.height = h.toString() + 'px'
 }
-function refreshCanvasSize(event, ui) {
+function refreshCanvasSize(size) {
     console.log('refreshCanvasSize')
-    
+    console.log(size)
     let wd = parseInt($("#canvasresize")[0].style.width)-16 // Assume width is in px
     let hd = video.videoHeight/video.videoWidth*wd
         
