@@ -459,21 +459,24 @@ VisitWidget.prototype.create = function() {
     $('#visitblockdiv').html("EDIT VISIT: ")
             .append($('<button>DISMISS</button>').click(()=>this.close()))
         .append("<br>visit event, frame <span id='frame'></span>, id <span id='visit_id'></span>&nbsp;")
+        .append('<br>')
             .append($('<button class="btn btn-default btn-xs goto-visit">Goto</button>').click(()=>this.gotoObs('visit')))
             .append($('<button class="btn btn-default btn-xs new-visit">Create</button>').click(()=>this.newVisit()))
             .append($('<button class="btn btn-default btn-xs delete-visit">Delete</button>').click(()=>this.deleteVisit()))
         .append('<br>')
-        .append('Pollinator: <span id="pollinator_id"></span>&nbsp;&nbsp;')
+        .append('&nbsp;&nbsp;&nbsp;Pollinator: <span id="pollinator_id"></span>')
             .append($('<button class="btn btn-default btn-blue-toggle btn-xs select-pollinator">Goto</button>').click(()=>this.gotoObs('pollinator')))
             .append($('<button class="btn btn-default btn-blue-toggle btn-xs pick-pollinator">Pick</button>').click(()=>this.pickMode('pollinator')))
-        .append('&nbsp;-&nbsp;Flower: <span id="flower_id"></span>&nbsp;')
+        .append('<br>')
+            .append('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Flower: <span id="flower_id"></span>')
             .append($('<button class="btn btn-default btn-blue-toggle btn-xs select-flower">Goto</button>').click(()=>this.gotoObs('flower')))
             .append($('<button class="btn btn-default btn-blue-toggle btn-xs pick-flower">Pick</button>').click(()=>this.pickMode('flower')))
         .append('<br>')
-        .append('Span: Start frame: <span id="start-frame"></span>&nbsp;')
+        .append('Start frame: <span id="start-frame"></span>')
             .append($('<button class="btn btn-default btn-xs goto-start-frame">Goto</button>').click(()=>this.gotoSpanFrame('start')))
             .append($('<button class="btn btn-default btn-xs set-start-frame">Set</button>').click(()=>this.setSpanFrame('start')))
-        .append('&nbsp;-&nbsp;End frame: <span id="end-frame"></span>&nbsp;')
+        .append('<br>')
+        .append('&nbsp;End frame: <span id="end-frame"></span>')
             .append($('<button class="btn btn-default btn-xs goto-end-frame">Goto</button>').click(()=>this.gotoSpanFrame('end')))
             .append($('<button class="btn btn-default btn-xs set-end-frame">Set</button>').click(()=>this.setSpanFrame('end')))
 }
@@ -722,8 +725,30 @@ OverlayControl.prototype.optsClick = function(option) {
     
     this.opts[option] = !this.opts[option]
     this.updateOptsButtons()
-    
-    //this.refreshOverlay()
+
+    if (option=="useImageCache") {
+      if (this.opts[option]) { // Enable cache
+        if (videoControl.currentMode != "cache") {
+          console.log('optsClick: changing videoControl.currentMode to cache')
+          videoControl.currentMode = "cache"
+          videoControl.hardRefresh()
+          return
+        } else {
+          this.hardRefresh()
+          return
+        }
+      } else { // Disable cache
+        if (videoControl.currentMode == "cache") {
+          console.log('optsClick: changing videoControl.currentMode to video')
+          videoControl.currentMode = "video"
+          videoControl.hardRefresh()
+          return
+        } else {
+          this.hardRefresh()
+          return
+        }
+      }
+    }
     this.hardRefresh()
 }
 OverlayControl.prototype.updateOptsButtons = function() {
@@ -1779,22 +1804,19 @@ OverlayControl.prototype.redrawVideoFrame = function() {
     return;
   }
 
+  if (overlay.opts.showImageDiff) {
+    overlay.redrawVideoFrameDiff() // Caution: sync, with potential async preload that may arrive too late
+    return
+  } 
+
   if (videoControl.currentMode == "video") {
     let video = videoControl.video; // same as $('#video')[0]
     if (videoControl.flagCopyVideoToCanvas) {
-      if (overlay.opts.showImageDiff) {
-        overlay.redrawVideoFrameDiff() // Caution: async
-      } else {
-        if (overlay.opts.showImageDiff) {
-          overlay.redrawVideoFromCache() // Caution: async
-        } else {
-          // Copy video to canvas for fully synchronous display
-          overlay.ctx.drawImage(video,
-            canvasTransform[4], canvasTransform[5],
-            canvasTransform[0] * w, canvasTransform[3] * h,
-            0, 0, w, h);
-        }
-      }
+      // Copy video to canvas for fully synchronous display
+      overlay.ctx.drawImage(video,
+        canvasTransform[4], canvasTransform[5],
+        canvasTransform[0] * w, canvasTransform[3] * h,
+        0, 0, w, h);
     } else {
       // Rely on video under canvas. More efficient (one copy less), but
       // may have some time discrepency between video and overlay
@@ -1823,6 +1845,28 @@ OverlayControl.prototype.redrawVideoFrame = function() {
     //         createRectsFromTracks(this.previewFrame)
     //         selectBeeByID(defaultSelectedBee);
     //         overlay.refreshOverlay()
+  } else if ((videoControl.currentMode == "cache")||(videoControl.currentMode == "cache-preview")) {
+    let img = videoControl.currentImage
+    if (!img) {
+      console.log("overlay.redrawVideoFrame: cacheImage null. ABORT")
+      overlay.ctx.save();
+      overlay.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      var lineHeight = overlay.ctx.measureText("M").width * 1.2;
+      overlay.ctx.fillStyle = "#DDD";
+      overlay.ctx.fillRect(0, 0, 300, lineHeight);
+      overlay.ctx.fillStyle = "#00F";
+      overlay.ctx.font = "12px Verdana";
+      overlay.ctx.textAlign = "center";
+      overlay.ctx.textBaseline = "middle";
+      overlay.ctx.fillText("Frame "+String(videoControl.currentFrame)+" not in cache", 10, lineHeight);
+      overlay.ctx.restore();
+      overlay.canvas1.clear();
+      return;
+    }
+    overlay.ctx.drawImage(img,
+      canvasTransform[4], canvasTransform[5],
+      canvasTransform[0] * w, canvasTransform[3] * h,
+      0, 0, w, h);
   }
 };
 OverlayControl.prototype.refreshOverlay = function () {

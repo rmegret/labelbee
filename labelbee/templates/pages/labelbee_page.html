@@ -142,91 +142,6 @@
 
             <div id="beeInfo" class="sortable">
 
-              <div id="beeidpanel" class="block inline-collapsible">
-                <div class="block-header small">BeeID:</div>
-                <div class="block-content display-inline">
-                  <input type="text" size="5" value="" id="I" onkeypress="onKeyDown_IDEdit(event)"
-                    class="small"></input>
-                  <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button"
-                    class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
-                  <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-warning btn-xs"
-                    style="position: inline" id="deleteButton">
-                  <button type="button" onclick="undoAction()" class="btn btn-info btn-xs" style="position: inline"
-                    id="undoButton">Undo</button>
-
-                  <small style="color:blue">newid <input type="text" size="6" value="" id="newid"
-                      onkeypress="onKeyDown_NewIDEdit(event)""></input></small>
-            <button onclick=" onLabelToggled(event)" type="button"
-                      class="btn btn-green-toggle btn-xs labeltoggle wrongid" thelabel="wrongid"
-                      title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">wrongid
-                    <span class="glyphicon glyphicon-remove small blue"></span></button>
-                    <button type="button" onclick="swapID_callback()" class="btn btn-info btn-xs"
-                      style="position: inline" id="swapID">SwapID</button>
-                </div>
-              </div>
-
-              <div class='block inline-collapsible'>
-                <div class="block-header small">BoundingBox angle:</div>
-                <span class="block-content display-inline">
-                  <input value="Disable" onclick="overlay.onClickDisableAngle()" type="button"
-                    class="guiAngle-disableAngle btn btn-pink-toggle btn-xs"
-                    title="Does not allow event to have angle by default">
-
-                  <button value="Reset to 0" onclick="overlay.onClickResetAngle()" type="button"
-                    class="btn btn-default btn-xs" title="Reset event angle to 0">Reset angle to 0</button>
-                  <button value="Set from tag" onclick="overlay.onClickAngleFromTag()" type="button"
-                    class="btn btn-default btn-xs" title="Set Event angle from associated tag">Angle from tag</button>
-                </span>
-              </div>
-
-              <!-- LABEL TOGGLES -->
-
-              <div id="labeltoggle" class="block inline-collapsible">
-                <div class="block-header small">Labels:</div>
-                <div class="block-content">
-                  <div style="display:inline" id="labeltoggle-panel">
-                    <button onclick="onLabelToggled(event)" type="button"
-                      class="btn btn-green-toggle btn-xs labeltoggle fanning" thelabel="fanning"
-                      title="Toogle label">fanning</button>
-                    <button onclick="onLabelToggled(event)" type="button"
-                      class="btn btn-green-toggle btn-xs labeltoggle pollen" thelabel="pollen"
-                      title="Toogle label">pollen <span class="glyphicon glyphicon-pollen small"></span></button>
-                    <button onclick="onLabelToggled(event)" type="button"
-                      class="btn btn-green-toggle btn-xs labeltoggle entering" thelabel="entering"
-                      title="Toogle label">entering <span class="glyphicon glyphicon-arrow-up small"
-                        style="color:magenta"></span></button>
-                    <button onclick="onLabelToggled(event)" type="button"
-                      class="btn btn-green-toggle btn-xs labeltoggle leaving" thelabel="leaving"
-                      title="Toogle label">leaving <span class="glyphicon glyphicon-arrow-down small"
-                        style="color:green"></span></button>
-                    <button onclick="onLabelToggled(event)" type="button"
-                      class="btn btn-green-toggle btn-xs labeltoggle walking" thelabel="walking"
-                      title="Toogle label">walking <span class="glyphicon glyphicon-repeat small"></span></button>
-                    <button onclick="onLabelToggled(event)" type="button"
-                      class="btn btn-green-toggle btn-xs labeltoggle expulsed" thelabel="expulsed"
-                      title="Toogle label Expulsed: when a bee is rejected/expelled from the colony">expulsed</button>
-                    <button onclick="onLabelToggled(event)" type="button"
-                      class="btn btn-green-toggle btn-xs labeltoggle expulsing" thelabel="expulsing"
-                      title="Toogle label Expulsion: when a bee is rejecting/expelling another individual from the colony">expulsing</button>
-                    <button onclick="onLabelToggled(event)" type="button"
-                      class="btn btn-green-toggle btn-xs labeltoggle falsealarm" thelabel="falsealarm"
-                      title="Toogle FalseAlarm label: when a tag detection is not a tag">falsealarm <span
-                        class="glyphicon glyphicon-remove small red"></span></button>
-                  </div>
-                  <div style="display:inline" id="labeltoggle-config">
-                    <button onclick="labelListDialog.openDialog()" type="button" class="btn btn-info btn-xs"
-                      title="Edit list of labels">Edit...</button>
-                    <button onclick="labelListFromServerDialog.openDialog()" type="button" class="btn btn-info btn-xs"
-                      title="Load list of labels">Preset...</button>
-                  </div>
-                  <br>
-                  <div class="textbox-inline">
-                    <label>Labels: </label><input type="textbox" value="" class="resizedTextbox" id="labels">
-                    <label>Notes: </label><input type="textbox" value="" class="resizedTextbox" id="notes">
-                  </div>
-                </div>
-              </div>
-
               <div id="dialog-form-mainLabelList" class="modal-dialog" title="Label List">
                 <form style="width:100%; height:100%; box-sizing:border-box;">
                   <div style="width:100%; height:100%; box-sizing:border-box;">
@@ -273,11 +188,19 @@
 
               </p>
 
+
+              <div id="alerttextblock" class="block inline-collapsible">
+                <div class="block-header small">
+                  Messages
+                </div>
+                <div class="block-content">
+                  <div id='alertextwrapper'>
+                    <div id="alerttext"></div>
+                  </div>
+                </div>
+              </div>
+
               <!-- # VIDEO VIEW -->
-
-              <!-- PLAY CONTROL -->
-
-
               <div id="canvasresize" class="ui-widget-content">
                 <div class="canvaswrapper">
                   <video src="" id="video" style="width:400px; z-index: -1"></video>
@@ -285,7 +208,8 @@
                   <canvas id="canvas1" style="border: none; z-index: 3"></canvas>
                 </div>
               </div>
-              
+
+              <!-- PLAY CONTROL -->
               <div id="videocontrol" class="block inline-collapsible">
                 <div class="block-header small">
                   Video
@@ -323,36 +247,24 @@
                   <button value="Next minute" onclick="videoControl.forward(200)" type="button"
                     class="btn btn-info btn-xs x-small nopad fwbut fwbut3" title="+10s"><span
                       class="glyphicon glyphicon-fast-forward"></span></button>
-                  </small>
+                  <div class="inline-block">
+                      <button value="Image Cache" onclick="overlay.optsClick('useImageCache')" type="button"
+                    class="btn btn-blue-toggle btn-xs x-small nopad overlayOpts overlayOpts-useImageCache" title="Use image cache (yes), or open video directly (no)">Use Cache</button>
+                      <span id="cache-status"></span>
+                      <button value="Preload" onclick="videoControl.preloadCache()" type="button"
+                    class="btn btn-info btn-xs x-small nopad " title="Preload images around current frame">Preload</button>
+                      <button value="Cancel" onclick="videoControl.videoCache.cancelQueue()" type="button"
+                    class="btn btn-alert btn-xs x-small nopad " title="Cancel current queue"><span>Cancel</span></button>
+                    <button value="Reset Cache" onclick="videoControl.videoCache.resetCache()" type="button"
+                  class="btn btn-alert btn-xs x-small nopad " title="Empty and reset the cache"><span>Reset</span></button>
+                  </div>
                 </span>
               </div>
               <br>
-              <div id="alerttextblock" class="block inline-collapsible">
-                <div class="block-header small">
-                  Messages
-                </div>
-                <div class="block-content">
-                  <div id='alertextwrapper'>
-                    <div id="alerttext"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div id="visitblock" class="block inline-collapsible collapsed">
-                <div class="block-header small">
-                  Visit Mode
-                </div>
-                <div class="block-content">
-                  <div id='visitblockblockwrapper'>
-                    <div id="visitblockdiv"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div id="pickframeblock" class="block inline-collapsible">
-                <div class="block-header small">
-                  Pick-Frame Mode
-                </div>
+              <div id="pickframetabBR" class="hidden"></div>
+              <div id="pickframeblock" class="block inline-collapsible hidden">
+                <div class="block-header small">Pick-Frame Mode</div>
+                <br>
                 <div class="block-content">
                   <div id='pickframeblockwrapper'>
                     <div id="pickframediv"></div>
@@ -360,10 +272,10 @@
                 </div>
               </div>
 
-              <div id="pickflowerblock" class="block inline-collapsible">
-                <div class="block-header small">
-                  Pick-Flower Mode
-                </div>
+              <div id="pickflowertabBR" class="hidden"></div>
+              <div id="pickflowerblock" class="block inline-collapsible hidden">
+                <div class="block-header small">Pick-Flower Mode</div>
+                <br>
                 <div class="block-content">
                   <div id='pickflowerblockwrapper'>
                     <div id="pickflowerdiv"></div>
@@ -375,149 +287,147 @@
 
               <div class="sortable">
 
-                <div id="timelineTab" class="hidden">
-                  <div id="timeline" class="block inline-collapsible">
-                    <div class="block-header small">
-                      Timeline
-                    </div>
-                    <div class="block-content">
-                      <div id='timelineblockwrapper'>
-                        <div id="timelineblockdiv"></div>
-                      </div>
+                <div id="timelineBR" class="hidden"></div>
+                <div id="timeline" class="block inline-collapsible hidden">
+                  <div class="block-header small">Timeline</div>
+                  <br>
+                  <div class="block-content">
+                    <div id='timelineblockwrapper'>
+                      <div id="timelineblockdiv"></div>
                     </div>
                   </div>
                 </div>
-
-                <div id="focusIntervalTab" class="hidden">
-                  <div class='block inline-collapsible'>
-                    <div class="block-header small">FocusInterval:</div>
-                    <span class="block-content">
-                      <button onclick="shiftTrackWindow(-0.75)" type="button" class="btn btn-window btn-xs"
-                        title="Reduce track window"><span class="glyphicon glyphicon-step-backward small"></span></button>
-                      <button onclick="shiftTrackWindow(0.75)" type="button" class="btn btn-window btn-xs"
-                        title="Extend track window"><span class="glyphicon glyphicon-step-forward small"></span></button>
-                      <input id="focusTrackWindow" value="Follow" onclick="onClickFocusTrackWindow()" type="button"
-                        class="btn btn-pink-toggle btn-xs" title="Track window follows current frame">
-                      <button value="win-" onclick="scaleTrackWindow(0.5)" type="button" class="btn btn-window btn-xs"
-                        title="Reduce track window"><span class="glyphicon glyphicon-chevron-right small"></span>-<span
-                          class="glyphicon glyphicon-chevron-left small"></span></button>
-                      <button value="win+" onclick="scaleTrackWindow(2)" type="button" class="btn btn-window btn-xs"
-                        title="Extend track window"><span class="glyphicon glyphicon-chevron-left small"></span>+<span
-                          class="glyphicon glyphicon-chevron-right small"></span></button>
-                      <select id="selectboxTrackDir" name="selectboxTrackDir" title="Focus interval direction"
-                        onchange="onTrackWindowChanged(event)" class="small" style="display:inline-block;">
-                        <option value="Bidirectional" selected>Bidir</option>
-                        <option value="Forward">Fwd</option>
-                        <option value="Backward">Bwd</option>
-                      </select> <!-- selectboxVideo -->
-                      <input type="text" value="5" size="4" id="trackWindow" class="small"
-                        onchange="onTrackWindowChanged(event)" title="Track window size from center in frames">
-                      <button value="1s" onclick="setTrackWindow(20)" type="button" class="btn btn-default btn-xs"
-                        title="Track window = 1s">1s</button>
-                      <button value="10s" onclick="setTrackWindow(200)" type="button" class="btn btn-default btn-xs"
-                        title="Track window = 10s">10s</button>
-                      <button value="1m" onclick="setTrackWindow(1200)" type="button" class="btn btn-default btn-xs"
-                        title="Track window = 1min">1m</button>
-                    </span>
-                  </div>
+                
+                <div id="focusIntervalTabBR" class="hidden"></div>
+                <div id="focusIntervalTab" class='block inline-collapsible'>
+                  <div class="block-header small">Focus Interval</div>
+                  <br>
+                  <span class="block-content">
+                    <button onclick="shiftTrackWindow(-0.75)" type="button" class="btn btn-window btn-xs"
+                      title="Reduce track window"><span class="glyphicon glyphicon-step-backward small"></span></button>
+                    <button onclick="shiftTrackWindow(0.75)" type="button" class="btn btn-window btn-xs"
+                      title="Extend track window"><span class="glyphicon glyphicon-step-forward small"></span></button>
+                    <input id="focusTrackWindow" value="Follow" onclick="onClickFocusTrackWindow()" type="button"
+                      class="btn btn-pink-toggle btn-xs" title="Track window follows current frame">
+                    <button value="win-" onclick="scaleTrackWindow(0.5)" type="button" class="btn btn-window btn-xs"
+                      title="Reduce track window"><span class="glyphicon glyphicon-chevron-right small"></span>-<span
+                        class="glyphicon glyphicon-chevron-left small"></span></button>
+                    <button value="win+" onclick="scaleTrackWindow(2)" type="button" class="btn btn-window btn-xs"
+                      title="Extend track window"><span class="glyphicon glyphicon-chevron-left small"></span>+<span
+                        class="glyphicon glyphicon-chevron-right small"></span></button>
+                    <select id="selectboxTrackDir" name="selectboxTrackDir" title="Focus interval direction"
+                      onchange="onTrackWindowChanged(event)" class="small" style="display:inline-block;">
+                      <option value="Bidirectional" selected>Bidir</option>
+                      <option value="Forward">Fwd</option>
+                      <option value="Backward">Bwd</option>
+                    </select> <!-- selectboxVideo -->
+                    <input type="text" value="5" size="4" id="trackWindow" class="small"
+                      onchange="onTrackWindowChanged(event)" title="Track window size from center in frames">
+                    <button value="1s" onclick="setTrackWindow(20)" type="button" class="btn btn-default btn-xs"
+                      title="Track window = 1s">1s</button>
+                    <button value="10s" onclick="setTrackWindow(200)" type="button" class="btn btn-default btn-xs"
+                      title="Track window = 10s">10s</button>
+                    <button value="1m" onclick="setTrackWindow(1200)" type="button" class="btn btn-default btn-xs"
+                      title="Track window = 1min">1m</button>
+                  </span>
                 </div>
 
-                <div id="selectedTab" class="hidden">
-                  <div class='block inline-collapsible'>
-                    <div class="block-header small">Selected:</div>
-                    <span class="block-content">
-                      <input type="text" value="" size="6" id="selectID" onchange="onSelectIDChanged(event)"
-                        class="small btn-green-border">
-  
-                      <button id="prevIDButton" onclick="onClickPrevID()" type="button"
-                        class="btn btn-default btn-xs btn-green-border" title="Select Previous Bee">PrevID <span
-                          class="glyphicon glyphicon-arrow-up small"></span></button>
-                      <button id="nextIDButton" onclick="onClickNextID()" type="button"
-                        class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID <span
-                          class="glyphicon glyphicon-arrow-down small"></span></button>
-  
-                      <button onclick="modifyCurrentObsSpan('extendleft')" type="button" class="btn btn-obs-expand btn-xs"
-                        title="Extend annotation left"> <span
-                          class="glyphicon glyphicon-chevron-left small"></span>+</button>
-                      <!-- <button onclick="modifyCurrentObsSpan('setspan-start')" type="button" class="btn btn-blue-toggle btn-xs setspan-start" title="Set span left">Set Start</button> -->
-                      <button onclick="modifyCurrentObsSpan('restrictleft')" type="button"
-                        class="btn btn-obs-expand btn-xs" title="Restrict annotation left"> <span
-                          class="glyphicon glyphicon-chevron-right small"></span>-</button>
-                      <button onclick="modifyCurrentObsSpan('setspan')" type="button"
-                        class="btn btn-blue-toggle btn-xs setspan" title="Set timespan for this event">Set Span</button>
-                      <button onclick="overlay.drawTimelineCurrentObject()" type="button"
-                        class="btn btn-blue-toggle btn-xs small" title="Show video around this event">Draw
-                        timeline<br>(Experimental)</button>
-                      <button onclick="modifyCurrentObsSpan('restrictright')" type="button"
-                        class="btn btn-obs-expand btn-xs" title="Restrict annotation right">-<span
-                          class="glyphicon glyphicon-chevron-left small"></span></button>
-                      <!-- <button onclick="modifyCurrentObsSpan('setspan-end')" type="button" class="btn btn-blue-toggle btn-xs setspan-end" title="Set span right">Set End</button> -->
-                      <button onclick="modifyCurrentObsSpan('extendright')" type="button"
-                        class="btn btn-obs-expand btn-xs" title="Extend annotation right">+<span
-                          class="glyphicon glyphicon-chevron-right small"></span></button>
-                    </span>
-                  </div>
+                <div id="selectedTabBR" class="hidden"></div>  
+                <div id="selectedTab" class='block inline-collapsible'>
+                  <div class="block-header small">Selected</div>
+                  <br>
+                  <span class="block-content">
+                    <input type="text" value="" size="6" id="selectID" onchange="onSelectIDChanged(event)"
+                      class="small btn-green-border">
+
+                    <button id="prevIDButton" onclick="onClickPrevID()" type="button"
+                      class="btn btn-default btn-xs btn-green-border" title="Select Previous Bee">PrevID <span
+                        class="glyphicon glyphicon-arrow-up small"></span></button>
+                    <button id="nextIDButton" onclick="onClickNextID()" type="button"
+                      class="btn btn-default btn-xs btn-green-border" title="Select Next Bee">NextID <span
+                        class="glyphicon glyphicon-arrow-down small"></span></button>
+
+                    <button onclick="modifyCurrentObsSpan('extendleft')" type="button" class="btn btn-obs-expand btn-xs"
+                      title="Extend annotation left"> <span
+                        class="glyphicon glyphicon-chevron-left small"></span>+</button>
+                    <!-- <button onclick="modifyCurrentObsSpan('setspan-start')" type="button" class="btn btn-blue-toggle btn-xs setspan-start" title="Set span left">Set Start</button> -->
+                    <button onclick="modifyCurrentObsSpan('restrictleft')" type="button"
+                      class="btn btn-obs-expand btn-xs" title="Restrict annotation left"> <span
+                        class="glyphicon glyphicon-chevron-right small"></span>-</button>
+                    <button onclick="modifyCurrentObsSpan('setspan')" type="button"
+                      class="btn btn-blue-toggle btn-xs setspan" title="Set timespan for this event">Set Span</button>
+                    <button onclick="overlay.drawTimelineCurrentObject()" type="button"
+                      class="btn btn-blue-toggle btn-xs small" title="Show video around this event">Draw
+                      timeline<br>(Experimental)</button>
+                    <button onclick="modifyCurrentObsSpan('restrictright')" type="button"
+                      class="btn btn-obs-expand btn-xs" title="Restrict annotation right">-<span
+                        class="glyphicon glyphicon-chevron-left small"></span></button>
+                    <!-- <button onclick="modifyCurrentObsSpan('setspan-end')" type="button" class="btn btn-blue-toggle btn-xs setspan-end" title="Set span right">Set End</button> -->
+                    <button onclick="modifyCurrentObsSpan('extendright')" type="button"
+                      class="btn btn-obs-expand btn-xs" title="Extend annotation right">+<span
+                        class="glyphicon glyphicon-chevron-right small"></span></button>
+                  </span>
                 </div>
                 
-                <div id="eventsTab" class='hidden'>
-                  <div class='block inline-collapsible'>
-                    <div class="block-header small">Events:</div>
-                    <span class="block-content">
-                      <button id="autoEventButton" onclick="onAutoEventButtonClick()" type="button"
-                        class="btn btn-xs btn-green-toggle" title="Toggle Auto Seek Event Mode">AutoSeek <span
-                          class="glyphicon glyphicon-arrow-down small"></span><span
-                          class="glyphicon glyphicon-arrow-up small"></span></button>
-                      <button onclick="eventSeekModeClicked('tag')" type="button"
-                        class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-tag" title="Tag mode">Tag</button>
-                      <button onclick="eventSeekModeClicked('freetag')" type="button"
-                        class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-freetag"
-                        title="Free tag mode">UnlabeledTag</button>
-                      <button onclick="eventSeekModeClicked('obs')" type="button"
-                        class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-obs" title="Obs mode">Obs</button>
-                      <button onclick="gotoFirstEvent()" type="button" class="btn btn-default btn-xs"
-                        title="Go to first event"><span
-                          class="glyphicon  glyphicon-fast-forward icon-flipped small"></span> First</button>
-                      <button onclick="gotoPreviousEvent()" type="button" class="btn btn-default btn-xs"
-                        title="Go to previous event"><span class="glyphicon glyphicon-step-backward small"></span>
-                        Prev</button>
-                      <button onclick="gotoNextEvent()" type="button" class="btn btn-default btn-xs"
-                        title="Go to next event">Next <span
-                          class="glyphicon glyphicon-step-forward small"></span></button>
-                      <button onclick="gotoLastEvent()" type="button" class="btn btn-default btn-xs"
-                        title="Go to last event">Last <span
-                          class="glyphicon  glyphicon-fast-forward small"></span></button>
-                    </span>
-                  </div>
+                <div id="eventsTabBR" class="hidden"></div>
+                <div id="eventsTab" class='block inline-collapsible'>
+                  <div class="block-header small">Events</div>
+                  <br>
+                  <span class="block-content">
+                    <button id="autoEventButton" onclick="onAutoEventButtonClick()" type="button"
+                      class="btn btn-xs btn-green-toggle" title="Toggle Auto Seek Event Mode">AutoSeek <span
+                        class="glyphicon glyphicon-arrow-down small"></span><span
+                        class="glyphicon glyphicon-arrow-up small"></span></button>
+                    <button onclick="eventSeekModeClicked('tag')" type="button"
+                      class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-tag" title="Tag mode">Tag</button>
+                    <button onclick="eventSeekModeClicked('freetag')" type="button"
+                      class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-freetag"
+                      title="Free tag mode">UnlabeledTag</button>
+                    <button onclick="eventSeekModeClicked('obs')" type="button"
+                      class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-obs" title="Obs mode">Obs</button>
+                    <button onclick="gotoFirstEvent()" type="button" class="btn btn-default btn-xs"
+                      title="Go to first event"><span
+                        class="glyphicon  glyphicon-fast-forward icon-flipped small"></span> First</button>
+                    <button onclick="gotoPreviousEvent()" type="button" class="btn btn-default btn-xs"
+                      title="Go to previous event"><span class="glyphicon glyphicon-step-backward small"></span>
+                      Prev</button>
+                    <button onclick="gotoNextEvent()" type="button" class="btn btn-default btn-xs"
+                      title="Go to next event">Next <span
+                        class="glyphicon glyphicon-step-forward small"></span></button>
+                    <button onclick="gotoLastEvent()" type="button" class="btn btn-default btn-xs"
+                      title="Go to last event">Last <span
+                        class="glyphicon  glyphicon-fast-forward small"></span></button>
+                  </span>
                 </div>
                 
-                <div id="filterTab" class="hidden">
-                  <div class='block inline-collapsible'>
-                    <div class="block-header small">Filter:</div>
-                    <span class="block-content">
-                      <input type="text" value="0" size="15" id="restrictID" onchange="onRestrictIDChanged(event)"
-                        class='btn-restrict-border small'>
-                      <button id="restrictIDButton" onclick="click_restrictID()" type="button"
-                        class="btn btn-restrict-toggle btn-xs" title="Show only tags with this ID">RestrictID</button>
-                      <button id="restrictIDfromSelectionButton" onclick="restrictIDFromSelection()" type="button"
-                        class="btn btn-default btn-restrict-border btn-selection-text btn-xs"
-                        title="Restrict to only current Selection ID">R:Selection</button>
-                      <button id="restrictIDFromWindowButton" onclick="restrictIDFromWindow()" type="button"
-                        class="btn btn-default btn-restrict-border btn-window-text btn-xs"
-                        title="Restrict to tags in current Window ID">R:Focus</button>
-  
-                      <input type="text" value="" size="15" id="excludeID" onchange="onExcludeIDChanged(event)"
-                        class="small btn-orange-border">
-                      <button id="excludeIDButton" onclick="click_excludeID()" type="button"
-                        class="btn btn-orange-toggle btn-xs"
-                        title="Exclude these IDs (comma separated list, no spaces)">ExcludeID</button>
-                      <button id="hideInvalidButton" onclick="click_hideInvalid()" type="button"
-                        class="btn btn-orange-toggle btn-xs"
-                        title="Hide markings as falsealarm or wrongid and their tag detection">Hide FA/WrongID</button>
-                      <button id="hideFlowersButton" onclick="click_hideFlowers()" type="button"
-                        class="btn btn-orange-toggle btn-xs" title="Hide annotations whose ID starts with F">Hide
-                        Flowers</button>
-                    </span>
-                  </div>
+                <div id="filterTabBR" class="hidden"></div>
+                <div id="filterTab" class='block inline-collapsible'>
+                  <div class="block-header small">Filter</div>
+                  <br>
+                  <span class="block-content">
+                    <input type="text" value="0" size="15" id="restrictID" onchange="onRestrictIDChanged(event)"
+                      class='btn-restrict-border small'>
+                    <button id="restrictIDButton" onclick="click_restrictID()" type="button"
+                      class="btn btn-restrict-toggle btn-xs" title="Show only tags with this ID">RestrictID</button>
+                    <button id="restrictIDfromSelectionButton" onclick="restrictIDFromSelection()" type="button"
+                      class="btn btn-default btn-restrict-border btn-selection-text btn-xs"
+                      title="Restrict to only current Selection ID">R:Selection</button>
+                    <button id="restrictIDFromWindowButton" onclick="restrictIDFromWindow()" type="button"
+                      class="btn btn-default btn-restrict-border btn-window-text btn-xs"
+                      title="Restrict to tags in current Window ID">R:Focus</button>
+
+                    <input type="text" value="" size="15" id="excludeID" onchange="onExcludeIDChanged(event)"
+                      class="small btn-orange-border">
+                    <button id="excludeIDButton" onclick="click_excludeID()" type="button"
+                      class="btn btn-orange-toggle btn-xs"
+                      title="Exclude these IDs (comma separated list, no spaces)">ExcludeID</button>
+                    <button id="hideInvalidButton" onclick="click_hideInvalid()" type="button"
+                      class="btn btn-orange-toggle btn-xs"
+                      title="Hide markings as falsealarm or wrongid and their tag detection">Hide FA/WrongID</button>
+                    <button id="hideFlowersButton" onclick="click_hideFlowers()" type="button"
+                      class="btn btn-orange-toggle btn-xs" title="Hide annotations whose ID starts with F">Hide
+                      Flowers</button>
+                  </span>
                 </div>
 
                 <!-- 
@@ -526,71 +436,60 @@
               <button value="ghost" onclick="plotGhostImage()" type="button" class="btn btn-default btn-xs" title="Plot averaged image">Ghost</span></button>
               </div>
  -->
-                <div id="chronoTab" class="hidden">
-                  <div class="block inline-collapsible" width="100%">
-
-                    <div class="block-header small">Chronogram:</div>
-                    <span class="block-content">
-  
-                      <div class='block inline-collapsible'>
-                        <div class="block-header small">View:</div>
-                        <span class="block-content">
-                          <div onclick="shiftTimeDomain(-0.5)" class="btn btn-info btn-xs" title="Shift left"><span
-                              class="glyphicon glyphicon-step-backward small"></span></div>
-                          <div onclick="shiftTimeDomain(0.5)" class="btn btn-info btn-xs" title="Shift right"><span
-                              class="glyphicon glyphicon-step-forward small"></span></div>
-  
-                          <input value="Z+" onclick="scaleTimeDomain(2)" type="button" class="btn btn-info btn-xs"
-                            title="Zoom In time">
-                          <input value="Z-" onclick="scaleTimeDomain(1/2)" type="button" class="btn btn-info btn-xs"
-                            title="Zoom Out time">
-  
-                          <input value="Video" onclick="onClickFocusVideo()" type="button"
-                            class="btn btn-default btn-video-border btn-xs" title="Reinit view">
-                        </span>
-                      </div>
-  
-                      <div class='block inline-collapsible'>
-                        <div class="block-header small">Size:</div>
-                        <span class="block-content">
-                          <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs"
-                            title="Reduce chronogram height">h-</button>
-                          <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs"
-                            title="Reinit chronogram height">h=</button>
-                          <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs"
-                            title="Increase chronogram height">h+</button>
-                          &nbsp;
-                          <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs"
-                            title="Reduce chronogram width">w-</button>
-                          <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs"
-                            title="Reinit chronogram width">w=</button>
-                          <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs"
-                            title="Increase chronogram width">w+</button>
-                        </span>
-                      </div>
-  
-                      <div>
-                        <div class="">
-                          <div id="chronoDiv" class="ui-widget-content" width="400" height="200"
-                            style="padding-right: 16px;">
-                            <svg id="svgVisualize" width="100%" height="100%"></svg>
-                          </div>
+                <div id="chronoTabBR"></div>
+                <div id="chronoTab" class="block inline-collapsible" width="100%">
+                  <div class="block-header small">Chronogram</div>
+                  <br>
+                  <span class="block-content">
+                    <div class='block inline-collapsible'>
+                      <div class="block-header small">View:</div>
+                      <span class="block-content">
+                        <div onclick="shiftTimeDomain(-0.5)" class="btn btn-info btn-xs" title="Shift left"><span
+                            class="glyphicon glyphicon-step-backward small"></span></div>
+                        <div onclick="shiftTimeDomain(0.5)" class="btn btn-info btn-xs" title="Shift right"><span
+                            class="glyphicon glyphicon-step-forward small"></span></div>
+                        <input value="Z+" onclick="scaleTimeDomain(2)" type="button" class="btn btn-info btn-xs"
+                          title="Zoom In time">
+                        <input value="Z-" onclick="scaleTimeDomain(1/2)" type="button" class="btn btn-info btn-xs"
+                          title="Zoom Out time">
+                        <input value="Video" onclick="onClickFocusVideo()" type="button"
+                          class="btn btn-default btn-video-border btn-xs" title="Reinit view">
+                      </span>
+                    </div>
+                    <div class='block inline-collapsible'>
+                      <div class="block-header small">Size:</div>
+                      <span class="block-content">
+                        <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs"
+                          title="Reduce chronogram height">h-</button>
+                        <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs"
+                          title="Reinit chronogram height">h=</button>
+                        <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs"
+                          title="Increase chronogram height">h+</button>
+                        &nbsp;
+                        <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs"
+                          title="Reduce chronogram width">w-</button>
+                        <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs"
+                          title="Reinit chronogram width">w=</button>
+                        <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs"
+                          title="Increase chronogram width">w+</button>
+                      </span>
+                    </div>
+                    <div>
+                      <div class="">
+                        <div id="chronoDiv" class="ui-widget-content" width="400" height="200"
+                          style="padding-right: 16px;">
+                          <svg id="svgVisualize" width="100%" height="100%"></svg>
                         </div>
                       </div>
-  
-                    </span>
-                  </div>
+                    </div>
+                  </span>
                 </div>
               </div>
-
-
-
-
             </div>
 
         </td>
         <td>
-          <div style="min-width:180px;">
+          <div style="min-width:220px;">
 
             <div id='right-side' class='sortable'>
 
@@ -737,6 +636,115 @@
                 </div>
               </div> <!-- videoinfo -->
 
+
+              <!-- ### ANNOTATIONS ### -->
+              <div id='annotationpanel' class="collapsible">
+                <label>Annotations</label>
+                <div>
+                  <!-- BEEID SUBPANEL  -->
+                  <div id="beeidpanel" class="subpanel collapsible collapsed">
+                    <label>BeeID</label>
+                    <div>
+                      <small style="color:black">currID</small>
+                      <input type="text" size="5" value="" id="I" onkeypress="onKeyDown_IDEdit(event)"
+                        class="small"></input>
+                      <button id="newRectForCurrentTag" onclick="newRectForCurrentTag()" type="button"
+                        class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
+                      <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-warning btn-sm"
+                        style="position: inline" id="deleteButton">
+                      <button type="button" onclick="undoAction()" class="btn btn-info btn-sm" style="position: inline"
+                        id="undoButton">Undo</button>
+                      <br>
+                      <small style="color:blue">newID<input type="text" size="6" value="" id="newid"
+                          onkeypress="onKeyDown_NewIDEdit(event)""></input></small>
+                        <button onclick=" onLabelToggled(event)" type="button"
+                          class="btn btn-green-toggle btn-sm labeltoggle wrongid" thelabel="wrongid"
+                          title="Toogle WrongID label: when a tag is detected but decoded with an incorrect ID">wrongID
+                        <span class="glyphicon glyphicon-remove small blue"></span></button>
+                        <button type="button" onclick="swapID_callback()" class="btn btn-info btn-sm"
+                          style="position: inline" id="swapID">SwapID</button>
+                    </div>
+                  </div>
+
+                  <!-- LABELS SUBPANEL -->
+                  <div id="labeltoggle" class="subpanel collapsible collapsed">
+                    <label>Labels</label>
+                    <div>
+                      <div>
+                        <button onclick="onLabelToggled(event)" type="button"
+                          class="btn btn-green-toggle btn-xs labeltoggle fanning" thelabel="fanning"
+                          title="Toogle label">fanning</button>
+                        <button onclick="onLabelToggled(event)" type="button"
+                          class="btn btn-green-toggle btn-xs labeltoggle pollen" thelabel="pollen"
+                          title="Toogle label">pollen <span class="glyphicon glyphicon-pollen small"></span></button>
+                        <br>
+                        <button onclick="onLabelToggled(event)" type="button"
+                          class="btn btn-green-toggle btn-xs labeltoggle entering" thelabel="entering"
+                          title="Toogle label">entering <span class="glyphicon glyphicon-arrow-up small"
+                            style="color:magenta"></span></button>
+                        <button onclick="onLabelToggled(event)" type="button"
+                          class="btn btn-green-toggle btn-xs labeltoggle leaving" thelabel="leaving"
+                          title="Toogle label">leaving <span class="glyphicon glyphicon-arrow-down small"
+                            style="color:green"></span></button>
+                        <br>
+                        <button onclick="onLabelToggled(event)" type="button"
+                          class="btn btn-green-toggle btn-xs labeltoggle walking" thelabel="walking"
+                          title="Toogle label">walking <span class="glyphicon glyphicon-repeat small"></span></button>
+                        <button onclick="onLabelToggled(event)" type="button"
+                          class="btn btn-green-toggle btn-xs labeltoggle expulsed" thelabel="expulsed"
+                          title="Toogle label Expulsed: when a bee is rejected/expelled from the colony">expulsed</button>
+                        <br>
+                        <button onclick="onLabelToggled(event)" type="button"
+                          class="btn btn-green-toggle btn-xs labeltoggle expulsing" thelabel="expulsing"
+                          title="Toogle label Expulsion: when a bee is rejecting/expelling another individual from the colony">expulsing</button>
+                        <button onclick="onLabelToggled(event)" type="button"
+                          class="btn btn-green-toggle btn-xs labeltoggle falsealarm" thelabel="falsealarm"
+                          title="Toogle FalseAlarm label: when a tag detection is not a tag">falsealarm <span
+                            class="glyphicon glyphicon-remove small red"></span></button>
+                      </div>
+                      <div>
+                        <button onclick="labelListDialog.openDialog()" type="button" class="btn btn-info btn-xs"
+                          title="Edit list of labels">Edit...</button>
+                        <button onclick="labelListFromServerDialog.openDialog()" type="button" class="btn btn-info btn-xs"
+                          title="Load list of labels">Preset...</button>
+                      </div>
+                      <div>
+                        <label>Labels: </label><input type="textbox" value="" class="resizedTextbox" id="labels">
+                        <br>
+                        <label>Notes: </label><input type="textbox" value="" class="resizedTextbox" id="notes">
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- VISITS SUBPANEL -->
+                  <div id="visitblock" class="subpanel collapsible collapsed">
+                    <label>Visits</label>
+                    <div>
+                      <div id='visitblockblockwrapper'>
+                        <div id="visitblockdiv"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- BOUNDING BOX SUBPANEL -->
+                  <div id="boundingboxblock" class='subpanel collapsible collapsed'>
+                    <label>Bounding Box Angle</label>
+                    <div>
+                      <input value="Disable Angle Control" onclick="overlay.onClickDisableAngle()" type="button"
+                        class="guiAngle-disableAngle btn btn-pink-toggle btn-xs"
+                        title="Does not allow event to have angle by default">
+                      <br>
+                      <button value="Reset to 0" onclick="overlay.onClickResetAngle()" type="button"
+                        class="btn btn-default btn-xs" title="Reset event angle to 0">Reset angle to 0</button>
+                      <br>
+                      <button value="Set from tag" onclick="overlay.onClickAngleFromTag()" type="button"
+                        class="btn btn-default btn-xs" title="Set Event angle from associated tag">Angle from tag</button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
               <!-- ## I/O -->
 
               <div id='I/O' class='collapsible'>
@@ -855,23 +863,45 @@
                 <div>
                   <label>Show menu tabs:</label>
                   <br>
-                  <input id="showTimeline" type="checkbox" onchange="toggleHidden('timelineTab', this.checked)">
+                  <input id="showTimeline" type="checkbox" onchange="
+                    toggleHidden('timelineBR', this.checked); 
+                    toggleHidden('timeline', this.checked);">
                   <label for="showTimeline">Timeline</label>
                   <br>
-                  <input id="showFocusInterval" type="checkbox" onchange="toggleHidden('focusIntervalTab', this.checked)">
+                  <input id="showFocusInterval" type="checkbox" onchange="
+                    toggleHidden('focusIntervalTabBR', this.checked); 
+                    toggleHidden('focusIntervalTab', this.checked);">
                   <label for="showFocusInterval">Focus Interval</label>
                   <br>
-                  <input id="showSelected" type="checkbox" onchange="toggleHidden('selectedTab', this.checked)">
+                  <input id="showSelected" type="checkbox" onchange="
+                    toggleHidden('selectedTabBR', this.checked); 
+                    toggleHidden('selectedTab', this.checked);">
                   <label for="showSelected">Selected</label>
                   <br>
-                  <input id="showEvents" type="checkbox" onchange="toggleHidden('eventsTab', this.checked)">
+                  <input id="showEvents" type="checkbox" onchange="
+                    toggleHidden('eventsTabBR', this.checked); 
+                    toggleHidden('eventsTab', this.checked);">
                   <label for="showEvents">Events</label>
                   <br>
-                  <input id="showFilter" type="checkbox" onchange="toggleHidden('filterTab', this.checked)">
+                  <input id="showFilter" type="checkbox" onchange="
+                    toggleHidden('filterTabBR', this.checked); 
+                    toggleHidden('filterTab', this.checked);">
                   <label for="showFilter">Filter</label>
                   <br>
-                  <input id="showChrono" type="checkbox" checked onchange="toggleHidden('chronoTab', this.checked)">
+                  <input id="showChrono" type="checkbox" checked onchange="
+                    toggleHidden('chronoTabBR', this.checked);
+                    toggleHidden('chronoTab', this.checked);">
                   <label for="showChrono">Chronogram</label>
+                  <br>
+                  <input id="showPickFrame" type="checkbox" onchange="
+                  toggleHidden('pickframetabBR', this.checked); 
+                  toggleHidden('pickframeblock', this.checked);">
+                  <label for="showPickFrame">Pick-Frame Mode</label>
+                  <br>
+                  <input id="showPickFlower" type="checkbox" onchange="
+                  toggleHidden('pickflowertabBR', this.checked); 
+                  toggleHidden('pickflowerblock', this.checked);">
+                  <label for="showPickFlower">Pick-Flower Mode</label>
                 </div>
               </div>
               <!-- ## LABELING -->
@@ -1340,7 +1370,7 @@
                     <div>
                       <div class="inline-block">
                         <b>Caching of video frames</b><br>
-                        Cache size (try 10 is interface is slow when using image diff) <input type="text" value="40"
+                        Cache size (try 10 is interface is slow when using image diff) <input type="text" value="1000"
                           size="4" id="videoCacheSize" onchange="videoCache.onVideoCacheParamsChanged(event)">
                       </div>
                     </div>
