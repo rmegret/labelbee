@@ -618,12 +618,14 @@ def ajaxlogin():
         # print(user.password)
         return current_app.user_manager.verify_password(password, user.password)
 
+    # Login fail
     if user is None or not check_password(user, password):
         return jsonify(
             {
                 "request": "login",
                 "email": email,
                 "status": "FAIL",
+                "message":"Incorrect credentials. Please try again."
             }
         )
 

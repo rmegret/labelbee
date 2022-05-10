@@ -89,6 +89,7 @@ function LoginDialog() {
       autoOpen: false,
       title: "Login",
       modal: true,
+      width: 335,
       buttons: {
         Ok: function () {
           var email = div.find('input[id="email"]').val();
