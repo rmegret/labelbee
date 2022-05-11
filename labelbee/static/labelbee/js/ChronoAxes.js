@@ -862,6 +862,8 @@ function ChronoAxes(parent, videoinfo, options) {
       $(axes).trigger("previewframe:trackend"); // jQuery callback
     }
     function trackFrame_keyDown() {
+      if (logging.mouseMoveEvents)
+        console.log("trackFrame_keyDown", d3.event);
       if (d3.event.ctrlKey) {
         // Register mousemove is not already done
 
@@ -875,11 +877,16 @@ function ChronoAxes(parent, videoinfo, options) {
       }
     }
     function trackFrame_keyUp() {
+      if (logging.mouseMoveEvents)
+        console.log("trackFrame_keyDown", d3.event);
       if (!d3.event.ctrlKey) {
         //axes.trackFrame_on = false;
 
         d3.select("body").on("keydown.trackFrame", trackFrame_keyDown);
         d3.select("body").on("keyup.trackFrame", null);
+
+        if (logging.mouseMoveEvents)
+          console.log("Stopped mousemove tracking in chronogram");
 
         $(axes).trigger("previewframe:trackend"); // jQuery callback
       }

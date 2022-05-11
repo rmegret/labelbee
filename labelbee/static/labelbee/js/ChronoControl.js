@@ -76,19 +76,20 @@ function initChrono() {
     let stayHere = false;
     if (stayHere) {
       // Stay at preview frame
-      videoControl.seekFrame(getCurrentFrame());
+      videoControl.seekFrame(getCurrentFrame(),"end-preview");
       // Update should be called by callbacks
     } else {
       // Come back to initial frame before preview
       //videoControl.currentMode = 'video';
-      videoControl.onFrameChanged();
+      videoControl.seekFrame(-1,"end-preview");
+      //videoControl.onFrameChanged();
       //updateTimeMark();
       //updateTrackWindowSpan()
       //videoControl.hardRefresh();
     }
   }
-  $(axes).on("previewframe:trackmove", onAxesMoved);
-  $(axes).on("previewframe:trackend", endPreview);
+  $(axes).on("previewframe:trackmove", (evt)=>onAxesMoved(evt));
+  $(axes).on("previewframe:trackend", ()=>endPreview());
 
   /* Resize events */
 
@@ -476,14 +477,17 @@ function onAxesDblClick(event) {
   ]);
 }
 function onAxesMoved(event) {
-  // User clicked in chronogram axes
+  // User moved in chronogram axes with Shift
   var frame = event.frame;
   var id = event.id;
   if (logging.axesEvents)
     console.log("onAxesMove: seeking to frame=", frame, "...");
 
   //defaultSelectedBee = id // Do not change, keep same ID
-  videoControl.seekFrame(frame, true);
+  // if (videoControl.currentMode != "preview") {
+  //   videoControl.savedNonPreviewFrame = videoControl.currentFrame
+  // }
+  videoControl.seekFrame(frame, "preview");
 }
 function onAxesChanged(event) {
   // User zoomed, scrolled or changed chronogram range or size */
