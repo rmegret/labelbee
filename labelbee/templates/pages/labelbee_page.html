@@ -102,8 +102,8 @@
         </ul>
  -->
         <ul class="nav navbar-nav navbar-right">
-          <li title="You need to quit labelbee before loging-in/out"><a><span id="whoami">-</span></a></li>
-          <li><a href="{{url_for('home_page')}}"><span class="glyphicon glyphicon-log-out"></span> Quit labelbee</a>
+          <li title="You need to quit LabelBee before logging-in/out"><a><span id="whoami">-</span></a></li>
+          <li><a href="{{url_for('home_page')}}"><span class="glyphicon glyphicon-log-out"></span> Quit LabelBee</a>
           </li>
         </ul>
       </div>
@@ -642,7 +642,7 @@
                 <label>Annotations</label>
                 <div>
                   <!-- BEEID SUBPANEL  -->
-                  <div id="beeidpanel" class="subpanel collapsible">
+                  <div id="beeidpanel" class="subpanel collapsible default-active">
                     <label>BeeID</label>
                     <div>
                       <small style="color:black">currID</small>
@@ -667,7 +667,7 @@
                   </div>
 
                   <!-- LABELS SUBPANEL -->
-                  <div id="labeltoggle" class="subpanel collapsible collapsed">
+                  <div id="labeltoggle" class="subpanel collapsible">
                     <label>Labels</label>
                     <div>
                       <div>
@@ -717,7 +717,7 @@
                   </div>
 
                   <!-- VISITS SUBPANEL -->
-                  <div id="visitblock" class="subpanel collapsible collapsed">
+                  <div id="visitblock" class="subpanel collapsible">
                     <label>Visits</label>
                     <div>
                       <div id='visitblockblockwrapper'>
@@ -727,7 +727,7 @@
                   </div>
 
                   <!-- BOUNDING BOX SUBPANEL -->
-                  <div id="boundingboxblock" class='subpanel collapsible collapsed'>
+                  <div id="boundingboxblock" class='subpanel collapsible'>
                     <label>Bounding Box Angle</label>
                     <div>
                       <input value="Disable Angle Control" onclick="overlay.onClickDisableAngle()" type="button"
