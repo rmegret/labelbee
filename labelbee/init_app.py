@@ -134,8 +134,10 @@ def init_app(app, extra_config_settings={}):
 
     app.jinja_env.globals["bootstrap_is_hidden_field"] = is_hidden_field_filter
 
+
     # Setup an error-logger to send emails to app.config.ADMINS
-    init_email_error_handler(app)
+    # Disabled due to lack of SMTP server
+    # init_email_error_handler(app)
 
     # Setup Flask-User to handle user account related forms
     from labelbee.models import User, CustomUserManager
