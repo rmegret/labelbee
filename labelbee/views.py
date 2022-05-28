@@ -31,6 +31,7 @@ from labelbee.models import (
     UserSchema,
     UsersRoles,
     UsersRolesSchema,
+    Role,
     RoleSchema,
     VideoDataSchema,
     VideoSchema,
@@ -497,6 +498,7 @@ def admin_page():
 @roles_accepted("admin")  # Limits access to users with the 'admin' role
 def manage_users_page():
     form = UserUpdateForm()
+    form.roles.choices = [(RoleSchema().dump(role)['id'], RoleSchema().dump(role)['label']) for role in Role.query.all()]
     user_schema = UserSchema()
     roles_schema = RoleSchema()
     success = False
@@ -505,17 +507,13 @@ def manage_users_page():
     if request.method == "POST" and form.validate():
         editing = True
         success = edit_user(form.data)
-
-    # Get user data
+        logger.debug(form.data)
+    # Get data for each user
     users = [user_schema.dump(user) for user in user_list()]
-
-    # Add role data to users dict
+    # Get roles for each user
     for user in users:
-        roles = []
-        for role in get_user_roles_by_id(user['id']):
-            roles.append(roles_schema.dump(role))
-        user['roles'] = roles
-    
+        user['roles'] = [roles_schema.dump(role) for role in get_user_roles_by_id(user['id'])]
+
     return render_template("pages/manage_users_page.html", form=form, users=users, editing=editing, success=success)
 
 

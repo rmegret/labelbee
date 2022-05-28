@@ -8,10 +8,10 @@ from flask_user.forms import RegisterForm, unique_email_validator
 from flask_wtf import FlaskForm
 from sqlalchemy.orm import backref
 from wtforms import StringField, SubmitField, validators, BooleanField, PasswordField, HiddenField
+from wtforms.fields import SelectMultipleField
 from labelbee.init_app import db, ma
 from marshmallow import validate, fields
 from labelbee.validation import FileName, Path
-
 
 # Define the User data model. Make sure to add the flask_user.UserMixin !!
 class User(db.Model, UserMixin):
@@ -238,6 +238,7 @@ class UserProfileForm(FlaskForm):
     )
     submit = SubmitField("Save")
 
+
 # Define an update user form
 class UserUpdateForm(FlaskForm):
     id = HiddenField()
@@ -266,4 +267,6 @@ class UserUpdateForm(FlaskForm):
     studentnum = StringField("Student number")
     clase = StringField("Class")
     active = BooleanField("Active?")
+    roles = SelectMultipleField("Roles", choices=[], coerce=int)
+    # roles = QuerySelectMultipleField(query_factory=lambda: Role.query.all(), get_label=lambda x: x.label)
     submit = SubmitField("Submit")

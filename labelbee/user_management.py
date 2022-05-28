@@ -58,15 +58,21 @@ def create_user(
 
 def edit_user(user_info) -> None:
     user = User.query.get(user_info['id'])
-    user.email = user_info['email']
-    user.first_name = user_info['first_name']
-    user.last_name = user_info['last_name']
+    user.email = user_info['email'] if user_info['email'] else user.email
+    user.first_name = user_info['first_name'] if user_info['first_name'] else user.first_name
+    user.last_name = user_info['last_name']if user_info['last_name'] else user.last_name
     user.password = (
         app.user_manager.hash_password(user_info['password']) if user_info['password'] else user.password
     )
-    user.studentnum = user_info['studentnum']
-    user.clase = user_info['clase']
-    user.active = user_info['active']
+    user.studentnum = user_info['studentnum'] if user_info['studentnum'] else user.studentnum
+    user.clase = user_info['clase'] if user_info['clase'] else user.clase
+    user.active = user_info['active'] if user_info['active'] else user.active
+    
+    # for role in UsersRoles.query.all():
+    #     db.session.delete(role)
+    for role_id in user_info['roles']:
+        role = UsersRoles(user_id=user_info['id'], role_id=role_id)
+        db.session.add(role)
     # user_role = UsersRoles.query.filter_by(user_id=user_id).first()
     # user_role.role_id = role_id
     success = True
