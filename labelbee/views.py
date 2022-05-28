@@ -29,8 +29,12 @@ from labelbee.models import (
     UserProfileForm,
     User,
     UserSchema,
+    UsersRoles,
+    UsersRolesSchema,
+    RoleSchema,
     VideoDataSchema,
     VideoSchema,
+    UserUpdateForm
 )
 from labelbee.db_functions import (
     add_video_data,
@@ -50,6 +54,7 @@ from labelbee.db_functions import (
     video_data_list,
     video_info,
     get_user_by_id,
+    get_user_roles_by_id,
     get_video_data_by_id,
     edit_video_data,
     import_from_csv,
@@ -57,7 +62,7 @@ from labelbee.db_functions import (
 )
 
 upload_dir = "labelbee/static/upload/"
-
+data_root_dir = os.environ.get("DATA_DIR")
 # -------------------------------------------
 # PAGES
 
@@ -491,24 +496,27 @@ def admin_page():
 @app.route("/manage_users", methods=["GET", "POST"])
 @roles_accepted("admin")  # Limits access to users with the 'admin' role
 def manage_users_page():
-
-    form = UserProfileForm(obj=current_user)
-    users = user_list()
-
+    form = UserUpdateForm()
+    user_schema = UserSchema()
+    roles_schema = RoleSchema()
+    success = False
+    editing = False
     # Process valid POST
     if request.method == "POST" and form.validate():
-        # Copy form fields to user_profile fields
-        form.populate_obj(current_user)
+        editing = True
+        success = edit_user(form.data)
 
-        # Save user_profile
-        db.session.commit()
+    # Get user data
+    users = [user_schema.dump(user) for user in user_list()]
 
-        # Redirect to home page
-        return render_template("pages/manage_users_page.html", form=form, users=users)
-
-    # Process GET or invalid POST
-
-    return render_template("pages/manage_users_page.html", form=form, users=users)
+    # Add role data to users dict
+    for user in users:
+        roles = []
+        for role in get_user_roles_by_id(user['id']):
+            roles.append(roles_schema.dump(role))
+        user['roles'] = roles
+    
+    return render_template("pages/manage_users_page.html", form=form, users=users, editing=editing, success=success)
 
 
 @app.route("/admin/version")
@@ -730,23 +738,26 @@ def add_users():
     user_schema = UserSchema(many=True)
     return jsonify({"status": "SUCCESS", "users": user_schema.dump(user_list)})
 
-
-@app.route("/rest/user/edit_users", methods=["POST"])
-def edit_users():
-    if current_user.is_authenticated and current_user.has_roles("admin"):
-        json_list = json.loads(request.form.get("json"))
-        for user in json_list:
-            edit_user(
-                user_id=int(user["user_id"]),
-                first_name=user.setdefault("first_name", None),
-                last_name=user.setdefault("last_name", None),
-                email=user.setdefault("email", None),
-                password=user.setdefault("password", None),
-                role_id=user.setdefault("role_id", 2),
-            )
-        return jsonify({"status": "SUCCESS"})
-    else:
-        return jsonify({"status": "FAIL", "message": "not authenticated"})
+# Deprecated, incompatible with new edit_user function implemented for
+# admin manage users menu (route /manage_users)
+# Assumes relationship between users and roles tables is one-to-many,
+# when it really is many-to-many(users can have more than one role)
+# @app.route("/rest/user/edit_users", methods=["POST"])
+# def edit_users():
+#     if current_user.is_authenticated and current_user.has_roles("admin"):
+#         json_list = json.loads(request.form.get("json"))
+#         for user in json_list:
+#             edit_user(
+#                 user_id=int(user["user_id"]),
+#                 first_name=user.setdefault("first_name", None),
+#                 last_name=user.setdefault("last_name", None),
+#                 email=user.setdefault("email", None),
+#                 password=user.setdefault("password", None),
+#                 role_id=user.setdefault("role_id", 2),
+#             )
+#         return jsonify({"status": "SUCCESS"})
+#     else:
+#         return jsonify({"status": "FAIL", "message": "not authenticated"})
 
 
 @app.route("/rest/user/list_users", methods=["GET"])
@@ -869,14 +880,15 @@ def serve_files(base_dir, path, base_uri, format="html"):
 @app.route("/rest/config/labellist/", methods=["GET"])
 @app.route("/rest/config/labellist/<path:path>", methods=["GET"])
 def labellist_get(path=""):
-    print("Handling labellist request PATH=" + path)
+    # print("Handling labellist request PATH=" + path)
     # if (not current_user.is_authenticated):
     #    raise Forbidden('/rest/config/labellist GET: login required !')
     format = request.args.get("format", "html")
-
-    base_dir = os.path.join(app.root_path, "static/data/config/labellist/")
+    
+    # base_dir = os.path.join(app.root_path, "static/data/config/labellist/")
+    # Quick fix using environment variable due to changes in config location
+    base_dir = os.path.join(data_root_dir, "config/labellist/")
     base_uri = url_for("labellist_get", path="")  # '/rest/config/labellist/'
-
     return serve_files(base_dir, path, base_uri, format)
 
 
