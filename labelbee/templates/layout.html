@@ -42,8 +42,9 @@
         </div>
         <div class="pull-right">
             {% if current_user.is_authenticated %}
-            <a href="{{ url_for('user_profile_page') }}">{{ current_user.first_name or current_user.user_auth.username
-                }}</a>
+            <a href="{{ url_for('user_profile_page') }}">
+                View Profile [{{ current_user.first_name or current_user.user_auth.username}}]
+            </a>
             &nbsp; | &nbsp;
             <a href="{{ url_for('user.logout') }}">Sign out</a>
             {% else %}
@@ -53,7 +54,7 @@
     </div>
     <div class="with-margins">
         <a href="{{ url_for('home_page') }}">Home</a>
-        &nbsp; | &nbsp; <a href="{{ url_for('datasets_page') }}">Videos</a>
+        <!-- &nbsp; | &nbsp; <a href="{{ url_for('datasets_page') }}">Videos</a> -->
         &nbsp; | &nbsp; <a href="{{ url_for('user_page') }}">User</a>
         &nbsp; | &nbsp; <a href="{{ url_for('admin_page') }}">Admin</a>
     </div>
@@ -85,7 +86,7 @@
     <hr class="no-margins" />
     <div id="footer-div" class="clearfix with-margins">
         <div class="pull-left">{{ config.APP_NAME }} v3.0</div>
-        <div class="pull-right">&copy; 2016-2018 University of Puerto Rico</div>
+        <div class="pull-right">&copy; 2016-2022 University of Puerto Rico</div>
     </div>
 
 
