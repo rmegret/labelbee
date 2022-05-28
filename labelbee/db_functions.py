@@ -691,7 +691,3 @@ def get_user_roles_by_id(userid: int) -> [Role]:
     :rtype: Role list
     """
     return db.session.query(Role).join(UsersRoles).filter(UsersRoles.user_id==userid)
-
-def set_user_roles(userid:int, role_ids: [int]) -> None:
-    
-    return
