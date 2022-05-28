@@ -28,7 +28,7 @@ USER_ENABLE_REMEMBER_ME = False
 USER_AFTER_LOGIN_ENDPOINT = 'user_page'
 USER_AFTER_LOGOUT_ENDPOINT = 'home_page'
 USER_EMAIL_SENDER_NAME = USER_APP_NAME
-# USER_EMAIL_SENDER_EMAIL = "noreply@example.com"
+USER_EMAIL_SENDER_EMAIL = "fakeEmail@fakeEmail.com"
 USER_SEND_REGISTERED_EMAIL = False # Send an email to user confirming registration
 USER_SEND_PASSWORD_CHANGED_EMAIL = False
 
