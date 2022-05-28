@@ -4,10 +4,10 @@
 
 import re
 from flask_user import UserMixin, UserManager
-from flask_user.forms import RegisterForm
+from flask_user.forms import RegisterForm, unique_email_validator
 from flask_wtf import FlaskForm
 from sqlalchemy.orm import backref
-from wtforms import StringField, SubmitField, validators
+from wtforms import StringField, SubmitField, validators, BooleanField, PasswordField, HiddenField
 from labelbee.init_app import db, ma
 from marshmallow import validate, fields
 from labelbee.validation import FileName, Path
@@ -22,8 +22,6 @@ class User(db.Model, UserMixin):
     email = db.Column(db.Unicode(255), nullable=False, server_default=u"", unique=True)
     email_confirmed_at = db.Column(db.DateTime())
     password = db.Column(db.String(255), nullable=False, server_default="")
-    # reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
-    active = db.Column(db.Boolean(), nullable=False, server_default="0")
 
     # User information
     active = db.Column("is_active", db.Boolean(), nullable=False, server_default="0")
@@ -120,15 +118,6 @@ class DataSet(db.Model):
     # https://flask-sqlalchemy.palletsprojects.com/en/2.x/models/
     videos = db.relationship("Video", backref="data_set", lazy=True)
 
-
-class RoleSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = Role
-
-    id = fields.Integer(dump_only=True)
-    name = fields.String(required=True)
-
-
 class VideoSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Video
@@ -194,7 +183,23 @@ class UserSchema(ma.SQLAlchemySchema):
     last_name = fields.String(required=True)
     studentnum = fields.String()
     clase = fields.String()
+    active = fields.Boolean()
 
+class UsersRolesSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = UsersRoles
+
+    id = fields.Integer(dump_only=True)
+    role_id = fields.Integer(required=True)
+    user_id = fields.Integer(required=True)
+
+class RoleSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = Role
+
+    id = fields.Integer(dump_only=True)
+    name = fields.String(required=True)
+    label = fields.String(required=True)
 
 class DataSetSchema(ma.SQLAlchemySchema):
     class Meta:
@@ -207,6 +212,10 @@ class DataSetSchema(ma.SQLAlchemySchema):
     creator = fields.Integer(required=True)
     timestamp = fields.DateTime(required=True)
 
+class CustomUserManager(UserManager):
+    def customize(self, app):
+        # Override properties
+        self.RegisterFormClass = MyRegisterForm
 
 # Define the User registration form
 # It augments the Flask-User RegisterForm with additional fields
@@ -229,8 +238,32 @@ class UserProfileForm(FlaskForm):
     )
     submit = SubmitField("Save")
 
-
-class CustomUserManager(UserManager):
-    def customize(self, app):
-        # Override properties
-        self.RegisterFormClass = MyRegisterForm
+# Define an update user form
+class UserUpdateForm(FlaskForm):
+    id = HiddenField()
+    email = StringField(
+        'Email', 
+        validators=[
+            validators.DataRequired('Email is required'),
+            validators.Email('Invalid Email')
+        ]
+    )
+    password = PasswordField(
+        'Password',
+    )
+    first_name = StringField(
+        "First name", 
+        validators=[
+            validators.DataRequired("First name is required")
+        ]
+    )
+    last_name = StringField(
+        "Last name", 
+        validators=[
+            validators.DataRequired("Last name is required")
+        ]
+    )
+    studentnum = StringField("Student number")
+    clase = StringField("Class")
+    active = BooleanField("Active?")
+    submit = SubmitField("Submit")

@@ -1,5 +1,5 @@
 from labelbee.models import User, Role, UsersRoles
-from labelbee.init_app import db, app
+from labelbee.init_app import db, app, logger
 from typing import Tuple
 from datetime import datetime
 
@@ -56,23 +56,22 @@ def create_user(
     return user
 
 
-def edit_user(
-    user_id: int,
-    first_name: str,
-    last_name: str,
-    email: str,
-    password: str,
-    role_id: int,
-) -> Tuple[User, UsersRoles]:
-    user = User.query.get(user_id)
-    user.first_name = first_name if first_name else user.first_name
-    user.last_name = last_name if last_name else user.last_name
-    user.email = email if email else user.email
+def edit_user(user_info) -> None:
+    user = User.query.get(user_info['id'])
+    user.email = user_info['email']
+    user.first_name = user_info['first_name']
+    user.last_name = user_info['last_name']
     user.password = (
-        app.user_manager.hash_password(password) if password else user.password
+        app.user_manager.hash_password(user_info['password']) if user_info['password'] else user.password
     )
-
-    user_role = UsersRoles.query.filter_by(user_id=user_id).first()
-    user_role.role_id = role_id
-    db.session.commit()
-    return user, user_role
+    user.studentnum = user_info['studentnum']
+    user.clase = user_info['clase']
+    user.active = user_info['active']
+    # user_role = UsersRoles.query.filter_by(user_id=user_id).first()
+    # user_role.role_id = role_id
+    success = True
+    try:
+        db.session.commit()
+    except:
+        success = False
+    return success

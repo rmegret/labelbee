@@ -9,7 +9,7 @@ from csv import DictReader
 from datetime import datetime
 
 from werkzeug.datastructures import FileStorage
-from labelbee.models import Video, VideoData, DataSet, User
+from labelbee.models import Video, VideoData, DataSet, User, UsersRoles, Role
 from labelbee.init_app import db, app
 from typing import List
 
@@ -409,19 +409,6 @@ def search_video(query: str) -> List[Video]:
 
     return Video.query.filter(Video.file_name.like(f"%{query}%")).all()
 
-
-def get_user_by_id(userid: int) -> User:
-    """Get a user by id.
-
-    :param userid: The id of the user to get.
-    :type userid: int
-    :return: The user specified by the id.
-    :rtype: User
-    """
-
-    return User.query.filter(User.id == userid).first()
-
-
 def get_dataset_by_id(datasetid: int) -> DataSet:
     """Get a dataset by id.
 
@@ -649,6 +636,18 @@ def add_video_data(
     db.session.commit()
     return video_data
 
+def fix_datasets() -> None:
+    """Fix datasets."""
+
+    print("Fixing datasets")
+    with app.app_context():
+        for video in Video.query.all():
+            if video.dataset == "gurabo1":
+                video.dataset = 1
+            elif video.dataset == "gurabo10":
+                video.dataset = 2
+
+        db.session.commit()
 
 def user_list() -> List[User]:
     """Get a list of users.
@@ -672,16 +671,27 @@ def delete_user(userid: int) -> None:
         db.session.delete(user)
         db.session.commit()
 
+def get_user_by_id(userid: int) -> User:
+    """Get a user by id.
 
-def fix_datasets() -> None:
-    """Fix datasets."""
+    :param userid: The id of the user to get.
+    :type userid: int
+    :return: The user specified by the id.
+    :rtype: User
+    """
 
-    print("Fixing datasets")
-    with app.app_context():
-        for video in Video.query.all():
-            if video.dataset == "gurabo1":
-                video.dataset = 1
-            elif video.dataset == "gurabo10":
-                video.dataset = 2
+    return User.query.filter(User.id == userid).first()
 
-        db.session.commit()
+def get_user_roles_by_id(userid: int) -> [Role]:
+    """Get roles for a user, given id
+
+    :param userid: The id of the user to get the roles for.
+    :type userid: int
+    :return: The roles for the user specified by the id.
+    :rtype: Role list
+    """
+    return db.session.query(Role).join(UsersRoles).filter(UsersRoles.user_id==userid)
+
+def set_user_roles(userid:int, role_ids: [int]) -> None:
+    
+    return

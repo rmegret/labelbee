@@ -1,10 +1,12 @@
 {% extends "common/page_base.html" %}  {# common/page_base.html extends layout.html #}
 
 {% block content %}
-
+{% from "flask_user/_macros.html" import render_field, render_submit_field %}
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css"/>
 <script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
 <link href="//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css" rel="stylesheet">
-<link href="video.css" rel="stylesheet">
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -27,10 +29,14 @@
 <table class="table" id="users_table">
   <thead>
       <tr>
-          <th>Video Name</th>
-          <th>Colony</th>
-          <th>Date and Time</th>
-          <th>Video ID</th>
+          <th></th>
+          <th>User ID</th>
+          <th>Email</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Student Number</th>
+          <th>Class</th>
+          <th>Active</th>
       </tr>
   </thead>
   <tbody id="videosBody">
@@ -45,13 +51,97 @@
   </tbody>
   <tfoot>
       <tr>
-          <th>Video Name</th>
-          <th>Colony</th>
-          <th>Date and Time</th>
-          <th>Video ID</th>
+          <th></th>
+          <th>User ID</th>
+          <th>Email</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Student Number</th>
+          <th>Class</th>
+          <th>Active</th>
       </tr>
   </tfoot>
-  <!--  -->
 </table>
+
+<div id="editUserMenu" class="modal">
+    <h2>Edit User Information</h2>
+    <form action="" method="POST" novalidate formnovalidate class="form" role="form">
+      {{ form.hidden_tag() }}
+
+      {{ render_field(form.email, tabindex=240) }}
+
+      {{ render_field(form.first_name, tabindex=240) }}
+
+      {{ render_field(form.last_name, tabindex=250) }}
+
+      {{ render_field(form.password, tabindex=260) }}
+
+      {{ render_field(form.studentnum, tabindex=240) }}
+
+      {{ render_field(form.clase, tabindex=240) }}
+
+      {{ render_field(form.active, tabindex=240) }}
+
+      {{ render_submit_field(form.submit, tabindex=280) }}
+  </form>
+  <a href="#" rel="modal:close">Close</a>
+</div>
+
+<script>
+  function populateFormFields(id){
+    console.log(id)
+    $('#id').val(id);
+    for (idx in users){
+      if (users[idx]['id'] == id){
+        user_data = users[idx];
+        break;
+      }
+    }
+    $('#email').val(user_data['email'])
+    $('#first_name').val(user_data['first_name'])
+    $('#last_name').val(user_data['last_name'])
+    $('#studentnum').val(user_data['studentnum'])
+    $('#clase').val(user_data['clase'])
+    $('#active').prop('checked', user_data['active'])
+    return
+  }
+  $(document).ready(function () {
+    users = {{users | tojson | safe}};
+    editing = {{editing | tojson | safe}};
+    success = {{success | tojson | safe}};
+    $('#users_table').DataTable({
+      data: users,
+      order: [[0, "asc"]],
+      columns: [
+        {
+          data:'id',
+          render: function(id){
+            return "<a class='btn btn-primary btn-xs' href='#editUserMenu' rel='modal:open' onclick='populateFormFields("+id+")'>Edit</a>"
+          } 
+        },
+        {data:'id'},
+        {data:'email'},
+        {data:'first_name'},
+        {data:'last_name'},
+        {data:'studentnum'},
+        {data:'clase'},
+        {
+          data:'active',
+          render: function(active){
+            return active ? "Yes" : "No";
+          }
+        }
+      ]
+    });
+    if(editing){
+      if (success){
+        alert("Successfully edited user.")
+      }
+      else{
+        alert("Could not edit user. Check server logs?")
+      }
+    }
+  });
+</script>
 
 {% endblock %}
