@@ -504,16 +504,14 @@ def manage_users_page():
     success = False
     editing = False
     # Process valid POST
-    if request.method == "POST" and form.validate():
+    if form.validate_on_submit():
         editing = True
         success = edit_user(form.data)
-        logger.debug(form.data)
     # Get data for each user
     users = [user_schema.dump(user) for user in user_list()]
     # Get roles for each user
     for user in users:
         user['roles'] = [roles_schema.dump(role) for role in get_user_roles_by_id(user['id'])]
-
     return render_template("pages/manage_users_page.html", form=form, users=users, editing=editing, success=success)
 
 

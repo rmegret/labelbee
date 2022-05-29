@@ -57,7 +57,22 @@ def create_user(
 
 
 def edit_user(user_info) -> None:
+    '''
+    user_info should be a dictionary
+    field types:
+        id: int
+        email: string
+        first_name: string
+        last_name: string
+        password: string
+        studentnum: string
+        clase: string
+        active: boolean
+        roles: [int]  (list of role ids)
+    '''
     user = User.query.get(user_info['id'])
+    # Change user's information
+    # If empty field, reuse old information
     user.email = user_info['email'] if user_info['email'] else user.email
     user.first_name = user_info['first_name'] if user_info['first_name'] else user.first_name
     user.last_name = user_info['last_name']if user_info['last_name'] else user.last_name
@@ -68,6 +83,7 @@ def edit_user(user_info) -> None:
     user.clase = user_info['clase'] if user_info['clase'] else user.clase
     user.active = user_info['active'] if user_info['active'] else user.active
     
+    # Replace user's roles
     # for role in UsersRoles.query.all():
     #     db.session.delete(role)
     for role_id in user_info['roles']:
