@@ -578,7 +578,14 @@ VideoManager.prototype.receiveVideoSelection = function(){
     error: function (){
         // Display error message in dialog menu
         fromServerDialog.setBody("<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br>"); 
-        fromServerDialog.setMessage("red", "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.<br>Press the refresh button above to try again.");
+        let errormsg;
+        if (user_data.is_authenticated){
+          errormsg = "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.<br>Press the refresh button above to try again.";
+        }
+        else{
+          errormsg = "VideoManager.receiveVideoSelection ERROR: User is not logged in.<br>Log in and press the refresh button above to try again.";
+        }
+        fromServerDialog.setMessage("red", errormsg);
         theManager.videoListJSON = "Error";
       },
     success: function(json){
