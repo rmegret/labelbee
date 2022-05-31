@@ -81,16 +81,14 @@ def edit_user(user_info) -> None:
     )
     user.studentnum = user_info['studentnum'] if user_info['studentnum'] else user.studentnum
     user.clase = user_info['clase'] if user_info['clase'] else user.clase
-    user.active = user_info['active'] if user_info['active'] else user.active
+    user.active = user_info['active'] if isinstance(user_info['active'], bool)  else user.active
     
     # Replace user's roles
-    # for role in UsersRoles.query.all():
-    #     db.session.delete(role)
+    for role in UsersRoles.query.filter(UsersRoles.user_id==user_info['id']):
+        db.session.delete(role)
     for role_id in user_info['roles']:
         role = UsersRoles(user_id=user_info['id'], role_id=role_id)
         db.session.add(role)
-    # user_role = UsersRoles.query.filter_by(user_id=user_id).first()
-    # user_role.role_id = role_id
     success = True
     try:
         db.session.commit()
