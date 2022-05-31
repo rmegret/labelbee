@@ -975,10 +975,10 @@ function LabelListFromServerDialog() {
       "labelListFromServerDialog: importing labelList from URL '" + url + "'..."
     );
 
-    div.find(".modal-message").html("Loading events from " + url + "...");
+    div.find(".modal-message").html("Loading labels from " + url + "...");
 
     labelListFromServer(url).then(function () {
-      div.find(".modal-message").html("Events loaded. Closing.");
+      div.find(".modal-message").html("Labels loaded. Closing.");
       theDialog.closeDialog();
     });
   };
