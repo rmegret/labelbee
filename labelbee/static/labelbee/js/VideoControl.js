@@ -236,31 +236,39 @@ VideoCache.prototype.getFrameImageAsync = async function (videoUrl, frame, fps) 
   this.processQueue()
   return promise
 }
-VideoCache.prototype.processQueue = async function () {
+VideoCache.prototype.processQueue = async function (force) {
   this.updateStatus()
   if (this.queryQueue.length == 0) {
+    console.log('VideoCache.processQueue: empty queue. ABORTED')
     return
   }
   // Force singleton processing
-  if (this.processingQueue) return
+  if (this.processingQueue && (!force)) {
+    console.log('VideoCache.processQueue: already processing. ABORTED')
+    return
+  }
   this.processingQueue = true
 
   function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
   try {
+    console.log('VideoCache.processQueue: start processing...')
     while (this.queryQueue.length > 0) {
       if (this.abortFlag) {
-        console.log('VideoCache.preloadFrames: abortFlag==true. ABORTED')
+        console.log('VideoCache.processQueue: abortFlag==true. ABORTED')
         return
       }
-      let query = this.queryQueue.shift()
+      let query = this.queryQueue[0]
       let key = query.key
+      console.log('VideoCache.processQueue: processing',key,query)
       let image = await this.getImageForce(query.videoUrl, query.frame, query.fps)
       let item = { 'state': 'incache', 'image': image, 'promise': query.deferred.promise() }
       this.lrucache.set(key, item)
       console.log('videoCache.processQueue: resolve ', key)
       query.deferred.resolve(image)
+      this.queryQueue.shift()
+
       this.updateStatus()
       console.log('Sleeping...')
       //await 
@@ -336,9 +344,14 @@ VideoCache.prototype.seekToFrame = async function (videoUrl, frame, fps) {
     let interval = 1 / fps;
     let currentTime = frame / fps + 0.00001;
 
-    video.currentTime = currentTime;
-    await new Promise(r => seekResolve = r);
-    resolve(video);
+    if (Math.abs(video.currentTime-currentTime)<0.00005) {
+      console.log('videoCache.seekToFrame: already at currentTime. RESOLVE',currentTime)
+      resolve(video);
+    } else {
+      video.currentTime = currentTime;
+      await new Promise(r => seekResolve = r);
+      resolve(video);
+    }
   });
 }
 VideoCache.prototype.seekWithCallback = async function (videoUrl, frame, fps, frameCallback) {
@@ -380,9 +393,14 @@ VideoCache.prototype.seekWithCallback = async function (videoUrl, frame, fps, fr
     let interval = 1 / fps;
     let currentTime = frame / fps + 0.00001;
 
-    video.currentTime = currentTime;
-    await new Promise(r => seekResolve = r);
-    resolve(video);
+    if (Math.abs(video.currentTime-currentTime)<0.00005) {
+      console.log('videoCache.seekToFrame: already at currentTime. RESOLVE',currentTime)
+      resolve(video);
+    } else {
+      video.currentTime = currentTime;
+      await new Promise(r => seekResolve = r);
+      resolve(video);
+    }
   });
 }
 VideoCache.prototype.getFrameCropDataURL = async function (videoUrl, frame, fps, crop) {
