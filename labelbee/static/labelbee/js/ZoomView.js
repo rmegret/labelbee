@@ -1346,6 +1346,10 @@ ZoomOverlay.prototype.updateTagView = function (tag) {
   /* 1.2. Draw video into zoomed canvas */
 
   let video = $("#video")[0];
+  if (videoControl.currentMode == "cache") {
+    if (videoControl.currentImage)
+      video = videoControl.currentImage
+  }
 
   ctx2.save();
 
@@ -2074,6 +2078,10 @@ ZoomOverlay.prototype.refreshZoom = function () {
   var zoom_ctx = zoom_canvas.getContext("2d");
 
   let video = $("#video")[0];
+  if (videoControl.currentMode == "cache") {
+    if (videoControl.currentImage)
+      video = videoControl.currentImage
+  }
 
   let zoomScale = this.scale;
 
