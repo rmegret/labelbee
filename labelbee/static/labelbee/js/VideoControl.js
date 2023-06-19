@@ -165,6 +165,7 @@ VideoCache.prototype.cancelQueue = function () {
     //query.deferred.reject()
   }
   this.queryQueue = []
+  this.processingQueue = false
   this.updateStatus()
 }
 VideoCache.prototype.resetCache = function () {
