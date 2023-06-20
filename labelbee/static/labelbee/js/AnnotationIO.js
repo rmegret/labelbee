@@ -247,12 +247,16 @@ function convertTracksToV1() {
 }
 function convertTracksToV2() {
   let obj = { info: TracksInfo, data: {} };
+  // TracksInfo should come with a few built-in fields:
+  // notes
 
   obj.info.formatnote =
     "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !";
 
   if (!obj.info.history) obj.info.history = [];
   obj.info.history.push("Saved using labelbee on " + Date());
+  //let {preview: _, ...videoinfo_without_preview} = videoinfo;
+  obj.info.videoinfo = videoinfo
 
   let nitems = 0;
 
@@ -619,6 +623,11 @@ function setTracks(obj) {
 
   Tracks = evts.data;
   TracksInfo = evts.info;
+
+  if ("comments" in TracksInfo) {
+    // HACK: reuse videoComments to display Events comments
+    $("#videoComments").prop("value",TracksInfo['comments'])
+  }
 
   updateEventsNotes();
 
