@@ -624,11 +624,6 @@ function setTracks(obj) {
   Tracks = evts.data;
   TracksInfo = evts.info;
 
-  if ("comments" in TracksInfo) {
-    // HACK: reuse videoComments to display Events comments
-    $("#videoComments").prop("value",TracksInfo['comments'])
-  }
-
   updateEventsNotes();
 
   videoControl.onFrameChanged();
