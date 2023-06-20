@@ -79,13 +79,18 @@ function OverlayControl(canvasTagId) {
       showRect: true,
       showID: true,
       showLabels: true,
-      labelFormatter: function(obs) {return activityString(obs)},
+      /* labelFormatter: function(obs) {return activityString(obs)}, */
+      labelFormatter: (obs)=>obs.labels,
+      label_offsetType: 'bottom',
+      wrapLabels: true,
+      wrapLabelsWidth: 80,
       showNotes: true,
       showSpan: false,
       resizeAroundCenter: false,
       ID_dotRadius: 4, // Radius of dot center
       ID_fontSize: 20,
       ID_color: 'yellow',
+      ID_offsetType: 'center',
       clickModeSelectMultiframe: false,
       clickModeNewAnnotation: false,
       clickModeAutoCentering: false,
@@ -764,12 +769,16 @@ OverlayControl.prototype.updateOptsButtons = function() {
     $('#overlayOpts-ID_dotRadius').val(String(this.opts.ID_dotRadius))
     $('#overlayOpts-ID_fontSize').val(String(this.opts.ID_fontSize))
     $('#overlayOpts-ID_color').val(String(this.opts.ID_color))
+    $('#overlayOpts-ID_offsetType').val(String(this.opts.ID_offsetType))
+    $('#overlayOpts-label_offsetType').val(String(this.opts.label_offsetType))
 }
 function onOverlayParamsChanged(event) {
     console.log('onOverlayParamsChanged')
     overlay.opts.ID_dotRadius = Number($('#overlayOpts-ID_dotRadius').val())
     overlay.opts.ID_fontSize = Number($('#overlayOpts-ID_fontSize').val())
     overlay.opts.ID_color = $('#overlayOpts-ID_color').val()
+    overlay.opts.ID_offsetType = $('#overlayOpts-ID_offsetType').val()
+    overlay.opts.label_offsetType = $('#overlayOpts-label_offsetType').val()
     overlay.refreshOverlay()
 }
 
@@ -2316,11 +2325,13 @@ function paintDot(ctx, pt, radius, color, id) {
   ctx.textAlign = "center";
   ctx.fillText(String(id), x, y - radius - 3);
 }
-function wrapText(context, text, x, y, maxWidth, lineHeight) {
+function wrapText(context, text, x, y, maxWidth, lineHeight, splitToken) {
   // From http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
-  var words = text.split(" ");
+  if (!splitToken) splitToken=" "
+  var words = text.split(splitToken);
   var line = "";
 
+  let y0 = y
   for (var n = 0; n < words.length; n++) {
     var testLine = line + words[n] + " ";
     var metrics = context.measureText(testLine);
@@ -2334,6 +2345,7 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
     }
   }
   context.fillText(line, x, y);
+  return y - y0 + lineHeight
 }
 function activityString(obs) {
   let acti = "";
@@ -2435,6 +2447,12 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
     }
   }
 
+  let ID_offset = 0
+  if (overlay.opts.ID_offsetType=='top') {
+    ID_offset = -(rect.height/2+3)
+  } else {
+    ID_offset = -(radius+3)
+  }
   if (overlay.opts.showID) {
     //ctx.font = "20px Arial";
     font = '' + overlay.opts.ID_fontSize + 'px Arial'
@@ -2444,21 +2462,26 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
     if (hasLabel(obs, 'wrongid')) {
       if (obs.newid == null) {
         ctx.fillStyle = "cyan";
-        ctx.fillText(String(obs.ID), x, y - radius - 3);
+        ctx.fillText(String(obs.ID), x, y + ID_offset);
       } else {
         ctx.font = "14px Arial";
         ctx.fillStyle = "cyan";
-        ctx.fillText(String(obs.ID), x, y - radius - 3);
+        ctx.fillText(String(obs.ID), x, y + ID_offset);
         ctx.font = "10px Arial";
         ctx.fillStyle = color;
-        ctx.fillText(String(obs.newid), x, y - radius - 16);
+        ctx.fillText(String(obs.newid), x, y + ID_offset - 13);
       }
     } else {
-      ctx.fillText(String(rect.id), x, y - radius - 3);
+      ctx.fillText(String(rect.id), x, y + ID_offset);
     }
   }
 
-  let labelOffset = radius + 3
+  let labelOffset = 0
+  if (overlay.opts.label_offsetType=='bottom') {
+    labelOffset = (rect.height/2)+3
+  } else {
+    labelOffset = radius+3
+  }
   if (overlay.opts.showSpan) {
     //ctx.font = "10px Arial";
     let obs = getObsHandle(rect.obs.frame, rect.obs.ID)//rect.obs
@@ -2489,10 +2512,15 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(acti, x, y + labelOffset);
-    ctx.textBaseline = 'alphabetic';
-    if (acti != '')
-      labelOffset += overlay.opts.ID_fontSize / 2
+    if (acti != '') {
+      if (overlay.opts.wrapLabels) {
+        labelOffset += wrapText(ctx, acti, x, y + labelOffset, overlay.opts.wrapLabelsWidth, 10, ",")
+      } else {
+        ctx.fillText(acti, x, y + labelOffset);
+        labelOffset += overlay.opts.ID_fontSize / 2
+      }
+      ctx.textBaseline = 'alphabetic';
+    }
   }
   if (overlay.opts.showNotes) {
     if (typeof rect.obs.notes !== 'undefined') {
@@ -2503,9 +2531,9 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
       ctx.fillStyle = color;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      wrapText(ctx, notes, x, y + labelOffset, 80, 10)
+      labelOffset += wrapText(ctx, notes, x, y + labelOffset, 80, 10)
     }
-    labelOffset += overlay.opts.ID_fontSize / 2
+    //labelOffset += overlay.opts.ID_fontSize / 2
   }
 
   ctx.restore();
