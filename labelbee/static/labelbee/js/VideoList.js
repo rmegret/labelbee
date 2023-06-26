@@ -538,7 +538,22 @@ VideoManager.prototype.makeVideoListTable = function (json){
     "<th>File Name</th>" +
     "<th>Created on</th>" +
     "<th>Video ID</th>" +
-    "<th>Colony</th></thead>"
+    "<th>Colony</th>" +
+    "<th>FPS</th>" +
+    "<th>W</th>" +
+    "<th>H</th>" +
+    "</thead>" +
+    `<tbody></tbody>
+<tfoot class="nopadding">\
+    <th></th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+</tfoot>` +
     "</table>";
 
   // Set dialog message and insert table skeleton into modal
@@ -557,8 +572,30 @@ VideoManager.prototype.makeVideoListTable = function (json){
         return timestamp.split('T').join(' ');
       }},
       {data:"id"},
-      {data:"colony"}
-    ]
+      {data:"colony"},
+      {data:"fps"},
+      {data:"width"},
+      {data:"height"}
+    ],
+    initComplete: function () {
+        this.api()
+            .columns()
+            .every(function () {
+                var column = this;
+                var foot = column.footer();
+                var title = foot.textContent;
+
+                if (foot.textContent)
+                  // Create input element and add event listener
+                  $('<input type="text" placeholder="" style="width:100%;"/>')
+                      .appendTo($(foot).empty())
+                      .on('keyup change clear', function () {
+                          if (column.search() !== this.value) {
+                              column.search(this.value).draw();
+                          }
+                      });
+            });
+    }
   });
 }
 
