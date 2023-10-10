@@ -1250,6 +1250,7 @@ VideoControl.prototype.onVideoLoaded2 = async function () {
   let name = videoinfo.name;
   $("#videoName").html(name);
   $("a.videolink").attr("href", videoinfo.videoPath);
+  $("a.videoinfolink").attr("href", url_for("/videodata?videoid="+videoManager.currentVideoID) );
   // this.loadPreviewVideo();
   
   $(this).trigger("video:loaded");
