@@ -1244,7 +1244,8 @@ function FromServerDialog() {
           data: json["data"],
           columns:[
             {data:"id", render: function(id){
-              buttonHTML = '<button onclick="fromServerDialog.loadEvents(\''+idx+'\')">Load</button>';
+              var tag_event_ID = theDialog.json[idx]?.["id"];
+              buttonHTML = '<button onclick="fromServerDialog.loadEvents(\''+idx+'\')" class="small">Load #'+tag_event_ID+'</button>';
               idx += 1;
               return buttonHTML;
             }},

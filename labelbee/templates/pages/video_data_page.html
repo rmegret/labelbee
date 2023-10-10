@@ -48,6 +48,10 @@
     <button type="button" onclick="" class="btn btn-primary">Edit Video</button>
 </a>
 
+<a href="{{ url_for('labelbee_user_page')}}#video_id={{ video.id }}" target="_blank">
+    <button type="button" onclick="" class="btn btn-primary">Open Video in LabelBee</button>
+</a>
+
 
 <h1>Video Data: {{ uri }} </h1>
 
@@ -76,7 +80,7 @@
 <script>
     $(document).ready(function () {
         $('#video_data_table').DataTable({
-            "ajax": "{{ url_for('videodata_get_v2') }}?video_id={{ video.id }}",
+            "ajax": "{{ url_for('videodata_get_v2') }}?video_id={{ video.id }}&allusers=True",
             "columns": [
             { "data": "id", "name": "id" },
             { "data": "file_name", "name": "file_name" ,

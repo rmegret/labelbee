@@ -502,7 +502,7 @@ VideoManager.prototype.updateVideoInfoForm = function () {
   $("#videoTagsFamily").val(videoinfo.tagsfamily);
   $("#videoPlace").val(videoinfo.place);
   $("#videoComments").text(videoinfo.comments);
-  $('.video_id').html("ID="+this.currentVideoID)
+  $('.video_id').html('<a class="small" href="#video_id='+this.currentVideoID+'">#video_id='+this.currentVideoID+'</a>')
 };
 
 VideoManager.prototype.videoListFromDB = function () {
