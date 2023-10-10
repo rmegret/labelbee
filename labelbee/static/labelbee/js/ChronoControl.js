@@ -270,7 +270,7 @@ function adjustChronogramHeight(itemHeight) {
 function domainxFromVideo() {
   var domain;
   if (isNaN(videoinfo.duration)) domain = [0, 1];
-  else domain = [0, videoinfo.nframes];
+  else domain = [0, videoinfo.nframes-1];
   if (logging.chrono) console.log("domainxFromVideo: domain=", domain);
   return domain;
 }

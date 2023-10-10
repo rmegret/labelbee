@@ -585,7 +585,8 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
   } else {
     this.savedFrame = this.currentFrame;
   } 
-  if (frame<0) {
+  if ((frame<0)|(frame>=videoinfo.nframes)) {
+    console.log("VideoControl.seekFrame: ABORTED, frame out of bounds",frame)
     return;
   }
   this.startSeekTimer();
@@ -658,6 +659,11 @@ VideoControl.prototype.rewind = function (frames) {
 };
 VideoControl.prototype.forward = function (frames) {
   if (!frames) frames = 1;
+  let newframe=this.currentFrame+frames
+  if ((newframe<0)|(newframe>=videoinfo.nframes)) {
+    console.log("VideoControl.forward: ABORTED, frame out of bounds",newframe)
+    return;
+  }
   if (this.currentMode == 'video') {
     this.startSeekTimer();
     this.video2.seekForward(frames);
@@ -941,6 +947,8 @@ VideoControl.prototype.loadVideo = function (url, previewURL) {
   statusWidget.statusRequest("videoLoad", []);
 };
 VideoControl.prototype.onVideoLoaded = function (event) {
+  console.log('OBSOLETE FUNCTION CALL WARNING: VideoControl.onVideoLoaded', event)
+
   if (logging.videoEvents) console.log("onVideoLoaded", event);
 
   console.log("onVideoLoaded: VIDEO loaded ", this.video.src);
@@ -1230,16 +1238,20 @@ VideoControl.prototype.loadVideo2 = function (videoURL) {
 VideoControl.prototype.onVideoLoaded2 = async function () {
   console.log("onVideoLoaded2: VIDEO loaded ", this.video.src);
   fromServerDialog.closeDialog()
+
   this.setPreviewVideoStatus("undefined");
   statusWidget.statusRequest("videoLoad", []);
   statusWidget.statusUpdate("videoLoad", true, []);
+  
   videoControl.video2.frameRate = videoinfo.videofps
   this.isValidVideo = true;
   this.onVideoSizeChanged();
+  
   let name = videoinfo.name;
   $("#videoName").html(name);
   $("a.videolink").attr("href", videoinfo.videoPath);
   // this.loadPreviewVideo();
+  
   $(this).trigger("video:loaded");
   this.hardRefresh();
 

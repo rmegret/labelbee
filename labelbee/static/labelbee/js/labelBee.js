@@ -42,6 +42,8 @@ var logging = {
 
 /** Global init */
 function init(videoID, tagID) {
+  console.log("init()", videoID, tagID)
+
   // Parameter passed through HTML Jinja template
   if (http_script_name_0) {
     http_script_name = http_script_name_0;

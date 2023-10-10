@@ -496,13 +496,15 @@ VideoManager.prototype.changeFrameOffset = function (event) {
 };
 
 VideoManager.prototype.updateVideoInfoForm = function () {
+  $('.video_id').html('<a class="small" href="#video_id='+this.currentVideoID+'">#video_id='+this.currentVideoID+'</a>')
+  $(".videoinfo_nframes").html("Num frames: "+videoinfo.nframes+" [0-"+(videoinfo.nframes-1)+"]");
+
   $("#videofps").val(videoinfo.videofps);
   $("#realfps").val(videoinfo.realfps);
   $("#startTime").val(videoinfo.starttime);
   $("#videoTagsFamily").val(videoinfo.tagsfamily);
   $("#videoPlace").val(videoinfo.place);
   $("#videoComments").text(videoinfo.comments);
-  $('.video_id').html('<a class="small" href="#video_id='+this.currentVideoID+'">#video_id='+this.currentVideoID+'</a>')
 };
 
 VideoManager.prototype.videoListFromDB = function () {

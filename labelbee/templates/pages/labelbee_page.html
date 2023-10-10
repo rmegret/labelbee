@@ -530,7 +530,7 @@
                     <div class="video_id" style="display:inline;">ID=??</div>
                     <br>
                     <label class="primary">Current Video
-                      <a class="videolink" href="undefined" target="_blank">[Raw File]</a>
+                      <a class="videolink btn btn-default btn-xs" href="undefined" target="_blank">Open video</a>
                     </label>
                     <br>
                     <div id="videoName" class="small">-</div>
@@ -539,11 +539,12 @@
                       <input onclick="overlay.exportFrame()" type="button" value="Export frame"
                         class="btn btn-default btn-xs" style="display:inline;"
                         title="Export current frame to new window">
-                      <input onclick="overlay.openVideoNewTab()" type="button" value="Open Video"
-                        class="btn btn-default btn-xs" style="display:inline;" title="Open current video in new window">
+                      <!-- <input onclick="overlay.openVideoNewTab()" type="button" value="Open Video"
+                        class="btn btn-default btn-xs videolink" style="display:inline;" title="Open current video in new window"> -->
                     </div>
-                    <div id="vidTime">Video Time:</div>
-                    <div id="realTime">Real Time:</div>
+                    <div id="vidTime" class="small">Video Time:</div>
+                    <div id="realTime" class="small">Real Time:</div>
+                    <div class="videoinfo_nframes small">Num frames:</div>
                     <select id="selectboxVideo" name="video" onchange="videoManager.onSelectboxVideoChanged()" class="hidden">
                       <option value="data/undefined.mp4" selected>Not yet initialized</option>
                     </select> <!-- selectboxVideo -->
