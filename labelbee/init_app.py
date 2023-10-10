@@ -87,7 +87,6 @@ app.logger.setLevel(logging.DEBUG)
 app.logger.handlers[0].setFormatter(logging.Formatter('[%(asctime)s] [%(filename)s] [%(levelname)s] %(message)s'))
 logger = logging.getLogger('labelbee.init_app')
 
-
 # Initialize Flask Application
 
 def init_app(app, extra_config_settings={}):
@@ -161,6 +160,9 @@ def init_app(app, extra_config_settings={}):
     from labelbee.user_management import import_users
 
     # import_users("users.csv")
+
+    logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
+    logger.info("config=%s",app.config)
 
 
 def init_email_error_handler(app):

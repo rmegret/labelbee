@@ -957,7 +957,7 @@ VideoControl.prototype.onVideoLoaded = function (event) {
   let name = videoinfo.name;
   $("#videoName").html(name);
 
-  $("a.videolink").attr("href", name);
+  $("a.videolink").attr("href", videoinfo.videoPath);
 
   let videourl = videoinfo.videoURL;
 
@@ -1238,7 +1238,7 @@ VideoControl.prototype.onVideoLoaded2 = async function () {
   this.onVideoSizeChanged();
   let name = videoinfo.name;
   $("#videoName").html(name);
-  $("a.videolink").attr("href", name);
+  $("a.videolink").attr("href", videoinfo.videoPath);
   // this.loadPreviewVideo();
   $(this).trigger("video:loaded");
   this.hardRefresh();
@@ -1251,6 +1251,6 @@ VideoControl.prototype.onVideoLoaded2 = async function () {
   setTimeout(() => { videoControl.rewind(0); }, 1500);
 
   // Make initial video size larger when loading a video
-  $("#canvasresize")[0].style.height = "650px";
-  overlay.refreshCanvasSize();
+  //$("#canvasresize")[0].style.height = "650px";
+  //overlay.refreshCanvasSize();
 }

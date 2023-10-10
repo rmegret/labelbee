@@ -238,7 +238,32 @@ function init(videoID, tagID) {
 
   // Preload video list
   videoManager.receiveVideoSelection();
+
+  onhashchange()
 }
+
+
+
+/* ROUTER */
+
+addEventListener("hashchange", onhashchange);
+onhashchange = function(event) {
+  const parsedHash = new URLSearchParams(
+    location.hash.substring(1) // foo=bar&baz=qux&val=val+has+spaces
+  );
+  console.log('LABELBEE onhashchange:',parsedHash)
+  if (parsedHash.has("video_id")) {
+    let id = parsedHash.get("video_id")
+    if (id == videoManager.currentVideoID) {
+      console.log('LABELBEE onhashchange: TRYING to load same video_id, ABORT',id)
+      return
+    }
+    console.log('LABELBEE onhashchange: processing hash, selecting video_id ',id)
+    videoManager.videoSelected(id)
+  }
+}
+
+/* MISC */
 
 function printMessage(html, color) {
   if (typeof color === "undefined") color = "black";

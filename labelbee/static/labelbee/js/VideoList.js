@@ -502,6 +502,7 @@ VideoManager.prototype.updateVideoInfoForm = function () {
   $("#videoTagsFamily").val(videoinfo.tagsfamily);
   $("#videoPlace").val(videoinfo.place);
   $("#videoComments").text(videoinfo.comments);
+  $('.video_id').html("ID="+this.currentVideoID)
 };
 
 VideoManager.prototype.videoListFromDB = function () {
@@ -653,6 +654,7 @@ VideoManager.prototype.videoSelected = async function(id) {
       videoManager.setVideoInfo(videoInfoJSON);
       fromServerDialog.setMessage("black", "Loading Video.")
       console.log("VideoManager.videoSelected: Loaded video information: ", videoInfoJSON);
+      window.location="#video_id="+id
     }
   });
 }
@@ -660,7 +662,7 @@ VideoManager.prototype.videoSelected = async function(id) {
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   videoinfo = {
     name: videoInfoJSON["file_name"],
-    videoPath: "/webapp/data" + videoInfoJSON["path"] + '/' + videoInfoJSON["file_name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",
+    videoPath: url_for("/data") + videoInfoJSON["path"] + '/' + videoInfoJSON["file_name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",
     videofps: videoInfoJSON["videofps"],
     realfps: videoInfoJSON["realfps"],
     starttime: videoInfoJSON["starttime"],
