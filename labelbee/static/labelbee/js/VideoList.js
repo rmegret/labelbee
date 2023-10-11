@@ -651,6 +651,7 @@ VideoManager.prototype.videoSelected = async function(id) {
         "selected video's information from server.")
         fromServerDialog.setMessage("red", "VideoManager.videoSelected ERROR: Unable to retrieve " +
         "selected video's information from server.");
+        throw new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id);
       },
     success: function(videoInfoJSON){
       videoManager.setVideoInfo(videoInfoJSON);

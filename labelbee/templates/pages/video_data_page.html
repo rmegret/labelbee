@@ -59,6 +59,7 @@
 <table class="table" id="video_data_table">
     <thead>
         <th>ID</th>
+        <th>Actions</th>
         <th>File Name</th>
         <th>Data Type</th>
         <th>Date and Time</th>
@@ -83,10 +84,16 @@
             "ajax": "{{ url_for('videodata_get_v2') }}?video_id={{ video.id }}&allusers=True",
             "columns": [
             { "data": "id", "name": "id" },
+            { "data": "id", "name": "actions", 
+              fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
+                    $(nTd).html("<a class='btn btn-default btn-xs' href='{{ url_for('video_data_details_page') }}" + "?video={{video.id}}" + "&video_data=" + rowData.id + "'>Details</a>" +
+                                "<a class='btn btn-default btn-xs' href='{{ url_for('labelbee_user_page')}}#video_data="+ rowData.id +"&video_id={{ video.id }}' target='_blank'>GUI</a>");
+                } 
+            },
             { "data": "file_name", "name": "file_name" ,
                 // convert file_name to link
                 fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
-                    $(nTd).html("<a href='{{ url_for('video_data_details_page') }}" + "?dataset={{ datasetid }}" + "&video={{video.id}}" + "&video_data=" + rowData.id + "'>" + rowData.file_name+"</a>");
+                    $(nTd).html(rowData.file_name).addClass("small");
                 }
             },
             { "data": "data_type", "name": "data_type" },

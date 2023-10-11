@@ -249,20 +249,32 @@ function init(videoID, tagID) {
 /* ROUTER */
 
 addEventListener("hashchange", onhashchange);
-onhashchange = function(event) {
+onhashchange = async function(event) {
+  console.log('onhashchange: hash=',location.hash)
+  if (!location.hash) return
   const parsedHash = new URLSearchParams(
     location.hash.substring(1) // foo=bar&baz=qux&val=val+has+spaces
   );
-  console.log('LABELBEE onhashchange:',parsedHash)
+  console.log('onhashchange:',parsedHash)
+  // First load video if present
   if (parsedHash.has("video_id")) {
     let id = parsedHash.get("video_id")
     if (id == videoManager.currentVideoID) {
-      console.log('LABELBEE onhashchange: TRYING to load same video_id, ABORT',id)
-      return
+      console.log('onhashchange: TRYING to load same video_id, ABORT',id)
+    } else {
+      console.log('onhashchange: processing hash, selecting video_id ',id)
+      await videoManager.videoSelected(id)
+      console.log("videoSelected SUCCESS")
     }
-    console.log('LABELBEE onhashchange: processing hash, selecting video_id ',id)
-    videoManager.videoSelected(id)
   }
+  // Then, load data if present
+  if (parsedHash.has("video_data")) {
+    let video_data_id = parsedHash.get("video_data")
+    console.log("onhashchange: loading video_data="+video_data_id)
+    await loadEventsFromServerByID(video_data_id)
+    console.log("onhashchange: loadEventsFromServerByID SUCCESS")
+  }
+  location.hash = ""
 }
 
 /* MISC */

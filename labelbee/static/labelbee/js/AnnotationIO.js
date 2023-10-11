@@ -1467,6 +1467,43 @@ function tracksListFromServer() {
   });
 }
 
+async function loadEventsFromServerByID(video_data_id) {
+    //Sending GET request to flask API to retrieve json containing annotation data
+    $.ajax({
+      url: url_for("rest/v2/get_video_data/" + video_data_id), // url to tag/event file
+      type: "GET", //passing data as get method
+      contentType: "application/json", // returning data as json
+      data: "",
+      success: function (json) {
+        //alert("success");  //response from the server given as alert message
+
+        console.log("loadEvents: Loaded events data:", json["data"]["data"]);
+        // Case: event file
+        let obj = JSON.parse(json["data"]["data"]);
+        success = setTracks(obj);
+
+        videoControl.onFrameChanged();
+
+        refreshChronogram();
+        if(success){
+          console.log("Loaded event. ID:", tag_event_ID)
+          theDialog.basedOn = tag_event_ID;
+          fromServerDialog.setMessage("black","Events loaded.");
+        }
+        else{
+          div.find(".modal-message h4").css("color","red");
+          div.find('.modal-message h4').html("ERROR <br> setTracks: Invalid event information obtained from server.");
+          throw new Error("loadEventsFromServerByID: invalid event data for video_data id="+video_data_id)
+        }
+      },
+      error:  function () {
+        div.find(".modal-message h4").css("color","red");
+        div.find(".modal-message h4").html("ERROR in loading tag or event with ID " + tag_event_ID);
+        throw new Error("loadEventsFromServerByID: could not load video_data id="+video_data_id)
+        },
+    });
+}
+
 function eventsFromServer(url) {
   console.log("eventsFromServer: importing Tracks from URL '" + url + "'...");
 
