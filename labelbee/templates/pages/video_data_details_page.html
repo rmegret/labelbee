@@ -38,7 +38,7 @@
             <td>{{video_data.path}}</td>
             <td>{{video_data.data_type}}</td>
             <td>{{video_data.timestamp}}</td>
-            <td>{{video_data.video.id}}</td>
+            <td><a class="btn btn-default" href="{{ url_for('video_data_page')}}?videoid={{ video_data.video.id }}">{{video_data.video.id}}</a></td>
             <td>{{video_data.created_by.first_name + " " + video_data.created_by.last_name}}</td>
         </tr>
     </tbody>
@@ -47,6 +47,7 @@
 <a href="{{ url_for('edit_video_data_page')}}?video_data={{ video_data.id }}">
     <button type="button" onclick="" class="btn btn-primary">Edit Metadata</button>
 </a>
+<a class='btn btn-default' href='{{url_for("get_video_data_raw_v2",id="")}}{{video_data.id}}' target='_blank'>RAW JSON</a>
 <a href="{{ url_for('labelbee_user_page')}}#video_data={{ video_data.id }}&video_id={{ video_id }}", target="_blank">
     <button type="button" onclick="" class="btn btn-primary">Open in LabelBee</button>
 </a>

@@ -14,6 +14,7 @@ from flask_user import current_user, login_required, roles_accepted
 from flask_login import logout_user, login_user
 from flask_wtf.csrf import generate_csrf
 from werkzeug.exceptions import BadRequest, Forbidden
+from flask import Response
 import sys
 import json
 
@@ -1018,6 +1019,15 @@ def get_video_data_v2(id):
 
     return jsonify({"data": video_data_schema.dump(get_video_data_by_id(id))})
 
+@app.route("/rest/v2/get_video_data_raw/<id>", methods=["GET"])
+def get_video_data_raw_v2(id):
+    print("Handling get_video_data request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/get_video_data GET: login required !")
+
+    video_data_schema = VideoDataSchema()
+
+    return Response(video_data_schema.dump(get_video_data_by_id(id))['data'], mimetype='application/json')
 
 @app.route("/rest/v2/edit_video_data/<id>", methods=["PUT"])
 def edit_video_data_v2(id):
