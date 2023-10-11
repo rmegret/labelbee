@@ -955,11 +955,11 @@ def videodata_get_v2():
     allusers = request.args.get("allusers", None)
     videodatas = VideoDataSchema(many=True)
 
-    if data_type == "" and allusers != "True":
+    if data_type == "" and allusers not in ["True","true"]:
         videos = video_data_list(video_id, current_user.id)
-    elif data_type == "" and allusers == "True":
+    elif data_type == "" and allusers in ["True","true"]:
         videos = video_data_list(video_id)
-    elif data_type != "" and allusers == "True":
+    elif data_type != "" and allusers in ["True","true"]:
         videos = video_data_list(video_id, data_type)
     else:
         videos = video_data_list(video_id, data_type, current_user.id)
