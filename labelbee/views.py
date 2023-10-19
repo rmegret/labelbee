@@ -1060,8 +1060,8 @@ def add_video_data_v2():
     print("Handling add_video_data request")
     if not current_user.is_authenticated:
         raise Forbidden("/rest/v2/add_video_data POST: login required !")
-    if not current_user.has_roles("admin"):
-        raise Forbidden("/rest/v2/add_video_data POST: admin required !")
+    #if not current_user.has_roles("admin"):
+    #    raise Forbidden("/rest/v2/add_video_data POST: admin required !")
 
     video_data_schema = VideoDataSchema()
     form_data = json.dumps(request.form)
