@@ -162,7 +162,7 @@ def init_app(app, extra_config_settings={}):
     # import_users("users.csv")
 
     logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
-    logger.info("config=%s",app.config)
+    #logger.info("config=%s",app.config)
 
 
 def init_email_error_handler(app):

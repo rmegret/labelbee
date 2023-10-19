@@ -90,17 +90,18 @@ def videos_page():
     form = UserProfileForm(obj=current_user)
 
     datasetid = request.args.get("dataset")
+    logger.info(f"videos_page: datasetid={datasetid}")
     if datasetid != None:
         # Parse the request to get the user name from id
+        logger.info(f"videos_page: datasetid={datasetid}")
         e = get_dataset_by_id(datasetid=datasetid)
+        user = get_user_by_id(e.created_by)
         dataset = {
             "id": e.id,
             "name": e.name,
             "description": e.description,
-            "created_by": get_user_by_id(e.created_by).first_name
-            + " "
-            + get_user_by_id(e.created_by).last_name,
-            "timestamp": e.timestamp,
+            "created_by": f"{user.first_name} {user.last_name} ({e.created_by})" if user is not None else "_"
+            #"timestamp": e.timestamp,
         }
     else:
         dataset = None
