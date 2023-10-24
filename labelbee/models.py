@@ -66,12 +66,13 @@ class Video(db.Model):
     colony = db.Column(db.String(50))
     notes = db.Column(db.Text())
     dataset = db.Column(db.Integer, db.ForeignKey("data_set.id"))
+    thumb = db.Column(db.String(200), nullable=True)
 
     frames = db.Column(db.Integer(), nullable=False)
     height = db.Column(db.Integer(), nullable=False)
     width = db.Column(db.Integer(), nullable=False)
-    fps = db.Column(db.Numeric(), nullable=False)
-    realfps = db.Column(db.Numeric(), nullable=False)
+    fps = db.Column(db.Numeric(asdecimal=False), nullable=False)
+    realfps = db.Column(db.Numeric(asdecimal=False), nullable=False)
     filesize = db.Column(db.BigInteger(), nullable=False)
     hash = db.Column(db.String(70))
     corrupted = db.Column(db.Boolean())
@@ -147,6 +148,7 @@ class VideoSchema(ma.SQLAlchemySchema):
     hasframeN_2s = fields.Boolean()
     hasframeN_1s = fields.Boolean()
     hasframeN = fields.Boolean()
+    thumb = fields.String()
 
 
 class VideoDataSchema(ma.SQLAlchemySchema):

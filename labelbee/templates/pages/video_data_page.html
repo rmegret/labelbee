@@ -21,6 +21,7 @@
 
 <table class="table" id="video_info">
     <thead>
+        <th>Thumb</th>
         <th>Video ID</th>
         <th>Video Name</th>
         <th>Time Recorded</th>
@@ -32,6 +33,13 @@
     </thead>
     <tbody>
         <tr>
+            <td>
+            {% if video.thumb %}
+            <img src="{{url_for('static',filename='data'+video.thumb)}}" href="{{url_for('static',filename='data'+video.thumb)}}" height="50px"/>
+            {% else %}
+            None
+            {% endif %}    
+            </td>
             <td>{{video.id}}</td>
             <td>{{video.path + "/" + video.file_name}}</td>
             <td>{{video.timestamp}}</td>
@@ -45,11 +53,19 @@
 </table>
 
 <a href="{{ url_for('edit_video_page')}}?video={{ video.id }}">
-    <button type="button" onclick="" class="btn btn-primary">Edit Video</button>
+    <button type="button" onclick="" class="btn btn-primary">Edit Video Info</button>
 </a>
 
 <a href="{{ url_for('labelbee_user_page')}}#video_id={{ video.id }}" target="_blank">
-    <button type="button" onclick="" class="btn btn-primary">Open Video in LabelBee</button>
+    <button type="button" onclick="" class="btn btn-info">Open Video in LabelBee</button>
+</a>
+
+<a href="{{ url_for('static',filename='data'+video.path+'/'+video.file_name) }}" target="_blank">
+    <button type="button" onclick="" class="btn btn-default">Show Raw Video</button>
+</a>
+
+<a href="{{ url_for('static',filename='data'+video.thumb) }}" target="_blank">
+    <button type="button" onclick="" class="btn btn-default">Show Thumbnail</button>
 </a>
 
 
