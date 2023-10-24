@@ -20,6 +20,9 @@
     })
 </script>
 
+{% from 'common/macros.html' import database_menu %}
+{{ database_menu('videos') }}
+
 {% if dataset != None %}
 <table class="table" id="video_info">
     <thead>
@@ -41,7 +44,7 @@
 </table>
 
 <a href="{{ url_for('edit_dataset_page')}}?dataset={{ dataset.id }}">
-    <button type="button" onclick="" class="btn btn-primary">Edit Dataset</button>
+    <button type="button" onclick="" class="btn btn-primary btn-sm">Edit Dataset</button>
 </a>
 {% endif %}
 

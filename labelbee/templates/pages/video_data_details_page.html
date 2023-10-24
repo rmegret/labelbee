@@ -19,6 +19,9 @@
     })
 </script>
 
+{% from 'common/macros.html' import database_menu %}
+{{ database_menu('') }}
+
 <h1>Annotation Data: </h1>
 
 <table class="table" id="video_info">
@@ -45,11 +48,11 @@
 </table>
 
 <a href="{{ url_for('edit_video_data_page')}}?video_data={{ video_data.id }}">
-    <button type="button" onclick="" class="btn btn-primary">Edit Metadata</button>
+    <button type="button" onclick="" class="btn btn-primary btn-xs">Edit Metadata</button>
 </a>
-<a class='btn btn-default' href='{{url_for("get_video_data_raw_v2",id="")}}{{video_data.id}}' target='_blank'>RAW JSON</a>
+<a class='btn btn-default btn-xs' href='{{url_for("get_video_data_raw_v2",id="")}}{{video_data.id}}' target='_blank'>RAW JSON</a>
 <a href="{{ url_for('labelbee_user_page')}}#video_data={{ video_data.id }}&video_id={{ video_id }}", target="_blank">
-    <button type="button" onclick="" class="btn btn-primary">Open in LabelBee</button>
+    <button type="button" onclick="" class="btn btn-info btn-xs">Open in LabelBee</button>
 </a>
 
 

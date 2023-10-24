@@ -2,6 +2,8 @@
 
 {% block content %}
 
+{% from 'common/macros.html' import database_menu %}
+
 <h1>User page</h1>
 
 <p>You are currently logged as 
@@ -11,7 +13,8 @@
 <h3>Tools</h3>
 <ul>
   <li><a href="labelbee/gui">Labelbee GUI</a></li>
-  <li><a href="videos">Browse database: videos and their annotation</a></li>
+  <li>Browse database: 
+    {{ database_menu('') }}</li>
 </ul>
 <h3>Access to raw data</h3>
 <ul>

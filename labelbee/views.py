@@ -318,6 +318,7 @@ def add_dataset_page():
     return render_template("pages/add_dataset.html", form=form)
 
 
+
 @app.route("/datasets", methods=["GET", "POST"])
 @login_required
 def datasets_page():
@@ -329,10 +330,8 @@ def datasets_page():
             "id": e.id,
             "name": e.name,
             "description": e.description,
-            "created_by": get_user_by_id(e.created_by).first_name
-            + " "
-            + get_user_by_id(e.created_by).last_name,
-            "timestamp": e.timestamp,
+            "created_by": e.created_by,
+            #"timestamp": e.timestamp,
         }
         for e in dataset_list()
     ]
@@ -948,9 +947,10 @@ def videodata_get_v2():
     print("Handling videodata request")
     if not current_user.is_authenticated:
         raise Forbidden("/rest/v2/videodata GET: login required !")
-    video_id = int(request.args.get("video_id"))
-    if video_id is None:
-        raise BadRequest("/rest/v2/videodata GET: video_id required !")
+    video_id = request.args.get("video_id")
+    if (video_id is not None): video_id = int(video_id)
+    #if video_id is None:
+    #    raise BadRequest("/rest/v2/videodata GET: video_id required !")
 
     data_type = request.args.get("data_type", "")
     allusers = request.args.get("allusers", None)

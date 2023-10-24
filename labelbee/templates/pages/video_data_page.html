@@ -19,6 +19,12 @@
     })
 </script>
 
+{% from 'common/macros.html' import database_menu %}
+{{ database_menu('videodata') }}
+
+
+{% if video %}
+
 <table class="table" id="video_info">
     <thead>
         <th>Thumb</th>
@@ -53,21 +59,28 @@
 </table>
 
 <a href="{{ url_for('edit_video_page')}}?video={{ video.id }}">
-    <button type="button" onclick="" class="btn btn-primary">Edit Video Info</button>
+    <button type="button" onclick="" class="btn btn-primary btn-xs">Edit Video Info</button>
 </a>
 
 <a href="{{ url_for('labelbee_user_page')}}#video_id={{ video.id }}" target="_blank">
-    <button type="button" onclick="" class="btn btn-info">Open Video in LabelBee</button>
+    <button type="button" onclick="" class="btn btn-info btn-xs">Open Video in LabelBee</button>
 </a>
 
 <a href="{{ url_for('static',filename='data'+video.path+'/'+video.file_name) }}" target="_blank">
-    <button type="button" onclick="" class="btn btn-default">Show Raw Video</button>
+    <button type="button" onclick="" class="btn btn-default btn-xs">Show Raw Video</button>
 </a>
 
+{% if video.thumb %}
 <a href="{{ url_for('static',filename='data'+video.thumb) }}" target="_blank">
-    <button type="button" onclick="" class="btn btn-default">Show Thumbnail</button>
+    <button type="button" onclick="" class="btn btn-default btn-xs">Show Thumbnail</button>
 </a>
+{% else %}
+<a href="{{ url_for('static',filename='data/undefined') }}" target="_blank">
+    <button type="button" onclick="" class="btn btn-default btn-xs">Show Thumbnail</button>
+</a>
+{% endif %}   
 
+{% endif %}  
 
 <h1>Video Data: {{ uri }} </h1>
 
@@ -88,14 +101,35 @@
             <td></td>
             <td></td>
             <td></td>
+            <td></td>
         </tr>
     </tbody>
+    <tfoot id="videosFoot">
+        <tr>
+            <th s="6">ID</th>
+            <th s="0">Actions</th>
+            <th s="20">Filename</th>
+            <th s="10">Data Type</th>
+            <th s="10">Date and Time</th>
+            <th s="10">Created By</th>
+        </tr>
+    </tfoot>
     <!--  -->
 </table>
 
 
+
+{% if video %}
 <script>
     $(document).ready(function () {
+        $('#video_data_table tfoot th').each( function () {
+            var title = $(this).text();
+            let size = $(this).attr('s');
+            if (size=="0")
+                $(this).html( '' );
+            else 
+                $(this).html( '<input type="text" placeholder="Search '+title+'" size="'+size+'"/>' );
+        } );
         $('#video_data_table').DataTable({
             "ajax": "{{ url_for('videodata_get_v2') }}?video_id={{ video.id }}&allusers=True",
             "columnDefs": [
@@ -127,11 +161,92 @@
                     $(nTd).html("["+rowData.created_by_id+"] "+rowData.created_by).addClass("small");
                 } },
             ],
-            "order": [[2, "desc"]]
+            "order": [[2, "desc"]],
+            
+            // Search function
+            initComplete: function () {
+                // Apply the search
+                this.api().columns().every( function () {
+                    var that = this;
+    
+                    $( 'input', this.footer() ).on( 'keyup change clear', function () {
+                        if ( that.search() !== this.value ) {
+                            // let name = $($('#video_data_table').dataTable().api().column(this.index()).header()).html()
+                            //console.log(this.value)
+                            that
+                                .search( this.value )
+                                .draw();
+                        }
+                    } );
+                } );
+            }
         });
     });
 </script>
+{% else %}
 
+<script>
+    $(document).ready(function () {
+        $('#video_data_table tfoot th').each( function () {
+            var title = $(this).text();
+            let size = $(this).attr('s');
+            if (size=="0")
+                $(this).html( '' );
+            else 
+                $(this).html( '<input type="text" placeholder="Search '+title+'" size="'+size+'"/>' );
+        } );
+        $('#video_data_table').DataTable({
+            "ajax": "{{ url_for('videodata_get_v2') }}?allusers=True",
+            "columnDefs": [
+                    { targets: [ 0 ], className: 'dt-right' }
+                ],
+            "columns": [
+            { "data": "id", "name": "id" , 
+              fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
+                    $(nTd).html("<a class='btn btn-default btn-xs' href='{{ url_for('video_data_details_page') }}" + "?video_data=" + rowData.id + "'>"+rowData.id+"</a>");
+                } 
+            },
+            { "data": "id", "name": "actions", 
+              fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
+                    $(nTd).html(
+                        "<a class='btn btn-default btn-xs' href='{{ url_for('get_video_data_raw_v2',id='') }}"+ rowData.id +" target='_blank'>JSON</a>" +
+                        "<a class='btn btn-primary btn-xs' href='{{ url_for('labelbee_user_page')}}#video_data="+ rowData.id +" target='_blank'>GUI</a>");
+                } 
+            },
+            { "data": "file_name", "name": "file_name" ,
+                // convert file_name to link
+                fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
+                    $(nTd).html(rowData.file_name).addClass("small");
+                }
+            },
+            { "data": "data_type", "name": "data_type" },
+            { "data": "timestamp", "name": "timestamp" },
+            { "data": "created_by", "name": "created_by", 
+                fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
+                    $(nTd).html("["+rowData.created_by_id+"] "+rowData.created_by).addClass("small");
+                } },
+            ],
+            "order": [[2, "desc"]],
+            // Search function
+            initComplete: function () {
+                // Apply the search
+                this.api().columns().every( function () {
+                    var that = this;
+                    //let name = $($('#video_data_table').dataTable().api().column(this.index()).header()).html()
+                    $( 'input', this.footer() ).on( 'keyup change clear', function () {
+                        if ( that.search() !== this.value ) {
+                            //console.log(name, this.value)
+                            that
+                                .search( this.value )
+                                .draw();
+                        }
+                    } );
+                } );
+            }
+        });
+    });
+</script>
+{% endif %}  
 
 
 {% endblock %}
