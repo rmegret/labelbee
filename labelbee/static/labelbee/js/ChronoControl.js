@@ -336,6 +336,7 @@ function validVisibleTagIdsDomain() {
 
 /* Update chronogram axes properties */
 function updateChronoXDomainFromVideo() {
+  axes.updateVideoinfo(videoinfo) // Update starttime and realfps
   axes.xdomain(domainxFromVideo());
 }
 function scaleTimeDomain(scale) {

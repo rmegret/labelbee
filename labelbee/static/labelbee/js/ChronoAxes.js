@@ -62,7 +62,21 @@ function ChronoAxes(parent, videoinfo, options) {
 
   /* ### INTERNAL MODEL for the axes: scales */
 
-  axes.videoinfo = videoinfo;
+  function starttime(_starttime) {
+    if (!arguments.length) return axes._starttime;
+    axes._starttime = _starttime;
+  }
+  function fps(_fps) {
+    if (!arguments.length) return axes._fps;
+    axes._fps = _fps;
+  }
+
+  function updateVideoinfo(videoinfo) {
+    starttime(videoinfo.starttime)
+    fps(videoinfo.realfps)
+  }
+
+  updateVideoinfo(videoinfo)
 
   // ## Scale objects (model that maps (frames,id) to pixels)
   var xScale = d3.scale.linear().range([0, width]);
@@ -80,10 +94,10 @@ function ChronoAxes(parent, videoinfo, options) {
     // the video parameters
     //console.log('updateTScale()')
     var d = xScale.domain(); // Get X domain expressed in frames
-    var a = new Date(axes.videoinfo.starttime); // Get start time of video
+    var a = new Date(axes._starttime); // Get start time of video
     tScale.domain([
-      new Date(a.getTime() + (d[0] / axes.videoinfo.realfps) * 1000),
-      new Date(a.getTime() + (d[1] / axes.videoinfo.realfps) * 1000),
+      new Date(a.getTime() + (d[0] / axes._fps) * 1000),
+      new Date(a.getTime() + (d[1] / axes._fps) * 1000),
     ]);
   }
   function xdomain(domain) {
@@ -185,6 +199,9 @@ function ChronoAxes(parent, videoinfo, options) {
   axes.xdomainFocus = xdomainFocus;
   axes.xdomainScale = xdomainScale;
   axes.xdomainCenter = xdomainCenter;
+  axes.starttime = starttime;
+  axes.fps = fps;
+  axes.updateVideoinfo = updateVideoinfo;
   //axes.updateTDomain=updateTDomain  // Private
 
   /* ### VIEW: axes, layout */
