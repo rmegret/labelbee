@@ -2,6 +2,12 @@
 
 {% block content %}
 
+
+<script src="{{ url_for('static', filename='labelbee/js/extern/jquery-ui-1.12.1.custom/external/jquery/jquery.js') }}"></script>
+
+<script src="{{ url_for('static', filename='labelbee/js/extern/jquery-ui-1.12.1.custom/jquery-ui.js') }}"></script>
+<link src="{{ url_for('static', filename='labelbee/js/extern/jquery-ui-1.12.1.custom/jquery-ui.css') }}" rel="stylesheet">
+
 <script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
 <link href="//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css" rel="stylesheet">
 
@@ -92,10 +98,12 @@
         <th>File Name</th>
         <th>Data Type</th>
         <th>Date and Time</th>
+        <th>Video</th>
         <th>Created By</th>
     </thead>
     <tbody id="videosBody">
         <tr>
+            <td></td>
             <td></td>
             <td></td>
             <td></td>
@@ -111,6 +119,7 @@
             <th s="20">Filename</th>
             <th s="10">Data Type</th>
             <th s="10">Date and Time</th>
+            <th s="15">Video</th>
             <th s="10">Created By</th>
         </tr>
     </tfoot>
@@ -156,12 +165,18 @@
             },
             { "data": "data_type", "name": "data_type" },
             { "data": "timestamp", "name": "timestamp" },
+            { "data": "video_id", "name": "video_id", 
+                render: function (nTd, cellData, rowData, iRow, iCol) {
+                    return `<a class="btn btn-default bt-xs" href="{{ url_for('video_data_page')}}?videoid=${rowData.video_id}">${rowData.video_id}</a>`
+                }
+            },
             { "data": "created_by", "name": "created_by", 
                 fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
                     $(nTd).html("["+rowData.created_by_id+"] "+rowData.created_by).addClass("small");
-                } },
+                } 
+            },
             ],
-            "order": [[2, "desc"]],
+            "order": [[4, "desc"]],
             
             // Search function
             initComplete: function () {
@@ -209,8 +224,8 @@
             { "data": "id", "name": "actions", 
               fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
                     $(nTd).html(
-                        "<a class='btn btn-default btn-xs' href='{{ url_for('get_video_data_raw_v2',id='') }}"+ rowData.id +" target='_blank'>JSON</a>" +
-                        "<a class='btn btn-primary btn-xs' href='{{ url_for('labelbee_user_page')}}#video_data="+ rowData.id +" target='_blank'>GUI</a>");
+                        "<a class='btn btn-default btn-xs' href='{{ url_for('get_video_data_raw_v2',id='') }}"+ rowData.id +"' target='_blank'>JSON</a>" +
+                        "<a class='btn btn-primary btn-xs' href='{{ url_for('labelbee_user_page')}}#video_data="+ rowData.id +"&video_id="+rowData.video_id+"' target='_blank'>GUI</a>");
                 } 
             },
             { "data": "file_name", "name": "file_name" ,
@@ -221,12 +236,17 @@
             },
             { "data": "data_type", "name": "data_type" },
             { "data": "timestamp", "name": "timestamp" },
+            { "data": "video_id", "name": "video_id", 
+                render: function (nTd, cellData, rowData, iRow, iCol) {
+                    return `<a class="btn btn-default bt-xs" href="{{ url_for('video_data_page')}}?videoid=${rowData.video_id}">${rowData.video_id}</a>`
+                }
+            },
             { "data": "created_by", "name": "created_by", 
                 fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
                     $(nTd).html("["+rowData.created_by_id+"] "+rowData.created_by).addClass("small");
                 } },
             ],
-            "order": [[2, "desc"]],
+            "order": [[4, "desc"]],
             // Search function
             initComplete: function () {
                 // Apply the search
