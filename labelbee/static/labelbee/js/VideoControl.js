@@ -923,6 +923,7 @@ VideoControl.prototype.refresh = function () {
 
 // #MARK ## Loading
 
+// WARNING: DEPRECATED. Use loadVideo2 instead
 VideoControl.prototype.loadVideo = function (url, previewURL) {
   if (logging.videoEvents) console.log("loadVideo: url=", url);
 

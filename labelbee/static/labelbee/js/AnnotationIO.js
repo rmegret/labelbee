@@ -306,7 +306,7 @@ function getTimestampNow() {
     if (i < 10) {
       i = "0" + i;
     }
-    return i;
+    return String(i);
   }
 
   let D = new Date();
@@ -321,7 +321,7 @@ function getTimestampNow() {
   return timestamp;
 }
 function getTimestampedVideoname() {
-  return videoinfo.videoName + "-" + getTimestampNow();
+  return videoinfo.name + "-" + getTimestampNow();
 }
 
 function saveEventsToFile(format) {
@@ -1364,7 +1364,9 @@ function FromServerDialog() {
   this.initDialog();
 }
 
+// WARNING: DEPRECATED. Use loadEventsFromServerByID() instead
 function tracksListFromServer() {
+
   var route = "/rest/events/"; // Hardcoded
 
   console.log(
@@ -1380,7 +1382,7 @@ function tracksListFromServer() {
     type: "GET",
     contentType: "application/json",
     //data:{format:'json'}, // Without 'video', list all videos
-    data: { format: "json", video: videoinfo.videoName },
+    data: { format: "json", video: videoinfo.videoName }, /* videoName deprecated */
     success: function (json) {
       // Get the file list in JSON format
 
@@ -1440,7 +1442,7 @@ function tracksListFromServer() {
             item["filename"] +
             "</button></td>" +
             "<td>" +
-            boldize(item["video"], item["video"] == videoinfo.videoName) +
+            boldize(item["video"], item["video"] == videoinfo.videoName) + /* videoName deprecated */
             "</td>" +
             "<td>" +
             item["user_name"] +
