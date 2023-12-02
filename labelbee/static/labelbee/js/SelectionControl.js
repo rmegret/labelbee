@@ -104,13 +104,17 @@ function hardRefreshLabelTogglePanel() {
     if (typeof item.iconHtml == "string") {
       content += " " + item.iconHtml;
     }
+    if ( (typeof item.accesskey == "string") && (item.accesskey != "") ) {
+      content += ` [${item.accesskey}]`;
+    }
 
     let button = $(
       '<button onclick="onLabelToggled(event)" type="button" class="btn btn-green-toggle btn-xs labeltoggle"/>'
     )
       .html(content)
       .attr("thelabel", item.label)
-      .attr("title", item.description);
+      .attr("title", item.description)
+      .attr("accesskey", item.accesskey);
 
     // This button can be accessed as: $('.labeltoggle[thelabel="xxxx"]')
 
@@ -197,6 +201,7 @@ function LabelListDialog() {
         { name: "label", type: "text", width: "auto", validate: "required" },
         { name: "description", type: "text", width: "auto" },
         { name: "iconHtml", type: "text", width: "auto" },
+        { name: "accesskey", type: "text", width: "auto" },
         { type: "control", width: "auto" },
       ],
 
@@ -879,11 +884,29 @@ function getLabels(obs) {
 
 /* Labels GUI */
 
+function labelsProcessKey(key) {
+  let item = labelButtonsArray.find( item => item.accesskey==key )
+  if (!item) return false;
+  labelToggle(item.label)
+  return true
+}
+
 // If labels changed from buttons
 function onLabelToggled(event) {
+  var target = event.currentTarget;
+  let thelabel = $(target).attr("thelabel");
+  let oldState = $(target).hasClass("active");
+  let isOn = !oldState;
+
+  labelToggle(thelabel, isOn)
+}
+
+function labelToggle(thelabel, isOn) {
+  // Set to isOn if isOn defined
+  // Toggle if isOn undefined
+
   if (logging.guiEvents) console.log("onLabelToggled: event=", event);
   var activeObject = overlay.getActiveObject();
-  var target = event.currentTarget;
   if (activeObject == null) {
     newRectForCurrentTag();
     activeObject = overlay.getActiveObject();
@@ -895,12 +918,12 @@ function onLabelToggled(event) {
 
   let obs = activeObject.obs;
 
-  let thelabel = $(target).attr("thelabel");
-  let oldState = $(target).hasClass("active");
+  if (isOn===undefined) {
+    isOn = !hasLabel(obs,thelabel)
+  }
 
-  let isOn = !oldState;
-  $(target).toggleClass("active", isOn);
   updateObsLabel(obs, thelabel, isOn);
+  updateButtonsForLabel(obs, thelabel)
 
   console.log(
     "onLabelToggled: thelabel=",

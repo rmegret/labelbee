@@ -862,5 +862,9 @@ function onKeyDown(e) {
     }
     return false;
   }
-  // NOTE: Removed switch during merge
+
+  // Labeling shortcuts
+  //if ((e.key in ["1","2","3","4","5","6","7","8","9","0"])) {
+  if (labelsProcessKey(e.key)) return false;  // labelsProcessKey returns true if processed the key
+  //}
 }
