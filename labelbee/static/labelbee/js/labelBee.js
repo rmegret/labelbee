@@ -273,8 +273,9 @@ onhashchange = async function(event) {
     console.log("onhashchange: loading video_data="+video_data_id)
     await loadEventsFromServerByID(video_data_id)
     console.log("onhashchange: loadEventsFromServerByID SUCCESS")
+    parsedHash.delete("video_data")
   }
-  location.hash = ""
+  location.hash = parsedHash
 }
 
 /* MISC */
