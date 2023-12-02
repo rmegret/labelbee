@@ -145,7 +145,8 @@ function whoami() {
       //$('#whoami').html(JSON.stringify(data))
       if (data.is_authenticated) {
         $("#whoami").html(
-          "Logged as " +
+          '<button onclick="whoami()" type="button" class="btn btn-black btn-xs" title="Refresh user info"><span class="glyphicon glyphicon-refresh small"></span></button>'+
+          " Logged as " +
             data.first_name +
             ' <button onclick="try_logout()" type="button" class="btn btn-black btn-xs" title="Log out current user">Log out</button>'
         );
@@ -160,7 +161,11 @@ function whoami() {
     })
     .fail(function (data) {
       console.log("whoami: ERROR", data);
-      $("#whoami").html("No connection to server storage");
+      $("#whoami").html(
+        '<button onclick="whoami()" type="button" class="btn btn-black btn-xs" title="Refresh user info"><span class="glyphicon glyphicon-refresh small"></span></button>'+
+        " No connection " +
+          '<button onclick="try_login()" type="button" class="btn btn-success btn-xs" title="Log in">Log in</button>'
+      );
       $(".require-server").toggleClass("disabled", true);
     });
 }

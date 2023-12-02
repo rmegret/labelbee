@@ -1,5 +1,10 @@
 /* Custom CSS style for labelBee interface */
 
+/* For fullscreen mode */
+::backdrop {
+  background-color: white;
+}
+
 canvas {
     border: 1px solid #d3d3d3;
 }

@@ -94,16 +94,22 @@
             height="25px"> labelBee</a>
       </div>
       <div id="navbar" class="collapse navbar-collapse">
-        <!-- 
+         
         <ul class="nav navbar-nav">
-          <li class="active"><a href="#">Home</a></li>
+          <li><a>
+            <label for="fullscreen" value="Fullscreen" class="btn btn-black btn-xs">Fullscreen</label>
+            <input type="button" value="Fullscreen" style="display:none" id="fullscreen"
+              onclick="toggleFullScreen()">
+            </a>
+            </li>
+          <!-- <li class="active"><a href="#">Home</a></li>
           <li><a href="#about">About</a></li>
-          <li><a href="#help">Help</a></li>
+          <li><a href="#help">Help</a></li> -->
         </ul>
- -->
+ 
         <ul class="nav navbar-nav navbar-right">
           <li title="You need to quit LabelBee before logging-in/out"><a><span id="whoami">-</span></a></li>
-          <li><a href="{{url_for('home_page')}}"><span class="glyphicon glyphicon-log-out"></span> Quit LabelBee</a>
+          <li><a href="{{url_for('home_page')}}"><span class="glyphicon glyphicon-log-out"></span>Quit</a>
           </li>
         </ul>
       </div>
@@ -492,33 +498,6 @@
           <div style="min-width:220px;">
 
             <div id='right-side' class='sortable'>
-
-              <div id='userpanel' class='collapsible'>
-                <label>User/Display</label>
-                <div>
-                  <label for="logout" value="Logout" class="btn btn-primary btn-sm">Log out</label>
-                  <input type="button" style="display:none" id="logout" onclick="alert('not implemented')">
-
-                  <label for="fullscreen" value="Fullscreen" class="btn btn-primary btn-sm">Fullscreen</label>
-                  <input type="button" value="Fullscreen" style="display:none" id="fullscreen"
-                    onclick="toggleFullScreen()">
-
-                  <div class='subpanel collapsible'>
-                    <label class="primary">Changelog</label>
-                    <div>
-                      <ul>
-                        <li>2018-01-06: <br>
-                          - In "Zoom/Alternate Tags", clicking on a tag will change current annotation to "wrongid" and
-                          store the selected tag as correct one. All tags covered by this annotation will appear as
-                          virtual tags on the chronogram.
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <input type="button" value="Refresh user info" onclick="whoami()" class="btn-primary btn-xs">
-                </div>
-              </div>
 
               <!-- ## VIDEO INFO -->
 

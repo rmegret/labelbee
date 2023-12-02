@@ -279,6 +279,7 @@ def video_data_list(
                         VideoData.video_id,
                         VideoData.created_by_id,
                         VideoData.created_from_id,
+                        VideoData.notes,
                     )
                     .order_by(VideoData.timestamp.desc())
                     .all()
@@ -294,6 +295,7 @@ def video_data_list(
                         VideoData.video_id,
                         VideoData.created_by_id,
                         VideoData.created_from_id,
+                        VideoData.notes,
                     )
                     .filter(
                         VideoData.created_by_id == userid
@@ -313,6 +315,7 @@ def video_data_list(
                         VideoData.video_id,
                         VideoData.created_by_id,
                         VideoData.created_from_id,
+                        VideoData.notes,
                     )
                     .filter(VideoData.data_type == datatype)
                     .order_by(VideoData.timestamp.desc())
@@ -329,6 +332,7 @@ def video_data_list(
                         VideoData.video_id,
                         VideoData.created_by_id,
                         VideoData.created_from_id,
+                        VideoData.notes,
                     )
                     .filter(
                         VideoData.data_type == datatype,
@@ -350,6 +354,7 @@ def video_data_list(
                         VideoData.video_id,
                         VideoData.created_by_id,
                         VideoData.created_from_id,
+                        VideoData.notes,
                     )
                     .filter(VideoData.video_id == videoid)
                     .order_by(VideoData.timestamp.desc())
@@ -366,6 +371,7 @@ def video_data_list(
                         VideoData.video_id,
                         VideoData.created_by_id,
                         VideoData.created_from_id,
+                        VideoData.notes,
                     )
                     .filter(
                         VideoData.video_id == videoid, VideoData.created_by_id == userid
@@ -385,6 +391,7 @@ def video_data_list(
                         VideoData.video_id,
                         VideoData.created_by_id,
                         VideoData.created_from_id,
+                        VideoData.notes,
                     )
                     .filter(VideoData.video_id == videoid, VideoData.data_type == datatype)
                     .order_by(VideoData.timestamp.desc())
@@ -401,6 +408,7 @@ def video_data_list(
                         VideoData.video_id,
                         VideoData.created_by_id,
                         VideoData.created_from_id,
+                        VideoData.notes,
                     )
                     .filter(
                         VideoData.video_id == videoid,

@@ -361,11 +361,9 @@ function StatusWidget() {
 function toggleFullScreen() {
   var main = $(".container.main")[0];
   if (!document.fullscreenElement) {
-    main.webkitRequestFullscreen();
+    document.body.webkitRequestFullscreen();
   } else {
-    if (main.exitFullscreen) {
-      main.exitFullscreen();
-    }
+    document.exitFullscreen();
   }
 }
 

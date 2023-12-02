@@ -100,9 +100,11 @@
         <th>Date and Time</th>
         <th>Video</th>
         <th>Created By</th>
+        <th>Notes</th>
     </thead>
     <tbody id="videosBody">
         <tr>
+            <td></td>
             <td></td>
             <td></td>
             <td></td>
@@ -121,6 +123,7 @@
             <th s="10">Date and Time</th>
             <th s="15">Video</th>
             <th s="10">Created By</th>
+            <th s="20">Notes</th>
         </tr>
     </tfoot>
     <!--  -->
@@ -175,6 +178,7 @@
                     $(nTd).html("["+rowData.created_by_id+"] "+rowData.created_by).addClass("small");
                 } 
             },
+            { "data": "notes", "name": "notes" }
             ],
             "order": [[4, "desc"]],
             
@@ -245,6 +249,7 @@
                 fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
                     $(nTd).html("["+rowData.created_by_id+"] "+rowData.created_by).addClass("small");
                 } },
+            { "data": "notes", "name": "notes" }
             ],
             "order": [[4, "desc"]],
             // Search function
