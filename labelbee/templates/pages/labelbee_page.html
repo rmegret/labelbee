@@ -740,7 +740,7 @@
 
                   <!-- Event Info -->
                   <div id='beeinfo' class='subpanel collapsible'>
-                    <label>Event info</label>
+                    <label>Events info</label>
                     <div>
                       <p>Bounding Box:</p>
                       <table>
@@ -769,6 +769,13 @@
                           </td>
                         </tr>
                       </table>
+
+                      <input onclick="updateAnnotationStatistics();" type="button" value="Update Statistics"
+                      class="btn btn-s" title="Update Annotation Statistics">
+                      
+                      <div id="annotation-statistics">
+                        -
+                      </div>
                     </div>
                   </div>
 

@@ -969,3 +969,16 @@ function onLabelsChanged() {
     automatic_sub();
   }
 }
+
+
+function updateAnnotationStatistics() {
+  let L=[]; for (i in Tracks) {T=Tracks[i]; for (j in T) {L.push(T[j])}}; 
+  let S=new Set(L.map(x => x.ID))
+  let F=new Set(L.map(x => x.frame))
+  console.log("num_events=",L.length)
+  console.log("unique_ids=",S.size)
+  console.log("unique_frames=", F.size)
+  console.log("ids=", [...S])
+  console.log("frames=", [...F])
+  $('#annotation-statistics').html( `num_events=${L.length}<br>unique_ids=${S.size}<br>unique_frames=${F.size}<br>ids=${[...S]}<br>frames=${[...F]}` )
+}
