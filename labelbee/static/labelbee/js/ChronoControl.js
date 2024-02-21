@@ -27,7 +27,7 @@ function initChrono() {
   mousewheelMode = false;
   onMousewheelModeToggled();
 
-  eventSeekMode = "tag";
+  eventSeekMode = "frame";
   updateEventSeekMode();
 
   chronoItemHeight = 12;
@@ -506,9 +506,13 @@ function updateEventSeekMode() {
     $(".eventSeekMode").removeClass("active");
     $(".eventSeekMode-freetag").addClass("active");
   }
-  if (eventSeekMode == "obs") {
+  if (eventSeekMode == "event") {
     $(".eventSeekMode").removeClass("active");
-    $(".eventSeekMode-obs").addClass("active");
+    $(".eventSeekMode-event").addClass("active");
+  }
+  if (eventSeekMode == "eventframe") {
+    $(".eventSeekMode").removeClass("active");
+    $(".eventSeekMode-eventframe").addClass("active");
   }
 }
 function eventSeekModeClicked(mode) {
@@ -551,6 +555,18 @@ function funLessThanIdBegin(id, frame) {
   };
 }
 // Sort/compare Events
+function compareIncreasingFrame(a, b) {
+  return Number(a.frame) - Number(b.frame);
+}
+function compareDecreasingFrame(a, b) {
+  return -(Number(a.frame) - Number(b.frame));
+}
+function funGreaterThanFrame(frame) {
+  return element => (Number(element.frame) > frame)
+}
+function funLessThanFrame(frame) {
+  return element => (Number(element.frame) < frame)
+}
 function compareIncreasingIdFrame(a, b) {
   let d = getIdCoord(a.id) - getIdCoord(b.id);
   if (d == 0) return Number(a.frame) - Number(b.frame);
@@ -632,7 +648,7 @@ function gotoNextEvent(from) {
       return;
     }
     gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "obs") {
+  } else if (eventSeekMode == "event") {
     let obs = findNextObsEvent(frame, id);
 
     if (!obs) {
@@ -640,7 +656,15 @@ function gotoNextEvent(from) {
       return;
     }
     gotoFrameId(obs.frame, obs.id);
-  }
+  } else if (eventSeekMode == "eventframe") {
+    let newframe = findNextEventFrame(frame);
+
+    if (newframe == undefined) {
+      console.log("Did not find next Event Frame");
+      return;
+    }
+    gotoFrameId(newframe, id);
+  } 
 }
 function gotoPreviousEvent(from) {
   let frame = Number(videoControl.getCurrentFrame());
@@ -667,7 +691,7 @@ function gotoPreviousEvent(from) {
       return;
     }
     gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "obs") {
+  } else if (eventSeekMode == "event") {
     let obs = findPreviousObsEvent(frame, id);
 
     if (!obs) {
@@ -675,7 +699,15 @@ function gotoPreviousEvent(from) {
       return;
     }
     gotoFrameId(obs.frame, obs.id);
-  }
+  } else if (eventSeekMode == "eventframe") {
+    let newframe = findPreviousEventFrame(frame);
+
+    if (newframe == undefined) {
+      console.log("Did not find previous Event Frame");
+      return;
+    }
+    gotoFrameId(newframe, id);
+  } 
 }
 
 function findNextTagEvent(frame, id) {
@@ -730,6 +762,20 @@ function findNextObsEvent(frame, id) {
   //console.log(obs)
   return obs;
 }
+function findNextEventFrame(frame) {
+  let obsList = [];
+  if (flag_hideInvalid) {
+    obsList = flatTracksValid;
+  } else {
+    obsList = flatTracksAll;
+  }
+  if (!obsList) return undefined;
+  let obs = obsList
+    .sort(compareIncreasingFrame)
+    .find(funGreaterThanFrame(frame));
+  //console.log(obs)
+  return obs?.frame;
+}
 function findPreviousTagEvent(frame, id) {
   let tagList = [];
   if (flag_autoEventMode) {
@@ -781,6 +827,20 @@ function findPreviousObsEvent(frame, id) {
     .find(funLessThanIdFrame(id, frame));
   //console.log(obs)
   return obs;
+}
+function findPreviousEventFrame(frame) {
+  let obsList = [];
+  if (flag_hideInvalid) {
+    obsList = flatTracksValid;
+  } else {
+    obsList = flatTracksAll;
+  }
+  if (!obsList) return undefined;
+  let obs = obsList
+    .sort(compareDecreasingFrame)
+    .find(funLessThanFrame(frame));
+  //console.log(obs)
+  return obs?.frame;
 }
 
 function nextSeekFocusWindow() {

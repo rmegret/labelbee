@@ -253,7 +253,7 @@
                   <button value="Next minute" onclick="videoControl.forward(200)" type="button"
                     class="btn btn-info btn-xs x-small nopad fwbut fwbut3" title="+10s"><span
                       class="glyphicon glyphicon-fast-forward"></span></button>
-                      
+
                   <div class="inline-block">
                       <button value="Image Cache" onclick="overlay.optsClick('useImageCache')" type="button"
                     class="btn btn-blue-toggle btn-xs x-small nopad overlayOpts overlayOpts-useImageCache" 
@@ -395,8 +395,10 @@
                     <button onclick="eventSeekModeClicked('freetag')" type="button"
                       class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-freetag"
                       title="Free tag mode">UnlabeledTag</button>
-                    <button onclick="eventSeekModeClicked('obs')" type="button"
-                      class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-obs" title="Obs mode">Obs</button>
+                    <button onclick="eventSeekModeClicked('event')" type="button"
+                      class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-event" title="Events mode: next/prev event with same ID">Event</button>
+                    <button onclick="eventSeekModeClicked('eventframe')" type="button"
+                        class="btn btn-xs btn-blue-toggle eventSeekMode eventSeekMode-eventframe" title="Frame mode: next/prev frame with at least one event">Frame</button>
                     <button onclick="gotoFirstEvent()" type="button" class="btn btn-default btn-xs"
                       title="Go to first event"><span
                         class="glyphicon  glyphicon-fast-forward icon-flipped small"></span> First</button>
@@ -928,7 +930,7 @@
                     toggleHidden('selectedTab', this.checked);">
                   <label for="showSelected">Selected</label>
                   <br>
-                  <input id="showEvents" type="checkbox" onchange="
+                  <input id="showEvents" type="checkbox" checked onchange="
                     toggleHidden('eventsTabBR', this.checked); 
                     toggleHidden('eventsTab', this.checked);">
                   <label for="showEvents">Events</label>
