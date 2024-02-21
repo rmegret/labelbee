@@ -2109,16 +2109,15 @@ function rotatedRectGeometry(rect) {
   rect.setCoords(); // Compute coordinates
   var coords = rect.oCoords;
   //console.log(rect)
-  geom.center = {
-    x: (coords.tl.x + coords.br.x) / 2,
-    y: (coords.tl.y + coords.br.y) / 2,
-  };
-  geom.tl = { x: coords.tl.x, y: coords.tl.y };
-  geom.br = { x: coords.br.x, y: coords.br.y };
   let center = {
     x: (coords.tl.x + coords.br.x) / 2,
     y: (coords.tl.y + coords.br.y) / 2,
   };
+  geom.center = center;
+  geom.tl = { x: coords.tl.x, y: coords.tl.y };
+  geom.tr = { x: coords.tr.x, y: coords.tr.y };
+  geom.bl = { x: coords.bl.x, y: coords.bl.y };
+  geom.br = { x: coords.br.x, y: coords.br.y };
   geom.unrotated = {
     left: center.x - rect.width / 2,
     top: center.y - rect.height / 2,

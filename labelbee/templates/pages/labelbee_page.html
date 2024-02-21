@@ -960,8 +960,8 @@
                         onclick="zoomOverlay.clickShowZoom()">Update</label>
                     <label><input type="checkbox" checked="true" id="checkboxZoomShowOverlay"
                         onclick="zoomOverlay.clickShowOverlay()">Overlay</label>
-                    <label><input type="checkbox" checked="true" id="checkboxZoomToggleGrid"
-                        onclick="zoomOverlay.clickToggleGrid()">Grid</label>
+                    <label><input type="checkbox" checked="true" id="checkboxZoomShowBB"
+                        onclick="zoomOverlay.clickToggleShowBB()">Box</label>
                     <label><input type="checkbox" checked="true" id="checkboxZoomShowTagView"
                         onclick="zoomOverlay.clickToggleShowTagView()">Tag</label>
                     <!--                     <label><input type="checkbox" checked="true" id="checkboxZoomShowDistractors" onclick="zoomOverlay.clickShowDistractors()">Alternate Tags</label> -->
@@ -974,13 +974,9 @@
                       title="Reset Zoom" style="display:inline;">
                     <input value="Z-" onclick="zoomOverlay.zoomApplyScale(1/2)" type="button"
                       class="btn btn-info btn-xs" title="Zoom Out" style="display:inline;">
-                    <input value="⤿" onclick="zoomOverlay.rotateTag(-90)" type="button" class="btn btn-xs"
-                      title="Rotate CCW" style="display:inline;">
-                    <input value="⤾" onclick="zoomOverlay.rotateTag(+90)" type="button" class="btn btn-xs"
-                      title="Rotate CW" style="display:inline;">
-                    <input value="Export Image" onclick="zoomOverlay.exportZoomImage()" type="button"
+                      <input value="Export Image" onclick="zoomOverlay.exportZoomImage()" type="button"
                       class="btn btn-default btn-xs" title="Export Image" style="display:inline;">
-                  </div>
+                      </div>
 
                   <div style="clear:both;"></div>
 
@@ -1000,6 +996,12 @@
                         <div>
                           <div class='tagdivresizable'>
                             <div class="inline-block tagImageID">ID</div>
+                            <input value="⤿" onclick="zoomOverlay.rotateTag(-90)" type="button" class="btn btn-xs"
+                            title="Rotate CCW" style="display:inline;">
+                            <input value="⤾" onclick="zoomOverlay.rotateTag(+90)" type="button" class="btn btn-xs"
+                            title="Rotate CW" style="display:inline;">
+                            <label><input type="checkbox" checked="true" id="checkboxZoomToggleGrid"
+                                onclick="zoomOverlay.clickToggleGrid()">Grid</label>
                             <br>
                             <div id="tagImageDiv" style="width:50px; height:50px;" class="inline-block hidden">
                               <img id="tagImage" class="pixelated" />
