@@ -3832,8 +3832,8 @@ function computeDefaultNewID() {
 
 // #MARK # LOW-LEVEL MOUSE EVENTS
 
-var default_width = 40;
-var default_height = 40;
+var default_width = 100;
+var default_height = 100;
 
 function newRectForTag(tag) {
   let angle = tagAngle(tag);
@@ -3843,24 +3843,26 @@ function newRectForTag(tag) {
   let pt = overlay.videoToCanvasPoint({ x: tag.c[0], y: tag.c[1] });
   if (typeof angle !== "undefined") {
     console.log("newObsForTag: found angle=", angle);
+    let ds=getDefaultRectSizeCanvas()
     rect = addRect(
       tag.id,
-      pt.x - default_width / 2,
-      pt.y - default_height / 2,
-      default_width,
-      default_height,
+      pt.x - ds.w / 2,
+      pt.y - ds.h / 2,
+      ds.w,
+      ds.h,
       "new",
       undefined,
       angle
     );
   } else {
     console.log("newObsForTag: angle not found");
+    let ds=getDefaultRectSizeCanvas()
     rect = addRect(
       tag.id,
-      pt.x - default_width / 2,
-      pt.y - default_height / 2,
-      default_width,
-      default_height,
+      pt.x - ds.w / 2,
+      pt.y - ds.h / 2,
+      ds.w,
+      ds.h,
       "new"
     );
   }
@@ -3999,12 +4001,13 @@ function onMouseDown_predict(option) {
       id = id + 1;
     }
     // Did not find any tag nor rect
+    let ds=getDefaultRectSizeCanvas()
     rect = addRect(
       id,
-      startX - default_width / 2,
-      startY - default_height / 2,
-      default_width,
-      default_height,
+      startX - ds.w / 2,
+      startY - ds.h / 2,
+      ds.w,
+      ds.h,
       "new"
     );
     if (logging.mouseEvents)
@@ -4024,6 +4027,16 @@ function onMouseDown_predict(option) {
   //     target: rect,
   //     e: option.e
   // })
+}
+
+function updateDefaultSizeFromRect(rect) {
+  default_width = rect.width * canvasTransform[0];
+  default_height = rect.height * canvasTransform[3];
+  if (default_width<1) default_width=1
+  if (default_height<1) default_height=1
+}
+function getDefaultRectSizeCanvas() {
+  return {w: default_width / canvasTransform[0], h: default_height / canvasTransform[3]};
 }
 
 /* Create new rectangle interactively (dragging) */
@@ -4121,8 +4134,7 @@ function onMouseDown_interactiveRect(option) {
       overlay.canvas1.renderAll();
 
       // Update default size to latest rectangle created
-      default_width = activeObject.width;
-      default_height = activeObject.height;
+      updateDefaultSizeFromRect(activeObject)
 
       // updateForm(activeObject)
       // $('#I')[0].focus() // Set focus to allow easy ID typing
@@ -4434,8 +4446,9 @@ function fixRectSizeAfterScaling(rect) {
   rect.setCoords();
 
   // Update default size when rectangle is created by just clicking
-  default_width = rect.get("width");
-  default_height = rect.get("height");
+  //default_width = rect.get("width");
+  //default_height = rect.get("height");
+  updateDefaultSizeFromRect(rect)
 }
 
 function onMouseUp(option) {
