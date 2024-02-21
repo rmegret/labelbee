@@ -27,7 +27,7 @@ function initChrono() {
   mousewheelMode = false;
   onMousewheelModeToggled();
 
-  eventSeekMode = "frame";
+  eventSeekMode = "eventframe";
   updateEventSeekMode();
 
   chronoItemHeight = 12;
