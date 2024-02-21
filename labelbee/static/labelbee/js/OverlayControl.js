@@ -101,6 +101,7 @@ function OverlayControl(canvasTagId) {
       timelineZoom : 4.0,
       timelineMaxDelta : 3,
       timelineDisplaySize : 300,
+      fixedAspect : true
   }
   overlay.updateOptsButtons()
 
@@ -754,11 +755,25 @@ OverlayControl.prototype.optsClick = function(option) {
         }
       }
     }
+    if (option=="fixedAspect") {
+      if (this.opts[option]) { // Enable fixed aspect ratio
+        this.canvasSetVideoSize(this.videoSize.w,this.videoSize.h)
+        $("#canvasresize")
+          .resizable("option", "aspectRatio", this.videoSize.w/this.videoSize.h)
+          .data('ui-resizable')._aspectRatio = this.videoSize.w/this.videoSize.h;
+      } else {
+        $("#canvasresize")
+          .resizable("option", "aspectRatio", false)
+          .data('ui-resizable')._aspectRatio = false;
+      }
+    }
     this.hardRefresh()
 }
 OverlayControl.prototype.updateOptsButtons = function() {
     console.log('overlay.updateDisableAngleButton')
-    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering','showImageDiff','useImageCache','showPredictedStatus']) {
+    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter',
+                    'clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering',
+                    'showImageDiff','useImageCache','showPredictedStatus', 'fixedAspect']) {
         console.log(option)
         if ( this.opts[option] ) {
             $(".overlayOpts-"+option).addClass("active")
@@ -955,12 +970,15 @@ OverlayControl.prototype.refreshCanvasSize = function (event, ui) {
 
   var borderThickness = 4;
 
-  // Assume width is in px to parse #canvasresize size
-  let hd = Math.round(
-    parseInt($("#canvasresize")[0].style.height) - borderThickness
-  );
-  let wd = Math.round((hd / overlay.videoSize.h) * overlay.videoSize.w);
-
+  let hd = 100, wd = 100;
+  if (overlay.opts.fixedAspect) {
+    // Assume width is in px to parse #canvasresize size
+    hd = Math.round( parseInt($("#canvasresize")[0].style.height) - borderThickness );
+    wd = Math.round( (hd / overlay.videoSize.h) * overlay.videoSize.w );
+  } else {
+    hd = Math.round( parseInt($("#canvasresize")[0].style.height) - borderThickness );
+    wd = Math.round( parseInt($("#canvasresize")[0].style.width) - borderThickness );
+  }
   resizeCanvas(wd, hd);
 
   $("#videoSize")[0].innerHTML =
@@ -1031,8 +1049,8 @@ OverlayControl.prototype.canvasTransform_Fix = function () {
   let w2 = overlay.videoSize.w;
   let h2 = overlay.videoSize.h;
 
-  if (canvasTransform[0] * w1 > w2 && canvasTransform[3] * h1 > h2) {
-    let scaling = Math.max(w2 / w1, h2 / h1);
+  if (canvasTransform[0] * w1 > w2 || canvasTransform[3] * h1 > h2) {
+    let scaling = Math.min(w2 / w1, h2 / h1);
     canvasTransform[0] = scaling;
     canvasTransform[3] = scaling;
   }

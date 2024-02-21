@@ -253,9 +253,11 @@
                   <button value="Next minute" onclick="videoControl.forward(200)" type="button"
                     class="btn btn-info btn-xs x-small nopad fwbut fwbut3" title="+10s"><span
                       class="glyphicon glyphicon-fast-forward"></span></button>
+                      
                   <div class="inline-block">
                       <button value="Image Cache" onclick="overlay.optsClick('useImageCache')" type="button"
-                    class="btn btn-blue-toggle btn-xs x-small nopad overlayOpts overlayOpts-useImageCache" title="Use image cache (yes), or open video directly (no)">Use Cache</button>
+                    class="btn btn-blue-toggle btn-xs x-small nopad overlayOpts overlayOpts-useImageCache" 
+                    title="Use image cache (yes), or open video directly (no)">Use Cache</button>
                       <span id="cache-status"></span>
                       <button value="Preload" onclick="videoControl.preloadCache()" type="button"
                     class="btn btn-info btn-xs x-small nopad " title="Preload images around current frame">Preload</button>
@@ -263,6 +265,10 @@
                     class="btn btn-alert btn-xs x-small nopad " title="Cancel current queue"><span>Cancel</span></button>
                     <button value="Reset Cache" onclick="videoControl.videoCache.resetCache()" type="button"
                   class="btn btn-alert btn-xs x-small nopad " title="Empty and reset the cache"><span>Reset</span></button>
+
+                  <button value="Fixed Aspect" onclick="overlay.optsClick('fixedAspect')" type="button"
+                  class="btn btn-blue-toggle btn-xs x-small nopad overlayOpts overlayOpts-fixedAspect" 
+                  title="Toggle fixed aspect ratio equal to video"><span>Fixed Aspect</span></button>
                   </div>
                 </span>
               </div>
