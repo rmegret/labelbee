@@ -579,16 +579,19 @@ function sanitizeEvents(obj) {
         source: "Converted from Tracks v1",
       };
   
-      console.log("sanitizeEvents: Tracks JSON v1");
+      if (logging.io)
+        console.log("sanitizeEvents: Tracks JSON v1");
       if (typeof obj == "array") {
-        console.log("sanitizeEvents: got an array, converting to object");
+        if (logging.io)
+          console.log("sanitizeEvents: got an array, converting to object");
         data = obj.reduce(function (acc, cur, i) {
           acc[i] = cur;
           return acc;
         }, {});
         info.source = "Converted from Tracks v1 array";
       } else if (typeof obj == "object") {
-        console.log("sanitizeEvents: got an object, use directly");
+        if (logging.io)
+          console.log("sanitizeEvents: got an object, use directly");
         data = obj;
         info.source = "Converted from Tracks v1 object";
       } else {
@@ -616,7 +619,7 @@ function sanitizeEvents(obj) {
 
   return { info: info, data: data };
 }
-function setTracks(obj) {
+function setTracks(obj, skipRefresh) {
   console.log("setTracks: changing events data structure and refreshing...");
 
   var evts = sanitizeEvents(obj);
@@ -631,8 +634,10 @@ function setTracks(obj) {
 
   updateEventsNotes();
 
-  videoControl.onFrameChanged();
-  refreshChronogram();
+  if (!skipRefresh) {
+    videoControl.onFrameChanged();
+    refreshChronogram();
+  }
   return true;
 }
 function setEventsProp(option, value) {

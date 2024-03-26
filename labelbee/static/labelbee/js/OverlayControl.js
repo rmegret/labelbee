@@ -770,11 +770,11 @@ OverlayControl.prototype.optsClick = function(option) {
     this.hardRefresh()
 }
 OverlayControl.prototype.updateOptsButtons = function() {
-    console.log('overlay.updateDisableAngleButton')
+    //console.log('overlay.updateDisableAngleButton')
     for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter',
                     'clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering',
                     'showImageDiff','useImageCache','showPredictedStatus', 'fixedAspect']) {
-        console.log(option)
+        //console.log(option)
         if ( this.opts[option] ) {
             $(".overlayOpts-"+option).addClass("active")
         } else {
@@ -3118,7 +3118,7 @@ function onShowTagsTracksChanged() {
 }
 
 /* Track Window */
-function onTrackWindowChanged(event) {
+function onTrackWindowChanged(event, skipRefresh) {
   let range = Number($("#trackWindow")[0].value);
   overlay.trackWindow.range = range;
 
@@ -3147,7 +3147,8 @@ function onTrackWindowChanged(event) {
 
   $(overlay).trigger("trackWindow:change");
 
-  videoControl.refresh();
+  if (!skipRefresh)
+    videoControl.refresh();
 }
 function setTrackWindow(L) {
   $("#trackWindow").val(L);

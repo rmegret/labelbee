@@ -31,6 +31,8 @@ function VideoControl(videoTagId) {
   this.videoname = "unknownVideo";
   this.currentMode = "video";
   this.currentFrame = 0;
+  
+  this.delayedSeekFrame = undefined;
 
   this.preloadSpanBefore = 50
   this.preloadSpanAfter = 100
@@ -671,7 +673,7 @@ VideoControl.prototype.forward = function (frames) {
     this.seekFrame(this.currentFrame+frames)
 };
 VideoControl.prototype.rewind2 = function () {
-  this.rewind(videoinfo.videofps);
+  this.rewind(videoinfo.videofps); // 1s
 };
 VideoControl.prototype.forward2 = function () {
   this.forward(videoinfo.videofps);
@@ -788,7 +790,12 @@ VideoControl.prototype.onFrameChangedVideo2 = function (event) {
       );
   }
 
-  if (logging.frameEvents) console.log("video2 frameChanged", this.currentFrame);
+  if (logging.frameEvents) console.log("videoControl.onFrameChangedVideo2", this.currentFrame);
+
+  if (!this.isValidVideo) {
+    console.log("videoControl.onFrameChangedVideo2 ABORT, no valid video");
+    return
+  }
 
   this.onFrameChanged()
 }
@@ -850,6 +857,24 @@ VideoControl.prototype.onFrameChangedCachePreview = function (event) {
 VideoControl.prototype.onFrameChanged = function (event) {
   if (logging.frameEvents) console.log("frameChanged", this.currentFrame);
 
+  if (this.removeHashOnFrameChange) {
+    if ((this.delayedSeekFrame == undefined) & (this.currentFrame != this.removeHashOnFrameChangeFrame)) {
+      const parsedHash = new URLSearchParams(
+        location.hash.substring(1) // foo=bar&baz=qux&val=val+has+spaces
+      );
+      if (parsedHash.has('frame')) {
+        this.removeHashOnFrameChange = false
+        // Avoid infinite feedback loop by not listening to hash changes
+        removeEventListener("hashchange", onhashchange);
+        console.log('videoControl.onFrameChanged: remove hash #frame=xxx due to frame change')
+        parsedHash.delete("frame")
+        lasthash = String(parsedHash) // Save to check manually when hash really changed
+        location.hash = parsedHash
+        addEventListener("hashchange", onhashchange);
+      }
+    }
+  }
+
   this.hardRefresh();
 
   // Trigger public event
@@ -888,7 +913,8 @@ VideoControl.prototype.updateVideoControlForm = function () {
     $('.currentFrameDiv').text('Frame: ' + this.currentFrame + ' [P]')
   } else {
     $('#currentFrame').val('' + this.currentFrame)
-    $('.currentFrameDiv').text('Frame: ' + this.currentFrame)
+    //$('.currentFrameDiv').text('Frame: ' + this.currentFrame)
+    $('.currentFrameDiv').html(`<a href="#video_id=${videoManager.currentVideoID}&frame=${this.currentFrame}" target="_blank">Frame: ${this.currentFrame}</a>`) // Add link to current frame in Labelbee
   }
   $("#vidTime").html(
     "Video Time: " + this.video2.toHMSm(this.getCurrentVideoTime())
@@ -981,16 +1007,22 @@ VideoControl.prototype.onVideoLoaded = function (event) {
   tagsFromServer(videoinfo.tags.videoTagURL, true); // quiet
 };
 VideoControl.prototype.onVideoError = function (event) {
-  if (logging.videoEvents) console.log("onVideoError", event);
-  console.log("onVideoError: could not load ", this.video.src);
-  fromServerDialog.setMessage("red", "onVideoError: could not load \n" + this.video.src);
-  statusWidget.statusUpdate("videoLoad", false, []);
+  let rawsrc = this.video.getAttribute('src')
+  if (rawsrc == "") { // Not yet initialized
+    console.log("onVideoError: rawsrc==''");
+    //statusWidget.statusUpdate("videoLoad", false, []);
+    this.isValidVideo = false;
 
-  this.isValidVideo = false;
+  } else {
+    console.log("onVideoError: could not load ", this.video.src);
+    fromServerDialog.setMessage("red", "onVideoError: could not load \n" + this.video.src);
+    statusWidget.statusUpdate("videoLoad", false, []);
+    this.isValidVideo = false;
+    
+    this.onVideoSizeChanged();
+    this.hardRefresh();
+  }
 
-  this.onVideoSizeChanged();
-
-  this.hardRefresh();
 };
 
 VideoControl.prototype.setPreviewVideoStatus = function (status) {
@@ -1215,7 +1247,7 @@ VideoControl.prototype.loadVideoInfo = function (infourl) {
   // Update of videoInfo handled in callback onVideoInfoChanged
 };
 VideoControl.prototype.onVideoInfoChanged = function () {
-  if (logging.videoEvents) console.log("onVideoInfoChanged", event);
+  if (logging.videoEvents) console.log("onVideoInfoChanged");
 
   videoinfo.nframes = Math.floor(videoinfo.duration * videoinfo.videofps);
   this.video2.frameRate = videoinfo.videofps;
@@ -1230,10 +1262,21 @@ VideoControl.prototype.maxframe = function () {
   return Math.floor(videoinfo.duration * videoinfo.videofps);
 };
 
-VideoControl.prototype.loadVideo2 = function (videoURL) {
+const timeout = (promise, time, name) =>
+	Promise.race([promise, new Promise((_r, rej) => setTimeout(()=>{rej(new DOMException("TIMEOUT "+name, "TimeoutError"))}, time))]);
+
+
+VideoControl.prototype.loadVideo2 = function (videoURL, callback) {
   if (logging.videoEvents) console.log("loadVideo2: url=", videoURL);
-  this.name = videoinfo.name;
-  this.video.src = videoURL;
+  this.flagLoadingVideo = true
+  
+  let P = new Promise((resolve, reject)=>{
+      this.video.addEventListener('loadeddata', ()=>{console.log("loadVideo2: RESOLVED loadeddata videoURL=",videoURL); resolve()}, {once: true});
+      this.video.addEventListener('error', (error)=>{console.log("loadVideo2: REJECTED loadeddata videoURL=",videoURL); reject(error)}, {once: true});
+      this.video.src = videoURL;
+  })
+
+  return timeout(P, 10000,"loadVideo2 promise url="+videoURL)
 }
 
 VideoControl.prototype.onVideoLoaded2 = async function () {
@@ -1254,17 +1297,42 @@ VideoControl.prototype.onVideoLoaded2 = async function () {
   $("a.videoinfolink").attr("href", url_for("/videodata?videoid="+videoManager.currentVideoID) );
   // this.loadPreviewVideo();
   
-  $(this).trigger("video:loaded");
-  this.hardRefresh();
+  this.flagLoadingVideo = false
+  console.log("onVideoLoaded2: trying to refresh, time=", this.video.currentTime);
 
+  //this.hardRefresh();
+  //this.hardRefresh();
+  
   // HACKY SOLUTION
   // Video image was blank after loading a video
   // Using these two function calls to force display 
   // of first frame
-  videoControl.forward(1);
-  setTimeout(() => { videoControl.rewind(0); }, 1500);
+  //videoControl.forward(1);
+  //setTimeout(() => { videoControl.rewind(0); }, 1500);
+
+  if (this.delayedSeekFrame != undefined) {
+    console.log("onVideoLoaded2 delayedSeekFrame",this.delayedSeekFrame)
+    this.delayedSeekFrame = undefined
+    setTimeout(() => { videoControl.seekFrame(this.delayedSeekFrame); }, 500);
+  } else {
+    console.log("onVideoLoaded2 delayedSeekFrame undefined")
+    setTimeout(() => { videoControl.hardRefresh(); }, 500);
+  }
+
+  $(this).trigger("video:loaded");
 
   // Make initial video size larger when loading a video
   //$("#canvasresize")[0].style.height = "650px";
   //overlay.refreshCanvasSize();
+}
+
+VideoControl.prototype.delayedSeek = function (frame) {
+  console.log("delayedSeek frame=",frame)
+  if (this.flagLoadingVideo) {
+    console.log("delayedSeek setting for onload event")
+    this.delayedSeekFrame = frame
+  } else {
+    console.log("delayedSeek seeking immediatly")
+    this.seekFrame(frame)
+  }
 }

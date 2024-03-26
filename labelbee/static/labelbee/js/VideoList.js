@@ -639,27 +639,48 @@ VideoManager.prototype.receiveVideoSelection = function(){
 }
 
 VideoManager.prototype.videoSelected = async function(id) {
+  let videoManager = this
+  this.loadingVideoId = true
   this.currentVideoID = id;
-  console.log("Current video ID: ", this.currentVideoID)
-  $.ajax({
-    url: url_for("/rest/v2/get_video_info/" + id),
-    method: 'get',
-    data: "", 
-    dataType: 'json',
-    error: function (){
-        console.log("VideoManager.videoSelected ERROR: Unable to retrieve " +
-        "selected video's information from server.")
-        fromServerDialog.setMessage("red", "VideoManager.videoSelected ERROR: Unable to retrieve " +
-        "selected video's information from server.");
-        throw new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id);
-      },
-    success: function(videoInfoJSON){
-      videoManager.setVideoInfo(videoInfoJSON);
-      fromServerDialog.setMessage("black", "Loading Video.")
-      console.log("VideoManager.videoSelected: Loaded video information: ", videoInfoJSON);
-      window.location="#video_id="+id
-    }
-  });
+  if (logging.videoList)
+    console.log("videoSelected: Loading video ID: ", this.currentVideoID)
+  //console.log("Current video ID: ", this.currentVideoID)
+
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      url: url_for("/rest/v2/get_video_info/" + id),
+      method: 'get',
+      data: "", 
+      dataType: 'json',
+      error: function (){
+          console.log("VideoManager.videoSelected ERROR: Unable to retrieve " +
+          "selected video's information from server.")
+          fromServerDialog.setMessage("red", "VideoManager.videoSelected ERROR: Unable to retrieve " +
+          "selected video's information from server.");
+          videoManager.loadingVideoId = false;
+          //throw new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id);
+          reject(new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id))
+        },
+        success: function(videoInfoJSON){
+          fromServerDialog.setMessage("black", "Loading Video.")
+          if (logging.videoList)
+            console.log("VideoManager.videoSelected: Received video information, setting it: ", videoInfoJSON);
+          videoManager.setVideoInfo(videoInfoJSON)
+            .then( ()=>{
+              if (logging.videoList)
+                console.log("VideoManager.videoSelected: videoManager.setVideoInfo SUCCESS");
+              videoManager.loadingVideoId = false;
+              resolve()
+            })  // Resolve only once onvideoloaded
+            .catch( (error)=>{
+              if (logging.videoList)
+                console.log("VideoManager.videoSelected: videoManager.setVideoInfo FAILED");
+              videoManager.loadingVideoId = false; 
+              reject(error)
+            })
+      }
+    });
+  })
 }
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
@@ -683,5 +704,6 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   }
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
-  videoControl.loadVideo2(videoinfo.videoPath);
+  return videoControl.loadVideo2(videoinfo.videoPath); //Promise
 }
+

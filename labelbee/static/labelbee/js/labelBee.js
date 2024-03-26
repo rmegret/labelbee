@@ -18,7 +18,7 @@ var user_id;
 /** Debugging levels */
 var logging = {
   rects: false,
-  frameEvents: false,
+  frameEvents: true,
   guiEvents: false,
   submitEvents: false,
   mouseEvents: false,
@@ -27,13 +27,13 @@ var logging = {
   overlay: false,
   selectionEvents: false,
   chrono: false,
-  videoEvents: false,
+  videoEvents: true,
   canvasEvents: false,
   idPrediction: false,
   axesEvents: false,
   zoomTag: false,
   zoomOverlay: false,
-  videoList: false,
+  videoList: true,
   io: false,
 };
 
@@ -212,16 +212,6 @@ function init(videoID, tagID) {
 
   /* Set defaults */
 
-
-  // ASK REMI IF WE SHOULD BE LOADING ANY DEFAULT VIDEOS
-  // if (video_data !== "None" && tag_file !== "None") {
-  // videoManager.addDefaultVideo(video_data, tag_file); 
-  // }
-  // videoManager.selectVideoByID(0);
-
-  //Will trigger videoControl.onVideoLoaded
-  onTrackWindowChanged(); // to compute track window params
-
   whoami(); // Refresh user status
 
   window.onbeforeunload = function (e) {
@@ -234,12 +224,16 @@ function init(videoID, tagID) {
   };
 
   // Done
-  setTracks([]);
+  setTracks([], true); // skipRefresh
 
   loginDialog = new LoginDialog();
 
   // Preload video list
   videoManager.receiveVideoSelection();
+  // Any default video should be handled after receiving the video list
+
+  //Will trigger refresh, which should fail if no default video
+  onTrackWindowChanged({}, true); // to compute track window params. Skip refresh
 
   onhashchange()
 }
@@ -248,14 +242,26 @@ function init(videoID, tagID) {
 
 /* ROUTER */
 
+lasthash = ""
+
 addEventListener("hashchange", onhashchange);
 onhashchange = async function(event) {
-  console.log('onhashchange: hash=',location.hash)
-  if (!location.hash) return
+  let newhash = location.hash
+  console.log('onhashchange: current hash=',newhash)
+  if (!newhash) return
+  if (newhash == lasthash) {
+    console.log('onhashchange: ABORT, newhash same as last registered hash', lasthash)
+  }
+  const parsedHash0 = new URLSearchParams(
+    location.hash.substring(1) // foo=bar&baz=qux&val=val+has+spaces
+  );
   const parsedHash = new URLSearchParams(
     location.hash.substring(1) // foo=bar&baz=qux&val=val+has+spaces
   );
-  console.log('onhashchange:',parsedHash)
+  //console.log('onhashchange: parsedHash=',String(parsedHash))
+
+  let need_push = false
+
   // First load video if present
   if (parsedHash.has("video_id")) {
     let id = parsedHash.get("video_id")
@@ -264,7 +270,12 @@ onhashchange = async function(event) {
     } else {
       console.log('onhashchange: processing hash, selecting video_id ',id)
       await videoManager.videoSelected(id)
-      console.log("videoSelected SUCCESS")
+      console.log("onhashchange: videoSelected SUCCESS, video_id=", id)
+      if (!parsedHash.has("frame")) {
+        // Add default 
+        parsedHash.get("frame","0")
+      }
+      need_push = true
     }
   }
   // Then, load data if present
@@ -274,8 +285,33 @@ onhashchange = async function(event) {
     await loadEventsFromServerByID(video_data_id)
     console.log("onhashchange: loadEventsFromServerByID SUCCESS")
     parsedHash.delete("video_data")
+    need_push = true
   }
-  location.hash = parsedHash
+
+  if (parsedHash.has("frame")) {
+    let frame = parseInt(parsedHash.get("frame"),10)
+    console.log("onhashchange: delayed seek frame="+frame)
+    videoControl.removeHashOnFrameChange = true
+    videoControl.removeHashOnFrameChangeFrame = frame
+    videoControl.delayedSeek( frame )
+    parsedHash.delete("frame")
+    need_push = true
+  }
+
+  //location.hash = parsedHash
+  
+  // removeEventListener("hashchange", onhashchange);
+  // if (need_push) {
+  //   console.log('onhashchange: PUSH old hash to history',String(parsedHash0))
+  //   history.replaceState(undefined,undefined,'#'+parsedHash0);
+  //   window.document.title="Labelbee #"+parsedHash0
+  //   //history.pushState(undefined,undefined,'#'+parsedHash);
+  //   location.hash = parsedHash
+  // } else {
+  //   console.log('onhashchange: REPLACE hash in history',String(parsedHash))
+  //   history.replaceState(undefined,undefined,'#'+parsedHash);
+  // }
+  // addEventListener("hashchange", onhashchange);
 }
 
 /* MISC */
