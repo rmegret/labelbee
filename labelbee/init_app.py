@@ -13,6 +13,10 @@ from flask_marshmallow import Marshmallow
 from flask_user import UserManager
 from flask_wtf.csrf import CSRFProtect
 import sys
+import logging
+import os
+
+log_dir = os.environ.get("LABELBEE_LOGDIR")
 
 # Enable running in subdomain
 # http://flask.pocoo.org/snippets/35/
@@ -76,8 +80,14 @@ ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
 
 ####
 
-# Initialize Flask Application
+# Configure Logging
+app.logger.removeHandler(app.logger.handlers[0])
+app.logger.addHandler(logging.FileHandler(log_dir + "/gunicorn_error_logs.log"))
+app.logger.setLevel(logging.DEBUG)
+app.logger.handlers[0].setFormatter(logging.Formatter('[%(asctime)s] [%(filename)s] [%(levelname)s] %(message)s'))
+logger = logging.getLogger('labelbee.init_app')
 
+# Initialize Flask Application
 
 def init_app(app, extra_config_settings={}):
 
@@ -123,15 +133,16 @@ def init_app(app, extra_config_settings={}):
 
     app.jinja_env.globals["bootstrap_is_hidden_field"] = is_hidden_field_filter
 
+
     # Setup an error-logger to send emails to app.config.ADMINS
-    init_email_error_handler(app)
+    # Disabled due to lack of SMTP server
+    # init_email_error_handler(app)
 
     # Setup Flask-User to handle user account related forms
     from labelbee.models import User, CustomUserManager
     from labelbee.views import user_profile_page
 
     user_manager = CustomUserManager(app, db, User)
-
     from labelbee.db_functions import injest_tags, injest_videos
 
     # try:
@@ -149,6 +160,9 @@ def init_app(app, extra_config_settings={}):
     from labelbee.user_management import import_users
 
     # import_users("users.csv")
+
+    logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
+    #logger.info("config=%s",app.config)
 
 
 def init_email_error_handler(app):
@@ -172,10 +186,7 @@ def init_email_error_handler(app):
     subject = app.config.get("APP_SYSTEM_ERROR_SUBJECT_LINE", "System Error")
 
     # Setup an SMTP mail handler for error-level messages
-    import logging
-    from logging.handlers import SMTPHandler
-
-    mail_handler = SMTPHandler(
+    mail_handler = logging.handlers.SMTPHandler(
         mailhost=(host, port),  # Mail host and port
         fromaddr=from_addr,  # From address
         toaddrs=to_addr_list,  # To address

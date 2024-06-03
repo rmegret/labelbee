@@ -496,6 +496,9 @@ VideoManager.prototype.changeFrameOffset = function (event) {
 };
 
 VideoManager.prototype.updateVideoInfoForm = function () {
+  $('.video_id').html('<a class="small" href="#video_id='+this.currentVideoID+'">#video_id='+this.currentVideoID+'</a>')
+  $(".videoinfo_nframes").html("Num frames: "+videoinfo.nframes+" [0-"+(videoinfo.nframes-1)+"]");
+
   $("#videofps").val(videoinfo.videofps);
   $("#realfps").val(videoinfo.realfps);
   $("#startTime").val(videoinfo.starttime);
@@ -512,7 +515,14 @@ VideoManager.prototype.videoListFromDB = function () {
   // fromServerDialog.closeDialog();
   if (this.videoListJSON == "Error"){
     fromServerDialog.setBody("<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br>");
-    fromServerDialog.setMessage("red", "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.<br>Press the refresh button above to try again.");
+    let errormsg;
+    if (user_data.is_authenticated){
+      errormsg = "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.<br>Press the refresh button above to try again.";
+    }
+    else{
+      errormsg = "VideoManager.receiveVideoSelection ERROR: User is not logged in.<br>Log in and press the refresh button above to try again.";
+    }
+    fromServerDialog.setMessage("red", errormsg);
   }
   else if (this.videoListJSON != null){
     this.makeVideoListTable(this.videoListJSON);
@@ -531,7 +541,22 @@ VideoManager.prototype.makeVideoListTable = function (json){
     "<th>File Name</th>" +
     "<th>Created on</th>" +
     "<th>Video ID</th>" +
-    "<th>Colony</th></thead>"
+    "<th>Colony</th>" +
+    "<th>FPS</th>" +
+    "<th>W</th>" +
+    "<th>H</th>" +
+    "</thead>" +
+    `<tbody></tbody>
+<tfoot class="nopadding">\
+    <th></th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+    <th>x</th>
+</tfoot>` +
     "</table>";
 
   // Set dialog message and insert table skeleton into modal
@@ -550,8 +575,30 @@ VideoManager.prototype.makeVideoListTable = function (json){
         return timestamp.split('T').join(' ');
       }},
       {data:"id"},
-      {data:"colony"}
-    ]
+      {data:"colony"},
+      {data:"fps"},
+      {data:"width"},
+      {data:"height"}
+    ],
+    initComplete: function () {
+        this.api()
+            .columns()
+            .every(function () {
+                var column = this;
+                var foot = column.footer();
+                var title = foot.textContent;
+
+                if (foot.textContent)
+                  // Create input element and add event listener
+                  $('<input type="text" placeholder="" style="width:100%;"/>')
+                      .appendTo($(foot).empty())
+                      .on('keyup change clear', function () {
+                          if (column.search() !== this.value) {
+                              column.search(this.value).draw();
+                          }
+                      });
+            });
+    }
   });
 }
 
@@ -571,7 +618,14 @@ VideoManager.prototype.receiveVideoSelection = function(){
     error: function (){
         // Display error message in dialog menu
         fromServerDialog.setBody("<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br>"); 
-        fromServerDialog.setMessage("red", "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.<br>Press the refresh button above to try again.");
+        let errormsg;
+        if (user_data.is_authenticated){
+          errormsg = "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.<br>Press the refresh button above to try again.";
+        }
+        else{
+          errormsg = "VideoManager.receiveVideoSelection ERROR: User is not logged in.<br>Log in and press the refresh button above to try again.";
+        }
+        fromServerDialog.setMessage("red", errormsg);
         theManager.videoListJSON = "Error";
       },
     success: function(json){
@@ -585,30 +639,54 @@ VideoManager.prototype.receiveVideoSelection = function(){
 }
 
 VideoManager.prototype.videoSelected = async function(id) {
+  let videoManager = this
+  this.loadingVideoId = true
   this.currentVideoID = id;
-  console.log("Current video ID: ", this.currentVideoID)
-  $.ajax({
-    url: url_for("/rest/v2/get_video_info/" + id),
-    method: 'get',
-    data: "", 
-    dataType: 'json',
-    error: function (){
-        console.log("VideoManager.videoSelected ERROR: Unable to retrieve " +
-        "selected video's information from server.")
-        fromServerDialog.setMessage("red", "VideoManager.videoSelected ERROR: Unable to retrieve " +
-        "selected video's information from server.");
-      },
-    success: function(videoInfoJSON){
-      videoManager.setVideoInfo(videoInfoJSON);
-      console.log("VideoManager.videoSelected: Loaded video information: ", videoInfoJSON);
-    }
-  });
+  if (logging.videoList)
+    console.log("videoSelected: Loading video ID: ", this.currentVideoID)
+  //console.log("Current video ID: ", this.currentVideoID)
+
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      url: url_for("/rest/v2/get_video_info/" + id),
+      method: 'get',
+      data: "", 
+      dataType: 'json',
+      error: function (){
+          console.log("VideoManager.videoSelected ERROR: Unable to retrieve " +
+          "selected video's information from server.")
+          fromServerDialog.setMessage("red", "VideoManager.videoSelected ERROR: Unable to retrieve " +
+          "selected video's information from server.");
+          videoManager.loadingVideoId = false;
+          //throw new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id);
+          reject(new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id))
+        },
+        success: function(videoInfoJSON){
+          fromServerDialog.setMessage("black", "Loading Video.")
+          if (logging.videoList)
+            console.log("VideoManager.videoSelected: Received video information, setting it: ", videoInfoJSON);
+          videoManager.setVideoInfo(videoInfoJSON)
+            .then( ()=>{
+              if (logging.videoList)
+                console.log("VideoManager.videoSelected: videoManager.setVideoInfo SUCCESS");
+              videoManager.loadingVideoId = false;
+              resolve()
+            })  // Resolve only once onvideoloaded
+            .catch( (error)=>{
+              if (logging.videoList)
+                console.log("VideoManager.videoSelected: videoManager.setVideoInfo FAILED");
+              videoManager.loadingVideoId = false; 
+              reject(error)
+            })
+      }
+    });
+  })
 }
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   videoinfo = {
     name: videoInfoJSON["file_name"],
-    videoPath: "/webapp/data" + videoInfoJSON["path"] + '/' + videoInfoJSON["file_name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",
+    videoPath: url_for("/data") + videoInfoJSON["path"] + '/' + videoInfoJSON["file_name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",
     videofps: videoInfoJSON["videofps"],
     realfps: videoInfoJSON["realfps"],
     starttime: videoInfoJSON["starttime"],
@@ -626,5 +704,6 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   }
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
-  videoControl.loadVideo2(videoinfo.videoPath);
+  return videoControl.loadVideo2(videoinfo.videoPath); //Promise
 }
+

@@ -26,12 +26,11 @@
 <p>This page is accessible to authenticated users with the 'admin' role.</p>
 
 <ul>
-<li><a href={{ url_for('version_page') }}>Version</a></li>
 <li>
-  <form action={{ url_for('manage_users_page') }} method="post">
-    {{ form.hidden_tag() }}
-    <input type="submit" value="Manage Users">
-  </form>
+  <a class="btn btn-primary btn-xs" href={{ url_for('version_page') }}>View Version</a>
+</li>
+<li>
+  <a class="btn btn-primary btn-xs" href= {{ url_for('manage_users_page') }}>Manage Users</a>
 </li>
 </ul>
 

@@ -102,6 +102,8 @@ function ZoomOverlay(canvas, canvasOverlay) {
   $("#checkboxZoomShowOverlay").prop("checked", this.flagShowOverlay);
   this.flagShowGrid = true;
   $("#buttonZoomShowGrid").toggleClass("active", this.flagShowGrid);
+  this.flagShowBB = true;
+  $("#buttonZoomShowBB").toggleClass("active", this.flagShowBB);
   this.flagShowZoom = true;
   $('#checkboxShowZoom').prop('checked', this.flagShowZoom);
   this.flagShowTagView = false
@@ -579,6 +581,10 @@ ZoomOverlay.prototype.clickToggleGrid = function () {
   this.flagShowGrid = $("#checkboxZoomToggleGrid").is(":checked");
   this.refreshZoom();
 };
+ZoomOverlay.prototype.clickToggleShowBB = function () {
+  this.flagShowBB = $('#checkboxZoomShowBB').is(':checked')
+  this.refreshZoom();
+}
 ZoomOverlay.prototype.clickShowZoom = function () {
   this.flagShowZoom = $("#checkboxShowZoom").is(":checked");
   if (this.flagShowZoom) {
@@ -671,6 +677,11 @@ ZoomOverlay.prototype.setGeometry = function (cx, cy, angle, zx, zy, scale) {
   this.angle = angle;
   this.scale = scale;
 };
+/**
+ * Convert zoom coordinates to video coordinates
+ * @param {{x,y}} posCanvas - point in zoom coordinates
+ * @returns {{x,y}} posFrame - point in video coordinates
+ */
 ZoomOverlay.prototype.canvas2frame = function (posCanvas) {
   var posFrame = {
     x:
@@ -686,6 +697,11 @@ ZoomOverlay.prototype.canvas2frame = function (posCanvas) {
   };
   return posFrame;
 };
+/**
+ * Convert video frame coordinates to zoom canvas coordinates
+ * @param {{x,y}} posFrame - point in video coordinates
+ * @returns {{x,y}} `posCanvas` - point in zoom canvas coordinates
+ */
 ZoomOverlay.prototype.frame2canvas = function (posFrame) {
   var posCanvas = {
     x:
@@ -1346,6 +1362,10 @@ ZoomOverlay.prototype.updateTagView = function (tag) {
   /* 1.2. Draw video into zoomed canvas */
 
   let video = $("#video")[0];
+  if (videoControl.currentMode == "cache") {
+    if (videoControl.currentImage)
+      video = videoControl.currentImage
+  }
 
   ctx2.save();
 
@@ -2074,6 +2094,10 @@ ZoomOverlay.prototype.refreshZoom = function () {
   var zoom_ctx = zoom_canvas.getContext("2d");
 
   let video = $("#video")[0];
+  if (videoControl.currentMode == "cache") {
+    if (videoControl.currentImage)
+      video = videoControl.currentImage
+  }
 
   let zoomScale = this.scale;
 
@@ -2163,6 +2187,45 @@ ZoomOverlay.prototype.refreshZoom = function () {
         zoom_ctx.fillStyle = "yellow";
         zoom_ctx.fill();
       }
+
+      zoom_ctx.restore();
+    }
+  }
+
+  if (this.flagShowBB) {
+    let rect = getSelectedRect();
+    if (rect != null) {
+      let geom = rotatedRectGeometry(rect);
+      let pt = overlay.canvasToVideoPoint(geom.center);
+      cx = pt.x;
+      cy = pt.y;
+      angle = (geom.angle / 180) * Math.PI;
+
+      // let tl = overlay.canvasToVideoPoint(geom.tl);
+      // let tr = overlay.canvasToVideoPoint(geom.tr);
+      // let br = overlay.canvasToVideoPoint(geom.br);
+      // let bl = overlay.canvasToVideoPoint(geom.bl);
+      // Overlay canvas coordinates to Zoom canvas coordinates
+      let tl = this.frame2canvas(overlay.canvasToVideoPoint(geom.tl));
+      let tr = this.frame2canvas(overlay.canvasToVideoPoint(geom.tr));
+      let br = this.frame2canvas(overlay.canvasToVideoPoint(geom.br));
+      let bl = this.frame2canvas(overlay.canvasToVideoPoint(geom.bl));
+
+      zoom_ctx.setTransform(1, 0, 0, 1, 0, 0);
+      //zoom_ctx.translate(+mw, +mh);
+      //zoom_ctx.scale(zoomScale, zoomScale);
+      //zoom_ctx.rotate(-angle);
+      //zoom_ctx.translate(-cx, -cy);
+
+      //zoom_ctx.drawImage(video, 0, 0); // Possibly out of sync when playing
+      zoom_ctx.beginPath();
+      zoom_ctx.moveTo(tl.x, tl.y);
+      zoom_ctx.lineTo(tr.x, tr.y);
+      zoom_ctx.lineTo(br.x, br.y);
+      zoom_ctx.lineTo(bl.x, bl.y);
+      zoom_ctx.closePath()
+      zoom_ctx.strokeStyle = "red";
+      zoom_ctx.stroke();
 
       zoom_ctx.restore();
     }

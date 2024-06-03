@@ -27,7 +27,7 @@ function initChrono() {
   mousewheelMode = false;
   onMousewheelModeToggled();
 
-  eventSeekMode = "tag";
+  eventSeekMode = "eventframe";
   updateEventSeekMode();
 
   chronoItemHeight = 12;
@@ -76,19 +76,20 @@ function initChrono() {
     let stayHere = false;
     if (stayHere) {
       // Stay at preview frame
-      videoControl.seekFrame(getCurrentFrame());
+      videoControl.seekFrame(getCurrentFrame(),"end-preview");
       // Update should be called by callbacks
     } else {
       // Come back to initial frame before preview
       //videoControl.currentMode = 'video';
-      videoControl.onFrameChanged();
+      videoControl.seekFrame(-1,"end-preview");
+      //videoControl.onFrameChanged();
       //updateTimeMark();
       //updateTrackWindowSpan()
       //videoControl.hardRefresh();
     }
   }
-  $(axes).on("previewframe:trackmove", onAxesMoved);
-  $(axes).on("previewframe:trackend", endPreview);
+  $(axes).on("previewframe:trackmove", (evt)=>onAxesMoved(evt));
+  $(axes).on("previewframe:trackend", ()=>endPreview());
 
   /* Resize events */
 
@@ -269,7 +270,7 @@ function adjustChronogramHeight(itemHeight) {
 function domainxFromVideo() {
   var domain;
   if (isNaN(videoinfo.duration)) domain = [0, 1];
-  else domain = [0, videoinfo.nframes];
+  else domain = [0, videoinfo.nframes-1];
   if (logging.chrono) console.log("domainxFromVideo: domain=", domain);
   return domain;
 }
@@ -335,6 +336,7 @@ function validVisibleTagIdsDomain() {
 
 /* Update chronogram axes properties */
 function updateChronoXDomainFromVideo() {
+  axes.updateVideoinfo(videoinfo) // Update starttime and realfps
   axes.xdomain(domainxFromVideo());
 }
 function scaleTimeDomain(scale) {
@@ -476,14 +478,17 @@ function onAxesDblClick(event) {
   ]);
 }
 function onAxesMoved(event) {
-  // User clicked in chronogram axes
+  // User moved in chronogram axes with Shift
   var frame = event.frame;
   var id = event.id;
   if (logging.axesEvents)
     console.log("onAxesMove: seeking to frame=", frame, "...");
 
   //defaultSelectedBee = id // Do not change, keep same ID
-  videoControl.seekFrame(frame, true);
+  // if (videoControl.currentMode != "preview") {
+  //   videoControl.savedNonPreviewFrame = videoControl.currentFrame
+  // }
+  videoControl.seekFrame(frame, "preview");
 }
 function onAxesChanged(event) {
   // User zoomed, scrolled or changed chronogram range or size */
@@ -501,9 +506,13 @@ function updateEventSeekMode() {
     $(".eventSeekMode").removeClass("active");
     $(".eventSeekMode-freetag").addClass("active");
   }
-  if (eventSeekMode == "obs") {
+  if (eventSeekMode == "event") {
     $(".eventSeekMode").removeClass("active");
-    $(".eventSeekMode-obs").addClass("active");
+    $(".eventSeekMode-event").addClass("active");
+  }
+  if (eventSeekMode == "eventframe") {
+    $(".eventSeekMode").removeClass("active");
+    $(".eventSeekMode-eventframe").addClass("active");
   }
 }
 function eventSeekModeClicked(mode) {
@@ -546,6 +555,18 @@ function funLessThanIdBegin(id, frame) {
   };
 }
 // Sort/compare Events
+function compareIncreasingFrame(a, b) {
+  return Number(a.frame) - Number(b.frame);
+}
+function compareDecreasingFrame(a, b) {
+  return -(Number(a.frame) - Number(b.frame));
+}
+function funGreaterThanFrame(frame) {
+  return element => (Number(element.frame) > frame)
+}
+function funLessThanFrame(frame) {
+  return element => (Number(element.frame) < frame)
+}
 function compareIncreasingIdFrame(a, b) {
   let d = getIdCoord(a.id) - getIdCoord(b.id);
   if (d == 0) return Number(a.frame) - Number(b.frame);
@@ -627,7 +648,7 @@ function gotoNextEvent(from) {
       return;
     }
     gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "obs") {
+  } else if (eventSeekMode == "event") {
     let obs = findNextObsEvent(frame, id);
 
     if (!obs) {
@@ -635,7 +656,15 @@ function gotoNextEvent(from) {
       return;
     }
     gotoFrameId(obs.frame, obs.id);
-  }
+  } else if (eventSeekMode == "eventframe") {
+    let newframe = findNextEventFrame(frame);
+
+    if (newframe == undefined) {
+      console.log("Did not find next Event Frame");
+      return;
+    }
+    gotoFrameId(newframe, id);
+  } 
 }
 function gotoPreviousEvent(from) {
   let frame = Number(videoControl.getCurrentFrame());
@@ -662,7 +691,7 @@ function gotoPreviousEvent(from) {
       return;
     }
     gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "obs") {
+  } else if (eventSeekMode == "event") {
     let obs = findPreviousObsEvent(frame, id);
 
     if (!obs) {
@@ -670,7 +699,15 @@ function gotoPreviousEvent(from) {
       return;
     }
     gotoFrameId(obs.frame, obs.id);
-  }
+  } else if (eventSeekMode == "eventframe") {
+    let newframe = findPreviousEventFrame(frame);
+
+    if (newframe == undefined) {
+      console.log("Did not find previous Event Frame");
+      return;
+    }
+    gotoFrameId(newframe, id);
+  } 
 }
 
 function findNextTagEvent(frame, id) {
@@ -725,6 +762,20 @@ function findNextObsEvent(frame, id) {
   //console.log(obs)
   return obs;
 }
+function findNextEventFrame(frame) {
+  let obsList = [];
+  if (flag_hideInvalid) {
+    obsList = flatTracksValid;
+  } else {
+    obsList = flatTracksAll;
+  }
+  if (!obsList) return undefined;
+  let obs = obsList
+    .sort(compareIncreasingFrame)
+    .find(funGreaterThanFrame(frame));
+  //console.log(obs)
+  return obs?.frame;
+}
 function findPreviousTagEvent(frame, id) {
   let tagList = [];
   if (flag_autoEventMode) {
@@ -776,6 +827,20 @@ function findPreviousObsEvent(frame, id) {
     .find(funLessThanIdFrame(id, frame));
   //console.log(obs)
   return obs;
+}
+function findPreviousEventFrame(frame) {
+  let obsList = [];
+  if (flag_hideInvalid) {
+    obsList = flatTracksValid;
+  } else {
+    obsList = flatTracksAll;
+  }
+  if (!obsList) return undefined;
+  let obs = obsList
+    .sort(compareDecreasingFrame)
+    .find(funLessThanFrame(frame));
+  //console.log(obs)
+  return obs?.frame;
 }
 
 function nextSeekFocusWindow() {

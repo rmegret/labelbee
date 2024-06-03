@@ -1,0 +1,18 @@
+{%- macro is_current(current, label, value_true, value_false) -%}
+{{ value_true if (current==label) else value_false }}
+{%- endmacro -%}
+
+{% macro database_menu(current) %}
+
+  <a href="{{ url_for('datasets_page')}}">
+    <button type="button" onclick="" class="btn {{is_current(current,'datasets','btn-primary','btn-default')}} btn-sm">Datasets</button>
+  </a>
+
+  <a href="{{ url_for('videos_page')}}">
+    <button type="button" onclick="" class="btn {{is_current(current,'videos','btn-primary','btn-default')}} btn-sm">Videos</button>
+  </a>
+  
+  <a href="{{ url_for('video_data_page')}}">
+    <button type="button" onclick="" class="btn {{is_current(current,'videodata','btn-primary','btn-default')}} btn-sm">Video Data</button>
+  </a>
+{% endmacro %}

@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- These 3 meta tags MUST come first -->
 
-    <title>labelbee</title>
+    <title>{{config.APP_NAME}}</title>
 
     <!-- Bootstrap CSS and JS -->
     <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
@@ -33,12 +33,18 @@
     {% block body %}
     <!-- Application specific HTML -->
     <div id="header-div" class="clearfix with-margins">
-        <div class="pull-left"><a href="{{ url_for('home_page') }}"><span class="header-title">{{ user_manager.app_name
-                    }}</span></a></div>
+        <div class="pull-left">
+            <a href="{{ url_for('home_page') }}">
+                <span class="header-title">
+                    {{ config.APP_NAME }}
+                </span>
+            </a>
+        </div>
         <div class="pull-right">
             {% if current_user.is_authenticated %}
-            <a href="{{ url_for('user_profile_page') }}">{{ current_user.first_name or current_user.user_auth.username
-                }}</a>
+            <a href="{{ url_for('user_profile_page') }}">
+                View Profile [{{ current_user.first_name or current_user.user_auth.username}}]
+            </a>
             &nbsp; | &nbsp;
             <a href="{{ url_for('user.logout') }}">Sign out</a>
             {% else %}
@@ -48,7 +54,7 @@
     </div>
     <div class="with-margins">
         <a href="{{ url_for('home_page') }}">Home</a>
-        &nbsp; | &nbsp; <a href="{{ url_for('datasets_page') }}">Videos</a>
+        <!-- &nbsp; | &nbsp; <a href="{{ url_for('datasets_page') }}">Videos</a> -->
         &nbsp; | &nbsp; <a href="{{ url_for('user_page') }}">User</a>
         &nbsp; | &nbsp; <a href="{{ url_for('admin_page') }}">Admin</a>
     </div>
@@ -79,8 +85,8 @@
     <br />
     <hr class="no-margins" />
     <div id="footer-div" class="clearfix with-margins">
-        <div class="pull-left">{{ user_manager.app_name }} v3.0</div>
-        <div class="pull-right">&copy; 2016-2018 University of Puerto Rico</div>
+        <div class="pull-left">{{ config.APP_NAME }} v3.0</div>
+        <div class="pull-right">&copy; 2016-2022 University of Puerto Rico</div>
     </div>
 
 

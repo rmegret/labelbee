@@ -6,6 +6,7 @@
 //import {VideoFrame} from "extern/VideoFrame.js";
 //var LRUCache = require("extern/lru_cache-master/index").LRUCache
 
+
 function VideoControl(videoTagId) {
   if (this === window) {
     console.log(
@@ -26,9 +27,15 @@ function VideoControl(videoTagId) {
   this.seekWallTime = 0;
   this.seekTiming = false;
   this.playbackRate = 1;
+  this.playingState = 'paused'
   this.videoname = "unknownVideo";
   this.currentMode = "video";
   this.currentFrame = 0;
+  
+  this.delayedSeekFrame = undefined;
+
+  this.preloadSpanBefore = 50
+  this.preloadSpanAfter = 100
 
   if (typeof videoTagId === "undefined") videoTagId = "video"; // Default HTML5 video tag to attach to
 
@@ -41,7 +48,7 @@ function VideoControl(videoTagId) {
     id: videoTagId,
     /* We use the fps declared in the video here, even if not real */
     frameRate: videoinfo.videofps,
-    callback: this.onFrameChanged.bind(this), // VERY IMPORTANT: all frame changes (play,next,prev...) trigger this callback. No refresh should be done outside of this callback
+    callback: this.onFrameChangedVideo2.bind(this), // VERY IMPORTANT: all frame changes (play,next,prev...) trigger this callback. No refresh should be done outside of this callback
   });
   this.video2.onListen = function () {
     console.log("video2.onListen");
@@ -73,7 +80,7 @@ function VideoControl(videoTagId) {
 function VideoCache(videoControl, videoCacheTagId) {
   let videoCache = this;
   videoCache.opts = {
-    videoCacheSize: 40
+    videoCacheSize: 1000
   }
   this.queryQueue = []
   this.abortFlag = false
@@ -96,7 +103,7 @@ VideoCache.prototype.onVideoCacheParamsChanged = function (event) {
   this.setCacheSize(cacheSize)
 
   // Update GUI
-  $('#videoCacheSize').val(String(this.videoCacheSize))
+  $('#videoCacheSize').val(String(this.opts.videoCacheSize))
 }
 
 // Model methods
@@ -107,7 +114,7 @@ VideoCache.prototype.setCacheSize = function (size) {
     return
   }
   console.log('VideoCache: new size ', psize)
-  this.videoCacheSize = psize
+  this.opts.videoCacheSize = psize
   this.lrucache.setLimit(psize)
 }
 VideoCache.prototype.loadVideo = function (url) {
@@ -135,8 +142,8 @@ VideoCache.prototype.preloadFrames = async function (videoUrl, frames, fps) {
   //    return
   //}
   console.log('Preloading ', frames)
-  if (frames.length > this.videoCacheSize / 2) {
-    console.log('VideoCache.preloadFrames: frames.length > this.videoCacheSize. ABORTED')
+  if (frames.length > this.opts.videoCacheSize / 2) {
+    console.log('VideoCache.preloadFrames: frames.length > this.opts.videoCacheSize. ABORTED')
     return
   }
   //this.preloading = true
@@ -149,6 +156,31 @@ VideoCache.prototype.preloadFrames = async function (videoUrl, frames, fps) {
   await this.processQueue()
   console.log('Preload DONE')
   //this.preloading = false
+}
+VideoCache.prototype.cancelQueue = function () {
+  for (query of this.queryQueue) {
+    let videoUrl = query.videoUrl
+    let frame = query.frame
+    let state = this.getFrameState(videoUrl, frame)
+    if (state != "inqueue") continue;
+    this.removeFrame(videoUrl, frame)
+    //query.deferred.reject()
+  }
+  this.queryQueue = []
+  this.processingQueue = false
+  this.updateStatus()
+}
+VideoCache.prototype.resetCache = function () {
+  this.cancelQueue()
+  this.lrucache.removeAll()
+  this.updateStatus()
+}
+
+VideoCache.prototype.updateStatus = function () {
+  let queueSize = this.queryQueue.length
+  let cacheUsed = this.lrucache.size
+  let cacheSize = this.opts.videoCacheSize
+  let status = $('#cache-status').html(`${cacheUsed}/${cacheSize},Q${queueSize}`)
 }
 
 // Only two functions supposed to interact with lrucache
@@ -176,6 +208,10 @@ VideoCache.prototype.setFrameState = function (videoUrl, frame, state, image, pr
   let item = { 'state': state, 'image': image, 'promise': promise }
   this.lrucache.set(key, item)
 }
+VideoCache.prototype.removeFrame = function (videoUrl, frame) {
+  let key = videoUrl + ':' + frame
+  this.lrucache.remove(key)
+}
 VideoCache.prototype.enqueueFrame = async function (videoUrl, frame, fps) {
   let key = videoUrl + ':' + frame
 
@@ -192,7 +228,9 @@ VideoCache.prototype.enqueueFrame = async function (videoUrl, frame, fps) {
   console.log('videoCache.enqueueFrame: Pushing ', key)
   let D = $.Deferred()
   this.setFrameState(videoUrl, frame, 'inqueue', undefined, D.promise())
-  this.queryQueue.push({ videoUrl: videoUrl, frame: frame, fps: fps, deferred: D })
+
+  this.queryQueue.push({ videoUrl: videoUrl, frame: frame, fps: fps, key:key, deferred: D })
+  this.updateStatus()
   return D.promise()
 }
 VideoCache.prototype.getFrameImageAsync = async function (videoUrl, frame, fps) {
@@ -200,32 +238,43 @@ VideoCache.prototype.getFrameImageAsync = async function (videoUrl, frame, fps) 
   this.processQueue()
   return promise
 }
-VideoCache.prototype.processQueue = async function () {
+VideoCache.prototype.processQueue = async function (force) {
+  this.updateStatus()
   if (this.queryQueue.length == 0) {
+    console.log('VideoCache.processQueue: empty queue. ABORTED')
     return
   }
   // Force singleton processing
-  if (this.processingQueue) return
+  if (this.processingQueue && (!force)) {
+    console.log('VideoCache.processQueue: already processing. ABORTED')
+    return
+  }
   this.processingQueue = true
 
   function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
   try {
+    console.log('VideoCache.processQueue: start processing...')
     while (this.queryQueue.length > 0) {
       if (this.abortFlag) {
-        console.log('VideoCache.preloadFrames: abortFlag==true. ABORTED')
+        console.log('VideoCache.processQueue: abortFlag==true. ABORTED')
         return
       }
-      let query = this.queryQueue.shift()
+      let query = this.queryQueue[0]
+      let key = query.key
+      console.log('VideoCache.processQueue: processing',key,query)
       let image = await this.getImageForce(query.videoUrl, query.frame, query.fps)
-      let key = query.videoUrl + ':' + query.frame
       let item = { 'state': 'incache', 'image': image, 'promise': query.deferred.promise() }
       this.lrucache.set(key, item)
       console.log('videoCache.processQueue: resolve ', key)
       query.deferred.resolve(image)
+      this.queryQueue.shift()
+
+      this.updateStatus()
       console.log('Sleeping...')
-      await sleep(20)
+      //await 
+      sleep(20)
     }
   } finally {
     this.processingQueue = false
@@ -297,13 +346,18 @@ VideoCache.prototype.seekToFrame = async function (videoUrl, frame, fps) {
     let interval = 1 / fps;
     let currentTime = frame / fps + 0.00001;
 
-    video.currentTime = currentTime;
-    await new Promise(r => seekResolve = r);
-    resolve(video);
+    if (Math.abs(video.currentTime-currentTime)<0.00005) {
+      console.log('videoCache.seekToFrame: already at currentTime. RESOLVE',currentTime)
+      resolve(video);
+    } else {
+      video.currentTime = currentTime;
+      await new Promise(r => seekResolve = r);
+      resolve(video);
+    }
   });
 }
 VideoCache.prototype.seekWithCallback = async function (videoUrl, frame, fps, frameCallback) {
-  return new Promise(async (resolve) => {
+  return new Promise(async (resolve, reject) => {
 
     // fully download it first (no buffering):
     //let videoBlob = await fetch(videoUrl).then(r => r.blob());
@@ -316,16 +370,24 @@ VideoCache.prototype.seekWithCallback = async function (videoUrl, frame, fps, fr
       frameCallback(now, metadata)
       if (seekResolve) seekResolve();
     }
-    video.requestVideoFrameCallback(seeked);
+    let cbHandle = video.requestVideoFrameCallback(seeked);
 
     if (video.currentSrc != videoUrl)
       video.src = videoUrl;
 
     // workaround chromium metadata bug (https://stackoverflow.com/q/38062864/993683)
-    while ((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
+    //while 
+    if ((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
       console.log('videoCache.seekWithCallback: duration workaround')
       await new Promise(r => setTimeout(r, 1000));
       video.currentTime = 10000000 * Math.random();
+    }
+    // Just reject instead of trying too hard
+    if ((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
+      console.log('videoCache.seekWithCallback: duration workaround ABORTED')
+      video.cancelVideoFrameCallback(cbHandle)
+      reject()
+      return
     }
     let duration = video.duration;
 
@@ -333,98 +395,16 @@ VideoCache.prototype.seekWithCallback = async function (videoUrl, frame, fps, fr
     let interval = 1 / fps;
     let currentTime = frame / fps + 0.00001;
 
-    video.currentTime = currentTime;
-    await new Promise(r => seekResolve = r);
-    resolve(video);
+    if (Math.abs(video.currentTime-currentTime)<0.00005) {
+      console.log('videoCache.seekToFrame: already at currentTime. RESOLVE',currentTime)
+      resolve(video);
+    } else {
+      video.currentTime = currentTime;
+      await new Promise(r => seekResolve = r);
+      resolve(video);
+    }
   });
 }
-
-
-// VideoCache.prototype.getFrameDataURL = async function(videoUrl, frame, fps) {
-//     if (this.abortFlag) {
-//         console.log('VideoCache.preloadFrames: abortFlag==true. ABORTED')
-//         return
-//       }
-//     return new Promise(async (resolve) => {
-
-//       // fully download it first (no buffering):
-//       //let videoBlob = await fetch(videoUrl).then(r => r.blob());
-//       //let videoObjectUrl = URL.createObjectURL(videoBlob);
-//       let video = this.video
-
-//       let seekResolve;
-//       video.addEventListener('seeked', async function() {
-//         if(seekResolve) seekResolve();
-//       });
-
-//       video.src = videoUrl;
-
-//       // workaround chromium metadata bug (https://stackoverflow.com/q/38062864/993683)
-//       while((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
-//         await new Promise(r => setTimeout(r, 1000));
-//         video.currentTime = 10000000*Math.random();
-//       }
-//       let duration = video.duration;
-
-//       let canvas = document.createElement('canvas');
-//       let context = canvas.getContext('2d');
-//       let [w, h] = [video.videoWidth, video.videoHeight]
-//       canvas.width =  w;
-//       canvas.height = h;
-
-//       let frames = [];
-//       let interval = 1 / fps;
-//       let currentTime = frame / fps;
-
-//       //while(currentTime < duration) {
-//         video.currentTime = currentTime;
-//         await new Promise(r => seekResolve=r);
-
-//         context.drawImage(video, 0, 0, w, h);
-//         let base64ImageData = canvas.toDataURL('image/jpeg');
-//         frames.push(base64ImageData);
-
-//       //  currentTime += interval;
-//       //}
-//       resolve(frames);
-//     });
-//   }
-//   VideoCache.prototype.getFrameImage = async function(videoUrl, frame, fps) {
-//     if (this.abortFlag) {
-//         console.log('VideoCache.preloadFrames: abortFlag==true. ABORTED')
-//         return
-//       }
-
-//     let key = videoUrl+':'+frame
-
-//     let image = this.getFrameImageSync = function(videoUrl, frame)
-//     if (image) {
-//         console.log('VideoCache: found '+key+' in cache')
-//         return image
-//     }
-
-//     let vid = await this.seekToFrame(videoUrl, frame, fps)
-
-//     let canvas = this.canvas
-//     let context = this.ctx
-//     let [w, h] = [video.videoWidth, video.videoHeight]
-//     if ((w != canvas.width) || (h != canvas.height)) {
-//         canvas.width =  w;
-//         canvas.height = h;
-//     }
-
-//     context.drawImage(vid, 0, 0, w, h);
-//     let base64ImageData = canvas.toDataURL('image/jpeg');
-
-//     image = new Image();
-//     image.src = base64ImageData;
-//     await image.decode();
-
-//     this.lrucache.set(key, image)
-//     console.log('VideoCache: put '+key+' in cache')
-
-//     return image
-//   }
 VideoCache.prototype.getFrameCropDataURL = async function (videoUrl, frame, fps, crop) {
   if (this.abortFlag) {
     console.log('VideoCache.preloadFrames: abortFlag==true. ABORTED')
@@ -474,8 +454,8 @@ VideoControl.prototype.playRateInputChanged = function () {
 
 VideoControl.prototype.playPauseVideo = function (option) {
   if (logging.guiEvents) console.log("playPauseVideo()");
-  let playingState = this.video2.playingState();
-  if (playingState == "paused" || playingState == "playingBackwards") {
+  //let playingState = this.video2.playingState();
+  if (this.playingState == "paused" || this.playingState == "playingBackwards") {
     this.playForwards(option);
   } else {
     this.pause();
@@ -483,8 +463,8 @@ VideoControl.prototype.playPauseVideo = function (option) {
 };
 VideoControl.prototype.playPauseVideoBackward = function (option) {
   if (logging.guiEvents) console.log("playPauseVideoBackward()");
-  let playingState = this.video2.playingState();
-  if (playingState == "paused" || playingState == "playingForwards") {
+  //let playingState = this.video2.playingState();
+  if (this.playingState == "paused" || this.playingState == "playingForwards") {
     this.playBackwards(option);
   } else {
     this.pause();
@@ -493,9 +473,16 @@ VideoControl.prototype.playPauseVideoBackward = function (option) {
 VideoControl.prototype.playForwards = function (option) {
   if (logging.frameEvents) console.log("playForwards");
 
-  if (Number(option) == 2) this.video2.playForwards(1000.0 / 20 / 4);
-  else {
-    this.video2.playForwards();
+  this.pause();
+  this.playingState = "playingForwards"
+  if (this.currentMode == "video") {
+    if (Number(option) == 2) this.video2.playForwards(1000.0 / 20 / 4);
+    else {
+      this.video2.playForwards();
+    }
+  } else {
+    // cache
+    this.playStart()
   }
 
   this.updateNavigationView();
@@ -504,9 +491,16 @@ VideoControl.prototype.playForwards = function (option) {
 VideoControl.prototype.playBackwards = function (option) {
   if (logging.frameEvents) console.log("playBackwards");
 
-  this.video2.stopListen(); // Cut any other play occuring
-  if (Number(option) == 2) this.video2.playBackwards(1000.0 / 20 / 4);
-  else this.video2.playBackwards();
+  this.pause();
+  this.playingState = "playingBackwards"
+  if (this.currentMode == "video") {
+    //this.video2.stopListen(); // Cut any other play occuring
+    if (Number(option) == 2) this.video2.playBackwards(1000.0 / 20 / 4);
+    else this.video2.playBackwards();
+  } else {
+    // cache
+    this.playStart()
+  }
   this.updateNavigationView();
 
   // Any call to refresh is now handled by the video2 callback to onFrameChanged
@@ -515,9 +509,54 @@ VideoControl.prototype.pause = function () {
   // Was playing, pause
   if (logging.frameEvents) console.log("pause");
 
+  this.playingState = "paused"
   this.video2.video.pause();
   this.video2.stopListen();
   this.updateNavigationView();
+};
+
+VideoControl.prototype.playStart = function () {
+  this.playLastFrame = -1
+  this.playFrame = this.currentFrame
+  window.requestAnimationFrame((timestamp)=>this.playTick(timestamp));
+}
+VideoControl.prototype.playTick = function (timestamp) {
+  if (this.playingState== 'paused') {
+    if (logging.frameEvents) console.log("tick->pause");
+    return
+  }
+
+  let step = 1
+  if (this.playingState== 'playingBackwards') {
+    step = -1
+  }
+
+  if (this.playLastFrame == -1) {
+    this.playLastFrame = this.playFrame
+    this.playLastTime = timestamp
+    this.playFrame += step
+    this.seekFrame(this.playFrame)
+    window.requestAnimationFrame((timestamp)=>this.playTick(timestamp));
+    return
+  }
+  //console.log("playTick:",timestamp,this.playLastTime, videoinfo.videofps)
+  if (timestamp - this.playLastTime < 1000/videoinfo.videofps/this.playbackRate) {
+    // Wait for frame period
+    window.requestAnimationFrame((timestamp)=>this.playTick(timestamp));
+    return
+  }
+  if (this.currentFrame != this.playFrame) {
+    // didnt display requested frame yet, need to slow down
+    window.requestAnimationFrame((timestamp)=>this.playTick(timestamp));
+    return
+  }
+
+  this.playLastFrame = this.playFrame
+  this.playLastTime = timestamp
+  this.playFrame += step
+  this.seekFrame(this.playFrame)
+
+  window.requestAnimationFrame((timestamp)=>this.playTick(timestamp));
 };
 
 // #MARK # Change current frame
@@ -527,10 +566,65 @@ VideoControl.prototype.startSeekTimer = function () {
 };
 
 VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
+  if (useFastSeek == "preview") {
+    // Legacy ChronoControl call to seek preview frame
+    if (this.currentMode != "cache-preview") {  
+      this.savedMode = this.currentMode;
+      this.savedFrame = this.currentFrame;
+      console.log("videoControl.seekFrame: start-preview, saved mode", this.savedMode, " saved frame", this.savedFrame);
+      this.currentMode = "cache-preview";
+    }
+  } else if (useFastSeek == "end-preview") {
+    if (this.currentMode == "cache-preview") {
+      this.currentMode = this.savedMode;
+      if (frame==-1) frame = this.savedFrame;
+      console.log("videoControl.seekFrame: end-preview, come back to mode", this.savedMode, 
+        " and frame,savedFrame", frame, this.savedFrame);
+    } else {
+      console.log("videoControl.seekFrame: end-preview, ignore, not in cache-preview mode", this.currentMode);
+      return
+    }
+  } else {
+    this.savedFrame = this.currentFrame;
+  } 
+  if ((frame<0)|(frame>=videoinfo.nframes)) {
+    console.log("VideoControl.seekFrame: ABORTED, frame out of bounds",frame)
+    return;
+  }
   this.startSeekTimer();
-  if (useFastSeek) {
+  
+  if (this.currentMode == "cache") {
+    this.cacheRequestedFrame = frame;
+    //this.currentMode = "cache";
+    if (logging.frameEvents)
+      console.log("videoControl.seekFrame: CACHE, f=", frame);
+    this.videoCache.getFrameImageAsync(this.video.src, frame + videoinfo.frameoffset, videoinfo.videofps)
+      .catch((err) => { console.error('videoControl.seekFrame getFrameImageAsync ERROR',err); })
+      .then((img) => {
+        this.cacheImage = img
+        this.cacheFrame = frame
+        this.onFrameChangedCache()
+      }
+      );
+  } else if (this.currentMode == "cache-preview") {
+    this.cacheRequestedFrame = frame;
+    //this.currentMode = "cache";
+    if (logging.frameEvents)
+      console.log("videoControl.seekFrame: CACHE PREVIEW, f=", frame);
+    this.videoCache.enqueueFrame(this.video.src, frame + videoinfo.frameoffset, videoinfo.videofps)
+    this.videoCache.processQueue()
+    let img = this.videoCache.getFrameImageSync(this.video.src, frame + videoinfo.frameoffset)
+    if (img) {
+      this.cacheImage = img
+      this.cacheFrame = frame
+      this.onFrameChangedCachePreview()
+    } else {
+      if (logging.frameEvents)
+        console.log("videoControl.seekFrame: CACHE PREVIEW, invalid image", img);
+    }
+  } else if (this.currentMode == "preview") {
     this.previewFrame = frame;
-    this.currentMode = "preview";
+    //this.currentMode = "preview";
 
     // preview keeps 1 keyframe out of 40 frames
     // and is encoded at same speed as original (0.5fps=20fps/40)
@@ -541,30 +635,45 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
     //let t = Math.round((frame+videoinfo.frameoffset)/40)/20
 
     let t =
-      (frame + videoinfo.frameoffset) /
-      videoinfo.videofps /
-      videoinfo.preview.previewTimescale;
+    (frame + videoinfo.frameoffset) /
+    videoinfo.videofps /
+    videoinfo.preview.previewTimescale;
 
     if (logging.frameEvents)
-      console.log("videoControl.seekFrame: FAST, f=", frame, " t=", t);
+      console.log("videoControl.seekFrame: PREVIEW, f=", frame, " t=", t);
     this.previewVideo.currentTime = t;
-  } else {
-    this.currentMode = "video";
+    // will call onPreviewFrameChanged when seeked
+  } else if (this.currentMode == "video") {
+    //this.currentMode = "video";
+    if (logging.frameEvents)
+      console.log("videoControl.seekFrame: VIDEO2, f=", frame);
     this.video2.seekTo({ frame: frame + videoinfo.frameoffset });
+    // will call onFrameChangedVideo2 when seeked
   }
 };
 VideoControl.prototype.rewind = function (frames) {
   if (!frames) frames = 1;
-  this.startSeekTimer();
-  this.video2.seekBackward(frames);
+  if (this.currentMode == 'video') {
+    this.startSeekTimer();
+    this.video2.seekBackward(frames);
+  } else
+    this.seekFrame(this.currentFrame-frames)
 };
 VideoControl.prototype.forward = function (frames) {
   if (!frames) frames = 1;
-  this.startSeekTimer();
-  this.video2.seekForward(frames);
+  let newframe=this.currentFrame+frames
+  if ((newframe<0)|(newframe>=videoinfo.nframes)) {
+    console.log("VideoControl.forward: ABORTED, frame out of bounds",newframe)
+    return;
+  }
+  if (this.currentMode == 'video') {
+    this.startSeekTimer();
+    this.video2.seekForward(frames);
+  } else
+    this.seekFrame(this.currentFrame+frames)
 };
 VideoControl.prototype.rewind2 = function () {
-  this.rewind(videoinfo.videofps);
+  this.rewind(videoinfo.videofps); // 1s
 };
 VideoControl.prototype.forward2 = function () {
   this.forward(videoinfo.videofps);
@@ -582,7 +691,24 @@ VideoControl.prototype.forward4 = function () {
   this.forward(videoinfo.videofps * 60);
 };
 
-// # Get current frame/time
+VideoControl.prototype.preloadCache = function (centerFrame) {
+  function interval(start, end) {
+    return Array.from({length: end-start+1}, (x, i) => start+i);
+  }
+
+  if (centerFrame == undefined) centerFrame = this.currentFrame
+
+  let f1 = Math.max(0, centerFrame - this.preloadSpanBefore)
+  let f2 = Math.min(videoinfo.nframes-1, centerFrame + this.preloadSpanAfter)
+  console.log("preloadCache, centerFrame", centerFrame,", interval", f1,f2)
+
+  let frames = interval( centerFrame, f2 )
+  this.videoCache.preloadFrames(videoControl.video.src, frames, videoinfo.videofps)
+  frames = interval( f1, centerFrame-1 )
+  this.videoCache.preloadFrames(videoControl.video.src, frames, videoinfo.videofps)
+};
+
+// # Get current frame/time // FIXME: move logic to specific frameChanged callbacks
 VideoControl.prototype.getCurrentVideoFrame = function () {
   if (this.currentMode == "preview")
     return this.previewFrame - videoinfo.frameoffset;
@@ -645,10 +771,14 @@ VideoControl.prototype.onFrameTextChanged = function () {
 };
 
 // This callback is the only one that should handle frame changes. It is called automatically by video2
-VideoControl.prototype.onFrameChanged = function (event) {
+VideoControl.prototype.onFrameChangedVideo2 = function (event) {
+  //console.log("videoControl.onFrameChangedVideo2");
+  if (this.currentMode != "video") {
+    console.log("onFrameChangedVideo2: DISMISSED event, currentMode=", this.currentMode);
+    return;
+  }
   this.previewReady = true;
-
-  this.currentMode = "video";
+  //this.currentMode = "video";
   this.currentFrame = this.getCurrentVideoFrame();
 
   if (this.seekTiming) {
@@ -660,7 +790,90 @@ VideoControl.prototype.onFrameChanged = function (event) {
       );
   }
 
+  if (logging.frameEvents) console.log("videoControl.onFrameChangedVideo2", this.currentFrame);
+
+  if (!this.isValidVideo) {
+    console.log("videoControl.onFrameChangedVideo2 ABORT, no valid video");
+    return
+  }
+
+  this.onFrameChanged()
+}
+
+VideoControl.prototype.onPreviewFrameChanged = function (event) {
+  console.log("videoControl.onPreviewFrameChanged");
+  if (this.currentMode != "preview") {
+    console.log("onPreviewFrameChanged: DISMISSED event, currentMode=", this.currentMode);
+    return;
+  }
+  if (!this.previewReady) {
+    console.log("onPreviewFrameChanged: not ready, skip");
+    return;
+  }
+
+  //this.currentMode = "preview";
+  this.currentFrame = this.getCurrentVideoFrame(); // FIXME: handling not consistent between preview and video
+
+  if (logging.frameEvents) console.log("previewFrameChanged", this.currentFrame);
+
+  this.onFrameChanged()
+};
+
+VideoControl.prototype.onFrameChangedCache = function (event) {
+  console.log("videoControl.onFrameChangedCache");
+  if (this.currentMode != "cache") {
+    console.log("onFrameChangedCache: DISMISSED event, currentMode=", this.currentMode);
+    return;
+  }
+
+  //this.currentMode = "cache";
+  this.currentFrame = this.cacheFrame;
+  this.currentImage = this.cacheImage;
+
+  if (logging.frameEvents) console.log("cache frameChanged", this.currentFrame);
+
+  this.onFrameChanged()
+};
+
+VideoControl.prototype.onFrameChangedCachePreview = function (event) {
+  console.log("videoControl.onFrameChangedCachePreview");
+  if (this.currentMode != "cache-preview") {
+    console.log("onFrameChangedCachePreview: DISMISSED event, currentMode=", this.currentMode);
+    return;
+  }
+
+  //this.currentMode = "cache";
+  this.currentFrame = this.cacheFrame;
+  this.currentImage = this.cacheImage;
+
+  if (logging.frameEvents) console.log("cache preview frameChanged", this.currentFrame);
+
+  this.onFrameChanged()
+};
+
+// Final callback when frame changed
+// Mode specific frame changed callbacks should call it
+// after making sure currentMode and currentFrame are updated
+VideoControl.prototype.onFrameChanged = function (event) {
   if (logging.frameEvents) console.log("frameChanged", this.currentFrame);
+
+  if (this.removeHashOnFrameChange) {
+    if ((this.delayedSeekFrame == undefined) & (this.currentFrame != this.removeHashOnFrameChangeFrame)) {
+      const parsedHash = new URLSearchParams(
+        location.hash.substring(1) // foo=bar&baz=qux&val=val+has+spaces
+      );
+      if (parsedHash.has('frame')) {
+        this.removeHashOnFrameChange = false
+        // Avoid infinite feedback loop by not listening to hash changes
+        removeEventListener("hashchange", onhashchange);
+        console.log('videoControl.onFrameChanged: remove hash #frame=xxx due to frame change')
+        parsedHash.delete("frame")
+        lasthash = String(parsedHash) // Save to check manually when hash really changed
+        location.hash = parsedHash
+        addEventListener("hashchange", onhashchange);
+      }
+    }
+  }
 
   this.hardRefresh();
 
@@ -671,25 +884,6 @@ VideoControl.prototype.onFrameChanged = function (event) {
   // (Update: videoControl.hardRefresh calls overlay.hardRefresh directly. Synchronicyt issue?)
   $(this).trigger('frame:changed')
 }
-
-VideoControl.prototype.onPreviewFrameChanged = function (event) {
-  console.log("videoControl.onPreviewFrameChanged");
-
-  if (!this.previewReady) {
-    console.log("onPreviewFrameChanged: not ready, skip");
-    return;
-  }
-
-  this.currentMode = "preview";
-  this.currentFrame = this.getCurrentVideoFrame();
-
-  if (logging.frameEvents)
-    console.log("previewFrameChanged", this.currentFrame);
-
-  this.hardRefresh();
-
-  $(this).trigger("previewframe:changed");
-};
 
 VideoControl.prototype.updateVideoControlForm = function () {
   function toLocaleISOString(date) {
@@ -719,7 +913,8 @@ VideoControl.prototype.updateVideoControlForm = function () {
     $('.currentFrameDiv').text('Frame: ' + this.currentFrame + ' [P]')
   } else {
     $('#currentFrame').val('' + this.currentFrame)
-    $('.currentFrameDiv').text('Frame: ' + this.currentFrame)
+    //$('.currentFrameDiv').text('Frame: ' + this.currentFrame)
+    $('.currentFrameDiv').html(`<a href="#video_id=${videoManager.currentVideoID}&frame=${this.currentFrame}" target="_blank">Frame: ${this.currentFrame}</a>`) // Add link to current frame in Labelbee
   }
   $("#vidTime").html(
     "Video Time: " + this.video2.toHMSm(this.getCurrentVideoTime())
@@ -754,6 +949,7 @@ VideoControl.prototype.refresh = function () {
 
 // #MARK ## Loading
 
+// WARNING: DEPRECATED. Use loadVideo2 instead
 VideoControl.prototype.loadVideo = function (url, previewURL) {
   if (logging.videoEvents) console.log("loadVideo: url=", url);
 
@@ -778,6 +974,8 @@ VideoControl.prototype.loadVideo = function (url, previewURL) {
   statusWidget.statusRequest("videoLoad", []);
 };
 VideoControl.prototype.onVideoLoaded = function (event) {
+  console.log('OBSOLETE FUNCTION CALL WARNING: VideoControl.onVideoLoaded', event)
+
   if (logging.videoEvents) console.log("onVideoLoaded", event);
 
   console.log("onVideoLoaded: VIDEO loaded ", this.video.src);
@@ -794,7 +992,7 @@ VideoControl.prototype.onVideoLoaded = function (event) {
   let name = videoinfo.name;
   $("#videoName").html(name);
 
-  $("a.videolink").attr("href", name);
+  $("a.videolink").attr("href", videoinfo.videoPath);
 
   let videourl = videoinfo.videoURL;
 
@@ -809,16 +1007,22 @@ VideoControl.prototype.onVideoLoaded = function (event) {
   tagsFromServer(videoinfo.tags.videoTagURL, true); // quiet
 };
 VideoControl.prototype.onVideoError = function (event) {
-  if (logging.videoEvents) console.log("onVideoError", event);
-  console.log("onVideoError: could not load ", this.video.src);
-  fromServerDialog.setMessage("red", "onVideoError: could not load \n" + this.video.src);
-  statusWidget.statusUpdate("videoLoad", false, []);
+  let rawsrc = this.video.getAttribute('src')
+  if (rawsrc == "") { // Not yet initialized
+    console.log("onVideoError: rawsrc==''");
+    //statusWidget.statusUpdate("videoLoad", false, []);
+    this.isValidVideo = false;
 
-  this.isValidVideo = false;
+  } else {
+    console.log("onVideoError: could not load ", this.video.src);
+    fromServerDialog.setMessage("red", "onVideoError: could not load \n" + this.video.src);
+    statusWidget.statusUpdate("videoLoad", false, []);
+    this.isValidVideo = false;
+    
+    this.onVideoSizeChanged();
+    this.hardRefresh();
+  }
 
-  this.onVideoSizeChanged();
-
-  this.hardRefresh();
 };
 
 VideoControl.prototype.setPreviewVideoStatus = function (status) {
@@ -1043,7 +1247,7 @@ VideoControl.prototype.loadVideoInfo = function (infourl) {
   // Update of videoInfo handled in callback onVideoInfoChanged
 };
 VideoControl.prototype.onVideoInfoChanged = function () {
-  if (logging.videoEvents) console.log("onVideoInfoChanged", event);
+  if (logging.videoEvents) console.log("onVideoInfoChanged");
 
   videoinfo.nframes = Math.floor(videoinfo.duration * videoinfo.videofps);
   this.video2.frameRate = videoinfo.videofps;
@@ -1058,55 +1262,77 @@ VideoControl.prototype.maxframe = function () {
   return Math.floor(videoinfo.duration * videoinfo.videofps);
 };
 
-VideoControl.prototype.loadVideo2 = function (videoURL) {
+const timeout = (promise, time, name) =>
+	Promise.race([promise, new Promise((_r, rej) => setTimeout(()=>{rej(new DOMException("TIMEOUT "+name, "TimeoutError"))}, time))]);
+
+
+VideoControl.prototype.loadVideo2 = function (videoURL, callback) {
   if (logging.videoEvents) console.log("loadVideo2: url=", videoURL);
-  this.name = videoinfo.name;
-  this.video.src = videoURL;
+  this.flagLoadingVideo = true
+  
+  let P = new Promise((resolve, reject)=>{
+      this.video.addEventListener('loadeddata', ()=>{console.log("loadVideo2: RESOLVED loadeddata videoURL=",videoURL); resolve()}, {once: true});
+      this.video.addEventListener('error', (error)=>{console.log("loadVideo2: REJECTED loadeddata videoURL=",videoURL); reject(error)}, {once: true});
+      this.video.src = videoURL;
+  })
+
+  return timeout(P, 10000,"loadVideo2 promise url="+videoURL)
 }
 
 VideoControl.prototype.onVideoLoaded2 = async function () {
   console.log("onVideoLoaded2: VIDEO loaded ", this.video.src);
   fromServerDialog.closeDialog()
+
   this.setPreviewVideoStatus("undefined");
   statusWidget.statusRequest("videoLoad", []);
   statusWidget.statusUpdate("videoLoad", true, []);
+  
   videoControl.video2.frameRate = videoinfo.videofps
   this.isValidVideo = true;
   this.onVideoSizeChanged();
+  
   let name = videoinfo.name;
   $("#videoName").html(name);
-  $("a.videolink").attr("href", name);
-  this.loadPreviewVideo();
+  $("a.videolink").attr("href", videoinfo.videoPath);
+  $("a.videoinfolink").attr("href", url_for("/videodata?videoid="+videoManager.currentVideoID) );
+  // this.loadPreviewVideo();
+  
+  this.flagLoadingVideo = false
+  console.log("onVideoLoaded2: trying to refresh, time=", this.video.currentTime);
+
+  //this.hardRefresh();
+  //this.hardRefresh();
+  
+  // HACKY SOLUTION
+  // Video image was blank after loading a video
+  // Using these two function calls to force display 
+  // of first frame
+  //videoControl.forward(1);
+  //setTimeout(() => { videoControl.rewind(0); }, 1500);
+
+  if (this.delayedSeekFrame != undefined) {
+    console.log("onVideoLoaded2 delayedSeekFrame",this.delayedSeekFrame)
+    this.delayedSeekFrame = undefined
+    setTimeout(() => { videoControl.seekFrame(this.delayedSeekFrame); }, 500);
+  } else {
+    console.log("onVideoLoaded2 delayedSeekFrame undefined")
+    setTimeout(() => { videoControl.hardRefresh(); }, 500);
+  }
+
   $(this).trigger("video:loaded");
-  this.hardRefresh();
+
+  // Make initial video size larger when loading a video
+  //$("#canvasresize")[0].style.height = "650px";
+  //overlay.refreshCanvasSize();
 }
 
-// {
-//   if (logging.videoEvents) console.log("onVideoLoaded", event);
-
-//   statusWidget.statusUpdate("videoLoad", true, []);
-
-//   this.isValidVideo = true;
-
-//   this.onVideoSizeChanged();
-
-//   videoinfo.duration = this.video.duration;
-//   videoinfo.name = this.video.src;
-
-//   let name = videoinfo.name;
-//   $("#videoName").html(name);
-
-//   $("a.videolink").attr("href", name);
-
-//   let videourl = videoinfo.videoURL;
-
-//   this.loadVideoInfo(videourl + ".info.json");
-//   this.loadPreviewVideo();
-
-//   $(this).trigger("video:loaded");
-
-//   this.hardRefresh();
-
-//   statusWidget.statusRequest("tagsLoad", []);
-//   tagsFromServer(videoinfo.tags.videoTagURL, true); // quiet
-// }
+VideoControl.prototype.delayedSeek = function (frame) {
+  console.log("delayedSeek frame=",frame)
+  if (this.flagLoadingVideo) {
+    console.log("delayedSeek setting for onload event")
+    this.delayedSeekFrame = frame
+  } else {
+    console.log("delayedSeek seeking immediatly")
+    this.seekFrame(frame)
+  }
+}

@@ -87,7 +87,9 @@ function LoginDialog() {
 
     div.dialog({
       autoOpen: false,
+      title: "Login",
       modal: true,
+      width: 335,
       buttons: {
         Ok: function () {
           var email = div.find('input[id="email"]').val();
@@ -133,15 +135,18 @@ function try_logout() {
   }
 }
 
+user_data = {is_authenticated:false};
 function whoami() {
   $.getJSON(url_for("/rest/auth/whoami"), function (data) {
     console.log("whoami: data=", data);
+    user_data = data;
   })
     .done(function (data) {
       //$('#whoami').html(JSON.stringify(data))
       if (data.is_authenticated) {
         $("#whoami").html(
-          "Logged as " +
+          '<button onclick="whoami()" type="button" class="btn btn-black btn-xs" title="Refresh user info"><span class="glyphicon glyphicon-refresh small"></span></button>'+
+          " Logged as " +
             data.first_name +
             ' <button onclick="try_logout()" type="button" class="btn btn-black btn-xs" title="Log out current user">Log out</button>'
         );
@@ -156,7 +161,11 @@ function whoami() {
     })
     .fail(function (data) {
       console.log("whoami: ERROR", data);
-      $("#whoami").html("No connection to server storage");
+      $("#whoami").html(
+        '<button onclick="whoami()" type="button" class="btn btn-black btn-xs" title="Refresh user info"><span class="glyphicon glyphicon-refresh small"></span></button>'+
+        " No connection " +
+          '<button onclick="try_login()" type="button" class="btn btn-success btn-xs" title="Log in">Log in</button>'
+      );
       $(".require-server").toggleClass("disabled", true);
     });
 }
@@ -243,12 +252,16 @@ function convertTracksToV1() {
 }
 function convertTracksToV2() {
   let obj = { info: TracksInfo, data: {} };
+  // TracksInfo should come with a few built-in fields:
+  // notes
 
   obj.info.formatnote =
     "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !";
 
   if (!obj.info.history) obj.info.history = [];
   obj.info.history.push("Saved using labelbee on " + Date());
+  //let {preview: _, ...videoinfo_without_preview} = videoinfo;
+  obj.info.videoinfo = videoinfo
 
   let nitems = 0;
 
@@ -298,7 +311,7 @@ function getTimestampNow() {
     if (i < 10) {
       i = "0" + i;
     }
-    return i;
+    return String(i);
   }
 
   let D = new Date();
@@ -313,7 +326,7 @@ function getTimestampNow() {
   return timestamp;
 }
 function getTimestampedVideoname() {
-  return videoinfo.videoName + "-" + getTimestampNow();
+  return videoinfo.name + "-" + getTimestampNow();
 }
 
 function saveEventsToFile(format) {
@@ -566,16 +579,19 @@ function sanitizeEvents(obj) {
         source: "Converted from Tracks v1",
       };
   
-      console.log("sanitizeEvents: Tracks JSON v1");
+      if (logging.io)
+        console.log("sanitizeEvents: Tracks JSON v1");
       if (typeof obj == "array") {
-        console.log("sanitizeEvents: got an array, converting to object");
+        if (logging.io)
+          console.log("sanitizeEvents: got an array, converting to object");
         data = obj.reduce(function (acc, cur, i) {
           acc[i] = cur;
           return acc;
         }, {});
         info.source = "Converted from Tracks v1 array";
       } else if (typeof obj == "object") {
-        console.log("sanitizeEvents: got an object, use directly");
+        if (logging.io)
+          console.log("sanitizeEvents: got an object, use directly");
         data = obj;
         info.source = "Converted from Tracks v1 object";
       } else {
@@ -603,14 +619,14 @@ function sanitizeEvents(obj) {
 
   return { info: info, data: data };
 }
-function setTracks(obj) {
+function setTracks(obj, skipRefresh) {
   console.log("setTracks: changing events data structure and refreshing...");
 
   var evts = sanitizeEvents(obj);
 
   if (!evts) {
     console.log("setTracks: ABORTED, wrong format.");
-    return 0;
+    return false;
   }
 
   Tracks = evts.data;
@@ -618,9 +634,11 @@ function setTracks(obj) {
 
   updateEventsNotes();
 
-  videoControl.onFrameChanged();
-  refreshChronogram();
-  return 1;
+  if (!skipRefresh) {
+    videoControl.onFrameChanged();
+    refreshChronogram();
+  }
+  return true;
 }
 function setEventsProp(option, value) {
   if (!TracksInfo) {
@@ -971,10 +989,10 @@ function LabelListFromServerDialog() {
       "labelListFromServerDialog: importing labelList from URL '" + url + "'..."
     );
 
-    div.find(".modal-message").html("Loading events from " + url + "...");
+    div.find(".modal-message").html("Loading labels from " + url + "...");
 
     labelListFromServer(url).then(function () {
-      div.find(".modal-message").html("Events loaded. Closing.");
+      div.find(".modal-message").html("Labels loaded. Closing.");
       theDialog.closeDialog();
     });
   };
@@ -1071,7 +1089,7 @@ function FromServerDialog() {
   this.resetAllHTML = function(){
     this.setTitle("");
     this.setCheckboxes("");
-    this.setMessage("");
+    this.setMessage("black","");
     this.setBody("");
   }
 
@@ -1087,7 +1105,7 @@ function FromServerDialog() {
     // videoManager.currentVideoID = 9371; // ONLY FOR DEV PURPOSES! COMMENT WHEN DEPLOYING TO LIVE SERVICE
     this.data_type = data_type;
     this.resetAllHTML();
-    this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath + '/' + videoinfo.name);
+    this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath);
     let checkboxHTML = 
     '<label>'+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)">'+ 
@@ -1172,7 +1190,7 @@ function FromServerDialog() {
 
   this.showAdvancedLoadingDialog = function(allusers) {
     this.resetAllHTML();
-    this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath + '/' + videoinfo.name);
+    this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath);
     let checkboxHTML = 
     '<label> '+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog(\''+ this.data_type +'\');"> '+ 
@@ -1236,7 +1254,8 @@ function FromServerDialog() {
           data: json["data"],
           columns:[
             {data:"id", render: function(id){
-              buttonHTML = '<button onclick="fromServerDialog.loadEvents(\''+idx+'\')">Load</button>';
+              var tag_event_ID = theDialog.json[idx]?.["id"];
+              buttonHTML = '<button onclick="fromServerDialog.loadEvents(\''+idx+'\')" class="small">Load #'+tag_event_ID+'</button>';
               idx += 1;
               return buttonHTML;
             }},
@@ -1326,12 +1345,10 @@ function FromServerDialog() {
           videoControl.onFrameChanged();
 
           refreshChronogram();
-
-          // Close dialogue window
           if(success){
+            console.log("Loaded event. ID:", tag_event_ID)
             theDialog.basedOn = tag_event_ID;
-            div.find(".modal-message h4").css("color","black");
-            div.find(".modal-message h4").html("Events loaded.");
+            fromServerDialog.setMessage("black","Events loaded.");
           }
           else{
             div.find(".modal-message h4").css("color","red");
@@ -1357,7 +1374,9 @@ function FromServerDialog() {
   this.initDialog();
 }
 
+// WARNING: DEPRECATED. Use loadEventsFromServerByID() instead
 function tracksListFromServer() {
+
   var route = "/rest/events/"; // Hardcoded
 
   console.log(
@@ -1373,7 +1392,7 @@ function tracksListFromServer() {
     type: "GET",
     contentType: "application/json",
     //data:{format:'json'}, // Without 'video', list all videos
-    data: { format: "json", video: videoinfo.videoName },
+    data: { format: "json", video: videoinfo.videoName }, /* videoName deprecated */
     success: function (json) {
       // Get the file list in JSON format
 
@@ -1433,7 +1452,7 @@ function tracksListFromServer() {
             item["filename"] +
             "</button></td>" +
             "<td>" +
-            boldize(item["video"], item["video"] == videoinfo.videoName) +
+            boldize(item["video"], item["video"] == videoinfo.videoName) + /* videoName deprecated */
             "</td>" +
             "<td>" +
             item["user_name"] +
@@ -1458,6 +1477,43 @@ function tracksListFromServer() {
       $("#loadTracksFromServerDialog").modal("hide");
     }),
   });
+}
+
+async function loadEventsFromServerByID(video_data_id) {
+    //Sending GET request to flask API to retrieve json containing annotation data
+    $.ajax({
+      url: url_for("rest/v2/get_video_data/" + video_data_id), // url to tag/event file
+      type: "GET", //passing data as get method
+      contentType: "application/json", // returning data as json
+      data: "",
+      success: function (json) {
+        //alert("success");  //response from the server given as alert message
+
+        console.log("loadEvents: Loaded events data:", json["data"]["data"]);
+        // Case: event file
+        let obj = JSON.parse(json["data"]["data"]);
+        success = setTracks(obj);
+
+        videoControl.onFrameChanged();
+
+        refreshChronogram();
+        if(success){
+          console.log("Loaded event. ID:", tag_event_ID)
+          theDialog.basedOn = tag_event_ID;
+          fromServerDialog.setMessage("black","Events loaded.");
+        }
+        else{
+          div.find(".modal-message h4").css("color","red");
+          div.find('.modal-message h4').html("ERROR <br> setTracks: Invalid event information obtained from server.");
+          throw new Error("loadEventsFromServerByID: invalid event data for video_data id="+video_data_id)
+        }
+      },
+      error:  function () {
+        div.find(".modal-message h4").css("color","red");
+        div.find(".modal-message h4").html("ERROR in loading tag or event with ID " + tag_event_ID);
+        throw new Error("loadEventsFromServerByID: could not load video_data id="+video_data_id)
+        },
+    });
 }
 
 function eventsFromServer(url) {

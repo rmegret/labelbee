@@ -9,9 +9,9 @@ from csv import DictReader
 from datetime import datetime
 
 from werkzeug.datastructures import FileStorage
-from labelbee.models import Video, VideoData, DataSet, User
+from labelbee.models import Video, VideoData, DataSet, User, UsersRoles, Role
 from labelbee.init_app import db, app
-from typing import List
+from typing import List, Optional
 
 
 def import_from_csv(csvfile: FileStorage, dataset: str) -> None:
@@ -257,7 +257,7 @@ def populate_datasets() -> None:
 
 
 def video_data_list(
-    videoid: int, datatype: str = "", userid: int = None
+    videoid: Optional[int], datatype: str = "", userid: int = None
 ) -> List[VideoData]:
     """Get a list of all video data for a video.
 
@@ -266,78 +266,158 @@ def video_data_list(
     :return: A list of all video data.
     :rtype: List[VideoData]
     """
-    if datatype == "":
-        if not userid:
-            return (
-                VideoData.query.with_entities(
-                    VideoData.id,
-                    VideoData.file_name,
-                    VideoData.path,
-                    VideoData.timestamp,
-                    VideoData.data_type,
-                    VideoData.video_id,
-                    VideoData.created_by_id,
-                    VideoData.created_from_id,
+    if (videoid is None):
+        if datatype == "":
+            if not userid:
+                return (
+                    VideoData.query.with_entities(
+                        VideoData.id,
+                        VideoData.file_name,
+                        VideoData.path,
+                        VideoData.timestamp,
+                        VideoData.data_type,
+                        VideoData.video_id,
+                        VideoData.created_by_id,
+                        VideoData.created_from_id,
+                        VideoData.notes,
+                    )
+                    .order_by(VideoData.timestamp.desc())
+                    .all()
                 )
-                .filter(VideoData.video_id == videoid)
-                .order_by(VideoData.timestamp.desc())
-                .all()
-            )
+            else:
+                return (
+                    VideoData.query.with_entities(
+                        VideoData.id,
+                        VideoData.file_name,
+                        VideoData.path,
+                        VideoData.timestamp,
+                        VideoData.data_type,
+                        VideoData.video_id,
+                        VideoData.created_by_id,
+                        VideoData.created_from_id,
+                        VideoData.notes,
+                    )
+                    .filter(
+                        VideoData.created_by_id == userid
+                    )
+                    .order_by(VideoData.timestamp.desc())
+                    .all()
+                )
         else:
-            return (
-                VideoData.query.with_entities(
-                    VideoData.id,
-                    VideoData.file_name,
-                    VideoData.path,
-                    VideoData.timestamp,
-                    VideoData.data_type,
-                    VideoData.video_id,
-                    VideoData.created_by_id,
-                    VideoData.created_from_id,
+            if not userid:
+                return (
+                    VideoData.query.with_entities(
+                        VideoData.id,
+                        VideoData.file_name,
+                        VideoData.path,
+                        VideoData.timestamp,
+                        VideoData.data_type,
+                        VideoData.video_id,
+                        VideoData.created_by_id,
+                        VideoData.created_from_id,
+                        VideoData.notes,
+                    )
+                    .filter(VideoData.data_type == datatype)
+                    .order_by(VideoData.timestamp.desc())
+                    .all()
                 )
-                .filter(
-                    VideoData.video_id == videoid, VideoData.created_by_id == userid
+            else:
+                return (
+                    VideoData.query.with_entities(
+                        VideoData.id,
+                        VideoData.file_name,
+                        VideoData.path,
+                        VideoData.timestamp,
+                        VideoData.data_type,
+                        VideoData.video_id,
+                        VideoData.created_by_id,
+                        VideoData.created_from_id,
+                        VideoData.notes,
+                    )
+                    .filter(
+                        VideoData.data_type == datatype,
+                        VideoData.created_by_id == userid,
+                    )
+                    .order_by(VideoData.timestamp.desc())
+                    .all()
                 )
-                .order_by(VideoData.timestamp.desc())
-                .all()
-            )
     else:
-        if not userid:
-            return (
-                VideoData.query.with_entities(
-                    VideoData.id,
-                    VideoData.file_name,
-                    VideoData.path,
-                    VideoData.timestamp,
-                    VideoData.data_type,
-                    VideoData.video_id,
-                    VideoData.created_by_id,
-                    VideoData.created_from_id,
+        if datatype == "":
+            if not userid:
+                return (
+                    VideoData.query.with_entities(
+                        VideoData.id,
+                        VideoData.file_name,
+                        VideoData.path,
+                        VideoData.timestamp,
+                        VideoData.data_type,
+                        VideoData.video_id,
+                        VideoData.created_by_id,
+                        VideoData.created_from_id,
+                        VideoData.notes,
+                    )
+                    .filter(VideoData.video_id == videoid)
+                    .order_by(VideoData.timestamp.desc())
+                    .all()
                 )
-                .filter(VideoData.video_id == videoid, VideoData.data_type == datatype)
-                .order_by(VideoData.timestamp.desc())
-                .all()
-            )
+            else:
+                return (
+                    VideoData.query.with_entities(
+                        VideoData.id,
+                        VideoData.file_name,
+                        VideoData.path,
+                        VideoData.timestamp,
+                        VideoData.data_type,
+                        VideoData.video_id,
+                        VideoData.created_by_id,
+                        VideoData.created_from_id,
+                        VideoData.notes,
+                    )
+                    .filter(
+                        VideoData.video_id == videoid, VideoData.created_by_id == userid
+                    )
+                    .order_by(VideoData.timestamp.desc())
+                    .all()
+                )
         else:
-            return (
-                VideoData.query.with_entities(
-                    VideoData.id,
-                    VideoData.file_name,
-                    VideoData.path,
-                    VideoData.timestamp,
-                    VideoData.data_type,
-                    VideoData.video_id,
-                    VideoData.created_by_id,
-                    VideoData.created_from_id,
+            if not userid:
+                return (
+                    VideoData.query.with_entities(
+                        VideoData.id,
+                        VideoData.file_name,
+                        VideoData.path,
+                        VideoData.timestamp,
+                        VideoData.data_type,
+                        VideoData.video_id,
+                        VideoData.created_by_id,
+                        VideoData.created_from_id,
+                        VideoData.notes,
+                    )
+                    .filter(VideoData.video_id == videoid, VideoData.data_type == datatype)
+                    .order_by(VideoData.timestamp.desc())
+                    .all()
                 )
-                .filter(
-                    VideoData.video_id == videoid,
-                    VideoData.data_type == datatype,
-                    VideoData.created_by_id == userid,
+            else:
+                return (
+                    VideoData.query.with_entities(
+                        VideoData.id,
+                        VideoData.file_name,
+                        VideoData.path,
+                        VideoData.timestamp,
+                        VideoData.data_type,
+                        VideoData.video_id,
+                        VideoData.created_by_id,
+                        VideoData.created_from_id,
+                        VideoData.notes,
+                    )
+                    .filter(
+                        VideoData.video_id == videoid,
+                        VideoData.data_type == datatype,
+                        VideoData.created_by_id == userid,
+                    )
+                    .order_by(VideoData.timestamp.desc())
+                    .all()
                 )
-                .order_by(VideoData.timestamp.desc())
-                .all()
-            )
 
 
 def video_list(dataset: int = None) -> List[Video]:
@@ -408,19 +488,6 @@ def search_video(query: str) -> List[Video]:
     """
 
     return Video.query.filter(Video.file_name.like(f"%{query}%")).all()
-
-
-def get_user_by_id(userid: int) -> User:
-    """Get a user by id.
-
-    :param userid: The id of the user to get.
-    :type userid: int
-    :return: The user specified by the id.
-    :rtype: User
-    """
-
-    return User.query.filter(User.id == userid).first()
-
 
 def get_dataset_by_id(datasetid: int) -> DataSet:
     """Get a dataset by id.
@@ -649,6 +716,18 @@ def add_video_data(
     db.session.commit()
     return video_data
 
+def fix_datasets() -> None:
+    """Fix datasets."""
+
+    print("Fixing datasets")
+    with app.app_context():
+        for video in Video.query.all():
+            if video.dataset == "gurabo1":
+                video.dataset = 1
+            elif video.dataset == "gurabo10":
+                video.dataset = 2
+
+        db.session.commit()
 
 def user_list() -> List[User]:
     """Get a list of users.
@@ -672,16 +751,23 @@ def delete_user(userid: int) -> None:
         db.session.delete(user)
         db.session.commit()
 
+def get_user_by_id(userid: int) -> User:
+    """Get a user by id.
 
-def fix_datasets() -> None:
-    """Fix datasets."""
+    :param userid: The id of the user to get.
+    :type userid: int
+    :return: The user specified by the id.
+    :rtype: User
+    """
 
-    print("Fixing datasets")
-    with app.app_context():
-        for video in Video.query.all():
-            if video.dataset == "gurabo1":
-                video.dataset = 1
-            elif video.dataset == "gurabo10":
-                video.dataset = 2
+    return User.query.filter(User.id == userid).first()
 
-        db.session.commit()
+def get_user_roles_by_id(userid: int) -> [Role]:
+    """Get roles for a user, given id
+
+    :param userid: The id of the user to get the roles for.
+    :type userid: int
+    :return: The roles for the user specified by the id.
+    :rtype: Role list
+    """
+    return db.session.query(Role).join(UsersRoles).filter(UsersRoles.user_id==userid)

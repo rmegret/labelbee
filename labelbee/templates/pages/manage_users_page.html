@@ -1,10 +1,10 @@
 {% extends "common/page_base.html" %}  {# common/page_base.html extends layout.html #}
 
 {% block content %}
+{% from "flask_user/_macros.html" import render_field, render_submit_field %}
 
 <script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
 <link href="//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css" rel="stylesheet">
-<link href="video.css" rel="stylesheet">
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -27,10 +27,15 @@
 <table class="table" id="users_table">
   <thead>
       <tr>
-          <th>Video Name</th>
-          <th>Colony</th>
-          <th>Date and Time</th>
-          <th>Video ID</th>
+          <th></th>
+          <th>User ID</th>
+          <th>Email</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Student Number</th>
+          <th>Class</th>
+          <th>Roles</th>
+          <th>Active</th>
       </tr>
   </thead>
   <tbody id="videosBody">
@@ -45,13 +50,131 @@
   </tbody>
   <tfoot>
       <tr>
-          <th>Video Name</th>
-          <th>Colony</th>
-          <th>Date and Time</th>
-          <th>Video ID</th>
+          <th></th>
+          <th>User ID</th>
+          <th>Email</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Student Number</th>
+          <th>Class</th>
+          <th>Roles</th>
+          <th>Active</th>
       </tr>
   </tfoot>
-  <!--  -->
 </table>
+
+
+
+
+
+<div id="editUserMenu" class="modal" role="dialog">
+  <div class="modal-dialog" role="document" style="width:500px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h3 class="modal-title">Edit User Information</h3>
+      </div>
+      <div class="modal-body">
+        <form action="" method="POST" novalidate formnovalidate class="form" role="form">
+          {{ form.hidden_tag() }}
+    
+          {{ render_field(form.email) }}
+    
+          {{ render_field(form.first_name) }}
+    
+          {{ render_field(form.last_name) }}
+    
+          {{ render_field(form.password) }}
+    
+          {{ render_field(form.studentnum) }}
+    
+          {{ render_field(form.clase) }}
+    
+          {{ render_field(form.active) }}
+          
+          {{ render_field(form.roles) }}
+          Select multiple roles using control+click or control+arrows+spacebar.
+          <br><br>
+    
+          {{ render_submit_field(form.submit) }}
+      </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function populateFormFields(id){
+    $('#id').val(id);
+    for (idx in users){
+      if (users[idx]['id'] == id){
+        user_data = users[idx];
+        break;
+      }
+    }
+    $('#email').val(user_data['email'])
+    $('#first_name').val(user_data['first_name'])
+    $('#last_name').val(user_data['last_name'])
+    $('#studentnum').val(user_data['studentnum'])
+    $('#clase').val(user_data['clase'])
+    $('#active').prop('checked', user_data['active'])
+    return
+  }
+  $(document).ready(function () {
+    users = {{users | tojson | safe}};
+    editing = {{editing | tojson | safe}};
+    success = {{success | tojson | safe}};
+    $('#users_table').DataTable({
+      data: users,
+      order: [[0, "asc"]],
+      columns: [
+        {
+          data:'id',
+          render: function(id){
+            return "<button class='btn btn-primary btn-xs' data-toggle='modal' data-target='#editUserMenu' onclick='populateFormFields("+id+")'>Edit</button>"
+          } 
+        },
+        {data:'id'},
+        {data:'email'},
+        {data:'first_name'},
+        {data:'last_name'},
+        {data:'studentnum'},
+        {data:'clase'},
+        {
+          data:'roles',
+          render: function(roles){
+            roles_string = "None"
+            if (roles.length > 0){
+              roles_string = roles[0]['label'];
+              for (let i = 1; i < roles.length; i++){
+                roles_string += ', ' + roles[i]['label'];
+              }
+            }
+            return roles_string
+          }
+        },
+        {
+          data:'active',
+          render: function(active){
+            return active ? "Yes" : "No";
+          }
+        }
+      ]
+    });
+    if(editing){
+      if (success){
+        alert("Successfully edited user.")
+      }
+      else{
+        alert("Could not edit user. Invalid input? Check server logs?")
+      }
+    }
+  });
+</script>
 
 {% endblock %}

@@ -4,7 +4,7 @@
 
 <script src="//cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
 <link href="//cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css" rel="stylesheet">
-<link href="video.css" rel="stylesheet">
+<!-- <link href="video.css" rel="stylesheet"> -->
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -19,6 +19,9 @@
         }
     })
 </script>
+
+{% from 'common/macros.html' import database_menu %}
+{{ database_menu('videos') }}
 
 {% if dataset != None %}
 <table class="table" id="video_info">
@@ -41,7 +44,7 @@
 </table>
 
 <a href="{{ url_for('edit_dataset_page')}}?dataset={{ dataset.id }}">
-    <button type="button" onclick="" class="btn btn-primary">Edit Dataset</button>
+    <button type="button" onclick="" class="btn btn-primary btn-sm">Edit Dataset</button>
 </a>
 {% endif %}
 
@@ -51,6 +54,7 @@
 <table class="table" id="videos_table">
     <thead>
         <tr>
+            <th>Thumb</th>
             <th>Video Name</th>
             <th>Colony</th>
             <th>Date and Time</th>
@@ -63,42 +67,71 @@
             <td></td>
             <td></td>
             <td></td>
+            <td></td>
         </tr>
         
     </tbody>
     <tfoot>
         <tr>
-            <th>Video Name</th>
-            <th>Colony</th>
-            <th>Date and Time</th>
-            <th>Video ID</th>
+            <th s="0">Thumb</th>
+            <th s="20">Video Name</th>
+            <th s="5">Colony</th>
+            <th s="12">Date and Time</th>
+            <th s="6">Video ID</th>
         </tr>
     </tfoot>
     <!--  -->
 </table>
 
+<input type="checkbox" id="show_thumb" onclick="refresh_table()">Show Thumbnail</input>
+
 
 <script>
+    var show_thumb = false;
     $(document).ready(function () {
         
         $('#videos_table tfoot th').each( function () {
             var title = $(this).text();
-            $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+            let size = $(this).attr('s');
+            if (size=="0")
+                $(this).html( '' );
+            else 
+                $(this).html( '<input type="text" placeholder="Search '+title+'" size="'+size+'"/>' );
         } );
         var table = $('#videos_table').DataTable({
             // load the data
             "ajax": "{{ url_for('videolist_get_v2') + '?dataset=' + dataset.id|string }}",
             // put the data into the table
+            "deferRender": true,
+            "bAutoWidth": false,
             "columns": [
-                { "data": "file_name", "name": "file_name",
-                    // convert file_name to link
-                    fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
-                        $(nTd).html("<a href='{{ url_for('video_data_page') }}?dataset={{ dataset.id }}" + "&videoid=" + rowData.id + "'>" + rowData.path + "/" + rowData.file_name+"</a>");
+                { "data": "thumb", "name": "thumb", "visible":false, "width":200,
+                render: function (nTd, cellData, rowData, iRow, iCol) {
+                        //console.log(iRow)
+                            html='<img class="thumb" src="{{url_for('static',filename='data')}}'+rowData.thumb+'" height="40px"/>'
+                        return html
                     }
+                },
+                { "data": "file_name", "name": "file_name",
+                    render: function (nTd, cellData, rowData, iRow, iCol) {
+                        let html="<a href='{{ url_for('video_data_page') }}?dataset={{ dataset.id }}" + "&videoid=" + rowData.id + "'>" + rowData.path + "/" + rowData.file_name+"</a>"
+                        return html
+                    }
+                    // convert file_name to link
+                    // fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
+                    //     if ($("#show_thumb").prop('checked')) {
+                    //         html='<img src="{{url_for('static',filename='data')}}'+rowData.thumb+'" height="20px"/>'
+                    //     } else
+                    //         html=""
+                    //     html+="<a href='{{ url_for('video_data_page') }}?dataset={{ dataset.id }}" + "&videoid=" + rowData.id + "'>" + rowData.path + "/" + rowData.file_name+"</a>"
+                    //     $(nTd).html(html);
+                    // }
                 },
                 { "data": "colony", "name": "colony" },
                 { "data": "timestamp", "name": "timestamp" },
-                { "data": "id", "name": "id" }
+                { "data": "id", "name": "id", render: function (nTd, cellData, rowData, iRow, iCol) {
+                        return rowData.id.toString().padStart(6,'0')
+                    }}
             ],
             "order": [[2, "desc"]],
 
@@ -119,6 +152,12 @@
             }
         });
     });
+    function refresh_table() {
+        show_thumb = $("#show_thumb").prop('checked')
+        let api = $('#videos_table').dataTable().api()
+        api.column(0).visible(show_thumb)
+        api.rows().invalidate()
+    }
 </script>
 
 

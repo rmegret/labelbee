@@ -79,22 +79,29 @@ function OverlayControl(canvasTagId) {
       showRect: true,
       showID: true,
       showLabels: true,
-      labelFormatter: function(obs) {return activityString(obs)},
+      /* labelFormatter: function(obs) {return activityString(obs)}, */
+      labelFormatter: (obs)=>obs.labels,
+      label_offsetType: 'bottom',
+      wrapLabels: true,
+      wrapLabelsWidth: 80,
       showNotes: true,
       showSpan: false,
       resizeAroundCenter: false,
       ID_dotRadius: 4, // Radius of dot center
       ID_fontSize: 20,
       ID_color: 'yellow',
+      ID_offsetType: 'center',
       clickModeSelectMultiframe: false,
       clickModeNewAnnotation: false,
       clickModeAutoCentering: false,
       predictIdClickRadius: 120,
       showImageDiff: false,
+      useImageCache: false,
       showPredictedStatus : false,
       timelineZoom : 4.0,
       timelineMaxDelta : 3,
       timelineDisplaySize : 300,
+      fixedAspect : true
   }
   overlay.updateOptsButtons()
 
@@ -458,21 +465,24 @@ VisitWidget.prototype.create = function() {
     $('#visitblockdiv').html("EDIT VISIT: ")
             .append($('<button>DISMISS</button>').click(()=>this.close()))
         .append("<br>visit event, frame <span id='frame'></span>, id <span id='visit_id'></span>&nbsp;")
+        .append('<br>')
             .append($('<button class="btn btn-default btn-xs goto-visit">Goto</button>').click(()=>this.gotoObs('visit')))
             .append($('<button class="btn btn-default btn-xs new-visit">Create</button>').click(()=>this.newVisit()))
             .append($('<button class="btn btn-default btn-xs delete-visit">Delete</button>').click(()=>this.deleteVisit()))
         .append('<br>')
-        .append('Pollinator: <span id="pollinator_id"></span>&nbsp;&nbsp;')
+        .append('&nbsp;&nbsp;&nbsp;Pollinator: <span id="pollinator_id"></span>')
             .append($('<button class="btn btn-default btn-blue-toggle btn-xs select-pollinator">Goto</button>').click(()=>this.gotoObs('pollinator')))
             .append($('<button class="btn btn-default btn-blue-toggle btn-xs pick-pollinator">Pick</button>').click(()=>this.pickMode('pollinator')))
-        .append('&nbsp;-&nbsp;Flower: <span id="flower_id"></span>&nbsp;')
+        .append('<br>')
+            .append('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Flower: <span id="flower_id"></span>')
             .append($('<button class="btn btn-default btn-blue-toggle btn-xs select-flower">Goto</button>').click(()=>this.gotoObs('flower')))
             .append($('<button class="btn btn-default btn-blue-toggle btn-xs pick-flower">Pick</button>').click(()=>this.pickMode('flower')))
         .append('<br>')
-        .append('Span: Start frame: <span id="start-frame"></span>&nbsp;')
+        .append('Start frame: <span id="start-frame"></span>')
             .append($('<button class="btn btn-default btn-xs goto-start-frame">Goto</button>').click(()=>this.gotoSpanFrame('start')))
             .append($('<button class="btn btn-default btn-xs set-start-frame">Set</button>').click(()=>this.setSpanFrame('start')))
-        .append('&nbsp;-&nbsp;End frame: <span id="end-frame"></span>&nbsp;')
+        .append('<br>')
+        .append('&nbsp;End frame: <span id="end-frame"></span>')
             .append($('<button class="btn btn-default btn-xs goto-end-frame">Goto</button>').click(()=>this.gotoSpanFrame('end')))
             .append($('<button class="btn btn-default btn-xs set-end-frame">Set</button>').click(()=>this.setSpanFrame('end')))
 }
@@ -721,14 +731,50 @@ OverlayControl.prototype.optsClick = function(option) {
     
     this.opts[option] = !this.opts[option]
     this.updateOptsButtons()
-    
-    //this.refreshOverlay()
+
+    if (option=="useImageCache") {
+      if (this.opts[option]) { // Enable cache
+        if (videoControl.currentMode != "cache") {
+          console.log('optsClick: changing videoControl.currentMode to cache')
+          videoControl.currentMode = "cache"
+          videoControl.hardRefresh()
+          return
+        } else {
+          this.hardRefresh()
+          return
+        }
+      } else { // Disable cache
+        if (videoControl.currentMode == "cache") {
+          console.log('optsClick: changing videoControl.currentMode to video')
+          videoControl.currentMode = "video"
+          videoControl.hardRefresh()
+          return
+        } else {
+          this.hardRefresh()
+          return
+        }
+      }
+    }
+    if (option=="fixedAspect") {
+      if (this.opts[option]) { // Enable fixed aspect ratio
+        this.canvasSetVideoSize(this.videoSize.w,this.videoSize.h)
+        $("#canvasresize")
+          .resizable("option", "aspectRatio", this.videoSize.w/this.videoSize.h)
+          .data('ui-resizable')._aspectRatio = this.videoSize.w/this.videoSize.h;
+      } else {
+        $("#canvasresize")
+          .resizable("option", "aspectRatio", false)
+          .data('ui-resizable')._aspectRatio = false;
+      }
+    }
     this.hardRefresh()
 }
 OverlayControl.prototype.updateOptsButtons = function() {
-    console.log('overlay.updateDisableAngleButton')
-    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter','clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering','showImageDiff','showPredictedStatus']) {
-        console.log(option)
+    //console.log('overlay.updateDisableAngleButton')
+    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter',
+                    'clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering',
+                    'showImageDiff','useImageCache','showPredictedStatus', 'fixedAspect']) {
+        //console.log(option)
         if ( this.opts[option] ) {
             $(".overlayOpts-"+option).addClass("active")
         } else {
@@ -738,12 +784,16 @@ OverlayControl.prototype.updateOptsButtons = function() {
     $('#overlayOpts-ID_dotRadius').val(String(this.opts.ID_dotRadius))
     $('#overlayOpts-ID_fontSize').val(String(this.opts.ID_fontSize))
     $('#overlayOpts-ID_color').val(String(this.opts.ID_color))
+    $('#overlayOpts-ID_offsetType').val(String(this.opts.ID_offsetType))
+    $('#overlayOpts-label_offsetType').val(String(this.opts.label_offsetType))
 }
 function onOverlayParamsChanged(event) {
     console.log('onOverlayParamsChanged')
     overlay.opts.ID_dotRadius = Number($('#overlayOpts-ID_dotRadius').val())
     overlay.opts.ID_fontSize = Number($('#overlayOpts-ID_fontSize').val())
     overlay.opts.ID_color = $('#overlayOpts-ID_color').val()
+    overlay.opts.ID_offsetType = $('#overlayOpts-ID_offsetType').val()
+    overlay.opts.label_offsetType = $('#overlayOpts-label_offsetType').val()
     overlay.refreshOverlay()
 }
 
@@ -920,12 +970,15 @@ OverlayControl.prototype.refreshCanvasSize = function (event, ui) {
 
   var borderThickness = 4;
 
-  // Assume width is in px to parse #canvasresize size
-  let hd = Math.round(
-    parseInt($("#canvasresize")[0].style.height) - borderThickness
-  );
-  let wd = Math.round((hd / overlay.videoSize.h) * overlay.videoSize.w);
-
+  let hd = 100, wd = 100;
+  if (overlay.opts.fixedAspect) {
+    // Assume width is in px to parse #canvasresize size
+    hd = Math.round( parseInt($("#canvasresize")[0].style.height) - borderThickness );
+    wd = Math.round( (hd / overlay.videoSize.h) * overlay.videoSize.w );
+  } else {
+    hd = Math.round( parseInt($("#canvasresize")[0].style.height) - borderThickness );
+    wd = Math.round( parseInt($("#canvasresize")[0].style.width) - borderThickness );
+  }
   resizeCanvas(wd, hd);
 
   $("#videoSize")[0].innerHTML =
@@ -996,8 +1049,8 @@ OverlayControl.prototype.canvasTransform_Fix = function () {
   let w2 = overlay.videoSize.w;
   let h2 = overlay.videoSize.h;
 
-  if (canvasTransform[0] * w1 > w2 && canvasTransform[3] * h1 > h2) {
-    let scaling = Math.max(w2 / w1, h2 / h1);
+  if (canvasTransform[0] * w1 > w2 || canvasTransform[3] * h1 > h2) {
+    let scaling = Math.min(w2 / w1, h2 / h1);
     canvasTransform[0] = scaling;
     canvasTransform[3] = scaling;
   }
@@ -1608,7 +1661,7 @@ OverlayControl.prototype.exportFrame = async function() {
     console.log('overlay.exportFrame: ', videoUrl, frame)
     let img = await videoCache.getFrameImageAsync(videoUrl, frame, videoinfo.videofps)
     var newTab = window.open();
-    newTab.document.body.innerHTML = 'Extracted Frame '+frame+' from <a href="+videoUrl+">'+videoUrl+'</a><br><div><img src="'+img.src+'" style="max-width:100%; max-height:95%;"></div>';
+    newTab.document.body.innerHTML = 'Extracted Frame '+frame+' from <a target="_blank" href="'+videoUrl+'">'+videoUrl+'</a><br><div><img src="'+img.src+'" style="max-width:100%; max-height:95%;"></div>';
     newTab.document.title = 'Frame '+frame+', video '+videoUrl
 }
 OverlayControl.prototype.diffImage = function(canvas2, canvas1, gain) {
@@ -1669,7 +1722,7 @@ OverlayControl.prototype.redrawVideoFrameDiff = function() {
             //overlay.hardRefresh()
         })
         //videoControl.pause() // pause after to avoid infinite loop?
-        printMessage("Paused, need to preload video frames")
+        //printMessage("Paused, need to preload video frames")
     }
 
     let img1 = videoControl.videoCache.getFrameImageSync(videoUrl, frame)
@@ -1687,6 +1740,44 @@ OverlayControl.prototype.redrawVideoFrameDiff = function() {
     
     overlay.diffImage(overlay.canvas2,overlay.canvas, 3.0)
 }
+
+OverlayControl.prototype.redrawVideoFromCache = function() {
+  var overlay = this;
+  
+  let w = overlay.canvas.width
+  let h = overlay.canvas.height
+  
+  let video = videoControl.video
+
+  function interval(start, end) {
+      return Array.from({length: end-start+1}, (x, i) => start+i);
+  }
+
+  let videoUrl = video.src
+  let frame=videoControl.currentFrame
+
+  // Load async if frames not found
+  let state1 = videoCache.getFrameState(videoUrl, frame)
+  if (!state1) {
+      // CAUTION: risk of infinite async loop if test always fail!
+      //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), videoinfo.videofps)
+      videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), videoinfo.videofps)
+      .then(function() {
+          printMessage("Preload done")
+          //overlay.hardRefresh()
+      })
+      //videoControl.pause() // pause after to avoid infinite loop?
+      //printMessage("Paused, need to preload video frames")
+  }
+
+  let img1 = videoControl.videoCache.getFrameImageSync(videoUrl, frame)
+  if (img1)
+      overlay.ctx.drawImage(img1, 
+          canvasTransform[4], canvasTransform[5],
+          canvasTransform[0]*w, canvasTransform[3]*h,
+          0, 0, w, h);
+}
+
 
 OverlayControl.prototype.drawImageToCanvas = function(img) {
     let overlay = this
@@ -1740,18 +1831,19 @@ OverlayControl.prototype.redrawVideoFrame = function() {
     return;
   }
 
+  if (overlay.opts.showImageDiff) {
+    overlay.redrawVideoFrameDiff() // Caution: sync, with potential async preload that may arrive too late
+    return
+  } 
+
   if (videoControl.currentMode == "video") {
     let video = videoControl.video; // same as $('#video')[0]
     if (videoControl.flagCopyVideoToCanvas) {
-      if (overlay.opts.showImageDiff) {
-        overlay.redrawVideoFrameDiff() // Caution: async
-      } else {
-        // Copy video to canvas for fully synchronous display
-        overlay.ctx.drawImage(video,
-          canvasTransform[4], canvasTransform[5],
-          canvasTransform[0] * w, canvasTransform[3] * h,
-          0, 0, w, h);
-      }
+      // Copy video to canvas for fully synchronous display
+      overlay.ctx.drawImage(video,
+        canvasTransform[4], canvasTransform[5],
+        canvasTransform[0] * w, canvasTransform[3] * h,
+        0, 0, w, h);
     } else {
       // Rely on video under canvas. More efficient (one copy less), but
       // may have some time discrepency between video and overlay
@@ -1780,6 +1872,28 @@ OverlayControl.prototype.redrawVideoFrame = function() {
     //         createRectsFromTracks(this.previewFrame)
     //         selectBeeByID(defaultSelectedBee);
     //         overlay.refreshOverlay()
+  } else if ((videoControl.currentMode == "cache")||(videoControl.currentMode == "cache-preview")) {
+    let img = videoControl.currentImage
+    if (!img) {
+      console.log("overlay.redrawVideoFrame: cacheImage null. ABORT")
+      overlay.ctx.save();
+      overlay.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      var lineHeight = overlay.ctx.measureText("M").width * 1.2;
+      overlay.ctx.fillStyle = "#DDD";
+      overlay.ctx.fillRect(0, 0, 300, lineHeight);
+      overlay.ctx.fillStyle = "#00F";
+      overlay.ctx.font = "12px Verdana";
+      overlay.ctx.textAlign = "center";
+      overlay.ctx.textBaseline = "middle";
+      overlay.ctx.fillText("Frame "+String(videoControl.currentFrame)+" not in cache", 10, lineHeight);
+      overlay.ctx.restore();
+      overlay.canvas1.clear();
+      return;
+    }
+    overlay.ctx.drawImage(img,
+      canvasTransform[4], canvasTransform[5],
+      canvasTransform[0] * w, canvasTransform[3] * h,
+      0, 0, w, h);
   }
 };
 OverlayControl.prototype.refreshOverlay = function () {
@@ -2013,16 +2127,15 @@ function rotatedRectGeometry(rect) {
   rect.setCoords(); // Compute coordinates
   var coords = rect.oCoords;
   //console.log(rect)
-  geom.center = {
-    x: (coords.tl.x + coords.br.x) / 2,
-    y: (coords.tl.y + coords.br.y) / 2,
-  };
-  geom.tl = { x: coords.tl.x, y: coords.tl.y };
-  geom.br = { x: coords.br.x, y: coords.br.y };
   let center = {
     x: (coords.tl.x + coords.br.x) / 2,
     y: (coords.tl.y + coords.br.y) / 2,
   };
+  geom.center = center;
+  geom.tl = { x: coords.tl.x, y: coords.tl.y };
+  geom.tr = { x: coords.tr.x, y: coords.tr.y };
+  geom.bl = { x: coords.bl.x, y: coords.bl.y };
+  geom.br = { x: coords.br.x, y: coords.br.y };
   geom.unrotated = {
     left: center.x - rect.width / 2,
     top: center.y - rect.height / 2,
@@ -2229,11 +2342,13 @@ function paintDot(ctx, pt, radius, color, id) {
   ctx.textAlign = "center";
   ctx.fillText(String(id), x, y - radius - 3);
 }
-function wrapText(context, text, x, y, maxWidth, lineHeight) {
+function wrapText(context, text, x, y, maxWidth, lineHeight, splitToken) {
   // From http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
-  var words = text.split(" ");
+  if (!splitToken) splitToken=" "
+  var words = text.split(splitToken);
   var line = "";
 
+  let y0 = y
   for (var n = 0; n < words.length; n++) {
     var testLine = line + words[n] + " ";
     var metrics = context.measureText(testLine);
@@ -2247,6 +2362,7 @@ function wrapText(context, text, x, y, maxWidth, lineHeight) {
     }
   }
   context.fillText(line, x, y);
+  return y - y0 + lineHeight
 }
 function activityString(obs) {
   let acti = "";
@@ -2348,6 +2464,12 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
     }
   }
 
+  let ID_offset = 0
+  if (overlay.opts.ID_offsetType=='top') {
+    ID_offset = -(rect.height/2+3)
+  } else {
+    ID_offset = -(radius+3)
+  }
   if (overlay.opts.showID) {
     //ctx.font = "20px Arial";
     font = '' + overlay.opts.ID_fontSize + 'px Arial'
@@ -2357,21 +2479,26 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
     if (hasLabel(obs, 'wrongid')) {
       if (obs.newid == null) {
         ctx.fillStyle = "cyan";
-        ctx.fillText(String(obs.ID), x, y - radius - 3);
+        ctx.fillText(String(obs.ID), x, y + ID_offset);
       } else {
         ctx.font = "14px Arial";
         ctx.fillStyle = "cyan";
-        ctx.fillText(String(obs.ID), x, y - radius - 3);
+        ctx.fillText(String(obs.ID), x, y + ID_offset);
         ctx.font = "10px Arial";
         ctx.fillStyle = color;
-        ctx.fillText(String(obs.newid), x, y - radius - 16);
+        ctx.fillText(String(obs.newid), x, y + ID_offset - 13);
       }
     } else {
-      ctx.fillText(String(rect.id), x, y - radius - 3);
+      ctx.fillText(String(rect.id), x, y + ID_offset);
     }
   }
 
-  let labelOffset = radius + 3
+  let labelOffset = 0
+  if (overlay.opts.label_offsetType=='bottom') {
+    labelOffset = (rect.height/2)+3
+  } else {
+    labelOffset = radius+3
+  }
   if (overlay.opts.showSpan) {
     //ctx.font = "10px Arial";
     let obs = getObsHandle(rect.obs.frame, rect.obs.ID)//rect.obs
@@ -2402,10 +2529,15 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(acti, x, y + labelOffset);
-    ctx.textBaseline = 'alphabetic';
-    if (acti != '')
-      labelOffset += overlay.opts.ID_fontSize / 2
+    if (acti != '') {
+      if (overlay.opts.wrapLabels) {
+        labelOffset += wrapText(ctx, acti, x, y + labelOffset, overlay.opts.wrapLabelsWidth, 10, ",")
+      } else {
+        ctx.fillText(acti, x, y + labelOffset);
+        labelOffset += overlay.opts.ID_fontSize / 2
+      }
+      ctx.textBaseline = 'alphabetic';
+    }
   }
   if (overlay.opts.showNotes) {
     if (typeof rect.obs.notes !== 'undefined') {
@@ -2416,9 +2548,9 @@ function identifyBeeRect(ctx, rect, radius, isActive) {
       ctx.fillStyle = color;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      wrapText(ctx, notes, x, y + labelOffset, 80, 10)
+      labelOffset += wrapText(ctx, notes, x, y + labelOffset, 80, 10)
     }
-    labelOffset += overlay.opts.ID_fontSize / 2
+    //labelOffset += overlay.opts.ID_fontSize / 2
   }
 
   ctx.restore();
@@ -2986,7 +3118,7 @@ function onShowTagsTracksChanged() {
 }
 
 /* Track Window */
-function onTrackWindowChanged(event) {
+function onTrackWindowChanged(event, skipRefresh) {
   let range = Number($("#trackWindow")[0].value);
   overlay.trackWindow.range = range;
 
@@ -3015,7 +3147,8 @@ function onTrackWindowChanged(event) {
 
   $(overlay).trigger("trackWindow:change");
 
-  videoControl.refresh();
+  if (!skipRefresh)
+    videoControl.refresh();
 }
 function setTrackWindow(L) {
   $("#trackWindow").val(L);
@@ -3700,8 +3833,8 @@ function computeDefaultNewID() {
 
 // #MARK # LOW-LEVEL MOUSE EVENTS
 
-var default_width = 40;
-var default_height = 40;
+var default_width = 100;
+var default_height = 100;
 
 function newRectForTag(tag) {
   let angle = tagAngle(tag);
@@ -3711,24 +3844,26 @@ function newRectForTag(tag) {
   let pt = overlay.videoToCanvasPoint({ x: tag.c[0], y: tag.c[1] });
   if (typeof angle !== "undefined") {
     console.log("newObsForTag: found angle=", angle);
+    let ds=getDefaultRectSizeCanvas()
     rect = addRect(
       tag.id,
-      pt.x - default_width / 2,
-      pt.y - default_height / 2,
-      default_width,
-      default_height,
+      pt.x - ds.w / 2,
+      pt.y - ds.h / 2,
+      ds.w,
+      ds.h,
       "new",
       undefined,
       angle
     );
   } else {
     console.log("newObsForTag: angle not found");
+    let ds=getDefaultRectSizeCanvas()
     rect = addRect(
       tag.id,
-      pt.x - default_width / 2,
-      pt.y - default_height / 2,
-      default_width,
-      default_height,
+      pt.x - ds.w / 2,
+      pt.y - ds.h / 2,
+      ds.w,
+      ds.h,
       "new"
     );
   }
@@ -3867,12 +4002,13 @@ function onMouseDown_predict(option) {
       id = id + 1;
     }
     // Did not find any tag nor rect
+    let ds=getDefaultRectSizeCanvas()
     rect = addRect(
       id,
-      startX - default_width / 2,
-      startY - default_height / 2,
-      default_width,
-      default_height,
+      startX - ds.w / 2,
+      startY - ds.h / 2,
+      ds.w,
+      ds.h,
       "new"
     );
     if (logging.mouseEvents)
@@ -3892,6 +4028,16 @@ function onMouseDown_predict(option) {
   //     target: rect,
   //     e: option.e
   // })
+}
+
+function updateDefaultSizeFromRect(rect) {
+  default_width = rect.width * canvasTransform[0];
+  default_height = rect.height * canvasTransform[3];
+  if (default_width<1) default_width=1
+  if (default_height<1) default_height=1
+}
+function getDefaultRectSizeCanvas() {
+  return {w: default_width / canvasTransform[0], h: default_height / canvasTransform[3]};
 }
 
 /* Create new rectangle interactively (dragging) */
@@ -3989,8 +4135,7 @@ function onMouseDown_interactiveRect(option) {
       overlay.canvas1.renderAll();
 
       // Update default size to latest rectangle created
-      default_width = activeObject.width;
-      default_height = activeObject.height;
+      updateDefaultSizeFromRect(activeObject)
 
       // updateForm(activeObject)
       // $('#I')[0].focus() // Set focus to allow easy ID typing
@@ -4302,8 +4447,9 @@ function fixRectSizeAfterScaling(rect) {
   rect.setCoords();
 
   // Update default size when rectangle is created by just clicking
-  default_width = rect.get("width");
-  default_height = rect.get("height");
+  //default_width = rect.get("width");
+  //default_height = rect.get("height");
+  updateDefaultSizeFromRect(rect)
 }
 
 function onMouseUp(option) {

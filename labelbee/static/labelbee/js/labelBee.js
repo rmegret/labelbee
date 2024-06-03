@@ -18,7 +18,7 @@ var user_id;
 /** Debugging levels */
 var logging = {
   rects: false,
-  frameEvents: false,
+  frameEvents: true,
   guiEvents: false,
   submitEvents: false,
   mouseEvents: false,
@@ -27,13 +27,13 @@ var logging = {
   overlay: false,
   selectionEvents: false,
   chrono: false,
-  videoEvents: false,
+  videoEvents: true,
   canvasEvents: false,
   idPrediction: false,
   axesEvents: false,
   zoomTag: false,
   zoomOverlay: false,
-  videoList: false,
+  videoList: true,
   io: false,
 };
 
@@ -42,6 +42,8 @@ var logging = {
 
 /** Global init */
 function init(videoID, tagID) {
+  console.log("init()", videoID, tagID)
+
   // Parameter passed through HTML Jinja template
   if (http_script_name_0) {
     http_script_name = http_script_name_0;
@@ -96,44 +98,60 @@ function init(videoID, tagID) {
   );
   $(".inline-collapsible > .block-header").on("click", function (e) {
     //console.log(e)
-      let header = $(e.currentTarget) //$(".block-header", $(e.currentTarget).parent())
-      let block = header.parent()
-      //let content = $("> .block-content", header.parent())
-      //content.toggle()
-      //header.toggleClass("collapsed",content.is(":hidden"))
-      //header.parent().toggleClass("collapsed",content.is(":hidden"))
-      //if (header.hasClass("collapsed")) {
-      block.toggleClass("collapsed")
-      if (!block.hasClass("collapsed")) {
-          //block.trigger("collapsiblecollapse",e)
-      } else {
-          //block.trigger("collapsibleexpand",e)
-      }
-      console.log('DONE\n\n')
-    })
+    let header = $(e.currentTarget) //$(".block-header", $(e.currentTarget).parent())
+    let block = header.parent()
+    //let content = $("> .block-content", header.parent())
+    //content.toggle()
+    //header.toggleClass("collapsed",content.is(":hidden"))
+    //header.parent().toggleClass("collapsed",content.is(":hidden"))
+    //if (header.hasClass("collapsed")) {
+    block.toggleClass("collapsed")
+    if (!block.hasClass("collapsed")) {
+      //block.trigger("collapsiblecollapse",e)
+    } else {
+      //block.trigger("collapsibleexpand",e)
+    }
+    console.log('DONE\n\n')
+  })
   function refreshCollapsible(block) {
-      let collapsed = block.hasClass("collapsed")
-      let content = $("> .block-content", block)
-      let header = $("> .block-header", block)
-      content.toggle(!collapsed)
-      header.toggleClass("collapsed",collapsed)
+    let collapsed = block.hasClass("collapsed")
+    let content = $("> .block-content", block)
+    let header = $("> .block-header", block)
+    content.toggle(!collapsed)
+    header.toggleClass("collapsed", collapsed)
   }
-  $(".inline-collapsible").on("collapsibleexpand",function (e) {
-      console.log('collapsible',e)
-      let block = $(e.currentTarget)
-      refreshCollapsible(block)
-    })
-  $(".inline-collapsible").on("collapsiblecollapse",function (e) {
-      console.log('collapsible',e)
-      let block = $(e.currentTarget)
-      refreshCollapsible(block)
-    })
+  $(".inline-collapsible").on("collapsibleexpand", function (e) {
+    console.log('collapsible', e)
+    let block = $(e.currentTarget)
+    refreshCollapsible(block)
+  })
+  $(".inline-collapsible").on("collapsiblecollapse", function (e) {
+    console.log('collapsible', e)
+    let block = $(e.currentTarget)
+    refreshCollapsible(block)
+  })
 
   $(".sortable").sortable({
     connectWith: ".sortable",
     handle: "> label, > .block-header",
   });
   //$( ".sortable" ).disableSelection();
+
+  // TODO: Clean up  variable<->buttons binding mechanism
+  // Missing a model to store all these properties
+  // For the moment, just call toggleHidden at least once to sync with 
+  // the existing 'checked' attribute from the GUI button
+  for (buttonid_property of [["showTimeline", "timelineTab"],
+    ["showFocusInterval", "focusIntervalTab"],
+    ["showSelected", "selectedTab"],
+    ["showEvents", "eventsTab"],
+    ["showFilter", "filterTab"],
+    ["showChrono", "chronoTab"]]) {
+    let id = buttonid_property[0]
+    let prop = buttonid_property[1]
+    let but = document.getElementById(id)
+    toggleHidden(prop, but.checked)
+  }
 
   // import * from "ZoomView.js";
   initZoomView();
@@ -172,9 +190,9 @@ function init(videoID, tagID) {
   // refresh();
   updateForm(null);
   defaultSelectedBee = undefined;
-    change_id_force = 'swap'  // What to do if conflict when changing id
+  change_id_force = 'swap'  // What to do if conflict when changing id
 
-    $('#alerttextblock').resizable()
+  $('#alerttextblock').resizable()
 
   //loadEventsFromFile0('data/Tracks-demo.json')
 
@@ -194,16 +212,6 @@ function init(videoID, tagID) {
 
   /* Set defaults */
 
-
-  // ASK REMI IF WE SHOULD BE LOADING ANY DEFAULT VIDEOS
-  // if (video_data !== "None" && tag_file !== "None") {
-  // videoManager.addDefaultVideo(video_data, tag_file); 
-  // }
-  // videoManager.selectVideoByID(0);
-
-  //Will trigger videoControl.onVideoLoaded
-  onTrackWindowChanged(); // to compute track window params
-
   whoami(); // Refresh user status
 
   window.onbeforeunload = function (e) {
@@ -216,13 +224,97 @@ function init(videoID, tagID) {
   };
 
   // Done
-  setTracks([]);
+  setTracks([], true); // skipRefresh
 
   loginDialog = new LoginDialog();
 
   // Preload video list
   videoManager.receiveVideoSelection();
+  // Any default video should be handled after receiving the video list
+
+  //Will trigger refresh, which should fail if no default video
+  onTrackWindowChanged({}, true); // to compute track window params. Skip refresh
+
+  onhashchange()
 }
+
+
+
+/* ROUTER */
+
+lasthash = ""
+
+addEventListener("hashchange", onhashchange);
+onhashchange = async function(event) {
+  let newhash = location.hash
+  console.log('onhashchange: current hash=',newhash)
+  if (!newhash) return
+  if (newhash == lasthash) {
+    console.log('onhashchange: ABORT, newhash same as last registered hash', lasthash)
+  }
+  const parsedHash0 = new URLSearchParams(
+    location.hash.substring(1) // foo=bar&baz=qux&val=val+has+spaces
+  );
+  const parsedHash = new URLSearchParams(
+    location.hash.substring(1) // foo=bar&baz=qux&val=val+has+spaces
+  );
+  //console.log('onhashchange: parsedHash=',String(parsedHash))
+
+  let need_push = false
+
+  // First load video if present
+  if (parsedHash.has("video_id")) {
+    let id = parsedHash.get("video_id")
+    if (id == videoManager.currentVideoID) {
+      console.log('onhashchange: TRYING to load same video_id, ABORT',id)
+    } else {
+      console.log('onhashchange: processing hash, selecting video_id ',id)
+      await videoManager.videoSelected(id)
+      console.log("onhashchange: videoSelected SUCCESS, video_id=", id)
+      if (!parsedHash.has("frame")) {
+        // Add default 
+        parsedHash.get("frame","0")
+      }
+      need_push = true
+    }
+  }
+  // Then, load data if present
+  if (parsedHash.has("video_data")) {
+    let video_data_id = parsedHash.get("video_data")
+    console.log("onhashchange: loading video_data="+video_data_id)
+    await loadEventsFromServerByID(video_data_id)
+    console.log("onhashchange: loadEventsFromServerByID SUCCESS")
+    parsedHash.delete("video_data")
+    need_push = true
+  }
+
+  if (parsedHash.has("frame")) {
+    let frame = parseInt(parsedHash.get("frame"),10)
+    console.log("onhashchange: delayed seek frame="+frame)
+    videoControl.removeHashOnFrameChange = true
+    videoControl.removeHashOnFrameChangeFrame = frame
+    videoControl.delayedSeek( frame )
+    parsedHash.delete("frame")
+    need_push = true
+  }
+
+  //location.hash = parsedHash
+  
+  // removeEventListener("hashchange", onhashchange);
+  // if (need_push) {
+  //   console.log('onhashchange: PUSH old hash to history',String(parsedHash0))
+  //   history.replaceState(undefined,undefined,'#'+parsedHash0);
+  //   window.document.title="Labelbee #"+parsedHash0
+  //   //history.pushState(undefined,undefined,'#'+parsedHash);
+  //   location.hash = parsedHash
+  // } else {
+  //   console.log('onhashchange: REPLACE hash in history',String(parsedHash))
+  //   history.replaceState(undefined,undefined,'#'+parsedHash);
+  // }
+  // addEventListener("hashchange", onhashchange);
+}
+
+/* MISC */
 
 function printMessage(html, color) {
   if (typeof color === "undefined") color = "black";
@@ -264,12 +356,12 @@ function StatusWidget() {
     //$(".status."+type).html(type+": Requested ["+HMS+"]")
     $(".status." + type).html(
       "<td>" +
-        type +
-        "</td><td class='tdspacing'>" +
-        htmlCheckmark("requested") +
-        "</td><td class='col_elapsed'>[@ " +
-        HMS +
-        "]</td>"
+      type +
+      "</td><td class='tdspacing'>" +
+      htmlCheckmark("requested") +
+      "</td><td class='col_elapsed'>[@ " +
+      HMS +
+      "]</td>"
     );
   };
   this.statusUpdate = function (type, success, info) {
@@ -282,21 +374,21 @@ function StatusWidget() {
       //$(".status."+type).html(type+": Success [elapsed "+elapsed+"s]")
       $(".status." + type).html(
         "<td>" +
-          type +
-          "</td><td class='tdspacing'>" +
-          htmlCheckmark(true) +
-          "</td><td class='col_elapsed' >[took  " +
-          elapsed +
-          "s]</td>"
+        type +
+        "</td><td class='tdspacing'>" +
+        htmlCheckmark(true) +
+        "</td><td class='col_elapsed' >[took  " +
+        elapsed +
+        "s]</td>"
       );
     } else {
       //$(".status."+type).html(type+": FAILED [elapsed "+elapsed+"s]")
       $(".status." + type).html(
         "<td>" +
-          type +
-          "</td><td class='tdspacing'>" +
-          htmlCheckmark(false) +
-          "</td><td class='col_elapsed'></td>"
+        type +
+        "</td><td class='tdspacing'>" +
+        htmlCheckmark(false) +
+        "</td><td class='col_elapsed'></td>"
       );
     }
   };
@@ -305,11 +397,9 @@ function StatusWidget() {
 function toggleFullScreen() {
   var main = $(".container.main")[0];
   if (!document.fullscreenElement) {
-    main.webkitRequestFullscreen();
+    document.body.webkitRequestFullscreen();
   } else {
-    if (main.exitFullscreen) {
-      main.exitFullscreen();
-    }
+    document.exitFullscreen();
   }
 }
 
@@ -351,8 +441,8 @@ function FilePickerFromServerDialog() {
   this.updateDialog = function (uri) {
     console.log(
       'FilePickerFromServerDialog: importing file list from URL "' +
-        this.route +
-        "'..."
+      this.route +
+      "'..."
     );
 
     let route = this.route;
@@ -789,22 +879,26 @@ function onKeyDown(e) {
       id_field.select();
       return false;
     }
-        return false;
+    return false;
+  }
+  // Enter: Focus on ID field vs video control (27)
+  if ((e.key == "Enter")) {
+    var id_field = document.getElementById("I");
+    if ($(id_field).is(':focus')) {
+      id_field.selectionStart = id_field.selectionEnd
+      id_field.blur();
+      $('#left-side')[0].focus({ preventScroll: true })
+      return false;
+    } else {
+      id_field.focus(); // Facilitate changing the id
+      id_field.select();
+      return false;
     }
-    // Enter: Focus on ID field vs video control (27)
-    if ((e.key=="Enter")) { 
-        var id_field = document.getElementById("I");
-        if ($(id_field).is(':focus')) {
-            id_field.selectionStart = id_field.selectionEnd
-            id_field.blur();
-            $('#left-side')[0].focus({preventScroll:true})
-            return false;
-        } else {
-            id_field.focus(); // Facilitate changing the id
-            id_field.select();
-            return false;
-        }
-        return false;
-    }
-    // NOTE: Removed switch during merge
+    return false;
+  }
+
+  // Labeling shortcuts
+  //if ((e.key in ["1","2","3","4","5","6","7","8","9","0"])) {
+  if (labelsProcessKey(e.key)) return false;  // labelsProcessKey returns true if processed the key
+  //}
 }

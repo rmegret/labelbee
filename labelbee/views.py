@@ -14,6 +14,7 @@ from flask_user import current_user, login_required, roles_accepted
 from flask_login import logout_user, login_user
 from flask_wtf.csrf import generate_csrf
 from werkzeug.exceptions import BadRequest, Forbidden
+from flask import Response
 import sys
 import json
 
@@ -21,15 +22,21 @@ import os
 from datetime import datetime
 import json
 import re
+import logging
 
-from labelbee.init_app import app, db, csrf
+from labelbee.init_app import app, db, csrf, logger
 from labelbee.models import (
     DataSetSchema,
     UserProfileForm,
     User,
     UserSchema,
+    UsersRoles,
+    UsersRolesSchema,
+    Role,
+    RoleSchema,
     VideoDataSchema,
     VideoSchema,
+    UserUpdateForm
 )
 from labelbee.db_functions import (
     add_video_data,
@@ -49,6 +56,7 @@ from labelbee.db_functions import (
     video_data_list,
     video_info,
     get_user_by_id,
+    get_user_roles_by_id,
     get_video_data_by_id,
     edit_video_data,
     import_from_csv,
@@ -56,8 +64,7 @@ from labelbee.db_functions import (
 )
 
 upload_dir = "labelbee/static/upload/"
-
-
+data_root_dir = os.environ.get("DATA_DIR")
 # -------------------------------------------
 # PAGES
 
@@ -83,17 +90,18 @@ def videos_page():
     form = UserProfileForm(obj=current_user)
 
     datasetid = request.args.get("dataset")
+    logger.info(f"videos_page: datasetid={datasetid}")
     if datasetid != None:
         # Parse the request to get the user name from id
+        logger.info(f"videos_page: datasetid={datasetid}")
         e = get_dataset_by_id(datasetid=datasetid)
+        user = get_user_by_id(e.created_by)
         dataset = {
             "id": e.id,
             "name": e.name,
             "description": e.description,
-            "created_by": get_user_by_id(e.created_by).first_name
-            + " "
-            + get_user_by_id(e.created_by).last_name,
-            "timestamp": e.timestamp,
+            "created_by": f"{user.first_name} {user.last_name} ({e.created_by})" if user is not None else "_"
+            #"timestamp": e.timestamp,
         }
     else:
         dataset = None
@@ -310,6 +318,7 @@ def add_dataset_page():
     return render_template("pages/add_dataset.html", form=form)
 
 
+
 @app.route("/datasets", methods=["GET", "POST"])
 @login_required
 def datasets_page():
@@ -321,10 +330,8 @@ def datasets_page():
             "id": e.id,
             "name": e.name,
             "description": e.description,
-            "created_by": get_user_by_id(e.created_by).first_name
-            + " "
-            + get_user_by_id(e.created_by).last_name,
-            "timestamp": e.timestamp,
+            "created_by": e.created_by,
+            #"timestamp": e.timestamp,
         }
         for e in dataset_list()
     ]
@@ -491,24 +498,22 @@ def admin_page():
 @app.route("/manage_users", methods=["GET", "POST"])
 @roles_accepted("admin")  # Limits access to users with the 'admin' role
 def manage_users_page():
-
-    form = UserProfileForm(obj=current_user)
-    users = user_list()
-
+    form = UserUpdateForm()
+    form.roles.choices = [(RoleSchema().dump(role)['id'], RoleSchema().dump(role)['label']) for role in Role.query.all()]
+    user_schema = UserSchema()
+    roles_schema = RoleSchema()
+    success = False
+    editing = False
     # Process valid POST
-    if request.method == "POST" and form.validate():
-        # Copy form fields to user_profile fields
-        form.populate_obj(current_user)
-
-        # Save user_profile
-        db.session.commit()
-
-        # Redirect to home page
-        return render_template("pages/manage_users_page.html", form=form, users=users)
-
-    # Process GET or invalid POST
-
-    return render_template("pages/manage_users_page.html", form=form, users=users)
+    if form.validate_on_submit():
+        editing = True
+        success = edit_user(form.data)
+    # Get data for each user
+    users = [user_schema.dump(user) for user in user_list()]
+    # Get roles for each user
+    for user in users:
+        user['roles'] = [roles_schema.dump(role) for role in get_user_roles_by_id(user['id'])]
+    return render_template("pages/manage_users_page.html", form=form, users=users, editing=editing, success=success)
 
 
 @app.route("/admin/version")
@@ -591,7 +596,7 @@ def send_data_():
 # REST API for authentification
 
 
-@app.route("/rest/auth/login", methods=["GET", "POST"])
+@app.route("/rest/auth/login", methods=["POST"])
 def ajaxlogin():
     """
     API GET endpoint for authentification
@@ -608,10 +613,9 @@ def ajaxlogin():
     :rtype: JSON object
     """
 
-    email = request.args.get("email")
-    password = request.args.get("password")
-    print(email, password)
-    # print(email,password)
+    email = request.form.get("email")
+    password = request.form.get("password")
+    # logger.debug(email)
 
     user = User.query.filter_by(email=email).first()
 
@@ -619,12 +623,14 @@ def ajaxlogin():
         # print(user.password)
         return current_app.user_manager.verify_password(password, user.password)
 
+    # Login fail
     if user is None or not check_password(user, password):
         return jsonify(
             {
                 "request": "login",
                 "email": email,
                 "status": "FAIL",
+                "message":"Incorrect credentials. Please try again."
             }
         )
 
@@ -729,23 +735,26 @@ def add_users():
     user_schema = UserSchema(many=True)
     return jsonify({"status": "SUCCESS", "users": user_schema.dump(user_list)})
 
-
-@app.route("/rest/user/edit_users", methods=["POST"])
-def edit_users():
-    if current_user.is_authenticated and current_user.has_roles("admin"):
-        json_list = json.loads(request.form.get("json"))
-        for user in json_list:
-            edit_user(
-                user_id=int(user["user_id"]),
-                first_name=user.setdefault("first_name", None),
-                last_name=user.setdefault("last_name", None),
-                email=user.setdefault("email", None),
-                password=user.setdefault("password", None),
-                role_id=user.setdefault("role_id", 2),
-            )
-        return jsonify({"status": "SUCCESS"})
-    else:
-        return jsonify({"status": "FAIL", "message": "not authenticated"})
+# Deprecated, incompatible with new edit_user function implemented for
+# admin manage users menu (route /manage_users)
+# Assumes relationship between users and roles tables is one-to-many,
+# when it really is many-to-many(users can have more than one role)
+# @app.route("/rest/user/edit_users", methods=["POST"])
+# def edit_users():
+#     if current_user.is_authenticated and current_user.has_roles("admin"):
+#         json_list = json.loads(request.form.get("json"))
+#         for user in json_list:
+#             edit_user(
+#                 user_id=int(user["user_id"]),
+#                 first_name=user.setdefault("first_name", None),
+#                 last_name=user.setdefault("last_name", None),
+#                 email=user.setdefault("email", None),
+#                 password=user.setdefault("password", None),
+#                 role_id=user.setdefault("role_id", 2),
+#             )
+#         return jsonify({"status": "SUCCESS"})
+#     else:
+#         return jsonify({"status": "FAIL", "message": "not authenticated"})
 
 
 @app.route("/rest/user/list_users", methods=["GET"])
@@ -868,14 +877,15 @@ def serve_files(base_dir, path, base_uri, format="html"):
 @app.route("/rest/config/labellist/", methods=["GET"])
 @app.route("/rest/config/labellist/<path:path>", methods=["GET"])
 def labellist_get(path=""):
-    print("Handling labellist request PATH=" + path)
+    # print("Handling labellist request PATH=" + path)
     # if (not current_user.is_authenticated):
     #    raise Forbidden('/rest/config/labellist GET: login required !')
     format = request.args.get("format", "html")
-
-    base_dir = os.path.join(app.root_path, "static/data/config/labellist/")
+    
+    # base_dir = os.path.join(app.root_path, "static/data/config/labellist/")
+    # Quick fix using environment variable due to changes in config location
+    base_dir = os.path.join(data_root_dir, "config/labellist/")
     base_uri = url_for("labellist_get", path="")  # '/rest/config/labellist/'
-
     return serve_files(base_dir, path, base_uri, format)
 
 
@@ -937,19 +947,20 @@ def videodata_get_v2():
     print("Handling videodata request")
     if not current_user.is_authenticated:
         raise Forbidden("/rest/v2/videodata GET: login required !")
-    video_id = int(request.args.get("video_id"))
-    if video_id is None:
-        raise BadRequest("/rest/v2/videodata GET: video_id required !")
+    video_id = request.args.get("video_id")
+    if (video_id is not None): video_id = int(video_id)
+    #if video_id is None:
+    #    raise BadRequest("/rest/v2/videodata GET: video_id required !")
 
     data_type = request.args.get("data_type", "")
     allusers = request.args.get("allusers", None)
     videodatas = VideoDataSchema(many=True)
 
-    if data_type == "" and allusers != "True":
+    if data_type == "" and allusers not in ["True","true"]:
         videos = video_data_list(video_id, current_user.id)
-    elif data_type == "" and allusers == "True":
+    elif data_type == "" and allusers in ["True","true"]:
         videos = video_data_list(video_id)
-    elif data_type != "" and allusers == "True":
+    elif data_type != "" and allusers in ["True","true"]:
         videos = video_data_list(video_id, data_type)
     else:
         videos = video_data_list(video_id, data_type, current_user.id)
@@ -1009,6 +1020,15 @@ def get_video_data_v2(id):
 
     return jsonify({"data": video_data_schema.dump(get_video_data_by_id(id))})
 
+@app.route("/rest/v2/get_video_data_raw/<id>", methods=["GET"])
+def get_video_data_raw_v2(id):
+    print("Handling get_video_data request")
+    if not current_user.is_authenticated:
+        raise Forbidden("/rest/v2/get_video_data GET: login required !")
+
+    video_data_schema = VideoDataSchema()
+
+    return Response(video_data_schema.dump(get_video_data_by_id(id))['data'], mimetype='application/json')
 
 @app.route("/rest/v2/edit_video_data/<id>", methods=["PUT"])
 def edit_video_data_v2(id):
@@ -1041,8 +1061,8 @@ def add_video_data_v2():
     print("Handling add_video_data request")
     if not current_user.is_authenticated:
         raise Forbidden("/rest/v2/add_video_data POST: login required !")
-    if not current_user.has_roles("admin"):
-        raise Forbidden("/rest/v2/add_video_data POST: admin required !")
+    #if not current_user.has_roles("admin"):
+    #    raise Forbidden("/rest/v2/add_video_data POST: admin required !")
 
     video_data_schema = VideoDataSchema()
     form_data = json.dumps(request.form)

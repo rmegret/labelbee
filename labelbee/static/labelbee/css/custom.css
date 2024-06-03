@@ -1,5 +1,10 @@
 /* Custom CSS style for labelBee interface */
 
+/* For fullscreen mode */
+::backdrop {
+  background-color: white;
+}
+
 canvas {
     border: 1px solid #d3d3d3;
 }
@@ -332,7 +337,7 @@ button > p.multiline {
 .subpanel.ui-accordion  .ui-accordion-header {
   display: block;
   cursor: pointer;
-  border: 1px red solid;
+  border: 1px lightgray solid;
   position: relative;
   margin: 2px 0 0 0;
   padding: .25em .25em .25em .35em;

@@ -20,18 +20,15 @@
 </script>
 
 
+{% from 'common/macros.html' import database_menu %}
+{{ database_menu('datasets') }}
 
 <h1>Datasets: {{ uri }} </h1>
 
-
+<!-- 
 <a href="{{ url_for('videos_page') }}">
     <button type="button" onclick="" class="btn btn-primary">All Videos</button>
-</a>
-
-<a href="{{ url_for('add_dataset_page') }}">
-    <button type="button" onclick="" class="btn btn-primary">New Dataset</button>
-</a>
-<br>
+</a> -->
 
 
 
@@ -54,6 +51,12 @@
     </tbody>
     <!--  -->
 </table>
+
+
+<a href="{{ url_for('add_dataset_page') }}">
+    <button type="button" onclick="" class="btn btn-primary">New Dataset</button>
+</a>
+<br>
 
 
 <script>
