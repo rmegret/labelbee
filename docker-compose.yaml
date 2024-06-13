@@ -1,0 +1,16 @@
+# cat docker-compose.yml
+version: '3.3'
+services:
+### MySQL Container
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER} # for Linux (not sure)
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    expose:
+      - "3306"
+    ports:
+      - "3306:3306" 
