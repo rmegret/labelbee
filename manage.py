@@ -2,7 +2,7 @@
 # - Heroku starts gunicorn, which loads Procfile, which starts manage.py
 # - Developers can run it from the command line: python runserver.py
 
-from labelbee.init_app import app, init_app, manager, logger
+from labelbee.init_app import app, init_app, logger
 from labelbee.manage_commands import init_db
 
 import sys
@@ -15,7 +15,7 @@ print("manage.py called with __name__==", __name__)
 # - python manage.py runserver
 if __name__ == "__main__":
     init_app(app)
-    manager.run()
+    # manager.run()
 
 if __name__ == "manage":
     print("manage.py: __name__==manage")

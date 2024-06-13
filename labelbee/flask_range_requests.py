@@ -2,9 +2,10 @@ import os
 import mimetypes
 import re
 
-from flask import request, send_file, Response, safe_join, send_from_directory
+from flask import request, send_file, Response, send_from_directory
 from flask import render_template
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden
+from werkzeug.security import safe_join
 
 # Enable range requests 
 # https://blog.asgaard.co.uk/2012/08/03/http-206-partial-content-for-flask-python
