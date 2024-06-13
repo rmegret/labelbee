@@ -9,18 +9,20 @@ from flask_wtf import FlaskForm
 from sqlalchemy.orm import backref
 from wtforms import StringField, SubmitField, validators, BooleanField, PasswordField, HiddenField
 from wtforms.fields import SelectMultipleField
-from labelbee.init_app import db, ma
+from labelbee.__init__ import db, ma
 from marshmallow import validate, fields
 from labelbee.validation import FileName, Path
+
+
 
 # Define the User data model. Make sure to add the flask_user.UserMixin !!
 class User(db.Model, UserMixin):
     __tablename__ = "users"
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
     # User authentication information (required for Flask-User)
     email = db.Column(db.Unicode(255), nullable=False, server_default=u"", unique=True)
-    email_confirmed_at = db.Column(db.DateTime())
+    email_confirmed_at = db.Column(db.DateTime(), default=db.func.now())
     password = db.Column(db.String(255), nullable=False, server_default="")
 
     # User information
@@ -65,7 +67,7 @@ class Video(db.Model):
     location = db.Column(db.Integer(), nullable=False)
     colony = db.Column(db.String(50))
     notes = db.Column(db.Text())
-    dataset = db.Column(db.Integer, db.ForeignKey("data_set.id"))
+    dataset = db.Column(db.Integer, db.ForeignKey("data_set.id", ondelete="CASCADE"))
     thumb = db.Column(db.String(200), nullable=True)
 
     frames = db.Column(db.Integer(), nullable=False)
