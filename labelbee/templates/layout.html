@@ -34,7 +34,7 @@
     <!-- Application specific HTML -->
     <div id="header-div" class="clearfix with-margins">
         <div class="pull-left">
-            <a href="{{ url_for('home_page') }}">
+            <a href="{{ url_for('home.home_page') }}">
                 <span class="header-title">
                     {{ config.APP_NAME }}
                 </span>
@@ -53,10 +53,10 @@
         </div>
     </div>
     <div class="with-margins">
-        <a href="{{ url_for('home_page') }}">Home</a>
-        <!-- &nbsp; | &nbsp; <a href="{{ url_for('datasets_page') }}">Videos</a> -->
-        &nbsp; | &nbsp; <a href="{{ url_for('user_page') }}">User</a>
-        &nbsp; | &nbsp; <a href="{{ url_for('admin_page') }}">Admin</a>
+        <a href="{{ url_for('home.home_page') }}">Home</a>
+        <!-- &nbsp; | &nbsp; <a href="{{ url_for('home.datasets_page') }}">Videos</a> -->
+        &nbsp; | &nbsp; <a href="{{ url_for('home.user_page') }}">User</a>
+        &nbsp; | &nbsp; <a href="{{ url_for('home.admin_page') }}">Admin</a>
     </div>
     <hr class="no-margins" />
 

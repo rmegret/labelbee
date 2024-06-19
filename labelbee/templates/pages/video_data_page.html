@@ -215,21 +215,21 @@
                 $(this).html( '<input type="text" placeholder="Search '+title+'" size="'+size+'"/>' );
         } );
         $('#video_data_table').DataTable({
-            "ajax": "{{ url_for('videodata_get_v2') }}?allusers=True",
+            "ajax": "{{ url_for('home.videodata_get_v2') }}?allusers=True",
             "columnDefs": [
                     { targets: [ 0 ], className: 'dt-right' }
                 ],
             "columns": [
             { "data": "id", "name": "id" , 
               fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
-                    $(nTd).html("<a class='btn btn-default btn-xs' href='{{ url_for('video_data_details_page') }}" + "?video_data=" + rowData.id + "'>"+rowData.id+"</a>");
+                    $(nTd).html("<a class='btn btn-default btn-xs' href='{{ url_for('home.video_data_details_page') }}" + "?video_data=" + rowData.id + "'>"+rowData.id+"</a>");
                 } 
             },
             { "data": "id", "name": "actions", 
               fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
                     $(nTd).html(
-                        "<a class='btn btn-default btn-xs' href='{{ url_for('get_video_data_raw_v2',id='') }}"+ rowData.id +"' target='_blank'>JSON</a>" +
-                        "<a class='btn btn-primary btn-xs' href='{{ url_for('labelbee_user_page')}}#video_data="+ rowData.id +"&video_id="+rowData.video_id+"' target='_blank'>GUI</a>");
+                        "<a class='btn btn-default btn-xs' href='{{ url_for('home.get_video_data_raw_v2',id='') }}"+ rowData.id +"' target='_blank'>JSON</a>" +
+                        "<a class='btn btn-primary btn-xs' href='{{ url_for('labelbee.labelbee_user_page')}}#video_data="+ rowData.id +"&video_id="+rowData.video_id+"' target='_blank'>GUI</a>");
                 } 
             },
             { "data": "file_name", "name": "file_name" ,
@@ -242,7 +242,7 @@
             { "data": "timestamp", "name": "timestamp" },
             { "data": "video_id", "name": "video_id", 
                 render: function (nTd, cellData, rowData, iRow, iCol) {
-                    return `<a class="btn btn-default bt-xs" href="{{ url_for('video_data_page')}}?videoid=${rowData.video_id}">${rowData.video_id}</a>`
+                    return `<a class="btn btn-default bt-xs" href="{{ url_for('home.video_data_page')}}?videoid=${rowData.video_id}">${rowData.video_id}</a>`
                 }
             },
             { "data": "created_by", "name": "created_by", 

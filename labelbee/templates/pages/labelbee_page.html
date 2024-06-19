@@ -109,7 +109,7 @@
  
         <ul class="nav navbar-nav navbar-right">
           <li title="You need to quit LabelBee before logging-in/out"><a><span id="whoami">-</span></a></li>
-          <li><a href="{{url_for('home_page')}}"><span class="glyphicon glyphicon-log-out"></span>Quit</a>
+          <li><a href="{{url_for('home.home_page')}}"><span class="glyphicon glyphicon-log-out"></span>Quit</a>
           </li>
         </ul>
       </div>
@@ -519,7 +519,7 @@
                       <div class="video_id bold" style="display:inline;">ID=??</div>
                     </label>
                     <a class="videolink btn btn-default btn-xs" href="" target="_blank" title="Open current video in new tab">Link</a>
-                    <a class="videoinfolink btn btn-default btn-xs" href="{{url_for('videos_page')}}" target="_blank" title="Open database information page for current video in new tab">Info</a>
+                    <a class="videoinfolink btn btn-default btn-xs" href="{{url_for('home.videos_page')}}" target="_blank" title="Open database information page for current video in new tab">Info</a>
                     <div id="videoName" class="small">-</div>
                     <div>
                       <div style="display:inline;" class="currentFrameDiv">-</div>
