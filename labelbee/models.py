@@ -13,6 +13,7 @@ from labelbee.__init__ import db, ma
 from marshmallow import validate, fields
 from labelbee.validation import FileName, Path
 
+#TODO: Move schemas and forms to a different module
 
 
 # Define the User data model. Make sure to add the flask_user.UserMixin !!
@@ -48,7 +49,7 @@ class Role(db.Model):
     # for display purposes
     label = db.Column(db.Unicode(255), server_default=u"")
 
-
+#TODO: Ask why this table exists
 # Define the UserRoles association model
 class UsersRoles(db.Model):
     __tablename__ = "users_roles"
@@ -56,7 +57,8 @@ class UsersRoles(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE"))
     role_id = db.Column(db.Integer(), db.ForeignKey("roles.id", ondelete="CASCADE"))
 
-
+#TODO: Figure out where the adhoc columns are used
+#TODO: Remove adhoc columns
 class Video(db.Model):
     __tablename__ = "videos"
     __table_args__ = (db.UniqueConstraint("file_name", "path"),)
@@ -88,7 +90,8 @@ class Video(db.Model):
     hasframeN_1s = db.Column(db.Boolean())
     hasframeN = db.Column(db.Boolean())
 
-
+#TODO: Figure out what data and data_type stand for
+#TODO: Change created_from_id name to something actually informative
 class VideoData(db.Model):
     __tablename__ = "video_data"
     __table_args__ = (db.UniqueConstraint("file_name", "path"),)
@@ -102,6 +105,7 @@ class VideoData(db.Model):
     video_id = db.Column(db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"))
     video = db.relationship("Video", backref="video_data")
     # created_from = db.relationship("VideoData", backref="created_from")
+    # Terrible 
     created_from_id = db.Column(db.Integer(), db.ForeignKey("video_data.id"))
     created_by_id = db.Column(
         db.Integer(), db.ForeignKey("users.id", ondelete="CASCADE")
