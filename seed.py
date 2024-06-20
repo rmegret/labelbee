@@ -102,7 +102,7 @@ with app.app_context():
 
     video_1 = Video(
         file_name="gurabo_video.mp4",
-        path="./videos/",
+        path="/videos",
         timestamp="2020/01/01",
         location=1,
         colony="colony 1",
@@ -129,7 +129,7 @@ with app.app_context():
 
     video_2 = Video(
         file_name="pollinators_RP_video.mp4",
-        path="./videos/",
+        path="/videos",
         timestamp="2020/01/01",
         location=5,
         colony="colony 2",
@@ -156,7 +156,7 @@ with app.app_context():
 
     video_3 = Video(
         file_name="pollinators_Juana_Diaz_video.mp4",
-        path="./videos/",
+        path="/videos",
         timestamp="2023/05/01",
         location=3,
         colony="colony 10",
@@ -188,7 +188,7 @@ with app.app_context():
 
     video_data_1 = VideoData(
         file_name="gurabo_video_data",
-        path="./video_data",
+        path="/video_data",
         timestamp="2024/02/12",
         data_type="csv",
         data="not sure",
@@ -199,7 +199,7 @@ with app.app_context():
 
     video_data_2 = VideoData(
         file_name="pollinators_rp_video_data",
-        path="./video_data",
+        path="/video_data",
         timestamp="2024/02/12",
         data_type="csv",
         data="not sure",
@@ -210,7 +210,7 @@ with app.app_context():
 
     video_data_3 = VideoData(
         file_name="pollinators_juana_diaz_video_data",
-        path="./video_data",
+        path="/video_data",
         timestamp="2024/03/31",
         data_type="csv",
         data="not sure",

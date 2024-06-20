@@ -61,7 +61,9 @@ def send_from_directory_partial(directory, filename, base_uri):
     if not range_header: 
         print('send_from_directory_partial: REQUEST "'+filename+'" norange')
         print('  send_from_directory: '+directory+','+filename+'"')
-        return send_from_directory(directory, filename)
+        # TODO: unhardcode gurabo_video.mp4 
+        #TODO: Pass file name
+        return send_from_directory(directory, "gurabo_video.mp4")
     else:
         print('send_from_directory_partial: REQUEST "'+filename+'" range='+range_header)
     

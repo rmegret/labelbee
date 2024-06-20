@@ -1,6 +1,8 @@
 from flask import render_template, render_template_string, jsonify, Blueprint, request
 from flask_user import current_user
 from flask import redirect, url_for, Response
+from labelbee.flask_range_requests import send_from_directory_partial, dir_listing
+
 
 import os
 
@@ -271,6 +273,14 @@ def video_data_page():
         datasetid=datasetid,
     )
 
+#TODO: Add to receive file path in route path"data/<path:pathid>""
+@bp.route("/data/")
+def send_data():
+    data_dir = os.path.join(bp.root_path, "static/data")
+    path = "/videos/gurabo_video.mp4"
+    #TODO: Unhardcode this
+    return send_from_directory_partial(data_dir, "/gurabo_video.mp4", "/data")
+
 
 
 #User views
@@ -351,3 +361,27 @@ def get_video_data_raw_v2(id):
     video_data_schema = VideoDataSchema()
 
     return Response(video_data_schema.dump(get_video_data_by_id(id))['data'], mimetype='application/json')
+
+
+@bp.route("/rest/v2/get_video_info/<videoid>", methods=["GET"])
+def get_videoinfo_v2(videoid):
+    print("Handling get_videoinfo request")
+    # if not current_user.is_authenticated:
+        # raise Forbidden("/rest/v2/get_videoinfo GET: login required !")
+
+    video = get_video_by_id(videoid)
+
+    video_schema = VideoSchema()
+
+    video = video_schema.dump(video)
+    videoinfo = {
+        "video_id": video["id"],
+        "path": video["path"],
+        "file_name": video["file_name"],
+        "videofps": video["fps"],
+        "realfps": video["realfps"],
+        "starttime": video["timestamp"],
+        "duration": video["frames"] / video["fps"],
+        "nframes": video["frames"],
+    }
+    return jsonify(videoinfo)

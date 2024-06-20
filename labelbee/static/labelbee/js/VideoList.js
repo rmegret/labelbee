@@ -704,6 +704,8 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   }
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
-  return videoControl.loadVideo2(videoinfo.videoPath); //Promise
+  // TODO: Unhardcode
+  // Get path from videoPath from videoinfo
+  return videoControl.loadVideo2("../data/"); //Promise
 }
 
