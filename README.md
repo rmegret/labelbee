@@ -1,41 +1,30 @@
-# Flask-User starter app
-
-This code base serves as a great starting point to write your next Flask application  
-(With or without Flask-User)
-
-## Developer benefits
-* Tested on Python 2.7, 3.3, and 3.4
-* Well organized directories with lots of comments
-  * app/models
-  * app/startup
-  * app/views
-* HTML5 BoilerPlate / jQuery / Bootstrap layout template
-* Few dependencies (Flask-SQLAlchemy, Flask-WTF, Flask-User, Flask-Migrate)
-* Includes Flask-User user management
-  * Register, Confirm email, Login, Logout
-  * Change username/email/password, Forgot password
-* SMTPHandler for error-level log messages -- sends emails on unhandled exceptions
-* Includes `py.test` test framework
-* Includes `alembic` database migration framework
+#Labelbee docs
 
 
-## Cloning the code base
-We assume that you have `git` and `virtualenvwrapper` installed.
+## Running the application
 
-    # Clone the code repository into ~/dev/my_app
-    mkdir -p ~/dev
-    cd ~/dev
-    git clone https://github.com/lingthio/Flask-User-starter-app.git my_app
+1. Create an .env file using the .example.env file as an example
+2. In the root directory, `run docker-compose up -d`. This will create the mysql database instance in the docker 
+3. `cd labelbee/`
+4. Run `python -m venv venv` to create a virtual environment
+5. Run `pip install -r requirements.txt` to download all the dependencies
+6. Run `flask db init` to initialize the db
+7. Run `flask db migration upgrade` to migrate the database
+8. Run `flask run`
 
-    # Create the 'my_app' virtual environment
-    mkvirtualenv -p PATH/TO/PYTHON my_app
+This should have the application up and running.
 
-    # Install required Python packages
-    cd ~/dev/my_app
-    workon my_app
-    pip install -r requirements.txt
-    
-    
+
+## Application Structure:
+
+1. Home Page
+2. Authentication
+3. Datasets Page
+4. Admin Page
+5. Labelbee
+6. Rest API
+
+
 ## Configuring the app
 
 Before we can use this application, we will have to configure the database URL and SMTP account
@@ -89,27 +78,3 @@ You can make use of the following users:
 
     # Run tests and show a test coverage report
     ./runcoverage.sh      # will run py.test with coverage options
-
-## Database migrations
-
-    # Show all DB migration commands
-    python manage.py db
-
-See [the Alembic docs](alembic.readthedocs.org) for more information.
-
-
-## Trouble shooting
-If you make changes in the Models and run into DB schema issues, delete the sqlite DB file `app/app.sqlite`.
-
-
-## Acknowledgements
-With thanks to the following Flask extensions:
-
-* [Alembic](alembic.readthedocs.org)
-* [Flask-Migrate](flask-migrate.readthedocs.org)
-* [Flask-User](pythonhosted.org/Flask-User/)
-
-[Flask-User-starter-app](https://github.com/lingthio/Flask-User-starter-app) was used as a starting point for this code repository.
-
-    # Please consider leaving the line above in your project's README file. Thank you.
-
