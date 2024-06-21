@@ -1,4 +1,4 @@
-from labelbee import create_app, db
+from labelbee import  create_app, db
 from labelbee.models import User, Role, UsersRoles, DataSet, Video, VideoData
 from sqlalchemy import DateTime
 
