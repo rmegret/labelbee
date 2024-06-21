@@ -174,3 +174,67 @@ def videos_page():
         dataset=dataset,
     )
 
+
+@bp.route("/video_data_details", methods=["GET", "POST"])
+# @login_required
+def video_data_details_page():
+    form = UserProfileForm(obj=current_user)
+
+    video_dataid = request.args.get("video_data")
+    video_data = get_video_data_by_id(video_dataid=video_dataid)
+
+    video_id = request.args.get("video")
+    datasetid = request.args.get("dataset")
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        # Redirect to home page
+        return redirect(url_for("home.video_data_details_page"))
+
+    # Process GET or invalid POST
+    return render_template(
+        "pages/video_data_details_page.html",
+        form=form,
+        video_data=video_data,
+        datasetid=datasetid,
+        video_id=video_id,
+    )
+
+
+
+@bp.route("/videodata", methods=["GET", "POST"])
+# @login_required
+def video_data_page():
+    form = UserProfileForm(obj=current_user)
+
+    videoid = request.args.get("videoid")
+
+    video_url = request.args.get("video_file")
+
+    datasetid = request.args.get("dataset")
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        # Redirect to home page
+        return redirect(url_for("home.video_data_page"))
+
+    # Process GET or invalid POST
+    return render_template(
+        "pages/video_data_page.html",
+        video_url=video_url,
+        video=video_info(videoid),
+        form=form,
+        datasetid=datasetid,
+    )
