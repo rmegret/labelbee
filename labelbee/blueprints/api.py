@@ -2,12 +2,6 @@ from flask import render_template, render_template_string, jsonify, Blueprint, r
 from flask_user import current_user
 import os
 
-"""
-Views
-====================================
-All web endpoints are defined here.
-"""
-
 from labelbee.user_management import create_user, edit_user
 from labelbee.flask_range_requests import send_from_directory_partial, dir_listing
 from flask import current_app
@@ -72,10 +66,12 @@ from labelbee.db_functions import (
     update_paths,
 )
 
+# TODO: Clean up
+# TODO: Keep cleaning
+# TODO: Make api restful
+# TODO: Figure out if this should be done using flask-REST
 
 bp = Blueprint('api', __name__, url_prefix='')
-
-
 
 
 @bp.route("/rest/auth/login", methods=["POST"])

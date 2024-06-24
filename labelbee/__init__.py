@@ -73,7 +73,7 @@ from labelbee.models import *
 # Initialize Flask Application
 
 def create_app():
-    app = Flask(__name__, static_url_path="")  # The WSGI compliant webapp object
+    app = Flask(__name__, static_url_path="", template_folder="templates")  # The WSGI compliant webapp object
     app.wsgi_app = ReverseProxied(app.wsgi_app)
 
     ####
@@ -132,14 +132,18 @@ def create_app():
 
     app.jinja_env.globals["bootstrap_is_hidden_field"] = is_hidden_field_filter
 
+    from .blueprints import home
+    app.register_blueprint(home.bp)
 
+    from .blueprints import labelbee
+    app.register_blueprint(labelbee.bp)
 
-    from . import labelbee_bp
-    app.register_blueprint(labelbee_bp.bp)
+    from .blueprints import download
+    app.register_blueprint(download.bp)
 
-    from . import home_bp
-    app.register_blueprint(home_bp.bp)
-
+    from .blueprints import api
+    app.register_blueprint(api.bp)
+    
     # logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
     #logger.info("config=%s",app.config)
 

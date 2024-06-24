@@ -9,7 +9,7 @@
 4. Run `python -m venv venv` to create a virtual environment
 5. Run `pip install -r requirements.txt` to download all the dependencies
 6. Run `flask db init` to initialize the db
-7. Run `flask db migration upgrade` to migrate the database
+7. Run `flask db upgrade` to migrate the database
 8. Run `flask run`
 
 This should have the application up and running.

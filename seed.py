@@ -1,6 +1,8 @@
 from labelbee import  create_app, db
 from labelbee.models import User, Role, UsersRoles, DataSet, Video, VideoData
 from sqlalchemy import DateTime
+from flask_security import hash_password
+import bcrypt
 
 import time
 
@@ -16,11 +18,13 @@ with app.app_context():
             name="user",
             label="user"
         )
-        
+    
+    password = "password"
+    hashed_password =  bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     user_1 = User(
         email="andres.ramos7@upr.edu",
-        password="password",
+        password=hashed_password,
         active=True,
         first_name="Andres",
         last_name="Ramos",
@@ -29,7 +33,7 @@ with app.app_context():
     )
     user_2 =  User(
         email="josue.rodriguez10@upr.edu",
-        password="password",
+        password=hashed_password,
         active=True,
         first_name="Josue",
         last_name="Rodriguez",
@@ -38,7 +42,7 @@ with app.app_context():
 
     user_3 = User(
         email="gabriel.santiago21@upr.edu",
-        password="password",
+        password=hashed_password,
         active=True,
         first_name="Gabriel",
         last_name="Santiago",

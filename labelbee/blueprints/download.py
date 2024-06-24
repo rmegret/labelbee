@@ -5,12 +5,8 @@ import os
 
 bp = Blueprint('download', __name__, url_prefix='/')
 
-
-
-#TODO: Add to receive file path in route path"data/<path:pathid>""
-@bp.route("/data/")
-def send_data():
+@bp.route("/data/<path:path>")
+def send_data(path):
+    # TODO: Make strigs into constants
     data_dir = os.path.join(bp.root_path, "../static/data")
-    path = "/videos/gurabo_video.mp4"
-    #TODO: Unhardcode this
-    return send_from_directory_partial(data_dir, "/gurabo_video.mp4", "/data")
+    return send_from_directory_partial(data_dir, path, "/data")
