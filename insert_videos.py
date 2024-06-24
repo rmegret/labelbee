@@ -3,14 +3,16 @@ import sqlalchemy
 from sqlalchemy.orm import Session
 import pandas as pd
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import shlex
 import cv2
 import glob 
 from labelbee.models import Video
 import time 
 
-load_dotenv() 
+env_file = find_dotenv(".env")
+load_dotenv(env_file)
+
 files = ["flowerpatch_20240606_09h10.MP4",  "flowerpatch_20240606_10h12.MP4"
 "flowerpatch_20240606_09h15.MP4",  "flowerpatch_20240606_10h17.MP4"
 "flowerpatch_20240606_09h20.MP4",  "flowerpatch_20240606_10h22.MP4"
@@ -75,15 +77,16 @@ class LabelbeeDB:
         self.user = os.environ.get('MYSQL_USER')
         self.password = os.environ.get('MYSQL_PASSWORD')
         self.host = os.environ.get('MYSQL_HOST')
+        self.database = os.environ.get('MYSQL_DATABASE')
         #user, password, host
 
     def connect(self):
         url = sqlalchemy.engine.URL.create(
             drivername="mysql+pymysql",
-            username='root',
-            password='password',
-            host="localhost",
-            database="labelbee-db", 
+            username=self.user,
+            password=self.password,
+            host=self.host,
+            database=self.database, 
             port=3306
         )
         print(f"Connecting...")
@@ -177,11 +180,14 @@ session = db.session()
 # TODO: Determine Gurabo location
 
 
-video_folder_path = "./labelbee/static/data/videos/"
+video_folder_path = "./labelbee/static/data/videos//"
+PATH = "/datasets/flowerpatch/mp4/2024_06_06_vids"
 dataset_id = "1"
-for video_path in glob.glob(f"{video_folder_path}/*"):
-    print(video_path)
-
+for video_file in files:
+    # print(video_path)
+    file_name = video_file
+    path = f"{PATH}/{video_file}
+    video_path = f"/mnt/storage/Gurabo/{path}"
     #Get fps
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -192,8 +198,7 @@ for video_path in glob.glob(f"{video_folder_path}/*"):
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     cap.release()
 
-    file_name = video_path.split("/")[-1]
-    path = "/".join(video_path.split("/")[:-1]) + "/"
+
     location = 1
     thumb = ""
     colony = 10
@@ -207,7 +212,7 @@ for video_path in glob.glob(f"{video_folder_path}/*"):
     video_entry = {
         "file_name": file_name, #Yes
         "path": path, # Yes
-        "timestamp": time_stamp,
+        "timestamp": "2024-06-06 12:00:00",
         "location": location, #Yes
         "colony": colony, #Yes 
         "notes": notes,
