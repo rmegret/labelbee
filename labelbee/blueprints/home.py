@@ -3,10 +3,6 @@ from labelbee.flask_range_requests import send_from_directory_partial, dir_listi
 from flask_user import current_user
 import os
 
-from flask import render_template, render_template_string, jsonify, Blueprint, request
-from flask_user import current_user
-import os
-
 """
 Views
 ====================================
@@ -116,19 +112,12 @@ def datasets_page():
     # Process GET or invalid POST
     return render_template("pages/datasets_page.html", datasets=datasets, form=form)
 
-@bp.route("/user")
-@login_required  # Limits access to authenticated users
-def user_page():
-
-    return render_template("pages/user_page.html", userid={"current_user": "andres"})
-
-
 # The Admin page is accessible to users with the 'admin' role
-@bp.route("/admin")
-@roles_accepted("admin")  # Limits access to users with the 'admin' role
-def admin_page():
-    form = UserProfileForm(obj=current_user)
-    return render_template("pages/admin_page.html", form=form)
+# @bp.route("/admin")
+# @roles_accepted("admin")  # Limits access to users with the 'admin' role
+# def admin_page():
+#     form = UserProfileForm(obj=current_user)
+#     return render_template("pages/admin_page.html", form=form)
 
 
 @bp.route("/videos", methods=["GET", "POST"])
@@ -233,23 +222,3 @@ def video_data_page():
         form=form,
         datasetid=datasetid,
     )
-
-@bp.route("/user/profile", methods=["GET", "POST"])
-@login_required
-def user_profile_page():
-    # Initialize form
-    form = UserProfileForm(obj=current_user)
-
-    # Process valid POST
-    if request.method == "POST" and form.validate():
-        # Copy form fields to user_profile fields
-        form.populate_obj(current_user)
-
-        # Save user_profile
-        db.session.commit()
-
-        # Redirect to home page
-        return redirect(url_for("home.home_page"))
-
-    # Process GET or invalid POST
-    return render_template("pages/user_profile_page.html", form=form)

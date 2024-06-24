@@ -18,7 +18,7 @@ log_dir = "./"
 # Enable running in subdomain
 # http://flask.pocoo.org/snippets/35/
 
-
+# TODO: Maybe poner en proxy?
 class ReverseProxied(object):
     """Wrap the application in this middleware and configure the
     front-end server to add these headers, to let you quietly bind
@@ -114,14 +114,11 @@ def create_app():
     db.init_app(app)
     ma.init_app(app)
     # Setup Flask-Migrate
-
     migrate = Migrate(app, db)
-    # print(migrate)
     # Setup Flask-Mail
     # mail = Mail(app)
     user_manager = UserManager(app, db, User)
     # Setup WTForms CsrfProtect
-
     csrf.init_app(app)
 
     # Define bootstrap_is_hidden_field for flask-bootstrap's bootstrap_wtf.html
@@ -131,6 +128,12 @@ def create_app():
         return isinstance(field, HiddenField)
 
     app.jinja_env.globals["bootstrap_is_hidden_field"] = is_hidden_field_filter
+
+    from .blueprints import auth
+    app.register_blueprint(auth.bp)
+
+    from .blueprints import admin
+    app.register_blueprint(admin.bp)
 
     from .blueprints import home
     app.register_blueprint(home.bp)
@@ -144,6 +147,7 @@ def create_app():
     from .blueprints import api
     app.register_blueprint(api.bp)
     
+
     # logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
     #logger.info("config=%s",app.config)
 
