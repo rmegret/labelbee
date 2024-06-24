@@ -186,7 +186,7 @@ dataset_id = "1"
 for video_file in files:
     # print(video_path)
     file_name = video_file
-    path = f"{PATH}/{video_file}
+    path = f"{PATH}/{video_file}"
     video_path = f"/mnt/storage/Gurabo/{path}"
     #Get fps
     cap = cv2.VideoCapture(video_path)
@@ -224,7 +224,17 @@ for video_file in files:
         "fps": fps,
         "realfps": real_fps,
         "filesize": filesize,
-        "hash": _hash
+        "hash": _hash,
+        "corrupted" : False,
+        "trimmed" : False,
+        "hasframe0" : False,
+        "hasframe_1s" : False,
+        "hasframe_2s" : False,
+        "hasframe_10s" : False,
+        "hasframeN_30s" : False,
+        "hasframeN_2s" : False,
+        "hasframeN_1s" : False,
+        "hasframeN": False
 
     }
     video = Video(**video_entry)
