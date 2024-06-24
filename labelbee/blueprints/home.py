@@ -112,13 +112,6 @@ def datasets_page():
     # Process GET or invalid POST
     return render_template("pages/datasets_page.html", datasets=datasets, form=form)
 
-# The Admin page is accessible to users with the 'admin' role
-# @bp.route("/admin")
-# @roles_accepted("admin")  # Limits access to users with the 'admin' role
-# def admin_page():
-#     form = UserProfileForm(obj=current_user)
-#     return render_template("pages/admin_page.html", form=form)
-
 
 @bp.route("/videos", methods=["GET", "POST"])
 @login_required
@@ -222,3 +215,64 @@ def video_data_page():
         form=form,
         datasetid=datasetid,
     )
+
+@app.route("/add_dataset", methods=["GET", "POST"])
+@login_required
+def add_dataset_page():
+    form = UserProfileForm(obj=current_user)
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+        new_dataset(
+            name=request.form.get("name"),
+            description=request.form.get("description"),
+            user=current_user,
+        )
+
+        # Redirect to home page
+        return redirect(url_for("home.datasets_page"))
+
+    # Process GET or invalid POST
+    return render_template("pages/add_dataset.html", form=form)
+
+@bp.route("/edit_video", methods=["GET", "POST"])
+@roles_accepted("admin")
+def edit_video_page():
+    form = UserProfileForm(obj=current_user)
+
+    videoid = request.args.get("video")
+    if videoid != None:
+        video = get_video_by_id(videoid=videoid)
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        edit_video(
+            videoid=request.form.get("video"),
+            file_name=request.form.get("file_name"),
+            path=request.form.get("path"),
+            timestamp=request.form.get("timestamp"),
+            location=request.form.get("location"),
+            colony=request.form.get("colony"),
+            frames=request.form.get("frames"),
+            width=request.form.get("width"),
+            height=request.form.get("height"),
+        )
+
+        # Redirect to home page
+        return redirect(
+            url_for("video_data_page") + "?videoid=" + request.form.get("video")
+        )
+
+    # Process GET or invalid POST
+    return render_template("pages/edit_video.html", form=form, video=video)

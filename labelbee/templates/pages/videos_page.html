@@ -100,7 +100,7 @@
         } );
         var table = $('#videos_table').DataTable({
             // load the data
-            "ajax": "{{ url_for('home.videolist_get_v2') + '?dataset=' + dataset.id|string }}",
+            "ajax": "{{ url_for('api.videolist_get_v2') + '?dataset=' + dataset.id|string }}",
             // put the data into the table
             "deferRender": true,
             "bAutoWidth": false,

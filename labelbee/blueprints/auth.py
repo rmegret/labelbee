@@ -10,7 +10,7 @@ bp = Blueprint('auth', __name__, url_prefix='')
 @login_required  # Limits access to authenticated users
 def user_page():
 
-    return render_template("pages/user_page.html", userid={"current_user": "andres"})
+    return render_template("auth/user_page.html", userid={"current_user": "andres"})
 
 
 @bp.route("/user/profile", methods=["GET", "POST"])
@@ -31,4 +31,4 @@ def user_profile_page():
         return redirect(url_for("home.home_page"))
 
     # Process GET or invalid POST
-    return render_template("pages/user_profile_page.html", form=form)
+    return render_template("auth/user_profile_page.html", form=form)
