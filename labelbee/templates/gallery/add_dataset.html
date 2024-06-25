@@ -19,7 +19,7 @@
     })
 </script>
 
-<form action="{{ url_for('home.add_dataset_page') }}" method="POST">
+<form action="{{ url_for('gallery.add_dataset_page') }}" method="POST">
     {{ form.hidden_tag() }}
     <div class='form-group'>
         Dataset Name: <input class="form-control" type="text" name="name"><br>

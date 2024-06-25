@@ -41,7 +41,7 @@
   <tbody id="videosBody">
       {% for item in videos %}
       <tr>
-          <td><a href="{{ url_for('video_data_page') }}?video_url={{ item.path + '/' + item.file_name }}&videoid={{ item.id }}">{{ item.path + '/' + item.file_name }}</a></td>
+          <td><a href="{{ url_for('home.video_data_page') }}?video_url={{ item.path + '/' + item.file_name }}&videoid={{ item.id }}">{{ item.path + '/' + item.file_name }}</a></td>
           <td>{{ item.colony }}</td>
           <td>{{ item.timestamp }}</td>
           <td>{{ item.id }}</td>

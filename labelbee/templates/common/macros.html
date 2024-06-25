@@ -4,15 +4,15 @@
 
 {% macro database_menu(current) %}
 
-  <a href="{{ url_for('home.datasets_page')}}">
+  <a href="{{ url_for('gallery.datasets_page')}}">
     <button type="button" onclick="" class="btn {{is_current(current,'datasets','btn-primary','btn-default')}} btn-sm">Datasets</button>
   </a>
 
-  <a href="{{ url_for('home.videos_page')}}">
+  <a href="{{ url_for('gallery.videos_page')}}">
     <button type="button" onclick="" class="btn {{is_current(current,'videos','btn-primary','btn-default')}} btn-sm">Videos</button>
   </a>
   
-  <a href="{{ url_for('home.video_data_page')}}">
+  <a href="{{ url_for('gallery.video_data_page')}}">
     <button type="button" onclick="" class="btn {{is_current(current,'videodata','btn-primary','btn-default')}} btn-sm">Video Data</button>
   </a>
 {% endmacro %}

@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from flask_user import login_required, current_user, roles_accepted
-from labelbee.init_app import app, db, csrf, logger
 
 from labelbee.user_management import create_user, edit_user
 
@@ -13,11 +12,10 @@ from labelbee.db_functions import (
 from labelbee.models import (
     UserProfileForm,
     UserUpdateForm,
-    UserSchema,
-    RoleSchema,
     Role
 )
 
+from labelbee.schemas import RoleSchema, UserSchema
 
 
 bp = Blueprint('admin', __name__, url_prefix='')

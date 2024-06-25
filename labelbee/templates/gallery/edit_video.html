@@ -20,7 +20,7 @@
 </script>
 
 <h1>Edit {{video.name}}</h1>
-<form action="{{ url_for('edit_video_page') }}" method="POST">
+<form action="{{ url_for('gallery.edit_video_page') }}" method="POST">
     {{ form.hidden_tag() }}
     <div class='form-group'>
         <input type="hidden" name="video" value="{{video.id}}">

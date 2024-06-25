@@ -117,7 +117,6 @@ def create_app():
     migrate = Migrate(app, db)
     # Setup Flask-Mail
     # mail = Mail(app)
-    user_manager = UserManager(app, db, User)
     # Setup WTForms CsrfProtect
     csrf.init_app(app)
 
@@ -138,6 +137,9 @@ def create_app():
     from .blueprints import home
     app.register_blueprint(home.bp)
 
+    from .blueprints import gallery
+    app.register_blueprint(gallery.bp)
+
     from .blueprints import labelbee
     app.register_blueprint(labelbee.bp)
 
@@ -147,6 +149,7 @@ def create_app():
     from .blueprints import api
     app.register_blueprint(api.bp)
     
+    user_manager = UserManager(app, db, User)
 
     # logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
     #logger.info("config=%s",app.config)
