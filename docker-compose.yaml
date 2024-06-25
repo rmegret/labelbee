@@ -6,7 +6,7 @@ services:
     image: mysql:5.7
     container_name: mysql_db
     environment:
-      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER} # for Linux (not sure)
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
