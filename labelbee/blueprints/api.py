@@ -29,16 +29,10 @@ import logging
 
 from labelbee.init_app import app, db, csrf, logger
 from labelbee.models import (
-    DataSetSchema,
     UserProfileForm,
     User,
-    UserSchema,
     UsersRoles,
-    UsersRolesSchema,
     Role,
-    RoleSchema,
-    VideoDataSchema,
-    VideoSchema,
     UserUpdateForm
 )
 from labelbee.db_functions import (
@@ -48,11 +42,9 @@ from labelbee.db_functions import (
     delete_video,
     edit_dataset,
     edit_video,
-    fix_datasets,
     get_dataset_by_id,
     get_video_by_id,
     new_dataset,
-    populate_datasets,
     user_list,
     video_list,
     dataset_list,
@@ -61,9 +53,11 @@ from labelbee.db_functions import (
     get_user_by_id,
     get_user_roles_by_id,
     get_video_data_by_id,
-    edit_video_data,
-    import_from_csv,
-    update_paths,
+    edit_video_data
+)
+
+from labelbee.schemas import (
+    VideoSchema
 )
 
 # TODO: Clean up
@@ -416,8 +410,11 @@ def videolist_get_v2():
 
     videos_schema = VideoSchema(many=True)
 
-    return jsonify({"data": videos_schema.dump(video_list(dataset))})
-
+    try :
+        video_payload = videos_schema.dump(video_list(dataset))
+        return jsonify({"data": video_payload})
+    except Exception as e:
+        print(e)
 
 @bp.route("/rest/v2/videodata", methods=["GET"])
 def videodata_get_v2():

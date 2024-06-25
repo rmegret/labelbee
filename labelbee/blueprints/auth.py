@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from flask_user import login_required, current_user
-from labelbee.init_app import app, db, csrf, logger
+from labelbee import db
 
 from labelbee.models import UserProfileForm
 
