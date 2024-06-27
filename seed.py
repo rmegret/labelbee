@@ -113,12 +113,12 @@ with app.app_context():
         notes="",
         dataset=dataset_1.id,
         thumb="./thumbnails/gurabo_video_1.png",
-        frames=10000,
-        height=1080,
-        width=1080,
-        fps=60,
-        realfps=60,
-        filesize=1020391723,
+        frames=6126,
+        height=2816,
+        width=2816,
+        fps=22.700312844682205,
+        realfps=22.700312844682205,
+        filesize=2652712916,
         hash="",
         trimmed=False,
         hasframe0 = False,
@@ -227,8 +227,3 @@ with app.app_context():
     db.session.add(video_data_2)
     db.session.add(video_data_3)
     db.session.commit()
-# with app.app_context():
-#     db.session.add_all(roles)
-#     db.session.add_all(users)
-#     db.session.add_all(usersroles)
-#     db.session.commit()
