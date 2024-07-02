@@ -5,8 +5,14 @@ import os
 
 bp = Blueprint('download', __name__, url_prefix='/')
 
+
+#TODO: Send id in path
+#TODO: Use storage api to get the bytes 
+#TODO: Send bytes using partial thing 
 @bp.route("/data/<path:path>")
 def send_data(path):
     # TODO: Make strigs into constants
+    # TODO: Use storage api to get the correct path
+    
     data_dir = os.path.join(bp.root_path, "../static/data")
     return send_from_directory_partial(data_dir, path, "/data")

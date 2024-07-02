@@ -8,14 +8,14 @@ load_dotenv()
 
 class FileSystemStorage:
 
+    # TODO: Add feature to create directory if it doesn't exist
     ROOT_PATH = os.getenv('ROOT_PATH')
 
     def put(self, file):
 
         file_id =  uuid.uuid4()
-
         try :
-            with open(f"{self.ROOT_PATH}/{file_id}.mp4", 'w') as f:
+            with open(f"{self.ROOT_PATH}/{file_id}.mp4", 'wb') as f:
                 f.write(file)
             return {
                 "success": True,
@@ -23,14 +23,13 @@ class FileSystemStorage:
             }
         
         except Exception as e:
-            print(e)
             return {
                 "success": False
             }
     
     def get(self, file_id):
         try :
-            with open(f"{self.ROOT_PATH}/{file_id}") as f:
+            with open(f"{self.ROOT_PATH}/{file_id}.mp4", 'rb') as f:
                 file = f.read()
             return {
                 "success": True,
