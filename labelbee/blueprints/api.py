@@ -7,7 +7,7 @@ from labelbee.flask_range_requests import send_from_directory_partial, dir_listi
 from flask import current_app
 from flask import redirect
 from flask import render_template, render_template_string, jsonify, Blueprint
-from flask import request, url_for
+from flask import request, url_for, abort
 from flask_user import current_user, login_required, roles_accepted
 from flask_login import logout_user, login_user
 from flask_wtf.csrf import generate_csrf
@@ -15,6 +15,9 @@ from werkzeug.exceptions import BadRequest, Forbidden
 from flask import Response
 import sys
 import json
+from labelbee import csrf
+from labelbee.storage import StorageFactory
+import cv2
 
 # from labelbee.__init__ import app
 
@@ -69,6 +72,7 @@ bp = Blueprint('api', __name__, url_prefix='')
 
 
 @bp.route("/rest/auth/login", methods=["POST"])
+@csrf.exempt #this will exempt the csrf for this view
 def ajaxlogin():
     """
     API GET endpoint for authentification
@@ -84,6 +88,7 @@ def ajaxlogin():
     :return: JSON object with the following fields:
     :rtype: JSON object
     """
+    print("aqio")
     email = request.form.get("email")
     password = request.form.get("password")
     # logger.debug(email)
@@ -152,7 +157,7 @@ def whoami():
     email: string
     id: int
     """
-    # print
+    print(current_user)
     if current_user.is_authenticated:
         return jsonify(
             {
@@ -853,3 +858,65 @@ def load_json(trackfile):
         raise Forbidden("/rest/events GET: login required !")
 
     return loadtrack(str(current_user.id), trackfile)
+
+
+
+@bp.route("/rest/video/", methods=['POST'])
+@csrf.exempt
+def create_video():
+    print(request.args.get('video'))
+    video_files = request.files.get("video")
+    video_bytes = video_files.read()
+    cap = cv2.VideoCapture(video_bytes)
+    print(cap)
+    #TODO Move this to __init__ and import 
+    storage_api = StorageFactory().create("file_system_storage")
+
+
+    storage_response = storage_api.put(video_bytes)
+    # If successfully stored video files
+    if storage_response["success"]:
+        storage_id = storage_response["id"]
+        # if not cap.isOpened():
+        #     print("Error opening video file!")
+        # real_fps = cap.get(cv2.CAP_PROP_FPS)
+        # frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        # width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # cap.release()
+        #Create video entry 
+        #TODO: Generate timestamp
+        #TODO: 
+        return Response("salu2")
+
+    abort(500)
+
+        
+    # Sacar metadata del video
+    # Sacar bytes del video
+    # Subir los bytes al storage usando storage api
+    # Crear video entry en la db  
+
+@bp.route("/rest/video/", methods=['GET'])
+@csrf.exempt
+def list_video():
+    video_id = request.json["video_id"]
+    #TODO: Move this to __init and import 
+    storage_api = StorageFactory().create("file_system_storage")
+    print(storage_api.get(video_id))
+    # video_files = request.files.get("video")
+    # video_bytes = video_files.read()
+    # #TODO Move this to __init__ and import 
+    # storage_api = StorageFactory().create("file_system_storage")
+
+
+    # storage_response = storage_api.put(video_bytes)
+    # # If successfully stored video files
+    # if storage_response["success"]:
+    #     storage_id = storage_response["id"]
+        
+        #Create video entry 
+
+    return Response("salu2")
+
+    # abort(500)
