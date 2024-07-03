@@ -61,10 +61,11 @@ class UsersRoles(db.Model):
 #TODO: Remove adhoc columns
 class Video(db.Model):
     __tablename__ = "videos"
-    __table_args__ = (db.UniqueConstraint("file_name", "path"),)
+    __table_args__ = (db.UniqueConstraint("storage_id"),)
     id = db.Column(db.Integer(), primary_key=True)
-    file_name = db.Column(db.String(200), nullable=False, server_default=u"")
-    path = db.Column(db.String(100), nullable=False, server_default=u"")
+    video_name = db.Column(db.String(200), nullable=False, server_default=u"")
+    storage_id = db.Column(db.String(64))
+    # path = db.Column(db.String(100), nullable=False, server_default=u"")
     timestamp = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.Integer(), nullable=False)
     colony = db.Column(db.String(50))

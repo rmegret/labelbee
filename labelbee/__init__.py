@@ -10,6 +10,7 @@ from flask_wtf.csrf import CSRFProtect
 import sys
 import logging
 import os
+from labelbee.storage import StorageFactory
 
 
 log_dir = os.environ.get("LABELBEE_LOGDIR")
@@ -66,6 +67,8 @@ class ReverseProxied(object):
 
 db = SQLAlchemy()
 ma = Marshmallow()
+csrf = CSRFProtect()
+storage_api = StorageFactory().create("file_system_storage")
 
 from labelbee.models import *
 # from labelbee.views import *
@@ -106,7 +109,6 @@ def create_app():
         # Disable CSRF checks while testing
         app.config["WTF_CSRF_ENABLED"] = False
 
-    csrf = CSRFProtect(app)  # Setup CSRF protection
     # ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
 
 

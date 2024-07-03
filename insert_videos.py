@@ -175,19 +175,17 @@ db.load_credentials_from_env()
 db.connect()
 session = db.session()
 
-# TODO: Figure out video_folder_path
-# TODO: Figure out dataset id
-# TODO: Determine Gurabo location
 
-
-video_folder_path = "./labelbee/static/data/videos//"
-PATH = "/datasets/flowerpatch/mp4/2024_06_06_vids"
+video_folder_path = "./labelbee/static/data/videos"
+# PATH = "/datasets/flowerpatch/mp4/2024_06_06_vids"
 dataset_id = "1"
-for video_file in files:
+for video_path in glob.glob(f"{video_folder_path}/*"):
+    print("Aqui")
+    print(video_path)
+
     # print(video_path)
-    file_name = video_file
-    path = f"{PATH}/{video_file}"
-    video_path = f"/mnt/storage/Gurabo/{path}"
+    file_name = video_path.split("/")[-1]
+    # video_path = f"/videos/"
     #Get fps
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -201,7 +199,7 @@ for video_file in files:
 
     location = 1
     thumb = ""
-    colony = 10
+    colony = "C"
     notes = ""
     dataset = dataset_id
     filesize = os.path.getsize(video_path)
@@ -209,6 +207,8 @@ for video_file in files:
     fps = 60
     local_time = time.localtime(time.time())
     time_stamp = time.strftime("%Y-%m-%d", local_time)
+    path = "/videos"
+
     video_entry = {
         "file_name": file_name, #Yes
         "path": path, # Yes
@@ -237,6 +237,8 @@ for video_file in files:
         "hasframeN": False
 
     }
+    print(video_entry)
     video = Video(**video_entry)
     session.add(video)
-    session.commit()
+    break 
+session.commit()

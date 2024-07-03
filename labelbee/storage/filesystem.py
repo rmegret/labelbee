@@ -37,6 +37,7 @@ class FileSystemStorage:
                 "file": file
             }
         except Exception as e:
+            print(e)
             return {
                 "success": False,
                 "file_id": file_id

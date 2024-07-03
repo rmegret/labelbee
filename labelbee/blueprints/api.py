@@ -613,8 +613,8 @@ def get_videoinfo_v2(videoid):
     video = video_schema.dump(video)
     videoinfo = {
         "video_id": video["id"],
-        "path": video["path"],
-        "file_name": video["file_name"],
+        "storage_id": video["storage_id"],
+        "file_name": video["video_name"],
         "videofps": video["fps"],
         "realfps": video["realfps"],
         "starttime": video["timestamp"],

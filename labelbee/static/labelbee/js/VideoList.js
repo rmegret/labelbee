@@ -684,9 +684,10 @@ VideoManager.prototype.videoSelected = async function(id) {
 }
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
+  console.log("aca", videoInfoJSON)
   videoinfo = {
     name: videoInfoJSON["file_name"],
-    videoPath: url_for("/data") + videoInfoJSON["path"] + '/' + videoInfoJSON["file_name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",
+    storageId: `${url_for("/data")}/${videoInfoJSON["storage_id"]}`,//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",
     videofps: videoInfoJSON["videofps"],
     realfps: videoInfoJSON["realfps"],
     starttime: videoInfoJSON["starttime"],
@@ -704,6 +705,6 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   }
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
-  return videoControl.loadVideo2(videoinfo.videoPath); //Promise
+  return videoControl.loadVideo2(videoinfo.storageId); //Promise
 }
 

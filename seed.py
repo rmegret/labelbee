@@ -105,8 +105,8 @@ with app.app_context():
 
 
     video_1 = Video(
-        file_name="gurabo_video.mp4",
-        path="/videos",
+        video_name="gurabo_video.mp4",
+        storage_id="2ca6e508-1d9a-4787-983a-0cddfa1435a8",
         timestamp="2020/01/01",
         location=1,
         colony="colony 1",
@@ -131,63 +131,63 @@ with app.app_context():
         hasframeN = False
     )
 
-    video_2 = Video(
-        file_name="pollinators_RP_video.mp4",
-        path="/videos",
-        timestamp="2020/01/01",
-        location=5,
-        colony="colony 2",
-        notes="",
-        dataset=dataset_2.id,
-        thumb="./thumbnails/pollinators_video_rp.png",
-        frames=10000,
-        height=1080,
-        width=1080,
-        fps=60,
-        realfps=60,
-        filesize=1020391723,
-        hash="",
-        trimmed=False,
-        hasframe0 = False,
-        hasframe_1s = False,
-        hasframe_2s = False,
-        hasframe_10s = False,
-        hasframeN_30s = False,
-        hasframeN_2s = False,
-        hasframeN_1s = False,
-        hasframeN = False
-    )
+    # video_2 = Video(
+    #     video_name="pollinators_RP_video.mp4",
+    #     storage_id="",
+    #     timestamp="2020/01/01",
+    #     location=5,
+    #     colony="colony 2",
+    #     notes="",
+    #     dataset=dataset_2.id,
+    #     thumb="./thumbnails/pollinators_video_rp.png",
+    #     frames=10000,
+    #     height=1080,
+    #     width=1080,
+    #     fps=60,
+    #     realfps=60,
+    #     filesize=1020391723,
+    #     hash="",
+    #     trimmed=False,
+    #     hasframe0 = False,
+    #     hasframe_1s = False,
+    #     hasframe_2s = False,
+    #     hasframe_10s = False,
+    #     hasframeN_30s = False,
+    #     hasframeN_2s = False,
+    #     hasframeN_1s = False,
+    #     hasframeN = False
+    # )
 
-    video_3 = Video(
-        file_name="pollinators_Juana_Diaz_video.mp4",
-        path="/videos",
-        timestamp="2023/05/01",
-        location=3,
-        colony="colony 10",
-        notes="",
-        dataset=dataset_3.id,
-        thumb="./thumbnails/pollinators_video_juana_diaz.png",
-        frames=10000,
-        height=1080,
-        width=1080,
-        fps=60,
-        realfps=60,
-        filesize=1020391723,
-        hash="",
-        trimmed=False,
-        hasframe0 = False,
-        hasframe_1s = False,
-        hasframe_2s = False,
-        hasframe_10s = False,
-        hasframeN_30s = False,
-        hasframeN_2s = False,
-        hasframeN_1s = False,
-        hasframeN = False
-    )
+    # video_3 = Video(
+    #     video_name="pollinators_Juana_Diaz_video.mp4",
+    #     storage_id="",
+    #     timestamp="2023/05/01",
+    #     location=3,
+    #     colony="colony 10",
+    #     notes="",
+    #     dataset=dataset_3.id,
+    #     thumb="./thumbnails/pollinators_video_juana_diaz.png",
+    #     frames=10000,
+    #     height=1080,
+    #     width=1080,
+    #     fps=60,
+    #     realfps=60,
+    #     filesize=1020391723,
+    #     hash="",
+    #     trimmed=False,
+    #     hasframe0 = False,
+    #     hasframe_1s = False,
+    #     hasframe_2s = False,
+    #     hasframe_10s = False,
+    #     hasframeN_30s = False,
+    #     hasframeN_2s = False,
+    #     hasframeN_1s = False,
+    #     hasframeN = False
+    # )
 
     db.session.add(video_1)
-    db.session.add(video_2)
-    db.session.add(video_3)
+    # db.session.add(video_2)
+    # db.session.add(video_3)
     db.session.commit()
 
     video_data_1 = VideoData(
@@ -201,29 +201,29 @@ with app.app_context():
         created_by_id=user_1.id
     )
 
-    video_data_2 = VideoData(
-        file_name="pollinators_rp_video_data",
-        path="/video_data",
-        timestamp="2024/02/12",
-        data_type="csv",
-        data="not sure",
-        notes="",
-        video_id = video_2.id,
-        created_by_id=user_1.id
-    )
+    # video_data_2 = VideoData(
+    #     file_name="pollinators_rp_video_data",
+    #     path="/video_data",
+    #     timestamp="2024/02/12",
+    #     data_type="csv",
+    #     data="not sure",
+    #     notes="",
+    #     video_id = video_2.id,
+    #     created_by_id=user_1.id
+    # )
 
-    video_data_3 = VideoData(
-        file_name="pollinators_juana_diaz_video_data",
-        path="/video_data",
-        timestamp="2024/03/31",
-        data_type="csv",
-        data="not sure",
-        notes="",
-        video_id = video_2.id,
-        created_by_id=user_2.id
-    )
+    # video_data_3 = VideoData(
+    #     file_name="pollinators_juana_diaz_video_data",
+    #     path="/video_data",
+    #     timestamp="2024/03/31",
+    #     data_type="csv",
+    #     data="not sure",
+    #     notes="",
+    #     video_id = video_2.id,
+    #     created_by_id=user_2.id
+    # )
 
     db.session.add(video_data_1)
-    db.session.add(video_data_2)
-    db.session.add(video_data_3)
+    # db.session.add(video_data_2)
+    # db.session.add(video_data_3)
     db.session.commit()

@@ -42,9 +42,10 @@ def send_from_directory_partial(directory, filename, base_uri):
         TODO: handle all send_file args, mirror send_file's error handling
         (if it has any)
     """
-    
-    path = safe_join(directory, filename)
-        
+    print(directory, filename)
+    # path = safe_join(directory, filename)
+    # TODO: Do this correctly 
+    path = directory + '/'+filename
     print('send_from_directory_partial: looking for path="'+path+'"...')
 
     try:
@@ -69,15 +70,16 @@ def send_from_directory_partial(directory, filename, base_uri):
     
     
     print('send_from_directory_partial: MIME='+mimetypes.guess_type(path)[0])
-    
+    print("acaaaaaa")
     size = os.path.getsize(path)    
     byte1, byte2 = 0, None
     
     m = re.search('(\d+)-(\d*)', range_header)
-    g = m.groups()
+    print(m,"acaaaaaaa")
+    # g = m.groups()
     
-    if g[0]: byte1 = int(g[0])
-    if g[1]: byte2 = int(g[1])
+    # if g[0]: byte1 = int(g[0])
+    # if g[1]: byte2 = int(g[1])
 
     length = size - byte1
     if byte2 is not None:

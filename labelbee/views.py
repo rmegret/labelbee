@@ -6,9 +6,9 @@ All web endpoints are defined here.
 
 from labelbee.user_management import create_user, edit_user
 from labelbee.flask_range_requests import send_from_directory_partial, dir_listing
-from flask import current_app
+# from flask import current_app
 from flask import redirect
-from flask import render_template, render_template_string, jsonify
+from flask import render_template, render_template_string, jsonify, Blueprint
 from flask import request, url_for
 from flask_user import current_user, login_required, roles_accepted
 from flask_login import logout_user, login_user
@@ -18,7 +18,7 @@ from flask import Response
 import sys
 import json
 
-from labelbee.__init__ import app
+# from labelbee.__init__ import app
 
 
 from werkzeug.security import safe_join
@@ -72,6 +72,8 @@ upload_dir = "labelbee/static/upload/"
 data_root_dir = os.environ.get("DATA_DIR")
 # -------------------------------------------
 # PAGES
+
+# bp = Blueprint('views', __name__, url_prefix='/views')
 
 # The Home page is accessible to anyone
 @app.route("/")
@@ -164,7 +166,7 @@ def edit_dataset_page():
 
         # Redirect to home page
         return redirect(
-            url_for("videos_page") + "?dataset=" + request.form.get("dataset")
+            url_for("home.videos_page") + "?dataset=" + request.form.get("dataset")
         )
 
     # Process GET or invalid POST
@@ -585,7 +587,9 @@ def after_request(response):
 @app.route("/data/<path:path>")
 def send_data(path):
     print("Handling file request PATH=" + path)
+    print(app.root_path)
     data_dir = os.path.join(app.root_path, "static/data")
+    print(data_dir)
     return send_from_directory_partial(data_dir, path, "/data")
 
 
@@ -598,7 +602,7 @@ def send_data_():
 
 
 # --------------------------------------
-# REST API for authentification
+# REST API for authentificationf
 
 
 @app.route("/rest/auth/login", methods=["POST"])
@@ -617,7 +621,6 @@ def ajaxlogin():
     :return: JSON object with the following fields:
     :rtype: JSON object
     """
-
     email = request.form.get("email")
     password = request.form.get("password")
     # logger.debug(email)
@@ -686,7 +689,7 @@ def whoami():
     email: string
     id: int
     """
-
+    # print
     if current_user.is_authenticated:
         return jsonify(
             {

@@ -15,8 +15,8 @@ class VideoSchema(ma.SQLAlchemySchema):
         model = Video
 
     id = fields.Integer(dump_only=True)
-    file_name = FileName()
-    path = Path()
+    video_name = fields.String()
+    storage_id = fields.String()
     timestamp = fields.DateTime()
     location = fields.Integer()
     colony = fields.String()

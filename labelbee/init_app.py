@@ -2,12 +2,11 @@
 #
 # Authors: Ling Thio <ling.thio@gmail.com>
 
-# import logging
 from datetime import datetime
-from flask import Flask
-from flask_mail import Mail
+from flask import Flask, render_template
+# from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_script import Manager
+# from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_user import UserManager
@@ -17,6 +16,7 @@ import logging
 import os
 
 log_dir = os.environ.get("LABELBEE_LOGDIR")
+log_dir = "./"
 
 # Enable running in subdomain
 # http://flask.pocoo.org/snippets/35/
@@ -74,7 +74,7 @@ app = Flask(__name__, static_url_path="")  # The WSGI compliant webapp object
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 db = SQLAlchemy()  # Setup Flask-SQLAlchemy
-manager = Manager(app)  # Setup Flask-Script
+# manager = Manager(app)  # Setup Flask-Script
 csrf = CSRFProtect(app)  # Setup CSRF protection
 ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
 
@@ -95,11 +95,12 @@ def init_app(app, extra_config_settings={}):
 
     # Read common settings from 'app/settings.py'
     app.config.from_object("labelbee.settings")
-
+    # print(app.config)
     # Read environment-specific settings from 'app/local_settings.py'
     try:
         app.config.from_object("labelbee.local_settings")
-    except ImportError:
+    except ImportError as e:
+        print(e)
         exit(
             "The configuration file 'labelbee/local_settings.py' does not exist.\n"
             + "Please copy labelbee/local_settings_example.py to labelbee/local_settings.py\n"
@@ -114,12 +115,10 @@ def init_app(app, extra_config_settings={}):
 
     # Initialize Flask-SQLAlchemy and Flask-Script _after_ app.config has been read
     db.init_app(app)
-
     # Setup Flask-Migrate
     migrate = Migrate(app, db)
-
     # Setup Flask-Mail
-    mail = Mail(app)
+    # mail = Mail(app)
 
     # Setup WTForms CsrfProtect
 
@@ -145,7 +144,7 @@ def init_app(app, extra_config_settings={}):
     user_manager = CustomUserManager(app, db, User)
     from labelbee.db_functions import injest_tags, injest_videos
 
-    # try:
+    # try:Began 
     #     injest_videos("data/tags.csv")
     # except Exception as e:
     #     print(e)
@@ -157,13 +156,14 @@ def init_app(app, extra_config_settings={}):
 
     # print(app.logger)
 
-    from labelbee.user_management import import_users
+    # from labelbee.user_management import import_users
 
     # import_users("users.csv")
-
+    # print("aca")
     logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
     #logger.info("config=%s",app.config)
 
+    return app
 
 def init_email_error_handler(app):
     """
