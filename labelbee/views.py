@@ -8,8 +8,8 @@ from labelbee.user_management import create_user, edit_user
 from labelbee.flask_range_requests import send_from_directory_partial, dir_listing
 from flask import current_app
 from flask import redirect
-from flask import render_template, render_template_string, Markup, jsonify
-from flask import request, url_for, safe_join
+from flask import render_template, render_template_string, jsonify
+from flask import request, url_for
 from flask_user import current_user, login_required, roles_accepted
 from flask_login import logout_user, login_user
 from flask_wtf.csrf import generate_csrf
@@ -17,6 +17,7 @@ from werkzeug.exceptions import BadRequest, Forbidden
 from flask import Response
 import sys
 import json
+from werkzeug.security import safe_join
 
 import os
 from datetime import datetime
@@ -556,7 +557,7 @@ def version_page():
     )
     text += "\n<h4>Log (5 last commits)</h4>\n<pre>" + log + "</pre>"
     text += "\n<h4>Details status</h4>\n<pre>" + details + "</pre>"
-    return render_template("pages/version_page.html", webapp_version=Markup(text))
+    return render_template("pages/version_page.html", webapp_version=text)
 
 
 # ---------------------------------------------------

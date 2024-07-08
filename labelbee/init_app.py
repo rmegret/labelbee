@@ -7,7 +7,7 @@ from datetime import datetime
 from flask import Flask
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_script import Manager
+# from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_user import UserManager
@@ -15,8 +15,12 @@ from flask_wtf.csrf import CSRFProtect
 import sys
 import logging
 import os
+from dotenv import load_dotenv
+import uuid 
 
+load_dotenv()
 log_dir = os.environ.get("LABELBEE_LOGDIR")
+# print(log_dir)
 
 # Enable running in subdomain
 # http://flask.pocoo.org/snippets/35/
@@ -74,7 +78,7 @@ app = Flask(__name__, static_url_path="")  # The WSGI compliant webapp object
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 db = SQLAlchemy()  # Setup Flask-SQLAlchemy
-manager = Manager(app)  # Setup Flask-Script
+# manager = Manager(app)  # Setup Flask-Script
 csrf = CSRFProtect(app)  # Setup CSRF protection
 ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
 
@@ -95,6 +99,7 @@ def init_app(app, extra_config_settings={}):
 
     # Read common settings from 'app/settings.py'
     app.config.from_object("labelbee.settings")
+    # app.secret_key = uuid.uuid4()
 
     # Read environment-specific settings from 'app/local_settings.py'
     try:

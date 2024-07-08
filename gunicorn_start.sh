@@ -22,15 +22,16 @@ checkEnvVariable LABELBEE_PORT
 checkEnvVariable LABELBEE_APPDIR
 checkEnvVariable LABELBEE_LOGDIR
 
-checkEnvVariable CONDA_EXE
+# checkEnvVariable CONDA_EXE
 
 GUNICORN_PIDFILE="$LABELBEE_LOGDIR"/labelbee.pid
 GUNICORN_LOG="$LABELBEE_LOGDIR"/gunicorn_error_logs.log
 
 # Setup CONDA, then activate labelbee env
-eval "$($CONDA_EXE shell.bash hook)"
-conda activate labelbee
+# eval "$($CONDA_EXE shell.bash hook)"
+# conda activate labelbee
+source venv/bin/activate
 
 # May be a good idea to check https://docs.gunicorn.org/en/latest/configure.html
 
-gunicorn -p "$GUNICORN_PIDFILE" -b 127.0.0.1:$LABELBEE_PORT --chdir "$LABELBEE_APPDIR" manage:app -w 1 --threads 12 --timeout 300 --log-file "$GUNICORN_LOG" --daemon
+gunicorn -p "$GUNICORN_PIDFILE" -b 127.0.0.1:$LABELBEE_PORT --chdir "$LABELBEE_APPDIR" manage:app -w 1 --threads 12 --timeout 300 --log-file "$GUNICORN_LOG"

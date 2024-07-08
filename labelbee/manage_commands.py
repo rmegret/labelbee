@@ -6,12 +6,12 @@
 
 from datetime import datetime
 
-from labelbee.init_app import app, db, manager
+from labelbee.init_app import app, db
 from labelbee.models import User, Role, UsersRoles
 import pandas as pd
 
 
-@manager.command
+# @manager.command
 def init_db():
     """Initialize the database."""
     # Create all tables
