@@ -15,7 +15,7 @@ DEBUG = os.environ["DEBUG"]
 SECRET_KEY = os.environ[
         "SECRET_KEY"
     ] 
-SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://root:password@localhost:3306/labelbee-db"
+SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{os.environ["MYSQL_USER"]}:{os.environ["MYSQL_PASSWORD"]}@{os.environ["MYSQL_HOST"]}/{os.environ["MYSQL_DATABASE"]}'
 MAIL_SERVER = "localhost"
 MAIL_PORT = 25
 MAIL_USE_SSL = False
