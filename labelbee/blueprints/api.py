@@ -27,7 +27,7 @@ import json
 import re
 import logging
 
-from labelbee.init_app import app, db, csrf, logger
+# from labelbee import app
 from labelbee.models import (
     UserProfileForm,
     User,
@@ -57,7 +57,7 @@ from labelbee.db_functions import (
 )
 
 from labelbee.schemas import (
-    VideoSchema
+    VideoSchema, VideoDataSchema, DataSetSchema, UserSchema
 )
 
 # TODO: Clean up
@@ -333,6 +333,7 @@ def serve_files(base_dir, path, base_uri, format="html"):
                 "path": path,
                 "uri": uripath,
             }
+            print("result", result)
             return jsonify(result)
         raise BadRequest("GET " + base_uri + ": Internal error")
     else:
@@ -370,7 +371,7 @@ def keypointlabels_get(path=""):
     #    raise Forbidden('/rest/config/labellist GET: login required !')
     format = request.args.get("format", "html")
 
-    base_dir = os.path.join(app.root_path, "static/data/config/keypointlabels/")
+    base_dir = os.path.join(current_app.root_path, "static/data/config/keypointlabels/")
     # '/rest/config/keypointlabels/'
     base_uri = url_for("keypointlabels_get", path="")
 
@@ -391,7 +392,7 @@ def videolist_get(path=""):
 
     print("format=", format)
 
-    base_dir = os.path.join(app.root_path, "static/data/config/videolist/")
+    base_dir = os.path.join(current_app.root_path, "static/data/config/videolist/")
     # '/rest/config/keypointlabels/'
     base_uri = url_for("videolist_get", path="")
 
@@ -412,6 +413,7 @@ def videolist_get_v2():
 
     try :
         video_payload = videos_schema.dump(video_list(dataset))
+        print(video_payload)
         return jsonify({"data": video_payload})
     except Exception as e:
         print(e)

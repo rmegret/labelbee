@@ -10,7 +10,7 @@ from datetime import datetime
 
 from werkzeug.datastructures import FileStorage
 from labelbee.models import Video, VideoData, DataSet, User, UsersRoles, Role
-from labelbee import db
+from labelbee.app import db
 from flask import current_app
 from typing import List, Optional
 

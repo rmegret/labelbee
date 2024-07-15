@@ -6,7 +6,7 @@ from .models import (
     DataSet,
     Role
 )
-from labelbee.__init__ import ma
+from labelbee.app import ma
 from marshmallow import validate, fields
 from labelbee.validation import FileName, Path
 

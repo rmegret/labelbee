@@ -9,10 +9,11 @@ from labelbee.db_functions import (
     get_video_by_id,
     edit_video,
     video_info,
-    get_video_data_by_id
+    get_video_data_by_id,
+    edit_dataset
 )
 
-from labelbee import db
+from labelbee.app import db
 
 from labelbee.models import UserProfileForm
 
@@ -239,3 +240,45 @@ def video_data_details_page():
         datasetid=datasetid,
         video_id=video_id,
     )
+
+
+@bp.route("/edit_dataset", methods=["GET", "POST"])
+@roles_accepted("admin")
+def edit_dataset_page():
+    form = UserProfileForm(obj=current_user)
+
+    datasetid = request.args.get("dataset")
+    if datasetid != None:
+        e = get_dataset_by_id(datasetid=datasetid)
+        dataset = {
+            "id": e.id,
+            "name": e.name,
+            "description": e.description,
+            "created_by": get_user_by_id(e.created_by).first_name
+            + " "
+            + get_user_by_id(e.created_by).last_name,
+            "timestamp": e.timestamp,
+        }
+
+    # Process valid POST
+    if request.method == "POST" and form.validate():
+        # Copy form fields to user_profile fields
+        form.populate_obj(current_user)
+
+        # Save user_profile
+        db.session.commit()
+
+        edit_dataset(
+            datasetid=request.form.get("dataset"),
+            name=request.form.get("name"),
+            description=request.form.get("description"),
+        )
+
+        # Redirect to home page
+        return redirect(
+            url_for("videos_page") + "?dataset=" + request.form.get("dataset")
+        )
+
+    # Process GET or invalid POST
+    return render_template("pages/edit_dataset.html", form=form, dataset=dataset)
+

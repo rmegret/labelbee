@@ -1,7 +1,8 @@
 from labelbee.models import User, Role, UsersRoles
-from labelbee.init_app import db, app, logger
+from labelbee.app import db
 from typing import Tuple
 from datetime import datetime
+from flask import current_app
 
 
 def import_users(csv_file: str) -> None:
@@ -44,7 +45,7 @@ def create_user(
         first_name=first_name,
         last_name=last_name,
         email=email,
-        password=app.user_manager.hash_password(password),
+        password=current_app.user_manager.hash_password(password),
         active=True,
         email_confirmed_at=datetime.utcnow(),
     )
@@ -77,7 +78,7 @@ def edit_user(user_info) -> None:
     user.first_name = user_info['first_name'] if user_info['first_name'] else user.first_name
     user.last_name = user_info['last_name']if user_info['last_name'] else user.last_name
     user.password = (
-        app.user_manager.hash_password(user_info['password']) if user_info['password'] else user.password
+        current_app.user_manager.hash_password(user_info['password']) if user_info['password'] else user.password
     )
     user.studentnum = user_info['studentnum'] if user_info['studentnum'] else user.studentnum
     user.clase = user_info['clase'] if user_info['clase'] else user.clase

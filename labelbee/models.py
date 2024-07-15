@@ -9,7 +9,7 @@ from flask_wtf import FlaskForm
 from sqlalchemy.orm import backref
 from wtforms import StringField, SubmitField, validators, BooleanField, PasswordField, HiddenField
 from wtforms.fields import SelectMultipleField
-from labelbee.__init__ import db, ma
+from labelbee.app import db, ma
 from marshmallow import validate, fields
 from labelbee.validation import FileName, Path
 
