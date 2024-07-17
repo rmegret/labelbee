@@ -102,7 +102,7 @@ class DataSetSchema(ma.SQLAlchemySchema):
     id = fields.Integer(dump_only=True)
     name = fields.String(required=True)
     description = fields.String()
-    creator = fields.Integer(required=True)
+    creator = fields.Nested(UserSchema)
     timestamp = fields.DateTime(required=True)
 
 

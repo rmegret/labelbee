@@ -66,6 +66,7 @@ class ReverseProxied(object):
 
 db = SQLAlchemy()
 ma = Marshmallow()
+csrf = CSRFProtect()
 
 from labelbee.models import *
 # from labelbee.views import *
@@ -106,7 +107,7 @@ def create_app():
         # Disable CSRF checks while testing
         app.config["WTF_CSRF_ENABLED"] = False
 
-    csrf = CSRFProtect(app)  # Setup CSRF protection
+  # Setup CSRF protection
     # ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
 
 

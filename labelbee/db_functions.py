@@ -257,6 +257,201 @@ from typing import List, Optional
 #         db.session.commit()
 
 
+#Dataset
+
+def dataset_list() -> List[DataSet]:
+    """Get list of all datasets.
+
+    :return: A list of all datasets.
+    :rtype: List[DataSet]
+    """
+
+    return DataSet.query.all()
+
+
+def new_dataset(name: str, description: str, user: User):
+    """Create a new dataset.
+
+    :param name: The name of the dataset.
+    :type name: str
+    :param description: The description of the dataset.
+    :type description: str
+    :param user: The user creating the dataset.
+    :type user: User
+    """
+
+    dataset = DataSet(
+        name="New Dataset" if name.strip() == "" else name,
+        description=description,
+        created_by=user.id,
+    )
+    db.session.add(dataset)
+    db.session.commit()
+
+def get_dataset_by_id(datasetid: int) -> DataSet:
+    """Get a dataset by id.
+
+    :param datasetid: The id of the dataset to get.
+    :type datasetid: int
+    :return: The dataset specified by the id.
+    :rtype: DataSet
+    """
+
+    return DataSet.query.filter(DataSet.id == datasetid).first()
+
+
+def edit_dataset(datasetid: int, name: str, description: str) -> None:
+    """Edit a dataset.
+
+    :param datasetid: The id of the dataset to edit.
+    :type datasetid: int
+    :param name: The new name of the dataset.
+    :type name: str
+    :param description: The new description of the dataset.
+    :type description: str
+    """
+
+    dataset = get_dataset_by_id(datasetid)
+    if dataset:
+        dataset.name = name
+        dataset.description = description
+        db.session.commit()
+
+
+def delete_dataset_by_id(datasetid: int) -> None:
+    """Delete a dataset by id.
+
+    :param datasetid: The id of the dataset to delete.
+    :type datasetid: int
+    """
+
+    dataset = get_dataset_by_id(datasetid)
+    if dataset:
+        db.session.delete(dataset)
+        db.session.commit()
+
+
+#Video
+
+def video_list(dataset: int = None) -> List[Video]:
+    """Get a list of all videos in a dataset.
+
+    :param dataset: The dataset to get videos from, defaults to None
+    :type dataset: DataSet, optional
+    :return: A list of videos from a dataset, if None, all videos are returned.
+    :rtype: List[Video]
+    """
+
+    if dataset:
+        return Video.query.filter(Video.dataset == dataset).all()
+    else:
+        return Video.query.all()
+
+
+def video_info(videoid: int) -> Video:
+    """Get a video by id.
+
+    :param videoid: The id of the video to get.
+    :type videoid: int
+    :return: The video specified by the id.
+    :rtype: Video
+    """
+
+    return Video.query.filter(Video.id == videoid).first()
+
+
+def get_video_by_id(videoid: int) -> Video:
+    """Get a video by id.
+
+    :param videoid: The id of the video to get.
+    :type videoid: int
+    :return: The video specified by the id.
+    :rtype: Video
+    """
+
+    return Video.query.filter(Video.id == videoid).first()
+
+
+
+
+# search for a video using sqlalchemy flask
+def search_video(query: str) -> List[Video]:
+    """Search for a video by name.
+
+    :param query: The name of the video to search for.
+    :type query: str
+    :return: A list of videos matching the query.
+    :rtype: List[Video]
+    """
+
+    return Video.query.filter(Video.file_name.like(f"%{query}%")).all()
+
+
+def edit_video(
+    videoid: int,
+    file_name: str = None,
+    path: str = None,
+    timestamp: datetime = None,
+    location: str = None,
+    colony: int = None,
+    frames: int = None,
+    width: int = None,
+    height: int = None,
+    dataset: str = None,
+) -> Video:
+    """Edit a video.
+
+    :param videoid: The id of the video to edit
+    :type videoid: int
+    :param file_name: The new name of the video.
+    :type file_name: str
+    :param path: The new path of the video.
+    :type path: str
+    :param timestamp: The new timestamp of the video.
+    :type timestamp: datetime
+    :param location: The new location of the video.
+    :type location: str
+    :param colony: The new colony of the video.
+    :type colony: int
+    :param frames: The new number of frames of the video.
+    :type frames: int
+    :param width: The new width of the video.
+    :type width: int
+    :param height: The new height of the video.
+    :type height: int
+    """
+
+    video = get_video_by_id(videoid)
+    video.file_name = file_name if file_name else video.file_name
+    video.path = path if path else video.path
+    video.timestamp = (
+        datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+        if timestamp
+        else video.timestamp
+    )
+    video.location = location if location else video.location
+    video.colony = colony if colony else video.colony
+    video.frames = frames if frames else video.frames
+    video.width = width if width else video.width
+    video.height = height if height else video.height
+    video.dataset = dataset if dataset else video.dataset
+
+    db.session.commit()
+    return video
+
+
+def delete_video(videoid: int) -> None:
+    """Delete a video.
+
+    :param videoid: The id of the video to delete.
+    :type int: int
+    """
+    video = get_video_by_id(videoid)
+    db.session.delete(video)
+    db.session.commit()
+
+
+#Videodata
 def video_data_list(
     videoid: Optional[int], datatype: str = "", userid: int = None
 ) -> List[VideoData]:
@@ -421,211 +616,6 @@ def video_data_list(
                 )
 
 
-def video_list(dataset: int = None) -> List[Video]:
-    """Get a list of all videos in a dataset.
-
-    :param dataset: The dataset to get videos from, defaults to None
-    :type dataset: DataSet, optional
-    :return: A list of videos from a dataset, if None, all videos are returned.
-    :rtype: List[Video]
-    """
-
-    if dataset:
-        return Video.query.filter(Video.dataset == dataset).all()
-    else:
-        return Video.query.all()
-
-
-def dataset_list() -> List[DataSet]:
-    """Get list of all datasets.
-
-    :return: A list of all datasets.
-    :rtype: List[DataSet]
-    """
-
-    return DataSet.query.all()
-
-
-def video_info(videoid: int) -> Video:
-    """Get a video by id.
-
-    :param videoid: The id of the video to get.
-    :type videoid: int
-    :return: The video specified by the id.
-    :rtype: Video
-    """
-
-    return Video.query.filter(Video.id == videoid).first()
-
-
-def new_dataset(name: str, description: str, user: User):
-    """Create a new dataset.
-
-    :param name: The name of the dataset.
-    :type name: str
-    :param description: The description of the dataset.
-    :type description: str
-    :param user: The user creating the dataset.
-    :type user: User
-    """
-
-    dataset = DataSet(
-        name="New Dataset" if name.strip() == "" else name,
-        description=description,
-        created_by=user.id,
-    )
-    db.session.add(dataset)
-    db.session.commit()
-
-
-# search for a video using sqlalchemy flask
-def search_video(query: str) -> List[Video]:
-    """Search for a video by name.
-
-    :param query: The name of the video to search for.
-    :type query: str
-    :return: A list of videos matching the query.
-    :rtype: List[Video]
-    """
-
-    return Video.query.filter(Video.file_name.like(f"%{query}%")).all()
-
-def get_dataset_by_id(datasetid: int) -> DataSet:
-    """Get a dataset by id.
-
-    :param datasetid: The id of the dataset to get.
-    :type datasetid: int
-    :return: The dataset specified by the id.
-    :rtype: DataSet
-    """
-
-    return DataSet.query.filter(DataSet.id == datasetid).first()
-
-
-def delete_dataset_by_id(datasetid: int) -> None:
-    """Delete a dataset by id.
-
-    :param datasetid: The id of the dataset to delete.
-    :type datasetid: int
-    """
-
-    dataset = get_dataset_by_id(datasetid)
-    if dataset:
-        db.session.delete(dataset)
-        db.session.commit()
-
-
-# Old deprecated function from when dataset was a custom folder of videos
-
-# Add video to a dataset using video id and dataset id
-# def add_video_to_dataset(videoid: int, datasetid: int) -> None:
-#     """Add a video to a dataset.
-
-#     :param videoid: The id of the video to add.
-#     :type videoid: int
-#     :param datasetid: The id of the dataset to add the video to.
-#     :type datasetid: int
-#     """
-
-#     video_data_set = VideoDataSet(video_id=videoid, ds_id=datasetid)
-#     db.session.add(video_data_set)
-#     db.session.commit()
-
-
-def edit_dataset(datasetid: int, name: str, description: str) -> None:
-    """Edit a dataset.
-
-    :param datasetid: The id of the dataset to edit.
-    :type datasetid: int
-    :param name: The new name of the dataset.
-    :type name: str
-    :param description: The new description of the dataset.
-    :type description: str
-    """
-
-    dataset = get_dataset_by_id(datasetid)
-    if dataset:
-        dataset.name = name
-        dataset.description = description
-        db.session.commit()
-
-
-def get_video_by_id(videoid: int) -> Video:
-    """Get a video by id.
-
-    :param videoid: The id of the video to get.
-    :type videoid: int
-    :return: The video specified by the id.
-    :rtype: Video
-    """
-
-    return Video.query.filter(Video.id == videoid).first()
-
-
-def edit_video(
-    videoid: int,
-    file_name: str = None,
-    path: str = None,
-    timestamp: datetime = None,
-    location: str = None,
-    colony: int = None,
-    frames: int = None,
-    width: int = None,
-    height: int = None,
-    dataset: str = None,
-) -> Video:
-    """Edit a video.
-
-    :param videoid: The id of the video to edit
-    :type videoid: int
-    :param file_name: The new name of the video.
-    :type file_name: str
-    :param path: The new path of the video.
-    :type path: str
-    :param timestamp: The new timestamp of the video.
-    :type timestamp: datetime
-    :param location: The new location of the video.
-    :type location: str
-    :param colony: The new colony of the video.
-    :type colony: int
-    :param frames: The new number of frames of the video.
-    :type frames: int
-    :param width: The new width of the video.
-    :type width: int
-    :param height: The new height of the video.
-    :type height: int
-    """
-
-    video = get_video_by_id(videoid)
-    video.file_name = file_name if file_name else video.file_name
-    video.path = path if path else video.path
-    video.timestamp = (
-        datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
-        if timestamp
-        else video.timestamp
-    )
-    video.location = location if location else video.location
-    video.colony = colony if colony else video.colony
-    video.frames = frames if frames else video.frames
-    video.width = width if width else video.width
-    video.height = height if height else video.height
-    video.dataset = dataset if dataset else video.dataset
-
-    db.session.commit()
-    return video
-
-
-def delete_video(videoid: int) -> None:
-    """Delete a video.
-
-    :param videoid: The id of the video to delete.
-    :type int: int
-    """
-    video = get_video_by_id(videoid)
-    db.session.delete(video)
-    db.session.commit()
-
-
 def get_video_data_by_id(video_dataid: int) -> VideoData:
     """Get a video data by id.
 
@@ -717,18 +707,9 @@ def add_video_data(
     db.session.commit()
     return video_data
 
-# def fix_datasets() -> None:
-#     """Fix datasets."""
 
-#     print("Fixing datasets")
-#     with app.app_context():
-#         for video in Video.query.all():
-#             if video.dataset == "gurabo1":
-#                 video.dataset = 1
-#             elif video.dataset == "gurabo10":
-#                 video.dataset = 2
 
-#         db.session.commit()
+
 
 def user_list() -> List[User]:
     """Get a list of users.
