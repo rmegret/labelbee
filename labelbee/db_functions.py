@@ -287,6 +287,7 @@ def new_dataset(name: str, description: str, user: User):
     )
     db.session.add(dataset)
     db.session.commit()
+    return dataset
 
 def get_dataset_by_id(datasetid: int) -> DataSet:
     """Get a dataset by id.
@@ -372,8 +373,6 @@ def get_video_by_id(videoid: int) -> Video:
     return Video.query.filter(Video.id == videoid).first()
 
 
-
-
 # search for a video using sqlalchemy flask
 def search_video(query: str) -> List[Video]:
     """Search for a video by name.
@@ -420,7 +419,6 @@ def edit_video(
     :param height: The new height of the video.
     :type height: int
     """
-
     video = get_video_by_id(videoid)
     video.file_name = file_name if file_name else video.file_name
     video.path = path if path else video.path
@@ -450,6 +448,8 @@ def delete_video(videoid: int) -> None:
     db.session.delete(video)
     db.session.commit()
 
+
+# def add_video()
 
 #Videodata
 def video_data_list(

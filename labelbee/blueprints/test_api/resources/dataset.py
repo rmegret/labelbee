@@ -10,48 +10,61 @@ from labelbee.db_functions import (
 from flask_restful import reqparse
 from flask import abort
 from labelbee.models import User
+from flask_user import current_user
+from .constants import STATUS_CODE_500, STATUS_CODE_401, STATUS_CODE_200
 
-#TODO: Figure out if this or marshmal
+#TODO: Figure out if this or marshmallow
 parser = reqparse.RequestParser()
 parser.add_argument("name")
 parser.add_argument("description")
 
-# TODO: Figure out authentication
+
 #TODO: Figure out user shit 
 class DatasetListAPI(Resource):
     def get(self):
-        # if not current_user.is_authenticated:
-        #     raise Forbidden("/rest/v2/datasets GET: login required !")
+        """
+        Lists datasets
+        """
+        print(current_user)
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Unauthenticated user")
         try :
             datasets_schema = DataSetSchema(many=True)
             return datasets_schema.dump(dataset_list())
         except Exception as e:
-            abort(500, e)
+            abort(STATUS_CODE_500, e)
 
     def post(self):
+        """
+        Creates a new dataset
+        """
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Unauthenticated user")
         args = parser.parse_args()
-
-        #TODO: Unhardcode user :)
-        user = User.query.first()
 
         name = args["name"]
         description = args["description"]
 
-        new_dataset(
+        dataset = new_dataset(
             name=name,
             description=description,
-            user=user,
+            user=current_user,
         )
         #TODO: Return id 
         return {
             "success": True,
-            "id": 1
+            "status_code": STATUS_CODE_200,
+            "data": {
+                "id": dataset.id
+            }
         }
 
 #TODO: Implement put and delete 
 class DatasetAPI(Resource):
 
     def get(self, id):
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Unauthenticated user")
         #TODO: Validate inputs 
 
         dataset_schema = DataSetSchema()
@@ -60,10 +73,18 @@ class DatasetAPI(Resource):
             return dataset_schema.dump(dataset)
 
         except Exception as e:
-            abort(500)
+            abort(STATUS_CODE_500)
 
     
     def put(self, id):
+        """
+        Updates dataset by id
+        Input: 
+            name - dataset name
+            description - dataset description
+        """
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Unauthenticated user")
         args = parser.parse_args()
         name = args["name"]
         description = args["description"]
@@ -77,14 +98,20 @@ class DatasetAPI(Resource):
             }
 
         except Exception as e:
-            abort(500)
+            abort(STATUS_CODE_500)
 
     
     def delete(self, id):
+        """
+        Deletes dataset by id 
+        """
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Unauthenticated user")
+
         try: 
             delete_dataset_by_id(id)
         except Exception as e:
-            abort(500)
+            abort(STATUS_CODE_500)
         return {
             "success": True,
             "id": id

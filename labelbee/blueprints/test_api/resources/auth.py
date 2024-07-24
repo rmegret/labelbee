@@ -1,7 +1,7 @@
 from flask_restful import Resource
 from labelbee.models import User
 from flask import request
-from flask_login import logout_user, login_user
+from flask_login import logout_user, login_user, logout_user
 from flask import current_app
 from flask_wtf.csrf import generate_csrf
 from labelbee.app import csrf
@@ -38,5 +38,16 @@ class Authentication(Resource):
         }
     
     def get(self):
-        print(current_user)
-        pass 
+        if not current_user.is_authenticated:
+            return {
+                    "request": "logout",
+                    "status": "FAIL",
+                }
+            
+  
+        logout_user()
+        return {
+                "request": "logout",
+                "status": "SUCCESS",
+            }
+    

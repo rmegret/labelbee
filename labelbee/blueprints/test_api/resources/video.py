@@ -138,10 +138,21 @@ class VideoAPI(Resource):
             video = get_video_by_id(id)
 
             video_schema = VideoSchema()
+            video = video_schema.dump(video)
+            video_info = {
+                "video_id": video["id"],
+                "path": video["path"],
+                "file_name": video["file_name"],
+                "videofps": video["fps"],
+                "realfps": video["realfps"],
+                "starttime": video["timestamp"],
+                "duration": video["frames"] / video["fps"],
+                "nframes": video["frames"],
+            }
 
             return {
                     "success": True,
-                    "data": video_schema.dump(video),
+                    "data": video_info,
                     "status_code": 200
                     }
         except Exception:
