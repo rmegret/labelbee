@@ -12,8 +12,15 @@ from dotenv import load_dotenv
 import os
 from labelbee.models import Video
 from labelbee.app import db
+from flask_user import current_user
+from .constants import (
+    STATUS_CODE_200,
+    STATUS_CODE_401, 
+    STATUS_CODE_403,
+    STATUS_CODE_500,
+)
 
-
+#Unhardcode this 
 load_dotenv()
 
 #TODO: Add validation
@@ -21,6 +28,9 @@ load_dotenv()
 #TODO: Add list filters 
 class VideoListAPI(Resource):
     def get(self):
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Authentication Required")
+
         dataset = request.args.get("dataset", "")
 
         dataset = None if dataset == "" else dataset
@@ -31,14 +41,14 @@ class VideoListAPI(Resource):
             video_payload = videos_schema.dump(video_list(dataset))
             return {
                 "success": True,
-                "status_code": 200,
+                "status_code": STATUS_CODE_200,
                 "data": video_payload
                 }
         
         except Exception as e:
             return {
                 "success": False,
-                "status_code": 500,
+                "status_code": STATUS_CODE_500,
                 "data": {}
             }
 
@@ -47,7 +57,9 @@ class VideoListAPI(Resource):
     # 3. validate input data 
     # 4. Check authentication
     def post(self):
-        
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Authentication Required")
+
         # Get data from body
         video_name = request.form.get("video_name")
         #TODO: Map location string to int 
@@ -67,7 +79,7 @@ class VideoListAPI(Resource):
                 f.write(video_file.stream.read())
 
         except Exception:
-            abort(500, "Error writing video file")
+            abort(STATUS_CODE_500, "Error writing video file")
 
         try:
             cap = cv2.VideoCapture(file_path)
@@ -82,7 +94,7 @@ class VideoListAPI(Resource):
             filesize = os.path.getsize(file_path)
 
         except Exception:
-            abort(500, "Error extracting video metadata")
+            abort(STATUS_CODE_500, "Error extracting video metadata")
 
         _hash = ""
 
@@ -121,16 +133,19 @@ class VideoListAPI(Resource):
 
             return {
                 "success": True,
-                "status_code": 200,
+                "status_code": STATUS_CODE_200,
                 "id": vid.id
             }
         except Exception as e:
             os.remove(file_path)
-            abort(500, "Error inserting video metadata")
+            abort(STATUS_CODE_500, "Error inserting video metadata")
 
 
 class VideoAPI(Resource):
     def get(self, id):
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Unauthenticated user")
+
         # if not current_user.is_authenticated:
         #     raise Forbidden("/rest/v2/add_video_data POST: login required !")
 
@@ -153,16 +168,18 @@ class VideoAPI(Resource):
             return {
                     "success": True,
                     "data": video_info,
-                    "status_code": 200
+                    "status_code": STATUS_CODE_200
                     }
         except Exception:
             return {
                 "success": False,
-                "status_code": 500,
+                "status_code": STATUS_CODE_500,
                 "data": {}
             }
 
     def put(self, id):
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Unauthenticated user")
 
         video_name = request.json.get("video_name")
         #TODO: Map location string to int 
@@ -183,7 +200,7 @@ class VideoAPI(Resource):
             )
             return {
                 "success": True,
-                "status_code": 200,
+                "status_code": STATUS_CODE_200,
                 "data": {
                     "id": id
                 }
@@ -192,24 +209,25 @@ class VideoAPI(Resource):
             abort(500)
 
     def delete(self, id):
-        # if not current_user.is_authenticated:
-            # raise Forbidden("/rest/v2/delete_video GET: login required !")
-        # if not current_user.has_roles("admin"):
-            # raise Forbidden("/rest/v2/delete_video GET: admin required !")
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Unauthenticated user")
+
+        if not current_user.has_roles("admin"):
+            raise abort(STATUS_CODE_403,"Missing user permissions")
+        
         video_schema = VideoSchema()
 
         try :
             video_info = video_schema.dump(get_video_by_id(id))
 
         except :
-            abort(500, "Error reading video file")
+            abort(STATUS_CODE_500, "Error reading video file")
 
         try :
-            print(video_info["path"], video_info["file_name"])
             delete_video(id)
 
         except Exception:
-            abort(500, "Error deleting video")
+            abort(STATUS_CODE_500, "Error deleting video")
 
         try :
             # TODO: Figure out path structure 
@@ -219,7 +237,7 @@ class VideoAPI(Resource):
             vid = Video(**video_info)
             db.session.add(vid)
             db.session.commit()
-            abort(500, "Error deleting video files")
+            abort(STATUS_CODE_500, "Error deleting video files")
 
         return {
                 "success": True,

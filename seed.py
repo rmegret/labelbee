@@ -1,4 +1,4 @@
-from labelbee import  create_app, db
+from labelbee.app import  create_app, db
 from labelbee.models import User, Role, UsersRoles, DataSet, Video, VideoData
 from sqlalchemy import DateTime
 from flask_security import hash_password
@@ -68,7 +68,7 @@ with app.app_context():
     )
     userrole_3 = UsersRoles(
         user_id=user_3.id,
-        role_id=role_1.id
+        role_id=role_2.id
     )
 
     db.session.add(userrole_1)
