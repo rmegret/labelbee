@@ -20,7 +20,7 @@
 </script>
 
 <h1>Edit {{dataset.name}}</h1>
-<form action="{{ url_for('edit_dataset_page') }}" method="POST">
+<form action="{{ url_for('gallery.edit_dataset_page') }}" method="POST">
     {{ form.hidden_tag() }}
     <div class='form-group'>
         <input type="hidden" name="dataset" value="{{dataset.id}}">
@@ -32,14 +32,14 @@
 </form>
 <br>
 <br>
-<form action="{{ url_for('delete_dataset') }}?dataset={{ dataset.id }}" method="POST">
+<form action="{{ url_for('api.datasets') }}?id={{ dataset.id }}" method="POST">
     {{ form.hidden_tag() }}
     <div class='form-group'>
         <input class="btn btn-danger" type="submit" name="Delete Dataset" value="Delete Dataset"><br>
     </div>
 </form>
 
-<a href="{{ url_for('add_video')}}?dataset={{ dataset.id }}">
+<a href="{{ url_for('api.videos')}}?dataset={{ dataset.id }}">
     <button type="button" onclick="" class="btn btn-primary">Add Video to Dataset</button>
 </a>
 

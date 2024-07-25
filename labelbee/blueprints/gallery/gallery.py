@@ -17,7 +17,7 @@ from labelbee.app import db
 
 from labelbee.models import UserProfileForm
 
-bp = Blueprint('gallery', __name__, url_prefix='/')
+bp = Blueprint('gallery', __name__, url_prefix='/', template_folder="templates")
 
 
 @bp.route("/datasets", methods=["GET", "POST"])
@@ -47,7 +47,7 @@ def datasets_page():
         return redirect(url_for("gallery.datasets_page"))
 
     # Process GET or invalid POST
-    return render_template("gallery/datasets_page.html", datasets=datasets, form=form)
+    return render_template("datasets_page.html", datasets=datasets, form=form)
 
 
 
@@ -73,7 +73,7 @@ def add_dataset_page():
         return redirect(url_for("gallery.datasets_page"))
 
     # Process GET or invalid POST
-    return render_template("gallery/add_dataset.html", form=form)
+    return render_template("add_dataset.html", form=form)
 
 
 
@@ -136,7 +136,7 @@ def videos_page():
 
     # Process GET or invalid POST
     return render_template(
-        "gallery/videos_page.html",
+        "videos_page.html",
         form=form,
         dataset=dataset,
     )
@@ -176,7 +176,7 @@ def edit_video_page():
         )
 
     # Process GET or invalid POST
-    return render_template("gallery/edit_video.html", form=form, video=video)
+    return render_template("edit_video.html", form=form, video=video)
 
 
 @bp.route("/videodata", methods=["GET", "POST"])
@@ -203,7 +203,7 @@ def video_data_page():
 
     # Process GET or invalid POST
     return render_template(
-        "gallery/video_data_page.html",
+        "video_data_page.html",
         video_url=video_url,
         video=video_info(videoid),
         form=form,
@@ -234,7 +234,7 @@ def video_data_details_page():
 
     # Process GET or invalid POST
     return render_template(
-        "gallery/video_data_details_page.html",
+        "video_data_details_page.html",
         form=form,
         video_data=video_data,
         datasetid=datasetid,
@@ -257,7 +257,7 @@ def edit_dataset_page():
             "created_by": get_user_by_id(e.created_by).first_name
             + " "
             + get_user_by_id(e.created_by).last_name,
-            "timestamp": e.timestamp,
+            # "timestamp": e.timestamp,
         }
 
     # Process valid POST
@@ -276,9 +276,9 @@ def edit_dataset_page():
 
         # Redirect to home page
         return redirect(
-            url_for("videos_page") + "?dataset=" + request.form.get("dataset")
+            url_for("gallery.videos_page") + "?dataset=" + request.form.get("dataset")
         )
 
     # Process GET or invalid POST
-    return render_template("pages/edit_dataset.html", form=form, dataset=dataset)
+    return render_template("edit_dataset.html", form=form, dataset=dataset)
 

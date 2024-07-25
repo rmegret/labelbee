@@ -143,7 +143,7 @@
                 $(this).html( '<input type="text" placeholder="Search '+title+'" size="'+size+'"/>' );
         } );
         $('#video_data_table').DataTable({
-            "ajax": "{{ url_for('api.videodata_get_v2') }}?video_id={{ video.id }}&allusers=True",
+            "ajax": "{{ url_for('api.annotations') }}?video_id={{ video.id }}&allusers=True",
             "columnDefs": [
                     { targets: [ 0 ], className: 'dt-right' }
                 ],
@@ -215,7 +215,7 @@
                 $(this).html( '<input type="text" placeholder="Search '+title+'" size="'+size+'"/>' );
         } );
         $('#video_data_table').DataTable({
-            "ajax": "{{ url_for('api.videodata_get_v2') }}?allusers=True",
+            "ajax": "{{ url_for('api.annotations') }}?allusers=True",
             "columnDefs": [
                     { targets: [ 0 ], className: 'dt-right' }
                 ],
@@ -228,7 +228,7 @@
             { "data": "id", "name": "actions", 
               fnCreatedCell: function (nTd, cellData, rowData, iRow, iCol) {
                     $(nTd).html(
-                        "<a class='btn btn-default btn-xs' href='{{ url_for('api.get_video_data_raw_v2',id='') }}"+ rowData.id +"' target='_blank'>JSON</a>" +
+                        "<a class='btn btn-default btn-xs' href='{{ url_for('api.annotations',id='') }}"+ rowData.id +"' target='_blank'>JSON</a>" +
                         "<a class='btn btn-primary btn-xs' href='{{ url_for('labelbee.labelbee_user_page')}}#video_data="+ rowData.id +"&video_id="+rowData.video_id+"' target='_blank'>GUI</a>");
                 } 
             },
