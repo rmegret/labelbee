@@ -147,11 +147,10 @@ def create_app():
     from .blueprints import download
     app.register_blueprint(download.bp)
 
-    from .blueprints import api
-    app.register_blueprint(api.bp)
+    # from .blueprints import api
+    # app.register_blueprint(api.bp)
     
     from .blueprints import test_api
-    # print(test_api.bp.ro)
     app.register_blueprint(test_api.bp)
 
     user_manager = UserManager(app, db, User)

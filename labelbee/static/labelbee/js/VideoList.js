@@ -611,7 +611,7 @@ VideoManager.prototype.receiveVideoSelection = function(){
   theManager = this;
   // Request to server to obtain video list
   $.ajax({
-    url: url_for("/rest/v2/videolist"),
+    url: url_for("/api/v1/videos"),
     method: 'get',
     data: "", 
     dataType: 'json',
@@ -648,7 +648,7 @@ VideoManager.prototype.videoSelected = async function(id) {
 
   return new Promise((resolve, reject) => {
     $.ajax({
-      url: url_for("/rest/v2/get_video_info/" + id),
+      url: url_for("/api/v1/video/" + id),
       method: 'get',
       data: "", 
       dataType: 'json',
@@ -662,10 +662,11 @@ VideoManager.prototype.videoSelected = async function(id) {
           reject(new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id))
         },
         success: function(videoInfoJSON){
+          console.log(videoInfoJSON)
           fromServerDialog.setMessage("black", "Loading Video.")
           if (logging.videoList)
             console.log("VideoManager.videoSelected: Received video information, setting it: ", videoInfoJSON);
-          videoManager.setVideoInfo(videoInfoJSON)
+          videoManager.setVideoInfo(videoInfoJSON.data)
             .then( ()=>{
               if (logging.videoList)
                 console.log("VideoManager.videoSelected: videoManager.setVideoInfo SUCCESS");

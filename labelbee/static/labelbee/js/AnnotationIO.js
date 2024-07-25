@@ -19,7 +19,7 @@ function initAnnotationIO() {
 }
 
 function ajaxlogin(email, password) {
-  var url = url_for("/rest/auth/login");
+  var url = url_for("/api/v1/auth/login");
 
   //console.log(url)
   console.log("ajaxlogin, email=", email);
@@ -49,7 +49,7 @@ function ajaxlogin(email, password) {
 }
 
 function ajaxlogout(email, password) {
-  var url = url_for("/rest/auth/logout");
+  var url = url_for("/api/v1/auth/logout");
 
   //console.log(url)
 
@@ -137,7 +137,7 @@ function try_logout() {
 
 user_data = {is_authenticated:false};
 function whoami() {
-  $.getJSON(url_for("/rest/auth/whoami"), function (data) {
+  $.getJSON(url_for("/api/v1/auth/whoami"), function (data) {
     console.log("whoami: data=", data);
     user_data = data;
   })
@@ -1133,7 +1133,7 @@ function FromServerDialog() {
 
     // Load first tag/event file information through GET request
     $.ajax({
-      url: url_for("rest/v2/videodata"),
+      url: url_for("api/v1/annotations"),
       method: 'get',
       data: {video_id : videoManager.currentVideoID, data_type: data_type}, 
       dataType: 'json',
@@ -1221,7 +1221,7 @@ function FromServerDialog() {
     // json includes information about all event files related to the current video 
     // videoID obtained from URL as GET parameter, dataType entered as argument when called in labelbee_page.html
     $.ajax({
-      url: url_for("rest/v2/videodata"),
+      url: url_for("api/v1/annotations"),
       method: 'get',
       data: {video_id : videoManager.currentVideoID, data_type: theDialog.data_type, allusers: allusers}, 
       dataType: 'json',
@@ -1317,7 +1317,7 @@ function FromServerDialog() {
     else{                           // Case: event file
       //Sending GET request to flask API to retrieve json containing annotation data
       $.ajax({
-        url: url_for("rest/v2/get_video_data/" + tag_event_ID), // url to tag/event file
+        url: url_for("api/v1/annotation/" + tag_event_ID), // url to tag/event file
         type: "GET", //passing data as get method
         contentType: "application/json", // returning data as json
         data: "",
@@ -1482,7 +1482,7 @@ function tracksListFromServer() {
 async function loadEventsFromServerByID(video_data_id) {
     //Sending GET request to flask API to retrieve json containing annotation data
     $.ajax({
-      url: url_for("rest/v2/get_video_data/" + video_data_id), // url to tag/event file
+      url: url_for("api/v1/annotation/" + video_data_id), // url to tag/event file
       type: "GET", //passing data as get method
       contentType: "application/json", // returning data as json
       data: "",
@@ -1589,7 +1589,7 @@ function showAjaxError(title, prehook, onlyConsole) {
 }
 
 function eventsToServer(format) {
-  var route = "/rest/v2/add_video_data";
+  var route = "/api/v1/annotations";
 
   console.log("eventsToServer");
 
@@ -1662,7 +1662,7 @@ function tagsFromServer(tagFileID, div) {
   }
   statusWidget.statusRequest("tagsLoad", "");
 
-  $.getJSON(url_for("rest/v2/get_video_data/" + tagFileID), function () {
+  $.getJSON(url_for("rest/v2/annotation/" + tagFileID), function () {
     console.log('tagsFromServer: loaded tag file with ID "' + tagFileID + '"');
     statusWidget.statusUpdate("tagsLoad", true, "");
   })
