@@ -108,7 +108,7 @@ def create_app():
         app.config["WTF_CSRF_ENABLED"] = False
 
   # Setup CSRF protection
-    # ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
+    ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
 
 
     # Initialize Flask-SQLAlchemy and Flask-Script _after_ app.config has been read
@@ -147,11 +147,8 @@ def create_app():
     from .blueprints import download
     app.register_blueprint(download.bp)
 
-    # from .blueprints import api
-    # app.register_blueprint(api.bp)
-    
-    from .blueprints import test_api
-    app.register_blueprint(test_api.bp)
+    from .blueprints import api
+    app.register_blueprint(api.bp)
 
     user_manager = UserManager(app, db, User)
 
