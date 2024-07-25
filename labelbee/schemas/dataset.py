@@ -1,8 +1,7 @@
 from labelbee.models import DataSet
 
 from labelbee.app import ma
-from marshmallow import validate, fields
-from labelbee.validation import FileName, Path
+from marshmallow import fields
 from .user import UserSchema
 
 class DataSetSchema(ma.SQLAlchemySchema):

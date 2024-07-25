@@ -3,7 +3,7 @@ from labelbee.models import (
 )
 from labelbee.app import ma
 from marshmallow import validate, fields
-from labelbee.validation import FileName, Path
+from .utils import FileName, Path
 
 class VideoDataSchema(ma.SQLAlchemySchema):
     class Meta:

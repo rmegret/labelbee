@@ -3,7 +3,6 @@ from labelbee.models import (
 )
 from labelbee.app import ma
 from marshmallow import validate, fields
-from labelbee.validation import FileName, Path
 
 class UserSchema(ma.SQLAlchemySchema):
     class Meta:
