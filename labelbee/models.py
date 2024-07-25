@@ -1,19 +1,10 @@
-# Copyright 2014 SolidBuilds.com. All rights reserved
-#
-# Authors: Ling Thio <ling.thio@gmail.com>
-
-import re
 from flask_user import UserMixin, UserManager
-from flask_user.forms import RegisterForm, unique_email_validator
+from flask_user.forms import RegisterForm
 from flask_wtf import FlaskForm
 from sqlalchemy.orm import backref
 from wtforms import StringField, SubmitField, validators, BooleanField, PasswordField, HiddenField
 from wtforms.fields import SelectMultipleField
 from labelbee.app import db, ma
-from marshmallow import validate, fields
-from labelbee.validation import FileName, Path
-
-#TODO: Move schemas and forms to a different module
 
 
 # Define the User data model. Make sure to add the flask_user.UserMixin !!
