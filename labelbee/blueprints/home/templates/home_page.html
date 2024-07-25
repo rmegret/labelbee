@@ -1,0 +1,42 @@
+{% extends "common/page_base.html" %}  {# common/page_base.html extends layout.html #}
+
+{% block content %}
+<h1>Home page</h1>
+
+<p>This page is accessible to any user (signed in or not)</p>
+
+{% if not current_user.is_authenticated %}
+<p>
+To view the User page, you must
+<a href="{{ url_for('user.login') }}">Sign in</a> or
+<a href="{{ url_for('user.register') }}">Register</a>.
+</p>
+{% else %}
+<p>You are currently logged as 
+<span style="font-family: monospace; border: solid gray 1px; padding: 3px;">{{current_user.first_name or current_user.user_auth.username}}</span>
+</p>
+{% endif %}
+
+<h3>Tools</h3>
+<ul>
+  {% if not current_user.is_authenticated %}
+<p>
+  <li><a href="labelbee/gui">{{config.APP_NAME}} (CAUTION: limited functionality, log in for full funcitonality)</a></li>
+</p>
+{% else %}  
+<li><a href="labelbee/gui">{{config.APP_NAME}} (signed in))</a></li>
+{% endif %}
+</ul>
+
+<h3>Access to raw data</h3>
+<ul>
+  <li><a href="data/">raw data</a></li>
+  <li><a href="data/videos/">raw videos</a></li>
+</ul>
+
+<h3>External links</h3>
+<ul>
+  </li><a href="https://bigdbee.hpcf.upr.edu">bigdbee webpage</a></li>
+</ul>
+
+{% endblock %}
