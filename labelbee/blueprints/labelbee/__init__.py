@@ -1,0 +1,1 @@
+from .labelbee import bp

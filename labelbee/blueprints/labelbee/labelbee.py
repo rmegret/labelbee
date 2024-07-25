@@ -4,7 +4,7 @@ from flask_user import current_user, login_required, roles_accepted
 from flask_user import current_user
 import os
 
-bp = Blueprint('labelbee', __name__, url_prefix='/')
+bp = Blueprint('labelbee', __name__, url_prefix='/', template_folder="templates")
 
 
 @bp.route("/labelbee/gui")
@@ -25,7 +25,7 @@ def labelbee_user_page():
         print(tag_file)
         # TODO: Make pages a constant
         return render_template(
-            "labelbee/labelbee_page.html",
+            "labelbee_page.html",
             userid=str(current_user.id),
             http_script_name=http_script_name,
             video_url="datasets/gurabo10avi/mp4/", # + video_url  
@@ -35,7 +35,7 @@ def labelbee_user_page():
     else:
         #TODO: Make pages a constant
         return render_template(
-            "labelbee/labelbee_page.html",
+            "labelbee_page.html",
             userid="anonymous",
             http_script_name=http_script_name,
             video_url=video_url,
