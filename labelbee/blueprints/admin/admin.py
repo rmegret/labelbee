@@ -16,13 +16,13 @@ from labelbee.models import (
 from labelbee.schemas import RoleSchema, UserSchema
 
 
-bp = Blueprint('admin', __name__, url_prefix='')
+bp = Blueprint('admin', __name__, url_prefix='', template_folder="templates")
 
 @bp.route("/admin")
 @roles_accepted("admin")  # Limits access to users with the 'admin' role
 def admin_page():
     form = UserProfileForm(obj=current_user)
-    return render_template("admin/admin_page.html", form=form)
+    return render_template("admin_page.html", form=form)
 
 
 @bp.route("/manage_users", methods=["GET", "POST"])
@@ -43,7 +43,7 @@ def manage_users_page():
     # Get roles for each user
     for user in users:
         user['roles'] = [roles_schema.dump(role) for role in get_user_roles_by_id(user['id'])]
-    return render_template("admin/manage_users_page.html", form=form, users=users, editing=editing, success=success)
+    return render_template("manage_users_page.html", form=form, users=users, editing=editing, success=success)
 
 
 @bp.route("/admin/version")
@@ -86,4 +86,4 @@ def version_page():
     )
     text += "\n<h4>Log (5 last commits)</h4>\n<pre>" + log + "</pre>"
     text += "\n<h4>Details status</h4>\n<pre>" + details + "</pre>"
-    return render_template("admin/version_page.html", webapp_version=text)
+    return render_template("version_page.html", webapp_version=text)
