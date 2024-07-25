@@ -13,7 +13,7 @@ import os
 from labelbee.models import Video
 from labelbee.app import db
 from flask_user import current_user
-from .constants import (
+from ..constants import (
     STATUS_CODE_200,
     STATUS_CODE_401, 
     STATUS_CODE_403,
@@ -23,8 +23,6 @@ from .constants import (
 #Unhardcode this 
 load_dotenv()
 
-#TODO: Add validation
-#TODO: Add authentication
 #TODO: Add list filters 
 class VideoListAPI(Resource):
     def get(self):
@@ -146,9 +144,6 @@ class VideoAPI(Resource):
         if not current_user.is_authenticated:
             abort(STATUS_CODE_401, "Unauthenticated user")
 
-        # if not current_user.is_authenticated:
-        #     raise Forbidden("/rest/v2/add_video_data POST: login required !")
-
         try :
             video = get_video_by_id(id)
 
@@ -213,7 +208,7 @@ class VideoAPI(Resource):
             abort(STATUS_CODE_401, "Unauthenticated user")
 
         if not current_user.has_roles("admin"):
-            raise abort(STATUS_CODE_403,"Missing user permissions")
+            abort(STATUS_CODE_403,"Missing user permissions")
         
         video_schema = VideoSchema()
 

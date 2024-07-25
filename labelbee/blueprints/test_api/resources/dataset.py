@@ -11,7 +11,7 @@ from flask_restful import reqparse
 from flask import abort
 from labelbee.models import User
 from flask_user import current_user
-from .constants import STATUS_CODE_500, STATUS_CODE_401, STATUS_CODE_200
+from ..constants import STATUS_CODE_500, STATUS_CODE_401, STATUS_CODE_200
 
 #TODO: Figure out if this or marshmallow
 parser = reqparse.RequestParser()

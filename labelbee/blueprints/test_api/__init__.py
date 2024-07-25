@@ -4,7 +4,7 @@ from flask_restful import Api
 from .resources.video import VideoAPI, VideoListAPI
 from .resources.dataset import DatasetAPI, DatasetListAPI
 from .resources.annotations import AnnotationAPI, AnnotationsAPI
-from .resources.auth import Authentication
+from .resources.auth import Login, Logout, Whoami
 from labelbee.app import csrf   
 
 
@@ -21,4 +21,6 @@ api.add_resource(DatasetAPI, "/dataset/<int:id>", endpoint="dataset")
 api.add_resource(AnnotationsAPI, "/annotations", endpoint="annotations")
 api.add_resource(AnnotationAPI, "/annotation/<int:id>", endpoint="annotation")
 
-api.add_resource(Authentication, "/auth", endpoint="auth")
+api.add_resource(Login, "/auth/login")
+api.add_resource(Logout, "/auth/logout")
+api.add_resource(Whoami, "/auth/whoami")

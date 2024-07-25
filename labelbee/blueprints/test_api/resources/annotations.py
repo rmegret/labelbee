@@ -11,19 +11,27 @@ from labelbee.db_functions import (
     )
 import json 
 from labelbee.app import db 
+from flask_user import current_user
+from ..constants import (
+    STATUS_CODE_200,
+    STATUS_CODE_401, 
+    STATUS_CODE_400,
+    STATUS_CODE_403,
+    STATUS_CODE_500,
+)
 
 #TODO: Add input sanitation
 #TODO: Add authentication
 
 class AnnotationsAPI(Resource):
     def get(self):
-        # if not current_user.is_authenticated:
-        #     raise Forbidden("/rest/v2/videodata GET: login required !")
-
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Authentication Required")
+            
         video_id = request.args.get("video_id")
         #Bad request if no video id
         if video_id is None:
-           raise abort(400,"/rest/v2/videodata GET: video_id required !")
+           raise abort(STATUS_CODE_400,"/rest/v2/videodata GET: video_id required !")
 
         #TODO: Figure out what datatype is 
         data_type = request.args.get("data_type", "")
@@ -45,11 +53,13 @@ class AnnotationsAPI(Resource):
 
         return {
             "success": True,
-            "status_code": 200,
+            "status_code": STATUS_CODE_200,
             "data": videos_json
         }
         
     def post(self):
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Authentication Required")
         # Performs input validation
         video_data_schema = VideoDataSchema()
         form_data = json.dumps(request.form)
@@ -74,13 +84,15 @@ class AnnotationsAPI(Resource):
         )
         return {
             "success": True,
-            "status_code": 200,
+            "status_code": STATUS_CODE_200,
             "data": video_data
         }
             
 
 class AnnotationAPI(Resource):
     def get(self, id):
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Authentication Required")
         # if not current_user.is_authenticated:
             # raise Forbidden("/rest/v2/get_video_data GET: login required !")
 
@@ -92,13 +104,13 @@ class AnnotationAPI(Resource):
             if len(annotation_payload) == 0:
                 return {
                     "success": False,
-                    "status_code": 400,
+                    "status_code": STATUS_CODE_400,
                     "data": {}
                 }
             
             return {
                 "success": True,
-                "status_code": 200,
+                "status_code": STATUS_CODE_200,
                 "data": annotation_schema.dump(annotation_data)
                 }
         
@@ -106,16 +118,17 @@ class AnnotationAPI(Resource):
             #Unexpected error return 500
             return {
                     "success": False,
-                    "status_code": 500,
+                    "status_code": STATUS_CODE_500,
                     "data": {}
                 }
 
     #TODO: Test this 
     def put(self, id):
-        # if not current_user.is_authenticated:
-        #     raise Forbidden("/rest/v2/edit_video_data POST: login required !")
-        # if not current_user.has_roles("admin"):
-        #     raise Forbidden("/rest/v2/edit_video_data POST: admin required !")
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Authentication Required")
+
+        if not current_user.has_roles("admin"):
+            raise abort(STATUS_CODE_403,"Missing user permissions")
 
         video_data_schema = VideoDataSchema()
         form_data = json.dumps(request.form)
@@ -134,16 +147,18 @@ class AnnotationAPI(Resource):
 
         return {
             "success": True,
-            "status_code": 200,
+            "status_code": STATUS_CODE_200,
             "data": video_data
             }
     
     def delete(self, id):
+        if not current_user.is_authenticated:
+            abort(STATUS_CODE_401, "Authentication Required")
         annotation = get_video_data_by_id(id)
         db.session.delete(annotation)
         db.session.commit()
         return {
             "success": True,
-            "status_code": 200,
+            "status_code": STATUS_CODE_200,
             "data": {"id": id}
         }
