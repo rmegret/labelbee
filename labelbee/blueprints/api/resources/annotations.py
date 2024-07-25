@@ -1,14 +1,14 @@
 from flask_restful import Resource
 from flask import jsonify, request, abort
 from labelbee.schemas import VideoDataSchema
-from labelbee.db_functions import (
+from labelbee.database import (
     get_user_by_id, 
     get_video_by_id, 
     add_video_data, 
     edit_video_data,
     get_video_data_by_id,
     video_data_list
-    )
+)
 import json 
 from labelbee.app import db 
 from flask_user import current_user

@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from labelbee.schemas import VideoSchema
-from labelbee.db_functions import (
+from labelbee.database import (
     video_list, 
     get_video_by_id, 
     delete_video,

@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from labelbee.schemas import DataSetSchema
-from labelbee.db_functions import (
+from labelbee.database import (
     new_dataset,
     dataset_list,
     get_dataset_by_id,

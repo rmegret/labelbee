@@ -1,6 +1,6 @@
 from flask import render_template, Blueprint, request, redirect, url_for
 from flask_user import current_user, login_required, roles_accepted
-from labelbee.db_functions import (
+from labelbee.database import (
     dataset_list,
     get_user_by_id,
     get_dataset_by_id,
