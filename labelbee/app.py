@@ -13,7 +13,6 @@ import os
 
 
 log_dir = os.environ.get("LABELBEE_LOGDIR")
-log_dir = "./"
 
 # Enable running in subdomain
 # http://flask.pocoo.org/snippets/35/
@@ -67,29 +66,25 @@ class ReverseProxied(object):
 db = SQLAlchemy()
 ma = Marshmallow()
 csrf = CSRFProtect()
+logger = logging.getLogger('labelbee.init_app')
+
 
 from labelbee.models import *
-# from labelbee.views import *
-
-# Initialize Flask Application
 
 def create_app():
+
     app = Flask(__name__, static_url_path="", template_folder="templates")  # The WSGI compliant webapp object
     app.wsgi_app = ReverseProxied(app.wsgi_app)
 
-    ####
-
     # Configure Logging
-    # app.logger.removeHandler(app.logger.handlers[0])
-    # app.logger.addHandler(logging.FileHandler(log_dir + "/gunicorn_error_logs.log"))
-    # app.logger.setLevel(logging.DEBUG)
-    # app.logger.handlers[0].setFormatter(logging.Formatter('[%(asctime)s] [%(filename)s] [%(levelname)s] %(message)s'))
-    # logger = logging.getLogger('labelbee.init_app')
+    app.logger.removeHandler(app.logger.handlers[0])
+    app.logger.addHandler(logging.FileHandler(log_dir + "/gunicorn_error_logs.log"))
+    app.logger.setLevel(logging.DEBUG)
+    app.logger.handlers[0].setFormatter(logging.Formatter('[%(asctime)s] [%(filename)s] [%(levelname)s] %(message)s'))
+    logger = logging.getLogger('labelbee.init_app')
 
 
-    # Read common settings from 'app/settings.py'
     app.config.from_object("labelbee.settings")
-    # print(app.config)
     # Read environment-specific settings from 'app/local_settings.py'
     try:
         app.config.from_object("labelbee.local_settings")
@@ -114,12 +109,10 @@ def create_app():
     # Initialize Flask-SQLAlchemy and Flask-Script _after_ app.config has been read
     db.init_app(app)
     ma.init_app(app)
-    # Setup Flask-Migrate
     migrate = Migrate(app, db)
-    # Setup Flask-Mail
-    # mail = Mail(app)
-    # Setup WTForms CsrfProtect
     csrf.init_app(app)
+    # mail = Mail(app)
+    
 
     # Define bootstrap_is_hidden_field for flask-bootstrap's bootstrap_wtf.html
     from wtforms.fields import HiddenField
@@ -152,7 +145,7 @@ def create_app():
 
     user_manager = UserManager(app, db, User)
 
-    # logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
-    #logger.info("config=%s",app.config)
+    logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
+    logger.info("config=%s",app.config)
     return app
 
