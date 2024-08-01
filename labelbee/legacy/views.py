@@ -5,7 +5,7 @@ All web endpoints are defined here.
 """
 
 from labelbee.user_management import create_user, edit_user
-from labelbee.flask_range_requests import send_from_directory_partial, dir_listing
+from labelbee.blueprints.download.flask_range_requests import send_from_directory_partial, dir_listing
 from flask import current_app
 from flask import redirect
 from flask import render_template, render_template_string, jsonify

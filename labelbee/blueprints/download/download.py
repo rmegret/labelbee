@@ -1,5 +1,5 @@
 from flask import render_template, render_template_string, jsonify, Blueprint, request
-from labelbee.flask_range_requests import send_from_directory_partial, dir_listing
+from .flask_range_requests import send_from_directory_partial, dir_listing
 from flask_user import current_user
 import os
 
