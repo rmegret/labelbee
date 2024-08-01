@@ -3,7 +3,7 @@ from labelbee.flask_range_requests import send_from_directory_partial, dir_listi
 from flask_user import current_user
 import os
 
-bp = Blueprint('download', __name__, url_prefix='/')
+bp = Blueprint('download', __name__, url_prefix='/data')
 
 @bp.route("/data/<path:path>")
 def send_data(path):
