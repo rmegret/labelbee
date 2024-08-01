@@ -20,30 +20,23 @@ from ..constants import (
     STATUS_CODE_500,
 )
 
-#TODO: Add input sanitation
-#TODO: Add authentication
-
 class AnnotationsAPI(Resource):
     def get(self):
         if not current_user.is_authenticated:
             abort(STATUS_CODE_401, "Authentication Required")
-            
-        video_id = request.args.get("video_id")
-        #Bad request if no video id
-        if video_id is None:
-           raise abort(STATUS_CODE_400,"/rest/v2/videodata GET: video_id required !")
 
-        #TODO: Figure out what datatype is 
+
+        video_id = request.args.get("video_id") 
         data_type = request.args.get("data_type", "")
         all_users = request.args.get("allusers", None)
 
         annotations_schema = VideoDataSchema(many=True)
 
         #TODO: First param must be user id
-        current_user_id = all_users if all_users else None 
+        current_user_id = all_users if all_users else current_user.id
         data_type = data_type if data_type else ""
         
-        videos = video_data_list(video_id, data_type)
+        videos = video_data_list(video_id, data_type, current_user_id)
         videos_json = annotations_schema.dump(videos)
 
         #TODO: Terrible. Change this 
