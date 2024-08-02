@@ -1,0 +1,32 @@
+from labelbee.app import db
+
+class Video(db.Model):
+    __tablename__ = "videos"
+    __table_args__ = (db.UniqueConstraint("file_name", "path"),)
+    id = db.Column(db.Integer(), primary_key=True)
+    file_name = db.Column(db.String(200), nullable=False, server_default=u"")
+    path = db.Column(db.String(100), nullable=False, server_default=u"")
+    timestamp = db.Column(db.DateTime, nullable=False)
+    location = db.Column(db.Integer(), nullable=False)
+    colony = db.Column(db.String(50))
+    notes = db.Column(db.Text())
+    dataset = db.Column(db.Integer, db.ForeignKey("data_set.id", ondelete="CASCADE"))
+    thumb = db.Column(db.String(200), nullable=True)
+
+    frames = db.Column(db.Integer(), nullable=False)
+    height = db.Column(db.Integer(), nullable=False)
+    width = db.Column(db.Integer(), nullable=False)
+    fps = db.Column(db.Double())
+    realfps = db.Column(db.Double())
+    filesize = db.Column(db.BigInteger(), nullable=False)
+    hash = db.Column(db.String(70))
+    corrupted = db.Column(db.Boolean())
+    trimmed = db.Column(db.Boolean())
+    hasframe0 = db.Column(db.Boolean())
+    hasframe_1s = db.Column(db.Boolean())
+    hasframe_2s = db.Column(db.Boolean())
+    hasframe_10s = db.Column(db.Boolean())
+    hasframeN_30s = db.Column(db.Boolean())
+    hasframeN_2s = db.Column(db.Boolean())
+    hasframeN_1s = db.Column(db.Boolean())
+    hasframeN = db.Column(db.Boolean())
