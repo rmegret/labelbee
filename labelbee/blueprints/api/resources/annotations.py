@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from flask import jsonify, request, abort
-from labelbee.schemas import VideoDataSchema
+from labelbee.database.annotation.schema import VideoDataSchema
 from labelbee.database import (
     get_user_by_id, 
     get_video_by_id, 

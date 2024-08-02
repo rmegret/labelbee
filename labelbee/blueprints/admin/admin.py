@@ -15,7 +15,7 @@ from labelbee.models import (
 
 import os 
 
-from labelbee.schemas import RoleSchema, UserSchema
+from labelbee.database.user.schemas import RoleSchema, UserSchema
 
 
 bp = Blueprint('admin', __name__, url_prefix='', template_folder="templates")

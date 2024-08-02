@@ -1,5 +1,5 @@
 from flask_restful import Resource
-from labelbee.schemas import VideoSchema
+from labelbee.database.video.schema import VideoSchema
 from labelbee.database import (
     video_list, 
     get_video_by_id, 
@@ -20,7 +20,6 @@ from ..constants import (
     STATUS_CODE_500,
 )
 
-#Unhardcode this 
 load_dotenv()
 
 #TODO: Add list filters 
