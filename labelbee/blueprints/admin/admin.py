@@ -13,6 +13,8 @@ from labelbee.models import (
     Role
 )
 
+import os 
+
 from labelbee.schemas import RoleSchema, UserSchema
 
 
@@ -87,3 +89,10 @@ def version_page():
     text += "\n<h4>Log (5 last commits)</h4>\n<pre>" + log + "</pre>"
     text += "\n<h4>Details status</h4>\n<pre>" + details + "</pre>"
     return render_template("version_page.html", webapp_version=text)
+
+#TODO: Implement video registration
+# @bp.route("/video_registry")
+# def video_registry():
+#     directory = ""
+#     directories = os.walk(directory)
+#     return render_template("video_registry.html")

@@ -25,7 +25,6 @@ class DatasetListAPI(Resource):
         """
         Lists datasets
         """
-        print(current_user)
         if not current_user.is_authenticated:
             abort(STATUS_CODE_401, "Unauthenticated user")
         try :
