@@ -24,11 +24,12 @@ from labelbee.models import *
 
 def create_app():
 
-    app = Flask(__name__, static_url_path="", template_folder="templates")  # The WSGI compliant webapp object
+    app = Flask(__name__, static_url_path="", template_folder="blueprints/templates")  # The WSGI compliant webapp object
     app.wsgi_app = ReverseProxied(app.wsgi_app)
 
     # Configure Logging
     app.logger.removeHandler(app.logger.handlers[0])
+    #TODO: Pull this from the env file
     os.makedirs("../logs", exist_ok=True)
     app.logger.addHandler(logging.FileHandler(log_dir + "/gunicorn_error_logs.log"))
     app.logger.setLevel(logging.DEBUG)
@@ -54,7 +55,6 @@ def create_app():
         # Disable CSRF checks while testing
         app.config["WTF_CSRF_ENABLED"] = False
 
-  # Setup CSRF protection
     ma = Marshmallow(app)  # Setup Flask_Marshmallow for API
 
 
@@ -62,6 +62,7 @@ def create_app():
     db.init_app(app)
     ma.init_app(app)
     migrate = Migrate(app, db)
+    # Setup CSRF protection
     csrf.init_app(app)
     # mail = Mail(app)
     
