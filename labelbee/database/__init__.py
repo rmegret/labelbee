@@ -1,11 +1,11 @@
-from .annotation import (
+from .annotation.api import (
     video_data_list,
     get_video_data_by_id,
     edit_video_data,
     add_video_data
 )
 
-from .dataset import (
+from .dataset.api import (
     dataset_list,
     new_dataset,
     get_dataset_by_id,
@@ -13,7 +13,7 @@ from .dataset import (
     delete_dataset_by_id
 )
 
-from .user import (
+from .user.api import (
     user_list,
     delete_user,
     get_user_by_id,
@@ -23,7 +23,7 @@ from .user import (
     edit_user
 )
 
-from .video import (
+from .video.api import (
     video_list,
     video_info,
     get_video_by_id,
