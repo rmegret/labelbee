@@ -7,6 +7,8 @@ from wtforms.fields import SelectMultipleField
 from labelbee.app import db, ma
 
 
+#TODO: Move forms and custom user manager to separate files
+
 # Define the User data model. Make sure to add the flask_user.UserMixin !!
 class User(db.Model, UserMixin):
     __tablename__ = "users"

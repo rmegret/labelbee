@@ -10,59 +10,10 @@ from flask_wtf.csrf import CSRFProtect
 import sys
 import logging
 import os
+from labelbee.middlewares.reverse_proxy import ReverseProxied
 
 
 log_dir = os.environ.get("LABELBEE_LOGDIR")
-
-# Enable running in subdomain
-# http://flask.pocoo.org/snippets/35/
-
-# TODO: Maybe poner en proxy?
-class ReverseProxied(object):
-    """Wrap the application in this middleware and configure the
-    front-end server to add these headers, to let you quietly bind
-    this to a URL other than / and to an HTTP scheme that is
-    different than what is used locally.
-
-    In nginx:
-    location /myprefix {
-        proxy_pass http://192.168.0.1:5001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Scheme $scheme;
-        proxy_set_header X-Script-Name /myprefix;
-        }
-
-    :param app: the WSGI application
-    """
-
-    def __init__(self, app):
-        self.app = app
-
-    def __call__(self, environ, start_response):
-        # print('ReverseProxied',environ,start_response)
-        script_name = environ.get("HTTP_X_SCRIPT_NAME", "")
-        if script_name:
-            environ["SCRIPT_NAME"] = script_name
-            path_info = environ["PATH_INFO"]
-            if path_info.startswith(script_name):
-                environ["PATH_INFO"] = path_info[len(script_name) :]
-
-        scheme = environ.get("HTTP_X_SCHEME", "")
-        if scheme:
-            environ["wsgi.url_scheme"] = scheme
-
-        server = environ.get("HTTP_X_FORWARDED_SERVER", "")
-        if server:
-            environ["HTTP_HOST"] = server
-
-        port = environ.get("HTTP_X_FORWARDED_PORT", "")
-        if port:
-            environ["SERVER_PORT"] = port
-
-        return self.app(environ, start_response)
-
-
 db = SQLAlchemy()
 ma = Marshmallow()
 csrf = CSRFProtect()
@@ -78,16 +29,17 @@ def create_app():
 
     # Configure Logging
     app.logger.removeHandler(app.logger.handlers[0])
+    os.makedirs("../logs", exist_ok=True)
     app.logger.addHandler(logging.FileHandler(log_dir + "/gunicorn_error_logs.log"))
     app.logger.setLevel(logging.DEBUG)
     app.logger.handlers[0].setFormatter(logging.Formatter('[%(asctime)s] [%(filename)s] [%(levelname)s] %(message)s'))
     logger = logging.getLogger('labelbee.init_app')
 
 
-    app.config.from_object("labelbee.settings")
+    app.config.from_object("labelbee.settings.settings")
     # Read environment-specific settings from 'app/local_settings.py'
     try:
-        app.config.from_object("labelbee.local_settings")
+        app.config.from_object("labelbee.settings.local_settings")
     except ImportError as e:
         print(e)
         exit(
@@ -137,7 +89,7 @@ def create_app():
     from .blueprints import labelbee
     app.register_blueprint(labelbee.bp)
 
-    from .blueprints import download
+    from .blueprints.download import download
     app.register_blueprint(download.bp)
 
     from .blueprints import api
