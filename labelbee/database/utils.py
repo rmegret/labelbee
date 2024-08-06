@@ -17,7 +17,7 @@ class Path(fields.Field):
         except:
             raise ValidationError("File name must be a string")
 
-        if value is None or value is "":
+        if value == None or value == "":
             return value
         elif not value.startswith("/"):
             raise ValidationError("Path must start with /")
@@ -39,7 +39,7 @@ class FileName(fields.Field):
                 value = str(value.decode("utf-8"))
             elif isinstance(value, str):
                 pass
-            elif value is None:
+            elif value == None:
                 return None
             else:
                 raise ValidationError("File name must be a string")

@@ -11,7 +11,9 @@ import sys
 import logging
 import os
 from labelbee.middlewares.reverse_proxy import ReverseProxied
+from dotenv import load_dotenv
 
+load_dotenv()
 
 log_dir = os.environ.get("LABELBEE_LOGDIR")
 db = SQLAlchemy()
@@ -24,13 +26,13 @@ from labelbee.models import *
 
 def create_app():
 
+    
     app = Flask(__name__, static_url_path="", template_folder="blueprints/templates")  # The WSGI compliant webapp object
     app.wsgi_app = ReverseProxied(app.wsgi_app)
 
     # Configure Logging
     app.logger.removeHandler(app.logger.handlers[0])
-    #TODO: Pull this from the env file
-    os.makedirs("../logs", exist_ok=True)
+    os.makedirs(log_dir, exist_ok=True)
     app.logger.addHandler(logging.FileHandler(log_dir + "/gunicorn_error_logs.log"))
     app.logger.setLevel(logging.DEBUG)
     app.logger.handlers[0].setFormatter(logging.Formatter('[%(asctime)s] [%(filename)s] [%(levelname)s] %(message)s'))
@@ -96,6 +98,7 @@ def create_app():
     from .blueprints import api
     app.register_blueprint(api.bp)
 
+    csrf.exempt(api.bp)
     user_manager = UserManager(app, db, User)
 
     logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
