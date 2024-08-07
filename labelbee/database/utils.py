@@ -10,7 +10,7 @@ class Path(fields.Field):
                 value = str(value.decode("utf-8"))
             elif isinstance(value, str):
                 pass
-            elif value is None:
+            elif value == None:
                 return None
             else:
                 raise ValidationError("File name must be a string")
