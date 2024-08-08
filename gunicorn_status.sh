@@ -10,10 +10,11 @@ checkEnvVariable() {
   fi
 }
 
+source .env
 # Define all vars in a script and source it
 # source gunicorn_config.sh
 
-checkEnvVariable LABELBEE_LOGDIR
+#checkEnvVariable LABELBEE_LOGDIR
 
 GUNICORN_PIDFILE="$LABELBEE_LOGDIR"/labelbee.pid
 GUNICORN_LOG="$LABELBEE_LOGDIR"/gunicorn_error_logs.log
