@@ -310,7 +310,7 @@
                   </div>
                 </div>
                 
-                <div id="focusIntervalTabBR" class="hidden"></div>
+                <div id="focusIntervalTabBR" class=""></div>
                 <div id="focusIntervalTab" class='block inline-collapsible'>
                   <div class="block-header small">Focus Interval</div>
                   <br>
@@ -414,11 +414,15 @@
                   </span>
                 </div>
                 
-                <div id="filterTabBR" class="hidden"></div>
+                <div id="filterTabBR" class=""></div>
                 <div id="filterTab" class='block inline-collapsible'>
                   <div class="block-header small">Filter</div>
                   <br>
                   <span class="block-content">
+
+                    <div class='block inline-collapsible'>
+                      <div class="block-header small">RestrictID:</div>
+                      <span class="block-content">
                     <input type="text" value="0" size="15" id="restrictID" onchange="onRestrictIDChanged(event)"
                       class='btn-restrict-border small'>
                     <button id="restrictIDButton" onclick="click_restrictID()" type="button"
@@ -429,7 +433,12 @@
                     <button id="restrictIDFromWindowButton" onclick="restrictIDFromWindow()" type="button"
                       class="btn btn-default btn-restrict-border btn-window-text btn-xs"
                       title="Restrict to tags in current Window ID">R:Focus</button>
+                      </span>
+                      </div>
 
+                    <div class='block inline-collapsible'>
+                      <div class="block-header small">ExcludeID:</div>
+                      <span class="block-content">
                     <input type="text" value="" size="15" id="excludeID" onchange="onExcludeIDChanged(event)"
                       class="small btn-orange-border">
                     <button id="excludeIDButton" onclick="click_excludeID()" type="button"
@@ -441,6 +450,38 @@
                     <button id="hideFlowersButton" onclick="click_hideFlowers()" type="button"
                       class="btn btn-orange-toggle btn-xs" title="Hide annotations whose ID starts with F">Hide
                       Flowers</button>
+                      </span>
+                      </div>
+
+                    <div class='block inline-collapsible'>
+                      <div class="block-header small">ID Remap:</div>
+                      <span class="block-content">
+                    <!-- <input type="text" value="" size="15" id="idAxisMap" onchange="chrono.idAxisMap_inputChanged(event)"
+                      class="small btn-restrict-border"> -->
+                    <button onclick="chrono.click_setIdAxisMap('id')" type="button"
+                      class="btn btn-xs"
+                      title="Set chronogram y axis to be regular ID">ID</button>
+                    <button onclick="chrono.click_setIdAxisMap('modulo')" type="button"
+                      class="btn btn-xs"
+                      title="Set chronogram y axis to be ID modulo X">Modulo</button>
+                      </span>
+                      </div>
+
+                    <div class='block inline-collapsible'>
+                      <div class="block-header small">Frames:</div>
+                    <button id="filterFrameButton" onclick="chrono.setFrameFilter('toggle_active',event)" type="button"
+                      class="btn btn-restrict-toggle btn-xs"
+                      title="Activate frame filtering">Filter</button>
+                      <span class="block-content">
+                        <input type="text" value="0" size="7" id="chronoFrameFilterFrameMin" onchange="chrono.setFrameFilter('frameMin',event)"
+                      class='btn-restrict-border small'>
+                        <input type="text" value="-1" size="7" id="chronoFrameFilterFrameMax" onchange="chrono.setFrameFilter('frameMax',event)"
+                      class='btn-restrict-border small'>
+                        <div id="chronoFrameFilterRefresh" onclick="chrono.setFrameFilter('refresh')" class="btn btn-info btn-xs" title="Refresh chronogram data">Refresh</div>
+                        <div onclick="chrono.setFrameFilter('auto')" class="btn btn-info btn-xs" title="Filter Auto around current frame">Auto</div>
+                        <div onclick="chrono.setFrameFilter('all')" class="btn btn-info btn-xs" title="Filter All">All</div>
+                      </span>
+                    </div>
                   </span>
                 </div>
 

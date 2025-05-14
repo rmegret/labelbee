@@ -65,7 +65,8 @@ function init(videoID, tagID) {
   overlay = new OverlayControl("canvas");
 
   // import * from "ChronoControl.js";
-  initChrono();
+  //initChrono();
+  chrono = new Chronogram(); // TODO: fix direct access to #chronoTab, #chronoDiv, #svgVisualize
 
   // import * from "AnnotationIO.js"
   initAnnotationIO();

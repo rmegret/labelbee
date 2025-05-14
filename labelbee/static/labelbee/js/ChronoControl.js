@@ -5,6 +5,110 @@
 // ###########################################################
 // CHRONOGRAM
 
+class Chronogram {
+  constructor() {
+    const chrono = this
+    const config = {}
+    chrono.config = config
+    config.frameFilter = { active: false,
+                           frameMin: 0,
+                           frameMax: -1
+                          }
+    config.idAxisMapString = 'id'
+    config.idAxisMap = Function("id",config.idAxisMapString)
+
+    initChrono()  // '#svgVisualize'
+    // TODO: move all functionalities inside Chronogram
+  };
+
+  // ID REMAP
+
+  idAxisMap_inputChanged(event) {
+    const config = this.config
+    config.idAxisMapString = $('#').val
+    this.update_idAxisMap()
+  }
+  click_setIdAxisMap(mode) {
+    const config = this.config
+    if (mode == 'id') {
+      //config.idAxisMapString = 'id'
+      config.idAxisMap = (id)=>id
+      this.update_idAxisMap()
+    }
+    if (mode == 'modulo') {
+      const mod = prompt("Set ID axis remap with modulo:", 20)
+      if (mod == null) return
+      //config.idAxisMapString = `String( Number(id) % mod )`
+      config.idAxisMap = (id) => String( Number(id) % Number(mod) )
+      this.update_idAxisMap()
+    }
+  }
+  update_idAxisMap() {
+    const config = this.config
+    //config.idAxisMap = Function("id",config.idAxisMapString)
+    //this.update_idAxisMap_input()
+    refreshChronogram()
+  }
+  update_idAxisMap_input() {
+    const config = this.config
+    $('#').val = config.idAxisMapString
+  }
+
+  // FRAMEFILTER
+
+  setFrameFilter(how, event) {
+    const chrono = this
+    const frameFilter = chrono.config.frameFilter
+
+    console.log('chrono.setFrameFilter',how,event)
+
+    if (how == 'toggle_active') {
+      chrono.config.frameFilter.active = !chrono.config.frameFilter.active
+      chrono.refreshFrameFilterGUI()
+      refreshChronogram()
+    }
+    if (how == 'all') {
+      frameFilter.frameMin = 0
+      frameFilter.frameMax = videoinfo.nframes-1
+      chrono.refreshFrameFilterGUI()
+      refreshChronogram()
+    }
+    if (how == 'auto') {
+      frameFilter.frameMin = videoControl.currentFrame - 500
+      frameFilter.frameMax = videoControl.currentFrame + 500
+      chrono.refreshFrameFilterGUI()
+      refreshChronogram()
+    }
+    if (how == 'refresh') {
+      chrono.refreshFrameFilterGUI()
+      refreshChronogram()
+    }
+    if (how == 'frameMin') {
+      frameFilter.frameMin = Number( $('#chronoFrameFilterFrameMin').val() )
+      //if (frameFilter.frameMin>frameFilter.frameMax) frameFilter.frameMin=frameFilter.frameMax
+      chrono.refreshFrameFilterGUI()
+      flash($('#chronoFrameFilterRefresh'))
+      //refreshChronogram()
+    }
+    if (how == 'frameMax') {
+      frameFilter.frameMax = Number( $('#chronoFrameFilterFrameMax').val() )
+      if (frameFilter.frameMax < 0) 
+        frameFilter.frameMax = videoinfo.nframes + frameFilter.frameMax
+      //if (frameFilter.frameMin<0) frameFilter.frameMax=frameFilter.frameMin
+      chrono.refreshFrameFilterGUI()
+      flash($('#chronoFrameFilterRefresh'))
+      //refreshChronogram()
+    }
+  };
+
+  refreshFrameFilterGUI() {
+      $('#filterFrameButton').toggleClass("active", chrono.config.frameFilter.active );
+      $('#chronoFrameFilterFrameMin').val( chrono.config.frameFilter.frameMin )
+      $('#chronoFrameFilterFrameMax').val( chrono.config.frameFilter.frameMax )
+  };
+
+}
+
 function initChrono() {
   // global variables
   axes = undefined;
@@ -20,7 +124,7 @@ function initChrono() {
   flag_hideFlowers = false
 
   flag_showPartsOnChrono = false;
-  flag_showIndividualEvents = true;
+  flag_showIndividualEvents = false; // false by default as it is way to expensive for full video tracks
   updateButtons_showPartsOnChrono();
   updateButtons_showIndividualEvents();
 
@@ -34,6 +138,7 @@ function initChrono() {
 
   // SVG adjust to its parent #chronoDiv
   var svg = d3.select("#svgVisualize");
+  //var svg = d2.select(svg_selector)  // TODO: make it modular and self contained, no global CSS selectors
   svg.attr("width", "100%").attr("height", "100%");
 
   /* ## Build the axes (resizable) ## */
@@ -93,7 +198,7 @@ function initChrono() {
 
   /* Resize events */
 
-  $("#chronoTab").on("collapsibleexpand", refreshChronoLayout);
+  $("#chronoTab").on("collapsibleexpand", refreshChronoLayout); // TODO: make it more modular, no global selectors
 
   // Make it resizable using jQuery-UI
   $("#chronoDiv").resizable({
@@ -300,11 +405,11 @@ function validIdsDomain() {
     chronogramData.forEach(function (d) {
       let labs = d.labels.split(",");
       if (labs.indexOf("wrongid") == -1 && labs.indexOf("falsealarm") == -1)
-        ids.add(d.y);
+        ids.add(d.id);
     });
   } else {
     chronogramData.forEach(function (d) {
-      ids.add(d.y);
+      ids.add(d.id);
     });
   }
   return [...ids]; // Convert to array
@@ -400,7 +505,22 @@ function updateChronoYDomain() {
 
   //let itemHeight = getChronoItemHeight()
 
-  axes.ydomain(domain);
+  if (chrono.config.idAxisMap) {
+    // let trackLength={}
+    // let yEnd={}; 
+    // chrono.trackY={}; 
+    // console.log('allIntervals',allIntervals)
+    // allIntervals.forEach( (item) => {item.frames = item.x2-item.x1+1; trackLength[item.id]=item.frames} )
+    // allIntervals.forEach( (item) => { let L=trackLength[item.id]; let curY=(L>1)+(L>2)+(L>4)+(L>8)+(L>16)+(L>32)+(L>64)+(L>128)+(L>256); for (let y=curY; ; y++) {
+    //     if (yEnd[y]==null || item.x1>yEnd[y]) { yEnd[y]=item.x2; chrono.trackY[item.id]=y; break; }
+    // }  } )
+    //chrono.config.idAxisMap = (id) => chrono.trackY[id]
+    // Apply an id mapping if exists
+    const mappedDomain = [...new Set( domain.map(chrono.config.idAxisMap) )].sort( (a,b) => -Number(b)+Number(a))
+    axes.ydomain(mappedDomain);
+  } else {
+    axes.ydomain(domain);
+  }
 
   adjustChronogramHeight(chronoItemHeight);
 
@@ -958,12 +1078,19 @@ function restrictIDFromWindow() {
   let win = getWindow();
   let f1 = win[0],
     f2 = win[1];
-  restrictIDArray = flatTags
-    .filter(function (tag) {
-      return tag.frame >= f1 && tag.frame <= f2;
+  // restrictIDArray = flatTags
+  //   .filter(function (tag) {
+  //     return tag.frame >= f1 && tag.frame <= f2;
+  //   })
+  //   .map(function (tag) {
+  //     return String(tag.id);
+  //   });
+  restrictIDArray = chronogramData
+    .filter(function (item) {
+      return item.x >= f1 && item.x <= f2;
     })
-    .map(function (tag) {
-      return String(tag.id);
+    .map(function (item) {
+      return String(item.id);
     });
   restrictIDArray = sortIds([...new Set(restrictIDArray)]);
   restrictID = restrictIDArray.join(",");
@@ -1033,6 +1160,16 @@ function click_hideFlowers() {
     button.toggleClass( "active", flag_hideFlowers )
     refreshChronogram()
 }
+
+function flash(elements) {
+    $(elements).toggleClass("focus",true)
+    var repeat = 0
+    var interval = setInterval(function() {if (repeat>4) {$(elements).toggleClass("focus",false); clearInterval(interval); return;}
+                                           repeat+=1;
+    $(elements).toggleClass("focus")
+  }, 100)
+};
+
 
 /* Callback to react to change in chronogramData */
 function drawChrono() {
@@ -1208,23 +1345,23 @@ function createIntervalList() {
   tempCoordinates = {};
 
   for (var i = 0; i < chronogramData.length; i++) {
-    if (chronogramData[i].y in tempCoordinates) {
+    if (chronogramData[i].id in tempCoordinates) {
       //Make sure y coordinate is not in tempCoordiantes
-      tempCoordinates[chronogramData[i].y].push(i);
+      tempCoordinates[chronogramData[i].id].push(i);
     } else {
       //Create new beeId key with it's x coordiantes as value
-      tempCoordinates[chronogramData[i].y] = [];
-      tempCoordinates[chronogramData[i].y].push(i);
+      tempCoordinates[chronogramData[i].id] = [];
+      tempCoordinates[chronogramData[i].id].push(i);
     }
   }
   //initiliaze allIntervals to update data
   allIntervals = [];
   acts = ["", "pollen", "entering", "leaving", "fanning"];
   for (var a of acts) {
-    for (var y in tempCoordinates) {
+    for (var id in tempCoordinates) {
       let xValues = [];
 
-      let iArray = tempCoordinates[y];
+      let iArray = tempCoordinates[id];
 
       iArray = iArray.filter(function (i) {
         return chronogramData[i].Activity == a;
@@ -1234,48 +1371,58 @@ function createIntervalList() {
         continue;
       }
 
+      let passThroughROI=false
       for (let j = 0; j < iArray.length; j++) {
         xValues[j] = Number(chronogramData[iArray[j]].x);
       }
 
-      var iData = chronogramData[iArray[0]];
+      let iData = chronogramData[iArray[0]];
       let tempInterval = {
         x1: xValues[0],
         x2: xValues[0],
-        y: y,
+        y: iData.y,  // XXX Reuse y
+        id: id,
         Activity: iData.Activity,
         labels: iData.labels,
         pollen: iData.pollen,
         tag: iData.tag,
         obs: iData.obs,
+        passThroughROI: iData.inROI
       };
 
       // let tempInterval = { x1: xValues[0], x2: xValues[0], y: y,
       //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
 
       for (var i = 1; i < xValues.length; i++) {
-        iData = chronogramData[iArray[i]];
+        let iData = chronogramData[iArray[i]];
         // console.log("Act temp interval IN: ", tempInterval[i].Activity);
         if (xValues[i] - xValues[i - 1] == 1) {
           tempInterval.x2 = xValues[i]; //Extend the existing interval
           tempInterval.pollen |= iData.pollen;
+          tempInterval.passThroughROI |= iData.inROI
         } else {
           allIntervals.push(tempInterval);
           tempInterval = {
             x1: xValues[i],
             x2: xValues[i],
-            y: y,
+            y: iData.y,  // XXX Reuse y
+            id: id,
             Activity: iData.Activity,
             labels: iData.labels,
             pollen: iData.pollen,
             tag: iData.tag,
             obs: iData.obs,
+            passThroughROI: iData.inROI
           }; // New interval
         }
       }
       allIntervals.push(tempInterval);
     }
   }
+
+  // Filter out
+  if (flag_useROI)
+    allIntervals = allIntervals.filter( interval => interval.passThroughROI )
 
   // Pass extra data from chronogramData to allInterval
   for (let interval of allIntervals) {
@@ -1309,7 +1456,7 @@ function onActivityClick(d) {
   // Prevent default chronogram click to go to the correct frame
   d3.event.stopPropagation();
 
-  gotoEvent(d.x1, d.y);
+  gotoEvent(d.x1, d.id);
 }
 function onObsSpanClick(obsspan) {
   console.log("CLICK ObsSpan obsspan=", obsspan);
@@ -1357,7 +1504,7 @@ function setGeomActivity(selection) {
     .text(function (d) {
       return (
         "Bee ID: " +
-        d.y +
+        d.id +
         " Start Frame: " +
         d.x1 +
         " End Frame: " +
@@ -1383,7 +1530,7 @@ function updateEntering(input) {
       return axes.xScale(d.x1);
     })
     .attr("y", function (d) {
-      return axes.yScale(d.y);
+      return axes.yScale(d.y); // XXX Use y
     })
     .attr("width", "4px")
     .attr("height", function (d) {
@@ -1407,7 +1554,7 @@ function updateLeaving(input) {
       return axes.xScale(d.x2);
     })
     .attr("y", function (d) {
-      return axes.yScale(d.y); // ordinal
+      return axes.yScale(d.y); // ordinal  // XXX Use y
     })
     .attr("width", "4px")
     .attr("height", function (d) {
@@ -1431,7 +1578,7 @@ function updatePollen(input) {
       return axes.xScale(d.x1);
     })
     .attr("y", function (d) {
-      return axes.yScale(d.y); // ordinal
+      return axes.yScale(d.y); // ordinal  // XXX Use y
     })
     .attr("width", function (d) {
       return axes.xScale(d.x2 + 1) - axes.xScale(d.x1);
@@ -1457,7 +1604,7 @@ function updateFanning(input) {
       return axes.xScale(d.x1);
     })
     .attr("y", function (d) {
-      return axes.yScale(d.y) + axes.yScale.rangeBand() / 2;
+      return axes.yScale(d.y) + axes.yScale.rangeBand() / 2;   // XXX Use y
     })
     .attr("width", function (d) {
       return axes.xScale(d.x2 + 1) - axes.xScale(d.x1);
@@ -1504,7 +1651,7 @@ function updateObsSpan(selection) {
       return axes.xScale(d.span.f1);
     })
     .attr("y", function (d) {
-      return axes.yScale(d.id); // ordinal
+      return axes.yScale(d.y); // ordinal   // XXX Use y
       //axes.yScale(d.id)+axes.yScale.rangeBand()/2; // ordinal
     })
     .attr("width", function (d) {
@@ -1567,7 +1714,7 @@ function updateAlertCircle(selection) {
       return axes.xScale(d.frame);
     })
     .attr("cy", function (d) {
-      return axes.yScale(d.id) + axes.yScale.rangeBand() / 2; // ordinal
+      return axes.yScale(d.y) + axes.yScale.rangeBand() / 2; // ordinal  // XXX Use y
     })
     .attr("r", 7)
     .style("stroke", "cyan");
@@ -1681,7 +1828,7 @@ function updateActivities(onlyScaling) {
       return axes.xScale(Number(d.x1));
     })
     .attr("cy", function (d) {
-      return axes.yScale(d.y) + axes.yScale.rangeBand() / 2;
+      return axes.yScale(d.y) + axes.yScale.rangeBand() / 2;  // XXX Use y
     })
     .attr("r", 5) //change radius
     .style("stroke", function (d) {
@@ -1711,7 +1858,7 @@ function updateActivities(onlyScaling) {
       var message = "";
       message +=
         "BeeID=" +
-        d.y +
+        d.id +  // xxx Use id
         " Frame=" +
         d.x1 +
         "<br>Time=" +
@@ -1742,13 +1889,13 @@ function updateActivities(onlyScaling) {
       tooltip.style("visibility", "hidden");
     });
 
-  var lineFunction = d3.svg
+  var lineFunction = d3.svg // Not used?
     .line()
     .x(function (d) {
       return d.x;
     })
     .y(function (d) {
-      return d.y;
+      return d.y; // XXX Use y
     })
     .interpolate("linear");
 
@@ -1790,7 +1937,7 @@ function updateActivities(onlyScaling) {
   path
     .attr("d", function (d) {
       var X = axes.xScale(Number(d.x1)),
-        Y = axes.yScale(d.y) + axes.yScale.rangeBand() / 2;
+        Y = axes.yScale(d.y) + axes.yScale.rangeBand() / 2;  // XXX Use y
       //if((d.labels == "wrongid") && (d.newid != null))
       //    return crossFunction(X,Y,5);
       return crossFunction(X, Y, 5);
@@ -1846,7 +1993,7 @@ function updateActivities(onlyScaling) {
         return axes.xScale(Number(d.x1)) - axes.yScale.rangeBand() / 2;
       })
       .attr("y", function (d) {
-        return axes.yScale(d.y);
+        return axes.yScale(d.y);  // XXX Use y
       })
       .attr("width", axes.yScale.rangeBand())
       .attr("height", axes.yScale.rangeBand())
@@ -1917,7 +2064,7 @@ function setTagGeom(selection) {
       return axes.xScale(Number(d.begin));
     })
     .attr("y", function (d) {
-      return axes.yScale(d.id) + H - tagHeight(d);
+      return axes.yScale(d.y) + H - tagHeight(d);  // XXX Use y  // tagIntervals?
     })
     .attr("width", function (d) {
       return axes.xScale(Number(d.end) + 1) - axes.xScale(Number(d.begin));
@@ -2074,6 +2221,12 @@ function updateObsTable() {
   // All obs sorted by frame,id
   flatTracksAll = [];
   for (let F in Tracks) {
+
+    // TODO: filter in only one place instead of both updateObsTable and refreshChronogram
+    if (chrono.config.frameFilter.active) {
+      if ((F < chrono.config.frameFilter.frameMin) || (F > chrono.config.frameFilter.frameMax)) continue // Just skip out of active zone
+    }
+
     for (let id in Tracks[F]) {
       // var obs = Tracks[F][id]
       obs = Tracks[F][id];
@@ -2085,7 +2238,9 @@ function updateObsTable() {
         if ($.inArray(String(id), excludeIDArray) >= 0) continue;
       }
 
-      let chronoObs = { frame: F, id: id, labels: obs.labels, obs: obs };
+      // XX Define y
+      let y = chrono.config.idAxisMap(id)
+      let chronoObs = { frame: F, id: id, y: y, labels: obs.labels, obs: obs };
 
       flatTracksAll.push(chronoObs);
     }
@@ -2345,7 +2500,15 @@ function refreshChronogram() {
   chronogramData.length = 0;
   if (showObsChrono) {
     for (let F in Tracks) {
+
+      if (chrono.config.frameFilter.active) {
+        if ((F < chrono.config.frameFilter.frameMin) || (F > chrono.config.frameFilter.frameMax)) continue // Just skip out of active zone
+      }
+
       for (let id in Tracks[F]) {
+
+        const id_eff = String(Number(id)%50)
+
         let obs=Tracks[F][id]
         let labelArray = (obs.labels || '').split(",")
 
@@ -2358,9 +2521,17 @@ function refreshChronogram() {
         if (flag_hideInvalid) {
           if (hasLabel(obs, "falsealarm") || hasLabel(obs, "wrongid")) continue;
         }
-                if (flag_hideFlowers) {
-                    if (String(id).startsWith('F')) continue;
-                }
+        if (flag_hideFlowers) {
+            if (String(id).startsWith('F')) continue;
+        }
+        let inROI = true
+        if (flag_useROI) {
+            inROI = (obs.cx >= ROI.left &&
+              obs.cx <= ROI.right &&
+              obs.cy >= ROI.top &&
+              obs.cy <= ROI.bottom
+            );
+        };
 
         let b = obs.bool_acts;
         let b0 = b[0];
@@ -2372,48 +2543,58 @@ function refreshChronogram() {
         //                 let b2 = hasLabel(obs,'entering')
         //                 let b3 = hasLabel(obs,'leaving')
 
+        // XXX Define y
+        let y = chrono.config.idAxisMap(id)
         if (!b0 && !b2 && !b3) {
           chronogramData.push({
             x: F,
-            y: id,
+            y: y, 
+            id: id,
             Activity: "",
             labels: obs.labels,
             pollen: b1,
             tag: obs.tag,
             obs: obs,
+            inROI: inROI
           });
         }
         if (b2) {
           chronogramData.push({
             x: F,
-            y: id,
+            y: y,
+            id: id,
             Activity: "entering",
             labels: obs.labels,
             pollen: b1,
             tag: obs.tag,
             obs: obs,
+            inROI: inROI
           });
         }
         if (b3) {
           chronogramData.push({
             x: F,
-            y: id,
+            y: y,
+            id: id,
             Activity: "leaving",
             labels: obs.labels,
             pollen: b1,
             tag: obs.tag,
             obs: obs,
+            inROI: inROI
           });
         }
         if (b0) {
           chronogramData.push({
             x: F,
-            y: id,
+            y: y,
+            id: id,
             Activity: "fanning",
             labels: obs.labels,
             pollen: b1,
             tag: obs.tag,
             obs: obs,
+            inROI: inROI
           });
         }
       }
@@ -2491,9 +2672,12 @@ function refreshChronogram() {
               activeInterval.dmavg = activeInterval.dmavg / len;
               tagIntervals.push(activeInterval);
             }
+            // XXX Define y
+            let y = chrono.config.idAxisMap(id)
             // Open new one
             activeInterval = {
               id: id,
+              y: y,
               begin: f,
               end: f,
               hammingavg: tags.hamming,
@@ -2502,9 +2686,12 @@ function refreshChronogram() {
             };
           }
         } else {
+          // XXX Define y
+          let y = chrono.config.idAxisMap(id)
           // Open new one
           activeInterval = {
             id: id,
+            y: y,
             begin: f,
             end: f,
             hammingavg: tags.hamming,
@@ -2599,8 +2786,11 @@ function interpolateTags(maxgap) {
       if (Tags[j] == null) {
         Tags[j] = { tags: [] };
       }
+      // XXX Define y
+      let y = chrono.config.idAxisMap(id)
       Tags[j].tags.push({
         id: id,
+        y: y,
         c: [cx, cy],
         hamming: 1000,
         p: pts,
