@@ -5,6 +5,10 @@ from .resources.video import VideoAPI, VideoListAPI
 from .resources.dataset import DatasetAPI, DatasetListAPI
 from .resources.annotations import AnnotationAPI, AnnotationsAPI
 from .resources.auth import Login, Logout, Whoami
+
+
+from .resources.rawdata import RawDataAPI
+
 from labelbee.app import csrf   
 
 
@@ -24,3 +28,6 @@ api.add_resource(AnnotationAPI, "/annotation/<int:id>", endpoint="annotation")
 api.add_resource(Login, "/auth/login")
 api.add_resource(Logout, "/auth/logout")
 api.add_resource(Whoami, "/auth/whoami")
+
+
+api.add_resource(RawDataAPI, "/rawdata/", "/rawdata/<path:path>", endpoint="rawdata") # Need to register empty path

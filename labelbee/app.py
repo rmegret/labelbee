@@ -19,7 +19,8 @@ log_dir = os.environ.get("LABELBEE_LOGDIR")
 db = SQLAlchemy()
 ma = Marshmallow()
 csrf = CSRFProtect()
-logger = logging.getLogger('labelbee.init_app')
+
+#logger = logging.getLogger('labelbee.init_app') # should be labelbee.app
 
 
 from labelbee.models import *
@@ -33,10 +34,16 @@ def create_app():
     # Configure Logging
     app.logger.removeHandler(app.logger.handlers[0])
     os.makedirs(log_dir, exist_ok=True)
-    app.logger.addHandler(logging.FileHandler(log_dir + "/gunicorn_error_logs.log"))
+    app.logger.addHandler(logging.FileHandler(log_dir + "/flask_errors.log"))
     app.logger.setLevel(logging.DEBUG)
     app.logger.handlers[0].setFormatter(logging.Formatter('[%(asctime)s] [%(filename)s] [%(levelname)s] %(message)s'))
-    logger = logging.getLogger('labelbee.init_app')
+
+    logger = app.logger
+
+    logger.info("Starting LabelBee at %s", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info(f"app.logger.name={app.logger.name}")
+
+    #logger = logging.getLogger('labelbee.init_app')
 
 
     app.config.from_object("labelbee.settings.settings")

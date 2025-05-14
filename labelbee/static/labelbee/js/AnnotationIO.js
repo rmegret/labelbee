@@ -14,6 +14,7 @@ function initAnnotationIO() {
   ttags = [];
   labelListFromServerDialog = new LabelListFromServerDialog();
   fromServerDialog = new FromServerDialog();
+  pickEventsCSVDialog = new EventsCSVManualFilePicker();
 
   $("#events-notes").on("input", onChanged_events_notes);
 }
@@ -171,6 +172,27 @@ function whoami() {
 }
 
 function show_log_in() {}
+
+// ## Manual load of events
+
+class EventsCSVManualFilePicker {
+  constructor() {
+    this.filePicker = new FilePickerFromServerDialog();
+    this.filePicker.initDialog({
+      base_uri: url_for("/api/v1/rawdata/"),
+      loadFileFunction: function (uri) {
+        loadTracksCSVFromServer(uri);
+      },
+      dialogName: "Load tracks CSV Manually",
+    });
+  }
+  open() {
+    this.filePicker.openDialog();
+  }
+  close() {
+    this.filePicker.closeDialog();
+  }
+}
 
 // ## Annotations control
 
@@ -535,6 +557,7 @@ function sanitizeEvents(obj) {
           let evt0 = frameItem0[i];
           if (evt0 == null) continue;
   
+          // Normalize id (json)  to String ID (Tracks)
           let evt = Object.assign({ ID: String(evt0.id) }, evt0);
           delete evt.id;
   
@@ -1539,6 +1562,84 @@ function eventsFromServer(url) {
     },
     error: showAjaxError("ERROR in eventsFromServer"),
   });
+}
+
+function tracks_csv_to_json(data, info) {
+  console.log("tracks_csv_to_json: converting CSV to JSON...");
+
+  let obj = {};
+
+  for (let i = 0; i < data.length; i++) {
+    src=data[i]
+    let frame = src["frame"];
+    if (!(frame in obj)) {
+      obj[frame] = {}; // List of detections
+      //obj[frame]["tags"] = [];
+    }
+    let item = {};
+    const w = 300
+    const h = 600
+
+    item["id"] = src["track_id"];
+    //item["ID"] = src["track_id"];
+    item['frame'] = +src['frame']
+    //item["label"] = src["label"];
+    item["cx"] = +src["cx"];
+    item["cy"] = +src["cy"];
+    item["angle"] = +src["angle"]+90;
+    item["width"] = +w;
+    item["height"] = +h;
+    item["x"] = +src["cx"]-w/2;
+    item["y"] = +src["cy"]-h/2;
+    item['bool_acts'] = [false,false,false,false]
+    item['labels'] = ''
+    let parts = []
+    for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
+      if (+src[name+"_visibility"] > 0)
+        parts.push({"posFrame": {"x": +src[name+"_x"], "y": +src[name+"_y"]}, "label": name})
+    }
+    item['parts'] = parts
+
+    obj[frame][item['id']] = item;
+  }
+
+  evts = {info: info, data: obj};
+
+  return evts;
+}
+function loadTracksCSVFromServer(url) {
+  console.log("loadTracksDataFrameFromServer: importing Tracks in CSV format from URL '" + url + "'...");
+
+  d3.csv(url, function (data) {
+      console.log("loadTracksDataFrameFromServer: SUCCESS\ncsv=", data);
+
+      //tracks_csv = data
+
+      let info = {
+        type: "events-multiframe",
+        source: `Converted from CSV "${url}"`,
+        history: `Loaded in Labelbee on ${new Date().toISOString()}`,
+      }
+
+      let obj = tracks_csv_to_json(data, info)
+
+      setTracks(obj)
+      //setTracks(obj);
+
+      videoControl.onFrameChanged();
+
+      refreshChronogram();
+    })
+
+}
+async function clickLoadTracksCSVFromServer() {
+  console.log("clickLoadTracksCSVFromServer: loading .tracks.csv from URL");
+  const url = prompt("Enter tracks URL", url_for("/data")+"/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv");
+  if (url == null || url == "") {
+    console.log("clickLoadTracksCSVFromServer: no URL entered");
+    return;
+  }
+  loadTracksCSVFromServer(url);
 }
 
 function mainAlert(text) {

@@ -3,9 +3,11 @@ import mimetypes
 import re
 
 from flask import request, send_file, Response, send_from_directory
-from flask import render_template
+from flask import render_template, make_response, jsonify, current_app
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden
 from werkzeug.security import safe_join
+
+
 
 # Enable range requests 
 # https://blog.asgaard.co.uk/2012/08/03/http-206-partial-content-for-flask-python
@@ -14,7 +16,7 @@ from werkzeug.security import safe_join
 #    response.headers.add('Accept-Ranges', 'bytes')
 #    return response
 
-def dir_listing(directory, dirname='', base_uri='/', show_hidden=False):
+def dir_listing(directory, dirname='', base_uri='/', show_hidden=False, format='html'):
     # Joining the base dir and the requested relative dir
     abs_path = os.path.join(directory, dirname)
     #abs_path = safe_join(directory, dirname)
@@ -33,7 +35,13 @@ def dir_listing(directory, dirname='', base_uri='/', show_hidden=False):
     files = [os.path.normpath(f) for f in files]
     files.insert(0,'..')
     dir_uri = os.path.join(base_uri, dirname, '') # Add trailing /
-    return render_template('pages/files.html', dir_uri=dir_uri, files=files)
+    richfiles = [{"uri": os.path.normpath(os.path.join(dir_uri, f))+f'?format={format}', "filename": f} for f in files]
+    if (format=='html'):
+        return render_template('pages/files.html', dir_uri=dir_uri, files=files)
+    else:
+        response = make_response(render_template('pages/filebrowser.html', dirs=[], files=richfiles, format=format), 200)
+        response.headers["Content-Type"] = "text/html"
+        return response
 
 def send_from_directory_partial(directory, filename, base_uri):
     """ 
@@ -61,9 +69,7 @@ def send_from_directory_partial(directory, filename, base_uri):
     if not range_header: 
         print('send_from_directory_partial: REQUEST "'+filename+'" norange')
         print('  send_from_directory: '+directory+','+filename+'"')
-        # TODO: unhardcode gurabo_video.mp4 
-        #TODO: Pass file name
-        return send_from_directory(directory, "gurabo_video.mp4")
+        return send_from_directory(directory, filename)
     else:
         print('send_from_directory_partial: REQUEST "'+filename+'" range='+range_header)
     
@@ -102,3 +108,82 @@ def send_from_directory_partial(directory, filename, base_uri):
     print('send_from_directory_partial: SENT range={0}-{1}/{2}'.format(byte1,byte2,size))
 
     return rv
+
+
+def serve_files(base_dir, path, base_uri, direct_download_base_uri=None, format="html"):
+    logger = current_app.logger
+
+    filepath = safe_join(base_dir, path)
+    uripath = safe_join(base_uri, path)
+
+    logger.info("serve_files...")
+    logger.info("filepath={}".format(filepath))
+    logger.info("uripath={}".format(uripath))
+    logger.info(f"format={format}")
+
+    if not os.path.exists(filepath):
+        raise BadRequest("GET " + base_uri + ': File not found "{}"'.format(filepath))
+
+    if format == "html":
+        if os.path.isfile(filepath):
+            return send_from_directory_partial(base_dir, path, base_uri)
+        if os.path.isdir(filepath):
+            return dir_listing(filepath, "", uripath, show_hidden=False, format="html")
+    elif format == "htmlpage":
+        if os.path.isfile(filepath):
+            #return f'send_from_directory_partial("{base_dir}", "{path}", "{base_uri}")'
+            return send_from_directory_partial(base_dir, path, base_uri)
+        if os.path.isdir(filepath):
+            return dir_listing(filepath, "", uripath, show_hidden=False, format="htmlpage")
+    elif format == "json":
+        if os.path.isfile(filepath):
+            raise BadRequest(
+                "GET "
+                + base_uri
+                + ": Attempting to get file in JSON format. try format=html"
+            )
+        if os.path.isdir(filepath):
+            items = os.listdir(filepath)
+            # files = [f for f in items if f.endswith('.json') and os.path.isfile(safe_join(filepath,f))]
+            files = [f for f in items if os.path.isfile(safe_join(filepath, f))]
+            dirs = [f for f in items if os.path.isdir(safe_join(filepath, f))]
+            if path != "":
+                dirs.append("..")
+            files_obj = [
+                {
+                    # url_for('send_data', path=os.path.join('config/labellist/',path,filename)),
+                    "uri": os.path.normpath(os.path.join(base_uri, path, filename)),
+                    "download_uri": os.path.normpath(os.path.join(direct_download_base_uri, path, filename)) if direct_download_base_uri is not None else None,
+                    "filename": filename,
+                    "path": os.path.normpath(os.path.join(path, filename)),
+                }
+                for filename in files
+            ]
+            dirs_obj = [
+                {
+                    # url_for('labellist_get', path=os.path.join(path,filename+'/'), format=format),
+                    "uri": os.path.normpath(
+                        os.path.join(base_uri, path, filename + "/")
+                    ),
+                    "download_uri": os.path.normpath(os.path.join(direct_download_base_uri, path, filename)) if direct_download_base_uri is not None else None,
+                    "filename": filename + "/",
+                    "path": os.path.normpath(os.path.join(path, filename + "/")),
+                }
+                for filename in dirs
+            ]
+
+            result = {
+                "files": files_obj,
+                "dirs": dirs_obj,
+                "base_uri": base_uri,
+                "path": path,
+                "uri": uripath,
+            }
+            return jsonify(result)
+        raise BadRequest("GET " + base_uri + ": Internal error")
+    else:
+        raise BadRequest(
+            "GET " + base_uri + ': Unrecognized format "{}"'.format(format)
+        )
+
+    raise BadRequest("GET " + base_uri + ": Internal error")

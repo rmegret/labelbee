@@ -513,8 +513,9 @@
                 <label>Video Info</label>
                 <div>
                   <div class='subpanel'>
-                    <button class="btn btn-default" onclick="videoManager.videoListFromDB()">Load Video</button>
-                    <a class="btn btn-xs btn-default" onclick="videoManager.clickLoadVideoManual()">Manual Load</a>
+                    <button class="btn btn-default" onclick="videoManager.videoListFromDB()">Load Video from DB</button>
+                    <a class="btn btn-xs btn-default" onclick="videoManager.clickLoadVideoManual()">From URI</a>
+                    <a class="btn btn-xs btn-default" onclick="videoManager.filePicker.openDialog()">From /data</a>
                     <br>
                     <label class="primary">
                       <div class="video_id bold" style="display:inline;">ID=??</div>
@@ -865,7 +866,9 @@
                         class="btn btn-default btn-sm" value="Load Tags">
                       <br>
                       <input id="tagsFromServer" onclick="fromServerDialog.openRecentLoadingDialog('event')" type="button" 
-                        class="btn btn-default btn-sm" value="Load Events">
+                        class="btn btn-default btn-sm" value="Load Events from DB">
+                      <a class="btn btn-xs btn-default" onclick="clickLoadTracksCSVFromServer()">from URI</a>
+                      <a class="btn btn-xs btn-default" onclick="pickEventsCSVDialog.open()">from /data</a>
                       <br>
                       <!-- <input id="tagsFromServerAdvanced" onclick="fromServerDialog.showAdvancedLoadingDialog(false)" type="button" value="Load Tags (Advanced)"
                       class="btn btn-default btn-xs">  

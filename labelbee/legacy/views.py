@@ -915,6 +915,22 @@ def keypointlabels_get(path=""):
 
 # LIST AND GET V1
 
+@app.route("/rest/rawdata", methods=["GET"])
+@app.route("/rest/rawdata/", methods=["GET"])
+@app.route("/rest/rawdata/<path:path>", methods=["GET"])
+def rawdata_get(path=""):
+    print("Handling request to raw data PATH=" + path)
+    # if (not current_user.is_authenticated):
+    #    raise Forbidden('/rest/config/labellist GET: login required !')
+    format = request.args.get("format", "html")
+
+    print("format=", format)
+
+    base_dir = os.path.join(app.root_path, "static/data")
+    base_uri = url_for("rawdata_get", path="")
+
+    return serve_files(base_dir, path, base_uri, format)
+
 
 @app.route("/rest/config/videolist", methods=["GET"])
 @app.route("/rest/config/videolist/", methods=["GET"])

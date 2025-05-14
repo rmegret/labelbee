@@ -5,7 +5,7 @@ import os
 
 bp = Blueprint('download', __name__, url_prefix='/data')
 
-@bp.route("/data/<path:path>")
+@bp.route("/<path:path>")  # no duplicate with url_prefix
 def send_data(path):
     # TODO: Make strigs into constants
     data_dir = os.path.join(bp.root_path, "../static/data")

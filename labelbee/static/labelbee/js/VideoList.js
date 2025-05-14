@@ -61,13 +61,25 @@ function VideoManager() {
 
   // this.videoListFromServer("/data/videolist.csv", 1);
 
+  // this.filePicker = new FilePickerFromServerDialog();
+  // this.filePicker.initDialog({
+  //   base_uri: url_for("/rest/config/videolist/"),
+  //   fileLoadedCallback: function (file, content) {
+  //     videoManager.setVideoListFromCSV(content, 0);
+  //   },
+  //   dialogName: "Load Video List from Server",
+  // });
+
   this.filePicker = new FilePickerFromServerDialog();
   this.filePicker.initDialog({
-    base_uri: url_for("/rest/config/videolist/"),
-    fileLoadedCallback: function (file, content) {
-      videoManager.setVideoListFromCSV(content, 0);
+    base_uri: url_for("/api/v1/rawdata/"),
+    // fileLoadedCallback: function (file, content) {
+    //   console.log("fileLoadedCallback: ", file, content);
+    // },
+    loadFileFunction: function (uri) {
+      videoManager.loadVideoManual(uri);
     },
-    dialogName: "Load Video List from Server",
+    dialogName: "Load Video Manually from Server",
   });
 
   // Default currentVideoID value
@@ -496,7 +508,7 @@ VideoManager.prototype.changeFrameOffset = function (event) {
 };
 
 VideoManager.prototype.updateVideoInfoForm = function () {
-  $('.video_id').html('<a class="small" href="#video_id='+this.currentVideoID+'">#video_id='+this.currentVideoID+'</a>')
+  $('.video_id').html('<a class="small" href="#video_id='+encodeURIComponent(this.currentVideoID)+'">#video_id='+this.currentVideoID+'</a>')
   $(".videoinfo_nframes").html("Num frames: "+videoinfo.nframes+" [0-"+(videoinfo.nframes-1)+"]");
 
   $("#videofps").val(videoinfo.videofps);
@@ -638,6 +650,18 @@ VideoManager.prototype.receiveVideoSelection = function(){
   });
 }
 
+VideoManager.prototype.selectVideoBy_video_id = async function (video_id) {
+  const id = Number(video_id);
+  if (id == video_id) {
+    // If numerical ID, assume it is from database
+    this.videoSelected(id)
+  } else {
+    // Else, this is manually loaded video. video_id is the URI. Load manual
+    let uri = url_for('/data')+video_id
+    this.loadVideoManual(uri)
+  }
+};
+
 VideoManager.prototype.videoSelected = async function(id) {
   let videoManager = this
   this.loadingVideoId = true
@@ -659,7 +683,8 @@ VideoManager.prototype.videoSelected = async function(id) {
           "selected video's information from server.");
           videoManager.loadingVideoId = false;
           //throw new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id);
-          reject(new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id))
+          //reject(new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id))
+          throw new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id)
         },
         success: function(videoInfoJSON){
           console.log(videoInfoJSON)
@@ -677,7 +702,8 @@ VideoManager.prototype.videoSelected = async function(id) {
               if (logging.videoList)
                 console.log("VideoManager.videoSelected: videoManager.setVideoInfo FAILED");
               videoManager.loadingVideoId = false; 
-              reject(error)
+              throw error
+              //reject(error)
             })
       }
     });
@@ -703,6 +729,7 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
     place: "",
     comments: ""
   }
+  console.log("setVideoInfo: videoinfo=", videoinfo);
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
   return videoControl.loadVideo2(videoinfo.videoPath); //Promise
@@ -739,7 +766,7 @@ VideoManager.prototype.loadVideoManual = async function(url) {
   function splitUrlData(url) {
     // Example: "https://host/some/prefix/data/foo/bar/file.mp4"
     // Groups: [1]=before/data, [2]=/foo/bar/, [3]=file.mp4
-    const m = url.match(/^(.*?\/data)(\/.*\/)([^\/]+)$/);
+    const m = url.match(/^(.*?data)(\/.*\/)([^\/]+)$/);
     if (m) {
       return {
         before: m[1],
@@ -763,6 +790,7 @@ VideoManager.prototype.loadVideoManual = async function(url) {
 
   info.path = path
   info.file_name = filename
+  info.file_path = path.replace(/\/$/, "")+"/"+filename
 
   const urljson = url+'.stream.json'
 
@@ -780,8 +808,8 @@ VideoManager.prototype.loadVideoManual = async function(url) {
           //fromServerDialog.setMessage("red", "VideoManager.videoSelected ERROR: Unable to retrieve " +
           //"selected video's information from server.");
           videoManager.loadingVideoId = false;
-          //throw new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id);
-          reject(new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id))
+          throw new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+url)
+          //reject(new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+url))
         },
       success: function(videoStreamInfoJSON){
         console.log(videoStreamInfoJSON)
@@ -792,6 +820,7 @@ VideoManager.prototype.loadVideoManual = async function(url) {
       }
     });
   })
+  if (stream_info == null) return
 
   const video_info = stream_info.video_info;
   info.nframes = Number(video_info.nb_frames);
@@ -804,13 +833,14 @@ VideoManager.prototype.loadVideoManual = async function(url) {
   // url = url_for("/data") + videoInfoJSON["path"] + '/' + videoInfoJSON["file_name"]
   //videoinfo.videoPath = url;
 
-  this.currentVideoID = -1 // Manual
+  console.log("loadVideoManual: currentVideoID=", info.file_path);
+  this.currentVideoID = info.file_path  // Expected to work out with automatic reload
   this.setVideoInfo(info);
 }
 
 VideoManager.prototype.clickLoadVideoManual = async function() {
   console.log("clickLoadVideoManual: loading video from URL");
-  const url = prompt("Enter video URL", url_for("/data")+"/datasets/path_to_video_file.mp4");
+  const url = prompt("Enter video URL", url_for("/data")+"/datasets/bee_feeder/videos/ciencias-naturales/2025-01-30/bf-cn_2025-01-30_01.cfr.mp4");
   if (url == null || url == "") {
     console.log("clickLoadVideoManual: no URL entered");
     return;

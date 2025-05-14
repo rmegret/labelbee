@@ -38,7 +38,7 @@ var logging = {
 };
 
 // ######################################################################
-// INITITALIZATION
+// INITIALIZATION
 
 /** Global init */
 function init(videoID, tagID) {
@@ -269,7 +269,8 @@ onhashchange = async function(event) {
       console.log('onhashchange: TRYING to load same video_id, ABORT',id)
     } else {
       console.log('onhashchange: processing hash, selecting video_id ',id)
-      await videoManager.videoSelected(id)
+      //await videoManager.videoSelected(id)
+      await videoManager.selectVideoBy_video_id(id)  // More generic version, can handle uri
       console.log("onhashchange: videoSelected SUCCESS, video_id=", id)
       if (!parsedHash.has("frame")) {
         // Add default 
@@ -424,6 +425,9 @@ function url_for(path) {
 }
 
 function FilePickerFromServerDialog() {
+
+  //#region INIT, OPEN, CLOSE FilePickerFromServerDialog
+
   this.dialogName = "FilePickerFromServerDialog";
   this.divId = "#dialog-filepicker-from-server";
   this.route = null;
@@ -437,6 +441,91 @@ function FilePickerFromServerDialog() {
       "FilePickerFromServerDialog: ERROR, could not find div " + this.divId
     );
   }
+
+  this.initDialog = function (params) {
+    // Only internal settings. Nothing stored to DOM dialog
+    theDialog.route = params.base_uri;
+
+    // Two mechanisms: either a function to load the file, or a callback to content
+    theDialog.loadFileFunction = params.loadFileFunction // gets the URI
+    theDialog.fileLoadedCallback = params.fileLoadedCallback; // download, then pass the content
+
+    theDialog.dialogName = params.dialogName
+      ? params.dialogName
+      : "Pick File from Server";
+
+    if ("hideOnSuccess" in params)
+      theDialog.hideOnSuccess = params.hideOnSuccess;
+    else theDialog.hideOnSuccess = true;
+
+  };
+  
+  this.openDialog = function () {
+    console.log(
+      "FilePickerFromServerDialog: openDialog, dialogName=",
+      theDialog.dialogName
+    );
+
+    if (!div.length) {
+      console.log(
+        "FilePickerFromServerDialog: ERROR, could not find div " + this.divId
+      );
+      return;
+    }
+    if (!theDialog.route) {
+      console.log("FilePickerFromServerDialog: no route defined. abort");
+      return;
+    }
+
+    // Reset it each time we open it
+    div.modal({
+      show: false,
+      autoOpen: false,
+      modal: true,
+      open: function () {
+        $("body").css("overflow", "auto");
+      },
+      close: function () {
+        $("body").css("overflow", "auto");
+      },
+    });
+    div.find(".modal-dialog").draggable({
+      handle: ".modal-header",
+    });
+    div.find(".modal-content").resizable({
+      alsoResize: ".modal-content",
+      minHeight: 300,
+      minWidth: 300,
+    });
+
+    div.find(".modal-title").html(theDialog.dialogName);
+
+    div.find(".dir-uri-btn").off("click").on("click", theDialog.onClickLoad);
+
+    div
+      .find(".dir-uri-btn-preview")
+      .off("click")
+      .on("click", theDialog.onClickPreview);
+
+    div.find(".modal-body").html("[...]");
+    div
+      .find(".modal-message")
+      .html("<div>Loading file list from server. Please wait...</div>");
+
+    div.modal("show");
+
+    this.updateDialog();
+  };
+
+  this.closeDialog = function () {
+    div.find(".dir-uri-btn").off("click");
+    div.modal("hide");
+    //this.route = null
+  };
+
+  //#endregion
+
+  // #region UPDATE FilePickerFromServerDialog
 
   this.updateDialog = function (uri) {
     console.log(
@@ -477,11 +566,22 @@ function FilePickerFromServerDialog() {
 
         //let html = ""
         for (let item of json.files) {
-          let button = $("<button>" + item["filename"] + "</button>");
-          button.attr("data-uri", item["uri"]);
-          button.on("click", theDialog.onClickFile);
+          
+          // Use direct download uri if defined (faster download)
+          // Otherwise, use the uri to the api (less efficient)
+          if (item['download_uri'] != null) {
+            //let button2 = $("<button class='btn-xs btn-default'>Direct download</button>");
+            let button2 = $("<button>" + item["filename"] + " [data]</button>");
+            button2.attr("data-uri", item["download_uri"]);
+            button2.on("click", theDialog.onClickFile);
+            listdiv.append(button2);
+          } else {
+            let button = $("<button>" + item["filename"] + "[api]</button>");
+            button.attr("data-uri", item["uri"]);
+            button.on("click", theDialog.onClickFile);
+            listdiv.append(button);
+          }
 
-          listdiv.append(button);
           listdiv.append($("<br>"));
 
           //html += '<button onclick="filePickerFromServerDialog.onClickFile(' + "'" + item['uri'] + "'" + ')">' + item['filename'] + '</button> <br>'
@@ -507,85 +607,40 @@ function FilePickerFromServerDialog() {
         // and filled with links to each Track file
         // Clicking on one of the link will trigger eventsFromServer()
       },
-      error: typesetAjaxError(
-        "FilePickerFromServerDialog: ERROR",
-        function (html) {
-          div.find(".modal-message").html(html);
+      error: function (data) {
+          console.log('ajax received', data)
+          typesetAjaxError(
+            "FilePickerFromServerDialog: ERROR",
+            function (html) {
+              div.find(".modal-message").html(html);
+            }
+          )
         }
-      ),
     });
   };
-  this.openDialog = function () {
-    console.log(
-      "FilePickerFromServerDialog: openDialog, dialogName=",
-      theDialog.dialogName
-    );
 
-    if (!div.length) {
-      console.log(
-        "FilePickerFromServerDialog: ERROR, could not find div " + this.divId
-      );
-      return;
-    }
-    if (!theDialog.route) {
-      console.log("FilePickerFromServerDialog: no route defined. abort");
-      return;
-    }
+  // #endregion
 
-    // Reset it each time we open it
-    div.modal({
-      show: false,
-      autoOpen: false,
-      modal: true,
-      open: function () {
-        $("body").css("overflow", "auto");
-      },
-      close: function () {
-        $("body").css("overflow", "auto");
-      },
-    });
-    div.find(".modal-dialog").draggable({
-      handle: ".modal-header",
-    });
-    div.find(".modal-content").resizable({
-      alsoResize: ".modal-content",
-      minHeight: 300,
-      minWidth: 300,
-    });
+  // #region ACTIONS FilePickerFromServerDialog
 
-    div.find(".dir-uri-btn").off("click").on("click", theDialog.onClickLoad);
+  this.onClickDir = function (evt) {
+    console.log("FilePickerFromServerDialog: onClickDir " + evt);
+    console.log(evt.target);
+    const uri = $(evt.target).attr("data-uri");
 
-    div
-      .find(".dir-uri-btn-preview")
-      .off("click")
-      .on("click", theDialog.onClickPreview);
+    console.log("FilePickerFromServerDialog: change directory uri=" + uri);
 
-    div.find(".modal-body").html("[...]");
-    div
-      .find(".modal-message")
-      .html("<div>Loading file list from server. Please wait...</div>");
-
-    div.modal("show");
-
-    this.updateDialog();
+    theDialog.updateDialog(uri);
   };
-  this.initDialog = function (params) {
-    // Only internal settings. Nothing stored to DOM dialog
-    theDialog.route = params.base_uri;
-    theDialog.fileLoadedCallback = params.fileLoadedCallback;
+  
+  this.onClickFile = function (evt) {
+    console.log("FilePickerFromServerDialog: onClickFile ", evt);
+    console.log(evt.target);
+    const uri = $(evt.target).attr("data-uri");
 
-    theDialog.dialogName = params.dialogName
-      ? params.dialogName
-      : "Pick File from Server";
-
-    if ("hideOnSuccess" in params)
-      theDialog.hideOnSuccess = params.hideOnSuccess;
-    else theDialog.hideOnSuccess = true;
-  };
-  this.closeDialog = function () {
-    div.find(".dir-uri-btn").off("click");
-    div.modal("hide");
-    //this.route = null
+    div.find(".dir-uri-text").val(uri);
+    theDialog.previewFile(null);
+    //theDialog.loadFile(uri)
   };
 
   this.onClickLoad = function (evt) {
@@ -600,19 +655,15 @@ function FilePickerFromServerDialog() {
 
     theDialog.previewFile(uri);
   };
-  this.onClickFile = function (evt) {
-    console.log("FilePickerFromServerDialog: onClickFile ", evt);
-    console.log(evt.target);
-    const uri = $(evt.target).attr("data-uri");
-
-    div.find(".dir-uri-text").val(uri);
-    theDialog.previewFile(null);
-    //theDialog.loadFile(uri)
-  };
   this.loadFile = function (uri) {
     console.log(
       "FilePickerFromServerDialog: importing file from URL '" + uri + "'..."
     );
+
+    if (this.loadFileFunction != null) {
+      this.loadFileFunction(uri)
+      return
+    }
 
     div.find(".modal-message").html("Loading file from " + uri + "...");
 
@@ -676,15 +727,7 @@ function FilePickerFromServerDialog() {
       },
     });
   };
-  this.onClickDir = function (evt) {
-    console.log("FilePickerFromServerDialog: onClickDir " + evt);
-    console.log(evt.target);
-    const uri = $(evt.target).attr("data-uri");
-
-    console.log("FilePickerFromServerDialog: change directory uri=" + uri);
-
-    theDialog.updateDialog(uri);
-  };
+  // #endregion
 
   //this.initDialog(params)
 }
