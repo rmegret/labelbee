@@ -708,3 +708,112 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
   return videoControl.loadVideo2(videoinfo.videoPath); //Promise
 }
 
+
+VideoManager.prototype.loadVideoManual = async function(url) {
+  console.log("loadVideoManual: loading video from URL: ", url);
+  if (url == null || url == "") {
+    console.log("loadVideoManual: no URL entered");
+    return;
+  }
+
+  let info = {"id":1,
+              "file_name":"bf-cn_2025-01-30_01.cfr.mp4",
+              "path":"/datasets/bee_feeder/videos/ciencias-naturales/2025-01-30",
+              "starttime":"2025-01-30T12:00:00",
+              "location":undefined,
+              "colony":undefined,
+              "dataset":undefined,
+              "notes":null,
+              "duration":888.665581,
+              "nframes":15626,
+              "height":2160,
+              "width":3840,
+              "videofps":211/12,
+              "realfps":211/12,
+              "filesize":undefined,
+              "hash":undefined,
+              "corrupted":false,
+              "trimmed":false,
+              "thumb":"/datasets/bee_feeder/videos/ciencias-naturales/2025-01-30/bf-cn_2025-01-30_01.cfr.mp4.thumb.jpg"}
+
+  function splitUrlData(url) {
+    // Example: "https://host/some/prefix/data/foo/bar/file.mp4"
+    // Groups: [1]=before/data, [2]=/foo/bar/, [3]=file.mp4
+    const m = url.match(/^(.*?\/data)(\/.*\/)([^\/]+)$/);
+    if (m) {
+      return {
+        before: m[1],
+        path: m[2].replace(/\/$/, ""), // remove trailing slash if present
+        filename: m[3]
+      };
+    } else {
+      // fallback: try to split at last slash
+      const idx = url.lastIndexOf('/');
+      return {
+        before: '',
+        path: url.substring(0, idx),
+        filename: url.substring(idx + 1)
+      };
+    }
+  }
+  const { before, path, filename } = splitUrlData(url);
+  console.log("before: ", before);
+  console.log("path: ", path);
+  console.log("filename: ", filename);
+
+  info.path = path
+  info.file_name = filename
+
+  const urljson = url+'.stream.json'
+
+  console.log(`Trying to get video info from ${urljson}`);
+
+  const stream_info = await new Promise((resolve, reject) => {
+    $.ajax({
+      url: urljson,
+      method: 'get',
+      data: "", 
+      dataType: 'json',
+      error: function () {
+          console.log("VideoManager.videoSelected ERROR: Unable to retrieve " +
+          "selected video's information from server.")
+          //fromServerDialog.setMessage("red", "VideoManager.videoSelected ERROR: Unable to retrieve " +
+          //"selected video's information from server.");
+          videoManager.loadingVideoId = false;
+          //throw new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id);
+          reject(new Error("VideoManager.videoSelected ERROR: Unable to retrieve video "+id))
+        },
+      success: function(videoStreamInfoJSON){
+        console.log(videoStreamInfoJSON)
+        //fromServerDialog.setMessage("black", "Loading Video.")
+        if (logging.videoList)
+          console.log("VideoManager.videoSelected: Received video information, setting it: ", videoStreamInfoJSON);
+        resolve(videoStreamInfoJSON)
+      }
+    });
+  })
+
+  const video_info = stream_info.video_info;
+  info.nframes = Number(video_info.nb_frames);
+  info.width = video_info.width;
+  info.height = video_info.height;
+  info.videofps = eval(video_info.r_frame_rate);
+  info.realfps = eval(video_info.r_frame_rate);
+  info.duration = Number(video_info.duration);
+
+  // url = url_for("/data") + videoInfoJSON["path"] + '/' + videoInfoJSON["file_name"]
+  //videoinfo.videoPath = url;
+
+  this.currentVideoID = -1 // Manual
+  this.setVideoInfo(info);
+}
+
+VideoManager.prototype.clickLoadVideoManual = async function() {
+  console.log("clickLoadVideoManual: loading video from URL");
+  const url = prompt("Enter video URL", url_for("/data")+"/datasets/path_to_video_file.mp4");
+  if (url == null || url == "") {
+    console.log("clickLoadVideoManual: no URL entered");
+    return;
+  }
+  await this.loadVideoManual(url);
+}
