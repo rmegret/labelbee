@@ -971,6 +971,62 @@ function onLabelsChanged() {
 }
 
 
+
+function modifyCurrentObsSpan(mode) {
+  let r = getSelectedRect()
+  if (!r) {
+      console.log('modifyCurrentObsSpan: CANCELED, no event selected')
+      return;
+  }
+
+  let frame = r.obs.frame;
+  let id = r.obs.ID;
+
+  let obs = Tracks[frame][id];
+
+  let tracks = flatTracksAll.filter(
+    function (element) {
+      return element.obs == obs;
+    }
+    //{return (element.obs.frame==obs.frame && element.obs.ID==obs.ID)}
+  );
+  if (tracks.length == 0) return;
+
+  let track = tracks[0];
+
+  if (!("span" in obs)) {
+    obs.span = { f1: track.span.f1, f2: track.span.f2 };
+  }
+  if (mode == "copy") {
+    return;
+  }
+  if (mode == "extendleft") {
+    obs.span.f1 = obs.span.f1 - 10;
+    if (obs.span.f1 < 0) obs.span.f1 = 0;
+  }
+  if (mode == "extendright") {
+    obs.span.f2 = obs.span.f2 + 10;
+  }
+  if (mode == "restrictleft") {
+    obs.span.f1 = obs.span.f1 + 10;
+    if (obs.span.f1 > obs.frame) obs.span.f1 = obs.frame;
+  }
+  if (mode == "restrictright") {
+    obs.span.f2 = obs.span.f2 - 10;
+    if (obs.span.f2 < obs.frame) obs.span.f2 = obs.frame;
+  }
+
+  if (mode=='setspan') {
+      overlay.setInteractionMode('pick-frame',{type:'setspan'})
+      return
+  }
+
+  updateTagsLabels()
+  drawChrono()
+}
+
+
+
 function updateAnnotationStatistics() {
   let L=[]; for (i in Tracks) {T=Tracks[i]; for (j in T) {L.push(T[j])}}; 
   let S=new Set(L.map(x => x.ID))

@@ -204,6 +204,8 @@ function ChronoAxes(parent, videoinfo, options) {
   axes.updateVideoinfo = updateVideoinfo;
   //axes.updateTDomain=updateTDomain  // Private
 
+  axes.mousewheelMode = true
+
   /* ### VIEW: axes, layout */
 
   // DOM Hierarchy of axes. e.g. for xAxisGroup:
@@ -766,7 +768,7 @@ function ChronoAxes(parent, videoinfo, options) {
     //console.log('chronoGroup, ',event)
     // Coordinates are not plotArea related (FIXME)
     //if ((d3.event.x<0) || (d3.event.y<0) || (d3.event.x>width) || (d3.event.y>height)) return false
-    if (!mousewheelMode) return true;
+    if (!axes.mousewheelMode) return true;
     return event.shiftKey == true;
   });
 

@@ -1626,6 +1626,7 @@ OverlayControl.prototype.hardRefresh = function () {
     selectBeeByID(defaultSelectedBee);
   } else {
     // Default behavior
+    console.log(`using defaultSelectedBee=${defaultSelectedBee}`)
     selectBeeByID(defaultSelectedBee);
   }
   // zoomOverlay supposed to be updated by event triggered by selectBeeByID

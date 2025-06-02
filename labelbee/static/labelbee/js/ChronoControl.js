@@ -5,23 +5,39 @@
 // ###########################################################
 // CHRONOGRAM
 
+// TODO: move global vars inside Chrono or some shared data store
+var allIntervals = [];
+var flatTracks = [];
+
+var tagIntervals = [];
+var allTagsID = []
+var flatTags = []
+var ttags = {}
+
+var crosses = []
+var partsIntervals = []
+
+var chrono
 class Chronogram {
   constructor() {
-    const chrono = this
+    //const chrono = this
+    chrono = this // TODO: fix back to normal local variable once all encapsulation is done properly
     const config = {}
     chrono.config = config
     config.frameFilter = { active: false,
                            frameMin: 0,
                            frameMax: -1
                           }
-    config.idAxisMapString = 'id'
+    config.idAxisMapString = 'return id'
     config.idAxisMap = Function("id",config.idAxisMapString)
+
+    config.showDanglingTracks = true
 
     initChrono()  // '#svgVisualize'
     // TODO: move all functionalities inside Chronogram
   };
 
-  // ID REMAP
+  // ### ID REMAP
 
   idAxisMap_inputChanged(event) {
     const config = this.config
@@ -54,7 +70,7 @@ class Chronogram {
     $('#').val = config.idAxisMapString
   }
 
-  // FRAMEFILTER
+  // ### FRAMEFILTER
 
   setFrameFilter(how, event) {
     const chrono = this
@@ -87,7 +103,10 @@ class Chronogram {
       frameFilter.frameMin = Number( $('#chronoFrameFilterFrameMin').val() )
       //if (frameFilter.frameMin>frameFilter.frameMax) frameFilter.frameMin=frameFilter.frameMax
       chrono.refreshFrameFilterGUI()
-      flash($('#chronoFrameFilterRefresh'))
+      if (!frameFilter.active) // Show user they need to activate or refresh
+        flash($('#filterFrameButton'))
+      else
+        flash($('#chronoFrameFilterRefresh'))
       //refreshChronogram()
     }
     if (how == 'frameMax') {
@@ -96,7 +115,10 @@ class Chronogram {
         frameFilter.frameMax = videoinfo.nframes + frameFilter.frameMax
       //if (frameFilter.frameMin<0) frameFilter.frameMax=frameFilter.frameMin
       chrono.refreshFrameFilterGUI()
-      flash($('#chronoFrameFilterRefresh'))
+      if (!frameFilter.active) // Show user they need to activate or refresh
+        flash($('#filterFrameButton'))
+      else
+        flash($('#chronoFrameFilterRefresh'))
       //refreshChronogram()
     }
   };
@@ -108,6 +130,18 @@ class Chronogram {
   };
 
 }
+
+// Util function for flashing a button to attrach user's attention
+function flash(elements) {
+    $(elements).toggleClass("focus",true)
+    var repeat = 0
+    var interval = setInterval(function() {if (repeat>4) {$(elements).toggleClass("focus",false); clearInterval(interval); return;}
+                                           repeat+=1;
+    $(elements).toggleClass("focus")
+  }, 100)
+};
+
+// ### INIT
 
 function initChrono() {
   // global variables
@@ -128,9 +162,6 @@ function initChrono() {
   updateButtons_showPartsOnChrono();
   updateButtons_showIndividualEvents();
 
-  mousewheelMode = false;
-  onMousewheelModeToggled();
-
   eventSeekMode = "eventframe";
   updateEventSeekMode();
 
@@ -147,6 +178,9 @@ function initChrono() {
   axes = new ChronoAxes(svg, videoinfo, options);
   //axes.onClick = onAxesClick         // Callback when the user clicks in axes
   //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
+  
+  axes.mousewheelMode = false;
+  updateMousewheelModeButton();
 
   //     svgInterval = axes.chronoGroup.append("g").attr('class', 'intervalLayer');
   //     svgMiddle = axes.chronoGroup.append("g").attr('class', 'middleLayer');
@@ -212,14 +246,15 @@ function initChrono() {
 
   /* ## Init chronogram content ## */
 
-  initActivities();
+  //initActivities(); // wait for refresh
   initTagIntervals();
 
   initVideoSpan();
   initTrackWindowSpan();
 
-  debouncer(refreshChronoLayout, 300);
+  debouncer(refreshChronoLayout, 300); // Avoid refreshing the chronogram too often
 }
+
 function debouncer(func, timeout) {
   var timeoutID,
     timeout = timeout || 100;
@@ -248,15 +283,8 @@ function refreshChronoLayout() {
   //doRefresh()
 }
 
-function onMousewheelModeToggled() {
-  mousewheelMode = $("#mousewheelMode").prop("checked");
-  if (logging.mouseMouseEvents) {
-    console.log(
-      "onMousewheelModeToggled: toggled mousewheelMode=",
-      mousewheelMode
-    );
-  }
-}
+// ### TOGGLEBABLE BUTTONS AND INPUTS
+var __section__chronogram_buttons
 
 // Simplify handling of input and button behaviors in one function
 function toggledNewState(event) {
@@ -299,6 +327,23 @@ function onToggleButton_showIndividualEvents(event) {
 function updateButtons_showIndividualEvents(event) {
   updateButtons("button_showIndividualEvents", flag_showIndividualEvents);
 }
+
+// TODO unify all buttons and checkmarks click handling
+function onMousewheelModeToggled() {
+  axes.mousewheelMode = $("#mousewheelMode").prop("checked"); 
+  if (logging.mouseMouseEvents) {
+    console.log(
+      "onMousewheelModeToggled: toggled mousewheelMode=",
+      axes.mousewheelMode
+    );
+  }
+}
+function updateMousewheelModeButton() {
+  $("#mousewheelMode").prop("checked", axes.mousewheelMode); 
+}
+
+// ### CHRONO RESIZING
+var __section__chronogram_resizing
 
 function getChronoItemHeight() {
   //return chronoItemHeight;
@@ -370,6 +415,10 @@ function adjustChronogramHeight(itemHeight) {
   $("#chronoDiv").height(minheight);
   refreshChronoLayout();
 }
+
+// ### CHRONO DOMAINS AND AXES
+var __section__chronogram_domains
+
 
 /* Synchronization between chronogram, video and chronogramData */
 function domainxFromVideo() {
@@ -526,6 +575,10 @@ function updateChronoYDomain() {
 
   //axes.ydomain(['0','1','2','3','10','12']) // Testing
 }
+
+// ### CHRONO DYNAMIC ELEMENTS (TIMEMARK, SELECTION)
+var __section__chronogram_dynamic_elements
+
 function updateTimeMark() {
   var frame = getCurrentFrame();
   if (logging.frameEvents) console.log("updateTimeMark: frame=", frame);
@@ -545,510 +598,8 @@ function updateChronoSelection() {
   axes.selectId(id);
 }
 
-function gotoEvent(frame, id) {
-  videoControl.pause();
-
-  frame = Number(frame);
-
-  let obs = getObsHandle(frame, id)
-
-  defaultSelectedBee = id
-  if (frame==getCurrentFrame()) {
-    // Try to select the bee in current frame
-    selectBeeByID(id);
-  } else {
-    if (obsDoesExist(frame, id)) {
-      // Set the id as default selection before seeking the frame
-      defaultSelectedBee = id;
-    }
-    videoControl.seekFrame(frame);
-    // external controller logic is supposed to call back updateTimeMark
-    // to update the view
-  }
-    
-  if (overlay.opts.clickModeAutoCentering) {
-      // Animate the AutoCentering button to remind the user of current mode
-      $('.overlayOpts-clickModeAutoCentering').effect({'effect':"highlight","duration":200,"color":"#ffff00"})
-      //$('.overlayOpts-clickModeAutoCentering').effect({'effect':"pulsate","duration":100,"times":2})
-      console.log("gotoEvent: clickModeAutoCentering, obs", obs)
-      autoCentering(obs)
-  }
-}
-
-/* Callbacks to react to changes in chronogram axes */
-function onAxesClick(event) {
-  // User clicked in chronogram axes
-  var frame = event.frame;
-  var id = event.id;
-  if (logging.axesEvents)
-    console.log("onAxesClick: seeking to frame=", frame, "...");
-
-  gotoEvent(frame, id);
-}
-function onAxesDblClick(event) {
-  // User double clicked in chronogram axes
-  var frame = event.frame;
-  var id = event.id;
-  if (logging.axesEvents)
-    console.log("onAxesDblClick: zooming chrono around frame=", frame, "...");
-
-  axes.xdomainFocus([
-    frame - overlay.trackWindow.backward * 1.05,
-    frame + overlay.trackWindow.forward * 1.05,
-  ]);
-}
-function onAxesMoved(event) {
-  // User moved in chronogram axes with Shift
-  var frame = event.frame;
-  var id = event.id;
-  if (logging.axesEvents)
-    console.log("onAxesMove: seeking to frame=", frame, "...");
-
-  //defaultSelectedBee = id // Do not change, keep same ID
-  // if (videoControl.currentMode != "preview") {
-  //   videoControl.savedNonPreviewFrame = videoControl.currentFrame
-  // }
-  videoControl.seekFrame(frame, "preview");
-}
-function onAxesChanged(event) {
-  // User zoomed, scrolled or changed chronogram range or size */
-  if (logging.axesEvents) console.log("onAxesChanged: event=", event);
-
-  updateChrono();
-}
-
-function updateEventSeekMode() {
-  if (eventSeekMode == "tag") {
-    $(".eventSeekMode").removeClass("active");
-    $(".eventSeekMode-tag").addClass("active");
-  }
-  if (eventSeekMode == "freetag") {
-    $(".eventSeekMode").removeClass("active");
-    $(".eventSeekMode-freetag").addClass("active");
-  }
-  if (eventSeekMode == "event") {
-    $(".eventSeekMode").removeClass("active");
-    $(".eventSeekMode-event").addClass("active");
-  }
-  if (eventSeekMode == "eventframe") {
-    $(".eventSeekMode").removeClass("active");
-    $(".eventSeekMode-eventframe").addClass("active");
-  }
-}
-function eventSeekModeClicked(mode) {
-  eventSeekMode = mode;
-  updateEventSeekMode();
-}
-
-function getIdCoord(id) {
-  return axes.yScale(id);
-}
-
-// Sort/compare Tag intervals
-function compareIncreasingIdBegin(a, b) {
-  let d = getIdCoord(a.id) - getIdCoord(b.id);
-  if (d == 0) return Number(a.begin) - Number(b.begin);
-  else return d;
-}
-function compareDecreasingIdBegin(a, b) {
-  let d = getIdCoord(a.id) - getIdCoord(b.id);
-  if (d == 0) return -(Number(a.begin) - Number(b.begin));
-  else return -d;
-}
-function isNotLabeled(element) {
-  return !element.labeling.labeled;
-}
-function funGreaterThanIdBegin(id, frame) {
-  return function (element) {
-    return (
-      (element.id == id && Number(element.begin) > frame) ||
-      getIdCoord(element.id) > getIdCoord(id)
-    );
-  };
-}
-function funLessThanIdBegin(id, frame) {
-  return function (element) {
-    return (
-      (element.id == id && Number(element.begin) < frame) ||
-      getIdCoord(element.id) < getIdCoord(id)
-    );
-  };
-}
-// Sort/compare Events
-function compareIncreasingFrame(a, b) {
-  return Number(a.frame) - Number(b.frame);
-}
-function compareDecreasingFrame(a, b) {
-  return -(Number(a.frame) - Number(b.frame));
-}
-function funGreaterThanFrame(frame) {
-  return element => (Number(element.frame) > frame)
-}
-function funLessThanFrame(frame) {
-  return element => (Number(element.frame) < frame)
-}
-function compareIncreasingIdFrame(a, b) {
-  let d = getIdCoord(a.id) - getIdCoord(b.id);
-  if (d == 0) return Number(a.frame) - Number(b.frame);
-  else return d;
-}
-function compareDecreasingIdFrame(a, b) {
-  let d = getIdCoord(a.id) - getIdCoord(b.id);
-  if (d == 0) return -(Number(a.frame) - Number(b.frame));
-  else return -d;
-}
-function funGreaterThanIdFrame(id, frame) {
-  return function (element) {
-    return (
-      (element.id == id && Number(element.frame) > frame) ||
-      getIdCoord(element.id) > getIdCoord(id)
-    );
-  };
-}
-function funLessThanIdFrame(id, frame) {
-  return function (element) {
-    return (
-      (element.id == id && Number(element.frame) < frame) ||
-      getIdCoord(element.id) < getIdCoord(id)
-    );
-  };
-}
-function funEqualId(id) {
-  return function (element) {
-    return element.id == id;
-  };
-}
-
-function gotoFrameId(frame, id) {
-  console.log("gotoFrameId frame=", frame, "id=", id);
-  defaultSelectedBee = id;
-  videoControl.seekFrame(Number(frame));
-}
-
-function gotoFirstEvent() {
-  let from = { frame: -1, id: defaultSelectedBee };
-  if (flag_autoEventMode) {
-    let ids = axes.yScale.domain();
-    if (!ids) return;
-    from.id = ids[0];
-  }
-  gotoNextEvent(from);
-}
-function gotoLastEvent() {
-  let from = { frame: videoControl.maxframe() + 1, id: defaultSelectedBee };
-  if (flag_autoEventMode) {
-    let ids = axes.yScale.domain();
-    if (!ids) return;
-    from.id = ids[ids.length - 1];
-  }
-  gotoPreviousEvent(from);
-}
-function gotoNextEvent(from) {
-  let frame = Number(videoControl.getCurrentFrame());
-  let id = defaultSelectedBee;
-  if (from) {
-    frame = from.frame;
-    id = from.id;
-  }
-  console.log("gotoNextEvent from frame=", frame, "id=", id);
-
-  if (eventSeekMode == "tag") {
-    let interval = findNextTagEvent(frame, id);
-
-    if (!interval) {
-      console.log("Did not find next Tag");
-      return;
-    }
-    gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "freetag") {
-    let interval = findNextFreeTagEvent(frame, id);
-
-    if (!interval) {
-      console.log("Did not find next Unlabeled Tag");
-      return;
-    }
-    gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "event") {
-    let obs = findNextObsEvent(frame, id);
-
-    if (!obs) {
-      console.log("Did not find next Event");
-      return;
-    }
-    gotoFrameId(obs.frame, obs.id);
-  } else if (eventSeekMode == "eventframe") {
-    let newframe = findNextEventFrame(frame);
-
-    if (newframe == undefined) {
-      console.log("Did not find next Event Frame");
-      return;
-    }
-    gotoFrameId(newframe, id);
-  } 
-}
-function gotoPreviousEvent(from) {
-  let frame = Number(videoControl.getCurrentFrame());
-  let id = defaultSelectedBee;
-  if (from) {
-    frame = from.frame;
-    id = from.id;
-  }
-  console.log("gotoPreviousEvent from frame=", frame, "id=", id);
-
-  if (eventSeekMode == "tag") {
-    let interval = findPreviousTagEvent(frame, id);
-
-    if (!interval) {
-      console.log("Did not find previous Tag");
-      return;
-    }
-    gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "freetag") {
-    let interval = findPreviousFreeTagEvent(frame, id);
-
-    if (!interval) {
-      console.log("Did not find previous Unlabeled Tag");
-      return;
-    }
-    gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "event") {
-    let obs = findPreviousObsEvent(frame, id);
-
-    if (!obs) {
-      console.log("Did not find previous Event");
-      return;
-    }
-    gotoFrameId(obs.frame, obs.id);
-  } else if (eventSeekMode == "eventframe") {
-    let newframe = findPreviousEventFrame(frame);
-
-    if (newframe == undefined) {
-      console.log("Did not find previous Event Frame");
-      return;
-    }
-    gotoFrameId(newframe, id);
-  } 
-}
-
-function findNextTagEvent(frame, id) {
-  let tagList = [];
-  if (flag_autoEventMode) {
-    tagList = tagIntervals;
-  } else {
-    tagList = tagIntervals.filter(funEqualId(id));
-  }
-  if (!tagList) return undefined;
-
-  let tag = tagList
-    .sort(compareIncreasingIdBegin)
-    .find(funGreaterThanIdBegin(id, frame));
-  //console.log(tag)
-  return tag;
-}
-function findNextFreeTagEvent(frame, id) {
-  let tagList = [];
-  if (flag_autoEventMode) {
-    tagList = tagIntervals.filter(isNotLabeled);
-  } else {
-    tagList = tagIntervals.filter(funEqualId(id)).filter(isNotLabeled);
-  }
-  if (!tagList) return undefined;
-
-  let tag = tagList
-    .sort(compareIncreasingIdBegin)
-    .find(funGreaterThanIdBegin(id, frame));
-  //console.log(tag)
-  return tag;
-}
-function findNextObsEvent(frame, id) {
-  let obsList = [];
-  if (flag_autoEventMode) {
-    if (flag_hideInvalid) {
-      obsList = flatTracksValid;
-    } else {
-      obsList = flatTracksAll;
-    }
-  } else {
-    if (flag_hideInvalid) {
-      obsList = flatTracksValidGroupById[id];
-    } else {
-      obsList = flatTracksAllGroupById[id];
-    }
-  }
-  if (!obsList) return undefined;
-  let obs = obsList
-    .sort(compareIncreasingIdFrame)
-    .find(funGreaterThanIdFrame(id, frame));
-  //console.log(obs)
-  return obs;
-}
-function findNextEventFrame(frame) {
-  let obsList = [];
-  if (flag_hideInvalid) {
-    obsList = flatTracksValid;
-  } else {
-    obsList = flatTracksAll;
-  }
-  if (!obsList) return undefined;
-  let obs = obsList
-    .sort(compareIncreasingFrame)
-    .find(funGreaterThanFrame(frame));
-  //console.log(obs)
-  return obs?.frame;
-}
-function findPreviousTagEvent(frame, id) {
-  let tagList = [];
-  if (flag_autoEventMode) {
-    tagList = tagIntervals;
-  } else {
-    tagList = tagIntervals.filter(funEqualId(id));
-  }
-  if (!tagList) return undefined;
-
-  let tag = tagList
-    .sort(compareDecreasingIdBegin)
-    .find(funLessThanIdBegin(id, frame));
-  //console.log(tag)
-  return tag;
-}
-function findPreviousFreeTagEvent(frame, id) {
-  let tagList = [];
-  if (flag_autoEventMode) {
-    tagList = tagIntervals.filter(isNotLabeled);
-  } else {
-    tagList = tagIntervals.filter(funEqualId(id)).filter(isNotLabeled);
-  }
-  if (!tagList) return undefined;
-
-  let tag = tagList
-    .sort(compareDecreasingIdBegin)
-    .find(funLessThanIdBegin(id, frame));
-  //console.log(tag)
-  return tag;
-}
-function findPreviousObsEvent(frame, id) {
-  let obsList = [];
-  if (flag_autoEventMode) {
-    if (flag_hideInvalid) {
-      obsList = flatTracksValid;
-    } else {
-      obsList = flatTracksAll;
-    }
-  } else {
-    if (flag_hideInvalid) {
-      obsList = flatTracksValidGroupById[id];
-    } else {
-      obsList = flatTracksAllGroupById[id];
-    }
-  }
-  if (!obsList) return undefined;
-  let obs = obsList
-    .sort(compareDecreasingIdFrame)
-    .find(funLessThanIdFrame(id, frame));
-  //console.log(obs)
-  return obs;
-}
-function findPreviousEventFrame(frame) {
-  let obsList = [];
-  if (flag_hideInvalid) {
-    obsList = flatTracksValid;
-  } else {
-    obsList = flatTracksAll;
-  }
-  if (!obsList) return undefined;
-  let obs = obsList
-    .sort(compareDecreasingFrame)
-    .find(funLessThanFrame(frame));
-  //console.log(obs)
-  return obs?.frame;
-}
-
-function nextSeekFocusWindow() {
-  $(videoControl).on("frame:changed", gotoEvent_seekCB);
-}
-function gotoEvent_seekCB() {
-  $(videoControl).off("frame:changed", gotoEvent_seekCB);
-  focusTrackWindow();
-}
-
-function onClickNextID() {
-  //let domain = validAllTagIdsDomain()
-  //              .map(function(d){return String(d);})
-  let domain = validVisibleTagIdsDomain().map(function (d) {
-    return String(d);
-  });
-  let N = domain.length;
-  if (N == 0) return;
-
-  let id = String(getCurrentID());
-  let pos = $.inArray(id, domain);
-  let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
-  selectBeeByID(newID);
-
-  setRestrictID(newID);
-
-  if (flag_autoEventMode) {
-    gotoFirstEvent();
-  }
-
-  refreshChronogram();
-}
-function onClickPrevID(gotoLast) {
-  let domain = validVisibleTagIdsDomain().map(function (d) {
-    return String(d);
-  });
-  let N = domain.length;
-  if (N == 0) return;
-
-  let id = String(getCurrentID());
-  let pos = $.inArray(id, domain);
-  let newID = pos == -1 ? domain[N - 1] : domain[(pos + N - 1) % N];
-  selectBeeByID(newID);
-
-  setRestrictID(newID);
-
-  if (flag_autoEventMode) {
-    if (gotoLast) {
-      gotoLastEvent();
-    } else {
-      gotoFirstEvent();
-    }
-  }
-
-  refreshChronogram();
-}
-function onClickNextIDStart() {
-  let domain = validVisibleTagIdsDomain().map(function (d) {
-    return String(d);
-  });
-  let N = domain.length;
-  if (N == 0) return;
-
-  let id = String(getCurrentID());
-  let pos = $.inArray(id, domain);
-  let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
-  selectBeeByID(newID);
-
-  setRestrictID(newID);
-
-  gotoFirstEvent();
-
-  //refreshChronogram()
-}
-function onAutoEventButtonClick() {
-  flag_autoEventMode = !flag_autoEventMode;
-
-  update_autoEventMode();
-
-  refreshChronogram();
-}
-function update_autoEventMode() {
-  if (flag_autoEventMode) {
-    $("#autoEventButton").addClass("active");
-  } else {
-    $("#autoEventButton").removeClass("active");
-  }
-}
+// ### RESTRICT ID
+var __section__chronogram_restrict_id
 
 function setRestrictID(ids) {
   console.log("setRestrictID");
@@ -1122,6 +673,10 @@ function onRestrictIDChanged() {
   //selectBeeByID(restrictID)
   if (flag_restrictID) refreshChronogram();
 }
+
+// ### EXCLUDE ID, INVALID AND FLOWERS
+var __section__chronogram_exclude_id
+
 function click_excludeID() {
   if ($("#excludeIDButton").hasClass("active")) {
     $("#excludeIDButton").removeClass("active");
@@ -1161,15 +716,8 @@ function click_hideFlowers() {
     refreshChronogram()
 }
 
-function flash(elements) {
-    $(elements).toggleClass("focus",true)
-    var repeat = 0
-    var interval = setInterval(function() {if (repeat>4) {$(elements).toggleClass("focus",false); clearInterval(interval); return;}
-                                           repeat+=1;
-    $(elements).toggleClass("focus")
-  }, 100)
-};
-
+// ### CHRONO UPDATING
+var __section__chronogram_update
 
 /* Callback to react to change in chronogramData */
 function drawChrono() {
@@ -1203,9 +751,14 @@ function updateChrono() {
 
   updateVideoSpan();
   updateTrackWindowSpan();
+
+  $('#chronoStatusBar').html(`flatTracks: ${flatTracks.length} items, chronogramData: ${chronogramData.length} items, allIntervals: ${allIntervals.length} items, flatTags: ${flatTags.length} items`)
 }
 
 /* see code for chronogram axes in ChronoAxes.js */
+
+// ### CHRONO TIMESPANS
+var __section__chronogram_timespans
 
 //put first and last frame in vid
 function initVideoSpan() {
@@ -1331,125 +884,9 @@ function getWindow() {
   return [fmin, fmax];
 }
 
-//temporary object for beeID's(y) and it's x values
-var tempCoordinates = {};
-//Final intervals and its BeeID
-allIntervals = [];
 
-var isWrongId = false;
-var isFalseAlarm = false;
-
-//Get data from chronogramData and output allIntervals,
-function createIntervalList() {
-  //initiliaze allIntervals to update data
-  tempCoordinates = {};
-
-  for (var i = 0; i < chronogramData.length; i++) {
-    if (chronogramData[i].id in tempCoordinates) {
-      //Make sure y coordinate is not in tempCoordiantes
-      tempCoordinates[chronogramData[i].id].push(i);
-    } else {
-      //Create new beeId key with it's x coordiantes as value
-      tempCoordinates[chronogramData[i].id] = [];
-      tempCoordinates[chronogramData[i].id].push(i);
-    }
-  }
-  //initiliaze allIntervals to update data
-  allIntervals = [];
-  acts = ["", "pollen", "entering", "leaving", "fanning"];
-  for (var a of acts) {
-    for (var id in tempCoordinates) {
-      let xValues = [];
-
-      let iArray = tempCoordinates[id];
-
-      iArray = iArray.filter(function (i) {
-        return chronogramData[i].Activity == a;
-      });
-
-      if (iArray.length == 0) {
-        continue;
-      }
-
-      let passThroughROI=false
-      for (let j = 0; j < iArray.length; j++) {
-        xValues[j] = Number(chronogramData[iArray[j]].x);
-      }
-
-      let iData = chronogramData[iArray[0]];
-      let tempInterval = {
-        x1: xValues[0],
-        x2: xValues[0],
-        y: iData.y,  // XXX Reuse y
-        id: id,
-        Activity: iData.Activity,
-        labels: iData.labels,
-        pollen: iData.pollen,
-        tag: iData.tag,
-        obs: iData.obs,
-        passThroughROI: iData.inROI
-      };
-
-      // let tempInterval = { x1: xValues[0], x2: xValues[0], y: y,
-      //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
-
-      for (var i = 1; i < xValues.length; i++) {
-        let iData = chronogramData[iArray[i]];
-        // console.log("Act temp interval IN: ", tempInterval[i].Activity);
-        if (xValues[i] - xValues[i - 1] == 1) {
-          tempInterval.x2 = xValues[i]; //Extend the existing interval
-          tempInterval.pollen |= iData.pollen;
-          tempInterval.passThroughROI |= iData.inROI
-        } else {
-          allIntervals.push(tempInterval);
-          tempInterval = {
-            x1: xValues[i],
-            x2: xValues[i],
-            y: iData.y,  // XXX Reuse y
-            id: id,
-            Activity: iData.Activity,
-            labels: iData.labels,
-            pollen: iData.pollen,
-            tag: iData.tag,
-            obs: iData.obs,
-            passThroughROI: iData.inROI
-          }; // New interval
-        }
-      }
-      allIntervals.push(tempInterval);
-    }
-  }
-
-  // Filter out
-  if (flag_useROI)
-    allIntervals = allIntervals.filter( interval => interval.passThroughROI )
-
-  // Pass extra data from chronogramData to allInterval
-  for (let interval of allIntervals) {
-    var tempArray = interval.labels.split(",");
-    if (tempArray.includes("wrongid")) {
-      interval.wrongid = true;
-      interval.newid = interval.obs.newid;
-    }
-  }
-
-  // Subsets of allIntervals
-  crosses = allIntervals.filter(function (d) {
-    var tempArray = d.labels.split(",");
-    if (tempArray.includes("falsealarm") || tempArray.includes("wrongid")) {
-      return true;
-    }
-  });
-  rectIntervals = allIntervals.filter(function (d) {
-    return d.x1 != d.x2;
-  });
-  circlesIntervals = allIntervals.filter(function (d) {
-    return d.x1 == d.x2;
-  });
-  partsIntervals = allIntervals.filter(function (d) {
-    return hasParts(d.obs);
-  });
-}
+// ### CHRONO D3 ACTIVITY INTERVALS
+var __section__chronogram_d3_activities
 
 function onActivityClick(d) {
   console.log("CLICK Activity d=", d);
@@ -1615,6 +1052,7 @@ function updateFanning(input) {
     .style("fill", "purple");
 }
 
+// Common color and height channels
 function activityColor(d) {
   var color = "gray";
   if (d.Activity == "pollen") color = "#CFCF00";
@@ -1632,9 +1070,7 @@ function activityHeight(d) {
   return h;
 }
 
-allIntervals.x1 = 0;
-allIntervals.x2 = 0;
-
+//Create item span visuals
 function initObsSpan(selection) {
   //console.log('selection=',selection)
   selection
@@ -1720,7 +1156,8 @@ function updateAlertCircle(selection) {
     .style("stroke", "cyan");
 }
 
-//put circles and rects here
+// Render Activities
+// INPUTS: allIntervals, flatTracks
 function updateActivities(onlyScaling) {
   // Redraw activities
   if (onlyScaling) {
@@ -1728,7 +1165,7 @@ function updateActivities(onlyScaling) {
     let activityRects = svgInterval.selectAll(".activity").data(allIntervals);
     activityRects.call(setGeomActivity);
   } else {
-    createIntervalList();
+    //createIntervalList(); // Should be done only on update data
 
     // Full update
     let activityRects = svgInterval.selectAll(".activity").data(allIntervals);
@@ -1845,15 +1282,17 @@ function updateActivities(onlyScaling) {
       }
       return width;
     })
-    .style("fill", function (d) {
-      var color = "black";
-      if (d.Activity == "fanning") color = "#99CCFF";
-      else if (d.Activity == "pollen") color = "#FFFF00";
-      else if (d.Activity == "entering") color = "#FFC0C0";
-      else if (d.Activity == "leaving") color = "#C0FFC0";
-      return color;
-    })
+
+    circles.style("fill", function (d) {
+          var color = "black";
+          if (d.Activity == "fanning") color = "#99CCFF";
+          else if (d.Activity == "pollen") color = "#FFFF00";
+          else if (d.Activity == "entering") color = "#FFC0C0";
+          else if (d.Activity == "leaving") color = "#C0FFC0";
+          return color;
+      })
     // Display tooltip message
+    circles
     .on("mouseover", function (d) {
       var message = "";
       message +=
@@ -2007,6 +1446,36 @@ function updateActivities(onlyScaling) {
   } else {
     chart.selectAll(".partsAvailable").remove();
   }
+
+  //renderDangling(onlyScaling)
+}
+function renderDangling(onlyScaling) {
+  const chart = svgTop;
+
+  if (!chrono.config.showDanglingTracks) { 
+    chart.selectAll(".dangling_start").remove()
+    chart.selectAll(".dangling_end").remove()
+    return;
+  }
+
+  let dangling_start = chart.selectAll(".dangling_start").data(allIntervals.filter(d=>d.startInsideROI))
+  let dangling_end = chart.selectAll(".dangling_start").data(allIntervals.filter(d=>d.endInsideROI))
+
+  dangling_start
+    .join('circle')
+      .attr("class", "dangling_start")
+      .attr("cx", d => axes.xScale(Number(d.x1)) )
+      .attr("cy", d => axes.yScale(d.y) + axes.yScale.rangeBand() / 2)  // XXX Use y
+      .attr("r", axes.yScale.rangeBand()/2)
+      .style("fill", "red")
+  
+  dangling_end
+    .join('circle')
+      .attr("class", "dangling_end")
+      .attr("cx", d => axes.xScale(Number(d.x2)+1) )
+      .attr("cy", d => axes.yScale(d.y) + axes.yScale.rangeBand() / 2)  // XXX Use y
+      .attr("r", axes.yScale.rangeBand()/2)
+      .style("fill", "red")
 }
 
 function format_HMS(date, format) {
@@ -2030,6 +1499,10 @@ function initActivities() {
   chronogramData.length = 0;
   updateActivities();
 }
+
+// ### CHRONO D3 TAGS
+var __section__chronogram_d3_tags
+
 
 function onTagClick(tagInterval) {
   console.log("CLICK Tag tagInterval=", tagInterval);
@@ -2150,7 +1623,7 @@ function setTagGeom(selection) {
   }
   //.attr("hidden", function(d) {return (typeof axes.yScale(d.id));})
 }
-function updateTagIntervals(onlyScaling) {
+function renderTagIntervals(onlyScaling) {
   // Redraw tag intervals
   if (onlyScaling) {
     setTagGeom(tagSel);
@@ -2164,60 +1637,36 @@ function updateTagIntervals(onlyScaling) {
 function initTagIntervals() {
   //tagsData = []
   tagIntervals = [];
-  updateTagIntervals();
+  renderTagIntervals();
 }
 
-function getFlatTags(useFilter) {
-  let flatTags = [];
-  for (let F in Tags) {
-    let tags = Tags[F].tags;
-    for (let i in tags) {
-      let id = tags[i].id;
+// ### CHRONO DATA PREPARATION TRACKS
+var __section__chronogram_data_preparation_tracks
 
-      if (useFilter) {
-        if (flag_restrictID) {
-          if ($.inArray(String(id), restrictIDArray) < 0) continue;
-        }
-        if (flag_excludeID) {
-          if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+// Summary
+// augmentTrackWithTag: Tracks, Tags    => mutated Tracks
+// updateFlatTracks   : Tracks          => flatTracks and its variants
+// createIntervalList : chronogramData  => allIntervals
+// getFlatTags        : Tags            => flatTags    (used in refreshChronogram)
+// getTTags           : flatTags        => ttags       (used in refreshChronogram)
+// updateTagIntervals : ttags           => tagIntervals, allTagsID
+
+/* Augment Tracks with tag id if same (frame,id) exist for both */
+function augmentTrackWithTag() {
+  for (let F in Tracks) {
+    if (Tags[F] != undefined) {
+      for (var i = 0; i < Tags[F].tags.length; i++) {
+        let id = String(Tags[F].tags[i].id);
+        if (Tracks[F] && Tracks[F][id]) {
+          Tracks[F][id].tag = Tags[F].tags[i];
         }
       }
-
-      flatTags.push(tags[i]);
     }
   }
-  return flatTags;
 }
 
-function getTTags() {
-  allTagsID = new Set();
-
-  /* Transpose Tags data structure */
-  let ttags = {};
-  for (let F in Tags) {
-    let tags = Tags[F].tags;
-    for (let i in tags) {
-      let id = String(tags[i].id);
-
-      allTagsID.add(id);
-
-      if (flag_restrictID) {
-        if ($.inArray(String(id), restrictIDArray) < 0) continue;
-      }
-      if (flag_excludeID) {
-        if ($.inArray(String(id), excludeIDArray) >= 0) continue;
-      }
-
-      if (typeof ttags[id] === "undefined") ttags[id] = {};
-      ttags[id][String(F)] = tags[i];
-    }
-  }
-
-  return ttags;
-}
-
-var flatTracks = [];
-function updateObsTable() {
+/* Tracks => flatTracks, flatTracksAll, flatTracksValid, flatTracksAllGroupById, flatTracksValidGroupById */
+function updateFlatTracks() {
   // All obs sorted by frame,id
   flatTracksAll = [];
   for (let F in Tracks) {
@@ -2266,126 +1715,377 @@ function updateObsTable() {
   } else {
     flatTracks = flatTracksAll;
   }
+}
 
-  showObsTable = !$("#labelingTab > .ui-accordion-header").hasClass(
-    "ui-accordion-header-collapsed"
-  );
-  if (showObsTable) {
-    d3.select("#obsTable").html("");
-    var table = d3.select("#obsTable").append("table");
 
-    function ƒ(name) {
-      return function (d) {
-        return d[name];
-      };
+/* Tracks => chronogramData */
+function updateChronogramData() {
+  chronogramData.length = 0;
+
+  for (let F in Tracks) {
+
+      if (chrono.config.frameFilter.active) {
+        if ((F < chrono.config.frameFilter.frameMin) || (F > chrono.config.frameFilter.frameMax)) continue // Just skip out of active zone
+      }
+
+      for (let id in Tracks[F]) {
+
+        const id_eff = String(Number(id)%50)
+
+        let obs=Tracks[F][id]
+        let labelArray = (obs.labels || '').split(",")
+
+        if (flag_restrictID) {
+          if ($.inArray(String(id), restrictIDArray) < 0) continue;
+        }
+        if (flag_excludeID) {
+          if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+        }
+        if (flag_hideInvalid) {
+          if (hasLabel(obs, "falsealarm") || hasLabel(obs, "wrongid")) continue;
+        }
+        if (flag_hideFlowers) {
+            if (String(id).startsWith('F')) continue;
+        }
+        let inROI = true
+        //if (flag_useROI) {
+            inROI = (obs.cx >= ROI.left &&
+              obs.cx <= ROI.right &&
+              obs.cy >= ROI.top &&
+              obs.cy <= ROI.bottom
+            );
+        //};
+
+        let b = obs.bool_acts;
+        let b0 = b[0];
+        let b1 = b[1];
+        let b2 = b[2];
+        let b3 = b[3];
+        //                 let b0 = hasLabel(obs,'fanning')
+        //                 let b1 = hasLabel(obs,'pollen')
+        //                 let b2 = hasLabel(obs,'entering')
+        //                 let b3 = hasLabel(obs,'leaving')
+
+        // XXX Define y
+        let y = chrono.config.idAxisMap(id)
+        if (!b0 && !b2 && !b3) {
+          chronogramData.push({
+            x: F,
+            y: y, 
+            id: id,
+            Activity: "",
+            labels: obs.labels,
+            pollen: b1,
+            tag: obs.tag,
+            obs: obs,
+            inROI: inROI
+          });
+        }
+        if (b2) {
+          chronogramData.push({
+            x: F,
+            y: y,
+            id: id,
+            Activity: "entering",
+            labels: obs.labels,
+            pollen: b1,
+            tag: obs.tag,
+            obs: obs,
+            inROI: inROI
+          });
+        }
+        if (b3) {
+          chronogramData.push({
+            x: F,
+            y: y,
+            id: id,
+            Activity: "leaving",
+            labels: obs.labels,
+            pollen: b1,
+            tag: obs.tag,
+            obs: obs,
+            inROI: inROI
+          });
+        }
+        if (b0) {
+          chronogramData.push({
+            x: F,
+            y: y,
+            id: id,
+            Activity: "fanning",
+            labels: obs.labels,
+            pollen: b1,
+            tag: obs.tag,
+            obs: obs,
+            inROI: inROI
+          });
+        }
+      }
     }
+}
 
-    var columns = [
-      { head: "ID", cl: "id", html: ƒ("id") },
-      { head: "Frame", cl: "frame", html: ƒ("frame") },
-      { head: "Labels", cl: "labels", html: ƒ("labels") },
-    ];
 
-    function onObsTableRowClick(d) {
-      console.log("onObsTableRowClick: d=", d);
-      gotoEvent(Number(d.frame), d.id);
+// chronogramData => allIntervals
+function createIntervalList() {
+  //initiliaze allIntervals to update data
+  let tempCoordinates = {};
+
+  for (var i = 0; i < chronogramData.length; i++) {
+    if (chronogramData[i].id in tempCoordinates) {
+      //Make sure y coordinate is not in tempCoordiantes
+      tempCoordinates[chronogramData[i].id].push(i);
+    } else {
+      //Create new beeId key with it's x coordiantes as value
+      tempCoordinates[chronogramData[i].id] = [];
+      tempCoordinates[chronogramData[i].id].push(i);
     }
+  }
+  //initiliaze allIntervals to update data
+  allIntervals = [];
+  acts = ["", "pollen", "entering", "leaving", "fanning"];
+  for (var a of acts) {
+    for (var id in tempCoordinates) {
+      let xValues = [];
 
-    table
-      .append("thead")
-      .append("tr")
-      .selectAll("th")
-      .data(columns)
-      .enter()
-      .append("th")
-      .attr("class", function (d) {
-        return d.cl;
-      })
-      .text(function (d) {
-        return d.head;
+      let iArray = tempCoordinates[id];
+
+      iArray = iArray.filter(function (i) {
+        return chronogramData[i].Activity == a;
       });
 
-    table
-      .append("tbody")
-      .selectAll("tr")
-      .data(flatTracks)
-      .enter()
-      .append("tr")
-      .classed("obsTableRow", true)
-      .on("click", onObsTableRowClick)
-      .selectAll("td")
-      .data(function (row, i) {
-        // evaluate column objects against the current row
-        return columns.map(function (c) {
-          var cell = {};
-          d3.keys(c).forEach(function (k) {
-            cell[k] = typeof c[k] == "function" ? c[k](row, i) : c[k];
-          });
-          return cell;
-        });
-      })
-      .enter()
-      .append("td")
-      .html(ƒ("html"))
-      .attr("class", ƒ("cl"));
-  }
-}
+      if (iArray.length == 0) {
+        continue;
+      }
 
-function modifyCurrentObsSpan(mode) {
-  let r = getSelectedRect()
-  if (!r) {
-      console.log('modifyCurrentObsSpan: CANCELED, no event selected')
-      return;
-  }
+      let passThroughROI=false
+      for (let j = 0; j < iArray.length; j++) {
+        xValues[j] = Number(chronogramData[iArray[j]].x);
+      }
 
-  let frame = r.obs.frame;
-  let id = r.obs.ID;
+      let iData = chronogramData[iArray[0]];
+      let tempInterval = {
+        x1: xValues[0],
+        x2: xValues[0],
+        y: iData.y,  // XXX Reuse y
+        id: id,
+        Activity: iData.Activity,
+        labels: iData.labels,
+        pollen: iData.pollen,
+        tag: iData.tag,
+        obs: iData.obs,
+        passThroughROI: iData.inROI,
+        startInsideROI: iData.inROI,
+        endInsideROI: iData.inROI
+      };
 
-  let obs = Tracks[frame][id];
+      // let tempInterval = { x1: xValues[0], x2: xValues[0], y: y,
+      //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
 
-  let tracks = flatTracksAll.filter(
-    function (element) {
-      return element.obs == obs;
+      for (var i = 1; i < xValues.length; i++) {
+        let iData = chronogramData[iArray[i]];
+        // console.log("Act temp interval IN: ", tempInterval[i].Activity);
+        if (xValues[i] - xValues[i - 1] == 1) {
+          tempInterval.x2 = xValues[i]; //Extend the existing interval
+          tempInterval.pollen |= iData.pollen;
+          tempInterval.passThroughROI |= iData.inROI
+          tempInterval.endInsideROI = iData.inROI
+        } else {
+          allIntervals.push(tempInterval);
+          tempInterval = {
+            x1: xValues[i],
+            x2: xValues[i],
+            y: iData.y,  // XXX Reuse y
+            id: id,
+            Activity: iData.Activity,
+            labels: iData.labels,
+            pollen: iData.pollen,
+            tag: iData.tag,
+            obs: iData.obs,
+            passThroughROI: iData.inROI,
+            startInsideROI: iData.inROI,
+            endInsideROI: iData.inROI
+          }; // New interval
+        }
+      }
+      allIntervals.push(tempInterval);
     }
-    //{return (element.obs.frame==obs.frame && element.obs.ID==obs.ID)}
-  );
-  if (tracks.length == 0) return;
-
-  let track = tracks[0];
-
-  if (!("span" in obs)) {
-    obs.span = { f1: track.span.f1, f2: track.span.f2 };
-  }
-  if (mode == "copy") {
-    return;
-  }
-  if (mode == "extendleft") {
-    obs.span.f1 = obs.span.f1 - 10;
-    if (obs.span.f1 < 0) obs.span.f1 = 0;
-  }
-  if (mode == "extendright") {
-    obs.span.f2 = obs.span.f2 + 10;
-  }
-  if (mode == "restrictleft") {
-    obs.span.f1 = obs.span.f1 + 10;
-    if (obs.span.f1 > obs.frame) obs.span.f1 = obs.frame;
-  }
-  if (mode == "restrictright") {
-    obs.span.f2 = obs.span.f2 - 10;
-    if (obs.span.f2 < obs.frame) obs.span.f2 = obs.frame;
   }
 
-  if (mode=='setspan') {
-      overlay.setInteractionMode('pick-frame',{type:'setspan'})
-      return
+  // Filter out
+  if (flag_useROI)
+    allIntervals = allIntervals.filter( interval => interval.passThroughROI )
+
+  // Pass extra data from chronogramData to allInterval
+  for (let interval of allIntervals) {
+    var tempArray = interval.labels.split(",");
+    if (tempArray.includes("wrongid")) {
+      interval.wrongid = true;
+      interval.newid = interval.obs.newid;
+    }
   }
 
-  updateTagsLabels()
-  drawChrono()
+  // Subsets of allIntervals
+  crosses = allIntervals.filter(function (d) {
+    var tempArray = d.labels.split(",");
+    if (tempArray.includes("falsealarm") || tempArray.includes("wrongid")) {
+      return true;
+    }
+  });
+  rectIntervals = allIntervals.filter(function (d) {
+    return d.x1 != d.x2;
+  });
+  circlesIntervals = allIntervals.filter(function (d) {
+    return d.x1 == d.x2;
+  });
+  partsIntervals = allIntervals.filter(function (d) {
+    return hasParts(d.obs);
+  });
 }
 
-/* Augment tags with labels */
 
+
+/* Tags => flatTags */
+/* flatTags[k] is tag, with fields id, ... */
+function getFlatTags(useFilter) {
+  let flatTags = [];
+  for (let F in Tags) {
+    let tags = Tags[F].tags;
+    for (let i in tags) {
+      let id = tags[i].id;
+
+      if (useFilter) {
+        if (flag_restrictID) {
+          if ($.inArray(String(id), restrictIDArray) < 0) continue;
+        }
+        if (flag_excludeID) {
+          if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+        }
+      }
+
+      flatTags.push(tags[i]);
+    }
+  }
+  return flatTags;
+}
+
+/* Tags => allTagsID, ttags */
+/* ttags[id][frame] is tag */
+function getTTags() {
+  allTagsID = new Set();
+
+  /* Transpose Tags data structure */
+  let ttags = {};
+  for (let F in Tags) {
+    let tags = Tags[F].tags;
+    for (let i in tags) {
+      let id = String(tags[i].id);
+
+      allTagsID.add(id);
+
+      if (flag_restrictID) {
+        if ($.inArray(String(id), restrictIDArray) < 0) continue;
+      }
+      if (flag_excludeID) {
+        if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+      }
+
+      if (typeof ttags[id] === "undefined") ttags[id] = {};
+      ttags[id][String(F)] = tags[i];
+    }
+  }
+
+  return ttags;
+}
+
+
+/* ttags => tagIntervals */
+function updateTagIntervals() {
+  // ttags => tagIntervals
+  tagIntervals = [];
+
+  /* Convert to intervals */
+  for (let id in ttags) {
+    let obsarray = ttags[id];
+    let activeInterval = [];
+    let isActive = false;
+    for (let frame in obsarray) {
+      let tags = obsarray[frame];
+      let f = Number(frame);
+
+      if (!tagsSampleFilter(tags)) {
+        continue;
+      }
+
+      if (isActive) {
+        let doPush = false;
+        if (activeInterval.end == f - 1) {
+          // Extend active interval
+          activeInterval["end"] = f;
+
+          if (tags.hamming < 1000) {
+            activeInterval.hammingavg =
+              activeInterval.hammingavg + tags.hamming;
+            activeInterval.dmavg = activeInterval.dmavg + tags.dm;
+          } else {
+            activeInterval.hammingavg = activeInterval.hammingavg + 0;
+          }
+        } else {
+          // Do not extend active interval
+          doPush = true;
+        }
+        if (doPush) {
+          // Close previous
+          //activeInterval['end']++
+          if (tagsIntervalFilter(activeInterval)) {
+            let len = activeInterval["end"] - activeInterval["begin"] + 1;
+            activeInterval.hammingavg = activeInterval.hammingavg / len;
+            activeInterval.dmavg = activeInterval.dmavg / len;
+            tagIntervals.push(activeInterval);
+          }
+          // XXX Define y
+          let y = chrono.config.idAxisMap(id)
+          // Open new one
+          activeInterval = {
+            id: id,
+            y: y,
+            begin: f,
+            end: f,
+            hammingavg: tags.hamming,
+            dmavg: tags.dm,
+            labeling: {},
+          };
+        }
+      } else {
+        // XXX Define y
+        let y = chrono.config.idAxisMap(id)
+        // Open new one
+        activeInterval = {
+          id: id,
+          y: y,
+          begin: f,
+          end: f,
+          hammingavg: tags.hamming,
+          dmavg: tags.dm,
+          labeling: {},
+        };
+        isActive = true;
+      }
+    }
+    // Close if active
+    if (isActive)
+      if (tagsIntervalFilter(activeInterval)) {
+        //activeInterval['end']++
+        let len = activeInterval["end"] - activeInterval["begin"] + 1;
+        activeInterval.hammingavg = activeInterval.hammingavg / len;
+        activeInterval.dmavg = activeInterval.dmavg / len;
+        tagIntervals.push(activeInterval);
+      }
+  }
+}
+
+/* augment tagIntervals with labels from Tracks with same (frame,id) */
+/* flatTracksAll, tagIntervals => tagIntervals
+   also mark track obs on overlapping span as redundant */
 function updateTagsLabels() {
   for (let ann of flatTracksAll) {
     if ("span" in ann.obs) {
@@ -2479,238 +2179,47 @@ function updateTagsLabels() {
   }
 }
 
+
 function refreshChronogram() {
   //check if id and frame are in tag object
 
-  // Augment Tracks with tag id if same (frame,id) exist for both
-  for (let F in Tracks) {
-    if (Tags[F] != undefined) {
-      for (var i = 0; i < Tags[F].tags.length; i++) {
-        let id = String(Tags[F].tags[i].id);
-        if (Tracks[F] && Tracks[F][id]) {
-          Tracks[F][id].tag = Tags[F].tags[i];
-        }
-      }
-    }
-  }
+  console.log('refreshChronogram')
 
-  // Tracks => chronogramData
-  // chronogramData[flatID].x, .y, .Activity, .labels, .pollen
-  // .tag, .obs
+  const start = performance.now();
+  //console.time('refreshChronogram');
+  $('#chronoStatusBar').html('Refreshing chronogram...')
+
+  // PREPARE TRACKS DATA
+  
+  augmentTrackWithTag()
+  
   chronogramData.length = 0;
   if (showObsChrono) {
-    for (let F in Tracks) {
+    // Tracks => chronogramData
+    // chronogramData[flatk].x, .y, .Activity, .labels, .pollen, .tag, .obs
+    updateChronogramData()
 
-      if (chrono.config.frameFilter.active) {
-        if ((F < chrono.config.frameFilter.frameMin) || (F > chrono.config.frameFilter.frameMax)) continue // Just skip out of active zone
-      }
-
-      for (let id in Tracks[F]) {
-
-        const id_eff = String(Number(id)%50)
-
-        let obs=Tracks[F][id]
-        let labelArray = (obs.labels || '').split(",")
-
-        if (flag_restrictID) {
-          if ($.inArray(String(id), restrictIDArray) < 0) continue;
-        }
-        if (flag_excludeID) {
-          if ($.inArray(String(id), excludeIDArray) >= 0) continue;
-        }
-        if (flag_hideInvalid) {
-          if (hasLabel(obs, "falsealarm") || hasLabel(obs, "wrongid")) continue;
-        }
-        if (flag_hideFlowers) {
-            if (String(id).startsWith('F')) continue;
-        }
-        let inROI = true
-        if (flag_useROI) {
-            inROI = (obs.cx >= ROI.left &&
-              obs.cx <= ROI.right &&
-              obs.cy >= ROI.top &&
-              obs.cy <= ROI.bottom
-            );
-        };
-
-        let b = obs.bool_acts;
-        let b0 = b[0];
-        let b1 = b[1];
-        let b2 = b[2];
-        let b3 = b[3];
-        //                 let b0 = hasLabel(obs,'fanning')
-        //                 let b1 = hasLabel(obs,'pollen')
-        //                 let b2 = hasLabel(obs,'entering')
-        //                 let b3 = hasLabel(obs,'leaving')
-
-        // XXX Define y
-        let y = chrono.config.idAxisMap(id)
-        if (!b0 && !b2 && !b3) {
-          chronogramData.push({
-            x: F,
-            y: y, 
-            id: id,
-            Activity: "",
-            labels: obs.labels,
-            pollen: b1,
-            tag: obs.tag,
-            obs: obs,
-            inROI: inROI
-          });
-        }
-        if (b2) {
-          chronogramData.push({
-            x: F,
-            y: y,
-            id: id,
-            Activity: "entering",
-            labels: obs.labels,
-            pollen: b1,
-            tag: obs.tag,
-            obs: obs,
-            inROI: inROI
-          });
-        }
-        if (b3) {
-          chronogramData.push({
-            x: F,
-            y: y,
-            id: id,
-            Activity: "leaving",
-            labels: obs.labels,
-            pollen: b1,
-            tag: obs.tag,
-            obs: obs,
-            inROI: inROI
-          });
-        }
-        if (b0) {
-          chronogramData.push({
-            x: F,
-            y: y,
-            id: id,
-            Activity: "fanning",
-            labels: obs.labels,
-            pollen: b1,
-            tag: obs.tag,
-            obs: obs,
-            inROI: inROI
-          });
-        }
-      }
-    }
+    // chronogramData => allIntervals, crosses, rectIntervals, ...
+    createIntervalList()
   }
 
-  updateObsTable();
+  // Tracks => flatTracks...
+  updateFlatTracks();
 
-  //  tagsData.length=0
-  //     for (let F in Tags) {
-  //         let tags = Tags[F].tags
-  //         for (let i in tags) {
-  //             let id = Number(tags[i].id)
-  //             let hamming = Number(tags[i].hamming)
-  //             if (hamming==0) {
-  //               let tag = {
-  //                 "frame":F,
-  //                 "id":id
-  //               }
-  //               tagsData.push(tag)
-  //             }
-  //         }
-  //     }
-
-  if (logging.chrono)
-    console.log("refreshChronogram: convert tags to intervals...");
+  // PREPARE TAGS DATA
 
   flatTags = getFlatTags(false); // noFilter
 
-  //allTagsID = []
-
-  ttags = getTTags();
+  ttags = getTTags(); // reverse index ttags[id][frame]
 
   allTagsID = [...allTagsID];
 
-  // ttags => tagIntervals
+  if (logging.chrono)
+    console.log("refreshChronogram: convert tags to intervals...");
+  
   tagIntervals = [];
   if (showTagsChrono) {
-    /* Convert to intervals */
-    for (let id in ttags) {
-      let obsarray = ttags[id];
-      let activeInterval = [];
-      let isActive = false;
-      for (let frame in obsarray) {
-        let tags = obsarray[frame];
-        let f = Number(frame);
-
-        if (!tagsSampleFilter(tags)) {
-          continue;
-        }
-
-        if (isActive) {
-          let doPush = false;
-          if (activeInterval.end == f - 1) {
-            // Extend active interval
-            activeInterval["end"] = f;
-
-            if (tags.hamming < 1000) {
-              activeInterval.hammingavg =
-                activeInterval.hammingavg + tags.hamming;
-              activeInterval.dmavg = activeInterval.dmavg + tags.dm;
-            } else {
-              activeInterval.hammingavg = activeInterval.hammingavg + 0;
-            }
-          } else {
-            // Do not extend active interval
-            doPush = true;
-          }
-          if (doPush) {
-            // Close previous
-            //activeInterval['end']++
-            if (tagsIntervalFilter(activeInterval)) {
-              let len = activeInterval["end"] - activeInterval["begin"] + 1;
-              activeInterval.hammingavg = activeInterval.hammingavg / len;
-              activeInterval.dmavg = activeInterval.dmavg / len;
-              tagIntervals.push(activeInterval);
-            }
-            // XXX Define y
-            let y = chrono.config.idAxisMap(id)
-            // Open new one
-            activeInterval = {
-              id: id,
-              y: y,
-              begin: f,
-              end: f,
-              hammingavg: tags.hamming,
-              dmavg: tags.dm,
-              labeling: {},
-            };
-          }
-        } else {
-          // XXX Define y
-          let y = chrono.config.idAxisMap(id)
-          // Open new one
-          activeInterval = {
-            id: id,
-            y: y,
-            begin: f,
-            end: f,
-            hammingavg: tags.hamming,
-            dmavg: tags.dm,
-            labeling: {},
-          };
-          isActive = true;
-        }
-      }
-      // Close if active
-      if (isActive)
-        if (tagsIntervalFilter(activeInterval)) {
-          //activeInterval['end']++
-          let len = activeInterval["end"] - activeInterval["begin"] + 1;
-          activeInterval.hammingavg = activeInterval.hammingavg / len;
-          activeInterval.dmavg = activeInterval.dmavg / len;
-          tagIntervals.push(activeInterval);
-        }
-    }
+    updateTagIntervals()
   }
 
   // Augment tags with tracks labels
@@ -2723,24 +2232,97 @@ function refreshChronogram() {
       (interval) => !(interval.labeling.falsealarm || interval.labeling.wrongid)
     );
   }
-  //     if (flag_hideInvalid) {
-  //
-  //         let tagIntervals0 = tagIntervals;
-  //         tagIntervals=[]
-  //
-  //         for (let interval of tagIntervals0) {
-  //             if (interval.labeling.falsealarm ||
-  //                 interval.labeling.wrongid)   continue;
-  //             tagIntervals.push(interval)
-  //         }
-  //     }
-  //     tagIntervals0=[];
+
+  //console.timeEnd('refreshChronogram');
+  const end = performance.now();
+
+  $('chronoStatusBar').html(`Chrono refresh took ${end - start} ms`)
+
+  // REDRAW
 
   if (logging.chrono) console.log("refreshChronogram: drawChrono()...");
-
-  //d3.selectAll("svg > *").remove();
+  
+  //console.time('drawChrono');
   drawChrono();
+  renderObsTable();
+  //console.timeEnd('drawChrono');
 }
+
+
+// ### OBS TABLE IN LABELING TAB
+var __section__obs_table
+
+function updateObsTable() {
+  updateFlatTracks()
+  renderObsTable()
+}
+function renderObsTable() {
+  showObsTable = !$("#labelingTab > .ui-accordion-header").hasClass(
+    "ui-accordion-header-collapsed"
+  );
+  if (showObsTable) {
+    d3.select("#obsTable").html("");
+    var table = d3.select("#obsTable").append("table");
+
+    function ƒ(name) {
+      return function (d) {
+        return d[name];
+      };
+    }
+
+    var columns = [
+      { head: "ID", cl: "id", html: ƒ("id") },
+      { head: "Frame", cl: "frame", html: ƒ("frame") },
+      { head: "Labels", cl: "labels", html: ƒ("labels") },
+    ];
+
+    function onObsTableRowClick(d) {
+      console.log("onObsTableRowClick: d=", d);
+      gotoEvent(Number(d.frame), d.id);
+    }
+
+    table
+      .append("thead")
+      .append("tr")
+      .selectAll("th")
+      .data(columns)
+      .enter()
+      .append("th")
+      .attr("class", function (d) {
+        return d.cl;
+      })
+      .text(function (d) {
+        return d.head;
+      });
+
+    table
+      .append("tbody")
+      .selectAll("tr")
+      .data(flatTracks)
+      .enter()
+      .append("tr")
+      .classed("obsTableRow", true)
+      .on("click", onObsTableRowClick)
+      .selectAll("td")
+      .data(function (row, i) {
+        // evaluate column objects against the current row
+        return columns.map(function (c) {
+          var cell = {};
+          d3.keys(c).forEach(function (k) {
+            cell[k] = typeof c[k] == "function" ? c[k](row, i) : c[k];
+          });
+          return cell;
+        });
+      })
+      .enter()
+      .append("td")
+      .html(ƒ("html"))
+      .attr("class", ƒ("cl"));
+  }
+}
+
+// ### CHRONO EXTRA FUNCTION, NOT USED
+var __section__chronogram_extra_functions
 
 function interpolateTags(maxgap) {
   tagIntervals = [];
