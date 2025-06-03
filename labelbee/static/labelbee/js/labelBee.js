@@ -18,7 +18,7 @@ var user_id;
 /** Debugging levels */
 var logging = {
   rects: false,
-  frameEvents: true,
+  frameEvents: false,
   guiEvents: false,
   submitEvents: false,
   mouseEvents: false,

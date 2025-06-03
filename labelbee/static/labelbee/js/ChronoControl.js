@@ -888,17 +888,17 @@ function getWindow() {
 // ### CHRONO D3 ACTIVITY INTERVALS
 var __section__chronogram_d3_activities
 
-function onActivityClick(d) {
+function onActivityClick(event, d) {
   console.log("CLICK Activity d=", d);
   // Prevent default chronogram click to go to the correct frame
-  d3.event.stopPropagation();
+  event.stopPropagation();
 
   gotoEvent(d.x1, d.id);
 }
-function onObsSpanClick(obsspan) {
+function onObsSpanClick(event, obsspan) {
   console.log("CLICK ObsSpan obsspan=", obsspan);
   // Prevent default chronogram click to go to the correct frame
-  d3.event.stopPropagation();
+  event.stopPropagation();
 
   gotoEvent(obsspan.frame, obsspan.id);
 }
@@ -929,7 +929,7 @@ function setGeomActivity(selection) {
       return axes.xScale(d.x2 + 1) - axes.xScale(d.x1);
     })
     .attr("height", function (d) {
-      return axes.yScale.rangeBand() / 2;
+      return axes.yScale.bandwidth() / 2;
     })
     .style("fill", "gray");
   //.style("stroke", activityColor);
@@ -971,7 +971,7 @@ function updateEntering(input) {
     })
     .attr("width", "4px")
     .attr("height", function (d) {
-      return axes.yScale.rangeBand() / 2;
+      return axes.yScale.bandwidth() / 2;
     })
     .style("fill", "green");
 }
@@ -995,7 +995,7 @@ function updateLeaving(input) {
     })
     .attr("width", "4px")
     .attr("height", function (d) {
-      return axes.yScale.rangeBand() / 2;
+      return axes.yScale.bandwidth() / 2;
     })
     .style("fill", "red");
 }
@@ -1021,7 +1021,7 @@ function updatePollen(input) {
       return axes.xScale(d.x2 + 1) - axes.xScale(d.x1);
     })
     .attr("height", function (d) {
-      return axes.yScale.rangeBand() / 2;
+      return axes.yScale.bandwidth() / 2;
     })
     .style("fill", "yellow");
 }
@@ -1041,13 +1041,13 @@ function updateFanning(input) {
       return axes.xScale(d.x1);
     })
     .attr("y", function (d) {
-      return axes.yScale(d.y) + axes.yScale.rangeBand() / 2;   // XXX Use y
+      return axes.yScale(d.y) + axes.yScale.bandwidth() / 2;   // XXX Use y
     })
     .attr("width", function (d) {
       return axes.xScale(d.x2 + 1) - axes.xScale(d.x1);
     })
     .attr("height", function (d) {
-      return axes.yScale.rangeBand() / 2;
+      return axes.yScale.bandwidth() / 2;
     })
     .style("fill", "purple");
 }
@@ -1088,13 +1088,13 @@ function updateObsSpan(selection) {
     })
     .attr("y", function (d) {
       return axes.yScale(d.y); // ordinal   // XXX Use y
-      //axes.yScale(d.id)+axes.yScale.rangeBand()/2; // ordinal
+      //axes.yScale(d.id)+axes.yScale.bandwidth()/2; // ordinal
     })
     .attr("width", function (d) {
       return axes.xScale(d.span.f2 + 1) - axes.xScale(d.span.f1);
     })
     .attr("height", function (d) {
-      return axes.yScale.rangeBand(); //axes.yScale.rangeBand()/2;
+      return axes.yScale.bandwidth(); //axes.yScale.bandwidth()/2;
     })
     .style("fill", "none")
     .style("stroke", "red")
@@ -1150,7 +1150,7 @@ function updateAlertCircle(selection) {
       return axes.xScale(d.frame);
     })
     .attr("cy", function (d) {
-      return axes.yScale(d.y) + axes.yScale.rangeBand() / 2; // ordinal  // XXX Use y
+      return axes.yScale(d.y) + axes.yScale.bandwidth() / 2; // ordinal  // XXX Use y
     })
     .attr("r", 7)
     .style("stroke", "cyan");
@@ -1265,7 +1265,7 @@ function updateActivities(onlyScaling) {
       return axes.xScale(Number(d.x1));
     })
     .attr("cy", function (d) {
-      return axes.yScale(d.y) + axes.yScale.rangeBand() / 2;  // XXX Use y
+      return axes.yScale(d.y) + axes.yScale.bandwidth() / 2;  // XXX Use y
     })
     .attr("r", 5) //change radius
     .style("stroke", function (d) {
@@ -1293,7 +1293,7 @@ function updateActivities(onlyScaling) {
       })
     // Display tooltip message
     circles
-    .on("mouseover", function (d) {
+    .on("mouseover", function (event, d) {
       var message = "";
       message +=
         "BeeID=" +
@@ -1319,24 +1319,23 @@ function updateActivities(onlyScaling) {
         message += "<br><u>Tag:</u><br><i>None</i>";
       }
       tooltip
-        .style("left", d3.event.pageX + "px")
-        .style("top", d3.event.pageY + "px")
+        .style("left", event.pageX + "px")
+        .style("top", event.pageY + "px")
         .style("visibility", "visible")
         .html(message);
     })
-    .on("mouseout", function (d) {
+    .on("mouseout", function (event, d) {
       tooltip.style("visibility", "hidden");
     });
 
-  var lineFunction = d3.svg // Not used?
-    .line()
+  var lineFunction = d3.line()
     .x(function (d) {
       return d.x;
     })
     .y(function (d) {
       return d.y; // XXX Use y
     })
-    .interpolate("linear");
+    .curve(d3.curveLinear);
 
   function crossFunction(x, y, r) {
     x = Number(x);
@@ -1376,7 +1375,7 @@ function updateActivities(onlyScaling) {
   path
     .attr("d", function (d) {
       var X = axes.xScale(Number(d.x1)),
-        Y = axes.yScale(d.y) + axes.yScale.rangeBand() / 2;  // XXX Use y
+        Y = axes.yScale(d.y) + axes.yScale.bandwidth() / 2;  // XXX Use y
       //if((d.labels == "wrongid") && (d.newid != null))
       //    return crossFunction(X,Y,5);
       return crossFunction(X, Y, 5);
@@ -1429,13 +1428,13 @@ function updateActivities(onlyScaling) {
 
     parts
       .attr("x", function (d) {
-        return axes.xScale(Number(d.x1)) - axes.yScale.rangeBand() / 2;
+        return axes.xScale(Number(d.x1)) - axes.yScale.bandwidth() / 2;
       })
       .attr("y", function (d) {
         return axes.yScale(d.y);  // XXX Use y
       })
-      .attr("width", axes.yScale.rangeBand())
-      .attr("height", axes.yScale.rangeBand())
+      .attr("width", axes.yScale.bandwidth())
+      .attr("height", axes.yScale.bandwidth())
       .attr("stroke", function (d) {
         var color = "black";
         return color;
@@ -1465,16 +1464,16 @@ function renderDangling(onlyScaling) {
     .join('circle')
       .attr("class", "dangling_start")
       .attr("cx", d => axes.xScale(Number(d.x1)) )
-      .attr("cy", d => axes.yScale(d.y) + axes.yScale.rangeBand() / 2)  // XXX Use y
-      .attr("r", axes.yScale.rangeBand()/2)
+      .attr("cy", d => axes.yScale(d.y) + axes.yScale.bandwidth() / 2)  // XXX Use y
+      .attr("r", axes.yScale.bandwidth()/2)
       .style("fill", "red")
   
   dangling_end
     .join('circle')
       .attr("class", "dangling_end")
       .attr("cx", d => axes.xScale(Number(d.x2)+1) )
-      .attr("cy", d => axes.yScale(d.y) + axes.yScale.rangeBand() / 2)  // XXX Use y
-      .attr("r", axes.yScale.rangeBand()/2)
+      .attr("cy", d => axes.yScale(d.y) + axes.yScale.bandwidth() / 2)  // XXX Use y
+      .attr("r", axes.yScale.bandwidth()/2)
       .style("fill", "red")
 }
 
@@ -1504,10 +1503,10 @@ function initActivities() {
 var __section__chronogram_d3_tags
 
 
-function onTagClick(tagInterval) {
+function onTagClick(event, tagInterval) {
   console.log("CLICK Tag tagInterval=", tagInterval);
   // Prevent default chronogram click to go to the correct frame
-  d3.event.stopPropagation();
+  event.stopPropagation();
 
   gotoEvent(Number(tagInterval.begin), tagInterval.id);
 }
@@ -1526,7 +1525,7 @@ function insertTag(selection) {
 }
 function setTagGeom(selection) {
   // Tag interval
-  let H = axes.yScale.rangeBand();
+  let H = axes.yScale.bandwidth();
   function tagHeight(d) {
     if (d.hammingavg > 2) return H / 4;
     else return (H * (4 - d.hammingavg)) / 4;
@@ -1581,7 +1580,7 @@ function setTagGeom(selection) {
       .style("z-index", "1000")
       .style("pointer-events", "all")
       //.on("wheel", function(){console.log('got wheeled')})
-      .on("mouseover", function (taginterval) {
+      .on("mouseover", function (event, taginterval) {
         //console.log('mouseover: ',taginterval)
         var message = "";
         if (taginterval) {
@@ -1601,8 +1600,8 @@ function setTagGeom(selection) {
           message += "<u>Tag:</u><br><i>None</i>";
         }
         tooltip2
-          .style("left", d3.event.pageX + "px")
-          .style("top", d3.event.pageY + "px")
+          .style("left", event.pageX + "px")
+          .style("top", event.pageY + "px")
           .style("visibility", "visible")
           .html(message);
         //             // Highlight source tag for wrongid annotations
@@ -1614,7 +1613,7 @@ function setTagGeom(selection) {
         //                     .style("stroke","green")
         //             }
       })
-      .on("mouseout", function (taginterval) {
+      .on("mouseout", function (event, taginterval) {
         tooltip2.style("visibility", "hidden");
         //             setTagGeom(selection
         //                     .filter(d=>(d.id==taginterval.oldid) && (d.begin==taginterval.begin))
@@ -2276,7 +2275,7 @@ function renderObsTable() {
       { head: "Labels", cl: "labels", html: ƒ("labels") },
     ];
 
-    function onObsTableRowClick(d) {
+    function onObsTableRowClick(event, d) {
       console.log("onObsTableRowClick: d=", d);
       gotoEvent(Number(d.frame), d.id);
     }

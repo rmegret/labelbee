@@ -79,13 +79,14 @@ function ChronoAxes(parent, videoinfo, options) {
   updateVideoinfo(videoinfo)
 
   // ## Scale objects (model that maps (frames,id) to pixels)
-  var xScale = d3.scale.linear().range([0, width]);
-  var tScale = d3.time.scale.utc().range([0, width]);
+  var xScale = d3.scaleLinear().range([0, width]);
+  axes.xScaleOrig = xScale.copy()
+  var tScale = d3.scaleUtc().range([0, width]);
   var yScale;
   if (options.useOrdinalScale) {
-    yScale = d3.scale.ordinal().domain(["-"]).rangeBands([0, height], 0);
+    yScale = d3.scaleBand().domain(["-"]).range([0, height]);
   } else {
-    yScale = d3.scale.linear().range([0, height]);
+    yScale = d3.scaleLinear().range([0, height]);
   }
   // axis scales API
   function updateTDomain() {
@@ -104,6 +105,7 @@ function ChronoAxes(parent, videoinfo, options) {
     if (!arguments.length) return xScale.domain();
     /* Update xAxis and tAxis to domain = [firstFrame, lastFrame] */
     xScale.domain(domain);
+    axes.xScaleOrig.domain(domain) // Adapt original scale after parameter change
     updateTDomain();
     reinitZoom();
     refreshAxes({ type: "xDomainChanged", domain: domain });
@@ -205,6 +207,7 @@ function ChronoAxes(parent, videoinfo, options) {
   //axes.updateTDomain=updateTDomain  // Private
 
   axes.mousewheelMode = true
+  axes.mousewheelSpeed = 0.01
 
   /* ### VIEW: axes, layout */
 
@@ -222,7 +225,7 @@ function ChronoAxes(parent, videoinfo, options) {
   // xAxis(xAxisGroup)         /* update only the axis ticks */
 
   // ## Axis creation methods for X axis
-  var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickSize(5);
+  var xAxis = d3.axisBottom(xScale).tickSize(5);
   function xAxisInit(xAxisGroup) {
     // Create the SVG elements and styles
     xAxisGroup.attr("transform", "translate(0," + (height + 20) + ")");
@@ -251,25 +254,20 @@ function ChronoAxes(parent, videoinfo, options) {
 
       (function () {
         // Cache zoom parameters
-        var cacheScale = zoom.scale();
-        var cacheTranslate = zoom.translate();
-        var cacheTranslatePerc = zoom.translate().map(function (v, i, a) {
-          return (v * -1) / getFullWidth();
-        });
-        zoom.scale(1).translate([0, 0]);
+        const transform = d3.zoomTransform(axes.parent.node());
+        const old_k = transform.k;
+        const old_tx = transform.x; // in pixels
+        const old_width = xScale.range()[1]
 
-        // Change the range
-        xScale.range([0, width]);
+        const new_tx = old_tx / old_width * width
 
-        // Reapply zoom parameters
-        zoom.x(xScale);
-        zoom.scale(cacheScale);
-        cacheTranslate[0] = -(getFullWidth() * cacheTranslatePerc[0]);
-        zoom.translate(cacheTranslate);
+        // Change the range to element width
+        xScale.range([0, width]);  // keep old domain
+        axes.xScaleOrig.range([0, width]) // Make copy of original scale after parameter change
 
-        function getFullWidth() {
-          return xScale.range()[1] * zoom.scale();
-        }
+        reinitZoom()         // Should reuse xScale domain and range
+        //chronoGroup.call(zoom.transform, d3.zoomIdentity.translate(new_tx,0).scale(old_k))
+        //chronoGroup.property('__zoom', d3.zoomIdentity.translate(new_tx,0).scale(old_k))
       })();
     }
     // Simple way
@@ -284,54 +282,26 @@ function ChronoAxes(parent, videoinfo, options) {
   }
 
   // ## Axis creation methods for T axis
-  var customTimeFormat = d3.time.format.multi([
-    [
-      "%S.%L",
-      function (d) {
-        return d.getMilliseconds();
-      },
-    ],
-    [
-      "%S",
-      function (d) {
-        return d.getSeconds();
-      },
-    ],
-    [
-      "%H:%M",
-      function (d) {
-        return d.getMinutes();
-      },
-    ],
-    [
-      "%H:00",
-      function (d) {
-        return d.getHours();
-      },
-    ],
-    [
-      "%b %d",
-      function (d) {
-        return d.getDate() != 1;
-      },
-    ],
-    [
-      "%B",
-      function (d) {
-        return d.getMonth();
-      },
-    ],
-    [
-      "%Y",
-      function () {
-        return true;
-      },
-    ],
-  ]);
-  var tAxisBase = d3.svg
-    .axis()
-    .scale(tScale)
-    .orient("bottom")
+  var formatMillisecond = d3.timeFormat("%S.%L"),
+      formatSecond = d3.timeFormat(":%S"),
+      formatMinute = d3.timeFormat("%H:%M"),
+      formatHour = d3.timeFormat("%H:00"),
+      formatDay = d3.timeFormat("%a %d"),
+      formatWeek = d3.timeFormat("%b %d"),
+      formatMonth = d3.timeFormat("%B"),
+      formatYear = d3.timeFormat("%Y");
+
+  // Define filter conditions
+  function customTimeFormat(date) {
+    return (d3.timeSecond(date) < date ? formatMillisecond
+      : d3.timeMinute(date) < date ? formatSecond
+      : d3.timeHour(date) < date ? formatMinute
+      : d3.timeDay(date) < date ? formatHour
+      : d3.timeMonth(date) < date ? (d3.timeWeek(date) < date ? formatDay : formatWeek)
+      : d3.timeYear(date) < date ? formatMonth
+      : formatYear)(date);
+  }
+  var tAxisBase = d3.axisBottom(tScale)
     .tickSize(-height) // Used as gridline
     .tickFormat(customTimeFormat);
   var tAxis = function (tAxisParent) {
@@ -373,7 +343,7 @@ function ChronoAxes(parent, videoinfo, options) {
   function tAxisResized(tAxisGroup) {
     tScale.range([0, width]);
 
-    tAxisBase.ticks(Math.ceil(width / 100)); // Around 100px per tick for time
+    tAxisBase.ticks(Math.ceil(width / 150)); // Around 100px per tick for time
     tAxisBase.tickSize(-height);
 
     tAxisGroup.attr("transform", "translate(0," + height + ")");
@@ -388,10 +358,7 @@ function ChronoAxes(parent, videoinfo, options) {
   }
 
   // ## Axis creation methods for Y axis
-  var yAxisBase = d3.svg
-    .axis()
-    .scale(yScale)
-    .orient("left")
+  var yAxisBase = d3.axisLeft(yScale)
     .ticks(5)
     .tickSize(0); // Use manual grid creation below
   //.tickSize(-width); // Grid line
@@ -442,7 +409,7 @@ function ChronoAxes(parent, videoinfo, options) {
     return yAxisGroup;
   }
   function yAxisResized(yAxisGroup) {
-    if (options.useOrdinalScale) yScale.rangeBands([0, height], 0);
+    if (options.useOrdinalScale) yScale.range([0, height]);
     else yScale.range([0, height]);
 
     yAxisBase.ticks(Math.ceil(height / 20)); // Around 20 per tick for IDs
@@ -652,7 +619,7 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("x", 0)
         .attr("width", axes.width())
         .attr("y", axes.yScale(axes.selectedID))
-        .attr("height", axes.yScale.rangeBand())
+        .attr("height", axes.yScale.bandwidth())
         .style("fill", "#ffffff")
         .style("stroke", "#008000")
         .style("stroke-width", "2px");
@@ -717,26 +684,98 @@ function ChronoAxes(parent, videoinfo, options) {
   // ### CONTROLER: Add mouse interaction ###
 
   // ## Zooming (applies to the xScale object only)
-  var zoom = d3.behavior.zoom();
+  var zoom = d3.zoom().on("zoom", onZoom);
+  //axes.parent
+  chronoGroup.call(zoom) // Attach to the SVG
+    .on("wheel.zoom", (event) => {  
+    // Override the default wheel event listener
+      event.preventDefault();
+
+      //console.log(event)
+
+      const currentZoom = chronoGroup.property("__zoom").k || 1;
+
+      // Use mouse wheel or trackpad with 2 fingers to pan.
+      zoom.translateBy(
+        chronoGroup,
+        -(event.deltaX / currentZoom),
+        -(event.deltaY / currentZoom)
+      );
+      const nextZoom = currentZoom * Math.pow(2, -event.deltaY * axes.mousewheelSpeed);
+      zoom.scaleTo(chronoGroup, nextZoom, d3.pointer(event));
+    });
   reinitZoom();
-  zoom.on("zoom", onZoom);
-  //    chronoGroup.select(".plotAreaBackground").call(zoom)
-  // Zoom behavior is applied to an invisible rect on top of the plotArea
-  // chronoGroup.append("rect").attr('class', 'zoomEventRect')
-  //                .style("fill", "none")
-  //                .attr("width", width).attr("height", height+margin.bottom)
-  //                //.style("pointer-events", "all")
-  //.call(zoom)
-  chronoGroup.style("pointer-events", "all").call(zoom);
-  function onZoom() {
-    if (logging.axesEvents) console.log("zoomed", d3.event);
-    refreshAxes({ type: "zoom_x", d3_event: d3.event });
+  function onZoom(event) {
+    if (logging.axesEvents) console.log("zoomed", event);
+    const t = event.transform;
+    const scale = t.k;
+
+    // Viewbox in pixels
+    const rangeWidth = axes.xScaleOrig.range()[1] - axes.xScaleOrig.range()[0]
+    const pleft = axes.xScaleOrig.range()[0] + 0.5 * rangeWidth
+    const pright = axes.xScaleOrig.range()[1] - 0.5 * rangeWidth
+
+    // Interval always visible, in domain units
+    const x1 = axes.xScaleOrig.domain()[0]
+    const x2 = axes.xScaleOrig.domain()[1]
+    const domainWidth = x2-x1
+
+    // Make videoSpan always take at least 10% of the view
+    // Model: p1 = x1 * t.k * rangeWidth / domainWidth + t.x
+    // p1<pright ==> t.x < pright - x1 * t.k * rangeWidth / domainWidth
+    // p2>pleft  ==> t.x > pleft - x2 * t.k * rangeWidth / domainWidth
+    const fullScale = t.k * rangeWidth / domainWidth // t.k==1 when intialized: domain => range
+    const tmax = pright-x1*fullScale
+    const tmin = pleft-x2*fullScale
+
+    const clampedX = Math.max(tmin, Math.min(tmax, t.x));
+
+    // Rebuild transform with clamped x
+    const updatedTransform = d3.zoomIdentity.translate(clampedX, t.y).scale(scale);
+    //const updatedTransform = t
+
+    // Apply transform to content
+    const newDomain = updatedTransform.rescaleX(axes.xScaleOrig).domain();
+    xScale.domain(newDomain)
+
+    // Optional: update zoom state
+    //chronoGroup.call(zoom.transform, updatedTransform); // CAUTION: infinite loop
+    chronoGroup.property("__zoom",updatedTransform)
+
+    refreshAxes({ type: "zoom_x", d3_event: event });
     // Avoid scroll event to trigger normal scrolling in the browser
-    if (!!d3.event.sourceEvent) d3.event.sourceEvent.stopPropagation();
+    if (!!event.sourceEvent) event.sourceEvent.stopPropagation();
+  }
+  function onZoom0(event) {
+    if (logging.axesEvents) console.log("zoomed", event);
+
+    const newDomain = event.transform.rescaleX(axes.xScaleOrig).domain();
+    xScale.domain(newDomain)
+    //axes.parent.select(".x-axis").call(xAxis.scale(xScale));
+
+    refreshAxes({ type: "zoom_x", d3_event: event });
+    // Avoid scroll event to trigger normal scrolling in the browser
+    if (!!event.sourceEvent) event.sourceEvent.stopPropagation();
   }
   function reinitZoom() {
-    let d = xScale.domain();
-    zoom.x(xScale).scaleExtent([1 / 24, (d[1] - d[0]) / 10]); // Put limit in how far we can zoom in/out
+    console.log('reinitZoom')
+    const d = axes.xScaleOrig.domain();
+    const r = axes.xScaleOrig.range();
+    //zoom.x(xScale).scaleExtent([1 / 24, (d[1] - d[0]) / 10]); // Put limit in how far we can zoom in/out
+    zoom.scaleExtent([1 / 1.2, (d[1] - d[0]) / 10]); // Put limit in how far we can zoom in/out
+    zoom.extent([[axes.xScaleOrig.range()[0],0],[axes.xScaleOrig.range()[1],0]])
+    //zoom.translateExtent([[-xScale.range()[1]*.2,0],[xScale.range()[1]*.2,0]])
+    
+    console.log('reinitZoom',axes.xScaleOrig,axes.xScale)
+
+    let visibleDomain = axes.xScale.domain() // adapt to existing domain
+    if (visibleDomain) {
+      const k = (axes.xScaleOrig.domain()[1]-axes.xScaleOrig.domain()[0]) / (visibleDomain[1]-visibleDomain[0])  // pixel independent scale
+      const tx = (-visibleDomain[0] + axes.xScaleOrig.domain()[0]) / (visibleDomain[1]-visibleDomain[0]) * (axes.xScale.range()[1]-axes.xScale.range()[0]) // Translation is in pixels
+      chronoGroup.property('__zoom',d3.zoomIdentity.translate(tx,0).scale(k))
+    } else {
+      chronoGroup.property('__zoom',d3.zoomIdentity)
+    }
   }
 
   /* Monkey patch events from D3 selection */
@@ -754,10 +793,10 @@ function ChronoAxes(parent, videoinfo, options) {
       return;
     }
     // Define wrapper that calls original if test is true
-    function filteredCallback() {
+    function filteredCallback(event) {
       var args = arguments;
       //console.log('args=',args)
-      if (filterFun(d3.event)) originalCallback.apply(this, args);
+      if (filterFun(event)) originalCallback.apply(this, args);
     }
     // Replace by filtered callback
     eventSource.on(eventType, filteredCallback);
@@ -767,7 +806,7 @@ function ChronoAxes(parent, videoinfo, options) {
   injectEventFilter(chronoGroup, "wheel.zoom", function (event) {
     //console.log('chronoGroup, ',event)
     // Coordinates are not plotArea related (FIXME)
-    //if ((d3.event.x<0) || (d3.event.y<0) || (d3.event.x>width) || (d3.event.y>height)) return false
+    //if ((event.x<0) || (event.y<0) || (event.x>width) || (event.y>height)) return false
     if (!axes.mousewheelMode) return true;
     return event.shiftKey == true;
   });
@@ -782,9 +821,8 @@ function ChronoAxes(parent, videoinfo, options) {
   function invertYScale(y) {
     var id;
     if (options.useOrdinalScale) {
-      let rangeExtent = yScale.rangeExtent();
-      let rangeBand = yScale.rangeBand();
-      rank = Math.floor((y - rangeExtent[0]) / rangeBand);
+      let rangeBand = yScale.bandwidth();
+      rank = Math.floor((y - yScale.range()[0]) / rangeBand);
       if (rank < 0 || rank >= yScale.domain().length) id = undefined;
       else id = yScale.domain()[rank];
       //console.log("chronoGroup.onClick: rank=", rank)
@@ -797,11 +835,11 @@ function ChronoAxes(parent, videoinfo, options) {
     return id;
   }
 
-  function onAxesClick() {
+  function onAxesClick(event) {
     //if (typeof axes.onClick == 'undefined') return;
-    if (d3.event.defaultPrevented) return;
+    if (event.defaultPrevented) return;
 
-    var coords = d3.mouse(this);
+    var coords = d3.pointer(event, axes.chronoGroup.node()); // Get coords in chronoGroup units
 
     var frame, id;
     if (coords[0] >= 0) {
@@ -832,16 +870,16 @@ function ChronoAxes(parent, videoinfo, options) {
       type: "axes:clicked",
       frame: frame,
       id: id,
-      mouseevent: d3.event,
+      mouseevent: event,
     });
   }
   chronoGroup.on("click", onAxesClick);
 
-  function onAxesDblClick() {
+  function onAxesDblClick(event) {
     //if (typeof axes.onClick == 'undefined') return;
-    if (d3.event.defaultPrevented) return;
+    if (event.defaultPrevented) return;
 
-    var coords = d3.mouse(this);
+    var coords = d3.pointer(event, axes.chronoGroup.node()); // TODO
     var frame = Math.round(xScale.invert(coords[0]));
     var id = invertYScale(coords[1]);
 
@@ -855,35 +893,35 @@ function ChronoAxes(parent, videoinfo, options) {
       type: "axes:dblclick",
       frame: frame,
       id: id,
-      mouseevent: d3.event,
+      mouseevent: event,
     });
   }
   chronoGroup.on("dblclick", onAxesDblClick);
 
-  injectTrackFrame(chronoGroup);
+  //injectTrackFrame(chronoGroup);
   function injectTrackFrame(target) {
     chronoGroup.on("mouseenter.trackFrame", trackFrame_mouseEnter);
     chronoGroup.on("mouseleave.trackFrame", trackFrame_mouseLeave);
     var mouseCache = [undefined, undefined];
-    function trackFrame_mouseEnter() {
+    function trackFrame_mouseEnter(event) {
       if (logging.mouseMoveEvents) console.log("trackFrame_mouseEnter");
       d3.select("body").on("keydown.trackFrame", trackFrame_keyDown);
       chronoGroup.on("mousemove", trackFrame_mouseMove);
-      var coords = d3.mouse(chronoGroup.node());
+      var coords = d3.pointer(event, axes.chronoGroup.node());
       mouseCache[0] = coords[0];
       mouseCache[1] = coords[1];
     }
-    function trackFrame_mouseLeave() {
+    function trackFrame_mouseLeave(event) {
       if (logging.mouseMoveEvents) console.log("trackFrame_mouseLeave");
       d3.select("body").on("keydown.trackFrame", null); // callback off
       //d3.select("body").on('keyup.trackFrame',null) // callback off
       chronoGroup.on("mousemove", null);
       $(axes).trigger("previewframe:trackend"); // jQuery callback
     }
-    function trackFrame_keyDown() {
+    function trackFrame_keyDown(event) {
       if (logging.mouseMoveEvents)
-        console.log("trackFrame_keyDown", d3.event);
-      if (d3.event.ctrlKey) {
+        console.log("trackFrame_keyDown", event);
+      if (event.ctrlKey) {
         // Register mousemove is not already done
 
         d3.select("body").on("keydown.trackFrame", null); // Callback off
@@ -895,10 +933,10 @@ function ChronoAxes(parent, videoinfo, options) {
         trackFrame_change();
       }
     }
-    function trackFrame_keyUp() {
+    function trackFrame_keyUp(event) {
       if (logging.mouseMoveEvents)
-        console.log("trackFrame_keyDown", d3.event);
-      if (!d3.event.ctrlKey) {
+        console.log("trackFrame_keyDown", event);
+      if (!event.ctrlKey) {
         //axes.trackFrame_on = false;
 
         d3.select("body").on("keydown.trackFrame", trackFrame_keyDown);
@@ -910,29 +948,29 @@ function ChronoAxes(parent, videoinfo, options) {
         $(axes).trigger("previewframe:trackend"); // jQuery callback
       }
     }
-    function trackFrame_mouseMove() {
-      var coords = d3.mouse(chronoGroup.node());
+    function trackFrame_mouseMove(event) {
+      var coords = d3.pointer(event, chronoGroup.node());
       mouseCache[0] = coords[0];
       mouseCache[1] = coords[1];
 
-      if (!d3.event.ctrlKey) {
+      if (!event.ctrlKey) {
         //console.log('trackFrame_mouseMove: runaway call')
         //chronoGroup.on("mousemove", null);
         //axes.trackFrame_on = false;
         return;
       }
       //if (typeof axes.onClick == 'undefined') return;
-      if (d3.event.defaultPrevented) return;
+      if (event.defaultPrevented) return;
 
       trackFrame_change();
     }
-    function trackFrame_change() {
+    function trackFrame_change(event) {
       var coords = mouseCache;
       if (
         coords[0] < axes.xScale.range()[0] ||
         coords[0] > axes.xScale.range()[1] ||
-        coords[1] < axes.yScale.rangeExtent()[0] ||
-        coords[1] > axes.yScale.rangeExtent()[1]
+        coords[1] < axes.yScale.range()[0] ||
+        coords[1] > axes.yScale.range()[1]
       ) {
         if (logging.mouseMoveEvents)
           console.log(
@@ -965,7 +1003,7 @@ function ChronoAxes(parent, videoinfo, options) {
         type: "previewframe:trackmove",
         frame: frame,
         id: id,
-        mouseevent: d3.event,
+        mouseevent: event,
       }); // jQuery callback
     }
   }
