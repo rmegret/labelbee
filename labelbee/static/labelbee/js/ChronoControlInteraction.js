@@ -37,7 +37,11 @@ function onAxesClick(event) {
   if (logging.axesEvents)
     console.log("onAxesClick: seeking to frame=", frame, "...");
 
-  gotoEvent(frame, id);
+  if (chrono.config.idAxisMapMode == 'id') {
+    gotoEvent(frame, id);
+  } else {
+    videoControl.seekFrame(Number(frame)); // Avoid loosing current selection
+  }
 }
 function onAxesDblClick(event) {
   // User double clicked in chronogram axes

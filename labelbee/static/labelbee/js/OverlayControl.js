@@ -28,10 +28,10 @@ function OverlayControl(canvasTagId) {
     overlay.ctx2 = overlay.canvas2.getContext('2d');
 
   overlay.trackWindow = {
-    range: 200,
-    direction: "Bidirectional",
-    forward: 200,
-    backward: 200,
+    range: 10,
+    direction: "Backward",
+    forward: 0,
+    backward: 10,
   };
   /* Obs and Tags plotting params */
   $("#trackWindow").val(overlay.trackWindow.range);

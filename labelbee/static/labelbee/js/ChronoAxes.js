@@ -758,7 +758,7 @@ function ChronoAxes(parent, videoinfo, options) {
     if (!!event.sourceEvent) event.sourceEvent.stopPropagation();
   }
   function reinitZoom() {
-    console.log('reinitZoom')
+    //console.log('reinitZoom')
     const d = axes.xScaleOrig.domain();
     const r = axes.xScaleOrig.range();
     //zoom.x(xScale).scaleExtent([1 / 24, (d[1] - d[0]) / 10]); // Put limit in how far we can zoom in/out
@@ -766,7 +766,7 @@ function ChronoAxes(parent, videoinfo, options) {
     zoom.extent([[axes.xScaleOrig.range()[0],0],[axes.xScaleOrig.range()[1],0]])
     //zoom.translateExtent([[-xScale.range()[1]*.2,0],[xScale.range()[1]*.2,0]])
     
-    console.log('reinitZoom',axes.xScaleOrig,axes.xScale)
+    //console.log('reinitZoom',axes.xScaleOrig,axes.xScale)
 
     let visibleDomain = axes.xScale.domain() // adapt to existing domain
     if (visibleDomain) {
@@ -834,6 +834,20 @@ function ChronoAxes(parent, videoinfo, options) {
     }
     return id;
   }
+
+  function getFrameFromEvent(event) {
+    var coords = d3.pointer(event, axes.chronoGroup.node()); // Get coords in chronoGroup units
+
+    let frame;
+    if (coords[0] >= 0) {
+      frame = Math.round(axes.xScale.invert(coords[0]));
+    } else {
+      // Clicked on the left of frame: in the ID ticks
+      frame = axes.timeMark.frame; // Use current frame
+    }
+    return frame
+  }
+  axes.getFrameFromEvent = getFrameFromEvent
 
   function onAxesClick(event) {
     //if (typeof axes.onClick == 'undefined') return;

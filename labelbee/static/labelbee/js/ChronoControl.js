@@ -28,13 +28,19 @@ class Chronogram {
                            frameMin: 0,
                            frameMax: -1
                           }
+    config.idAxisMapMode = 'id'
     config.idAxisMapString = 'return id'
     config.idAxisMap = Function("id",config.idAxisMapString)
+
+    chrono.config.legacyActivities = false
+    console.log('TO ACTIVATE LEGACY D3 CODE OF ACTIVITIES for wrongid, falsealarm, etc... run:\nchrono.config.legacyActivities = true; removeActivities(); renderActivities()')
 
     config.showDanglingTracks = true
 
     initChrono()  // '#svgVisualize'
     // TODO: move all functionalities inside Chronogram
+
+    this.initTooltip()
   };
 
   // ### ID REMAP
@@ -48,6 +54,7 @@ class Chronogram {
     const config = this.config
     if (mode == 'id') {
       //config.idAxisMapString = 'id'
+      config.idAxisMapMode = 'id'
       config.idAxisMap = (id)=>id
       this.update_idAxisMap()
     }
@@ -55,6 +62,7 @@ class Chronogram {
       const mod = prompt("Set ID axis remap with modulo:", 20)
       if (mod == null) return
       //config.idAxisMapString = `String( Number(id) % mod )`
+      config.idAxisMapMode = 'modulo'
       config.idAxisMap = (id) => String( Number(id) % Number(mod) )
       this.update_idAxisMap()
     }
@@ -129,17 +137,22 @@ class Chronogram {
       $('#chronoFrameFilterFrameMax').val( chrono.config.frameFilter.frameMax )
   };
 
+  // TOOLTIP
+
+  initTooltip() {
+    d3.select("body").selectAll(".tooltip").remove();
+
+    chrono.tooltip = d3
+      .select("body")
+      .append("div")
+      .style("z-index", "10")
+      .style("visibility", "hidden")
+      .style("opacity", "1")
+      .attr("class", "tooltip");
+  }
+
 }
 
-// Util function for flashing a button to attrach user's attention
-function flash(elements) {
-    $(elements).toggleClass("focus",true)
-    var repeat = 0
-    var interval = setInterval(function() {if (repeat>4) {$(elements).toggleClass("focus",false); clearInterval(interval); return;}
-                                           repeat+=1;
-    $(elements).toggleClass("focus")
-  }, 100)
-};
 
 // ### INIT
 
@@ -255,18 +268,6 @@ function initChrono() {
   debouncer(refreshChronoLayout, 300); // Avoid refreshing the chronogram too often
 }
 
-function debouncer(func, timeout) {
-  var timeoutID,
-    timeout = timeout || 100;
-  return function () {
-    var scope = this,
-      args = arguments;
-    clearTimeout(timeoutID);
-    timeoutID = setTimeout(function () {
-      func.apply(scope, Array.prototype.slice.call(args));
-    }, timeout);
-  };
-}
 function refreshChronoLayout() {
   const doRefresh = function () {
     if (logging.axesEvents) {
@@ -283,8 +284,12 @@ function refreshChronoLayout() {
   //doRefresh()
 }
 
+
+
+var __section__chronogram_controls
+
 // ### TOGGLEBABLE BUTTONS AND INPUTS
-var __section__chronogram_buttons
+var __subsection__chronogram_buttons
 
 // Simplify handling of input and button behaviors in one function
 function toggledNewState(event) {
@@ -342,8 +347,132 @@ function updateMousewheelModeButton() {
   $("#mousewheelMode").prop("checked", axes.mousewheelMode); 
 }
 
+
+// ### RESTRICT ID
+var __subsection__chronogram_restrict_id
+
+function setRestrictID(ids) {
+  console.log("setRestrictID");
+  restrictID = String(ids);
+  restrictIDArray = restrictID
+    .split(",")
+    .map(function (d) {
+      return d.trim();
+    })
+    .filter(function (d) {
+      return d != "";
+    });
+
+  update_restrictID_GUI();
+
+  if (flag_restrictID) refreshChronogram();
+}
+function restrictIDFromSelection() {
+  console.log("restrictIDFromSelection");
+
+  flag_restrictID = true;
+  setRestrictID(defaultSelectedBee);
+}
+function restrictIDFromWindow() {
+  console.log("restrictIDFromWindow");
+  restrictID = [];
+  let win = getWindow();
+  let f1 = win[0],
+    f2 = win[1];
+  // restrictIDArray = flatTags
+  //   .filter(function (tag) {
+  //     return tag.frame >= f1 && tag.frame <= f2;
+  //   })
+  //   .map(function (tag) {
+  //     return String(tag.id);
+  //   });
+  restrictIDArray = chronogramData
+    .filter(function (item) {
+      return item.x >= f1 && item.x <= f2;
+    })
+    .map(function (item) {
+      return String(item.id);
+    });
+  restrictIDArray = sortIds([...new Set(restrictIDArray)]);
+  restrictID = restrictIDArray.join(",");
+
+  flag_restrictID = true;
+  update_restrictID_GUI();
+
+  if (flag_restrictID) refreshChronogram();
+}
+function update_restrictID_GUI() {
+  if (flag_restrictID) {
+    $("#restrictIDButton").addClass("active");
+  } else {
+    $("#restrictIDButton").removeClass("active");
+  }
+  $("#restrictID").val(restrictID);
+}
+function click_restrictID() {
+  flag_restrictID = !flag_restrictID;
+
+  update_restrictID_GUI();
+
+  refreshChronogram();
+}
+function onRestrictIDChanged() {
+  restrictID = $("#restrictID").val();
+  restrictIDArray = restrictID.split(",");
+
+  //selectBeeByID(restrictID)
+  if (flag_restrictID) refreshChronogram();
+}
+
+// ### EXCLUDE ID, INVALID AND FLOWERS
+var __subsection__chronogram_exclude_id
+
+function click_excludeID() {
+  if ($("#excludeIDButton").hasClass("active")) {
+    $("#excludeIDButton").removeClass("active");
+    //$("#excludeIDButton").addClass("btn-default")
+    //$("#excludeIDButton").removeClass("btn-warning")
+    flag_excludeID = false;
+  } else {
+    $("#excludeIDButton").addClass("active");
+    //$("#excludeIDButton").removeClass("btn-default")
+    //$("#excludeIDButton").addClass("btn-warning")
+    flag_excludeID = true;
+  }
+  refreshChronogram();
+}
+function onExcludeIDChanged() {
+  excludeID = $("#excludeID").val();
+  excludeIDArray = excludeID.split(",");
+
+  refreshChronogram();
+}
+
+function click_hideInvalid() {
+  if ($("#hideInvalidButton").hasClass("active")) {
+    $("#hideInvalidButton").removeClass("active");
+    flag_hideInvalid = false;
+  } else {
+    $("#hideInvalidButton").addClass("active");
+    flag_hideInvalid = true;
+  }
+  refreshChronogram();
+}
+
+function click_hideFlowers() {
+    let button = $("#hideFlowersButton")
+    flag_hideFlowers = !button.hasClass("active");
+    button.toggleClass( "active", flag_hideFlowers )
+    refreshChronogram()
+}
+
+
+// ### AXES MANAGEMENT
+var __section__chronogram_axes_management
+
+
 // ### CHRONO RESIZING
-var __section__chronogram_resizing
+var __subsection__chronogram_axes_resizing
 
 function getChronoItemHeight() {
   //return chronoItemHeight;
@@ -417,7 +546,7 @@ function adjustChronogramHeight(itemHeight) {
 }
 
 // ### CHRONO DOMAINS AND AXES
-var __section__chronogram_domains
+var __subsection__chronogram_axes_domains
 
 
 /* Synchronization between chronogram, video and chronogramData */
@@ -576,6 +705,12 @@ function updateChronoYDomain() {
   //axes.ydomain(['0','1','2','3','10','12']) // Testing
 }
 
+
+
+
+// ### CHRONO MAIN VIEW
+var __section__chronogram_main_view
+
 // ### CHRONO DYNAMIC ELEMENTS (TIMEMARK, SELECTION)
 var __section__chronogram_dynamic_elements
 
@@ -598,164 +733,6 @@ function updateChronoSelection() {
   axes.selectId(id);
 }
 
-// ### RESTRICT ID
-var __section__chronogram_restrict_id
-
-function setRestrictID(ids) {
-  console.log("setRestrictID");
-  restrictID = String(ids);
-  restrictIDArray = restrictID
-    .split(",")
-    .map(function (d) {
-      return d.trim();
-    })
-    .filter(function (d) {
-      return d != "";
-    });
-
-  update_restrictID_GUI();
-
-  if (flag_restrictID) refreshChronogram();
-}
-function restrictIDFromSelection() {
-  console.log("restrictIDFromSelection");
-
-  flag_restrictID = true;
-  setRestrictID(defaultSelectedBee);
-}
-function restrictIDFromWindow() {
-  console.log("restrictIDFromWindow");
-  restrictID = [];
-  let win = getWindow();
-  let f1 = win[0],
-    f2 = win[1];
-  // restrictIDArray = flatTags
-  //   .filter(function (tag) {
-  //     return tag.frame >= f1 && tag.frame <= f2;
-  //   })
-  //   .map(function (tag) {
-  //     return String(tag.id);
-  //   });
-  restrictIDArray = chronogramData
-    .filter(function (item) {
-      return item.x >= f1 && item.x <= f2;
-    })
-    .map(function (item) {
-      return String(item.id);
-    });
-  restrictIDArray = sortIds([...new Set(restrictIDArray)]);
-  restrictID = restrictIDArray.join(",");
-
-  flag_restrictID = true;
-  update_restrictID_GUI();
-
-  if (flag_restrictID) refreshChronogram();
-}
-function update_restrictID_GUI() {
-  if (flag_restrictID) {
-    $("#restrictIDButton").addClass("active");
-  } else {
-    $("#restrictIDButton").removeClass("active");
-  }
-  $("#restrictID").val(restrictID);
-}
-function click_restrictID() {
-  flag_restrictID = !flag_restrictID;
-
-  update_restrictID_GUI();
-
-  refreshChronogram();
-}
-function onRestrictIDChanged() {
-  restrictID = $("#restrictID").val();
-  restrictIDArray = restrictID.split(",");
-
-  //selectBeeByID(restrictID)
-  if (flag_restrictID) refreshChronogram();
-}
-
-// ### EXCLUDE ID, INVALID AND FLOWERS
-var __section__chronogram_exclude_id
-
-function click_excludeID() {
-  if ($("#excludeIDButton").hasClass("active")) {
-    $("#excludeIDButton").removeClass("active");
-    //$("#excludeIDButton").addClass("btn-default")
-    //$("#excludeIDButton").removeClass("btn-warning")
-    flag_excludeID = false;
-  } else {
-    $("#excludeIDButton").addClass("active");
-    //$("#excludeIDButton").removeClass("btn-default")
-    //$("#excludeIDButton").addClass("btn-warning")
-    flag_excludeID = true;
-  }
-  refreshChronogram();
-}
-function onExcludeIDChanged() {
-  excludeID = $("#excludeID").val();
-  excludeIDArray = excludeID.split(",");
-
-  refreshChronogram();
-}
-
-function click_hideInvalid() {
-  if ($("#hideInvalidButton").hasClass("active")) {
-    $("#hideInvalidButton").removeClass("active");
-    flag_hideInvalid = false;
-  } else {
-    $("#hideInvalidButton").addClass("active");
-    flag_hideInvalid = true;
-  }
-  refreshChronogram();
-}
-
-function click_hideFlowers() {
-    let button = $("#hideFlowersButton")
-    flag_hideFlowers = !button.hasClass("active");
-    button.toggleClass( "active", flag_hideFlowers )
-    refreshChronogram()
-}
-
-// ### CHRONO UPDATING
-var __section__chronogram_update
-
-/* Callback to react to change in chronogramData */
-function drawChrono() {
-  // Strong update:
-  // Redraw chronogram after change in chronogramData content
-  // Need to adjust range
-
-  updateChronoYDomain();
-  //axes.ydomain([0,20]) // Uncomment for testing
-
-  updateChrono();
-}
-
-/* Update chronogram content */
-function updateChrono() {
-  // Weak update:
-  // Update chronogram without adjusting range
-
-  // IMPORTANT: do not call axes.refreshAxes() or any
-  // function that triggers is such as axes.here,
-  // as it would generate an infinite loop
-  // Put that is the stronger update function drawChrono
-
-  // Redraw activities
-  updateActivities();
-
-  // Redraw timeline
-  updateTimeMark(); // Normally already updated by frameChanged
-
-  updateTagIntervals();
-
-  updateVideoSpan();
-  updateTrackWindowSpan();
-
-  $('#chronoStatusBar').html(`flatTracks: ${flatTracks.length} items, chronogramData: ${chronogramData.length} items, allIntervals: ${allIntervals.length} items, flatTags: ${flatTags.length} items`)
-}
-
-/* see code for chronogram axes in ChronoAxes.js */
 
 // ### CHRONO TIMESPANS
 var __section__chronogram_timespans
@@ -885,774 +862,134 @@ function getWindow() {
 }
 
 
-// ### CHRONO D3 ACTIVITY INTERVALS
-var __section__chronogram_d3_activities
 
-function onActivityClick(event, d) {
-  console.log("CLICK Activity d=", d);
-  // Prevent default chronogram click to go to the correct frame
-  event.stopPropagation();
 
-  gotoEvent(d.x1, d.id);
-}
-function onObsSpanClick(event, obsspan) {
-  console.log("CLICK ObsSpan obsspan=", obsspan);
-  // Prevent default chronogram click to go to the correct frame
-  event.stopPropagation();
+// ### CHRONO UPDATING
+var __section__chronogram_update
 
-  gotoEvent(obsspan.frame, obsspan.id);
+/* Hard refresh: prepare data then redraw */
+function refreshChronogram() {
+  if (logging.chrono) console.log('refreshChronogram')
+
+  updateChronoData()
+
+  drawChrono();
+
+  renderObsTable();
 }
 
-//black orb rectangles are made here
-function insertActivities(selection) {
-  //console.log('selection=',selection)
-  selection
-    .insert("rect")
-    .attr("class", "activity")
-    .style("stroke-width", "1px")
-    .on("click", onActivityClick)
-    .call(setGeomActivity);
+/* Soft refresh: update ydomain and render */
+function drawChrono() {
+  // Strong update:
+  // Redraw chronogram after change in chronogramData content
+  // Need to adjust range
+
+  if (logging.chrono) console.log("drawChrono");
+
+  updateChronoYDomain();
+  //axes.ydomain([0,20]) // Uncomment for testing
+
+  updateChrono();
 }
 
-//v2 of intervals
-//Unlike the circles coordinates, the rectangles are being created here because if they're added
-//at the updateActivity function, there will be a uncought typeError
-function setGeomActivity(selection) {
-  selection
-    .attr("x", function (d) {
-      return axes.xScale(d.x1);
-    })
-    .attr("y", function (d) {
-      return axes.yScale(d.y); // ordinal
-    })
-    .attr("width", function (d) {
-      return axes.xScale(d.x2 + 1) - axes.xScale(d.x1);
-    })
-    .attr("height", function (d) {
-      return axes.yScale.bandwidth() / 2;
-    })
-    .style("fill", "gray");
-  //.style("stroke", activityColor);
-  //Add text to display annotation info
-  selection.select("rect").selectAll("title").remove();
-  selection
-    .select("rect")
-    .append("title")
-    .text(function (d) {
-      return (
-        "Bee ID: " +
-        d.id +
-        " Start Frame: " +
-        d.x1 +
-        " End Frame: " +
-        (d.x2 + 1) +
-        " Activity: " +
-        d.Activity
-      );
-    });
-}
+/* Render chrono */
+function updateChrono() {
+  // Weak update:
+  // Update chronogram without adjusting range
 
-function initEntering(input) {
-  input
-    .insert("rect")
-    .attr("width", "1px")
-    .attr("class", "entering")
-    .on("click", onActivityClick);
-  // .call(updateEnteringAct)
-}
-//create rectangles for entering exiting activites
-function updateEntering(input) {
-  input
-    .attr("x", function (d) {
-      return axes.xScale(d.x1);
-    })
-    .attr("y", function (d) {
-      return axes.yScale(d.y); // XXX Use y
-    })
-    .attr("width", "4px")
-    .attr("height", function (d) {
-      return axes.yScale.bandwidth() / 2;
-    })
-    .style("fill", "green");
-}
+  // IMPORTANT: do not call axes.refreshAxes() or any
+  // function that triggers is such as axes.here,
+  // as it would generate an infinite loop
+  // Put that is the stronger update function drawChrono
 
-//create exit visuals
-function initLeaving(input) {
-  input
-    .insert("rect")
-    .attr("width", "1px")
-    .attr("class", "leaving")
-    .on("click", onActivityClick);
-}
+  if (logging.chrono) console.log("drawChrono");
 
-function updateLeaving(input) {
-  input
-    .attr("x", function (d) {
-      return axes.xScale(d.x2);
-    })
-    .attr("y", function (d) {
-      return axes.yScale(d.y); // ordinal  // XXX Use y
-    })
-    .attr("width", "4px")
-    .attr("height", function (d) {
-      return axes.yScale.bandwidth() / 2;
-    })
-    .style("fill", "red");
-}
-
-//Create Pollen visuals
-function initPollen(input) {
-  input
-    .insert("rect")
-    .attr("width", "1px")
-    .attr("class", "pollen")
-    .on("click", onActivityClick);
-}
-
-function updatePollen(input) {
-  input
-    .attr("x", function (d) {
-      return axes.xScale(d.x1);
-    })
-    .attr("y", function (d) {
-      return axes.yScale(d.y); // ordinal  // XXX Use y
-    })
-    .attr("width", function (d) {
-      return axes.xScale(d.x2 + 1) - axes.xScale(d.x1);
-    })
-    .attr("height", function (d) {
-      return axes.yScale.bandwidth() / 2;
-    })
-    .style("fill", "yellow");
-}
-
-//Create Fanning visuals
-function initFanning(input) {
-  input
-    .insert("rect")
-    .attr("width", "1px")
-    .attr("class", "fanning")
-    .on("click", onActivityClick);
-}
-
-function updateFanning(input) {
-  input
-    .attr("x", function (d) {
-      return axes.xScale(d.x1);
-    })
-    .attr("y", function (d) {
-      return axes.yScale(d.y) + axes.yScale.bandwidth() / 2;   // XXX Use y
-    })
-    .attr("width", function (d) {
-      return axes.xScale(d.x2 + 1) - axes.xScale(d.x1);
-    })
-    .attr("height", function (d) {
-      return axes.yScale.bandwidth() / 2;
-    })
-    .style("fill", "purple");
-}
-
-// Common color and height channels
-function activityColor(d) {
-  var color = "gray";
-  if (d.Activity == "pollen") color = "#CFCF00";
-  else if (d.Activity == "entering") color = "#FF0000";
-  else if (d.Activity == "leaving") color = "#0000FF";
-  else if (d.Activity == "fanning") color = "#20FF20";
-  return color;
-}
-function activityHeight(d) {
-  var h = 2;
-  if (d.Activity == "entering") h = 4;
-  else if (d.Activity == "leaving") h = 4;
-  else if (d.Activity == "pollen") h = 6;
-  else if (d.Activity == "fanning") h = 6;
-  return h;
-}
-
-//Create item span visuals
-function initObsSpan(selection) {
-  //console.log('selection=',selection)
-  selection
-    .insert("rect")
-    .attr("class", "obsspan")
-    .style("stroke-width", "1px")
-    //.on('click',onObsSpanClick)
-    .call(updateObsSpan);
-}
-
-function updateObsSpan(selection) {
-  selection
-    .attr("x", function (d) {
-      return axes.xScale(d.span.f1);
-    })
-    .attr("y", function (d) {
-      return axes.yScale(d.y); // ordinal   // XXX Use y
-      //axes.yScale(d.id)+axes.yScale.bandwidth()/2; // ordinal
-    })
-    .attr("width", function (d) {
-      return axes.xScale(d.span.f2 + 1) - axes.xScale(d.span.f1);
-    })
-    .attr("height", function (d) {
-      return axes.yScale.bandwidth(); //axes.yScale.bandwidth()/2;
-    })
-    .style("fill", "none")
-    .style("stroke", "red")
-    .style("pointer-events", "all")
-    // Display tooltip message
-    .on("click", onObsSpanClick);
-  /*
-        .on("mouseover", function(obsspan){
-            var d = obsspan.obs;
-            
-            var message = "";
-            message += "BeeID=" + d.ID + " Frame=" + d.frame
-                    + "<br>Time=" + format_HMS(videoControl.frameToTime(d.frame))
-                    + "<br><u>Annotation:</u>"+
-                     "<br>Labels=" + d.labels;
-            if (d.wrongid) {
-                message += '<br>newid='+d.newid
-            }
-            if (d.tag != undefined){
-                message += 
-                    "<br><u>Tag:</u>"+
-                    "<br>Hamming=" + d.tag.hamming + 
-                    "<br>DM=" + d.tag.dm;
-            } else {
-                message += "<br><u>Tag:</u><br><i>None</i>"
-            }
-            
-            var tooltip = d3.select("body").selectAll(".tooltip")
-            tooltip.style("left",d3.event.pageX + "px")
-                   .style("top",d3.event.pageY + "px")
-                   .style("visibility", "visible")
-                   .html(message);
-        })
-        .on("mouseout", function(d){ 
-            var tooltip = d3.select("body").selectAll(".tooltip")
-            tooltip.style("visibility", "hidden");
-          });
-          */
-}
-
-function updateAlertCircle(selection) {
-  selection.exit().remove();
-  selection
-    .enter()
-    .insert("circle")
-    .attr("class", "alertcircle")
-    .style("fill", "none")
-    .style("stroke-width", "2px")
-    //.on('click',onActivityClick)
-    .call(updateObsSpan);
-  selection
-    .attr("cx", function (d) {
-      return axes.xScale(d.frame);
-    })
-    .attr("cy", function (d) {
-      return axes.yScale(d.y) + axes.yScale.bandwidth() / 2; // ordinal  // XXX Use y
-    })
-    .attr("r", 7)
-    .style("stroke", "cyan");
-}
-
-// Render Activities
-// INPUTS: allIntervals, flatTracks
-function updateActivities(onlyScaling) {
   // Redraw activities
-  if (onlyScaling) {
-    // Lightweight update (reuse previous activityRects)
-    let activityRects = svgInterval.selectAll(".activity").data(allIntervals);
-    activityRects.call(setGeomActivity);
-  } else {
-    //createIntervalList(); // Should be done only on update data
+  //updateActivities(); // Legacy
+  renderActivities()
+  updateTagIntervals();
 
-    // Full update
-    let activityRects = svgInterval.selectAll(".activity").data(allIntervals);
+  // Redraw dynamic markers
+  updateTimeMark(); // Normally already updated by frameChanged
+  updateVideoSpan();
+  updateTrackWindowSpan();
 
-    activityRects.call(setGeomActivity);
-    activityRects.enter().call(insertActivities);
-    activityRects.exit().remove();
-
-    if (flag_showIndividualEvents) {
-      let spanRects = svgSpanRects.selectAll(".obsspan").data(flatTracks);
-      spanRects.enter().call(initObsSpan);
-      spanRects.exit().remove();
-      spanRects.call(updateObsSpan);
-
-      let alertCircle = svgTop
-        .selectAll(".alertcircle")
-        .data(flatTracks.filter((d) => !!d.isredundant));
-      alertCircle.call(updateAlertCircle);
-    } else {
-      let spanRects = svgSpanRects.selectAll(".obsspan").data([]);
-      spanRects.exit().remove();
-
-      let alertCircle = svgTop.selectAll(".alertcircle").data([]);
-      alertCircle.call(updateAlertCircle);
-    }
-
-    //Object for pollen visuals
-    let insertPollen = svgTop.selectAll(".pollen").data(
-      allIntervals.filter(function (d) {
-        return d.Activity == "pollen";
-      })
-    );
-
-    insertPollen.enter().call(initPollen);
-    insertPollen.exit().remove();
-    insertPollen.call(updatePollen);
-
-    //Object for fanning visuals
-    let insertFanning = svgTop.selectAll(".fanning").data(
-      allIntervals.filter(function (d) {
-        return d.Activity == "fanning";
-      })
-    );
-
-    insertFanning.enter().call(initFanning);
-    insertFanning.exit().remove();
-    insertFanning.call(updateFanning);
-
-    //Object to create enter visuals
-    let insertEnter = svgTop.selectAll(".entering").data(
-      allIntervals.filter(function (d) {
-        return d.Activity == "entering";
-      })
-    );
-
-    insertEnter.enter().call(initEntering);
-    insertEnter.exit().remove();
-    insertEnter.call(updateEntering);
-
-    //Object for exit visuals
-    let insertLeaving = svgTop.selectAll(".leaving").data(
-      allIntervals.filter(function (d) {
-        return d.Activity == "leaving";
-      })
-    );
-
-    insertLeaving.enter().call(initLeaving);
-    insertLeaving.exit().remove();
-    insertLeaving.call(updateLeaving);
-  }
-
-  var chart = svgTop;
-
-  //Circles for solo bee iD
-  let circles = chart.selectAll("circle.obs").data(allIntervals);
-
-  d3.select("body").selectAll(".tooltip").remove();
-
-  var tooltip = d3
-    .select("body")
-    .append("div")
-    .style("z-index", "10")
-    .style("visibility", "hidden")
-    .style("opacity", "1")
-    .attr("class", "tooltip");
-
-  circles
-    .enter()
-    .append("circle")
-    .attr("class", "obs")
-    .on("click", onActivityClick)
-    .append("title"); //Add circle chronoGroup
-  circles.exit().remove();
-  //Update circles
-  circles
-    .attr("cx", function (d) {
-      return axes.xScale(Number(d.x1));
-    })
-    .attr("cy", function (d) {
-      return axes.yScale(d.y) + axes.yScale.bandwidth() / 2;  // XXX Use y
-    })
-    .attr("r", 5) //change radius
-    .style("stroke", function (d) {
-      var color = "black";
-      if (d.pollen) {
-        color = "ffbb00";
-      }
-      return color;
-    })
-    .style("stroke-width", function (d) {
-      var width = 1;
-      if (d.pollen) {
-        width = 3;
-      }
-      return width;
-    })
-
-    circles.style("fill", function (d) {
-          var color = "black";
-          if (d.Activity == "fanning") color = "#99CCFF";
-          else if (d.Activity == "pollen") color = "#FFFF00";
-          else if (d.Activity == "entering") color = "#FFC0C0";
-          else if (d.Activity == "leaving") color = "#C0FFC0";
-          return color;
-      })
-    // Display tooltip message
-    circles
-    .on("mouseover", function (event, d) {
-      var message = "";
-      message +=
-        "BeeID=" +
-        d.id +  // xxx Use id
-        " Frame=" +
-        d.x1 +
-        "<br>Time=" +
-        format_HMS(videoControl.frameToTime(d.x1)) +
-        "<br><u>Annotation:</u>" +
-        "<br>Labels=" +
-        d.labels;
-      if (d.wrongid) {
-        message += "<br>newid=" + d.newid;
-      }
-      if (d.tag != undefined) {
-        message +=
-          "<br><u>Tag:</u>" +
-          "<br>Hamming=" +
-          d.tag.hamming +
-          "<br>DM=" +
-          d.tag.dm;
-      } else {
-        message += "<br><u>Tag:</u><br><i>None</i>";
-      }
-      tooltip
-        .style("left", event.pageX + "px")
-        .style("top", event.pageY + "px")
-        .style("visibility", "visible")
-        .html(message);
-    })
-    .on("mouseout", function (event, d) {
-      tooltip.style("visibility", "hidden");
-    });
-
-  var lineFunction = d3.line()
-    .x(function (d) {
-      return d.x;
-    })
-    .y(function (d) {
-      return d.y; // XXX Use y
-    })
-    .curve(d3.curveLinear);
-
-  function crossFunction(x, y, r) {
-    x = Number(x);
-    y = Number(y);
-    if (!r) {
-      r = 10;
-    }
-
-    return (
-      "M" +
-      (x - r) +
-      "," +
-      (y - r) +
-      "L" +
-      (x + r) +
-      "," +
-      (y + r) +
-      "M" +
-      (x + r) +
-      "," +
-      (y - r) +
-      "L" +
-      (x - r) +
-      "," +
-      (y + r)
-    );
-  }
-
-  //Append line to chronogram
-  let path = chart.selectAll(".crossLeft").data(crosses);
-  //filter for labels, split it refreshChronogram so no need
-
-  path.enter().append("path").attr("class", "crossLeft");
-  // Caution: check CSS property pointer-events:
-  // crossLeft does not receive mouse events
-
-  path
-    .attr("d", function (d) {
-      var X = axes.xScale(Number(d.x1)),
-        Y = axes.yScale(d.y) + axes.yScale.bandwidth() / 2;  // XXX Use y
-      //if((d.labels == "wrongid") && (d.newid != null))
-      //    return crossFunction(X,Y,5);
-      return crossFunction(X, Y, 5);
-    })
-    .attr("stroke", function (d) {
-      var color = "black";
-      if (d.labels == "falsealarm") color = "red";
-      else if (d.labels == "wrongid") color = "#009fff";
-      return color;
-    })
-    .attr("stroke-width", function (d) {
-      var width = 3;
-      if (d.labels == "wrongid" && d.newid != null) width = 1.5;
-      return width;
-    })
-    .attr("fill", "none");
-  path.exit().remove();
-
-  function squareFunction(x, y) {
-    x = Number(x);
-    y = Number(y);
-
-    return (
-      "M" +
-      (x - 10) +
-      "," +
-      (y - 10) +
-      "L" +
-      (x + 10) +
-      "," +
-      (y + 10) +
-      "M" +
-      (x + 10) +
-      "," +
-      (y - 10) +
-      "L" +
-      (x - 10) +
-      "," +
-      (y + 10)
-    );
-  }
-
-  if (flag_showPartsOnChrono) {
-    //Append line to chronogram
-    let parts = chart.selectAll(".partsAvailable").data(partsIntervals);
-    //filter for labels, split it refreshChronogram so no need
-    parts.enter().append("rect").attr("class", "partsAvailable");
-    // Caution: check CSS property pointer-events:
-    // partsAvailable does not receive mouse events
-
-    parts
-      .attr("x", function (d) {
-        return axes.xScale(Number(d.x1)) - axes.yScale.bandwidth() / 2;
-      })
-      .attr("y", function (d) {
-        return axes.yScale(d.y);  // XXX Use y
-      })
-      .attr("width", axes.yScale.bandwidth())
-      .attr("height", axes.yScale.bandwidth())
-      .attr("stroke", function (d) {
-        var color = "black";
-        return color;
-      })
-      .attr("stroke-width", 1)
-      .attr("fill", "none");
-    parts.exit().remove();
-  } else {
-    chart.selectAll(".partsAvailable").remove();
-  }
-
-  if (chrono.config.showDanglingTracks) {
-    renderDangling(onlyScaling)
-  }
-}
-function renderDangling(onlyScaling) {
-  const chart = svgTop;
-
-  if (!chrono.config.showDanglingTracks) { 
-    chart.selectAll(".dangling_start").remove()
-    chart.selectAll(".dangling_end").remove()
-    return;
-  }
-
-  //let dangling_start = chart.selectAll(".dangling_start").data(allIntervals.filter(d=>d.startInsideROI))
-  //let dangling_end = chart.selectAll(".dangling_start").data(allIntervals.filter(d=>d.endInsideROI))
-  let dangling_start = chart.selectAll(".dangling_start").data(allIntervals)
-  let dangling_end = chart.selectAll(".dangling_end").data(allIntervals)
-
-  dangling_start
-    .join('circle')
-      .attr("class", "dangling_start")
-      .attr("cx", d => axes.xScale(Number(d.x1)) )
-      .attr("cy", d => axes.yScale(d.y) + axes.yScale.bandwidth() / 2)  // XXX Use y
-      .attr("r", d=>d.startInsideROI?axes.yScale.bandwidth()/4:axes.yScale.bandwidth()/8)
-      .style("fill", d=>d.startInsideROI?"red":"green")
-  
-  dangling_end
-    .join('circle')
-      .attr("class", "dangling_end")
-      .attr("cx", d => axes.xScale(Number(d.x2)+1) )
-      .attr("cy", d => axes.yScale(d.y) + axes.yScale.bandwidth() / 2)  // XXX Use y
-      .attr("r", d=>d.endInsideROI?axes.yScale.bandwidth()/4:axes.yScale.bandwidth()/8)
-      .style("fill", d=>d.endInsideROI?"red":"green")
+  $('#chronoStatusBar').html(`flatTracks: ${flatTracks.length} items, chronogramData: ${chronogramData.length} items, allIntervals: ${allIntervals.length} items, flatTags: ${flatTags.length} items`)
 }
 
-function format_HMS(date, format) {
-  function pad(n) {
-    return ("0" + n).substr(-2);
-  }
 
-  var time = [date.getHours(), date.getMinutes(), date.getSeconds()]
-    .map(pad)
-    .join(":");
-
-  if (format === "HMS.") {
-    time += "." + date.getMilliseconds();
-  }
-
-  return time;
-}
-
-function initActivities() {
-  //chronogramData = []
-  chronogramData.length = 0;
-  updateActivities();
-}
-
-// ### CHRONO D3 TAGS
-var __section__chronogram_d3_tags
-
-
-function onTagClick(event, tagInterval) {
-  console.log("CLICK Tag tagInterval=", tagInterval);
-  // Prevent default chronogram click to go to the correct frame
-  event.stopPropagation();
-
-  gotoEvent(Number(tagInterval.begin), tagInterval.id);
-}
-
-function insertTag(selection) {
-  selection
-    .insert("rect")
-    .style("fill", "blue")
-    .style("fill-opacity", "0.2")
-    .style("stroke", "blue")
-    .style("stroke-width", "1px")
-    //.attr("r",5)
-    .attr("class", "tag")
-    .on("click", onTagClick)
-    .call(setTagGeom);
-}
-function setTagGeom(selection) {
-  // Tag interval
-  let H = axes.yScale.bandwidth();
-  function tagHeight(d) {
-    if (d.hammingavg > 2) return H / 4;
-    else return (H * (4 - d.hammingavg)) / 4;
-  }
-  selection
-    .attr("x", function (d) {
-      //return xScale(Number(d.frame) - 0.5);
-      return axes.xScale(Number(d.begin));
-    })
-    .attr("y", function (d) {
-      return axes.yScale(d.y) + H - tagHeight(d);  // XXX Use y  // tagIntervals?
-    })
-    .attr("width", function (d) {
-      return axes.xScale(Number(d.end) + 1) - axes.xScale(Number(d.begin));
-    })
-    .attr("height", function (d) {
-      return tagHeight(d); // Ordinal scale
-    })
-    .style("fill", function (interval) {
-      if (interval.virtual) return "white";
-      if (interval.labeling.entering) {
-        //console.log('setTagGeom: found entering, d=',d)
-        return "#ff00c0";
-      } else if (interval.labeling.leaving) {
-        //console.log('setTagGeom: found entering, d=',d)
-        return "#00ef00";
-      } else {
-        return "blue";
-      }
-    })
-    .style("stroke", function (interval) {
-      if (interval.labeling.entering) return "#ff00c0";
-      else if (interval.labeling.leaving) return "#00e000";
-      else return "blue";
-    })
-    .style("fill-opacity", function (interval) {
-      if (interval.virtual) return "0.1";
-      else return "0.2";
-    });
-  if (true) {
-    d3.select("body").selectAll(".tooltip2").remove();
-
-    var tooltip2 = d3
-      .select("body")
-      .append("div")
-      .style("z-index", "10")
-      .style("visibility", "hidden")
-      .style("opacity", "1")
-      .attr("class", "tooltip2");
-
-    selection
-      .style("z-index", "1000")
-      .style("pointer-events", "all")
-      //.on("wheel", function(){console.log('got wheeled')})
-      .on("mouseover", function (event, taginterval) {
-        //console.log('mouseover: ',taginterval)
-        var message = "";
-        if (taginterval) {
-          message +=
-            "BeeID=" +
-            taginterval.id +
-            " Frame=" +
-            taginterval.begin +
-            "<br>Time=" +
-            format_HMS(videoControl.frameToTime(taginterval.begin)) +
-            "<br><u>Tag:</u>" +
-            "<br>HammingAvg=" +
-            taginterval.hammingavg +
-            "<br>DM=" +
-            taginterval.dmavg;
-        } else {
-          message += "<u>Tag:</u><br><i>None</i>";
-        }
-        tooltip2
-          .style("left", event.pageX + "px")
-          .style("top", event.pageY + "px")
-          .style("visibility", "visible")
-          .html(message);
-        //             // Highlight source tag for wrongid annotations
-        //             if (taginterval && typeof taginterval.oldid != 'undefined') {
-        //                 message += '<br>virtualtag: oldid='+taginterval.oldid
-        //                     selection
-        //                     .filter(d=>(d.id==taginterval.oldid) && (d.begin==taginterval.begin))
-        //                     .style("fill","green")
-        //                     .style("stroke","green")
-        //             }
-      })
-      .on("mouseout", function (event, taginterval) {
-        tooltip2.style("visibility", "hidden");
-        //             setTagGeom(selection
-        //                     .filter(d=>(d.id==taginterval.oldid) && (d.begin==taginterval.begin))
-        //             )
-      });
-  }
-  //.attr("hidden", function(d) {return (typeof axes.yScale(d.id));})
-}
-function renderTagIntervals(onlyScaling) {
-  // Redraw tag intervals
-  if (onlyScaling) {
-    setTagGeom(tagSel);
-  } else {
-    tagSel = svgTag.selectAll(".tag").data(tagIntervals);
-    tagSel.enter().call(insertTag);
-    tagSel.exit().remove();
-    tagSel.call(setTagGeom);
-  }
-}
-function initTagIntervals() {
-  //tagsData = []
-  tagIntervals = [];
-  renderTagIntervals();
-}
 
 // ### CHRONO DATA PREPARATION TRACKS
 var __section__chronogram_data_preparation_tracks
 
-// Summary
+// Top-level
+// updateChronoData   : top-level, do all updates
+// Calling:
 // augmentTrackWithTag: Tracks, Tags    => mutated Tracks
 // updateFlatTracks   : Tracks          => flatTracks and its variants
 // createIntervalList : chronogramData  => allIntervals
 // getFlatTags        : Tags            => flatTags    (used in refreshChronogram)
 // getTTags           : flatTags        => ttags       (used in refreshChronogram)
 // updateTagIntervals : ttags           => tagIntervals, allTagsID
+
+/* Top-level update all chrono data. Do not render */
+function updateChronoData() {
+
+  console.log('updateChronoData')
+
+  const start = performance.now();
+  //console.time('refreshChronogram');
+  $('#chronoStatusBar').html('Preparing chrono data...')
+
+  // PREPARE TRACKS DATA
+  
+  augmentTrackWithTag()
+  
+  chronogramData.length = 0;
+  if (showObsChrono) {
+    // Tracks => chronogramData
+    // chronogramData[flatk].x, .y, .Activity, .labels, .pollen, .tag, .obs
+    updateChronogramData()
+
+    // chronogramData => allIntervals, crosses, rectIntervals, ...
+    createIntervalList()
+  }
+
+  // Tracks => flatTracks...
+  updateFlatTracks();
+
+  // PREPARE TAGS DATA
+
+  flatTags = getFlatTags(false); // noFilter
+
+  ttags = getTTags(); // reverse index ttags[id][frame]
+
+  allTagsID = [...allTagsID];
+
+  if (logging.chrono)
+    console.log("updateChronoData: convert tags to intervals...");
+  
+  tagIntervals = [];
+  if (showTagsChrono) {
+    updateTagIntervals()
+  }
+
+  // Augment tags with tracks labels
+  // Also generate virtual tag intervals for wrongid annotations
+  updateTagsLabels();
+
+  // Filter tagIntervals
+  if (flag_hideInvalid) {
+    tagIntervals = tagIntervals.filter(
+      (interval) => !(interval.labeling.falsealarm || interval.labeling.wrongid)
+    );
+  }
+
+  //console.timeEnd('refreshChronogram');
+  const end = performance.now();
+
+  $('chronoStatusBar').html(`Chrono updateChronoData took ${end - start} ms`)
+}
 
 /* Augment Tracks with tag id if same (frame,id) exist for both */
 function augmentTrackWithTag() {
@@ -1831,8 +1168,8 @@ function updateChronogramData() {
     }
 }
 
-
-// chronogramData => allIntervals
+// chronogramData => allIntervals  
+// // New version is simplified: has only one interval by sequential track. not separated by activity type
 function createIntervalList() {
   //initiliaze allIntervals to update data
   let tempCoordinates = {};
@@ -1850,72 +1187,87 @@ function createIntervalList() {
   //initiliaze allIntervals to update data
   allIntervals = [];
   acts = ["", "pollen", "entering", "leaving", "fanning"];
-  for (var a of acts) {
-    for (var id in tempCoordinates) {
-      let xValues = [];
+  for (var id in tempCoordinates) {
+    let xValues = [];
 
-      let iArray = tempCoordinates[id];
+    let iArray = tempCoordinates[id];
 
-      iArray = iArray.filter(function (i) {
-        return chronogramData[i].Activity == a;
-      });
+    // iArray = iArray.filter(function (i) {
+    //   return chronogramData[i].Activity == a;
+    // });
 
-      if (iArray.length == 0) {
-        continue;
+    if (iArray.length == 0) {
+      continue;
+    }
+
+    let passThroughROI=false
+    for (let j = 0; j < iArray.length; j++) {
+      xValues[j] = Number(chronogramData[iArray[j]].x);
+    }
+
+    let iData = chronogramData[iArray[0]];
+    let tempInterval = {
+      x1: xValues[0],
+      x2: xValues[0],
+      y: iData.y,  // XXX Reuse y
+      id: id,
+      Activity: "",
+      labels: iData.labels,
+      haslabel: {},
+      pollen: iData.pollen,
+      tag: iData.tag,
+      obs: iData.obs,
+      passThroughROI: iData.inROI,
+      startInsideROI: iData.inROI,
+      endInsideROI: iData.inROI
+    };
+    if (iData.labels != "")
+      for (let label of iData.labels.split(",")) {
+        tempInterval.haslabel[label] = true
       }
 
-      let passThroughROI=false
-      for (let j = 0; j < iArray.length; j++) {
-        xValues[j] = Number(chronogramData[iArray[j]].x);
-      }
+    // let tempInterval = { x1: xValues[0], x2: xValues[0], y: y,
+    //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
 
-      let iData = chronogramData[iArray[0]];
-      let tempInterval = {
-        x1: xValues[0],
-        x2: xValues[0],
-        y: iData.y,  // XXX Reuse y
-        id: id,
-        Activity: iData.Activity,
-        labels: iData.labels,
-        pollen: iData.pollen,
-        tag: iData.tag,
-        obs: iData.obs,
-        passThroughROI: iData.inROI,
-        startInsideROI: iData.inROI,
-        endInsideROI: iData.inROI
-      };
-
-      // let tempInterval = { x1: xValues[0], x2: xValues[0], y: y,
-      //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
-
-      for (var i = 1; i < xValues.length; i++) {
-        let iData = chronogramData[iArray[i]];
-        // console.log("Act temp interval IN: ", tempInterval[i].Activity);
-        if (xValues[i] - xValues[i - 1] == 1) {
-          tempInterval.x2 = xValues[i]; //Extend the existing interval
-          tempInterval.pollen |= iData.pollen;
-          tempInterval.passThroughROI |= iData.inROI
-          tempInterval.endInsideROI = iData.inROI
-        } else {
-          allIntervals.push(tempInterval);
-          tempInterval = {
-            x1: xValues[i],
-            x2: xValues[i],
-            y: iData.y,  // XXX Reuse y
-            id: id,
-            Activity: iData.Activity,
-            labels: iData.labels,
-            pollen: iData.pollen,
-            tag: iData.tag,
-            obs: iData.obs,
-            passThroughROI: iData.inROI,
-            startInsideROI: iData.inROI,
-            endInsideROI: iData.inROI
-          }; // New interval
+    for (var i = 1; i < xValues.length; i++) {
+      let iData = chronogramData[iArray[i]];
+      // console.log("Act temp interval IN: ", tempInterval[i].Activity);
+      if (xValues[i] - xValues[i - 1] == 1) {
+        tempInterval.x2 = xValues[i]; //Extend the existing interval
+        tempInterval.pollen |= iData.pollen;
+        tempInterval.passThroughROI |= iData.inROI
+        tempInterval.endInsideROI = iData.inROI
+        
+        if (iData.labels != "")
+          for (let label of iData.labels.split(",")) {
+            tempInterval.haslabel[label] = true
+        }
+      } else {
+        allIntervals.push(tempInterval);
+        tempInterval = {
+          x1: xValues[i],
+          x2: xValues[i],
+          y: iData.y,  // XXX Reuse y
+          id: id,
+          Activity: iData.Activity,
+          labels: iData.labels,
+          haslabel: {},
+          pollen: iData.pollen,
+          tag: iData.tag,
+          obs: iData.obs,
+          passThroughROI: iData.inROI,
+          startInsideROI: iData.inROI,
+          endInsideROI: iData.inROI
+        }; // New interval
+        
+        if (iData.labels != "")
+          for (let label of iData.labels.split(",")) {
+            tempInterval.haslabel[label] = true
         }
       }
-      allIntervals.push(tempInterval);
     }
+    tempInterval.labels = Object.keys(tempInterval.haslabel).join(',')
+    allIntervals.push(tempInterval);
   }
 
   // Filter out
@@ -1948,6 +1300,7 @@ function createIntervalList() {
     return hasParts(d.obs);
   });
 }
+
 
 
 
@@ -2187,72 +1540,147 @@ function updateTagsLabels() {
 }
 
 
-function refreshChronogram() {
-  //check if id and frame are in tag object
 
-  console.log('refreshChronogram')
 
-  const start = performance.now();
-  //console.time('refreshChronogram');
-  $('#chronoStatusBar').html('Refreshing chronogram...')
 
-  // PREPARE TRACKS DATA
-  
-  augmentTrackWithTag()
-  
-  chronogramData.length = 0;
-  if (showObsChrono) {
-    // Tracks => chronogramData
-    // chronogramData[flatk].x, .y, .Activity, .labels, .pollen, .tag, .obs
-    updateChronogramData()
+// ### CHRONO D3 ACTIVITY INTERVALS
+var __section__chronogram_d3_render_activities
 
-    // chronogramData => allIntervals, crosses, rectIntervals, ...
-    createIntervalList()
+function renderActivities(onlyScaling) {
+  if (chrono.config.legacyActivities) {
+    updateActivities(onlyScaling) // legacy
+  } else {
+    chronoIntervals.render(onlyScaling)
+    chronoIntervals.renderEnterLeavePollen()
+
+    renderChrono_danglingTracks(onlyScaling)
+
+    chronoIntervals.renderSelection()
+  }
+}
+
+class ChronoIntervals {
+  constructor() {
+    //this.intervalRects = d3.selectAll(".nothing");
+
+    this.intervalClicked = this.intervalClicked.bind(this)
+  }
+  render(onlyScaling) {
+    const that = this
+    const intervalRects = svgInterval.selectAll(".interval")
+      .data(allIntervals)
+      .join(
+        (enter) => enter.append('rect')
+              .attr("class", "interval")
+              .on("click", that.intervalClicked) // bound to chronointervals
+              .on('mouseover', that.intervalMouseOver)
+              .on('mouseout', that.intervalMouseOut)
+              //.call( sel => sel.append('title') ) // Insert title child without breaking the chain
+      )
+      .attr("x", d => axes.xScale(d.x1) )
+      .attr("y", d => axes.yScale(d.y) )
+      .attr("width", d => axes.xScale(d.x2 + 1) - axes.xScale(d.x1) )
+      .attr("height", d => axes.yScale.bandwidth()*0.5 )
+      //.style("fill", "gray")  // Use CSS
+      // .call( sel => sel.select('title')
+      //     .text( d => `ID: ${d.id}, Frames: ${d.x1}-${d.x2}, Labels: ${d.labels}` )
+      // ) // Update title child without breaking the chain
+  }
+  renderSelection() {
+    const intervalRects = svgInterval.selectAll(".interval")
+       .classed("selected", d => d.id == defaultSelectedBee)
+  }
+  renderEnterLeavePollen() {
+    const intervalRects = svgInterval.selectAll(".interval")
+       .classed("entering", d => d.haslabel['entering'])
+       .classed("leaving", d => d.haslabel['leaving'])
+       .classed("pollen", d => d.haslabel['pollen'])
+       .classed("fanning", d => d.haslabel['fanning'])
+  }
+  intervalClicked(event, d) {
+    console.log("CLICK interval d=", d);
+    // Prevent default chronogram click to go to the correct frame
+    event.stopPropagation();
+
+    //gotoEvent(d.x1, d.id); // Legacy: jump to start of interval
+    let frame = axes.getFrameFromEvent(event)
+    gotoEvent(frame, d.id)
+
+    this.renderSelection() // function need to be bound correctly
+  }
+      
+  intervalMouseOver(event, d) {
+      let message = `ID=${d.id}
+        <br>Frames=${d.x1}-${d.x2} +
+        <br>Time=${format_HMS(videoControl.frameToTime(d.x1))}
+        <br><u>Annotation:</u>
+        <br>Labels=${d.labels}`.trim();
+
+      // if (d.wrongid) {
+      //   message += `\n<br>newid=${d.newid}`;
+      // }
+      // if (d.tag != undefined) {
+      //   message +=
+      //     "<br><u>Tag:</u>" +
+      //     "<br>Hamming=" +
+      //     d.tag.hamming +
+      //     "<br>DM=" +
+      //     d.tag.dm;
+      // } else {
+      //   message += "<br><u>Tag:</u><br><i>None</i>";
+      // }
+      chrono.tooltip
+        .style("left", event.pageX+20 + "px")
+        .style("top", event.pageY+20 + "px")
+        .style("visibility", "visible")
+        .html(message);
+    }
+    intervalMouseOut(event, d) {
+      chrono.tooltip.style("visibility", "hidden");
+    }
+}
+chronoIntervals = new ChronoIntervals()
+
+
+function renderChrono_danglingTracks(onlyScaling) {
+  const chart = svgTop;
+
+  if (!chrono.config.showDanglingTracks) { 
+    chart.selectAll(".dangling_start").remove()
+    chart.selectAll(".dangling_end").remove()
+    return;
   }
 
-  // Tracks => flatTracks...
-  updateFlatTracks();
+  if (chrono.config.hide_non_dangling == null) chrono.config.hide_non_dangling = true
 
-  // PREPARE TAGS DATA
+  const danglingStartIntervals = chrono.config.hide_non_dangling? allIntervals.filter(d=>d.startInsideROI) : allIntervals
+  const danglingEndIntervals = chrono.config.hide_non_dangling? allIntervals.filter(d=>d.endInsideROI) : allIntervals
 
-  flatTags = getFlatTags(false); // noFilter
-
-  ttags = getTTags(); // reverse index ttags[id][frame]
-
-  allTagsID = [...allTagsID];
-
-  if (logging.chrono)
-    console.log("refreshChronogram: convert tags to intervals...");
+  const dangling_start = chart.selectAll(".dangling_start")
+    .data(danglingStartIntervals)
+    .join('rect')
+      .attr("class", "dangling_start")
+      .attr("x", d => axes.xScale(Number(d.x1)-0.5) )
+      .attr("width", d => axes.xScale(Number(d.x1))-axes.xScale(Number(d.x1)-0.5) )
+      .attr("y", d => axes.yScale(d.y))
+      .attr('height', axes.yScale.bandwidth()*0.5)
+      //.attr("r", d=>d.startInsideROI?axes.yScale.bandwidth()/4:axes.yScale.bandwidth()/8)
+      .style("fill", d=>d.startInsideROI?"red":"green")
+      .style("stroke", d=>d.startInsideROI?"red":"green")
+      .style("stroke-width", 2)
   
-  tagIntervals = [];
-  if (showTagsChrono) {
-    updateTagIntervals()
-  }
-
-  // Augment tags with tracks labels
-  // Also generate virtual tag intervals for wrongid annotations
-  updateTagsLabels();
-
-  // Filter tagIntervals
-  if (flag_hideInvalid) {
-    tagIntervals = tagIntervals.filter(
-      (interval) => !(interval.labeling.falsealarm || interval.labeling.wrongid)
-    );
-  }
-
-  //console.timeEnd('refreshChronogram');
-  const end = performance.now();
-
-  $('chronoStatusBar').html(`Chrono refresh took ${end - start} ms`)
-
-  // REDRAW
-
-  if (logging.chrono) console.log("refreshChronogram: drawChrono()...");
-  
-  //console.time('drawChrono');
-  drawChrono();
-  renderObsTable();
-  //console.timeEnd('drawChrono');
+  const dangling_end = chart.selectAll(".dangling_end")
+    .data(danglingEndIntervals)
+    .join('rect')
+      .attr("class", "dangling_end")
+      .attr("x", d => axes.xScale(Number(d.x2)+1) )
+      .attr("width", d => axes.xScale(Number(d.x2)+1.5)-axes.xScale(Number(d.x2)+1) )
+      .attr("y", d => axes.yScale(d.y))
+      .attr('height', axes.yScale.bandwidth()*0.5)
+      //.attr("r", d=>d.endInsideROI?axes.yScale.bandwidth()/4:axes.yScale.bandwidth()/8)
+      .style("fill", d=>d.endInsideROI?"red":"green")
+      .style("stroke", d=>d.endInsideROI?"red":"green")
+      .style("stroke-width", 2)
 }
 
 
@@ -2328,8 +1756,52 @@ function renderObsTable() {
   }
 }
 
-// ### CHRONO EXTRA FUNCTION, NOT USED
-var __section__chronogram_extra_functions
+// ### CHRONO EXTRA FUNCTION
+var __section__chronogram_utils
+
+
+
+function format_HMS(date, format) {
+  function pad(n) {
+    return ("0" + n).substr(-2);
+  }
+
+  var time = [date.getHours(), date.getMinutes(), date.getSeconds()]
+    .map(pad)
+    .join(":");
+
+  if (format === "HMS.") {
+    time += "." + date.getMilliseconds();
+  }
+
+  return time;
+}
+
+// Util function for flashing a button to attrach user's attention
+function flash(elements) {
+    $(elements).toggleClass("focus",true)
+    var repeat = 0
+    var interval = setInterval(function() {if (repeat>4) {$(elements).toggleClass("focus",false); clearInterval(interval); return;}
+                                           repeat+=1;
+    $(elements).toggleClass("focus")
+  }, 100)
+};
+
+
+
+function debouncer(func, timeout) {
+  var timeoutID,
+    timeout = timeout || 100;
+  return function () {
+    var scope = this,
+      args = arguments;
+    clearTimeout(timeoutID);
+    timeoutID = setTimeout(function () {
+      func.apply(scope, Array.prototype.slice.call(args));
+    }, timeout);
+  };
+}
+
 
 function interpolateTags(maxgap) {
   tagIntervals = [];
