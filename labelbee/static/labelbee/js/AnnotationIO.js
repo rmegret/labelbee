@@ -1610,7 +1610,8 @@ function tracks_csv_to_json(data, info) {
 function loadTracksCSVFromServer(url) {
   console.log("loadTracksDataFrameFromServer: importing Tracks in CSV format from URL '" + url + "'...");
 
-  d3.csv(url, function (data) {
+  d3.csv(url)
+  .then(function (data) {
       console.log("loadTracksDataFrameFromServer: SUCCESS\ncsv=", data);
 
       //tracks_csv = data

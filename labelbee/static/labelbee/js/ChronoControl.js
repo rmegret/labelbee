@@ -1446,7 +1446,9 @@ function updateActivities(onlyScaling) {
     chart.selectAll(".partsAvailable").remove();
   }
 
-  //renderDangling(onlyScaling)
+  if (chrono.config.showDanglingTracks) {
+    renderDangling(onlyScaling)
+  }
 }
 function renderDangling(onlyScaling) {
   const chart = svgTop;
@@ -1457,24 +1459,26 @@ function renderDangling(onlyScaling) {
     return;
   }
 
-  let dangling_start = chart.selectAll(".dangling_start").data(allIntervals.filter(d=>d.startInsideROI))
-  let dangling_end = chart.selectAll(".dangling_start").data(allIntervals.filter(d=>d.endInsideROI))
+  //let dangling_start = chart.selectAll(".dangling_start").data(allIntervals.filter(d=>d.startInsideROI))
+  //let dangling_end = chart.selectAll(".dangling_start").data(allIntervals.filter(d=>d.endInsideROI))
+  let dangling_start = chart.selectAll(".dangling_start").data(allIntervals)
+  let dangling_end = chart.selectAll(".dangling_end").data(allIntervals)
 
   dangling_start
     .join('circle')
       .attr("class", "dangling_start")
       .attr("cx", d => axes.xScale(Number(d.x1)) )
       .attr("cy", d => axes.yScale(d.y) + axes.yScale.bandwidth() / 2)  // XXX Use y
-      .attr("r", axes.yScale.bandwidth()/2)
-      .style("fill", "red")
+      .attr("r", d=>d.startInsideROI?axes.yScale.bandwidth()/4:axes.yScale.bandwidth()/8)
+      .style("fill", d=>d.startInsideROI?"red":"green")
   
   dangling_end
     .join('circle')
       .attr("class", "dangling_end")
       .attr("cx", d => axes.xScale(Number(d.x2)+1) )
       .attr("cy", d => axes.yScale(d.y) + axes.yScale.bandwidth() / 2)  // XXX Use y
-      .attr("r", axes.yScale.bandwidth()/2)
-      .style("fill", "red")
+      .attr("r", d=>d.endInsideROI?axes.yScale.bandwidth()/4:axes.yScale.bandwidth()/8)
+      .style("fill", d=>d.endInsideROI?"red":"green")
 }
 
 function format_HMS(date, format) {
@@ -1747,7 +1751,11 @@ function updateChronogramData() {
             if (String(id).startsWith('F')) continue;
         }
         let inROI = true
-        //if (flag_useROI) {
+
+        obs.cx = obs.x + obs.width/2
+        obs.cy = obs.y + obs.height/2
+
+        //if (flag_useROI) {  // TODO; Check x vs cx
             inROI = (obs.cx >= ROI.left &&
               obs.cx <= ROI.right &&
               obs.cy >= ROI.top &&
