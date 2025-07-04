@@ -1763,12 +1763,12 @@ function tracks_tagged_csv_to_json(data, info) {
     const w = 300
     const h = 600
 
-    if ((src["track_tagid"] == null) && (src["track_tagid"] == '')) {
+    if ((src["track_tagid"] == null) || (src["track_tagid"] == '')) {
       item["id"] = 'T'+src["track_id"];
     } else {
       item["id"] = String(+src["track_tagid"]);
     }
-    if ((src["tag_id"] != null) || (src["tag_id"] != '')) {
+    if ((src["tag_id"] != null) && (src["tag_id"] != '')) {
       const tag = {
         id: +src["tag_id"],
         frame: +src['frame'],
