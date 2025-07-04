@@ -2,6 +2,8 @@
 
 // ## Video + canvas
 
+var tagMode = 'Tracks'
+
 function OverlayControl(canvasTagId) {
   if (this === window) {
     console.log(
@@ -2685,6 +2687,12 @@ function onShowObsChanged() {
 
 /* Access */
 function getTag(f, id) {
+  if (tagMode == 'Tracks') {
+    const obj = Tracks?.[f]?.[id]
+    if (obj == undefined) return undefined
+    return obj.tag
+  }
+  // Else tagMode == 'Tags'
   if (typeof Tags === "undefined") return undefined;
   let tagsFrame = Tags[f];
   if (typeof tagsFrame === "undefined") return undefined;

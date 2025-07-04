@@ -1564,6 +1564,68 @@ function eventsFromServer(url) {
   });
 }
 
+function db_to_json(db, info, limit = 100) {
+  console.log("db_to_json: converting CSV to JSON...");
+
+  const a=performance.now(); 
+  result = db.exec(`SELECT frame,CAST(track_id AS TEXT) as id, cx, cy, angle + 90 AS angle, 300 as width, 600 as height, cx-300/2 as x, cy-600/2 as y 
+  FROM data 
+  LIMIT ${limit}`); 
+  const b=performance.now(); 
+  console.log('DB query',b-a)
+
+  data = resultToObjects(result)
+  const c=performance.now(); 
+  console.log('Convert to field array',c-b)
+
+  const obj = flatjson_to_json(data)
+
+  evts = {info: info, data: obj};
+
+  const d=performance.now(); 
+  console.log('Convert to dictionnary',d-c)
+
+  return evts;
+}
+function flatjson_to_json(data) {
+  let obj = {};
+
+  for (let i = 0; i < data.length; i++) {
+    let item = data[i]
+    let frame = item["frame"];
+    if (!(frame in obj)) {
+      obj[frame] = {}; // List of detections
+      //obj[frame]["tags"] = [];
+    }
+    //let item = {};
+    const w = 300
+    const h = 600
+
+    item['bool_acts'] = [false,false,false,false]
+    item['labels'] = ''
+    // let parts = []
+    // for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
+    //   if (+src[name+"_visibility"] > 0)
+    //     parts.push({"posFrame": {"x": +src[name+"_x"], "y": +src[name+"_y"]}, "label": name})
+    // }
+    // item['parts'] = parts
+
+    obj[frame][item['id']] = item;
+  }
+  return obj
+}
+function resultToObjects(result) {
+  if (!result || result.length === 0) return [];
+
+  const { columns, values } = result[0];
+  return values.map(row => {
+    const obj = {};
+    columns.forEach((col, i) => {
+      obj[col] = row[i];
+    });
+    return obj;
+  });
+}
 function tracks_csv_to_json(data, info) {
   console.log("tracks_csv_to_json: converting CSV to JSON...");
 
@@ -1607,6 +1669,163 @@ function tracks_csv_to_json(data, info) {
 
   return evts;
 }
+function tags_csv_to_json(data, info) {
+  console.log("tags_csv_to_json: converting CSV to JSON...");
+
+  let obj = {};
+
+  for (let i = 0; i < data.length; i++) {
+    src=data[i]
+    let frame = src["frame"];
+    if (!(frame in obj)) {
+      obj[frame] = {}; // List of detections
+      //obj[frame]["tags"] = [];
+    }
+    let item = {};
+    const w = 300
+    const h = 600
+
+    item["id"] = src["id"];
+    //item["ID"] = src["track_id"];
+    item['frame'] = +src['frame']
+    //item["label"] = src["label"];
+    item["cx"] = +src["cx"];
+    item["cy"] = +src["cy"];
+    item["angle"] = +src["angle"]+90;
+    item["width"] = +w;
+    item["height"] = +h;
+    item["x"] = +src["cx"]-w/2;
+    item["y"] = +src["cy"]-h/2;
+    item['bool_acts'] = [false,false,false,false]
+    item['labels'] = ''
+    let parts = []
+    for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
+      if (+src[name+"_visibility"] > 0)
+        parts.push({"posFrame": {"x": +src[name+"_x"], "y": +src[name+"_y"]}, "label": name})
+    }
+    item['parts'] = parts
+
+    obj[frame][item['id']] = item;
+  }
+
+  evts = {info: info, data: obj};
+
+  return evts;
+}
+function tags_csv_to_tagjson(data, info) {
+  console.log("tags_csv_to_tagjson: converting CSV to tag JSON...");
+
+  let obj = {};
+
+  for (let i = 0; i < data.length; i++) {
+    src=data[i]
+    let frame = src["frame"];
+    if (!(frame in obj)) {
+      obj[frame] = {tags: []}; // List of detections
+      //obj[frame]["tags"] = [];
+    }
+    let item = {};
+
+    // Do not include in Tags detections that do not have one
+    if (+src['dm'] == 0)
+      continue
+
+    item["id"] = src["id"];
+    //item["ID"] = src["track_id"];
+    item['frame'] = +src['frame']
+    //item["label"] = src["label"];
+    item['c'] = [+src["cx_tag"],+src["cy_tag"]]
+    item["hamming"] = +src["hamming"];
+    item['goodness'] = +src['goodness']
+    item['dm'] = +src['dm']
+    item["p"] = [[+src.p0x,+src.p0y],[+src.p1x,+src.p1y],[+src.p2x,+src.p2y],[+src.p3x,+src.p3y]]
+
+    obj[frame].tags.push( item );
+  }
+
+  tags = {info: info, data: obj};
+
+  return tags;
+}
+function tracks_tagged_csv_to_json(data, info) {
+  console.log("tracks_tagged_csv_to_json: converting CSV to Tracks JSON with tags included...");
+
+  let obj = {};
+
+  for (let i = 0; i < data.length; i++) {
+    src=data[i]
+    let frame = src["frame"];
+    if (!(frame in obj)) {
+      obj[frame] = {}; // List of detections
+      //obj[frame]["tags"] = [];
+    }
+    let item = {};
+    const w = 300
+    const h = 600
+
+    if ((src["track_tagid"] == null) && (src["track_tagid"] == '')) {
+      item["id"] = 'T'+src["track_id"];
+    } else {
+      item["id"] = String(+src["track_tagid"]);
+    }
+    if ((src["tag_id"] != null) || (src["tag_id"] != '')) {
+      const tag = {
+        id: +src["tag_id"],
+        frame: +src['frame'],
+        c: [+src["tag_cx"],+src["tag_cy"]],
+        hamming: +src["tag_hamming"],
+        goodness: +src['tag_goodness'],
+        dm: +src['tag_dm'],
+        p: [[+src.tag_p0x,+src.tag_p0y],[+src.tag_p1x,+src.tag_p1y],[+src.tag_p2x,+src.tag_p2y],[+src.tag_p3x,+src.tag_p3y]]
+      }
+      item["tag"] = tag
+    }
+    //item["ID"] = src["track_id"];
+    item['frame'] = +src['frame']
+    //item["label"] = src["label"];
+    item["cx"] = +src["cx"];
+    item["cy"] = +src["cy"];
+    item["angle"] = +src["angle"]+90;
+    item["width"] = +w;
+    item["height"] = +h;
+    item["x"] = +src["cx"]-w/2;
+    item["y"] = +src["cy"]-h/2;
+    item['bool_acts'] = [false,false,false,false]
+    item['labels'] = ''
+    let parts = []
+    for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
+      if (+src[name+"_visibility"] > 0)
+        parts.push({"posFrame": {"x": +src[name+"_x"], "y": +src[name+"_y"]}, "label": name})
+    }
+    item['parts'] = parts
+
+    obj[frame][item['id']] = item;
+  }
+
+  evts = {info: info, data: obj};
+
+  return evts;
+}
+function loadTracksCSVFromDB(limit = 100) {
+
+    let info = {
+        type: "events-multiframe",
+        source: `Imported form DB`,
+        history: `Loaded in Labelbee on ${new Date().toISOString()}`,
+      }
+
+  const a=performance.now(); 
+  let obj = db_to_json(db, info, limit)
+  const b=performance.now(); 
+  console.log('DB query + convert to JSON',b-a)
+  setTracks(obj)
+  const c=performance.now(); 
+  console.log('setTracks',c-b)
+  videoControl.onFrameChanged();
+  refreshChronogram();
+  const d=performance.now(); 
+  console.log('refreshChronogram',d-c)
+}
 function loadTracksCSVFromServer(url) {
   console.log("loadTracksDataFrameFromServer: importing Tracks in CSV format from URL '" + url + "'...");
 
@@ -1624,6 +1843,62 @@ function loadTracksCSVFromServer(url) {
 
       let obj = tracks_csv_to_json(data, info)
 
+      setTracks(obj)
+      //setTracks(obj);
+
+      videoControl.onFrameChanged();
+
+      refreshChronogram();
+    })
+
+}
+function loadTagsCSVFromServer(url) {
+  console.log("loadTagsCSVFromServer: importing Tags+Tracks in CSV format from URL '" + url + "'...");
+
+  d3.csv(url)
+  .then(function (data) {
+      console.log("loadTagsCSVFromServer: SUCCESS\ncsv=", data);
+
+      //tracks_csv = data
+
+      let info = {
+        type: "events-multiframe",
+        source: `Converted from CSV "${url}"`,
+        history: `Loaded in Labelbee on ${new Date().toISOString()}`,
+      }
+      let obj = tags_csv_to_json(data, info)
+      setTracks(obj)
+      //setTracks(obj);
+
+      info = {
+        type: "tags-multiframe",
+        source: `Converted from CSV "${url}"`,
+        history: `Loaded in Labelbee on ${new Date().toISOString()}`,
+      }
+      obj = tags_csv_to_tagjson(data, info)
+      setTags(obj)
+
+      videoControl.onFrameChanged();
+
+      refreshChronogram();
+    })
+
+}
+function loadTrackTaggedCSVFromServer(url) {
+  console.log("loadTrackWithTagsCSVFromServer: importing Tags+Tracks in CSV format from URL '" + url + "'...");
+
+  d3.csv(url)
+  .then(function (data) {
+      console.log("loadTrackWithTagsCSVFromServer: SUCCESS\ncsv=", data);
+
+      //tracks_csv = data
+
+      let info = {
+        type: "events-multiframe",
+        source: `Converted from CSV "${url}"`,
+        history: `Loaded in Labelbee on ${new Date().toISOString()}`,
+      }
+      let obj = tracks_tagged_csv_to_json(data, info)
       setTracks(obj)
       //setTracks(obj);
 

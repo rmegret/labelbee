@@ -37,6 +37,8 @@ class Chronogram {
 
     config.showDanglingTracks = true
 
+    chrono.perf = {}
+
     initChrono()  // '#svgVisualize'
     // TODO: move all functionalities inside Chronogram
 
@@ -904,6 +906,8 @@ function updateChrono() {
 
   if (logging.chrono) console.log("drawChrono");
 
+  const start = performance.now()
+
   // Redraw activities
   //updateActivities(); // Legacy
   renderActivities()
@@ -914,7 +918,18 @@ function updateChrono() {
   updateVideoSpan();
   updateTrackWindowSpan();
 
-  $('#chronoStatusBar').html(`flatTracks: ${flatTracks.length} items, chronogramData: ${chronogramData.length} items, allIntervals: ${allIntervals.length} items, flatTags: ${flatTags.length} items`)
+  const end = performance.now()
+  chrono.perf.chronoRedraw = end-start
+
+  let statusMsg = `Chrono update ${Math.round(chrono.perf.chronoUpdate)} ms, redraw ${Math.round(chrono.perf.chronoRedraw)} ms;
+data: ${chronogramData.length} items, ${allIntervals.length} intervals, ${flatTags.length} tags`
+
+  if ( chrono.perf.chronoUpdate > 50 || chrono.perf.chronoRedraw > 50 ) {
+    statusMsg += '<br><b>Slow display, consider closing the chronogram or filtering the data</b>'
+  }
+
+  $('#chronoStatusBar').html(statusMsg)
+
 }
 
 
@@ -987,8 +1002,9 @@ function updateChronoData() {
 
   //console.timeEnd('refreshChronogram');
   const end = performance.now();
+  chrono.perf.chronoUpdate = end-start
 
-  $('chronoStatusBar').html(`Chrono updateChronoData took ${end - start} ms`)
+  //$('chronoStatusBar').html(`Chrono updateChronoData took ${chrono.perf.chronoUpdate} ms`)
 }
 
 /* Augment Tracks with tag id if same (frame,id) exist for both */
@@ -1550,7 +1566,9 @@ function renderActivities(onlyScaling) {
   if (chrono.config.legacyActivities) {
     updateActivities(onlyScaling) // legacy
   } else {
-    chronoIntervals.render(onlyScaling)
+    chronoIntervals.updateAndRender()
+    chronoIntervals.render()
+
     chronoIntervals.renderEnterLeavePollen()
 
     renderChrono_danglingTracks(onlyScaling)
@@ -1565,10 +1583,23 @@ class ChronoIntervals {
 
     this.intervalClicked = this.intervalClicked.bind(this)
   }
-  render(onlyScaling) {
+  updateAndRender() {
+    this.update()
+    this.render()
+  }
+  update() {
     const that = this
+
+    const [ xmin, xmax ] = axes.xScale.domain()
+
+    // Keep only intervals within axes domain (with extra 1 frame)
+    that.visibleIntervals = allIntervals.filter( d => (d.x2+2 >= xmin)&&(d.x1-1 <= xmax) )
+  }
+  render() {
+    const that = this
+
     const intervalRects = svgInterval.selectAll(".interval")
-      .data(allIntervals)
+      .data(that.visibleIntervals)
       .join(
         (enter) => enter.append('rect')
               .attr("class", "interval")

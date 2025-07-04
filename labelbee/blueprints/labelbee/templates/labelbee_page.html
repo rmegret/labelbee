@@ -59,6 +59,11 @@
   <script type="text/javascript" src="js/ZoomView.js"></script>
   <script type="text/javascript" src="js/labelBee.js"></script>
 
+  <!-- <script type="text/javascript" src='https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js'></script>
+  <script type="module" src="js/SQLiteDB.js"></script> -->
+  
+  <!-- <script type="module" src="js/DuckDB.js"></script> -->
+
   <link href="css/custom.css" rel="stylesheet">
 </head>
 
@@ -1489,6 +1494,17 @@
 
                 </div>
               </div>
+
+              <!-- <div id='sqliteTab' class='collapsible'>
+                <label>SQLite Console</label>
+                <div>
+                  <input type="file" id="upload" accept=".sqlite" />
+                  <select id="premade-queries"><option disabled selected>Ready-made queries</option></select>
+                  <textarea id="query">SELECT name FROM sqlite_master WHERE type='table';</textarea>
+                  <button id="run">Run Query</button>
+                  <div id="output"></div>
+                </div>
+              </div> -->
 
             </div> <!-- right-side -->
           </div>
