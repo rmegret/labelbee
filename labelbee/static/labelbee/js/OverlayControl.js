@@ -44,7 +44,7 @@ function OverlayControl(canvasTagId) {
   };
 
   flag_useROI = false;
-  ROI = { left: 175, top: 30, right: 2305, bottom: 1240 }; // For Gurabo videos 5MP
+  ROI = { left: 175, top: 250, right: 2305, bottom: 1240 }; // For Gurabo videos 5MP
   $("#ROI").val([ROI.left, ROI.top, ROI.right, ROI.bottom].join(","));
   //$(videoControl).on('video:loaded', updateROIFromVideo)
   $("#useROI").toggleClass("active", flag_useROI);

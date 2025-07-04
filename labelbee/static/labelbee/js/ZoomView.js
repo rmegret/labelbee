@@ -28,6 +28,8 @@ function ZoomOverlay(canvas, canvasOverlay) {
 
   let zoomOverlay = this;
 
+  this.showTagView = true
+
   // Manually bind all methods used as callbacks
   // https://www.smashingmagazine.com/2014/01/understanding-javascript-function-prototype-bind/
   this.refreshZoomSize = this.refreshZoomSize.bind(this);

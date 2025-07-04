@@ -1908,6 +1908,7 @@ function loadTrackTaggedCSVFromServer(url) {
     })
 
 }
+
 async function clickLoadTracksCSVFromServer() {
   console.log("clickLoadTracksCSVFromServer: loading .tracks.csv from URL");
   const url = prompt("Enter tracks URL", url_for("/data")+"/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv");
@@ -1917,6 +1918,22 @@ async function clickLoadTracksCSVFromServer() {
   }
   loadTracksCSVFromServer(url);
 }
+async function clickLoadTracksTaggedCSVFromServer() {
+  console.log("clickLoadTracksTaggedCSVFromServer: loading video and .tracks_tagged.csv from URL");
+  const col_videoname = prompt("Enter gurabo4 col_videoname", "col10/9_02_R_190809120000.cfr.mp4");
+  if (col_videoname == null || col_videoname == "") {
+    console.log("clickLoadTracksCSVFromServer: no video entered");
+    return;
+  }
+  const videoURL = url_for("/data")+`/datasets/gurabo4/mp4/${col_videoname}`
+  console.log(`Trying to load video from ${videoURL}`)
+  videoManager.loadVideoManual(videoURL);
+  
+  const tracksURL = url_for("/data")+`/datasets/gurabo4/tracks/${col_videoname}.tracks_tagged.csv`
+  console.log(`Trying to load tracks_tagged from ${tracksURL}`)
+  loadTrackTaggedCSVFromServer(tracksURL)
+}
+
 
 function mainAlert(text) {
   $("#mainAlertDialog .modal-body").html(text);
