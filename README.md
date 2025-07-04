@@ -78,3 +78,17 @@ You can make use of the following users:
 
     # Run tests and show a test coverage report
     ./runcoverage.sh      # will run py.test with coverage options
+
+
+## Experimental features:
+
+### gurabo4 tracks_tagged 
+
+To load both video and tagged tracks:
+
+In JS console:
+```
+videoname='7_02_R_190809100000.cfr.mp4'; 
+videoManager.loadVideoManual(`/webapp-test/data/datasets/gurabo4/mp4/col10/${videoname}`);
+loadTrackTaggedCSVFromServer(`/webapp-test/data/datasets/gurabo4/tracks/col10/${videoname}.tracks_tagged.csv`);
+```
