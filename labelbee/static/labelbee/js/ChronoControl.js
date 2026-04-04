@@ -662,7 +662,11 @@ function sortIds(IDarray) {
   return IDarray.sort(mixedCompare);
 }
 function validIdsChrono() {
-  let domainset = new Set([...validIdsDomain(), ...validTagIdsDomain()]);
+  let domainset
+  if (tagMode == 'Tracks')
+    domainset = new Set([...validIdsDomain()]);
+  else
+    domainset = new Set([...validIdsDomain(), ...validTagIdsDomain()]);
   let domain = sortIds([...domainset]); // convert back to sorted array
   return domain;
 }
@@ -1324,21 +1328,31 @@ function createIntervalList() {
 /* flatTags[k] is tag, with fields id, ... */
 function getFlatTags(useFilter) {
   let flatTags = [];
-  for (let F in Tags) {
-    let tags = Tags[F].tags;
-    for (let i in tags) {
-      let id = tags[i].id;
 
-      if (useFilter) {
-        if (flag_restrictID) {
-          if ($.inArray(String(id), restrictIDArray) < 0) continue;
-        }
-        if (flag_excludeID) {
-          if ($.inArray(String(id), excludeIDArray) >= 0) continue;
-        }
+  if (tagMode == 'Tracks') {
+    // Asume we already have flatTracks
+    for (let chronoObs of flatTracksAll) {
+      if (chronoObs.obs.tag) {
+        flatTags.push(chronoObs.obs.tag);
       }
+    }
+  } else { // Legacy
+    for (let F in Tags) {
+      let tags = Tags[F].tags;
+      for (let i in tags) {
+        let id = tags[i].id;
 
-      flatTags.push(tags[i]);
+        if (useFilter) {
+          if (flag_restrictID) {
+            if ($.inArray(String(id), restrictIDArray) < 0) continue;
+          }
+          if (flag_excludeID) {
+            if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+          }
+        }
+
+        flatTags.push(tags[i]);
+      }
     }
   }
   return flatTags;
@@ -1351,22 +1365,34 @@ function getTTags() {
 
   /* Transpose Tags data structure */
   let ttags = {};
-  for (let F in Tags) {
-    let tags = Tags[F].tags;
-    for (let i in tags) {
-      let id = String(tags[i].id);
-
+  if (tagMode == 'Tracks') {
+    // Asume we already have flatTags
+    for (let tag of flatTags) {
+      let id = String(tag.id);
+      let F = tag.frame;
       allTagsID.add(id);
-
-      if (flag_restrictID) {
-        if ($.inArray(String(id), restrictIDArray) < 0) continue;
-      }
-      if (flag_excludeID) {
-        if ($.inArray(String(id), excludeIDArray) >= 0) continue;
-      }
-
+      // Assume restrictID and excludeId already applied before flatTags
       if (typeof ttags[id] === "undefined") ttags[id] = {};
-      ttags[id][String(F)] = tags[i];
+      ttags[id][String(F)] = tag;
+    }
+  } else { // Legacy
+    for (let F in Tags) {
+      let tags = Tags[F].tags;
+      for (let i in tags) {
+        let id = String(tags[i].id);
+
+        allTagsID.add(id);
+
+        if (flag_restrictID) {
+          if ($.inArray(String(id), restrictIDArray) < 0) continue;
+        }
+        if (flag_excludeID) {
+          if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+        }
+
+        if (typeof ttags[id] === "undefined") ttags[id] = {};
+        ttags[id][String(F)] = tags[i];
+      }
     }
   }
 
