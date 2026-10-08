@@ -2,7 +2,7 @@ from flask_restful import Resource
 from flask_restful import reqparse
 from flask import abort, current_app
 from labelbee.models import User
-from flask_user import current_user
+# from flask_user import current_user
 from ..constants import STATUS_CODE_500, STATUS_CODE_401, STATUS_CODE_200
 #from ...legacy/views import serve_files
 
@@ -27,8 +27,8 @@ class RawDataAPI(Resource):
   def get(self, path=""):
       logger = current_app.logger
       
-      if not current_user.is_authenticated:
-          abort(STATUS_CODE_401, "Unauthenticated user")
+      # if not current_user.is_authenticated:
+      #    abort(STATUS_CODE_401, "Unauthenticated user")
 
       try :
           args = parser.parse_args()

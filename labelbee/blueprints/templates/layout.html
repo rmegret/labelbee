@@ -41,7 +41,8 @@
             </a>
         </div>
         <div class="pull-right">
-            {% if current_user.is_authenticated %}
+	    {#
+	    {% if current_user.is_authenticated %}
             <a href="{{ url_for('auth.user_profile_page') }}">
                 View Profile [{{ current_user.first_name or current_user.user_auth.username}}]
             </a>
@@ -50,12 +51,13 @@
             {% else %}
             <a href="{{ url_for('user.login') }}">Sign in</a>
             {% endif %}
+	    #}
         </div>
     </div>
     <div class="with-margins">
         <a href="{{ url_for('home.home_page') }}">Home</a>
         <!-- &nbsp; | &nbsp; <a href="{{ url_for('gallery.datasets_page') }}">Videos</a> -->
-        &nbsp; | &nbsp; <a href="{{ url_for('auth.user_page') }}">User</a>
+	{# &nbsp; | &nbsp; <a href="{{ url_for('auth.user_page') }}">User</a> #}
         &nbsp; | &nbsp; <a href="{{ url_for('admin.admin_page') }}">Admin</a>
     </div>
     <hr class="no-margins" />

@@ -10,7 +10,7 @@ from labelbee.database import (
 from flask_restful import reqparse
 from flask import abort
 from labelbee.models import User
-from flask_user import current_user
+#from flask_user import current_user
 from ..constants import STATUS_CODE_500, STATUS_CODE_401, STATUS_CODE_200
 
 #TODO: Figure out if this or marshmallow
@@ -25,8 +25,8 @@ class DatasetListAPI(Resource):
         """
         Lists datasets
         """
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Unauthenticated user")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Unauthenticated user")
         try :
             datasets_schema = DataSetSchema(many=True)
             return datasets_schema.dump(dataset_list())
@@ -37,8 +37,8 @@ class DatasetListAPI(Resource):
         """
         Creates a new dataset
         """
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Unauthenticated user")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Unauthenticated user")
         args = parser.parse_args()
 
         name = args["name"]
@@ -47,7 +47,7 @@ class DatasetListAPI(Resource):
         dataset = new_dataset(
             name=name,
             description=description,
-            user=current_user,
+            user=None,  #current_user,
         )
         #TODO: Return id 
         return {
@@ -62,8 +62,8 @@ class DatasetListAPI(Resource):
 class DatasetAPI(Resource):
 
     def get(self, id):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Unauthenticated user")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Unauthenticated user")
         #TODO: Validate inputs 
 
         dataset_schema = DataSetSchema()
@@ -82,8 +82,8 @@ class DatasetAPI(Resource):
             name - dataset name
             description - dataset description
         """
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Unauthenticated user")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Unauthenticated user")
         args = parser.parse_args()
         name = args["name"]
         description = args["description"]
@@ -104,8 +104,8 @@ class DatasetAPI(Resource):
         """
         Deletes dataset by id 
         """
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Unauthenticated user")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Unauthenticated user")
 
         try: 
             delete_dataset_by_id(id)

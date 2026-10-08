@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from flask_user import login_required, current_user, roles_accepted
+# from flask_user import login_required, current_user, roles_accepted
 
 from labelbee.database import (
     user_list,
@@ -21,14 +21,14 @@ from labelbee.database.user.schemas import RoleSchema, UserSchema
 bp = Blueprint('admin', __name__, url_prefix='', template_folder="templates")
 
 @bp.route("/admin")
-@roles_accepted("admin")  # Limits access to users with the 'admin' role
+# @roles_accepted("admin")  # Limits access to users with the 'admin' role
 def admin_page():
     form = UserProfileForm(obj=current_user)
     return render_template("admin_page.html", form=form)
 
 
 @bp.route("/manage_users", methods=["GET", "POST"])
-@roles_accepted("admin")  # Limits access to users with the 'admin' role
+# @roles_accepted("admin")  # Limits access to users with the 'admin' role
 def manage_users_page():
     form = UserUpdateForm()
     form.roles.choices = [(RoleSchema().dump(role)['id'], RoleSchema().dump(role)['label']) for role in Role.query.all()]

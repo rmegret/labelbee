@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 import os
 from labelbee.models import Video
 from labelbee.app import db
-from flask_user import current_user
+# from flask_user import current_user
 from ..constants import (
     STATUS_CODE_200,
     STATUS_CODE_401, 
@@ -25,8 +25,8 @@ load_dotenv()
 #TODO: Add list filters 
 class VideoListAPI(Resource):
     def get(self):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Authentication Required")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Authentication Required")
 
         dataset = request.args.get("dataset", "")
 
@@ -54,8 +54,8 @@ class VideoListAPI(Resource):
     # 3. validate input data 
     # 4. Check authentication
     def post(self):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Authentication Required")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Authentication Required")
 
         # Get data from body
         video_name = request.form.get("video_name")
@@ -140,8 +140,8 @@ class VideoListAPI(Resource):
 
 class VideoAPI(Resource):
     def get(self, id):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Unauthenticated user")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Unauthenticated user")
 
         try :
             video = get_video_by_id(id)
@@ -172,8 +172,8 @@ class VideoAPI(Resource):
             }
 
     def put(self, id):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Unauthenticated user")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Unauthenticated user")
 
         video_name = request.json.get("video_name")
         #TODO: Map location string to int 
@@ -203,11 +203,11 @@ class VideoAPI(Resource):
             abort(500)
 
     def delete(self, id):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Unauthenticated user")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Unauthenticated user")
 
-        if not current_user.has_roles("admin"):
-            abort(STATUS_CODE_403,"Missing user permissions")
+        # if not current_user.has_roles("admin"):
+        #    abort(STATUS_CODE_403,"Missing user permissions")
         
         video_schema = VideoSchema()
 

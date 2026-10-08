@@ -22,8 +22,8 @@ from ..constants import (
 
 class AnnotationsAPI(Resource):
     def get(self):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Authentication Required")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Authentication Required")
 
 
         video_id = request.args.get("video_id") 
@@ -33,7 +33,7 @@ class AnnotationsAPI(Resource):
         annotations_schema = VideoDataSchema(many=True)
 
         #TODO: First param must be user id
-        current_user_id = all_users if all_users else current_user.id
+        current_user_id = all_users if all_users else 1 #current_user.id
         data_type = data_type if data_type else ""
         
         videos = video_data_list(video_id, data_type, current_user_id)
@@ -51,8 +51,8 @@ class AnnotationsAPI(Resource):
         }
         
     def post(self):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Authentication Required")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Authentication Required")
         # Performs input validation
         video_data_schema = VideoDataSchema()
         form_data = json.dumps(request.form)
@@ -84,8 +84,8 @@ class AnnotationsAPI(Resource):
 
 class AnnotationAPI(Resource):
     def get(self, id):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Authentication Required")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Authentication Required")
         # if not current_user.is_authenticated:
             # raise Forbidden("/rest/v2/get_video_data GET: login required !")
 
@@ -117,11 +117,11 @@ class AnnotationAPI(Resource):
 
     #TODO: Test this 
     def put(self, id):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Authentication Required")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Authentication Required")
 
-        if not current_user.has_roles("admin"):
-            raise abort(STATUS_CODE_403,"Missing user permissions")
+        # if not current_user.has_roles("admin"):
+        #    raise abort(STATUS_CODE_403,"Missing user permissions")
 
         video_data_schema = VideoDataSchema()
         form_data = json.dumps(request.form)
@@ -145,8 +145,9 @@ class AnnotationAPI(Resource):
             }
     
     def delete(self, id):
-        if not current_user.is_authenticated:
-            abort(STATUS_CODE_401, "Authentication Required")
+        # if not current_user.is_authenticated:
+        #    abort(STATUS_CODE_401, "Authentication Required")
+        
         annotation = get_video_data_by_id(id)
         db.session.delete(annotation)
         db.session.commit()

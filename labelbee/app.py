@@ -5,7 +5,11 @@ from flask_migrate import Migrate
 # from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-from flask_user import UserManager
+
+# Removed for new db implementation
+# from flask_user import UserManager
+
+
 from flask_wtf.csrf import CSRFProtect
 import sys
 import logging
@@ -84,8 +88,8 @@ def create_app():
 
     app.jinja_env.globals["bootstrap_is_hidden_field"] = is_hidden_field_filter
 
-    from .blueprints import auth
-    app.register_blueprint(auth.bp)
+    # from .blueprints import auth
+    # app.register_blueprint(auth.bp)
 
     from .blueprints import admin
     app.register_blueprint(admin.bp)
@@ -106,7 +110,7 @@ def create_app():
     app.register_blueprint(api.bp)
 
     csrf.exempt(api.bp)
-    user_manager = UserManager(app, db, User)
+    # user_manager = UserManager(app, db, User)
 
     logger.info("APPLICATION_ROOT=%s",app.config['APPLICATION_ROOT'])
     logger.info("config=%s",app.config)

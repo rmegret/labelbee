@@ -1,5 +1,5 @@
 from flask import render_template, Blueprint, request, redirect, url_for
-from flask_user import current_user, login_required, roles_accepted
+# from flask_user import current_user, login_required, roles_accepted
 from labelbee.database import (
     dataset_list,
     get_user_by_id,
@@ -21,7 +21,7 @@ bp = Blueprint('gallery', __name__, url_prefix='/', template_folder="templates")
 
 
 @bp.route("/datasets", methods=["GET", "POST"])
-@login_required
+# @login_required
 def datasets_page():
     form = UserProfileForm(obj=current_user)
     # Parse the request to get the user name from id
@@ -52,7 +52,7 @@ def datasets_page():
 
 
 @bp.route("/add_dataset", methods=["GET", "POST"])
-@login_required
+# @login_required
 def add_dataset_page():
     form = UserProfileForm(obj=current_user)
 
@@ -78,7 +78,7 @@ def add_dataset_page():
 
 
 @bp.route("/delete_dataset", methods=["GET", "POST"])
-@roles_accepted("admin")
+# @roles_accepted("admin")
 def delete_dataset():
     form = UserProfileForm(obj=current_user)
 
@@ -102,7 +102,7 @@ def delete_dataset():
 
 
 @bp.route("/videos", methods=["GET", "POST"])
-@login_required
+# @login_required
 def videos_page():
     form = UserProfileForm(obj=current_user)
 
@@ -142,7 +142,7 @@ def videos_page():
     )
 
 @bp.route("/edit_video", methods=["GET", "POST"])
-@roles_accepted("admin")
+# @roles_accepted("admin")
 def edit_video_page():
     form = UserProfileForm(obj=current_user)
 
@@ -180,7 +180,7 @@ def edit_video_page():
 
 
 @bp.route("/videodata", methods=["GET", "POST"])
-@login_required
+# @login_required
 def video_data_page():
     form = UserProfileForm(obj=current_user)
 
@@ -211,7 +211,7 @@ def video_data_page():
     )
 
 @bp.route("/video_data_details", methods=["GET", "POST"])
-@login_required
+# @login_required
 def video_data_details_page():
     form = UserProfileForm(obj=current_user)
 
@@ -243,7 +243,7 @@ def video_data_details_page():
 
 
 @bp.route("/edit_dataset", methods=["GET", "POST"])
-@roles_accepted("admin")
+# @roles_accepted("admin")
 def edit_dataset_page():
     form = UserProfileForm(obj=current_user)
 
