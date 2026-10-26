@@ -8,6 +8,10 @@ Single home for refactor working assets. Committed unless noted.
 - `tests/`: safety-net notes: characterization tests, fixtures, `CHECKLIST.md`
 - `scratch/`: **git-ignored** throwaway notes, dumps, generated graphs
 
+## Analysis
+Start at `analysis/README.md` (stages 1-7: architecture -> backend -> frontend
+structure -> data model -> classes/interactions -> smells -> questions & proposals).
+
 ## Map of the repo root (to be completed by the analysis)
 - `labelbee/app.py`, `blueprints/`, `models.py`, `database/`, `settings/`: backend
 - `labelbee/static/labelbee/js/`: frontend modules (`labelBee.js` entry,
