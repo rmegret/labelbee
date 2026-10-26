@@ -51,8 +51,9 @@ Finish:
    `git rebase --abort` and report instead of resolving.
 6. `git diff --stat refactor..HEAD` touches only the step's scope. In `PLAN.md`
    change only the lines for this step.
-7. Report job branch, base SHA, commit SHA and the merge command
-   (`git cherry-pick <sha>` on `refactor`). Never modify protected paths
+7. Report job branch, base SHA, commit SHA and the merge command: in `~/labelbee`,
+   `git merge --ff-only <job-branch>` (cherry-pick only if the branch could not
+   be rebased onto `refactor`). Never modify protected paths
    (`.claude/settings.json`).
 
 ### Analysis rules (Phase 1 and any re-analysis)
