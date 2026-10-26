@@ -192,3 +192,7 @@ cython_debug/
 
 .env.staging
 .env.production
+# Claude Code / refactor working files
+refactor/scratch/
+CLAUDE.local.md
+.claude/scheduled_tasks.json
