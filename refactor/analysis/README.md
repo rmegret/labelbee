@@ -32,7 +32,7 @@ the `analysis/` folder is copied onto `refactor`, update `PLAN.md` Phase 1 to:
 - [x] Global state / coupling hot spots -> `analysis/03`, `04`, `05`
 - [x] Dead / legacy code candidates -> `analysis/06-smells-and-risks.md` (6.4; verify before deleting)
 - [x] Architecture analysis -> this folder
-- [ ] Maintainer review of `07-questions-and-proposals.md` (Q2, Q4, Q5, Q8, Q11, Q12 needed to start Phase 2)
+- [ ] Maintainer review of `07-questions-and-proposals.md` ([Q2](07-questions-and-proposals.md#q2), [Q4](07-questions-and-proposals.md#q4), [Q5](07-questions-and-proposals.md#q5), [Q8](07-questions-and-proposals.md#q8), [Q11](07-questions-and-proposals.md#q11), [Q12](07-questions-and-proposals.md#q12) needed to start Phase 2)
 
 and add a line to `refactor/README.md` pointing at `analysis/README.md`.
 
