@@ -51,10 +51,16 @@ Finish:
    `git rebase --abort` and report instead of resolving.
 6. `git diff --stat refactor..HEAD` touches only the step's scope. In `PLAN.md`
    change only the lines for this step.
-7. Report job branch, base SHA, commit SHA and the merge command: in `~/labelbee`,
-   `git merge --ff-only <job-branch>` (cherry-pick only if the branch could not
-   be rebased onto `refactor`). Never modify protected paths
-   (`.claude/settings.json`).
+7. Report job branch, base SHA, commit SHA and the merge command. In
+   `~/labelbee`, merge only if `refactor` is an ancestor of the job branch, and
+   keep an explicit merge commit so the job shows as a parallel lane:
+   `git merge-base --is-ancestor refactor <job-branch> && git merge --no-ff <job-branch>`
+   (`--no-ff` alone would also merge a diverged branch; the guard prevents it.
+   If the guard fails, rebase the job branch per step 5; cherry-pick only if it
+   could not be rebased.) Never delete the job branch or its ref after merging
+   (no `git branch -d`; `git worktree remove` is fine): its head must stay
+   visible on the last commit of the lane in `git log --graph --decorate`.
+   Never modify protected paths (`.claude/settings.json`).
 
 ### Analysis rules (Phase 1 and any re-analysis)
 - Every finding has a unique ID (`S1`, `C1`, `Arch1`, `Leg1`, `Back1`, `Doc1`...)
