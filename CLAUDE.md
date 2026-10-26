@@ -23,6 +23,38 @@ Claude-specific goes under `labelbee/`, `tests/` or `docs/`.
 - Match surrounding code style (naming, comment density, idiom).
 - Never commit data, uploads, secrets or the sqlite DB.
 
+### Worktree jobs (background/parallel sessions)
+`refactor` is the trunk; `master` is irrelevant here. A job branch is always
+created from the current local `refactor` tip and merged back by the user.
+
+Start (before any edit, in this order):
+1. Inspect the main checkout (`~/labelbee`, on `refactor`) read-only:
+   `git status --porcelain`. Never stash, reset, commit or edit there.
+2. Create the worktree from `refactor`, then enter it:
+   `git worktree add -b <job-name> .claude/worktrees/<job-name> refactor`
+   `EnterWorktree` with `path=`. Never use the default `name=` mode (it
+   branches from the default branch, not `refactor`).
+3. Verify `git rev-parse HEAD` == `git rev-parse refactor` and the tracked tree
+   is clean. If not, remove the worktree and redo step 2; do not repair with
+   reset or checkout.
+4. If step 1 listed uncommitted files in the main checkout, they are NOT in the
+   worktree. State the job's scope (files/dirs it will edit) in its first message,
+   and compare it with the dirty paths:
+   - no overlap: proceed, and list the dirty files in the final report;
+   - overlap, or the task needs those changes: stop with `needs input:` naming
+     the files (the user commits or stashes, then relaunches).
+   Reading a dirty file from the main checkout for context is allowed, but say so.
+
+Finish:
+5. `git rev-list refactor..HEAD` lists only this job's commits. If `refactor`
+   moved, `git rebase refactor` on the job branch only; on any conflict run
+   `git rebase --abort` and report instead of resolving.
+6. `git diff --stat refactor..HEAD` touches only the step's scope. In `PLAN.md`
+   change only the lines for this step.
+7. Report job branch, base SHA, commit SHA and the merge command
+   (`git cherry-pick <sha>` on `refactor`). Never modify protected paths
+   (`.claude/settings.json`).
+
 ### Analysis rules (Phase 1 and any re-analysis)
 - Every finding has a unique ID (`S1`, `C1`, `Arch1`, `Leg1`, `Back1`, `Doc1`...)
   and an evidence tag: `[read]` (path:line seen in code), `[ran]` (command run,
