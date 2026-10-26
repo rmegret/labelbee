@@ -37,60 +37,60 @@ maintenance cost, **L** = hygiene. All are from reading; none reproduced
 
 ## 6.3 Architecture smells (client)
 
-1. **Implicit globals everywhere** (see 3.3). No strict mode possible; name
+- **Arch1** Implicit globals everywhere (see 3.3). No strict mode possible; name
    collisions are silent; load order is the dependency graph.
-2. **God files**: `OverlayControl.js` mixes 8+ concerns (5.2). Three "classes"
+- **Arch2** God files: `OverlayControl.js` mixes 8+ concerns (5.2). Three "classes"
    (`OverlayControl`, `Chronogram`, `ZoomOverlay`) are shells around free
    functions that use singletons by name, so none can be instantiated twice or
    tested alone.
-3. **No model layer / change notification** (4.3): each writer hand-calls the
+- **Arch3** No model layer / change notification (4.3): each writer hand-calls the
    right refreshers.
-4. **State in the DOM**: toggles are read from button classes / `checked`;
+- **Arch4** State in the DOM: toggles are read from button classes / `checked`;
    many `$('#id')` strings embedded in constructors.
-5. **UI built from HTML strings** inside logic (pick-frame panel in
+- **Arch5** UI built from HTML strings inside logic (pick-frame panel in
    `overlay.hardRefresh`, 80+ lines); inline `onclick` in a 1.6k-line template.
-6. **Format/I-O mixed with UI**: parsers call dialogs (`alert`, `fromServerDialog.setMessage`).
-7. **Cycles** VideoControl <-> Overlay, Overlay <-> Selection <-> Zoom (5.1).
-8. **Performance**: full recompute of all derived chrono data on every edit
+- **Arch6** Format/I-O mixed with UI: parsers call dialogs (`alert`, `fromServerDialog.setMessage`).
+- **Arch7** Cycles VideoControl <-> Overlay, Overlay <-> Selection <-> Zoom (5.1).
+- **Arch8** Performance: full recompute of all derived chrono data on every edit
    (`refreshChronogram`), `for..in` over sparse objects, `JSON` deep copies
    (`deepcopy` in `copyObs` for `fix`).
-9. **Configuration constants in code**: ROI, exclude rects (Gurabo 5MP),
+- **Arch9** Configuration constants in code: ROI, exclude rects (Gurabo 5MP),
    tag image root `/data/tags/tag25h5inv/png`, hamming matrix URL, label
    vocabulary, `tagsfamily: "tag25h5"`, hard-coded `300x600` bee box.
-10. **Logging**: `console.log` throughout, only partially guarded by `logging.*`.
+- **Arch10** Logging: `console.log` throughout, only partially guarded by `logging.*`.
 
 ## 6.4 Dead / legacy candidates (verify with a "usage" grep before deleting)
 
-- `labelbee/legacy/views.py` (only in a comment); `labelbee/models.py`
+- **Leg1** `labelbee/legacy/views.py` (only in a comment); `labelbee/models.py`
   `CustomUserManager`, `MyRegisterForm` (not used by `UserManager(app, db, User)`).
-- `labelbee/database/*/model.py` duplicates of `models.py` classes.
-- `ChronoControlActivitiesLegacy.js` (808 lines, behind a flag; shares
+- **Leg2** `labelbee/database/*/model.py` duplicates of `models.py` classes.
+- **Leg3** `ChronoControlActivitiesLegacy.js` (808 lines, behind a flag; shares
   globals with the live code, so removing means checking `allIntervals` users).
-- `DuckDB.js`, `SQLiteDB.js` (not loaded), and `loadTracksCSVFromDB` callers.
-- `VideoControl.loadVideo` (marked DEPRECATED), `interpolateTags` (defined,
+- **Leg4** `DuckDB.js`, `SQLiteDB.js` (not loaded), and `loadTracksCSVFromDB` callers.
+- **Leg5** `VideoControl.loadVideo` (marked DEPRECATED), `interpolateTags` (defined,
   never called), `rest/v2/*` strings, `defaultVideoList` (unused after
   commenting), `fabric.canvasex.js`, `require.js`, `main.js`, `bootstrap.min.js` in `extern/`.
-- Static duplicates: `static/{css,fonts,images}` vs `static/labelbee/{css,fonts,images}`
+- **Leg6** Static duplicates: `static/{css,fonts,images}` vs `static/labelbee/{css,fonts,images}`
   (two near-identical `bootstrap.css`, 6768 lines each, differ).
-- Docs/ops: `Procfile` (`manage:app`), `tox.ini`, `tests/*`, root README
+- **Leg7** Docs/ops: `Procfile` (`manage:app`), `tox.ini`, `tests/*`, root README
   (`manage.py`, `runtests.sh`), `Dockerfile` (MySQL image with `data.sql` absent
   from the repo), `labelbee/README.md`.
 
 ## 6.5 Backend smells
 
-- `models.py` is a bucket (models, forms, user manager). `database/*/api.py`
+- **Back1** `models.py` is a bucket (models, forms, user manager). `database/*/api.py`
   is a decent query layer but `video_data_list` is an 8-way copy-paste of one
   query (dynamic `filter` would be 10 lines).
-- N+1 queries in `AnnotationsAPI.get` (`get_user_by_id` per row).
-- Inconsistent response envelopes and error handling (see 2.5).
-- Auth checks hand-rolled per method.
-- Mixed `print`/`logger`; `exit()` inside `create_app` on missing settings.
-- Heavy dependencies (`opencv-python`, `numpy`) for video metadata only.
-- `app.py` circular import with `models.py`.
+- **Back2** N+1 queries in `AnnotationsAPI.get` (`get_user_by_id` per row).
+- **Back3** Inconsistent response envelopes and error handling (see 2.5).
+- **Back4** Auth checks hand-rolled per method.
+- **Back5** Mixed `print`/`logger`; `exit()` inside `create_app` on missing settings.
+- **Back6** Heavy dependencies (`opencv-python`, `numpy`) for video metadata only.
+- **Back7** `app.py` circular import with `models.py`.
 
 ## 6.6 Documentation drift
 
-Root `README.md` contains three generations of instructions
-(`manage.py runserver`, `flask run`, `gunicorn`); `refactor/README.md` already
-notes `tox.ini` is stale. Doc sources exist (`docs/source`, Sphinx) but
-`docs/build` is committed.
+- **Doc1** Root `README.md` contains three generations of instructions
+  (`manage.py runserver`, `flask run`, `gunicorn`).
+- **Doc2** `tox.ini` is stale (already noted in `refactor/README.md`).
+- **Doc3** Sphinx sources exist (`docs/source`) but `docs/build` is committed.
