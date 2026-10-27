@@ -40,8 +40,8 @@ Start (before any edit, in this order):
    `EnterWorktree` with `path=`. Never use the default `name=` mode (it
    branches from the default branch, not `refactor`).
 4. Verify `git rev-parse HEAD` == `git rev-parse refactor` and the tracked tree
-   is clean. If not, remove the worktree and redo step 2; do not repair with
-   reset or checkout.
+   is clean. If not, remove the worktree, says what is wrong, propose a fix and stop. 
+   Do not repair with reset or checkout. 
 
 Finish:
 5. Review gate. Do the work and leave it uncommitted in the worktree. 
