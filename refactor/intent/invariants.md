@@ -22,8 +22,7 @@ or loading. Today saving violates it: see C1 in [analysis/06](../analysis/06-sme
 ## INV-002: Interactive responsiveness
 
 Stepping through frames and editing stay responsive on the 5MP videos used today. Any
-change to the refresh and redraw paths is judged against current behavior (no target
-figure yet, see OQ-011). Annotators also depend on keyboard and
+change to the refresh and redraw paths is judged against current behavior (no numeric target; the baseline is current behavior on the Gurabo 5MP videos, OQ-011). Annotators also depend on keyboard and
 mouse shortcuts and click modes: the behavior-preserving rule applies to each of them.
 
 - **Links:** P-202, CAP-401, OQ-005, OQ-011

@@ -12,7 +12,7 @@ text until `debt.md` exists.
 
 Product purpose (`[read]` `labelbee/static/labelbee/README.txt:1`): video annotation
 software for **behavior tracking of bees**. Users are presumably researchers who label
-bee activity at the hive entrance in recorded video, plus admins ([OQ-001](../../QUESTIONS.md#oq-001 "Users and purpose")).
+bee activity in recorded video (not limited to the hive entrance), plus admins ([OQ-001](../../QUESTIONS.md#oq-001 "Users and purpose")). Datasets in use: Gurabo hive ramp videos, beefeeder entrance videos, flowerpatch videos and mango videos.
 Annotation is presumably semi-automatic: tags are detected offline, the human verifies,
 corrects and adds behavior ([OQ-002](../../QUESTIONS.md#oq-002 "Tag pipeline boundary"), [DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee")).
 
@@ -104,6 +104,7 @@ Pick a video from the server list inside the annotator, load its metadata (`vide
 ### CAP-202: Play and seek
 
 Play, step and seek frame by frame; preview and cache modes. Owns the current frame position (future frame-sync seam).
+Arrow keys and `<`/`>` navigate (they do not nudge boxes, [DEC-004](../decisions.md#dec-004-the-code-is-the-reference-for-behavior)). `DEBT`: Ctrl+Right steps twice because `forward3`/`forward4` fall through to `forward()` or `forward2()` (`labelbee/static/labelbee/js/labelBee.js:891-901`, `[read]`).
 
 - **Group:** [CAP-200](#cap-200-load-and-play-video "Load and play video")
 - **Code:**
@@ -113,7 +114,7 @@ Play, step and seek frame by frame; preview and cache modes. Owns the current fr
 
 ## CAP-300: Temporal display and navigation
 
-Chronogram of tracks, tags and events over time. Display only: requests seeks, never owns the frame, and adapts to the filters and order it receives from [CAP-800](#cap-800-data-filtering-and-processing "Data filtering and processing"). `ChronoControlActivitiesLegacy.js` (~800 lines) is legacy: `DEBT`.
+Chronogram of tracks, tags and events over time. Navigation and review aid: selecting an event or ID requests a seek or a selection, and editing happens in the main overlay ([OQ-008](../../QUESTIONS.md#oq-008 "Chronogram role")). Requests seeks, never owns the frame, and adapts to the filters and order it receives from [CAP-800](#cap-800-data-filtering-and-processing "Data filtering and processing"). `ChronoControlActivitiesLegacy.js` (~800 lines) is legacy: `DEBT`.
 
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControlActivitiesLegacy.js](../../../labelbee/static/labelbee/js/ChronoControlActivitiesLegacy.js)
@@ -192,7 +193,7 @@ Show detected tags, orientation and tracks over the video; tags are displayed he
 
 ### CAP-403: Skeleton overlay
 
-Draw the skeleton (labelled keypoints, stored in `obs.parts`) of each bee on the main overlay when skeleton display is on (`zoomOverlay.flagShowParts`). Display only: the keypoints are placed in [CAP-501](#cap-501-skeleton-labelling "Skeleton labelling").
+Draw the skeleton (labelled keypoints, stored in `obs.parts`) of each bee on the main overlay when skeleton display is on (`zoomOverlay.flagShowParts`). Display only: the keypoints are placed in [CAP-501](#cap-501-skeleton-labelling "Skeleton labelling"). Skeleton labeling is live and its keypoint list must be configurable ([OQ-007](../../QUESTIONS.md#oq-007 "Skeleton labeling")).
 
 - **Group:** [CAP-400](#cap-400-overlay-display-and-annotations "Overlay display and annotations")
 - **Code:**
@@ -206,7 +207,7 @@ Magnified bee with its own overlay. Skeleton, alternate tags, tag ID assignment 
 
 ### CAP-501: Skeleton labelling
 
-Place the skeleton keypoints (head, neck, thorax, waist, tail; stored as `obs.parts`) on the magnified bee, with a label per click. Shown on the main overlay by [CAP-403](#cap-403-skeleton-overlay "Skeleton overlay").
+Place the skeleton keypoints (head, neck, thorax, waist, tail; stored as `obs.parts`) on the magnified bee, with a label per click. Shown on the main overlay by [CAP-403](#cap-403-skeleton-overlay "Skeleton overlay"). Live ([OQ-007](../../QUESTIONS.md#oq-007 "Skeleton labeling")). Wanted: configurable keypoint templates; the current vocabulary handling is a hacked version, `DEBT`.
 
 - **Group:** [CAP-500](#cap-500-zoom-view-and-details-editing "Zoom view and details editing")
 - **Code:**
@@ -230,7 +231,7 @@ Labels, notes, behavior flags, visits (edit GUI), read-only summaries and statis
 
 ### CAP-601: Behavior labels and notes
 
-Toggle fanning, pollen, entering, leaving, wrongID, falsealarm; free-text labels and notes on the selected observation. Labels are edited one by one here. They are generic ([DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic")): the six predefined labels are a target for plugins, and their current hard-coding is `DEBT`.
+Toggle fanning, pollen, entering, leaving, wrongID, falsealarm; free-text labels and notes on the selected observation. Labels are edited one by one here. They are generic ([DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic")): the six predefined labels are a target for plugins, and their current hard-coding is `DEBT`. A label is attached to one observation and is not propagated over a span; a track-level label (pollen, for example) would be a new feature. `bool_acts` is `DEBT`: every use is flagged and served by a temporary shim derived from `labels`, with removal expected during the refactor.
 
 - **Group:** [CAP-600](#cap-600-labels-dashboards-and-specialized-annotations "Labels, dashboards and specialized annotations")
 - **Code:**
@@ -356,7 +357,7 @@ Functional stages from `Tracks`/`Tags` to the structures views read: tag integra
 
 ### CAP-803: Annotation clean-up
 
-User-triggered bulk removal of obsolete events. Writes `Tracks` directly (`DEBT`); no undo today.
+User-triggered bulk removal of obsolete events. Writes `Tracks` directly (`DEBT`); no undo today, and undo is wanted ([OQ-009](../../QUESTIONS.md#oq-009 "Clean-up semantics")).
 
 - **Group:** [CAP-800](#cap-800-data-filtering-and-processing "Data filtering and processing")
 - **Code:**
