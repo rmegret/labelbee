@@ -19,8 +19,7 @@ Static read only (grep/read, nothing executed). Items marked "(unverified)" in
 ### Phase 1b: Analysis hardening (process fixes from the retrospective)
 - [x] Add "Analysis rules" to `CLAUDE.md`
 - [x] Give every finding in `analysis/06` a unique ID (Arch/Leg/Back/Doc added)
-- [ ] Tag every finding with evidence `[read]` / `[ran]` / `[inferred]`
-- [ ] Verify H items (S1-S4, C1) by running code; needs permission to run ([Q11](analysis/07-questions-and-proposals.md#q11)). Separate step.
+- [ ] Tag every finding with evidence, and verify H items: deferred to Phase 1d (smells and risks are re-examined after the specs)
 - [ ] Move questions out of `analysis/07` to `refactor/QUESTIONS.md`; target architecture
       and step list to draft ADRs / Phase 3-4 (keep `analysis/` descriptive only)
 - [ ] Split `analysis/` stage files over the 150-line budget (05 is 295)
@@ -39,6 +38,15 @@ a behavioral reference rather than "whatever the code does today".
 - [ ] Traceability: each analysis finding, ADR and Phase 2 test points to the intent/spec it
       protects or changes.
 - [ ] Specs are the input to Phase 2 characterization tests and `tests/CHECKLIST.md`.
+
+### Phase 1d: Smells and risks, re-examined against the specs
+Deferred from Phase 1b on purpose: a smell or risk is only meaningful relative to the intended
+behavior, so `analysis/06-smells-and-risks.md` is revisited once the Phase 1c specs exist.
+Starts after the Specs item of Phase 1c is done.
+- [ ] Re-read each finding in `analysis/06` against the specs and intent: confirm, reclassify
+      (bug vs intended behavior vs accepted limitation) or drop; link each to the spec it concerns
+- [ ] Tag every finding with evidence `[read]` / `[ran]` / `[inferred]`; severity H/M only for `[read]`/`[ran]`
+- [ ] Verify H items (S1-S4, C1) by running code; needs permission to run ([Q11](analysis/07-questions-and-proposals.md#q11)). Separate step.
 
 ## Phase 2: Safety net
 - [ ] Backend pytest smoke tests (fix runner config)
