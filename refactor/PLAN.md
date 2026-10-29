@@ -29,7 +29,7 @@ Static read only (grep/read, nothing executed). Items marked "(unverified)" in
 The analysis so far is code-centric (what exists). It must come back up to *why* (intent)
 and forward to *what exactly each feature does* (specs), so refactor steps and tests have
 a behavioral reference rather than "whatever the code does today".
-- [ ] Intent: for each analyzed area, state the user-facing purpose and goals (who annotates
+- [~] Intent (spec items in `intent/` (`capabilities.md` with 8 groups, `entities.md`, `invariants.md`, `decisions.md`; generated views in `intent/docs/`), awaiting maintainer answers to `OQ-001`-`OQ-011` in `QUESTIONS.md`): for each analyzed area, state the user-facing purpose and goals (who annotates
       what, why; which workflows matter), confirmed by the maintainer. Questions go to
       `refactor/QUESTIONS.md`; no step proceeds on a guessed intent.
 - [ ] Specs: per feature (e.g. video navigation, track/tag annotation, import/export, zoom/overlay),
