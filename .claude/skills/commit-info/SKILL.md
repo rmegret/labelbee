@@ -67,6 +67,7 @@ OUTSIDE OF SCOPE:
 
 # Message Draft:
 <subject>
+
 <optional body, as - bullets>
 
 <trailer, if required>
