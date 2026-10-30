@@ -22,7 +22,7 @@ or loading. Today saving violates it: see C1 in [analysis/06](../../analysis/06-
 
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV1`
-- **Links:** P-701, [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save"), [CAP-703](view_capabilities.md#cap-703-server-load-and-save "Server load and save"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")
+- **Links:** [CAP-701](view_capabilities.md#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo"), [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save"), [CAP-703](view_capabilities.md#cap-703-server-load-and-save "Server load and save"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")
 
 ## INV-002: Interactive responsiveness
 
@@ -30,7 +30,7 @@ Stepping through frames and editing stay responsive on the 5MP videos used today
 change to the refresh and redraw paths is judged against current behavior (no numeric target; the baseline is current behavior on the Gurabo 5MP videos, [OQ-011](../../QUESTIONS.md#oq-011 "Performance expectations")). Annotators also depend on keyboard and
 mouse shortcuts and click modes: the behavior-preserving rule applies to each of them.
 
-- **Links:** P-202, [CAP-401](view_capabilities.md#cap-401-bee-track-boxes "Bee track boxes"), [OQ-005](../../QUESTIONS.md#oq-005 "Core tracking workflow and shortcuts"), [OQ-011](../../QUESTIONS.md#oq-011 "Performance expectations")
+- **Links:** [CAP-202](view_capabilities.md#cap-202-play-and-seek "Play and seek"), [CAP-401](view_capabilities.md#cap-401-bee-track-boxes "Bee track boxes"), [OQ-005](../../QUESTIONS.md#oq-005 "Core tracking workflow and shortcuts"), [OQ-011](../../QUESTIONS.md#oq-011 "Performance expectations")
 
 ## INV-003: Old annotation files stay loadable
 
@@ -38,4 +38,4 @@ Readers for JSON v1, CSV and `tracks_tagged` files survive the refactor.
 
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`, `tracks_tagged_csv_to_json`, `setTags`
-- **Links:** T-004, [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save"), [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import"), [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")
+- **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save"), [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import"), [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")

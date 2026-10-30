@@ -19,7 +19,7 @@ Optional: `parts` (skeleton keypoints), `newid` (wrongid), `fix` (tag fix), `vis
 
 - **Code:**
   - `Model.js`: `Observation`, `copyObs`, `cloneObs`
-- **Links:** T-002, CAP-401, CAP-601, CAP-501, CAP-602, CAP-701, OQ-003, OQ-006
+- **Links:** ENT-002, CAP-401, CAP-601, CAP-501, CAP-602, CAP-701, OQ-003, OQ-006
 
 ## ENT-002: Tag detection
 
@@ -30,7 +30,7 @@ strings; untagged tracks get `T<n>` ids in the `tracks_tagged` CSV.
 - **Code:**
   - `Model.js`: `cacheTags`, `getTags`
   - `AnnotationIO.js`: `tagsAddFrames`
-- **Links:** T-001, CAP-402, CAP-502, OQ-002
+- **Links:** ENT-001, CAP-402, CAP-502, OQ-002
 
 ## ENT-003: Video
 
@@ -40,7 +40,7 @@ preview URLs, frame offset).
 - **Code:**
   - `labelbee/models.py`: `Video`
   - `VideoControl.js`: `VideoControl`
-- **Links:** P-201, CAP-101
+- **Links:** CAP-201, CAP-101
 
 ## ENT-004: Annotation file / record
 
@@ -52,7 +52,7 @@ Format table: [analysis/04](../analysis/04-data-model.md) 4.4.
 - **Code:**
   - `labelbee/models.py`: `VideoData`
   - `AnnotationIO.js`: `convertTracksToV1`, `convertTracksToV2`, `setTracks`
-- **Links:** P-702, CAP-703, INV-003, OQ-003
+- **Links:** CAP-702, CAP-703, INV-003, OQ-003
 
 ## ENT-005: Dataset
 
@@ -60,4 +60,4 @@ Named group of videos, managed by admins through the gallery pages.
 
 - **Code:**
   - `labelbee/models.py`: `DataSet`
-- **Links:** P-101
+- **Links:** CAP-101

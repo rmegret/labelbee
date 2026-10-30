@@ -35,7 +35,7 @@ Organize videos into datasets, browse them and open one in the annotator (galler
 - **Code:**
   - `blueprints/gallery/gallery.py`: `datasets_page`, `videos_page`, `add_dataset_page`, `edit_video_page`
   - `labelbee/models.py`: `Video`, `DataSet`
-- **Links:** T-003, ENT-005, OQ-001
+- **Links:** ENT-003, ENT-005, OQ-001
 
 ### CAP-102: User administration and login
 
@@ -46,7 +46,7 @@ Log in and manage users and roles (admin).
   - `blueprints/admin/admin.py`: `manage_users_page`
   - `blueprints/auth/auth.py`: `user_profile_page`
   - `labelbee/models.py`: `User`, `Role`
-- **Links:** -001
+- **Links:** OQ-001
 
 ## CAP-200: Load and play video
 
@@ -61,7 +61,7 @@ Pick a video from the server list inside the annotator, load its metadata (`vide
   - `VideoList.js`: `VideoManager`, `VideoManager.selectVideoByID`, `VideoManager.loadVideoManual`
   - `VideoControl.js`: `VideoControl.loadVideo`
   - `labelbee_page.html`: `~Video Info panel`
-- **Links:** T-003, OQ-004
+- **Links:** ENT-003, OQ-004
 
 ### CAP-202: Play and seek
 
@@ -72,7 +72,7 @@ Arrow keys and `<`/`>` navigate (they do not nudge boxes, [DEC-004](decisions.md
 - **Code:**
   - `VideoControl.js`: `VideoControl.seekFrame`, `VideoControl.playPauseVideo`, `VideoControl.playTick`, `VideoCache`
   - `labelbee_page.html`: `~Preview panel`
-- **Links:** V-002, OQ-004
+- **Links:** INV-002, OQ-004
 
 ## CAP-300: Temporal display and navigation
 
@@ -89,7 +89,7 @@ Time axis taken from the video; zoom and shift of the time domain; mousewheel mo
 - **Code:**
   - `ChronoControl.js`: `scaleTimeDomain`, `shiftTimeDomain`, `updateTimeMark`, `updateVideoSpan`, `updateTrackWindowSpan`
   - `ChronoAxes.js`: `ChronoAxes`
-- **Links:** P-202, CAP-401
+- **Links:** CAP-202, CAP-401
 
 ### CAP-302: ID axis and layout
 
@@ -98,7 +98,7 @@ One row per bee ID or tag ID, ordered and sized by the chronogram. It only adapt
 - **Group:** CAP-300
 - **Code:**
   - `ChronoControl.js`: `updateChronoYDomain`, `sortIds`, `chronoAdjust`
-- **Links:** P-801, CAP-802
+- **Links:** CAP-801, CAP-802
 
 ### CAP-303: Event display
 
@@ -108,7 +108,7 @@ Observations drawn as intervals: individual versus merged events, behavior label
 - **Code:**
   - `ChronoControl.js`: `renderActivities`, `renderChrono_danglingTracks`
   - `ChronoAxes.js`: `ChronoAxes`
-- **Links:** P-601, CAP-602, CAP-802, ENT-001, DEC-003, OQ-006
+- **Links:** CAP-601, CAP-602, CAP-802, ENT-001, DEC-003, OQ-006
 
 ### CAP-304: Tag display
 
@@ -117,7 +117,7 @@ Tag detection intervals, free tags (not yet in a track), wrongid virtual interva
 - **Group:** CAP-300
 - **Code:**
   - `ChronoControl.js`: `renderActivities`, `updateTagIntervals`, `updateTagsLabels`
-- **Links:** P-402, CAP-502, CAP-802, ENT-002
+- **Links:** CAP-402, CAP-502, CAP-802, ENT-002
 
 ### CAP-305: Event navigation
 
@@ -126,7 +126,7 @@ Click and double-click to request a seek and a selection; go to first, last, nex
 - **Group:** CAP-300
 - **Code:**
   - `ChronoControlInteraction.js`: `gotoEvent`, `gotoNextEvent`, `gotoPreviousEvent`, `onAxesClick`, `onClickNextID`
-- **Links:** P-202, CAP-701, OQ-008
+- **Links:** CAP-202, CAP-701, OQ-008
 
 ## CAP-400: Overlay display and annotations
 
@@ -141,7 +141,7 @@ Draw, move, rotate, delete boxes and assign the bee ID on the overlay; click mod
   - `OverlayControl.js`: `OverlayControl`, `fabric.BeeRect`
   - `SelectionControl.js`: `submit_bee`
   - `labelbee_page.html`: `~Annotations panel (BeeID, box angle)`
-- **Links:** T-001, INV-002, OQ-005
+- **Links:** ENT-001, INV-002, OQ-005
 
 ### CAP-402: Tag display on the frame
 
@@ -151,7 +151,7 @@ Show detected tags, orientation and tracks over the video; tags are displayed he
 - **Code:**
   - `OverlayControl.js`: `plotTags`, `plotTagsTracks`
   - `labelbee_page.html`: `#showTags`
-- **Links:** T-002, CAP-502, CAP-801
+- **Links:** ENT-002, CAP-502, CAP-801
 
 ### CAP-403: Skeleton overlay
 
@@ -161,7 +161,7 @@ Draw the skeleton (labelled keypoints, stored in `obs.parts`) of each bee on the
 - **Code:**
   - `OverlayControl.js`: `fabric.BeeRect._drawParts`
   - `ZoomView.js`: `ZoomOverlay.flagShowParts`
-- **Links:** T-001, CAP-501, OQ-007
+- **Links:** ENT-001, CAP-501, OQ-007
 
 ## CAP-500: Zoom view and details editing
 
@@ -175,7 +175,7 @@ Place the skeleton keypoints (head, neck, thorax, waist, tail; stored as `obs.pa
 - **Code:**
   - `ZoomView.js`: `ZoomOverlay`, `ZoomOverlay.onButtonClickAddRemovePartLabel`, `ZoomOverlay.keypointLabelsFromServer`
   - `labelbee_page.html`: `~Parts labeling panel`
-- **Links:** T-001, CAP-403, OQ-007
+- **Links:** ENT-001, CAP-403, OQ-007
 
 ### CAP-502: Tag ID assignment and fix
 
@@ -185,7 +185,7 @@ Review detected tags, open alternate decodings, assign a tag ID to a track and f
 - **Code:**
   - `ZoomView.js`: `ZoomOverlay.updateDistractors`, `ZoomOverlay.bakeTagFix`, `ZoomOverlay.onToggleButtonShowAlternate`
   - `labelbee_page.html`: `~Alternate Tags panel`
-- **Links:** T-002, DEC-001, CAP-402, OQ-002
+- **Links:** ENT-002, DEC-001, CAP-402, OQ-002
 
 ## CAP-600: Labels, dashboards and specialized annotations
 
@@ -199,7 +199,7 @@ Toggle fanning, pollen, entering, leaving, wrongID, falsealarm; free-text labels
 - **Code:**
   - `SelectionControl.js`: `labelToggle`, `submit_bee`
   - `labelbee_page.html`: `#labels`, `#notes`
-- **Links:** T-001, DEC-003, OQ-006
+- **Links:** ENT-001, DEC-003, OQ-006
 
 ### CAP-602: Pollination visits
 
@@ -209,7 +209,7 @@ Annotate visits as frame spans, with start and end picked in pick-frame mode. St
 - **Code:**
   - `OverlayControl.js`: `VisitWidget`, `TimelineWidget`
   - `labelbee_page.html`: `#visitblock`
-- **Links:** T-001, CAP-303, OQ-004
+- **Links:** ENT-001, CAP-303, OQ-004
 
 ### CAP-603: Summaries and statistics
 
@@ -220,7 +220,7 @@ Read-only overview of the annotation: events info, statistics and the observatio
   - `SelectionControl.js`: `updateAnnotationStatistics`
   - `ChronoControl.js`: `renderObsTable`, `updateObsTable`
   - `labelbee_page.html`: `~Events info panel`
-- **Links:** P-802, CAP-701
+- **Links:** CAP-802, CAP-701
 
 ## CAP-700: Annotation model and IO
 
@@ -234,7 +234,7 @@ Owns `Tracks`, `Tags`, the current selection and the undo stack; the single plac
 - **Code:**
   - `Model.js`: `Observation`, `getObsHandle`, `storeObs`, `changeObservationID`, `cacheTags`
   - `SelectionControl.js`: `selectBeeByID`, `undoPush`, `undoPop`, `deleteSelected`
-- **Links:** T-001, ENT-002, INV-001
+- **Links:** ENT-001, ENT-002, INV-001
 
 ### CAP-702: Local file load and save
 
@@ -244,7 +244,7 @@ Load and save tracks and tags as local files (JSON v1/v2, CSV).
 - **Code:**
   - `AnnotationIO.js`: `loadEventsFromFile`, `saveEventsToFile`, `loadTagsFromFile`, `saveTagsToFile`, `convertTracksToV2`
   - `labelbee_page.html`: `~I/O Local storage panel`
-- **Links:** T-004, INV-001, INV-003, OQ-003, OQ-010
+- **Links:** ENT-004, INV-001, INV-003, OQ-003, OQ-010
 
 ### CAP-703: Server load and save
 
@@ -254,7 +254,7 @@ Load annotations from the server and save a snapshot as a new record with `creat
 - **Code:**
   - `AnnotationIO.js`: `eventsToServer`, `eventsFromServer`, `tracksListFromServer`, `FromServerDialog`
   - `resources/annotations.py`: `AnnotationsAPI`, `AnnotationAPI`
-- **Links:** T-004, DEC-002, OQ-010
+- **Links:** ENT-004, DEC-002, OQ-010
 
 ### CAP-704: External-tool import
 
@@ -263,7 +263,7 @@ Read output of external tools: `tracks_tagged` CSV, tags CSV and JSON.
 - **Group:** CAP-700
 - **Code:**
   - `AnnotationIO.js`: `tracks_tagged_csv_to_json`, `tags_csv_to_json`, `tags_csv_to_tagjson`, `loadTrackTaggedCSVFromServer`
-- **Links:** T-004, INV-003, DEC-001
+- **Links:** ENT-004, INV-003, DEC-001
 
 ### CAP-705: Export
 
@@ -272,7 +272,7 @@ Export tracks as CSV and as bounding boxes.
 - **Group:** CAP-700
 - **Code:**
   - `AnnotationIO.js`: `tracksToCSV`, `tracksToBBoxes`, `saveEventsToCSV`, `saveEventsToBBoxes`
-- **Links:** T-004
+- **Links:** ENT-004
 
 ### CAP-706: Experimental DB sources
 
@@ -283,7 +283,7 @@ Load tracks from SQLite or DuckDB (experimental IO).
   - `AnnotationIO.js`: `loadTracksCSVFromDB`, `db_to_json`
   - `SQLiteDB.js`
   - `DuckDB.js`
-- **Links:** T-004
+- **Links:** ENT-004
 
 ### CAP-707: Load-time sanitising
 
@@ -292,7 +292,7 @@ Validate and normalise loaded files into a valid `Tracks`/`Tags` (duplicate ids,
 - **Group:** CAP-700
 - **Code:**
   - `AnnotationIO.js`: `sanitizeEvents`, `setTracks`, `setTags`
-- **Links:** T-004, INV-003
+- **Links:** ENT-004, INV-003
 
 ## CAP-800: Data filtering and processing
 
@@ -306,7 +306,7 @@ User options that hide, select or order data for the views: hide falsealarm/wron
 - **Code:**
   - `ChronoControl.js`: `click_restrictID`, `click_excludeID`, `click_hideInvalid`, `click_hideFlowers`
   - `labelbee_page.html`: `~Tag filtering panel`
-- **Links:** P-302, CAP-402
+- **Links:** CAP-302, CAP-402
 
 ### CAP-802: Derived-structure pipelines
 
@@ -315,7 +315,7 @@ Functional stages from `Tracks`/`Tags` to the structures views read: tag integra
 - **Group:** CAP-800
 - **Code:**
   - `ChronoControl.js`: `augmentTrackWithTag`, `updateChronogramData`, `createIntervalList`, `updateFlatTracks`, `getTTags`, `updateTagIntervals`
-- **Links:** P-303, CAP-304, ENT-001, ENT-002
+- **Links:** CAP-303, CAP-304, ENT-001, ENT-002
 
 ### CAP-803: Annotation clean-up
 
@@ -325,7 +325,7 @@ User-triggered bulk removal of obsolete events. Writes `Tracks` directly (`DEBT`
 - **Code:**
   - `ChronoControl.js`: `cleanObsoleteEvents`, `cleanObsoleteEventsCB`
   - `labelbee_page.html`: `#cleanObsoleteEventsButton`
-- **Links:** -009
+- **Links:** OQ-009
 
 ### CAP-804: Tag interpolation and motion direction
 
@@ -334,4 +334,4 @@ User-triggered bulk removal of obsolete events. Writes `Tracks` directly (`DEBT`
 - **Group:** CAP-800
 - **Code:**
   - `ChronoControl.js`: `interpolateTags`, `computeMotionDirection`
-- **Links:** T-002
+- **Links:** ENT-002
