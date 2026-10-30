@@ -5,7 +5,7 @@
 
 <p>This page is accessible to any user (signed in or not)</p>
 
-{% if not current_user.is_authenticated %}
+{# {% if not current_user.is_authenticated %}
 <p>
 To view the User page, you must
 <a href="{{ url_for('user.login') }}">Sign in</a> or
@@ -16,16 +16,17 @@ To view the User page, you must
 <span style="font-family: monospace; border: solid gray 1px; padding: 3px;">{{current_user.first_name or current_user.user_auth.username}}</span>
 </p>
 {% endif %}
+#}
 
 <h3>Tools</h3>
 <ul>
-  {% if not current_user.is_authenticated %}
+	{# {% if not current_user.is_authenticated %} #}
 <p>
   <li><a href="labelbee/gui">{{config.APP_NAME}} (CAUTION: limited functionality, log in for full funcitonality)</a></li>
 </p>
-{% else %}  
+{# {% else %} #}
 <li><a href="labelbee/gui">{{config.APP_NAME}} (signed in))</a></li>
-{% endif %}
+{# {% endif %} #}
 </ul>
 
 <h3>Access to raw data</h3>

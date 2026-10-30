@@ -1,29 +1,37 @@
 import os
-import sys
+from dotenv import load_dotenv
+
+# Load variables from .env file
+load_dotenv()
 
 # *****************************
 # Environment specific settings
 # *****************************
-from dotenv import load_dotenv
 
-load_dotenv()
+# DO NOT use "DEBUG = True" in production environments
+DEBUG = True
 
-WTF_CSRF_TIME_LIMIT = None
+# Read SECRET_KEY from .env, fallback to default if not set
+SECRET_KEY = os.getenv("SECRET_KEY", "This is an UNSECURE Secret. CHANGE THIS for production environments.")
 
-# Flask-Mail settings (use local server)
-SECRET_KEY = os.getenv("SECRET_KEY")
-# SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://root:password@localhost:3306/labelbee-db"
+# SQLAlchemy settings using MYSQL_* environment variables for PostgreSQL connection
+db_user = os.getenv("MYSQL_USER")
+db_pass = os.getenv("MYSQL_PASSWORD")
+db_host = os.getenv("MYSQL_HOST", "localhost")
+db_port = os.getenv("MYSQL_PORT", "5432")
+db_name = os.getenv("MYSQL_DATABASE")
 
-SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@{os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}/{os.getenv('MYSQL_DATABASE')}"
-MAIL_SERVER = "localhost"
-MAIL_PORT = 25
+SQLALCHEMY_DATABASE_URI = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+
+# Flask-Mail settings
+MAIL_SERVER = 'smtp.gmail.com'
+MAIL_PORT = 587
 MAIL_USE_SSL = False
-MAIL_USE_TLS = False
-MAIL_USERNAME = None
-MAIL_PASSWORD = None
-MAIL_DEFAULT_SENDER = None
-PORT=8080
+MAIL_USE_TLS = True
+MAIL_USERNAME = 'ivan.rodriguez5@upr.edu'
+MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "my-password")
+MAIL_DEFAULT_SENDER = '"Soy yo" <ivan.rodriguez5@upr.edu>'
 
 ADMINS = [
-    '"Admin" <remi.megret@upr.edu>',
+    '"Admin One" <ivan.rodriguez5@upr.edu>',
 ]
