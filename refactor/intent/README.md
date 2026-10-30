@@ -4,20 +4,22 @@ Scope: the *why* (who annotates what, for what purpose). The *what exactly* is f
 the per-feature specs (PLAN Phase 1c, not started); the *how it is built* is in
 [../analysis/](../analysis/README.md).
 
-Files associated to this task, in the intent/ folder:
-```
-  capabilities.md        # CAP
-  behaviors/             # BEH, grouped by capability file
-  entities.md            # ENT
-  invariants.md          # INV
-  decisions.md           # DEC
-  debt.md                # DEBT
-  questions.md           # OQ
-  seams.md               # SEAM
-  README.md              # this conventions doc
-  docs/view_*.md         # generated views with working links (committed, do not edit)
-  tools/spec_view.py     # generator and checker (stdlib only)
-```
+Files in the intent/ folder (sources; the generated views in [docs/](docs/README.md) have working links):
+
+| Prefix | Source | Content |
+|---|---|---|
+| `CAP` | [capabilities.md](capabilities.md) | 8 capability groups and their leaves |
+| `BEH` | [behaviors/](behaviors/), one `cap-NNN-*.md` per group | behaviors, grouped by capability |
+| `ENT` | [entities.md](entities.md) | data concepts |
+| `INV` | [invariants.md](invariants.md) | properties that must always hold |
+| `DEC` | [decisions.md](decisions.md) | design decisions |
+| `DEBT` | [debt.md](debt.md) | known hacks and accidents |
+| `SEAM` | [seams.md](seams.md) | module boundaries and interface contracts |
+| (none) | [modules.md](modules.md) | global state tables and proposed modules, per capability group |
+| (none) | [cap-vs-mod.md](cap-vs-mod.md) | alignment of capability leaves with the proposed modules |
+| `OQ` | [../QUESTIONS.md](../QUESTIONS.md) | open questions (kept at `refactor/` level per `CLAUDE.md`) |
+| | [tools/spec_view.py](tools/spec_view.py) | generator and checker of the views (stdlib only) |
+| | this file | conventions |
 
 
 ## 1. Purpose
@@ -60,13 +62,13 @@ Links to files:
 | Prefix | File |
 |---|---|
 | `CAP` | [capabilities.md](capabilities.md) |
-| `BEH` | not created yet |
+| `BEH` | [behaviors/](behaviors/) |
 | `ENT` | [entities.md](entities.md) |
 | `INV` | [invariants.md](invariants.md) |
 | `DEC` | [decisions.md](decisions.md) |
-| `DEBT` | not created yet |
+| `DEBT` | [debt.md](debt.md) |
 | `OQ` | [../QUESTIONS.md](../QUESTIONS.md) (kept at `refactor/` level per `CLAUDE.md`) |
-| `SEAM` | not created yet |
+| `SEAM` | [seams.md](seams.md) |
 
 ### 3.2 Work items
 

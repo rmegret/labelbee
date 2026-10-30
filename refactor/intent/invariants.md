@@ -17,7 +17,7 @@ or loading. Today saving violates it: see C1 in [analysis/06](../analysis/06-sme
 
 - **Code:**
   - `AnnotationIO.js`: `convertTracksToV1`
-- **Links:** P-701, CAP-702, CAP-703, OQ-003
+- **Links:** CAP-701, CAP-702, CAP-703, OQ-003
 
 ## INV-002: Interactive responsiveness
 
@@ -25,7 +25,7 @@ Stepping through frames and editing stay responsive on the 5MP videos used today
 change to the refresh and redraw paths is judged against current behavior (no numeric target; the baseline is current behavior on the Gurabo 5MP videos, OQ-011). Annotators also depend on keyboard and
 mouse shortcuts and click modes: the behavior-preserving rule applies to each of them.
 
-- **Links:** P-202, CAP-401, OQ-005, OQ-011
+- **Links:** CAP-202, CAP-401, OQ-005, OQ-011
 
 ## INV-003: Old annotation files stay loadable
 
@@ -33,4 +33,4 @@ Readers for JSON v1, CSV and `tracks_tagged` files survive the refactor.
 
 - **Code:**
   - `AnnotationIO.js`: `sanitizeEvents`, `tracks_tagged_csv_to_json`, `setTags`
-- **Links:** T-004, CAP-702, CAP-704, CAP-707, OQ-003
+- **Links:** ENT-004, CAP-702, CAP-704, CAP-707, OQ-003

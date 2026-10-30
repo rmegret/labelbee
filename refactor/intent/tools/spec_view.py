@@ -9,7 +9,7 @@ but must still be found in the file, otherwise a warning is printed;
 `<!-- toc -->` becomes a table of contents.
 
 usage: python3 -I spec_view.py SOURCE OUTPUT [--spec-dir DIR] [--check]
-       python3 -I spec_view.py --all [--check]   (every spec file of refactor/intent -> docs/)
+       python3 -I spec_view.py --all [--check]   (every spec file of refactor/intent and refactor/intent/behaviors -> docs/)
 """
 import argparse
 import os
@@ -52,9 +52,11 @@ class Resolver:
                 if os.path.splitext(fn)[1] in CODE_EXT:
                     self.files.append(os.path.relpath(os.path.join(dp, fn), root))
         self.ids = {}  # ID -> (file, anchor, title)
-        for p in sorted(os.listdir(spec_dir)):
-            if p.endswith('.md'):
-                self._index_spec(os.path.join(spec_dir, p))
+        for sub in ('', 'behaviors'):
+            d = os.path.join(spec_dir, sub)
+            for p in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+                if p.endswith('.md') and p != 'README.md':
+                    self._index_spec(os.path.join(d, p))
         self._index_spec(source)
         q = os.path.join(os.path.dirname(spec_dir), 'QUESTIONS.md')
         if os.path.exists(q):
@@ -65,6 +67,8 @@ class Resolver:
         for line in open(path).read().split('\n'):
             m = HEAD_RE.match(line)
             if m:
+                if m.group(2) in self.ids and self.ids[m.group(2)][0] != path:
+                    self.warn('duplicate ID %s' % m.group(2))
                 self.ids[m.group(2)] = (path, slug('%s: %s' % (m.group(2), m.group(3))), m.group(3))
 
     def view_of(self, path):
@@ -72,7 +76,8 @@ class Resolver:
         if os.path.abspath(path) == os.path.abspath(self.source):
             return self.output
         docs = os.path.join(self.spec_dir, 'docs')
-        if os.path.dirname(self.output) == docs and os.path.dirname(path) == self.spec_dir:
+        if os.path.dirname(self.output) == docs and os.path.dirname(path) in (
+                self.spec_dir, os.path.join(self.spec_dir, 'behaviors')):
             return os.path.join(docs, 'view_' + os.path.basename(path))
         return path
 
@@ -205,8 +210,11 @@ def main():
     a = ap.parse_args()
     if a.all:
         d = os.path.abspath(a.spec_dir or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
-        names = [n for n in sorted(os.listdir(d)) if n.endswith('.md') and n != 'README.md']
-        ok = [build(os.path.join(d, n), os.path.join(d, 'docs', 'view_' + n), d, a.check) for n in names]
+        srcs = [os.path.join(d, n) for n in sorted(os.listdir(d)) if n.endswith('.md') and n != 'README.md']
+        bd = os.path.join(d, 'behaviors')
+        if os.path.isdir(bd):
+            srcs += [os.path.join(bd, n) for n in sorted(os.listdir(bd)) if n.endswith('.md')]
+        ok = [build(x, os.path.join(d, 'docs', 'view_' + os.path.basename(x)), d, a.check) for x in srcs]
         sys.exit(0 if all(ok) else 1)
     if not (a.source and a.output):
         ap.error('SOURCE and OUTPUT, or --all')

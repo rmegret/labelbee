@@ -26,7 +26,7 @@ Optional: `parts` (skeleton keypoints), `newid` (wrongid), `fix` (tag fix), `vis
 
 - **Code:**
   - [labelbee/static/labelbee/js/Model.js](../../../labelbee/static/labelbee/js/Model.js): `Observation`, `copyObs`, `cloneObs`
-- **Links:** T-002, [CAP-401](view_capabilities.md#cap-401-bee-track-boxes "Bee track boxes"), [CAP-601](view_capabilities.md#cap-601-behavior-labels-and-notes "Behavior labels and notes"), [CAP-501](view_capabilities.md#cap-501-skeleton-labelling "Skeleton labelling"), [CAP-602](view_capabilities.md#cap-602-pollination-visits "Pollination visits"), [CAP-701](view_capabilities.md#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for"), [OQ-006](../../QUESTIONS.md#oq-006 "Label semantics")
+- **Links:** [ENT-002](#ent-002-tag-detection "Tag detection"), [CAP-401](view_capabilities.md#cap-401-bee-track-boxes "Bee track boxes"), [CAP-601](view_capabilities.md#cap-601-behavior-labels-and-notes "Behavior labels and notes"), [CAP-501](view_capabilities.md#cap-501-skeleton-labelling "Skeleton labelling"), [CAP-602](view_capabilities.md#cap-602-pollination-visits "Pollination visits"), [CAP-701](view_capabilities.md#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for"), [OQ-006](../../QUESTIONS.md#oq-006 "Label semantics")
 
 ## ENT-002: Tag detection
 
@@ -37,7 +37,7 @@ strings; untagged tracks get `T<n>` ids in the `tracks_tagged` CSV.
 - **Code:**
   - [labelbee/static/labelbee/js/Model.js](../../../labelbee/static/labelbee/js/Model.js): `cacheTags`, `getTags`
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tagsAddFrames`
-- **Links:** T-001, [CAP-402](view_capabilities.md#cap-402-tag-display-on-the-frame "Tag display on the frame"), [CAP-502](view_capabilities.md#cap-502-tag-id-assignment-and-fix "Tag ID assignment and fix"), [OQ-002](../../QUESTIONS.md#oq-002 "Tag pipeline boundary")
+- **Links:** [ENT-001](#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [CAP-402](view_capabilities.md#cap-402-tag-display-on-the-frame "Tag display on the frame"), [CAP-502](view_capabilities.md#cap-502-tag-id-assignment-and-fix "Tag ID assignment and fix"), [OQ-002](../../QUESTIONS.md#oq-002 "Tag pipeline boundary")
 
 ## ENT-003: Video
 
@@ -47,7 +47,7 @@ preview URLs, frame offset).
 - **Code:**
   - [labelbee/models.py](../../../labelbee/models.py): `Video`
   - [labelbee/static/labelbee/js/VideoControl.js](../../../labelbee/static/labelbee/js/VideoControl.js): `VideoControl`
-- **Links:** P-201, [CAP-101](view_capabilities.md#cap-101-dataset-and-video-pages "Dataset and video pages")
+- **Links:** [CAP-201](view_capabilities.md#cap-201-load-video-metadata-and-video "Load video metadata and video"), [CAP-101](view_capabilities.md#cap-101-dataset-and-video-pages "Dataset and video pages")
 
 ## ENT-004: Annotation file / record
 
@@ -59,7 +59,7 @@ Format table: [analysis/04](../../analysis/04-data-model.md) 4.4.
 - **Code:**
   - [labelbee/models.py](../../../labelbee/models.py): `VideoData`
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV1`, `convertTracksToV2`, `setTracks`
-- **Links:** P-702, [CAP-703](view_capabilities.md#cap-703-server-load-and-save "Server load and save"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")
+- **Links:** [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save"), [CAP-703](view_capabilities.md#cap-703-server-load-and-save "Server load and save"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")
 
 ## ENT-005: Dataset
 
@@ -67,4 +67,4 @@ Named group of videos, managed by admins through the gallery pages.
 
 - **Code:**
   - [labelbee/models.py](../../../labelbee/models.py): `DataSet`
-- **Links:** P-101
+- **Links:** [CAP-101](view_capabilities.md#cap-101-dataset-and-video-pages "Dataset and video pages")

@@ -19,6 +19,7 @@ _Proposed_: Front-end first; backend only for items in [Q5](#q5)/[Q6](#q6).
 What is the **end state** for the JS: (a) ES modules + same libs (jQuery, fabric, d3), (b) + a bundler (Vite/esbuild) + TypeScript/JSDoc types, (c) a framework (Vue/React/Svelte)?  
 _Significance_: Determines every ADR.  
 _Proposed_: (a), JSDoc types checked by `tsc --checkJs`; **no framework, no bundler required** at first.
+_Answer_: (a) ES modules with the same libs, confirmed by the maintainer (2026-10-30).
 
 **<a id='q3'>Q3</a>: Frozen libraries**  
 Which libraries are frozen? `extern/` is vendored (jQuery UI 1.12, Bootstrap 3, fabric.js version?, d3 v6). May they be upgraded or replaced (e.g. via npm)?  
@@ -47,6 +48,7 @@ _Proposed_: Keep all readers, write v2 only.
 **<a id='q8'>Q8</a>: Sample data**  
 Existing stored data: can I get an **anonymised sample** (one video + its tracks v1/v2, tags, `tracks_tagged`) to use as a fixture? Can I be told the real `data_type` values in `video_data`?  
 _Proposed_: Create synthetic fixtures from the code; flag as weaker.
+_Answer_: synthetic fixtures built from the code's formats, flagged as weaker, confirmed by the maintainer (2026-10-30).
 
 **<a id='q9'>Q9</a>: Gurabo-specific setup**  
 Is the **Gurabo-specific setup** (ROI for 5MP video, 4 exclude rects, 300x600 default box, `tag25h5`) specific to the Gurabo setup, or meant to be configurable per dataset/video?  
@@ -61,6 +63,7 @@ _Proposed_: Out of scope; keep snapshot model.
 **<a id='q11'>Q11</a>: Running code and dev tooling**  
 Can I run things in the next phases (browser tests, `npm install`, `pytest`) and may I add dev-only tooling (`package.json`, ESLint, Playwright) under `refactor/tests/`? This analysis ran nothing.  
 _Proposed_: Add tooling only under `refactor/`, never in `labelbee/`.
+_Answer_: yes: running `pytest` and Node tests and dev-only tooling under `refactor/tests/` allowed, never in `labelbee/`; confirmed by the maintainer (2026-10-30).
 
 **<a id='q12'>Q12</a>: Branches and worktrees**  
 `CLAUDE.md` says "work only on branch `refactor`, never commit unless asked". This session is a background job forced into a separate git worktree (branch `worktree-refactor-analysis`), so the analysis files are there and not in your checkout. How do you want them integrated (cherry-pick, copy, or let me work directly on `refactor`)?  

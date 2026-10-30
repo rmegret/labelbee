@@ -73,7 +73,7 @@ Organize videos into datasets, browse them and open one in the annotator (galler
 - **Code:**
   - [labelbee/blueprints/gallery/gallery.py](../../../labelbee/blueprints/gallery/gallery.py): `datasets_page`, `videos_page`, `add_dataset_page`, `edit_video_page`
   - [labelbee/models.py](../../../labelbee/models.py): `Video`, `DataSet`
-- **Links:** T-003, [ENT-005](view_entities.md#ent-005-dataset "Dataset"), [OQ-001](../../QUESTIONS.md#oq-001 "Users and purpose")
+- **Links:** [ENT-003](view_entities.md#ent-003-video "Video"), [ENT-005](view_entities.md#ent-005-dataset "Dataset"), [OQ-001](../../QUESTIONS.md#oq-001 "Users and purpose")
 
 ### CAP-102: User administration and login
 
@@ -84,7 +84,7 @@ Log in and manage users and roles (admin).
   - [labelbee/blueprints/admin/admin.py](../../../labelbee/blueprints/admin/admin.py): `manage_users_page`
   - [labelbee/blueprints/auth/auth.py](../../../labelbee/blueprints/auth/auth.py): `user_profile_page`
   - [labelbee/models.py](../../../labelbee/models.py): `User`, `Role`
-- **Links:** -001
+- **Links:** [OQ-001](../../QUESTIONS.md#oq-001 "Users and purpose")
 
 ## CAP-200: Load and play video
 
@@ -99,7 +99,7 @@ Pick a video from the server list inside the annotator, load its metadata (`vide
   - [labelbee/static/labelbee/js/VideoList.js](../../../labelbee/static/labelbee/js/VideoList.js): `VideoManager`, `VideoManager.selectVideoByID`, `VideoManager.loadVideoManual`
   - [labelbee/static/labelbee/js/VideoControl.js](../../../labelbee/static/labelbee/js/VideoControl.js): `VideoControl.loadVideo`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `Video Info panel`
-- **Links:** T-003, [OQ-004](../../QUESTIONS.md#oq-004 "Which workflows are routine")
+- **Links:** [ENT-003](view_entities.md#ent-003-video "Video"), [OQ-004](../../QUESTIONS.md#oq-004 "Which workflows are routine")
 
 ### CAP-202: Play and seek
 
@@ -110,7 +110,7 @@ Arrow keys and `<`/`>` navigate (they do not nudge boxes, [DEC-004](../decisions
 - **Code:**
   - [labelbee/static/labelbee/js/VideoControl.js](../../../labelbee/static/labelbee/js/VideoControl.js): `VideoControl.seekFrame`, `VideoControl.playPauseVideo`, `VideoControl.playTick`, `VideoCache`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `Preview panel`
-- **Links:** V-002, [OQ-004](../../QUESTIONS.md#oq-004 "Which workflows are routine")
+- **Links:** [INV-002](view_invariants.md#inv-002-interactive-responsiveness "Interactive responsiveness"), [OQ-004](../../QUESTIONS.md#oq-004 "Which workflows are routine")
 
 ## CAP-300: Temporal display and navigation
 
@@ -127,7 +127,7 @@ Time axis taken from the video; zoom and shift of the time domain; mousewheel mo
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `scaleTimeDomain`, `shiftTimeDomain`, `updateTimeMark`, `updateVideoSpan`, `updateTrackWindowSpan`
   - [labelbee/static/labelbee/js/ChronoAxes.js](../../../labelbee/static/labelbee/js/ChronoAxes.js): `ChronoAxes`
-- **Links:** P-202, [CAP-401](#cap-401-bee-track-boxes "Bee track boxes")
+- **Links:** [CAP-202](#cap-202-play-and-seek "Play and seek"), [CAP-401](#cap-401-bee-track-boxes "Bee track boxes")
 
 ### CAP-302: ID axis and layout
 
@@ -136,7 +136,7 @@ One row per bee ID or tag ID, ordered and sized by the chronogram. It only adapt
 - **Group:** [CAP-300](#cap-300-temporal-display-and-navigation "Temporal display and navigation")
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `updateChronoYDomain`, `sortIds`, `chronoAdjust`
-- **Links:** P-801, [CAP-802](#cap-802-derived-structure-pipelines "Derived-structure pipelines")
+- **Links:** [CAP-801](#cap-801-filters "Filters"), [CAP-802](#cap-802-derived-structure-pipelines "Derived-structure pipelines")
 
 ### CAP-303: Event display
 
@@ -146,7 +146,7 @@ Observations drawn as intervals: individual versus merged events, behavior label
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `renderActivities`, `renderChrono_danglingTracks`
   - [labelbee/static/labelbee/js/ChronoAxes.js](../../../labelbee/static/labelbee/js/ChronoAxes.js): `ChronoAxes`
-- **Links:** P-601, [CAP-602](#cap-602-pollination-visits "Pollination visits"), [CAP-802](#cap-802-derived-structure-pipelines "Derived-structure pipelines"), [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic"), [OQ-006](../../QUESTIONS.md#oq-006 "Label semantics")
+- **Links:** [CAP-601](#cap-601-behavior-labels-and-notes "Behavior labels and notes"), [CAP-602](#cap-602-pollination-visits "Pollination visits"), [CAP-802](#cap-802-derived-structure-pipelines "Derived-structure pipelines"), [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic"), [OQ-006](../../QUESTIONS.md#oq-006 "Label semantics")
 
 ### CAP-304: Tag display
 
@@ -155,7 +155,7 @@ Tag detection intervals, free tags (not yet in a track), wrongid virtual interva
 - **Group:** [CAP-300](#cap-300-temporal-display-and-navigation "Temporal display and navigation")
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `renderActivities`, `updateTagIntervals`, `updateTagsLabels`
-- **Links:** P-402, [CAP-502](#cap-502-tag-id-assignment-and-fix "Tag ID assignment and fix"), [CAP-802](#cap-802-derived-structure-pipelines "Derived-structure pipelines"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection")
+- **Links:** [CAP-402](#cap-402-tag-display-on-the-frame "Tag display on the frame"), [CAP-502](#cap-502-tag-id-assignment-and-fix "Tag ID assignment and fix"), [CAP-802](#cap-802-derived-structure-pipelines "Derived-structure pipelines"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection")
 
 ### CAP-305: Event navigation
 
@@ -164,7 +164,7 @@ Click and double-click to request a seek and a selection; go to first, last, nex
 - **Group:** [CAP-300](#cap-300-temporal-display-and-navigation "Temporal display and navigation")
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControlInteraction.js](../../../labelbee/static/labelbee/js/ChronoControlInteraction.js): `gotoEvent`, `gotoNextEvent`, `gotoPreviousEvent`, `onAxesClick`, `onClickNextID`
-- **Links:** P-202, [CAP-701](#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo"), [OQ-008](../../QUESTIONS.md#oq-008 "Chronogram role")
+- **Links:** [CAP-202](#cap-202-play-and-seek "Play and seek"), [CAP-701](#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo"), [OQ-008](../../QUESTIONS.md#oq-008 "Chronogram role")
 
 ## CAP-400: Overlay display and annotations
 
@@ -179,7 +179,7 @@ Draw, move, rotate, delete boxes and assign the bee ID on the overlay; click mod
   - [labelbee/static/labelbee/js/OverlayControl.js](../../../labelbee/static/labelbee/js/OverlayControl.js): `OverlayControl`, `fabric.BeeRect`
   - [labelbee/static/labelbee/js/SelectionControl.js](../../../labelbee/static/labelbee/js/SelectionControl.js): `submit_bee`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `Annotations panel (BeeID, box angle)`
-- **Links:** T-001, [INV-002](view_invariants.md#inv-002-interactive-responsiveness "Interactive responsiveness"), [OQ-005](../../QUESTIONS.md#oq-005 "Core tracking workflow and shortcuts")
+- **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [INV-002](view_invariants.md#inv-002-interactive-responsiveness "Interactive responsiveness"), [OQ-005](../../QUESTIONS.md#oq-005 "Core tracking workflow and shortcuts")
 
 ### CAP-402: Tag display on the frame
 
@@ -189,7 +189,7 @@ Show detected tags, orientation and tracks over the video; tags are displayed he
 - **Code:**
   - [labelbee/static/labelbee/js/OverlayControl.js](../../../labelbee/static/labelbee/js/OverlayControl.js): `plotTags`, `plotTagsTracks`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `#showTags`
-- **Links:** T-002, [CAP-502](#cap-502-tag-id-assignment-and-fix "Tag ID assignment and fix"), [CAP-801](#cap-801-filters "Filters")
+- **Links:** [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [CAP-502](#cap-502-tag-id-assignment-and-fix "Tag ID assignment and fix"), [CAP-801](#cap-801-filters "Filters")
 
 ### CAP-403: Skeleton overlay
 
@@ -199,7 +199,7 @@ Draw the skeleton (labelled keypoints, stored in `obs.parts`) of each bee on the
 - **Code:**
   - [labelbee/static/labelbee/js/OverlayControl.js](../../../labelbee/static/labelbee/js/OverlayControl.js): `fabric.BeeRect._drawParts`
   - [labelbee/static/labelbee/js/ZoomView.js](../../../labelbee/static/labelbee/js/ZoomView.js): `ZoomOverlay.flagShowParts`
-- **Links:** T-001, [CAP-501](#cap-501-skeleton-labelling "Skeleton labelling"), [OQ-007](../../QUESTIONS.md#oq-007 "Skeleton labeling")
+- **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [CAP-501](#cap-501-skeleton-labelling "Skeleton labelling"), [OQ-007](../../QUESTIONS.md#oq-007 "Skeleton labeling")
 
 ## CAP-500: Zoom view and details editing
 
@@ -213,7 +213,7 @@ Place the skeleton keypoints (head, neck, thorax, waist, tail; stored as `obs.pa
 - **Code:**
   - [labelbee/static/labelbee/js/ZoomView.js](../../../labelbee/static/labelbee/js/ZoomView.js): `ZoomOverlay`, `ZoomOverlay.onButtonClickAddRemovePartLabel`, `ZoomOverlay.keypointLabelsFromServer`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `Parts labeling panel`
-- **Links:** T-001, [CAP-403](#cap-403-skeleton-overlay "Skeleton overlay"), [OQ-007](../../QUESTIONS.md#oq-007 "Skeleton labeling")
+- **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [CAP-403](#cap-403-skeleton-overlay "Skeleton overlay"), [OQ-007](../../QUESTIONS.md#oq-007 "Skeleton labeling")
 
 ### CAP-502: Tag ID assignment and fix
 
@@ -223,7 +223,7 @@ Review detected tags, open alternate decodings, assign a tag ID to a track and f
 - **Code:**
   - [labelbee/static/labelbee/js/ZoomView.js](../../../labelbee/static/labelbee/js/ZoomView.js): `ZoomOverlay.updateDistractors`, `ZoomOverlay.bakeTagFix`, `ZoomOverlay.onToggleButtonShowAlternate`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `Alternate Tags panel`
-- **Links:** T-002, [DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee"), [CAP-402](#cap-402-tag-display-on-the-frame "Tag display on the frame"), [OQ-002](../../QUESTIONS.md#oq-002 "Tag pipeline boundary")
+- **Links:** [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee"), [CAP-402](#cap-402-tag-display-on-the-frame "Tag display on the frame"), [OQ-002](../../QUESTIONS.md#oq-002 "Tag pipeline boundary")
 
 ## CAP-600: Labels, dashboards and specialized annotations
 
@@ -237,7 +237,7 @@ Toggle fanning, pollen, entering, leaving, wrongID, falsealarm; free-text labels
 - **Code:**
   - [labelbee/static/labelbee/js/SelectionControl.js](../../../labelbee/static/labelbee/js/SelectionControl.js): `labelToggle`, `submit_bee`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `#labels`, `#notes`
-- **Links:** T-001, [DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic"), [OQ-006](../../QUESTIONS.md#oq-006 "Label semantics")
+- **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic"), [OQ-006](../../QUESTIONS.md#oq-006 "Label semantics")
 
 ### CAP-602: Pollination visits
 
@@ -247,7 +247,7 @@ Annotate visits as frame spans, with start and end picked in pick-frame mode. St
 - **Code:**
   - [labelbee/static/labelbee/js/OverlayControl.js](../../../labelbee/static/labelbee/js/OverlayControl.js): `VisitWidget`, `TimelineWidget`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `#visitblock`
-- **Links:** T-001, [CAP-303](#cap-303-event-display "Event display"), [OQ-004](../../QUESTIONS.md#oq-004 "Which workflows are routine")
+- **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [CAP-303](#cap-303-event-display "Event display"), [OQ-004](../../QUESTIONS.md#oq-004 "Which workflows are routine")
 
 ### CAP-603: Summaries and statistics
 
@@ -258,7 +258,7 @@ Read-only overview of the annotation: events info, statistics and the observatio
   - [labelbee/static/labelbee/js/SelectionControl.js](../../../labelbee/static/labelbee/js/SelectionControl.js): `updateAnnotationStatistics`
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `renderObsTable`, `updateObsTable`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `Events info panel`
-- **Links:** P-802, [CAP-701](#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo")
+- **Links:** [CAP-802](#cap-802-derived-structure-pipelines "Derived-structure pipelines"), [CAP-701](#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo")
 
 ## CAP-700: Annotation model and IO
 
@@ -272,7 +272,7 @@ Owns `Tracks`, `Tags`, the current selection and the undo stack; the single plac
 - **Code:**
   - [labelbee/static/labelbee/js/Model.js](../../../labelbee/static/labelbee/js/Model.js): `Observation`, `getObsHandle`, `storeObs`, `changeObservationID`, `cacheTags`
   - [labelbee/static/labelbee/js/SelectionControl.js](../../../labelbee/static/labelbee/js/SelectionControl.js): `selectBeeByID`, `undoPush`, `undoPop`, `deleteSelected`
-- **Links:** T-001, [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss")
+- **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss")
 
 ### CAP-702: Local file load and save
 
@@ -282,7 +282,7 @@ Load and save tracks and tags as local files (JSON v1/v2, CSV).
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadEventsFromFile`, `saveEventsToFile`, `loadTagsFromFile`, `saveTagsToFile`, `convertTracksToV2`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `I/O Local storage panel`
-- **Links:** T-004, [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for"), [OQ-010](../../QUESTIONS.md#oq-010 "Server versus local storage")
+- **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for"), [OQ-010](../../QUESTIONS.md#oq-010 "Server versus local storage")
 
 ### CAP-703: Server load and save
 
@@ -292,7 +292,7 @@ Load annotations from the server and save a snapshot as a new record with `creat
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `eventsToServer`, `eventsFromServer`, `tracksListFromServer`, `FromServerDialog`
   - [labelbee/blueprints/api/resources/annotations.py](../../../labelbee/blueprints/api/resources/annotations.py): `AnnotationsAPI`, `AnnotationAPI`
-- **Links:** T-004, [DEC-002](view_decisions.md#dec-002-single-writer-snapshot-model-no-concurrent-editing "Single-writer snapshot model, no concurrent editing"), [OQ-010](../../QUESTIONS.md#oq-010 "Server versus local storage")
+- **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [DEC-002](view_decisions.md#dec-002-single-writer-snapshot-model-no-concurrent-editing "Single-writer snapshot model, no concurrent editing"), [OQ-010](../../QUESTIONS.md#oq-010 "Server versus local storage")
 
 ### CAP-704: External-tool import
 
@@ -301,7 +301,7 @@ Read output of external tools: `tracks_tagged` CSV, tags CSV and JSON.
 - **Group:** [CAP-700](#cap-700-annotation-model-and-io "Annotation model and IO")
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracks_tagged_csv_to_json`, `tags_csv_to_json`, `tags_csv_to_tagjson`, `loadTrackTaggedCSVFromServer`
-- **Links:** T-004, [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee")
+- **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee")
 
 ### CAP-705: Export
 
@@ -310,7 +310,7 @@ Export tracks as CSV and as bounding boxes.
 - **Group:** [CAP-700](#cap-700-annotation-model-and-io "Annotation model and IO")
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracksToCSV`, `tracksToBBoxes`, `saveEventsToCSV`, `saveEventsToBBoxes`
-- **Links:** T-004
+- **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record")
 
 ### CAP-706: Experimental DB sources
 
@@ -321,7 +321,7 @@ Load tracks from SQLite or DuckDB (experimental IO).
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTracksCSVFromDB`, `db_to_json`
   - [labelbee/static/labelbee/js/SQLiteDB.js](../../../labelbee/static/labelbee/js/SQLiteDB.js)
   - [labelbee/static/labelbee/js/DuckDB.js](../../../labelbee/static/labelbee/js/DuckDB.js)
-- **Links:** T-004
+- **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record")
 
 ### CAP-707: Load-time sanitising
 
@@ -330,7 +330,7 @@ Validate and normalise loaded files into a valid `Tracks`/`Tags` (duplicate ids,
 - **Group:** [CAP-700](#cap-700-annotation-model-and-io "Annotation model and IO")
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`, `setTracks`, `setTags`
-- **Links:** T-004, [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable")
+- **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable")
 
 ## CAP-800: Data filtering and processing
 
@@ -344,7 +344,7 @@ User options that hide, select or order data for the views: hide falsealarm/wron
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `click_restrictID`, `click_excludeID`, `click_hideInvalid`, `click_hideFlowers`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `Tag filtering panel`
-- **Links:** P-302, [CAP-402](#cap-402-tag-display-on-the-frame "Tag display on the frame")
+- **Links:** [CAP-302](#cap-302-id-axis-and-layout "ID axis and layout"), [CAP-402](#cap-402-tag-display-on-the-frame "Tag display on the frame")
 
 ### CAP-802: Derived-structure pipelines
 
@@ -353,7 +353,7 @@ Functional stages from `Tracks`/`Tags` to the structures views read: tag integra
 - **Group:** [CAP-800](#cap-800-data-filtering-and-processing "Data filtering and processing")
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `augmentTrackWithTag`, `updateChronogramData`, `createIntervalList`, `updateFlatTracks`, `getTTags`, `updateTagIntervals`
-- **Links:** P-303, [CAP-304](#cap-304-tag-display "Tag display"), [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection")
+- **Links:** [CAP-303](#cap-303-event-display "Event display"), [CAP-304](#cap-304-tag-display "Tag display"), [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection")
 
 ### CAP-803: Annotation clean-up
 
@@ -363,7 +363,7 @@ User-triggered bulk removal of obsolete events. Writes `Tracks` directly (`DEBT`
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `cleanObsoleteEvents`, `cleanObsoleteEventsCB`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `#cleanObsoleteEventsButton`
-- **Links:** -009
+- **Links:** [OQ-009](../../QUESTIONS.md#oq-009 "Clean-up semantics")
 
 ### CAP-804: Tag interpolation and motion direction
 
@@ -372,4 +372,4 @@ User-triggered bulk removal of obsolete events. Writes `Tracks` directly (`DEBT`
 - **Group:** [CAP-800](#cap-800-data-filtering-and-processing "Data filtering and processing")
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `interpolateTags`, `computeMotionDirection`
-- **Links:** T-002
+- **Links:** [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection")

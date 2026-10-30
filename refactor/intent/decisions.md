@@ -17,8 +17,8 @@ code only decodes (Hamming search against the `tag25h5` table) and fixes tags.
 
 The producer is the `cb` command-line tool of the cyindibee project: it converts video to constant frame rate, detects individual bees with pose, tracks them, and runs secondary engines (pollen classification; number tag, QR code tag, paint or unmarked classification; tag decoding). It writes several CSV and JSON outputs that LabelBee loads in different places. LabelBee currently hard-codes QR-code tags. Other markings are expected: round number tags (the `tagid` field should suffice, the QR-specific logic being irrelevant there and to be enabled only when relevant), square QR tags, and paint markings (handled with labels).
 
-- **Links:** P-502, ENT-002, OQ-002
-- **Alternatives:** tection inside the app
+- **Links:** CAP-502, ENT-002, OQ-002
+- **Alternatives:** detection inside the app
 
 ## DEC-002: Single-writer snapshot model, no concurrent editing
 
@@ -28,8 +28,8 @@ lineage. Concurrent editing is not a goal. Overlaps
 
 - **Code:**
   - `resources/annotations.py`: `AnnotationsAPI`
-- **Links:** P-703, ENT-004
-- **Alternatives:** al-time multi-user editing
+- **Links:** CAP-703, ENT-004
+- **Alternatives:** real-time multi-user editing
 
 ## DEC-003: Labels are generic
 
@@ -40,9 +40,9 @@ six labels wired into the page and code, with `labels` and `bool_acts` encoding 
 twice ([analysis/04](../analysis/04-data-model.md) 4.1). `bool_acts` was a past intent at higher performance (booleans instead of strings); it is clunky and inflexible, and `DEBT`. Each use is flagged and served by a temporary shim derived from `labels` until removal. A label belongs to one observation; track-level labels would be a new feature. The chronogram (`CAP-303`) reads
 labels through the processing module (`CAP-802`); `CAP-601` edits them one by one.
 
-- **Links:** P-303, CAP-601, OQ-006
+- **Links:** CAP-303, CAP-601, OQ-006
 - **Decided by:** maintainer
-- **Alternatives:** rd-wired behavior vocabulary
+- **Alternatives:** hard-wired behavior vocabulary
 
 ## DEC-004: The code is the reference for behavior
 
@@ -52,7 +52,7 @@ and is corrected later. Known cases: arrow keys navigate frames (Quick Help says
 the box), and zoom uses Alt+Ctrl+wheel (Quick Help says Shift+wheel). Defects found in the
 code are recorded as `DEBT`, not fixed in a behavior-preserving step.
 
-- **Links:** P-202, CAP-202, OQ-005
+- **Links:** CAP-202, CAP-202, OQ-005
 - **Decided by:** maintainer
 
 ## DEC-005: Keyboard shortcuts belong in one place
@@ -64,5 +64,5 @@ as `p` (pollen) are kept for now; the refactor gathers the key bindings now spre
 and the label buttons (`accesskey`) in one place, so that a shortcut manager can be added
 later.
 
-- **Links:** P-202, INV-002, CAP-202, CAP-601, OQ-005
+- **Links:** CAP-202, INV-002, CAP-202, CAP-601, OQ-005
 - **Decided by:** maintainer
