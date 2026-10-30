@@ -96,5 +96,7 @@ Bridge entries stay until slice 2 moves their callers (the loaders); they are li
 ## 6. Out of scope / risks
 
 - Node is not installed in the job sandbox yet ([Q15](../QUESTIONS.md#q15)): step 1 cannot be run here until it is.
-- Behavior of untouched `SelectionControl.js` label helpers is assumed, not re-verified: the goldens
-  stub `hasLabel` with a copy of its current text, so label-alias regressions are not covered.
+- The goldens run the real `hasLabel`/`containsLabel`/`toLabelArray`/`normalizeLabel`/`labelMap`
+  extracted from `SelectionControl.js` (only `$.inArray` is stubbed), so label aliases are covered at
+  the call sites of `sanitizeEvents`; the helpers themselves are not tested.
+- Step 1 done with Node 20 from `~/.nvm` (Q15 satisfied for the job); see `refactor/tests/README.md`.

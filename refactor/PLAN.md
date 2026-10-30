@@ -33,7 +33,7 @@ Minimal, only what the first slices need.
 One slice in flight. Each follows the six steps of ADR 0001, ends with the old code deleted,
 and is its own commit series and review. The next slice is chosen after the previous merged.
 
-- [~] **Pilot: annotation loading** (slice 1 prepared: [ADR 0002](design/0002-slice-annotation-load-codec.md), branch `slice-annotation-load-codec`, awaiting confirmation and [Q15](QUESTIONS.md#q15)) (chosen by the maintainer: it makes testing easier). The chain that turns a file or server payload into `Tracks`/`Tags`: format conversion and sanitising (CAP-702/703/704/707, load side), from `AnnotationIO.js`. Proposed cut into two slices: (1) the pure parse/convert/sanitise functions (`AnnotationCodec` load side) with golden tests on synthetic fixtures; (2) the loaders (file, server) calling it. Proves the bridge, the Node runner and the delete step.
+- [~] **Pilot: annotation loading** (slice 1 prepared: [ADR 0002](design/0002-slice-annotation-load-codec.md), branch `slice-annotation-load-codec`, step 1 (goldens, `refactor/tests/golden/slice1/`) ready for review; steps 2-5 pending; [Q15](QUESTIONS.md#q15)) (chosen by the maintainer: it makes testing easier). The chain that turns a file or server payload into `Tracks`/`Tags`: format conversion and sanitising (CAP-702/703/704/707, load side), from `AnnotationIO.js`. Proposed cut into two slices: (1) the pure parse/convert/sanitise functions (`AnnotationCodec` load side) with golden tests on synthetic fixtures; (2) the loaders (file, server) calling it. Proves the bridge, the Node runner and the delete step.
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 
