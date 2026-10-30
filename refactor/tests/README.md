@@ -16,6 +16,8 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
 - `golden/harness/old-impl.js`: extracts the original functions from `AnnotationIO.js` (and the real
   `hasLabel` chain from `SelectionControl.js`) and evaluates them in a `vm` with stubbed globals.
   Still slice-1 specific (function list, files, stubs); generalize when a second slice needs it.
+- `golden/harness/new-impl.js`: loads `annotation/AnnotationCodec.js` (ESM) and sets the Notifier and `configure` like the page bridge; the test runs every case
+  on `old` and `new` against the same golden.
 - `golden/harness/run-case.js`, `golden/harness/serialize.js`: generic.
 - Extraction reads the source files, so `generate.js` stops working once step 3 deletes the old
   definitions; the golden file then stays as the reference.

@@ -793,6 +793,69 @@
     "errors": [],
     "sql": []
   },
+  "sanitize v2 primitive event and frame": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic"
+      },
+      "data": {
+        "0": {
+          "undefined": {
+            "0": "a",
+            "1": "b",
+            "ID": "undefined",
+            "labels": "",
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ]
+          }
+        },
+        "1": {},
+        "2": {
+          "undefined": {
+            "0": "x",
+            "ID": "undefined",
+            "labels": "",
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ]
+          }
+        }
+      }
+    },
+    "argsAfter": [
+      {
+        "info": {
+          "type": "events-multiframe",
+          "source": "synthetic"
+        },
+        "data": {
+          "0": [
+            "ab",
+            7
+          ],
+          "1": 5,
+          "2": "xy"
+        }
+      }
+    ],
+    "alerts": [
+      "WARNING: Events file was loaded, but it has duplicate entries. Current version of software deleted redundant events."
+    ],
+    "logs": [
+      "sanitizeEvents: WARNING duplicate entry: data[0][1] with id=undefined ignored.",
+      "sanitizeEvents: WARNING duplicate entry: data[2][1] with id=undefined ignored."
+    ],
+    "errors": [],
+    "sql": []
+  },
   "sanitize v2 without data": {
     "returned": {
       "info": {
@@ -1014,6 +1077,29 @@
     "argsAfter": [
       {
         "1": null
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "tagsAddFrames primitive tag (sloppy: ignored)": {
+    "returned": {
+      "$": "undefined"
+    },
+    "argsAfter": [
+      {
+        "1": {
+          "tags": [
+            5,
+            "x",
+            {
+              "id": 1,
+              "frame": 1
+            }
+          ]
+        }
       }
     ],
     "alerts": [],

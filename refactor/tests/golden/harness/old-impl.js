@@ -22,13 +22,17 @@ function extractFunction(src, name) {
   return end < 0 ? rest : rest.slice(0, end + 1);
 }
 
-function loadSources() {
-  const io = fs.readFileSync(path.join(JS_DIR, 'AnnotationIO.js'), 'utf8');
-  const sel = fs.readFileSync(path.join(JS_DIR, 'SelectionControl.js'), 'utf8');
+function labelSources(sel) {
   const labelMap = sel.match(/var labelMap = \{[\s\S]*?\n\};/)[0];
   const labelFns = ['normalizeLabel', 'toLabelArray', 'hasLabel', 'containsLabel']
     .map((n) => extractFunction(sel, n));
-  return [labelMap, ...labelFns, ...FUNCTIONS.map((n) => extractFunction(io, n))].join('\n');
+  return [labelMap, ...labelFns].join('\n');
+}
+
+function loadSources() {
+  const io = fs.readFileSync(path.join(JS_DIR, 'AnnotationIO.js'), 'utf8');
+  const sel = fs.readFileSync(path.join(JS_DIR, 'SelectionControl.js'), 'utf8');
+  return [labelSources(sel), ...FUNCTIONS.map((n) => extractFunction(io, n))].join('\n');
 }
 
 const PINNED_LOG = /ABORTED|unsupported|WARNING/;
@@ -36,15 +40,31 @@ const PINNED_LOG = /ABORTED|unsupported|WARNING/;
 // errors thrown inside the vm context are not instanceof the host Error.
 const fmt = (a) => (a && typeof a.message === 'string' && a.name ? a.name : String(a));
 
-// Returns {fns, rec}. rec collects what the tests pin: alerts, error-path logs, SQL sent to db.
-function makeOldImpl({ logIO = true } = {}) {
+// What the tests pin: alerts, error-path logs, console.error (by name), SQL sent to the db stub.
+function makeRecorder() {
   const rec = { alerts: [], logs: [], errors: [], sql: [] };
-  const sandbox = {
-    console: {
-      log: (...a) => { const s = a.map(fmt).join(' '); if (PINNED_LOG.test(s)) rec.logs.push(s); },
-      error: (...a) => rec.errors.push(a.map(fmt).join(' ')),
-    },
+  const stubs = {
+    log: (...a) => { const s = a.map(fmt).join(' '); if (PINNED_LOG.test(s)) rec.logs.push(s); },
+    error: (...a) => rec.errors.push(a.map(fmt).join(' ')),
     alert: (m) => rec.alerts.push(String(m)),
+  };
+  return { rec, stubs };
+}
+
+// The real label helpers of SelectionControl.js (hasLabel and what it calls), alone in a vm.
+function makeHasLabel() {
+  const sel = fs.readFileSync(path.join(JS_DIR, 'SelectionControl.js'), 'utf8');
+  const ctx = vm.createContext({ $: { inArray: (v, arr) => arr.indexOf(v) } });
+  vm.runInContext(labelSources(sel), ctx, { filename: 'SelectionControl.js(extracted)' });
+  return ctx.hasLabel;
+}
+
+// Returns {fns, rec}: the ORIGINAL functions, in a vm with stubbed globals.
+function makeOldImpl({ logIO = true } = {}) {
+  const { rec, stubs } = makeRecorder();
+  const sandbox = {
+    console: { log: stubs.log, error: stubs.error },
+    alert: stubs.alert,
     logging: { io: logIO },
     $: { inArray: (v, arr) => arr.indexOf(v) },
     performance: { now: () => 0 },
@@ -56,4 +76,4 @@ function makeOldImpl({ logIO = true } = {}) {
   return { fns, rec };
 }
 
-module.exports = { makeOldImpl, FUNCTIONS };
+module.exports = { makeOldImpl, makeRecorder, makeHasLabel, FUNCTIONS };

@@ -1314,6 +1314,14 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
   - `ChronoControl.js`: `getTTags`
 - **Links:** BEH-724
 
+## DEBT-737: tagsAddFrames silently skips non-object tag entries
+
+[ran] `tagsAddFrames` does `tag.frame = Number(f)` for every non-null entry; in the old sloppy script a primitive entry (number, string) makes this a silent no-op, in a strict ES module it would throw. The move to `labelbee/static/labelbee/js/annotation/AnnotationCodec.js` keeps the old behavior with an explicit skip; golden `tagsAddFrames primitive tag` pins it. Whether a primitive tag should be an error or dropped is undecided.
+
+- **Code:**
+  - `annotation/AnnotationCodec.js`: `tagsAddFrames`
+- **Links:** BEH-724
+
 ## DEBT-801: Stale intervals when "Show Events" is off
 
 `updateChronoData` only rebuilds `allIntervals`, `crosses`, `rectIntervals`, `circlesIntervals`, `partsIntervals` inside `if (showObsChrono)`; `chronogramData` is emptied unconditionally. Unchecking `#showObsChrono` therefore leaves the intervals of the previous refresh in those globals [read]; the renderer that reads `allIntervals` (`ChronoIntervals`) was not in the evidence served, so whether the stale intervals are still drawn is [inferred]. Replacement: the pure stage returns empty lists when events are hidden.

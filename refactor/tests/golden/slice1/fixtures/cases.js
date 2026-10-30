@@ -46,6 +46,7 @@ const cases = [
   { name: 'sanitize v2 ID alias instead of id', fn: 'sanitizeEvents', args: () => [{ info: { ...INFO_EVENTS }, data: { 0: [{ ID: '7', cx: 1 }] } }] },
   { name: 'sanitize v2 id and ID both', fn: 'sanitizeEvents', args: () => [{ info: { ...INFO_EVENTS }, data: { 0: [{ id: 3, ID: 'X' }] } }] },
   { name: 'sanitize v2 label aliases and null labels', fn: 'sanitizeEvents', args: () => [{ info: { ...INFO_EVENTS }, data: { 0: [evt(1, { labels: 'p,d,departing' }), evt(2, { labels: null }), evt(3, { labels: '' })] } }] },
+  { name: 'sanitize v2 primitive event and frame', fn: 'sanitizeEvents', args: () => [{ info: { ...INFO_EVENTS }, data: { 0: ['ab', 7], 1: 5, 2: 'xy' } }] },
   { name: 'sanitize v2 without data', fn: 'sanitizeEvents', args: () => [{ info: { ...INFO_EVENTS } }] },
   { name: 'sanitize v2 null frames and null events', fn: 'sanitizeEvents', args: () => [{ info: { ...INFO_EVENTS }, data: { 0: null, 1: [null, evt(5)], 2: [] } }] },
   { name: 'sanitize v2 info kept by reference fields', fn: 'sanitizeEvents', args: () => [{ info: { ...INFO_EVENTS, history: ['a', 'b'] }, data: {} }] },
@@ -56,6 +57,7 @@ const cases = [
   { name: 'tagsAddFrames overwrites frame', fn: 'tagsAddFrames', args: () => [{ 5: { tags: [{ id: 1, frame: 99 }] } }], mutates: 0 },
   { name: 'tagsAddFrames non numeric key', fn: 'tagsAddFrames', args: () => [{ x: { tags: [{ id: 1 }] } }], mutates: 0 },
   { name: 'tagsAddFrames null frame entry', fn: 'tagsAddFrames', args: () => [{ 1: null }], mutates: 0 },
+  { name: 'tagsAddFrames primitive tag (sloppy: ignored)', fn: 'tagsAddFrames', args: () => [{ 1: { tags: [5, 'x', { id: 1 }] } }], mutates: 0 },
   { name: 'tagsAddFrames null Tags', fn: 'tagsAddFrames', args: () => [null], mutates: 0 },
 
   // ---- tracks_csv_to_json ----

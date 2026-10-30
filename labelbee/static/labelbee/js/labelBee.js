@@ -15,27 +15,7 @@ var user_id;
 
 //var vis;
 
-/** Debugging levels */
-var logging = {
-  rects: false,
-  frameEvents: false,
-  guiEvents: false,
-  submitEvents: false,
-  mouseEvents: false,
-  mouseMoveEvents: false,
-  keyEvents: false,
-  overlay: false,
-  selectionEvents: false,
-  chrono: false,
-  videoEvents: true,
-  canvasEvents: false,
-  idPrediction: false,
-  axesEvents: false,
-  zoomTag: false,
-  zoomOverlay: false,
-  videoList: true,
-  io: false,
-};
+// Debugging levels: `logging` now lives in core/Notifier.js (exposed on window by core/NotifierBridge.js)
 
 // ######################################################################
 // INITIALIZATION
