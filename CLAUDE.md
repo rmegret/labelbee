@@ -15,6 +15,10 @@ Claude-specific goes under `labelbee/`, `tests/` or `docs/`.
 ### Rules
 - Branching and commit/merge should follow rules in worktree section below
 - Behavior-preserving steps only; one small, reviewable step at a time.
+  Exception: clear-cut bugs (the code contradicts its own evident intent, no plausible
+  reading makes it correct) in code a slice touches may be fixed, each in its own commit,
+  after the mechanical move, with the maintainer's approval of that fix and the changed
+  golden/test shown. Ambiguous cases stay recorded as `DEBT` (DEC-004).
 - Record structural decisions as ADRs in `refactor/design/` *before* implementing them.
 - No drive-by changes outside the current step.
 - Do not edit `labelbee/static/labelbee/js/extern/`, `labelbee/legacy/` or generated
