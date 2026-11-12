@@ -150,7 +150,7 @@ is not saved: that is not true of the code.
 - **Origin:** accident
 - **Code:**
   - `Model.js`: `copyObs`
-  - `AnnotationIO.js`: `convertTracksToV2`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV2`
   - `ChronoControl.js`: `augmentTrackWithTag`
   - `SelectionControl.js`: `modifyCurrentObsSpan`
 - **Links:** ENT-001, DEBT-704, OQ-702
@@ -183,11 +183,11 @@ Shape:
 ```
 { "info": { ...TracksInfo..., "formatnote": "<fixed warning text>",
             "history": [ ...previous entries, "Saved using labelbee on <Date()>" ],
-            "videoinfo": <current videoinfo object> },
+            "videoinfo": <deep copy of the current videoinfo object> },
   "data": { "<frame>": [ <event>, ... ], ... } }
 ```
 
-`info` is the live `TracksInfo` object itself (BEH-711): all its fields round-trip (`type` must be
+`info` is a deep copy of `TracksInfo` (BEH-711; it was the live object before slice 2 step 4): all its fields round-trip (`type` must be
 `"events-multiframe"`, `source`, `notes` from `#events-notes`, `basedon`, anything loaded from a previous
 file). `data` is keyed by `String(frame)` for every key of `Tracks` whose value is not null, including frames
 that became empty (written as `[]`); each value is an ARRAY of events (one per non-null observation, in
@@ -207,45 +207,46 @@ width, height, cx, cy` are always written (a missing one gives `NaN`, serialized
 - **Group:** CAP-702
 - **Origin:** essential
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV2`, `saveObjToJsonFile`
+  - `AnnotationIO.js`: `saveObjToJsonFile`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV2`
 - **Links:** ENT-004, INV-001, INV-003, OQ-003, OQ-712, OQ-715, BEH-711, BEH-708, BEH-712
 
-## BEH-711: Saving v2 mutates TracksInfo and fails after a CSV import
+## BEH-711: Saving v2 works on copies of TracksInfo and videoinfo (fixed; was: mutated TracksInfo, failed after a CSV import)
 
-`convertTracksToV2` does not copy `TracksInfo` (`obj = {info: TracksInfo, ...}`) and then, in place:
-sets `info.formatnote`, creates `info.history = []` if falsy, pushes `"Saved using labelbee on " + Date()`,
-and sets `info.videoinfo = videoinfo` (a reference to the live global, which also contains the
-`preview` sub-object and `tags`, `videoPath`, etc.). So each save (file or server) appends one entry
-to the in-memory history, and all saved files contain the video info at the time of save. If `info.history` is a
-non-empty string, as for every tracks CSV / `tracks_tagged` CSV / DB import (BEH-735, BEH-736, BEH-737, BEH-740) which
-set `history: "Loaded in Labelbee on <ISO date>"`, `.push` throws `TypeError` and the save aborts
-(file: nothing downloaded; server: no request sent), after `formatnote` was already set. Also
-`TracksInfo` undefined (no `setTracks` ever called) would throw `ReferenceError`; in practice init sets it (BEH-709).
+FIXED in slice 2 step 4 (DEBT-706). `convertTracksToV2` works on deep copies (`structuredClone`) of
+`TracksInfo` and `videoinfo`: on the copy it sets `info.formatnote`, makes `info.history` an array (a string, as
+set by every tracks CSV / `tracks_tagged` CSV / DB import (BEH-735, BEH-736, BEH-737, BEH-740), becomes
+`[string]`; a missing history becomes `[]`), appends `"Saved using labelbee on " + Date()` and embeds the whole
+`videoinfo` (OQ-712: kept whole, `preview` is only a URL). The live objects are not modified, so saves of one
+session do not accumulate: each saved file lists the history as loaded plus its own save (maintainer decision,
+2026-11-12). Before the fix the function modified the live `TracksInfo` in place (each save added a history
+entry that later saves also listed) and `.push` threw `TypeError` on a string history, so the file and the
+server save aborted after every CSV import, after `formatnote` had been set. An undeclared `TracksInfo` (no
+`setTracks` ever called) would make the bridge wrapper throw `ReferenceError`; in practice init sets it (BEH-709).
 
 - **Group:** CAP-702
 - **Origin:** accident
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV2`, `eventsToServer`, `saveEventsToFile`
+  - `AnnotationIO.js`: `eventsToServer`, `saveEventsToFile`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV2`
 - **Links:** DEBT-706, INV-001, BEH-710
 
-## BEH-712: Events JSON v1 format and the save-mutates-Tracks defect (C1)
+## BEH-712: Events JSON v1 format (the save-mutates-Tracks defect C1 is fixed)
 
 `convertTracksToV1()` (reachable only through `saveEventsToFile('v1')`; the v1 button is commented
 out in the page) returns a JS ARRAY indexed by `Number(frame)`: `obj[f] = { "<id>": evt, ... }`, so
 JSON.stringify writes `null` for every frame index without observations (holes) and the output length
-is `max frame + 1`. Frames with an empty dict are kept as `{}`. Event = the live observation object
-itself: `Object.assign(evt)` with one argument returns `evt`, so the following edits are applied IN PLACE
-on `Tracks` (analysis C1): fields `marked` and `permanent` are deleted; `cx = x + width/2`,
+is `max frame + 1`. Frames with an empty dict are kept as `{}`. Event = a copy of the observation (`Object.assign({}, evt)`, slice 2 step 4, DEBT-707 FIXED; it used to be the live observation itself, so the edits below were applied IN PLACE on `Tracks`, analysis C1). The copy gets: fields `marked` and `permanent` are deleted; `cx = x + width/2`,
 `cy = y + height/2`; `x, y, width, height, cx, cy` rounded to 3 decimals. `ID` and `bool_acts`
-are kept in v1 (the deletes are commented out), and `time, frame, angle, notes, labels, parts, tag, span...` stay. Live
-`Tracks` therefore changes at every v1 save (precision loss of the working coordinates, `cx,cy` re-derived).
-The v2 conversion (BEH-710) does not alias observations; the UI only ever exposes v2, so C1 is latent for
-users but active for any caller of `convertTracksToV1`.
+are kept in v1 (the deletes are commented out), and `time, frame, angle, notes, labels, parts, tag, span...` stay. Live `Tracks` is no longer changed by a v1 save (before the fix: precision loss of the working coordinates,
+`cx,cy` re-derived, `marked`/`permanent` deleted). The UI only exposes v2; v1 is reachable only by calling
+`convertTracksToV1`.
 
 - **Group:** CAP-702
 - **Origin:** accident
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV1`, `saveEventsToFile`
+  - `AnnotationIO.js`: `saveEventsToFile`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV1`
 - **Links:** DEBT-707, INV-001, INV-003, ENT-004
 
 ## BEH-713: Save Events to a local file
@@ -731,7 +732,8 @@ and nothing is downloaded. (`conc` helper inside is dead code.)
 - **Group:** CAP-705
 - **Origin:** intentional
 - **Code:**
-  - `AnnotationIO.js`: `tracksToCSV`, `saveEventsToCSV`, `saveCSVToFile`
+  - `AnnotationIO.js`: `saveEventsToCSV`, `saveCSVToFile`
+  - `annotation/AnnotationCodec.js`: `tracksToCSV`
   - `labelbee_page.html`: `#saveCSV`
 - **Links:** DEC-003, DEBT-727, OQ-003
 
@@ -748,7 +750,8 @@ Same failure case as BEH-738 for entries without `bool_acts`. `tracksToBBoxes` (
 - **Group:** CAP-705
 - **Origin:** intentional
 - **Code:**
-  - `AnnotationIO.js`: `tracksToBBoxes2`, `tracksToBBoxes`, `saveEventsToBBoxes`
+  - `AnnotationIO.js`: `saveEventsToBBoxes`
+  - `annotation/AnnotationCodec.js`: `tracksToBBoxes2`, `tracksToBBoxes`
   - `labelbee_page.html`: `#saveBBoxes`
 - **Links:** DEBT-727, DEBT-728, OQ-003
 
@@ -842,8 +845,7 @@ that are integer-like (`"12"`) iterate in ascending numeric order before non-int
 - **Group:** CAP-707
 - **Origin:** essential
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV2`
-  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV2`, `sanitizeEvents`
 - **Links:** ENT-001, ENT-002, ENT-004, INV-001, INV-003, OQ-003, OQ-703, BEH-746
 
 ## BEH-746: A v2 file without `data` loads as an empty model

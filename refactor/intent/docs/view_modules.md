@@ -279,13 +279,13 @@ Defined/written/read, [read] from `labelbee/static/labelbee/js/` (read-by lists 
 |---|---|---|---|
 | `Tracks` | `Model.js` | everywhere (Overlay, Chrono, Zoom, Selection, labelBee, IO) | `setTracks` (replace), `storeObs`, `getObsHandle(create)`, `changeObservationID`, `deleteEvent` (`SelectionControl.js:663`), `ChronoControl.js` clean-up (`delete Tracks[F][id]`) [inferred], `ZoomView.js` clean-up [inferred], `augmentTrackWithTag` (adds `obs.tag`; called only from `updateChronoData`), `modifyCurrentObsSpan` in `SelectionControl.js` (adds `obs.span` on the stored observation), `convertTracksToV1` (C1) |
 | `Tags` | `Model.js` | `ChronoControl.js` (`getTTags` legacy mode, `getFlatTags`, `augmentTrackWithTag`), `OverlayControl.js` [inferred], `saveTagsToFile` | `setTags` only (+ `tagsAddFrames` adds `tag.frame`) |
-| `TracksInfo` | implicit global, first created by `setTracks` (`AnnotationIO.js`) | `convertTracksToV2`, `onChanged_events_notes`, `updateEventsNotes` | `setTracks`, `setEventsProp`, `convertTracksToV2` (mutates), notes textarea |
+| `TracksInfo` | implicit global, first created by `setTracks` (`AnnotationIO.js`) | `convertTracksToV2`, `onChanged_events_notes`, `updateEventsNotes` | `setTracks`, `setEventsProp`, notes textarea (`convertTracksToV2` no longer mutates it since slice 2) |
 | `TagsInfo` | implicit global (`setTags`) | none found | `setTags` |
 | `tagCache` | implicit global, `Model.js` `cacheTags` | `getTags` (called from `ChronoControl.js` `computeMotionDirection`) [inferred] | `cacheTags` |
 | `ttags` | `ChronoControl.js` (`var ttags = {}`) [inferred], also reset in `initAnnotationIO` | `OverlayControl.js` (draw tag lines) [inferred], `Model.js` `cacheTags` (bug, reads `ttags[key]`) | `setTags`, `updateChronoData` in `ChronoControl.js:984`, `initAnnotationIO` |
 | `flatTags`, `allTagsID` | `ChronoControl.js` | `getTTags` (tagMode `Tracks` reads `flatTags`; resets `allTagsID`) | `updateChronoData` (`flatTags` at `:982`; `allTagsID` converted to an array at `:986`), `getTTags` (`allTagsID`) |
 | `tagsHaveDM` | implicit global (`setTags`) | UI classes `.requireDM` (set in `setTags`) | `setTags` |
-| `videoinfo` | `VideoList.js` [inferred] | `convertTracksToV2` (embedded in info by reference), `getTimestampedVideoname`, dialogs (`videoinfo.videoPath`), `getFramesWithID` (`nframes`) | `VideoList.js`, `VideoControl.js` [inferred] |
+| `videoinfo` | `VideoList.js` [inferred] | `convertTracksToV2` (embedded in info as a deep copy since slice 2), `getTimestampedVideoname`, dialogs (`videoinfo.videoPath`), `getFramesWithID` (`nframes`) | `VideoList.js`, `VideoControl.js` [inferred] |
 | `user_id` | `labelBee.js` | `eventsToServer` | `whoami` (authenticated branch only) |
 | `user_data` | implicit global, assigned in `whoami` (`AnnotationIO.js`) | `VideoList.js:531` and `:634` (`user_data.is_authenticated`) | `whoami` |
 | `loginDialog` | implicit, created in `labelBee.js` init | `ajaxlogin`, `ajaxlogout`/`try_login` [inferred] | init |

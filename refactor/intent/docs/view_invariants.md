@@ -17,11 +17,10 @@ README section 9.2 are not listed here yet: they must be re-derived (README 9.2,
 ## INV-001: No annotation loss
 
 A long session of manual work is never corrupted or silently dropped, by editing, saving
-or loading. Today saving violates it: see C1 in [analysis/06](../../analysis/06-smells-and-risks.md)
-(save mutates live `Tracks`). Defines what the first characterization tests protect.
+or loading. The v1 save used to violate it (C1 in [analysis/06](../../analysis/06-smells-and-risks.md): it mutated live `Tracks`); fixed in slice 2 step 4 ([DEBT-707](view_debt.md#debt-707-c1-converttrackstov1-mutates-live-tracks "C1, convertTracksToV1 mutates live Tracks")), as was the mutation of `TracksInfo` by the v2 save ([DEBT-706](view_debt.md#debt-706-v2-save-mutates-tracksinfo-and-crashes-when-history-is-a-string "v2 save mutates TracksInfo and crashes when history is a string")). Defines what the first characterization tests protect.
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV1`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV1`
 - **Links:** [CAP-701](view_capabilities.md#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo"), [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save"), [CAP-703](view_capabilities.md#cap-703-server-load-and-save "Server load and save"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")
 
 ## INV-002: Interactive responsiveness

@@ -92,6 +92,13 @@ the PLAN.
 - Decisions of ADR 0002 section 5 apply unchanged (goldens from the OLD code in `vm`, what is pinned,
   PascalCase files, bridge sets `window.*`, clear-cut bug rule of `CLAUDE.md`).
 
+## 5b. Decisions taken in step 4 (maintainer, 2026-11-12)
+
+- DEBT-706: `info` and `videoinfo` deep-cloned with `structuredClone` (plain JSON-like data; built in), not a
+  JSON round trip. The live `TracksInfo` is no longer modified by a save, so the saves of one session do not
+  accumulate in the history: each saved file lists the history as loaded plus its own save.
+- DEBT-707 as planned. Both fixes are separate commits with their golden diff reviewed first.
+
 ## 6. Out of scope / risks
 
 - A saved file differing from the old one without anyone noticing. Mitigation: full-text goldens and the
