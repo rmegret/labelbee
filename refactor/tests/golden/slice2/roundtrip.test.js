@@ -1,10 +1,11 @@
 // Round trip (slice 2, ADR 0004): what convertTracksToV2 saves, sanitizeEvents (slice 1 module) loads back.
-// Assertions on the documented contract (BEH-710, BEH-717), not a golden. Step 2 adds the module as a
-// second save implementation.
+// Assertions on the documented contract (BEH-710, BEH-717), not a golden. Run with both save
+// implementations (old code and module).
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { makeOldSaveImpl } = require('../harness/old-save-impl');
+const { loadNewSaveImpl } = require('../harness/new-save-impl');
 const { loadNewImpl } = require('../harness/new-impl');
 
 const obs = (ID, extra = {}) => ({
@@ -12,7 +13,7 @@ const obs = (ID, extra = {}) => ({
   bool_acts: [false, true, false, false], notes: 'n', labels: 'pollen', ...extra,
 });
 
-const SAVE_IMPLS = { old: async () => makeOldSaveImpl };
+const SAVE_IMPLS = { old: async () => makeOldSaveImpl, new: loadNewSaveImpl };
 
 for (const [implName, loadSave] of Object.entries(SAVE_IMPLS)) {
   test(`${implName}: v2 save then sanitizeEvents returns the saved model`, async () => {

@@ -34,5 +34,9 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
   (DEBT-707) are visible.
 - `golden/harness/old-save-impl.js`: extracts the original functions from `AnnotationIO.js` into a `vm`; sets
   the page globals from the arguments and replaces `Date()` by a fixed string.
-- `golden/slice2/roundtrip.test.js`: v2 save then `sanitizeEvents` (slice 1 module); assertions, not a golden.
+- `golden/harness/new-save-impl.js`: loads the save side of `annotation/AnnotationCodec.js` (ESM), sets the
+  Notifier like the page bridge and fixes `Date()` for the duration of each call; the test runs every case
+  on `old` and `new` against the same golden.
+- `golden/slice2/roundtrip.test.js`: v2 save then `sanitizeEvents` (slice 1 module), with both save
+  implementations; assertions, not a golden.
 - Like slice 1, `generate.js` and the `old` side stop working when step 3 deletes the old definitions.

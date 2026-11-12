@@ -39,7 +39,7 @@ and is its own commit series and review. The next slice is chosen after the prev
   - Left for later: `setTags` validates the global `Tags` instead of `obj` (fix when `setTags` is in scope, loaders slice); `null`/primitives still throw in `sanitizeEvents` (rest of DEBT-710).
 
 - [~] **Slice 2: annotation save/export codec** (encode side of `AnnotationCodec`; chosen by the maintainer 2026-11-12). Branch `slice-annotation-save-codec`, [ADR 0004](design/0004-slice-annotation-save-codec.md) written (proposed; [Q16](QUESTIONS.md#q16), [Q17](QUESTIONS.md#q17) answered, [OQ-712](QUESTIONS.md#oq-712) answered). Moves `convertTracksToV1/V2`, `tracksToCSV`, `tracksToBBoxes`, `tracksToBBoxes2` out of `AnnotationIO.js`.
-  - Steps: (1) goldens `refactor/tests/golden/slice2/` [x] (ready for review); (2) add to `annotation/AnnotationCodec.js` + bridge wrappers [ ]; (3) old definitions deleted from `AnnotationIO.js` [ ]; (4) bug fixes DEBT-707, DEBT-706 minimal, one commit each with approval [ ]; (5) record in PLAN and intent [ ].
+  - Steps: (1) goldens `refactor/tests/golden/slice2/` [x]; (2) add to `annotation/AnnotationCodec.js` + bridge wrappers [x] (goldens pass on old and new; ready for review); (3) old definitions deleted from `AnnotationIO.js` [ ]; (4) bug fixes DEBT-707, DEBT-706 minimal, one commit each with approval [ ]; (5) record in PLAN and intent [ ].
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 
