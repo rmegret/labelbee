@@ -458,7 +458,7 @@ export function convertTracksToV1(Tracks) {
 
       log("saveEventsToFile: frame " + f + "  id " + evt.ID);
 
-      let evt1 = Object.assign(evt);
+      let evt1 = Object.assign({}, evt);
       //delete evt1.ID
       //delete evt1.bool_acts
       delete evt1.marked;
