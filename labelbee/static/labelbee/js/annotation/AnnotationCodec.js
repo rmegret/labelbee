@@ -126,7 +126,7 @@ export function sanitizeEvents(obj) {
   
       if (logIO())
         log("sanitizeEvents: Tracks JSON v1");
-      if (typeof obj == "array") {
+      if (Array.isArray(obj)) {
         if (logIO())
           log("sanitizeEvents: got an array, converting to object");
         data = obj.reduce(function (acc, cur, i) {
@@ -146,7 +146,7 @@ export function sanitizeEvents(obj) {
         return;
       }
       if (
-        !Object.keys(data).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
+        !Object.keys(data).every((v) => /^(0|[1-9]\d*)$/.test(v)) &&
         !Object.keys(data).every((v) => Number.isInteger(v))
       ) {
         log(

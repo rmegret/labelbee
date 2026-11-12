@@ -63,7 +63,7 @@ as separate semantic commits (step 4), never inside the move.
    calls now resolve to the bridge. Check that the module is loaded before the first user action
    (module scripts are deferred, classic ones are not; no call happens at load, to be confirmed).
 4. **Fix bugs (semantic, one commit each, goldens updated explicitly)**, only clear-cut candidates the
-   maintainer signs off one by one: DEBT-710 (`typeof obj == "array"`, `&` for `&&` in the key check),
+   maintainer signs off one by one: DEBT-710 (`typeof obj == "array"` fixed with `Array.isArray`; `&` for `&&` in the key check is style only, no behavior change),
    `setTags` validating the global `Tags` instead of `obj` (in `setTags`, so only once it is in scope),
    and any found by the goldens. Each updated golden shows the intended behavior change.
 5. **Record**: PLAN, and the intent entries touched (SEAM-702 code list, BEH-717/735 `Code:` paths).

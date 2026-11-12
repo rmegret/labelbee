@@ -27,6 +27,7 @@ const cases = [
   // ---- sanitizeEvents ----
   { name: 'sanitize v1 object', fn: 'sanitizeEvents', args: () => [{ 0: { 1: evt(1, { labels: 'f,pollen' }) }, 5: {} }] },
   { name: 'sanitize v1 array', fn: 'sanitizeEvents', args: () => [[{ 3: evt(3) }, { 4: evt(4) }]] },
+  { name: 'sanitize v1 array with null entry and hole', fn: 'sanitizeEvents', args: () => [[{ 3: evt(3) }, null, , { 4: evt(4) }]] },
   { name: 'sanitize v1 empty object', fn: 'sanitizeEvents', args: () => [{}] },
   { name: 'sanitize v1 bad key', fn: 'sanitizeEvents', args: () => [{ a: { 1: evt(1) } }] },
   { name: 'sanitize v1 leading-zero key', fn: 'sanitizeEvents', args: () => [{ '01': {} }] },
