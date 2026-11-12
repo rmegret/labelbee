@@ -37,5 +37,6 @@ mouse shortcuts and click modes: the behavior-preserving rule applies to each of
 Readers for JSON v1, CSV and `tracks_tagged` files survive the refactor.
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`, `tracks_tagged_csv_to_json`, `setTags`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`, `tracks_tagged_csv_to_json`
 - **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save"), [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import"), [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")

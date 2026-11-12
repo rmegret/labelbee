@@ -336,7 +336,7 @@ absent, `null` or `[]`, nothing is iterated and the result is `{info, data: {}}`
 - **Group:** CAP-707
 - **Origin:** essential
 - **Code:**
-  - `AnnotationIO.js`: `sanitizeEvents`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
   - `SelectionControl.js`: `hasLabel`
 - **Links:** ENT-004, INV-003, DEC-003, BEH-719, BEH-746, OQ-703, OQ-713
 
@@ -344,8 +344,9 @@ absent, `null` or `[]`, nothing is iterated and the result is `{info, data: {}}`
 
 An object WITHOUT an `info` key is read as v1: a JSON array (or object) indexed by frame, each entry a dict
 `{id: event}` (null entries for holes are kept as `null`). A dummy `info = {type:"events-multiframe",
-source:"Converted from Tracks v1 object"}` is created (the `"array"` branch is dead: `typeof` never returns
-`"array"`, so the source string is never "...array", DEBT-710). `data = obj` is used directly (no copy, no
+source:"Converted from Tracks v1 object"}` is created for an object; for a JSON array the source is
+"Converted from Tracks v1 array" and `data` is a plain object keyed by array index (holes skipped, `null`
+entries kept; fixed in slice 1 step 4, DEBT-710). For an object, `data = obj` is used directly (no copy, no
 ID normalization, no recomputation of `bool_acts`, no `ID` created: the file's own `ID` and
 `bool_acts` fields are the ones used, so a v1 file lacking `bool_acts` yields observations that later break
 CSV/BBox export, BEH-738, BEH-739). Validation: every key of `data` must match `/^(0|[1-9]\d*)$/`; otherwise the load
@@ -357,7 +358,7 @@ Note `setTracks([])` (init, erase) takes this branch.
 - **Group:** CAP-707
 - **Origin:** intentional
 - **Code:**
-  - `AnnotationIO.js`: `sanitizeEvents`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
 - **Links:** ENT-004, INV-003, DEBT-710, DEBT-711, OQ-703
 
 ## BEH-719: Load-time duplicate handling and error containment
@@ -372,7 +373,8 @@ while reading (wrong structure) is caught: `console.error`, `sanitizeEvents` ret
 - **Group:** CAP-707
 - **Origin:** intentional
 - **Code:**
-  - `AnnotationIO.js`: `sanitizeEvents`, `setTracks`
+  - `AnnotationIO.js`: `setTracks`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
 - **Links:** INV-003, DEBT-709, BEH-717, OQ-711
 
 ## BEH-720: setTracks: replace the model and refresh
@@ -407,7 +409,8 @@ native files; the tags CSV import produces string ids (BEH-737).
 - **Group:** CAP-702
 - **Origin:** essential
 - **Code:**
-  - `AnnotationIO.js`: `setTags`, `saveTagsToFile`, `tagsAddFrames`
+  - `AnnotationIO.js`: `setTags`, `saveTagsToFile`
+  - `annotation/AnnotationCodec.js`: `tagsAddFrames`
 - **Links:** ENT-002, ENT-004, INV-003, DEBT-713, BEH-724
 
 ## BEH-722: Load Tags from a local file
@@ -463,7 +466,8 @@ the parse-stage failures return `0` with `Tags` unchanged.
 - **Group:** CAP-702
 - **Origin:** essential
 - **Code:**
-  - `AnnotationIO.js`: `setTags`, `tagsAddFrames`
+  - `AnnotationIO.js`: `setTags`
+  - `annotation/AnnotationCodec.js`: `tagsAddFrames`
   - `ChronoControl.js`: `getTTags`
 - **Links:** ENT-002, CAP-502, BEH-721, DEBT-715, DEBT-733, DEBT-736
 
@@ -675,7 +679,8 @@ promise rejection) and `tracks_csv_to_json` converts each row (all CSV values ar
 - **Group:** CAP-704
 - **Origin:** intentional
 - **Code:**
-  - `AnnotationIO.js`: `clickLoadTracksCSVFromServer`, `loadTracksCSVFromServer`, `tracks_csv_to_json`, `EventsCSVManualFilePicker`
+  - `AnnotationIO.js`: `clickLoadTracksCSVFromServer`, `loadTracksCSVFromServer`, `EventsCSVManualFilePicker`
+  - `annotation/AnnotationCodec.js`: `tracks_csv_to_json`
   - `labelBee.js`: `FilePickerFromServerDialog`
   - `labelbee_page.html`: `~Server storage panel (from URI, from /data)`
 - **Links:** DEC-001, OQ-002, OQ-708, DEBT-725, DEBT-706, BEH-748
@@ -694,7 +699,8 @@ select with `tagMode == 'Tracks'`). The video load and the CSV load are not sequ
 - **Group:** CAP-704
 - **Origin:** intentional
 - **Code:**
-  - `AnnotationIO.js`: `clickLoadTracksTaggedCSVFromServer`, `loadTrackTaggedCSVFromServer`, `tracks_tagged_csv_to_json`
+  - `AnnotationIO.js`: `clickLoadTracksTaggedCSVFromServer`, `loadTrackTaggedCSVFromServer`
+  - `annotation/AnnotationCodec.js`: `tracks_tagged_csv_to_json`
   - `labelbee_page.html`: `~Server storage panel (gurabo4 link)`
 - **Links:** DEC-001, INV-003, ENT-002, OQ-708, CAP-402, BEH-708
 
@@ -709,7 +715,8 @@ hamming:+hamming, goodness:+goodness, dm:+dm, p:[[+p0x,+p0y],...,[+p3x,+p3y]]}`;
 - **Group:** CAP-704
 - **Origin:** debt
 - **Code:**
-  - `AnnotationIO.js`: `loadTagsCSVFromServer`, `tags_csv_to_json`, `tags_csv_to_tagjson`
+  - `AnnotationIO.js`: `loadTagsCSVFromServer`
+  - `annotation/AnnotationCodec.js`: `tags_csv_to_json`, `tags_csv_to_tagjson`
 - **Links:** DEC-001, DEBT-726, ENT-002
 
 ## BEH-738: Export Events (CSV)
@@ -758,7 +765,8 @@ result: no rows), `flatjson_to_json` groups by `frame` into `{frame: {id: item}}
 - **Group:** CAP-706
 - **Origin:** intentional
 - **Code:**
-  - `AnnotationIO.js`: `loadTracksCSVFromDB`, `db_to_json`, `flatjson_to_json`, `resultToObjects`
+  - `AnnotationIO.js`: `loadTracksCSVFromDB`
+  - `annotation/AnnotationCodec.js`: `db_to_json`, `flatjson_to_json`, `resultToObjects`
 - **Links:** OQ-004, OQ-709, DEBT-729
 
 ## BEH-741: SQLiteDB.js: SQL console and database sources
@@ -834,7 +842,8 @@ that are integer-like (`"12"`) iterate in ascending numeric order before non-int
 - **Group:** CAP-707
 - **Origin:** essential
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV2`, `sanitizeEvents`
+  - `AnnotationIO.js`: `convertTracksToV2`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
 - **Links:** ENT-001, ENT-002, ENT-004, INV-001, INV-003, OQ-003, OQ-703, BEH-746
 
 ## BEH-746: A v2 file without `data` loads as an empty model
@@ -847,7 +856,8 @@ are silently discarded.
 - **Group:** CAP-707
 - **Origin:** accident
 - **Code:**
-  - `AnnotationIO.js`: `sanitizeEvents`, `setTracks`
+  - `AnnotationIO.js`: `setTracks`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
 - **Links:** BEH-717, BEH-720, INV-001, DEBT-734, OQ-714
 
 ## BEH-747: Label preset request failure leaves the dialog on its loading message

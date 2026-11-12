@@ -165,10 +165,13 @@ What crosses: reads (`getObsHandle`, `obsDoesExist`, `getValidIDsForFrame(s)`, i
 
 ## SEAM-702: Codec boundary (pure serialization)
 
+_Load side implemented in `annotation/AnnotationCodec.js` (slice 1); callers in `AnnotationIO.js` reach it through `window.*` wrappers set by `annotation/AnnotationCodecBridge.js`._
+
 What crosses: store snapshot <-> JSON/CSV text and objects. Direction: `LocalFileIO`/`ServerAnnotationClient` call the codec with parsed JSON or text; codec returns `{info, data}` or text. State owner: none (pure). Proposed contract: `encodeEvents(snapshot, videoinfo, info) -> {info, data}` without mutating inputs (fixes DEBT-706, DEBT-707); `decodeEvents(obj, {normalizeLabels}) -> {ok, info, data, warnings[]}` instead of alerts/console; `decodeTags`, `encodeTags`; CSV importers table-driven with the `cb` producer constants as parameters (OQ-708). The label vocabulary is not owned by the codec: `sanitizeEvents` calls `hasLabel` (`labelbee/static/labelbee/js/SelectionControl.js:855`), which uses `containsLabel`, `toLabelArray` and `normalizeLabel` (the alias map, same file around lines 795-860) and mutates `obs.labels` to `""` when null. Proposed owner: the labels module of group 6 (CAP-601, DEC-003) exports a pure `normalizeLabels(str)` / `hasLabel` that the codec receives as a dependency, so the codec stays pure. Current violations [read]: `convertTracksTo*` read the globals `Tracks`, `TracksInfo`, `videoinfo`; `sanitizeEvents` calls `alert` and `hasLabel` from `SelectionControl.js`; `setTracks` couples decoding, store write and view refresh.
 
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV2`, `convertTracksToV1`, `sanitizeEvents`, `setTracks`
+  - `AnnotationIO.js`: `convertTracksToV2`, `convertTracksToV1`, `setTracks`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
   - `SelectionControl.js`: `hasLabel`, `toLabelArray`
 - **Links:** BEH-710, BEH-717, BEH-718, DEBT-706, DEBT-707, DEC-003, OQ-708
 

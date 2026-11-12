@@ -32,5 +32,6 @@ mouse shortcuts and click modes: the behavior-preserving rule applies to each of
 Readers for JSON v1, CSV and `tracks_tagged` files survive the refactor.
 
 - **Code:**
-  - `AnnotationIO.js`: `sanitizeEvents`, `tracks_tagged_csv_to_json`, `setTags`
+  - `AnnotationIO.js`: `setTags`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`, `tracks_tagged_csv_to_json`
 - **Links:** ENT-004, CAP-702, CAP-704, CAP-707, OQ-003

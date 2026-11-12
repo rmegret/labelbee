@@ -36,7 +36,7 @@ strings; untagged tracks get `T<n>` ids in the `tracks_tagged` CSV.
 
 - **Code:**
   - [labelbee/static/labelbee/js/Model.js](../../../labelbee/static/labelbee/js/Model.js): `cacheTags`, `getTags`
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tagsAddFrames`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tagsAddFrames`
 - **Links:** [ENT-001](#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [CAP-402](view_capabilities.md#cap-402-tag-display-on-the-frame "Tag display on the frame"), [CAP-502](view_capabilities.md#cap-502-tag-id-assignment-and-fix "Tag ID assignment and fix"), [OQ-002](../../QUESTIONS.md#oq-002 "Tag pipeline boundary")
 
 ## ENT-003: Video

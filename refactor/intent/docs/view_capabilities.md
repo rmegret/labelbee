@@ -300,7 +300,8 @@ Read output of external tools: `tracks_tagged` CSV, tags CSV and JSON.
 
 - **Group:** [CAP-700](#cap-700-annotation-model-and-io "Annotation model and IO")
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracks_tagged_csv_to_json`, `tags_csv_to_json`, `tags_csv_to_tagjson`, `loadTrackTaggedCSVFromServer`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTrackTaggedCSVFromServer`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracks_tagged_csv_to_json`, `tags_csv_to_json`, `tags_csv_to_tagjson`
 - **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee")
 
 ### CAP-705: Export
@@ -318,7 +319,8 @@ Load tracks from SQLite or DuckDB (experimental IO).
 
 - **Group:** [CAP-700](#cap-700-annotation-model-and-io "Annotation model and IO")
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTracksCSVFromDB`, `db_to_json`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTracksCSVFromDB`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `db_to_json`
   - [labelbee/static/labelbee/js/SQLiteDB.js](../../../labelbee/static/labelbee/js/SQLiteDB.js)
   - [labelbee/static/labelbee/js/DuckDB.js](../../../labelbee/static/labelbee/js/DuckDB.js)
 - **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record")
@@ -329,7 +331,8 @@ Validate and normalise loaded files into a valid `Tracks`/`Tags` (duplicate ids,
 
 - **Group:** [CAP-700](#cap-700-annotation-model-and-io "Annotation model and IO")
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`, `setTracks`, `setTags`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTracks`, `setTags`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable")
 
 ## CAP-800: Data filtering and processing
