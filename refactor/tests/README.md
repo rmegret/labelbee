@@ -21,3 +21,18 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
 - The golden was generated from the original `AnnotationIO.js` functions (last present in commit
   `353ffa9e`); step 3 deleted them, so it is now the only reference. A change in it is a behavior
   change: review the diff.
+
+## Golden tests: annotation save/export codec (slice 2, [ADR 0004](../design/0004-slice-annotation-save-codec.md))
+
+    node --test refactor/tests/golden/slice2/        # run
+    node refactor/tests/golden/slice2/generate.js    # re-pin goldens from the OLD code (review the diff!)
+
+- `golden/slice2/fixtures/cases.js`: synthetic `Tracks` cases; every case has the signature of the module:
+  `convertTracksToV2(Tracks, TracksInfo, videoinfo)`, the others `(Tracks)`.
+- `golden/slice2/annotation-save.golden.json`: pinned return value (or thrown error name) and the inputs
+  after the call, which is where the in-place mutations of `TracksInfo` (DEBT-706) and of the live `Tracks`
+  (DEBT-707) are visible.
+- `golden/harness/old-save-impl.js`: extracts the original functions from `AnnotationIO.js` into a `vm`; sets
+  the page globals from the arguments and replaces `Date()` by a fixed string.
+- `golden/slice2/roundtrip.test.js`: v2 save then `sanitizeEvents` (slice 1 module); assertions, not a golden.
+- Like slice 1, `generate.js` and the `old` side stop working when step 3 deletes the old definitions.

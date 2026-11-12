@@ -1,6 +1,6 @@
 # ADR 0004: Slice 2, annotation save/export codec (encode side)
 
-Status: proposed (slice chosen by the maintainer on 2026-11-12; open questions [Q16](../QUESTIONS.md#q16), [Q17](../QUESTIONS.md#q17))
+Status: proposed (slice chosen by the maintainer on 2026-11-12; [Q16](../QUESTIONS.md#q16) and [Q17](../QUESTIONS.md#q17) answered the same day; [OQ-712](../QUESTIONS.md#oq-712) answered 2026-11-12)
 
 Second slice of [ADR 0001](0001-strangler-migration.md), mirror of [ADR 0002](0002-slice-annotation-load-codec.md)
 (same module, same method). Module: `AnnotationCodec`, save/export side ([modules.md](../intent/modules.md),
@@ -18,7 +18,7 @@ objects/text. Line numbers are those of `refactor` at `52b3fdf7`.
 | `convertTracksToV2` | 275 | `saveEventsToFile` (365), `eventsToServer` (1599) |
 | `tracksToCSV` | 373 | `saveEventsToCSV` (402) |
 | `tracksToBBoxes2` | 439 | `saveEventsToBBoxes` (482) |
-| `tracksToBBoxes` | 407 | none anywhere (grep, excluding `extern/`): see [Q17](../QUESTIONS.md#q17) |
+| `tracksToBBoxes` | 407 | none anywhere (grep, excluding `extern/`); moved next to `tracksToBBoxes2` ([Q17](../QUESTIONS.md#q17)) |
 
 No caller in other JS files or in `labelbee_page.html`.
 
@@ -50,7 +50,7 @@ SEAM-702 is a semantic change: a later step, not this slice.
    `Tracks`, `null` frame, `null` event, `history` absent / array / string (error name), `videoinfo` with a
    nested object, rounding at 3 decimals; v1 basic, holes in the returned array, and `Tracks` after the call
    (pins DEBT-707); CSV with each flag combination and `undefined` / missing `bool_acts` / `null` entry; BBox2
-   same; `tracksToBBoxes` only if kept (Q17). One round-trip case: `sanitizeEvents(convertTracksToV2(...))`
+   same; `tracksToBBoxes` (moved with its sibling, Q17). One round-trip test: `sanitizeEvents(convertTracksToV2(...))`
    returns the saved model (uses the module of slice 1).
 2. **Add** the functions to the existing `annotation/AnnotationCodec.js` (named exports, legacy names kept;
    ~170 lines added to its 431). `AnnotationCodecBridge.js` gets wrappers: `convertTracksToV1()` and
@@ -61,8 +61,12 @@ SEAM-702 is a semantic change: a later step, not this slice.
    bridge. Check that no call happens at load time (saves are user actions, the bridge is a deferred module).
    The test drops its `old` side, the golden stays as the reference (as in slice 1).
 4. **Fix bugs (semantic, one commit each, goldens updated explicitly)**, only clear-cut candidates that the
-   maintainer signs off one by one: DEBT-707 (`Object.assign({}, evt)`), and DEBT-706 in the minimal form of
-   [Q16](../QUESTIONS.md#q16). DEBT-727 (crash on missing `bool_acts`) is ambiguous and stays `DEBT`.
+   maintainer signs off one by one: DEBT-707 (`Object.assign({}, evt)`, approved in principle on 2026-11-12) and
+   DEBT-706 in its full form ([Q16](../QUESTIONS.md#q16), [OQ-712](../QUESTIONS.md#oq-712)): `info` and the
+   embedded `videoinfo` are deep-cloned instead of aliased (the whole `videoinfo` stays embedded, `preview` is
+   only a URL), `history` is always an array, so the live `TracksInfo` is no longer mutated. Each commit shows
+   its golden diff before approval. DEBT-727 (crash on missing
+   `bool_acts`) is ambiguous and stays `DEBT`.
 5. **Record**: PLAN, the code lists of SEAM-702, BEH-710/711/712/738/739, DEBT-706/707/727/728 and the entries that
    cite these functions, regenerate `intent/docs/`.
 
@@ -92,7 +96,8 @@ the PLAN.
 
 - A saved file differing from the old one without anyone noticing. Mitigation: full-text goldens and the
   manual before/after comparison of section 4.
-- `videoinfo` embeds `preview` and can be large in the real page; goldens use a small stub, so size is untested.
+- Goldens use a small `videoinfo` stub; the real object (name, `videoPath`, `preview` URL, `tags`, ...) is not
+  exercised, only cloned or aliased as is.
 - Whether `Tracks`/`videoinfo` are still plain `var` globals at call time depends on the bridge reading them
   by bare name (true today: `Model.js:3`, `VideoList.js:8`); `TracksInfo` is an implicit global and must exist
   (BEH-709), otherwise `ReferenceError` as before.

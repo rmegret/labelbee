@@ -1,0 +1,4169 @@
+{
+  "v2 basic two frames two ids": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": "pollen"
+          },
+          {
+            "id": "2",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "a note",
+            "labels": ""
+          }
+        ],
+        "3": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 26.5,
+            "cy": 41.5,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 Tracks as array with holes": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "2": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 2,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ],
+        "5": [
+          {
+            "id": "4",
+            "time": 0,
+            "frame": 5,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      [
+        {
+          "$": "undefined"
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 2,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "4": {
+            "ID": 4,
+            "time": 0,
+            "frame": 5,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      ],
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 empty Tracks object": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {}
+    },
+    "argsAfter": [
+      {},
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 empty Tracks array": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {}
+    },
+    "argsAfter": [
+      [],
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 null frame skipped": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "1": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": null,
+        "1": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 empty frame kept as []": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [],
+        "1": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {},
+        "1": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 null event skipped": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "2",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": null,
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 id taken from the key, not from ID": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "5",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "5": {
+            "ID": 99,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 frame keys in numeric order": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "1": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ],
+        "2": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ],
+        "10": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "1": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "2": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "10": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 history absent": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": "pollen"
+          },
+          {
+            "id": "2",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "a note",
+            "labels": ""
+          }
+        ],
+        "3": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 26.5,
+            "cy": 41.5,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 history array": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "history": [
+          "Loaded on x",
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": "pollen"
+          },
+          {
+            "id": "2",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "a note",
+            "labels": ""
+          }
+        ],
+        "3": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 26.5,
+            "cy": 41.5,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "history": [
+          "Loaded on x",
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 history string throws": {
+    "threw": "TypeError",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "history": "Loaded in Labelbee on 2024-01-01",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !"
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 old formatnote and videoinfo overwritten": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        },
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ]
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": "pollen"
+          },
+          {
+            "id": "2",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "a note",
+            "labels": ""
+          }
+        ],
+        "3": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 26.5,
+            "cy": 41.5,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        },
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ]
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 TracksInfo extra fields round-trip": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "basedon": 12,
+        "custom": {
+          "a": [
+            1,
+            2
+          ]
+        },
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": "pollen"
+          },
+          {
+            "id": "2",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "a note",
+            "labels": ""
+          }
+        ],
+        "3": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 26.5,
+            "cy": 41.5,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "basedon": 12,
+        "custom": {
+          "a": [
+            1,
+            2
+          ]
+        },
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 rounding to 3 decimals": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 1,
+            "y": 1.001,
+            "cx": 2.001,
+            "cy": 1.001,
+            "width": 2.001,
+            "height": 0,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          },
+          {
+            "id": "2",
+            "time": 0,
+            "frame": 0,
+            "x": -1,
+            "y": 0,
+            "cx": 49.499,
+            "cy": 1.5,
+            "width": 101,
+            "height": 3,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 1.0004,
+            "y": 1.0005,
+            "cx": 0,
+            "cy": 0,
+            "width": 2.0006,
+            "height": 0.0004,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": -1.0005,
+            "y": 1e-9,
+            "cx": 0,
+            "cy": 0,
+            "width": 100.9995,
+            "height": 3,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 removed fields and kept unknown fields": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": "",
+            "parts": [
+              [
+                1,
+                2
+              ]
+            ],
+            "newid": 7,
+            "fix": 1,
+            "visit": "v",
+            "span": 3,
+            "tag": 4,
+            "custom": "k"
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "",
+            "marked": true,
+            "permanent": true,
+            "parts": [
+              [
+                1,
+                2
+              ]
+            ],
+            "newid": 7,
+            "fix": 1,
+            "visit": "v",
+            "span": 3,
+            "tag": 4,
+            "custom": "k"
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 stored cx cy are recomputed": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 999,
+            "cy": 999,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 non-numeric x gives NaN": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": {
+              "$": "NaN"
+            },
+            "y": 20.679,
+            "cx": {
+              "$": "NaN"
+            },
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": "a",
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 missing geometry gives NaN": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "y": 20.679,
+            "cx": {
+              "$": "NaN"
+            },
+            "cy": 40.679,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": "",
+            "x": {
+              "$": "NaN"
+            },
+            "width": {
+              "$": "NaN"
+            }
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 absent time frame angle notes labels stay absent": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "x": 1,
+            "y": 2,
+            "width": 3,
+            "height": 4,
+            "cx": 2.5,
+            "cy": 4
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "x": 1,
+            "y": 2,
+            "width": 3,
+            "height": 4,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ]
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "name": "vid",
+          "width": 100,
+          "height": 50,
+          "preview": {
+            "w": 1
+          }
+        }
+      },
+      {
+        "name": "vid",
+        "width": 100,
+        "height": 50,
+        "preview": {
+          "w": 1
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v2 videoinfo undefined": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "$": "undefined"
+        }
+      },
+      "data": {
+        "0": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": "pollen"
+          },
+          {
+            "id": "2",
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "a note",
+            "labels": ""
+          }
+        ],
+        "3": [
+          {
+            "id": "1",
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 26.5,
+            "cy": 41.5,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        ]
+      }
+    },
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      },
+      {
+        "type": "events-multiframe",
+        "source": "synthetic",
+        "notes": "n",
+        "formatnote": "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !",
+        "history": [
+          "Saved using labelbee on FIXED DATE"
+        ],
+        "videoinfo": {
+          "$": "undefined"
+        }
+      },
+      {
+        "$": "undefined"
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v1 basic two frames two ids": {
+    "returned": [
+      {
+        "1": {
+          "ID": 1,
+          "time": 0,
+          "frame": 0,
+          "x": 10.123,
+          "y": 20.679,
+          "cx": 25.401,
+          "cy": 40.679,
+          "width": 30.556,
+          "height": 40,
+          "angle": 1.5,
+          "bool_acts": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "notes": "",
+          "labels": "pollen"
+        },
+        "2": {
+          "ID": 2,
+          "time": 0,
+          "frame": 0,
+          "x": 10.123,
+          "y": 20.679,
+          "cx": 25.401,
+          "cy": 40.679,
+          "width": 30.556,
+          "height": 40,
+          "angle": 1.5,
+          "bool_acts": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "notes": "a note",
+          "labels": ""
+        }
+      },
+      {
+        "$": "undefined"
+      },
+      {
+        "$": "undefined"
+      },
+      {
+        "1": {
+          "ID": 1,
+          "time": 0,
+          "frame": 3,
+          "x": 11,
+          "y": 21,
+          "cx": 26.5,
+          "cy": 41.5,
+          "width": 31,
+          "height": 41,
+          "angle": 1.5,
+          "bool_acts": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "notes": "",
+          "labels": ""
+        }
+      }
+    ],
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 26.5,
+            "cy": 41.5,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v1 returns an array with holes": {
+    "returned": [
+      {
+        "$": "undefined"
+      },
+      {
+        "$": "undefined"
+      },
+      {
+        "1": {
+          "ID": 1,
+          "time": 0,
+          "frame": 2,
+          "x": 10.123,
+          "y": 20.679,
+          "cx": 25.401,
+          "cy": 40.679,
+          "width": 30.556,
+          "height": 40,
+          "angle": 1.5,
+          "bool_acts": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "notes": "",
+          "labels": ""
+        }
+      }
+    ],
+    "argsAfter": [
+      {
+        "2": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 2,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v1 Tracks as array with holes": {
+    "returned": [
+      {
+        "$": "undefined"
+      },
+      {
+        "$": "undefined"
+      },
+      {
+        "1": {
+          "ID": 1,
+          "time": 0,
+          "frame": 2,
+          "x": 10.123,
+          "y": 20.679,
+          "cx": 25.401,
+          "cy": 40.679,
+          "width": 30.556,
+          "height": 40,
+          "angle": 1.5,
+          "bool_acts": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "notes": "",
+          "labels": ""
+        }
+      },
+      {
+        "$": "undefined"
+      },
+      {
+        "$": "undefined"
+      },
+      {
+        "4": {
+          "ID": 4,
+          "time": 0,
+          "frame": 5,
+          "x": 10.123,
+          "y": 20.679,
+          "cx": 25.401,
+          "cy": 40.679,
+          "width": 30.556,
+          "height": 40,
+          "angle": 1.5,
+          "bool_acts": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "notes": "",
+          "labels": ""
+        }
+      }
+    ],
+    "argsAfter": [
+      [
+        {
+          "$": "undefined"
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 2,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "4": {
+            "ID": 4,
+            "time": 0,
+            "frame": 5,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      ]
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v1 empty Tracks": {
+    "returned": [],
+    "argsAfter": [
+      {}
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v1 null frame and null event skipped": {
+    "returned": [
+      {
+        "$": "undefined"
+      },
+      {
+        "2": {
+          "ID": 2,
+          "time": 0,
+          "frame": 0,
+          "x": 10.123,
+          "y": 20.679,
+          "cx": 25.401,
+          "cy": 40.679,
+          "width": 30.556,
+          "height": 40,
+          "angle": 1.5,
+          "bool_acts": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "notes": "",
+          "labels": ""
+        }
+      }
+    ],
+    "argsAfter": [
+      {
+        "0": null,
+        "1": {
+          "1": null,
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v1 empty frame kept as {}": {
+    "returned": [
+      {}
+    ],
+    "argsAfter": [
+      {
+        "0": {}
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v1 keeps ID and bool_acts, drops marked and permanent": {
+    "returned": [
+      {
+        "1": {
+          "ID": 1,
+          "time": 0,
+          "frame": 0,
+          "x": 10.123,
+          "y": 20.679,
+          "cx": 25.401,
+          "cy": 40.679,
+          "width": 30.556,
+          "height": 40,
+          "angle": 1.5,
+          "bool_acts": [
+            false,
+            true,
+            false,
+            false
+          ],
+          "notes": "",
+          "labels": ""
+        }
+      }
+    ],
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.123,
+            "y": 20.679,
+            "cx": 25.401,
+            "cy": 40.679,
+            "width": 30.556,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              true,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "v1 rounding to 3 decimals": {
+    "returned": [
+      {
+        "1": {
+          "ID": 1,
+          "time": 0,
+          "frame": 0,
+          "x": 1,
+          "y": 1.001,
+          "cx": 2.001,
+          "cy": 1.001,
+          "width": 2.001,
+          "height": 0,
+          "angle": 1.5,
+          "bool_acts": [
+            false,
+            false,
+            false,
+            false
+          ],
+          "notes": "",
+          "labels": ""
+        }
+      }
+    ],
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 1,
+            "y": 1.001,
+            "cx": 2.001,
+            "cy": 1.001,
+            "width": 2.001,
+            "height": 0,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "csv basic": {
+    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\nnodate,0,1,,,\nnodate,0,2,,,\nnodate,3,1,,,\n",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "csv every flag combination": {
+    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\nnodate,0,1,,,\nnodate,1,1,fanning,,\nnodate,2,1,,pollen,\nnodate,3,1,came in,,\nnodate,4,1,went out,,\nnodate,5,1,fanning;came in;went out,pollen,\n",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "1": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "2": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              true,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              true,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "4": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              true
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "5": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "csv empty Tracks": {
+    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\n",
+    "argsAfter": [
+      {}
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "csv undefined Tracks": {
+    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\n",
+    "argsAfter": [
+      {
+        "$": "undefined"
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "csv null frame skipped": {
+    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\nnodate,1,1,fanning,,\n",
+    "argsAfter": [
+      {
+        "0": null,
+        "1": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "csv Tracks as array with holes": {
+    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\nnodate,2,1,,,\nnodate,5,4,,,\n",
+    "argsAfter": [
+      [
+        {
+          "$": "undefined"
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 2,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "4": {
+            "ID": 4,
+            "time": 0,
+            "frame": 5,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      ]
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "csv uses ID, not the key": {
+    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\nnodate,0,99,came in,,\n",
+    "argsAfter": [
+      {
+        "0": {
+          "5": {
+            "ID": 99,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              true,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "csv missing bool_acts throws": {
+    "threw": "TypeError",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "csv null event throws": {
+    "threw": "TypeError",
+    "argsAfter": [
+      {
+        "0": {
+          "1": null
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox basic": {
+    "returned": "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n0,10.12345,20.6789,40.67895,60.6789,0,0,0,0,1.5\n0,10.12345,20.6789,40.67895,60.6789,0,0,0,0,1.5\n3,11,21,42,62,0,0,0,0,1.5\n",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox every flag combination": {
+    "returned": "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n0,10.12345,20.6789,40.67895,60.6789,0,0,0,0,1.5\n1,10.12345,20.6789,40.67895,60.6789,0,0,0,1,1.5\n2,10.12345,20.6789,40.67895,60.6789,1,0,0,0,1.5\n3,10.12345,20.6789,40.67895,60.6789,0,1,0,0,1.5\n4,10.12345,20.6789,40.67895,60.6789,0,0,1,0,1.5\n5,10.12345,20.6789,40.67895,60.6789,1,1,1,1,1.5\n",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "1": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "2": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              true,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              true,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "4": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              true
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "5": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox empty Tracks": {
+    "returned": "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n",
+    "argsAfter": [
+      {}
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox undefined Tracks": {
+    "returned": "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n",
+    "argsAfter": [
+      {
+        "$": "undefined"
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox missing bool_acts throws": {
+    "threw": "TypeError",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 basic": {
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n0,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n0,2,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n3,1,26.5,41.5,1.5,11,21,42,62,0,0,0,0\n",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": "pollen"
+          },
+          "2": {
+            "ID": 2,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "a note",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 3,
+            "x": 11,
+            "y": 21,
+            "cx": 0,
+            "cy": 0,
+            "width": 31,
+            "height": 41,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 every flag combination": {
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n0,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n1,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,1\n2,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,1,0,0,0\n3,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,1,0,0\n4,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,1,0\n5,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,1,1,1,1\n",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "1": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              true,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "2": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              true,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "3": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              true,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "4": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              true
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        "5": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              true,
+              true,
+              true,
+              true
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 empty Tracks": {
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n",
+    "argsAfter": [
+      {}
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 undefined Tracks": {
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n",
+    "argsAfter": [
+      {
+        "$": "undefined"
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 null frame skipped": {
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n1,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n",
+    "argsAfter": [
+      {
+        "0": null,
+        "1": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 Tracks as array with holes": {
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n2,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n5,4,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n",
+    "argsAfter": [
+      [
+        {
+          "$": "undefined"
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 2,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "$": "undefined"
+        },
+        {
+          "4": {
+            "ID": 4,
+            "time": 0,
+            "frame": 5,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      ]
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 floating-point noise is not rounded": {
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n0,1,0.2,0.25,1.5,0.1,0.2,0.30000000000000004,0.30000000000000004,0,0,0,0\n",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 0.1,
+            "y": 0.2,
+            "cx": 0,
+            "cy": 0,
+            "width": 0.2,
+            "height": 0.1,
+            "angle": 1.5,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 missing angle gives NaN": {
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n0,1,25.4012,40.6789,NaN,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "bool_acts": [
+              false,
+              false,
+              false,
+              false
+            ],
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 missing bool_acts throws": {
+    "threw": "TypeError",
+    "argsAfter": [
+      {
+        "0": {
+          "1": {
+            "ID": 1,
+            "time": 0,
+            "frame": 0,
+            "x": 10.12345,
+            "y": 20.6789,
+            "cx": 0,
+            "cy": 0,
+            "width": 30.5555,
+            "height": 40,
+            "angle": 1.5,
+            "notes": "",
+            "labels": ""
+          }
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  },
+  "bbox2 null event throws": {
+    "threw": "TypeError",
+    "argsAfter": [
+      {
+        "0": {
+          "1": null
+        }
+      }
+    ],
+    "alerts": [],
+    "logs": [],
+    "errors": [],
+    "sql": []
+  }
+}
