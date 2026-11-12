@@ -3,7 +3,6 @@ from flask import jsonify, request, abort
 from labelbee.database.annotation.schema import VideoDataSchema
 from labelbee.database import (
     get_user_by_id, 
-    get_video_by_id, 
     add_video_data, 
     edit_video_data,
     get_video_data_by_id,
@@ -11,7 +10,7 @@ from labelbee.database import (
 )
 import json 
 from labelbee.app import db 
-from flask_user import current_user
+# from flask_user import current_user
 from ..constants import (
     STATUS_CODE_200,
     STATUS_CODE_401, 
@@ -42,7 +41,7 @@ class AnnotationsAPI(Resource):
         #TODO: Terrible. Change this 
         for i in videos_json:
             user = get_user_by_id(i["created_by_id"])
-            i["created_by"] = user.first_name + " " + user.last_name
+            i["created_by"] = f"{user.first_name} {user.last_name}" if user else "Unknown"
 
         return {
             "success": True,
@@ -59,8 +58,8 @@ class AnnotationsAPI(Resource):
         newdata = video_data_schema.loads(form_data)
 
 
-        video = get_video_by_id(newdata["video_id"])
-        created_by = get_user_by_id(newdata["created_by_id"])
+        # video_id is the DataInfrastructure UUID; it is stored as-is
+        created_by = get_user_by_id(newdata.get("created_by_id"))
 
         video_data = video_data_schema.dump(
             add_video_data(
@@ -68,7 +67,7 @@ class AnnotationsAPI(Resource):
                 path=newdata.setdefault("path", None),
                 timestamp=newdata.setdefault("timestamp", None),
                 data_type=newdata.setdefault("data_type", None),
-                video=video,
+                video_id=newdata.get("video_id"),
                 created_by=created_by,
                 data=newdata.setdefault("data", None),
                 notes=newdata.setdefault("notes", None),

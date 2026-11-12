@@ -8,6 +8,7 @@ bp = Blueprint('download', __name__, url_prefix='/data')
 @bp.route("/", defaults={'path': ''})
 @bp.route("/<path:path>")  # no duplicate with url_prefix
 def send_data(path):
-    # TODO: Make strigs into constants
-    data_dir = os.path.join(bp.root_path, "../static/data")
+    # Videos referenced by DataInfrastructure are served from DATA_DIR
+    # (see DATAINFRA_PATH_PREFIX); falls back to the old static/data folder.
+    data_dir = os.environ.get("DATA_DIR") or os.path.join(bp.root_path, "../static/data")
     return send_from_directory_partial(data_dir, path, "/data")

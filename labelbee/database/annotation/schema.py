@@ -22,7 +22,7 @@ class VideoDataSchema(ma.SQLAlchemySchema):
             ]
         )
     )
-    video_id = fields.Integer()
+    video_id = fields.String()  # DataInfrastructure video UUID
     created_by_id = fields.Integer()
     data = fields.String()
     notes = fields.String()

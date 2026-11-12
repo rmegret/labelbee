@@ -1,242 +1,138 @@
+"""Video endpoints, backed by the DataInfrastructure API.
+
+The URLs and response envelopes are the ones the labelbee frontend already
+uses; only the storage moved from labelbee's DB to DataInfrastructure.
+Video ids are now UUID strings.
+"""
+import os
+
+from flask import request
 from flask_restful import Resource
-from labelbee.database.video.schema import VideoSchema
-from labelbee.database import (
-    video_list, 
-    get_video_by_id, 
-    delete_video,
-    edit_video
-    )
-from flask import request, abort
 import cv2
 from dotenv import load_dotenv
-import os
-from labelbee.models import Video
-from labelbee.app import db
-# from flask_user import current_user
-from ..constants import (
-    STATUS_CODE_200,
-    STATUS_CODE_401, 
-    STATUS_CODE_403,
-    STATUS_CODE_500,
-)
+
+from labelbee.services import datainfra
+from labelbee.services.datainfra import DataInfraError
+from ..constants import STATUS_CODE_200, STATUS_CODE_400, STATUS_CODE_500
 
 load_dotenv()
 
-#TODO: Add list filters 
+
+def _error(e: DataInfraError):
+    return {"success": False, "status_code": e.status_code, "error": e.message, "data": {}}, e.status_code
+
+
 class VideoListAPI(Resource):
     def get(self):
         # if not current_user.is_authenticated:
         #    abort(STATUS_CODE_401, "Authentication Required")
-
-        dataset = request.args.get("dataset", "")
-
-        dataset = None if dataset == "" else dataset
-
-        videos_schema = VideoSchema(many=True)
-
+        dataset = request.args.get("dataset") or None
+        name = request.args.get("name") or None
         try:
-            video_payload = videos_schema.dump(video_list(dataset))
-            return {
-                "success": True,
-                "status_code": STATUS_CODE_200,
-                "data": video_payload
-                }
-        
-        except Exception as e:
-            return {
-                "success": False,
-                "status_code": STATUS_CODE_500,
-                "data": {}
-            }
+            videos = datainfra.list_videos(dataset=dataset, name=name)
+        except DataInfraError as e:
+            return _error(e)
+        return {
+            "success": True,
+            "status_code": STATUS_CODE_200,
+            "data": [datainfra.to_video_list_item(v) for v in videos],
+        }
 
-    #TODO: 
-    # 2. 404 for dataset id
-    # 3. validate input data 
-    # 4. Check authentication
     def post(self):
+        """Upload a video file and register it in DataInfrastructure."""
         # if not current_user.is_authenticated:
         #    abort(STATUS_CODE_401, "Authentication Required")
-
-        # Get data from body
         video_name = request.form.get("video_name")
-        #TODO: Map location string to int 
-        location = request.form.get("location")
-        dataset_id = request.form.get("dataset_id")
-        date = request.form.get("date")
-        colony = request.form.get("colony")
-        notes = request.form.get("notes")
-        fps = request.form.get("fps")
+        if not video_name or "file" not in request.files:
+            return {"success": False, "status_code": STATUS_CODE_400,
+                    "error": "video_name and file are required"}, STATUS_CODE_400
 
-        video_file = request.files["file"]
+        upload_dir = os.getenv("ROOT_PATH")
+        if not upload_dir:
+            return {"success": False, "status_code": STATUS_CODE_500,
+                    "error": "ROOT_PATH (upload directory) is not configured"}, STATUS_CODE_500
 
+        file_path = os.path.join(upload_dir, f"{os.path.basename(video_name)}.mp4")
         try:
-            path = os.getenv("ROOT_PATH")
-            file_path = f"{path}/{video_name}.mp4"
-            with open(file_path, 'wb') as f:
-                f.write(video_file.stream.read())
+            request.files["file"].save(file_path)
+        except OSError:
+            return {"success": False, "status_code": STATUS_CODE_500,
+                    "error": "Error writing video file"}, STATUS_CODE_500
 
-        except Exception:
-            abort(STATUS_CODE_500, "Error writing video file")
-
-        try:
-            cap = cv2.VideoCapture(file_path)
-            if not cap.isOpened():
-                raise Exception
-            real_fps = cap.get(cv2.CAP_PROP_FPS)
-            frames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            cap.release()
-
-            filesize = os.path.getsize(file_path)
-
-        except Exception:
-            abort(STATUS_CODE_500, "Error extracting video metadata")
-
-        _hash = ""
-
-        video_entry = {
-            "file_name": f"{video_name}.mp4", #Yes
-            "path": "/videos", # Yes
-            "timestamp": date,
-            "location": 10, #Yes
-            "colony": colony, #Yes 
-            "notes": notes,
-            "dataset": dataset_id, #yes
-            "thumb": "",
-            "frames": frames, #yes)
-            "height": height, #yes
-            "width": width,
-            "fps": fps if fps else real_fps,
-            "realfps": real_fps,
-            "filesize": filesize,
-            "hash": _hash,
-            "corrupted" : False,
-            "trimmed" : False,
-            "hasframe0" : False,
-            "hasframe_1s" : False,
-            "hasframe_2s" : False,
-            "hasframe_10s" : False,
-            "hasframeN_30s" : False,
-            "hasframeN_2s" : False,
-            "hasframeN_1s" : False,
-            "hasframeN": False
-        }
-        
-        try:
-            vid = Video(**video_entry)
-            db.session.add(vid)
-            db.session.commit()
-
-            return {
-                "success": True,
-                "status_code": STATUS_CODE_200,
-                "id": vid.id
-            }
-        except Exception as e:
+        cap = cv2.VideoCapture(file_path)
+        if not cap.isOpened():
             os.remove(file_path)
-            abort(STATUS_CODE_500, "Error inserting video metadata")
+            return {"success": False, "status_code": STATUS_CODE_400,
+                    "error": "Uploaded file is not a readable video"}, STATUS_CODE_400
+        real_fps = cap.get(cv2.CAP_PROP_FPS)
+        frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        cap.release()
+
+        fps = request.form.get("fps")
+        meta = {k: request.form.get(k) for k in ("colony", "notes") if request.form.get(k)}
+        try:
+            video_id = datainfra.create_video(
+                name=video_name,
+                filepath=file_path,
+                collection_id=request.form.get("dataset_id") or None,
+                location=request.form.get("location") or None,
+                timestamp=request.form.get("date") or None,
+                fps=float(fps) if fps else real_fps,
+                frames=frames,
+                resolution=f"{width}x{height}",
+                file_size=os.path.getsize(file_path),
+                type="mp4",
+                video_meta=meta or None,
+            )
+        except DataInfraError as e:
+            os.remove(file_path)
+            return _error(e)
+
+        return {"success": True, "status_code": STATUS_CODE_200, "id": video_id}
 
 
 class VideoAPI(Resource):
     def get(self, id):
         # if not current_user.is_authenticated:
         #    abort(STATUS_CODE_401, "Unauthenticated user")
-
-        try :
-            video = get_video_by_id(id)
-
-            video_schema = VideoSchema()
-            video = video_schema.dump(video)
-            video_info = {
-                "video_id": video["id"],
-                "path": video["path"],
-                "file_name": video["file_name"],
-                "videofps": video["fps"],
-                "realfps": video["realfps"],
-                "starttime": video["timestamp"],
-                "duration": video["frames"] / video["fps"],
-                "nframes": video["frames"],
-            }
-
-            return {
-                    "success": True,
-                    "data": video_info,
-                    "status_code": STATUS_CODE_200
-                    }
-        except Exception:
-            return {
-                "success": False,
-                "status_code": STATUS_CODE_500,
-                "data": {}
-            }
+        try:
+            video = datainfra.get_video(id)
+        except DataInfraError as e:
+            return _error(e)
+        return {
+            "success": True,
+            "status_code": STATUS_CODE_200,
+            "data": datainfra.to_video_info(video),
+        }
 
     def put(self, id):
         # if not current_user.is_authenticated:
         #    abort(STATUS_CODE_401, "Unauthenticated user")
-
-        video_name = request.json.get("video_name")
-        #TODO: Map location string to int 
-        location = request.json.get("location")
-        dataset_id = request.json.get("dataset_id")
-        date = request.json.get("date")
-        colony = request.json.get("colony")
-
-        try :
-            edit_video(
-                id, 
-                file_name=video_name,
-                path=None,
-                timestamp=date,
-                location=location,
-                colony=colony,
-                dataset=dataset_id
-            )
-            return {
-                "success": True,
-                "status_code": STATUS_CODE_200,
-                "data": {
-                    "id": id
-                }
-            }
-        except Exception:
-            abort(500)
+        body = request.get_json(silent=True) or request.form.to_dict()
+        fields = {}
+        if body.get("video_name"):
+            fields["name"] = body["video_name"]
+        if body.get("location"):
+            fields["location"] = body["location"]
+        if body.get("dataset_id"):
+            fields["collection_id"] = body["dataset_id"]
+        meta = {k: body[k] for k in ("colony", "notes", "date") if body.get(k)}
+        if meta:
+            fields["meta"] = meta
+        try:
+            datainfra.update_video(id, **fields)
+        except DataInfraError as e:
+            return _error(e)
+        return {"success": True, "status_code": STATUS_CODE_200, "data": {"id": id}}
 
     def delete(self, id):
-        # if not current_user.is_authenticated:
-        #    abort(STATUS_CODE_401, "Unauthenticated user")
-
+        """Remove the video from the catalog. The file on disk is left alone."""
         # if not current_user.has_roles("admin"):
         #    abort(STATUS_CODE_403,"Missing user permissions")
-        
-        video_schema = VideoSchema()
-
-        try :
-            video_info = video_schema.dump(get_video_by_id(id))
-
-        except :
-            abort(STATUS_CODE_500, "Error reading video file")
-
-        try :
-            delete_video(id)
-
-        except Exception:
-            abort(STATUS_CODE_500, "Error deleting video")
-
-        try :
-            # TODO: Figure out path structure 
-            os.remove(f'{os.getenv("ROOT_PATH")}/{video_info["file_name"]}')
-        except Exception:
-
-            vid = Video(**video_info)
-            db.session.add(vid)
-            db.session.commit()
-            abort(STATUS_CODE_500, "Error deleting video files")
-
-        return {
-                "success": True,
-                "data": {
-                    "id": id
-                    }
-                }
-        
+        try:
+            datainfra.delete_video(id)
+        except DataInfraError as e:
+            return _error(e)
+        return {"success": True, "status_code": STATUS_CODE_200, "data": {"id": id}}

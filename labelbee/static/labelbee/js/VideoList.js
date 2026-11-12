@@ -580,17 +580,19 @@ VideoManager.prototype.makeVideoListTable = function (json){
     data: json["data"],
     columns:[
       {data:"id", render: function(id){
-        return "<button onclick='videoManager.videoSelected("+id+")'>Load</button>";
+        // ids are UUID strings: quote them so the onclick is valid JS
+        const safeId = String(id).replace(/[^0-9a-zA-Z-]/g, "");
+        return "<button onclick=\"videoManager.videoSelected('"+safeId+"')\">Load</button>";
       }},
       {data:"file_name"},
-      {data:"timestamp", render: function(timestamp){
-        return timestamp.split('T').join(' ');
+      {data:"timestamp", defaultContent: "", render: function(timestamp){
+        return timestamp ? String(timestamp).split('T').join(' ') : "";
       }},
       {data:"id"},
-      {data:"colony"},
-      {data:"fps"},
-      {data:"width"},
-      {data:"height"}
+      {data:"colony", defaultContent: ""},
+      {data:"fps", defaultContent: ""},
+      {data:"width", defaultContent: ""},
+      {data:"height", defaultContent: ""}
     ],
     initComplete: function () {
         this.api()
@@ -650,11 +652,13 @@ VideoManager.prototype.receiveVideoSelection = function(){
   });
 }
 
+// Database video ids are UUIDs from DataInfrastructure (older ones were integers)
+const VIDEO_DB_ID_RE = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d+)$/i;
+
 VideoManager.prototype.selectVideoBy_video_id = async function (video_id) {
-  const id = Number(video_id);
-  if (id == video_id) {
-    // If numerical ID, assume it is from database
-    this.videoSelected(id)
+  if (VIDEO_DB_ID_RE.test(String(video_id))) {
+    // Database ID: ask the server for the video info
+    return this.videoSelected(String(video_id))
   } else {
     // Else, this is manually loaded video. video_id is the URI. Load manual
     let uri = url_for('/data')+video_id

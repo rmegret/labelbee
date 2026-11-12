@@ -1,117 +1,78 @@
-from flask_restful import Resource
-from labelbee.database.dataset.schema import DataSetSchema
-from labelbee.database import (
-    new_dataset,
-    dataset_list,
-    get_dataset_by_id,
-    delete_dataset_by_id,
-    edit_dataset
-)
-from flask_restful import reqparse
-from flask import abort
-from labelbee.models import User
-#from flask_user import current_user
-from ..constants import STATUS_CODE_500, STATUS_CODE_401, STATUS_CODE_200
+"""Dataset endpoints, backed by DataInfrastructure collections.
 
-#TODO: Figure out if this or marshmallow
+A labelbee "dataset" is a DataInfrastructure collection (videos.collection_id).
+Dataset ids are now UUID strings.
+"""
+from flask_restful import Resource, reqparse
+
+from labelbee.services import datainfra
+from labelbee.services.datainfra import DataInfraError
+from ..constants import STATUS_CODE_200
+
 parser = reqparse.RequestParser()
 parser.add_argument("name")
 parser.add_argument("description")
+parser.add_argument("experiment_id")
 
 
-#TODO: Figure out user shit 
+def _error(e: DataInfraError):
+    return {"success": False, "status_code": e.status_code, "error": e.message}, e.status_code
+
+
 class DatasetListAPI(Resource):
     def get(self):
-        """
-        Lists datasets
-        """
-        # if not current_user.is_authenticated:
-        #    abort(STATUS_CODE_401, "Unauthenticated user")
-        try :
-            datasets_schema = DataSetSchema(many=True)
-            return datasets_schema.dump(dataset_list())
-        except Exception as e:
-            abort(STATUS_CODE_500, e)
+        """Lists datasets (same list-of-objects shape as before)."""
+        try:
+            return [datainfra.to_dataset(c) for c in datainfra.list_collections()]
+        except DataInfraError as e:
+            return _error(e)
 
     def post(self):
-        """
-        Creates a new dataset
-        """
-        # if not current_user.is_authenticated:
-        #    abort(STATUS_CODE_401, "Unauthenticated user")
+        """Creates a new dataset"""
         args = parser.parse_args()
+        name = (args["name"] or "").strip() or "New Dataset"
+        fields = {"collection_name": name}
+        if args["description"]:
+            fields["meta"] = {"description": args["description"]}
+        if args["experiment_id"]:
+            fields["experiment_id"] = args["experiment_id"]
+        try:
+            new_id = datainfra.create_collection(**fields)
+        except DataInfraError as e:
+            return _error(e)
+        return {"success": True, "status_code": STATUS_CODE_200, "data": {"id": new_id}}
 
-        name = args["name"]
-        description = args["description"]
 
-        dataset = new_dataset(
-            name=name,
-            description=description,
-            user=None,  #current_user,
-        )
-        #TODO: Return id 
-        return {
-            "success": True,
-            "status_code": STATUS_CODE_200,
-            "data": {
-                "id": dataset.id
-            }
-        }
-
-#TODO: Implement put and delete 
 class DatasetAPI(Resource):
-
     def get(self, id):
-        # if not current_user.is_authenticated:
-        #    abort(STATUS_CODE_401, "Unauthenticated user")
-        #TODO: Validate inputs 
+        try:
+            return datainfra.to_dataset(datainfra.get_collection(id))
+        except DataInfraError as e:
+            return _error(e)
 
-        dataset_schema = DataSetSchema()
-        try :
-            dataset = get_dataset_by_id(id)
-            return dataset_schema.dump(dataset)
-
-        except Exception as e:
-            abort(STATUS_CODE_500)
-
-    
     def put(self, id):
         """
         Updates dataset by id
-        Input: 
+        Input:
             name - dataset name
             description - dataset description
         """
-        # if not current_user.is_authenticated:
-        #    abort(STATUS_CODE_401, "Unauthenticated user")
         args = parser.parse_args()
-        name = args["name"]
-        description = args["description"]
+        fields = {}
+        if args["name"]:
+            fields["collection_name"] = args["name"]
+        if args["description"] is not None:
+            fields["meta"] = {"description": args["description"]}
+        try:
+            datainfra.update_collection(id, **fields)
+        except DataInfraError as e:
+            return _error(e)
+        return {"success": True, "id": id}
 
-        dataset_schema = DataSetSchema()
-        try :
-            edit_dataset(id, name, description)
-            return {
-                "success": True,
-                "id": id
-            }
-
-        except Exception as e:
-            abort(STATUS_CODE_500)
-
-    
     def delete(self, id):
-        """
-        Deletes dataset by id 
-        """
-        # if not current_user.is_authenticated:
-        #    abort(STATUS_CODE_401, "Unauthenticated user")
-
-        try: 
-            delete_dataset_by_id(id)
-        except Exception as e:
-            abort(STATUS_CODE_500)
-        return {
-            "success": True,
-            "id": id
-        }
+        """Deletes dataset by id (its videos are kept, just unassigned)."""
+        try:
+            datainfra.delete_collection(id)
+        except DataInfraError as e:
+            return _error(e)
+        return {"success": True, "id": id}

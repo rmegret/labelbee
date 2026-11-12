@@ -95,8 +95,8 @@ class VideoData(db.Model):
     data_type = db.Column(db.String(25))
     data = db.Column(db.Text())
     notes = db.Column(db.Text())
-    video_id = db.Column(db.Integer(), db.ForeignKey("videos.id", ondelete="CASCADE"))
-    video = db.relationship("Video", backref="video_data")
+    # UUID of the video in DataInfrastructure (no FK: videos live in another DB)
+    video_id = db.Column(db.String(64), index=True)
     # created_from = db.relationship("VideoData", backref="created_from")
     # Terrible 
     created_from_id = db.Column(db.Integer(), db.ForeignKey("video_data.id"))

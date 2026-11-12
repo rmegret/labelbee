@@ -15,6 +15,34 @@
 This should have the application up and running.
 
 
+## Connecting to DataInfrastructure
+
+Videos and datasets are no longer stored in labelbee's database. They come from
+the DataInfrastructure API (datasets = DataInfrastructure *collections*, ids are
+UUIDs). Labelbee's own database only keeps users and annotations (`video_data`).
+
+1. Start the DataInfrastructure API (see its README), e.g. on port 8000.
+2. Add to labelbee's `.env` (see `example.env`):
+
+       DATAINFRA_API_URL=http://localhost:8000
+       DATAINFRA_PATH_PREFIX=/mnt/data
+       DATA_DIR=/mnt/data
+
+   `DATAINFRA_PATH_PREFIX` is the part of the paths stored in
+   DataInfrastructure that corresponds to `DATA_DIR`. A video stored as
+   `/mnt/data/flowerpatch/videos/x.cfr.mp4` is played from
+   `<labelbee>/data/flowerpatch/videos/x.cfr.mp4`, read from
+   `$DATA_DIR/flowerpatch/videos/x.cfr.mp4`.
+3. Use a separate database for labelbee (e.g. `MYSQL_DATABASE=labelbee`).
+   Both apps define `users`, `roles`, `users_roles` and `videos` tables with
+   different id types, so they must not share the DataInfrastructure database.
+4. Existing labelbee database: run `sql/001_video_data_video_id_uuid.sql`
+   once so annotations can store DataInfrastructure video UUIDs.
+   A new database: `flask db upgrade` / `db.create_all()` creates it correctly.
+
+If the API is unreachable, `/api/v1/videos` and `/api/v1/datasets` answer
+HTTP 502 with the reason in `error`.
+
 ## Application Structure:
 
 1. Home Page

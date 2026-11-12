@@ -6,7 +6,7 @@ from typing import List, Optional
 
 
 def video_data_list(
-    videoid: Optional[int], datatype: str = "", userid: int = None
+    videoid: Optional[str], datatype: str = "", userid: int = None
 ) -> List[VideoData]:
     """Get a list of all video data for a video.
 
@@ -187,7 +187,7 @@ def edit_video_data(
     path: str = None,
     timestamp: datetime = None,
     data_type: str = None,
-    video_id: int = None,
+    video_id: str = None,
     parent_id: int = None,
 ) -> VideoData:
     """Edit a video data.
@@ -221,7 +221,7 @@ def add_video_data(
     file_name: str,
     path: str,
     data_type: str,
-    video: int,
+    video_id: str,
     created_by: User,
     data: str,
     timestamp: str = None,
@@ -237,8 +237,8 @@ def add_video_data(
     :type timestamp: datetime
     :param data_type: The data type of the video data.
     :type data_type: str
-    :param video: The video for the video data.
-    :type video: int
+    :param video_id: DataInfrastructure UUID of the video.
+    :type video_id: str
     """
 
     timestamp = (
@@ -250,7 +250,7 @@ def add_video_data(
         path=path,
         timestamp=datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S"),
         data_type=data_type,
-        video=video,
+        video_id=str(video_id) if video_id is not None else None,
         created_by=created_by,
         data=data,
         created_from_id=created_from,
