@@ -12,6 +12,23 @@ const obs = (ID, extra = {}) => ({
   bool_acts: [false, true, false, false], notes: 'n', labels: 'pollen', ...extra,
 });
 
+test('v2 save leaves the live TracksInfo and videoinfo untouched; saves do not accumulate (DEBT-706)', async () => {
+  const save = (await loadNewSaveImpl())().fns;
+  const Tracks = { 0: { 1: obs(1) } };
+  const TracksInfo = { type: 'events-multiframe', source: 's', history: 'Loaded in Labelbee on 2024-01-01' };
+  const videoinfo = { name: 'v', preview: { previewURL: undefined } };
+  const before = structuredClone({ TracksInfo, videoinfo });
+
+  const first = save.convertTracksToV2(Tracks, TracksInfo, videoinfo);
+  const second = save.convertTracksToV2(Tracks, TracksInfo, videoinfo);
+
+  assert.deepEqual({ TracksInfo, videoinfo }, before); // nothing added to the live objects
+  assert.notEqual(first.info, TracksInfo); // copies, not aliases
+  assert.notEqual(first.info.videoinfo, videoinfo);
+  assert.deepEqual(first.info.history, ['Loaded in Labelbee on 2024-01-01', 'Saved using labelbee on FIXED DATE']);
+  assert.deepEqual(second.info.history, first.info.history); // the 2nd save does not list the 1st
+});
+
 test('v2 save then sanitizeEvents returns the saved model', async () => {
   const save = (await loadNewSaveImpl())().fns;
   const load = (await loadNewImpl())().fns;

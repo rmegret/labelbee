@@ -485,17 +485,20 @@ export function convertTracksToV1(Tracks) {
 }
 
 export function convertTracksToV2(Tracks, TracksInfo, videoinfo) {
-  let obj = { info: TracksInfo, data: {} };
+  // info and videoinfo are deep copies: the live TracksInfo and videoinfo are not modified by a save
+  let obj = { info: structuredClone(TracksInfo), data: {} };
   // TracksInfo should come with a few built-in fields:
   // notes
 
   obj.info.formatnote =
     "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !";
 
+  // history is always an array (CSV and DB imports set it to a string)
   if (!obj.info.history) obj.info.history = [];
+  else if (!Array.isArray(obj.info.history)) obj.info.history = [obj.info.history];
   obj.info.history.push("Saved using labelbee on " + Date());
   //let {preview: _, ...videoinfo_without_preview} = videoinfo;
-  obj.info.videoinfo = videoinfo
+  obj.info.videoinfo = structuredClone(videoinfo)
 
   let nitems = 0;
 
