@@ -25,18 +25,17 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
 ## Golden tests: annotation save/export codec (slice 2, [ADR 0004](../design/0004-slice-annotation-save-codec.md))
 
     node --test refactor/tests/golden/slice2/        # run
-    node refactor/tests/golden/slice2/generate.js    # re-pin goldens from the OLD code (review the diff!)
 
 - `golden/slice2/fixtures/cases.js`: synthetic `Tracks` cases; every case has the signature of the module:
   `convertTracksToV2(Tracks, TracksInfo, videoinfo)`, the others `(Tracks)`.
 - `golden/slice2/annotation-save.golden.json`: pinned return value (or thrown error name) and the inputs
   after the call, which is where the in-place mutations of `TracksInfo` (DEBT-706) and of the live `Tracks`
   (DEBT-707) are visible.
-- `golden/harness/old-save-impl.js`: extracts the original functions from `AnnotationIO.js` into a `vm`; sets
-  the page globals from the arguments and replaces `Date()` by a fixed string.
+- `golden/harness/save-stubs.js`: the list of save functions and the fixed string standing for `Date()`.
 - `golden/harness/new-save-impl.js`: loads the save side of `annotation/AnnotationCodec.js` (ESM), sets the
   Notifier like the page bridge and fixes `Date()` for the duration of each call; the test runs every case
-  on `old` and `new` against the same golden.
-- `golden/slice2/roundtrip.test.js`: v2 save then `sanitizeEvents` (slice 1 module), with both save
-  implementations; assertions, not a golden.
-- Like slice 1, `generate.js` and the `old` side stop working when step 3 deletes the old definitions.
+  against the golden.
+- `golden/slice2/roundtrip.test.js`: v2 save then `sanitizeEvents` (slice 1 module); assertions, not a golden.
+- The golden was generated from the original `AnnotationIO.js` functions (last present in commit `e1831be7`,
+  with `golden/harness/old-save-impl.js` and `golden/slice2/generate.js`); step 3 deleted them, so it is now
+  the only reference. A change in it is a behavior change: review the diff.

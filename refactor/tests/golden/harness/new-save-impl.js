@@ -1,11 +1,11 @@
 // Adapts the save side of the ES module annotation/AnnotationCodec.js to the {fns, rec} shape used by
 // run-case.js (slice 2, ADR 0004). Notifier recorded like the page bridge does; Date() replaced by the
-// same fixed string as in old-save-impl.js, only for the duration of each call.
+// fixed string the goldens were generated with, only for the duration of each call.
 'use strict';
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { makeRecorder } = require('./stubs');
-const { SAVE_FUNCTIONS, FIXED_DATE } = require('./old-save-impl');
+const { SAVE_FUNCTIONS, FIXED_DATE } = require('./save-stubs');
 
 const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js');
 const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;
