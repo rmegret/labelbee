@@ -386,7 +386,7 @@ absent, `null` or `[]`, nothing is iterated and the result is `{info, data: {}}`
 - **Group:** [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising")
 - **Origin:** essential
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
   - [labelbee/static/labelbee/js/SelectionControl.js](../../../labelbee/static/labelbee/js/SelectionControl.js): `hasLabel`
 - **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic"), [BEH-719](#beh-719-load-time-duplicate-handling-and-error-containment "Load-time duplicate handling and error containment"), [BEH-746](#beh-746-a-v2-file-without-data-loads-as-an-empty-model "A v2 file without `data` loads as an empty model"), [OQ-703](../../QUESTIONS.md#oq-703 "Are v1 events files and ID-less events still produced anywhere"), [OQ-713](../../QUESTIONS.md#oq-713 "Frame key versus ID divergence in v2 load")
 
@@ -394,8 +394,9 @@ absent, `null` or `[]`, nothing is iterated and the result is `{info, data: {}}`
 
 An object WITHOUT an `info` key is read as v1: a JSON array (or object) indexed by frame, each entry a dict
 `{id: event}` (null entries for holes are kept as `null`). A dummy `info = {type:"events-multiframe",
-source:"Converted from Tracks v1 object"}` is created (the `"array"` branch is dead: `typeof` never returns
-`"array"`, so the source string is never "...array", [DEBT-710](view_debt.md#debt-710-dead-array-branch-unreachable-non-object-branch-misleading-v1-source-string "Dead 'array' branch, unreachable non-object branch, misleading v1 source string")). `data = obj` is used directly (no copy, no
+source:"Converted from Tracks v1 object"}` is created for an object; for a JSON array the source is
+"Converted from Tracks v1 array" and `data` is a plain object keyed by array index (holes skipped, `null`
+entries kept; fixed in slice 1 step 4, [DEBT-710](view_debt.md#debt-710-dead-array-branch-unreachable-non-object-branch-misleading-v1-source-string "Dead 'array' branch, unreachable non-object branch, misleading v1 source string")). For an object, `data = obj` is used directly (no copy, no
 ID normalization, no recomputation of `bool_acts`, no `ID` created: the file's own `ID` and
 `bool_acts` fields are the ones used, so a v1 file lacking `bool_acts` yields observations that later break
 CSV/BBox export, [BEH-738](#beh-738-export-events-csv "Export Events (CSV)"), [BEH-739](#beh-739-export-events-bbox "Export Events (BBox)")). Validation: every key of `data` must match `/^(0|[1-9]\d*)$/`; otherwise the load
@@ -407,7 +408,7 @@ Note `setTracks([])` (init, erase) takes this branch.
 - **Group:** [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising")
 - **Origin:** intentional
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [DEBT-710](view_debt.md#debt-710-dead-array-branch-unreachable-non-object-branch-misleading-v1-source-string "Dead 'array' branch, unreachable non-object branch, misleading v1 source string"), [DEBT-711](view_debt.md#debt-711-v1-validation-and-normalization-are-weak "v1 validation and normalization are weak"), [OQ-703](../../QUESTIONS.md#oq-703 "Are v1 events files and ID-less events still produced anywhere")
 
 ## BEH-719: Load-time duplicate handling and error containment
@@ -422,7 +423,8 @@ while reading (wrong structure) is caught: `console.error`, `sanitizeEvents` ret
 - **Group:** [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising")
 - **Origin:** intentional
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`, `setTracks`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTracks`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [DEBT-709](view_debt.md#debt-709-silent-failures-when-loading-local-files "Silent failures when loading local files"), [BEH-717](#beh-717-events-json-v2-format-load-side-via-sanitizeevents "Events JSON v2 format (load side) via sanitizeEvents"), [OQ-711](../../QUESTIONS.md#oq-711 "Duplicate v2 entries: which one is kept and how it is reported")
 
 ## BEH-720: setTracks: replace the model and refresh
@@ -457,7 +459,8 @@ native files; the tags CSV import produces string ids ([BEH-737](#beh-737-import
 - **Group:** [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
 - **Origin:** essential
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`, `saveTagsToFile`, `tagsAddFrames`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`, `saveTagsToFile`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tagsAddFrames`
 - **Links:** [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [DEBT-713](view_debt.md#debt-713-settags-v1-validation-inspects-the-previous-tags-global "setTags v1 validation inspects the previous Tags global"), [BEH-724](#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh")
 
 ## BEH-722: Load Tags from a local file
@@ -513,7 +516,8 @@ the parse-stage failures return `0` with `Tags` unchanged.
 - **Group:** [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
 - **Origin:** essential
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`, `tagsAddFrames`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tagsAddFrames`
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `getTTags`
 - **Links:** [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [CAP-502](view_capabilities.md#cap-502-tag-id-assignment-and-fix "Tag ID assignment and fix"), [BEH-721](#beh-721-tags-json-v1-and-v2-formats "Tags JSON v1 and v2 formats"), [DEBT-715](view_debt.md#debt-715-settags-dm-detection-and-discarded-file-info "setTags DM detection and discarded file info"), [DEBT-733](view_debt.md#debt-733-settags-replaces-tags-before-unguarded-steps "setTags replaces Tags before unguarded steps"), [DEBT-736](view_debt.md#debt-736-settags-builds-ttags-from-stale-chronogram-data "setTags builds ttags from stale chronogram data")
 
@@ -725,7 +729,8 @@ promise rejection) and `tracks_csv_to_json` converts each row (all CSV values ar
 - **Group:** [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import")
 - **Origin:** intentional
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `clickLoadTracksCSVFromServer`, `loadTracksCSVFromServer`, `tracks_csv_to_json`, `EventsCSVManualFilePicker`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `clickLoadTracksCSVFromServer`, `loadTracksCSVFromServer`, `EventsCSVManualFilePicker`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracks_csv_to_json`
   - [labelbee/static/labelbee/js/labelBee.js](../../../labelbee/static/labelbee/js/labelBee.js): `FilePickerFromServerDialog`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `Server storage panel (from URI, from /data)`
 - **Links:** [DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee"), [OQ-002](../../QUESTIONS.md#oq-002 "Tag pipeline boundary"), [OQ-708](../../QUESTIONS.md#oq-708 "Fixed 300x600 box and +90 angle in CSV imports"), [DEBT-725](view_debt.md#debt-725-csv-loaders-no-error-handling-hard-coded-paths-unsequenced-video-and-csv "CSV loaders: no error handling, hard-coded paths, unsequenced video and CSV"), [DEBT-706](view_debt.md#debt-706-v2-save-mutates-tracksinfo-and-crashes-when-history-is-a-string "v2 save mutates TracksInfo and crashes when history is a string"), [BEH-748](#beh-748-server-file-picker-used-by-the-tracks-csv-import "Server file picker used by the tracks CSV import")
@@ -744,7 +749,8 @@ select with `tagMode == 'Tracks'`). The video load and the CSV load are not sequ
 - **Group:** [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import")
 - **Origin:** intentional
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `clickLoadTracksTaggedCSVFromServer`, `loadTrackTaggedCSVFromServer`, `tracks_tagged_csv_to_json`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `clickLoadTracksTaggedCSVFromServer`, `loadTrackTaggedCSVFromServer`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracks_tagged_csv_to_json`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `Server storage panel (gurabo4 link)`
 - **Links:** [DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [OQ-708](../../QUESTIONS.md#oq-708 "Fixed 300x600 box and +90 angle in CSV imports"), [CAP-402](view_capabilities.md#cap-402-tag-display-on-the-frame "Tag display on the frame"), [BEH-708](#beh-708-runtime-only-fields-of-an-observation-and-what-leaks-into-saves "Runtime-only fields of an observation, and what leaks into saves")
 
@@ -759,7 +765,8 @@ hamming:+hamming, goodness:+goodness, dm:+dm, p:[[+p0x,+p0y],...,[+p3x,+p3y]]}`;
 - **Group:** [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import")
 - **Origin:** debt
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTagsCSVFromServer`, `tags_csv_to_json`, `tags_csv_to_tagjson`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTagsCSVFromServer`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tags_csv_to_json`, `tags_csv_to_tagjson`
 - **Links:** [DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee"), [DEBT-726](view_debt.md#debt-726-near-identical-csv-converters-tags-csv-loader-unreachable "Near-identical CSV converters; tags CSV loader unreachable"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection")
 
 ## BEH-738: Export Events (CSV)
@@ -808,7 +815,8 @@ result: no rows), `flatjson_to_json` groups by `frame` into `{frame: {id: item}}
 - **Group:** [CAP-706](view_capabilities.md#cap-706-experimental-db-sources "Experimental DB sources")
 - **Origin:** intentional
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTracksCSVFromDB`, `db_to_json`, `flatjson_to_json`, `resultToObjects`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTracksCSVFromDB`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `db_to_json`, `flatjson_to_json`, `resultToObjects`
 - **Links:** [OQ-004](../../QUESTIONS.md#oq-004 "Which workflows are routine"), [OQ-709](../../QUESTIONS.md#oq-709 "How are the experimental DB sources activated"), [DEBT-729](view_debt.md#debt-729-experimental-db-path-is-unreachable-and-half-built "Experimental DB path is unreachable and half-built")
 
 ## BEH-741: SQLiteDB.js: SQL console and database sources
@@ -884,7 +892,8 @@ that are integer-like (`"12"`) iterate in ascending numeric order before non-int
 - **Group:** [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising")
 - **Origin:** essential
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`, `sanitizeEvents`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for"), [OQ-703](../../QUESTIONS.md#oq-703 "Are v1 events files and ID-less events still produced anywhere"), [BEH-746](#beh-746-a-v2-file-without-data-loads-as-an-empty-model "A v2 file without `data` loads as an empty model")
 
 ## BEH-746: A v2 file without `data` loads as an empty model
@@ -897,7 +906,8 @@ are silently discarded.
 - **Group:** [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising")
 - **Origin:** accident
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`, `setTracks`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTracks`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [BEH-717](#beh-717-events-json-v2-format-load-side-via-sanitizeevents "Events JSON v2 format (load side) via sanitizeEvents"), [BEH-720](#beh-720-settracks-replace-the-model-and-refresh "setTracks: replace the model and refresh"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [DEBT-734](view_debt.md#debt-734-v2-file-without-data-replaces-the-model-with-an-empty-one-silently "v2 file without data replaces the model with an empty one silently"), [OQ-714](../../QUESTIONS.md#oq-714 "Is a v2 file without data an empty model or an invalid file")
 
 ## BEH-747: Label preset request failure leaves the dialog on its loading message

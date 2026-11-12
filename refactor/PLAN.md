@@ -33,7 +33,10 @@ Minimal, only what the first slices need.
 One slice in flight. Each follows the six steps of ADR 0001, ends with the old code deleted,
 and is its own commit series and review. The next slice is chosen after the previous merged.
 
-- [ ] **Pilot: annotation loading** (chosen by the maintainer: it makes testing easier). The chain that turns a file or server payload into `Tracks`/`Tags`: format conversion and sanitising (CAP-702/703/704/707, load side), from `AnnotationIO.js`. Proposed cut into two slices: (1) the pure parse/convert/sanitise functions (`AnnotationCodec` load side) with golden tests on synthetic fixtures; (2) the loaders (file, server) calling it. Proves the bridge, the Node runner and the delete step.
+- [~] **Pilot: annotation loading**, slice 1 (pure load codec) done, branch `slice-annotation-load-codec`, awaiting merge and the browser checks of [ADR 0002](design/0002-slice-annotation-load-codec.md) section 4. Slice 2 (the loaders) not started. Chosen by the maintainer: it makes testing easier. The chain that turns a file or server payload into `Tracks`/`Tags`: format conversion and sanitising (CAP-702/703/704/707, load side), from `AnnotationIO.js`. Cut into two slices: (1) the pure parse/convert/sanitise functions (`AnnotationCodec` load side) with golden tests on synthetic fixtures; (2) the loaders (file, server) calling it. Proves the bridge, the Node runner and the delete step.
+  - Slice 1 steps: (1) goldens `refactor/tests/golden/slice1/` [x]; (2) `annotation/AnnotationCodec.js` + `core/Notifier.js` + bridges [x]; (3) old definitions deleted from `AnnotationIO.js` [x]; (4) bug fix DEBT-710 (`Array.isArray`; `&&` style only) [x]; (5) record in PLAN and intent [x]. Manual browser checks (ADR 0002 section 4) not run yet: a v1 file saved as an array is the riskiest case after step 4.
+  - Bridge entries that stay until slice 2 moves their callers: `window.sanitizeEvents`, `tagsAddFrames`, `db_to_json`, `flatjson_to_json`, `resultToObjects`, `tracks_csv_to_json`, `tags_csv_to_json`, `tags_csv_to_tagjson`, `tracks_tagged_csv_to_json` (`annotation/AnnotationCodecBridge.js`, all called from `AnnotationIO.js`); `window.logging` (`core/NotifierBridge.js`, until no classic script reads it).
+  - Left for later: `setTags` validates the global `Tags` instead of `obj` (fix when `setTags` is in scope, slice 2); `null`/primitives still throw in `sanitizeEvents` (rest of DEBT-710).
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 
@@ -53,3 +56,4 @@ budget. They can be revisited when a slice needs them.
 
 ## Decisions log
 - [ADR 0001](design/0001-strangler-migration.md): strangler migration (proposed)
+- [ADR 0003](design/0003-notifier.md): `core/Notifier.js`, shared alert/log module (proposed)

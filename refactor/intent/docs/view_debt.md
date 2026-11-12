@@ -167,6 +167,7 @@ group of the drafter (ID block `DEBT-G01..`).
 | DEBT-734 | [v2 file without data replaces the model with an empty one silently](#debt-734-v2-file-without-data-replaces-the-model-with-an-empty-one-silently) |
 | DEBT-735 | [labelListFromServer reports success when nothing was loaded, no error path in the dialog](#debt-735-labellistfromserver-reports-success-when-nothing-was-loaded-no-error-path-in-the-dialog) |
 | DEBT-736 | [setTags builds ttags from stale chronogram data](#debt-736-settags-builds-ttags-from-stale-chronogram-data) |
+| DEBT-737 | [tagsAddFrames silently skips non-object tag entries](#debt-737-tagsaddframes-silently-skips-non-object-tag-entries) |
 | DEBT-801 | [Stale intervals when "Show Events" is off](#debt-801-stale-intervals-when-show-events-is-off) |
 | DEBT-802 | [Read path mutates Tracks (obs.tag never cleared)](#debt-802-read-path-mutates-tracks-obstag-never-cleared) |
 | DEBT-803 | [Implicit globals and shared mutable products](#debt-803-implicit-globals-and-shared-mutable-products) |
@@ -1206,7 +1207,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 - **Code:**
   - [labelbee/static/labelbee/js/Model.js](../../../labelbee/static/labelbee/js/Model.js): `Observation`, `copyObs`
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`, `tracksToCSV`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracksToCSV`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [BEH-701](view_cap-700-annotation-model-io.md#beh-701-observation-record-and-its-defaults "Observation record and its defaults"), [BEH-717](view_cap-700-annotation-model-io.md#beh-717-events-json-v2-format-load-side-via-sanitizeevents "Events JSON v2 format (load side) via sanitizeEvents"), [BEH-738](view_cap-700-annotation-model-io.md#beh-738-export-events-csv "Export Events (CSV)"), [DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic"), [OQ-715](../../QUESTIONS.md#oq-715 "What does 'all Observation fields are preserved' cover")
 
 ## DEBT-702: copyObs copies a hand-maintained field list
@@ -1249,7 +1251,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] convertTracksToV2 uses `info: TracksInfo` by reference, sets formatnote, pushes to history, stores a `videoinfo` reference; CSV/DB imports set `history` to a string, so `.push` throws and the save aborts (file and server, before the request). Proposed: build `info` as a copy; history always an array (convert on load). Whether to embed `videoinfo` at all is [OQ-712](../../QUESTIONS.md#oq-712 "Should the whole videoinfo be embedded in every saved events file").
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`, `tracks_csv_to_json`, `tracks_tagged_csv_to_json`, `eventsToServer`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`, `eventsToServer`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracks_csv_to_json`, `tracks_tagged_csv_to_json`
 - **Links:** [BEH-711](view_cap-700-annotation-model-io.md#beh-711-saving-v2-mutates-tracksinfo-and-fails-after-a-csv-import "Saving v2 mutates TracksInfo and fails after a CSV import"), [BEH-735](view_cap-700-annotation-model-io.md#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [OQ-712](../../QUESTIONS.md#oq-712 "Should the whole videoinfo be embedded in every saved events file")
 
 ## DEBT-707: C1, convertTracksToV1 mutates live Tracks
@@ -1273,15 +1276,17 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] invalid JSON throws uncaught in onReaderLoad; sanitizeEvents failures only reach the console (setTracks returns false); [inferred] the same for onTagsReaderLoad and the ignored `setTags` return value. The user sees nothing. Proposed: visible error message.
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `onReaderLoad`, `onTagsReaderLoad`, `sanitizeEvents`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `onReaderLoad`, `onTagsReaderLoad`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [BEH-714](view_cap-700-annotation-model-io.md#beh-714-load-events-from-a-local-file "Load Events from a local file"), [BEH-719](view_cap-700-annotation-model-io.md#beh-719-load-time-duplicate-handling-and-error-containment "Load-time duplicate handling and error containment"), [BEH-722](view_cap-700-annotation-model-io.md#beh-722-load-tags-from-a-local-file "Load Tags from a local file")
 
 ## DEBT-710: Dead "array" branch, unreachable non-object branch, misleading v1 source string
 
-[read] `labelbee/static/labelbee/js/AnnotationIO.js` sanitizeEvents: `typeof obj == "array"` is never true, so arrays go to the object branch and `info.source` is always "Converted from Tracks v1 object"; `"info" in obj` throws for `null` and primitives before the `typeof obj == "object"` test, so the "unsupported file format. Should be either array..." branch is unreachable (same in `setTags`).
+[read] FIXED in slice 1 step 4 (`Array.isArray`, `labelbee/static/labelbee/js/annotation/AnnotationCodec.js` sanitizeEvents): arrays used to go to the object branch because `typeof obj == "array"` is never true, so `info.source` was always "Converted from Tracks v1 object". Still open: `"info" in obj` throws for `null` and primitives before the `typeof obj == "object"` test, so the "unsupported file format. Should be either array..." branch is unreachable (same in `setTags`).
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`, `setTags`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [BEH-718](view_cap-700-annotation-model-io.md#beh-718-events-json-v1-format-load-side-via-sanitizeevents "Events JSON v1 format (load side) via sanitizeEvents"), [BEH-721](view_cap-700-annotation-model-io.md#beh-721-tags-json-v1-and-v2-formats "Tags JSON v1 and v2 formats")
 
 ## DEBT-711: v1 validation and normalization are weak
@@ -1289,7 +1294,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] the key check is `!every(regex) & !every(Number.isInteger)` (bitwise & of booleans; the second operand is always true for string keys, so only the regex decides); v1 events keep the file's `ID` / `bool_acts` and the parsed object is used directly as `Tracks`. Proposed: same normalization as v2 for both versions; decision in [OQ-703](../../QUESTIONS.md#oq-703 "Are v1 events files and ID-less events still produced anywhere").
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [BEH-718](view_cap-700-annotation-model-io.md#beh-718-events-json-v1-format-load-side-via-sanitizeevents "Events JSON v1 format (load side) via sanitizeEvents"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-703](../../QUESTIONS.md#oq-703 "Are v1 events files and ID-less events still produced anywhere")
 
 ## DEBT-712: Implicit globals and double refresh in the IO code
@@ -1297,7 +1302,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] undeclared assignments in `labelbee/static/labelbee/js/AnnotationIO.js`: `data0`, `hasDuplicateEntries` (sanitizeEvents), `evts`, `src` (tracks_csv_to_json), `dataToSend`, `alertMSG` (eventsToServer), `fileData` (openRecentLoadingDialog), `html`, `idx`, `buttonHTML` (showAdvancedLoadingDialog), `success` (loadEvents, loadEventsFromServerByID), `tags` (tagsFromServer), `obj` (saveTagsToFile), `user_data` (whoami), and `TracksInfo` / `TagsInfo` / `tagsHaveDM` / `ttags` implicit; [inferred, not re-read] `result`, `data` (db_to_json), `tagCache` (`Model.js`). setTracks already refreshes, then callers refresh again (loadEvents, loadEventsFromServerByID, loadTracksCSVFromDB). Proposed: declared module state, one refresh.
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTracks`, `eventsToServer`, `sanitizeEvents`, `db_to_json`, `showAdvancedLoadingDialog`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTracks`, `eventsToServer`, `showAdvancedLoadingDialog`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`, `db_to_json`
 - **Links:** [BEH-720](view_cap-700-annotation-model-io.md#beh-720-settracks-replace-the-model-and-refresh "setTracks: replace the model and refresh")
 
 ## DEBT-713: setTags v1 validation inspects the previous Tags global
@@ -1411,7 +1417,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] tracks_csv_to_json, tags_csv_to_json, tracks_tagged_csv_to_json repeat the same geometry / parts code (300x600, angle + 90); [inferred] loadTagsCSVFromServer has no caller. Proposed: one table-driven converter (constants per [OQ-708](../../QUESTIONS.md#oq-708 "Fixed 300x600 box and +90 angle in CSV imports")).
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracks_csv_to_json`, `tags_csv_to_json`, `tracks_tagged_csv_to_json`, `loadTagsCSVFromServer`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTagsCSVFromServer`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracks_csv_to_json`, `tags_csv_to_json`, `tracks_tagged_csv_to_json`
 - **Links:** [BEH-735](view_cap-700-annotation-model-io.md#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)"), [BEH-737](view_cap-700-annotation-model-io.md#beh-737-import-of-a-tags-csv-tracks-and-tags-together "Import of a tags CSV (Tracks and Tags together)"), [OQ-708](../../QUESTIONS.md#oq-708 "Fixed 300x600 box and +90 angle in CSV imports")
 
 ## DEBT-727: Exports ignore labels and notes and crash on missing bool_acts
@@ -1435,7 +1442,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] `loadTracksCSVFromDB` in `labelbee/static/labelbee/js/AnnotationIO.js` calls `db_to_json(db, ...)` with the hard-coded typo "Imported form DB" and a string `history`; `db_to_json` runs a fixed SQL query on table `data` with hard-coded 300x600 box and `angle + 90`, supporting only the sql.js `db.exec` API; [inferred, not re-read] the script tags for SQLiteDB.js / DuckDB.js and the SQLite console panel are commented out in `labelbee/blueprints/labelbee/templates/labelbee_page.html`, loadTracksCSVFromDB has no caller. [read] `labelbee/static/labelbee/js/DuckDB.js:11` imports `apache-arrow@latest` (unpinned) while duckdb-wasm is pinned to 1.12.0.
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTracksCSVFromDB`, `db_to_json`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTracksCSVFromDB`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `db_to_json`
   - [labelbee/static/labelbee/js/DuckDB.js](../../../labelbee/static/labelbee/js/DuckDB.js): `loadCSVFromURL`
 - **Links:** [BEH-740](view_cap-700-annotation-model-io.md#beh-740-experimental-db-source-load-tracks-from-sqlite "Experimental DB source: load tracks from SQLite"), [BEH-742](view_cap-700-annotation-model-io.md#beh-742-duckdbjs-duckdb-wasm-console-not-connected-to-tracks "DuckDB.js: DuckDB-WASM console (not connected to Tracks)"), [OQ-004](../../QUESTIONS.md#oq-004 "Which workflows are routine"), [OQ-709](../../QUESTIONS.md#oq-709 "How are the experimental DB sources activated")
 
@@ -1469,7 +1477,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] `labelbee/static/labelbee/js/AnnotationIO.js` setTags assigns `Tags` and `TagsInfo` after the `try` block, then runs `tagsAddFrames` (reads `Tags[f].tags` without a null guard on `Tags[f]`) and the DM check (reads the first key's `.tags`) unguarded: a structurally bad file throws with `Tags` already replaced and no refresh. A v2 file without `data` sets `Tags = undefined`. Proposed: validate completely before assigning; return `0` on failure.
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`, `tagsAddFrames`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tagsAddFrames`
 - **Links:** [BEH-724](view_cap-700-annotation-model-io.md#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh"), [BEH-721](view_cap-700-annotation-model-io.md#beh-721-tags-json-v1-and-v2-formats "Tags JSON v1 and v2 formats")
 
 ## DEBT-734: v2 file without data replaces the model with an empty one silently
@@ -1477,7 +1486,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] `labelbee/static/labelbee/js/AnnotationIO.js` sanitizeEvents: `data0 = obj["data"]` undefined / null / `[]` iterates nothing and returns `{info, data: {}}`; setTracks then replaces `Tracks` ([INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss") data loss on a truncated file). Proposed: reject or warn; decision in [OQ-714](../../QUESTIONS.md#oq-714 "Is a v2 file without data an empty model or an invalid file").
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `sanitizeEvents`, `setTracks`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTracks`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
 - **Links:** [BEH-746](view_cap-700-annotation-model-io.md#beh-746-a-v2-file-without-data-loads-as-an-empty-model "A v2 file without `data` loads as an empty model"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [OQ-714](../../QUESTIONS.md#oq-714 "Is a v2 file without data an empty model or an invalid file")
 
 ## DEBT-735: labelListFromServer reports success when nothing was loaded, no error path in the dialog
@@ -1495,6 +1505,14 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `getTTags`
+- **Links:** [BEH-724](view_cap-700-annotation-model-io.md#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh")
+
+## DEBT-737: tagsAddFrames silently skips non-object tag entries
+
+[ran] `tagsAddFrames` does `tag.frame = Number(f)` for every non-null entry; in the old sloppy script a primitive entry (number, string) makes this a silent no-op, in a strict ES module it would throw. The move to `labelbee/static/labelbee/js/annotation/AnnotationCodec.js` keeps the old behavior with an explicit skip; golden `tagsAddFrames primitive tag` pins it. Whether a primitive tag should be an error or dropped is undecided.
+
+- **Code:**
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tagsAddFrames`
 - **Links:** [BEH-724](view_cap-700-annotation-model-io.md#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh")
 
 ## DEBT-801: Stale intervals when "Show Events" is off

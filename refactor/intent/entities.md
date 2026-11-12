@@ -29,7 +29,7 @@ strings; untagged tracks get `T<n>` ids in the `tracks_tagged` CSV.
 
 - **Code:**
   - `Model.js`: `cacheTags`, `getTags`
-  - `AnnotationIO.js`: `tagsAddFrames`
+  - `annotation/AnnotationCodec.js`: `tagsAddFrames`
 - **Links:** ENT-001, CAP-402, CAP-502, OQ-002
 
 ## ENT-003: Video

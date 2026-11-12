@@ -594,3 +594,11 @@ _Proposed_: Keep the stage until the legacy renderer is removed, then decide.
 Bad ROI text and malformed exclude-region JSON are accepted or throw without a message (BEH-827, BEH-841, DEBT-824). Should the app reject them with a visible error and keep the previous value?
 _Significance_: Sets the error-path behavior the reimplementation must have.
 _Proposed_: Reject and keep the previous value, with a message; confirm first.
+
+## Slices
+
+**<a id='q15'>Q15</a>: Node for the golden tests of slice 1**
+Slice 1 ([ADR 0002](design/0002-slice-annotation-load-codec.md)) needs Node (>=18, `node --test`, no npm dependency) to generate and run golden tests under `refactor/tests/`. `node` is not installed in the job sandbox. May the maintainer run the tests locally (job reports the command), or should Node be made available to the sandbox?
+_Significance_: Without a runner the goldens cannot be generated from the old code, so step 1 of the slice cannot be verified by the job.
+_Proposed_: Maintainer installs Node >=18 and runs `node --test refactor/tests/` locally; the job writes the runner and fixtures. Used only once the maintainer confirms it.
+_Answer_: Make Node available to the sandbox (maintainer, 2026-10-30). Pending: the sandbox does not have it yet.

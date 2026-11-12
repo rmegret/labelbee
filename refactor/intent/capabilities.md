@@ -262,7 +262,8 @@ Read output of external tools: `tracks_tagged` CSV, tags CSV and JSON.
 
 - **Group:** CAP-700
 - **Code:**
-  - `AnnotationIO.js`: `tracks_tagged_csv_to_json`, `tags_csv_to_json`, `tags_csv_to_tagjson`, `loadTrackTaggedCSVFromServer`
+  - `AnnotationIO.js`: `loadTrackTaggedCSVFromServer`
+  - `annotation/AnnotationCodec.js`: `tracks_tagged_csv_to_json`, `tags_csv_to_json`, `tags_csv_to_tagjson`
 - **Links:** ENT-004, INV-003, DEC-001
 
 ### CAP-705: Export
@@ -280,7 +281,8 @@ Load tracks from SQLite or DuckDB (experimental IO).
 
 - **Group:** CAP-700
 - **Code:**
-  - `AnnotationIO.js`: `loadTracksCSVFromDB`, `db_to_json`
+  - `AnnotationIO.js`: `loadTracksCSVFromDB`
+  - `annotation/AnnotationCodec.js`: `db_to_json`
   - `SQLiteDB.js`
   - `DuckDB.js`
 - **Links:** ENT-004
@@ -291,7 +293,8 @@ Validate and normalise loaded files into a valid `Tracks`/`Tags` (duplicate ids,
 
 - **Group:** CAP-700
 - **Code:**
-  - `AnnotationIO.js`: `sanitizeEvents`, `setTracks`, `setTags`
+  - `AnnotationIO.js`: `setTracks`, `setTags`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
 - **Links:** ENT-004, INV-003
 
 ## CAP-800: Data filtering and processing
