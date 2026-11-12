@@ -1,10 +1,10 @@
-// Adapts the ES module annotation/AnnotationCodec.js to the {fns, rec} shape of old-impl.js.
+// Adapts the ES module annotation/AnnotationCodec.js to the {fns, rec} shape used by run-case.js.
 // Connects it like the page bridge (AnnotationCodecBridge.js): real hasLabel through configure(),
 // alert/console recorded through the Notifier, logging.io on.
 'use strict';
 const path = require('path');
 const { pathToFileURL } = require('url');
-const { makeRecorder, makeHasLabel, FUNCTIONS } = require('./old-impl');
+const { makeRecorder, makeHasLabel, FUNCTIONS } = require('./stubs');
 
 const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js');
 const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;

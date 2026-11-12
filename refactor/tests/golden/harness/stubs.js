@@ -1,6 +1,6 @@
-// Evaluates the ORIGINAL functions of AnnotationIO.js in a vm context with stubbed globals.
-// Source of truth for goldens (slice 1, ADR 0002). Fresh context per call: implicit globals
-// (data0, src, evts...) cannot leak between cases.
+// Shared stubs for the slice 1 golden tests (ADR 0002): the recorder of observable side effects
+// and the REAL label helpers extracted from SelectionControl.js. The goldens were generated from
+// the original functions of AnnotationIO.js (git history: commit 353ffa9e); step 3 deleted them.
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -29,12 +29,6 @@ function labelSources(sel) {
   return [labelMap, ...labelFns].join('\n');
 }
 
-function loadSources() {
-  const io = fs.readFileSync(path.join(JS_DIR, 'AnnotationIO.js'), 'utf8');
-  const sel = fs.readFileSync(path.join(JS_DIR, 'SelectionControl.js'), 'utf8');
-  return [labelSources(sel), ...FUNCTIONS.map((n) => extractFunction(io, n))].join('\n');
-}
-
 const PINNED_LOG = /ABORTED|unsupported|WARNING/;
 // Errors are pinned by name only (V8 message text varies by Node version); duck-typed because
 // errors thrown inside the vm context are not instanceof the host Error.
@@ -59,21 +53,4 @@ function makeHasLabel() {
   return ctx.hasLabel;
 }
 
-// Returns {fns, rec}: the ORIGINAL functions, in a vm with stubbed globals.
-function makeOldImpl({ logIO = true } = {}) {
-  const { rec, stubs } = makeRecorder();
-  const sandbox = {
-    console: { log: stubs.log, error: stubs.error },
-    alert: stubs.alert,
-    logging: { io: logIO },
-    $: { inArray: (v, arr) => arr.indexOf(v) },
-    performance: { now: () => 0 },
-  };
-  const ctx = vm.createContext(sandbox);
-  vm.runInContext(loadSources(), ctx, { filename: 'AnnotationIO.js(extracted)' });
-  const fns = {};
-  for (const n of FUNCTIONS) fns[n] = ctx[n];
-  return { fns, rec };
-}
-
-module.exports = { makeOldImpl, makeRecorder, makeHasLabel, FUNCTIONS };
+module.exports = { makeRecorder, makeHasLabel, FUNCTIONS };
