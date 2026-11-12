@@ -602,3 +602,13 @@ Slice 1 ([ADR 0002](design/0002-slice-annotation-load-codec.md)) needs Node (>=1
 _Significance_: Without a runner the goldens cannot be generated from the old code, so step 1 of the slice cannot be verified by the job.
 _Proposed_: Maintainer installs Node >=18 and runs `node --test refactor/tests/` locally; the job writes the runner and fixtures. Used only once the maintainer confirms it.
 _Answer_: Make Node available to the sandbox (maintainer, 2026-10-30). Pending: the sandbox does not have it yet.
+
+**<a id='q16'>Q16</a>: Fix DEBT-706 (v2 save crashes after a CSV import) in slice 2?**
+`convertTracksToV2` does `info.history.push(...)`, but every tracks CSV, `tracks_tagged` CSV and DB import sets `history` to a string, so the JSON save (file and server) throws and nothing is saved (BEH-711, [DEBT-706](intent/debt.md)). Step 4 of slice 2 ([ADR 0004](design/0004-slice-annotation-save-codec.md)) may fix it. The full fix (copy `info`, always an array, decide whether `videoinfo` is embedded, OQ-712) changes the saved format; a minimal one only makes the save work.
+_Significance_: After a CSV import the user cannot save to JSON at all. The minimal fix is small but alters the saved `history` of those files.
+_Proposed_: Minimal fix as its own step-4 commit: when `history` is a string, wrap it as `[history]` before the push; `info` is still the live `TracksInfo`, `videoinfo` still embedded. The full redesign stays `DEBT-706`. Used only once the maintainer confirms.
+
+**<a id='q17'>Q17</a>: Unused `tracksToBBoxes`: move it or delete it?**
+`tracksToBBoxes` (`labelbee/static/labelbee/js/AnnotationIO.js:407`) has no caller anywhere (grep, excluding `extern/`); `saveEventsToBBoxes` uses `tracksToBBoxes2` and only logs the format of the other one ([DEBT-728](intent/debt.md)). Slice 2 ([ADR 0004](design/0004-slice-annotation-save-codec.md)) can carry it into the module, or drop it.
+_Significance_: Moving dead code costs a golden and a bridge entry for nothing; deleting it is a change outside a pure move.
+_Proposed_: Do not move it. Delete it in step 3 as a separate commit, after the grep is rechecked. The stale log message of `saveEventsToBBoxes` stays in `DEBT-728`. Used only once the maintainer confirms.

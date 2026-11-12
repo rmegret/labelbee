@@ -35,14 +35,17 @@ and is its own commit series and review. The next slice is chosen after the prev
 
 - [~] **Pilot: annotation loading**, slice 1 (pure load codec) done, branch `slice-annotation-load-codec`, awaiting merge and the browser checks of [ADR 0002](design/0002-slice-annotation-load-codec.md) section 4. Slice 2 (the loaders) not started. Chosen by the maintainer: it makes testing easier. The chain that turns a file or server payload into `Tracks`/`Tags`: format conversion and sanitising (CAP-702/703/704/707, load side), from `AnnotationIO.js`. Cut into two slices: (1) the pure parse/convert/sanitise functions (`AnnotationCodec` load side) with golden tests on synthetic fixtures; (2) the loaders (file, server) calling it. Proves the bridge, the Node runner and the delete step.
   - Slice 1 steps: (1) goldens `refactor/tests/golden/slice1/` [x]; (2) `annotation/AnnotationCodec.js` + `core/Notifier.js` + bridges [x]; (3) old definitions deleted from `AnnotationIO.js` [x]; (4) bug fix DEBT-710 (`Array.isArray`; `&&` style only) [x]; (5) record in PLAN and intent [x]. Manual browser checks (ADR 0002 section 4) not run yet: a v1 file saved as an array is the riskiest case after step 4.
-  - Bridge entries that stay until slice 2 moves their callers: `window.sanitizeEvents`, `tagsAddFrames`, `db_to_json`, `flatjson_to_json`, `resultToObjects`, `tracks_csv_to_json`, `tags_csv_to_json`, `tags_csv_to_tagjson`, `tracks_tagged_csv_to_json` (`annotation/AnnotationCodecBridge.js`, all called from `AnnotationIO.js`); `window.logging` (`core/NotifierBridge.js`, until no classic script reads it).
-  - Left for later: `setTags` validates the global `Tags` instead of `obj` (fix when `setTags` is in scope, slice 2); `null`/primitives still throw in `sanitizeEvents` (rest of DEBT-710).
+  - Bridge entries that stay until the loaders slice (after slice 2) moves their callers: `window.sanitizeEvents`, `tagsAddFrames`, `db_to_json`, `flatjson_to_json`, `resultToObjects`, `tracks_csv_to_json`, `tags_csv_to_json`, `tags_csv_to_tagjson`, `tracks_tagged_csv_to_json` (`annotation/AnnotationCodecBridge.js`, all called from `AnnotationIO.js`); `window.logging` (`core/NotifierBridge.js`, until no classic script reads it).
+  - Left for later: `setTags` validates the global `Tags` instead of `obj` (fix when `setTags` is in scope, loaders slice); `null`/primitives still throw in `sanitizeEvents` (rest of DEBT-710).
+
+- [~] **Slice 2: annotation save/export codec** (encode side of `AnnotationCodec`; chosen by the maintainer 2026-11-12). Branch `slice-annotation-save-codec`, [ADR 0004](design/0004-slice-annotation-save-codec.md) written (proposed; [Q16](QUESTIONS.md#q16), [Q17](QUESTIONS.md#q17) open). Moves `convertTracksToV1/V2`, `tracksToCSV`, `tracksToBBoxes2` out of `AnnotationIO.js`.
+  - Steps: (1) goldens `refactor/tests/golden/slice2/` [ ]; (2) add to `annotation/AnnotationCodec.js` + bridge wrappers [ ]; (3) old definitions deleted from `AnnotationIO.js` [ ]; (4) bug fixes DEBT-707, DEBT-706 minimal, one commit each with approval [ ]; (5) record in PLAN and intent [ ].
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 
 | Area | Candidate slices |
 |---|---|
-| Pure logic | `tag-image` (tag functions of `ZoomView.js`), `AnnotationCodec` save/export side, `IdPrediction`, `derive/*` (read-only parts) |
+| Pure logic | `tag-image` (tag functions of `ZoomView.js`), `IdPrediction`, `derive/*` (read-only parts) |
 | Shared state | `AnnotationStore` with a change event, then route the writers through it; `SelectionModel`, `UndoStack` |
 | Wiring | `KeyMap` (DEC-005), replace inline `onclick` by one dispatcher |
 | Large files | `OverlayControl.js` and `AnnotationIO.js` split by module, one piece per slice |
@@ -57,3 +60,4 @@ budget. They can be revisited when a slice needs them.
 ## Decisions log
 - [ADR 0001](design/0001-strangler-migration.md): strangler migration (proposed)
 - [ADR 0003](design/0003-notifier.md): `core/Notifier.js`, shared alert/log module (proposed)
+- [ADR 0004](design/0004-slice-annotation-save-codec.md): slice 2, annotation save/export codec (proposed)
