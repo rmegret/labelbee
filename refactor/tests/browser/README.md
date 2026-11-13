@@ -32,7 +32,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
   (`ui.dialog_accepts = False` answers Cancel, `ui.prompt_answers` feeds prompts).
 
 ## Findings of the first run
-Not caused by the refactor unless noted. Each is a candidate `DEBT` entry; none is recorded in `intent/debt.md` yet.
+Not caused by the refactor unless noted. Recorded in the intent spec: F1 in `DEBT-202`, F2 in `DEBT-203` (6), F3 as `DEBT-738`, F4 as `DEC-006`, F5 as `DEBT-125`.
 
 | ID | Finding | Where | Test |
 |---|---|---|---|

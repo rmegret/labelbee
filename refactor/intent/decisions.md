@@ -66,3 +66,16 @@ later.
 
 - **Links:** CAP-202, INV-002, CAP-202, CAP-601, OQ-005
 - **Decided by:** maintainer
+
+## DEC-006: The separate tag file is obsolescent; tag information travels in the Tracks
+
+The tag detections no longer reach LabelBee as a separate Tags file. The current pipeline adds the tag information to each
+Tracks observation (`obs.tag`, as the `tracks_tagged` CSV does, BEH-736) before LabelBee reads it, and `tagMode` is `'Tracks'`
+(`labelbee/static/labelbee/js/OverlayControl.js:5`; nothing changes it). The Tags structure, the tag file loaders (local file,
+server tag file, tags CSV) and the Tags display mode are legacy: kept working for now, candidates for removal. The refactor does
+not invest in them: no new features, and a slice moves them only as far as it already touches them (`AnnotationStore` keeps `Tags`
+for compatibility). Checked in the browser tests: a tags file is stored but not shown, the tracks_tagged pipeline is
+(`refactor/tests/browser/README.md`, finding F4).
+
+- **Links:** CAP-704, BEH-722, BEH-724, BEH-728, BEH-736, BEH-737, DEBT-118, DEBT-719, ENT-002
+- **Decided by:** maintainer (2026-11-13)
