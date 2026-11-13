@@ -39,3 +39,22 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
 - The golden was generated from the original `AnnotationIO.js` functions (last present in commit `e1831be7`,
   with `golden/harness/old-save-impl.js` and `golden/slice2/generate.js`); step 3 deleted them, so it is now
   the only reference. A change in it is a behavior change: review the diff.
+
+## Golden tests: setTracks/setTags and the loaders (slice 3, [ADR 0005](../design/0005-slice-annotation-loaders.md))
+
+    node --test refactor/tests/golden/slice3/        # run
+    node refactor/tests/golden/slice3/generate.js    # regenerate the golden (see below)
+
+- `golden/slice3/fixtures/cases.js`: synthetic cases (Q8): `setTracks`, `setTags`, `setEventsProp`, erase, the
+  local file loaders, `eventsFromServer`, `loadEventsFromServerByID`, `tagsFromServer`, the three CSV loaders,
+  the DB loader and the two prompt handlers. Case fields: `init` (page state before), `net` (what the stubbed
+  `$.ajax`/`$.getJSON`/`$.get`/`d3.csv` answer), `confirm`/`prompt`, `pinReturn`.
+- `golden/slice3/annotation-io.golden.json`: per case the state after the call (`Tracks`, `TracksInfo`, `Tags`,
+  `TagsInfo`, `tagsHaveDM`, `ttags`), the ordered effects `fx` (requests, `$` calls, refreshes), errors thrown
+  inside callbacks (`cbErrors`), unhandled promise rejections, alerts, error-path logs. It pins known defects as
+  they are today: DEBT-710, 712 (double refresh), 713, 719, 722, 733, 734.
+- `golden/harness/io-env.js`: loads the REAL functions of `AnnotationIO.js` into a `vm` (the file stays the
+  implementation under test during the whole slice, so one golden checks every step) with jQuery, d3,
+  `FileReader`, the views and `Date` stubbed. `readState`/`writeState` read the page globals; step 2 of the slice
+  replaces them by the store bridge. `golden/harness/run-io-case.js` runs a case and waits for the promises.
+- Run `generate.js` only before a step that changes behavior on purpose, and review the golden diff.
