@@ -74,8 +74,9 @@ Tracks observation (`obs.tag`, as the `tracks_tagged` CSV does, BEH-736) before 
 (`labelbee/static/labelbee/js/OverlayControl.js:5`; nothing changes it). The Tags structure, the tag file loaders (local file,
 server tag file, tags CSV) and the Tags display mode are legacy: kept working for now, candidates for removal. The refactor does
 not invest in them: no new features, and a slice moves them only as far as it already touches them (`AnnotationStore` keeps `Tags`
-for compatibility). Checked in the browser tests: a tags file is stored but not shown, the tracks_tagged pipeline is
-(`refactor/tests/browser/README.md`, finding F4).
+for compatibility). Checked in the browser tests (`refactor/tests/browser/README.md`, finding F4): a legacy tags file still works in
+the default mode, because `augmentTrackWithTag` (`ChronoControl.js:1015`) copies each of its tags onto the observation with the same id
+and frame; only the standalone display of the Tags structure (`tagMode == 'Tags'`) is unreachable.
 
 - **Links:** CAP-704, BEH-722, BEH-724, BEH-728, BEH-736, BEH-737, DEBT-118, DEBT-719, ENT-002
 - **Decided by:** maintainer (2026-11-13)

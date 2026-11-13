@@ -21,7 +21,7 @@ Three slices went in without the manual pass being run. This ADR records how the
 
 ## 2. Consequences
 - The checklist items A1-E1 are automated (55 tests, about a minute). What stays manual: drawing quality, H.264
-  playback in the maintainer's browser, the real backend, the legacy Tags mode of the obsolescent tag file (F4).
+  playback in the maintainer's browser, the real backend, the standalone Tags display, unreachable by design (F4).
 - A failing test is either a regression or a documented known bug (a known bug is pinned as a strict `xfail`, which fails the day it is fixed; F1 was one, and was fixed on 2026-11-12).
 - The first run found six things unrelated to the refactor, listed in [README](../tests/browser/README.md).
 - Cost: UI details are hard-coded (panel titles, button ids, `onclick` selectors). A UI change breaks tests on purpose; the

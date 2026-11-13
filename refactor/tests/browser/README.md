@@ -11,7 +11,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | File | Checklist items |
 |---|---|
 | `test_a_smoke.py` | A1-A9: open, play, seek, select, create, edit, undo (a delete), swap id, delete |
-| `test_a_features.py` | A10-A12: zoom view, tags (legacy Tags mode), parts, notes |
+| `test_a_features.py` | A10-A12: zoom view, tags (tags file merged by id, standalone Tags mode), parts, notes |
 | `test_b_store.py` | B1-B4: store and legacy globals, erase with confirmation, DM controls |
 | `test_c_loading.py` | C1-C7: local events and tags files, bad files |
 | `test_c_server.py` | C8-C13: "Load Events from DB", `#video_data=` hash, tracks CSV, bad URL, gurabo4 |
@@ -39,7 +39,7 @@ Not caused by the refactor unless noted. Recorded in the intent spec: F1 in `DEB
 | F1 | **Fixed.** A `frame=<n>` in a URL opened while the video was still loading never seeked: `onVideoLoaded2` set `delayedSeekFrame = undefined` and then the timer read it, so `seekFrame(undefined)` ran. It worked when the video was already loaded (hash changed on an open page). Now the frame is read before it is cleared | `labelbee/static/labelbee/js/VideoControl.js:1313-1317` (bug from commit `01ee8e27`) | `test_c9_opening_a_url_with_a_frame_seeks` |
 | F2 | **Fixed (wording).** `onhashchange` never rewrites the hash: that code is commented out. Only `frame=` is removed, when the frame changes. The slice 3 code comment and BEH-731 said "hash cleanup": corrected | `labelBee.js:271`, `intent/behaviors/cap-700-annotation-model-io.md` BEH-731 | `test_c9_hash_change_on_an_open_page...` |
 | F3 | **Fixed.** An alert opened while the previous one was still fading out was lost: the modal state said shown, nothing appeared and the backdrop stayed (Bootstrap 3.3.6: the pending hide ran after the new show). Needed two failures within ~300 ms. `mainAlert` now waits for `hidden.bs.modal` when a hide is in progress | `mainAlert` (`AnnotationIO.js`) | `test_alerts.py` (fails without the fix) |
-| F4 | **By design, not a defect** (maintainer, 2026-11-13). `tagMode` is hard-coded to `'Tracks'`: the separate tag file is marked for obsolescence and the current pipeline adds the tag information to the Tracks (`obs.tag`) before it reaches LabelBee. Loading a tags file therefore stores the Tags but shows nothing, and the chronogram counts only the tags of the Tracks | `OverlayControl.js:5` | `test_c13_...` (the current pipeline: embedded tag, chronogram count), `test_a10_tags_of_the_obsolescent_tag_file...` (the legacy path) |
+| F4 | **By design, not a defect** (maintainer, 2026-11-13). `tagMode` is hard-coded to `'Tracks'`: the separate tag file is marked for obsolescence and the current pipeline adds the tag information to the Tracks (`obs.tag`) before it reaches LabelBee. A legacy tags file still works in that mode: `augmentTrackWithTag` copies each of its tags onto the observation with the same id and frame (the chronogram counts it); a tag whose id matches no observation attaches to nothing. Only the standalone display of the Tags structure (`tagMode == 'Tags'`) is unreachable. **Correction (2026-11-13):** the first version of this row said a tags file "shows nothing"; that came from a sample whose tag ids matched no observation | `OverlayControl.js:5`, `ChronoControl.js:1015` | `test_c13_...` (embedded tag), `test_a10_a_tags_file_attaches...`, `test_a10_a_tag_with_no_matching...`, `test_a10_the_standalone_tags_display...` |
 | F5 | The backend tests cannot be collected: `tests/conftest.py` imports `labelbee.init_app`, which no longer exists, and `pytest-flask` (the `client` fixture) is not in `requirements.txt` | `tests/conftest.py:10` | not covered here (PLAN Phase 2) **Deferred** (maintainer 2026-11-13): left as is, to be replaced by tests under `refactor/tests/` when the refactor stabilizes |
 | F6 | Playwright's Chromium cannot decode H.264 (`tests/webapp/make_sample_video.sh` encodes H.264); the tests use VP9 inside `.mp4`, which the page accepts | `conftest.py` | all |
 
@@ -47,4 +47,4 @@ Undo only knows deletions (`undoPush('delete')` is the only caller): checklist i
 
 ## Not automated
 Visual quality of the drawing, H.264 playback in your usual browser, the real backend (database, login, uploads), the
-the legacy Tags mode of the obsolescent tag file (F4). Keep those in the manual checklist.
+the standalone Tags display (`tagMode == 'Tags'`, F4). Keep those in the manual checklist.

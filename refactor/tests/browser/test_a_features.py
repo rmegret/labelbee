@@ -21,20 +21,44 @@ def test_a10_zoom_view_shows_the_video_and_follows_the_selection(ui, sample_dir)
                               arg=first["hash"])
 
 
-def test_a10_tags_of_the_obsolescent_tag_file_reach_the_chronogram_in_the_tags_mode(ui, sample_dir):
-    """By design (maintainer, 2026-11-13): `tagMode` is 'Tracks' in OverlayControl.js and nothing changes it, because the
-    separate tag file is obsolescent: the current pipeline adds the tag information to the Tracks before it reaches
-    LabelBee (tracks_tagged CSV, see test_c13). A tags file is still read and stored, so the legacy Tags display is only
-    reachable by switching the mode in the console, which is what this test does."""
+def test_a10_a_tags_file_attaches_its_tags_to_the_observations_with_the_same_id(ui, sample_dir):
+    """The separate tag file is obsolescent (DEC-006) but still works in the default 'Tracks' mode: at every refresh
+    `augmentTrackWithTag` (ChronoControl.js:1015) copies each tag of the file onto the observation with the same id and
+    frame, and the chronogram counts it. A tag whose id matches no observation is stored and attaches to nothing."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")                       # observation ids 1 and 2, id 1 at frame 0
+    ui.wait_tracks()
+    tag = {"id": 1, "dm": 60, "c": [84, 104], "hamming": 0, "goodness": 45.5, "p": [[70, 90], [98, 90], [98, 118], [70, 118]]}
+    ui.load_tags(ui.write("tags_same_id.json", {"0": {"tags": [tag]}}))
+    ui.page.wait_for_function("(AnnotationStore.getTracks()[0] || {})[1] && !!AnnotationStore.getTracks()[0][1].tag")
+    assert ui.tracks()["0"]["1"]["tag"]["dm"] == 60
+    assert ui.js("tagMode") == "Tracks"
+    ui.page.wait_for_function("/\\b1 tags/.test(document.body.innerText)")
+    assert ui.js("Object.keys(ttags)") == ["1"]
+
+
+def test_a10_a_tag_with_no_matching_observation_is_stored_but_attaches_to_nothing(ui, sample_dir):
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    ui.load_tags(sample_dir / "tags_v2.json")                           # tag ids 5 and 6: no observation has them
+    ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
+    ui.page.wait_for_timeout(300)
+    assert list(ui.tags()) == ["0", "4"]
+    assert all("tag" not in o for frame in ui.tracks().values() for o in frame.values())
+    assert ui.js("Object.keys(ttags).length") == 0
+
+
+def test_a10_the_standalone_tags_display_is_only_reachable_from_the_console(ui, sample_dir):
+    """`tagMode` is 'Tracks' in OverlayControl.js:5 and nothing in the page changes it: the display of the Tags structure
+    itself (tagMode == 'Tags', legacy) is reachable only by switching the mode in the console, which is what this does."""
     ui.open()
     ui.load_tags(sample_dir / "tags_v2.json")
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
-    ui.page.wait_for_timeout(300)
     assert ui.js("tagMode") == "Tracks"
-    assert ui.js("Object.keys(ttags).length") == 0                     # default mode: loaded Tags are not indexed
     ui.js("tagMode = 'Tags'; refreshChronogram()")
     ui.page.wait_for_function("Object.keys(ttags).sort().join() === '5,6'")
-    ui.page.wait_for_function("/\\b3 tags/.test(document.body.innerText)")   # 3 tag detections in the file
+    ui.page.wait_for_function("/\\b3 tags/.test(document.body.innerText)")   # the 3 tag detections of the file
 
 
 def test_a11_parts_of_a_tracks_csv_and_the_show_on_video_toggle(ui):

@@ -82,8 +82,9 @@ Tracks observation (`obs.tag`, as the `tracks_tagged` CSV does, [BEH-736](view_c
 (`labelbee/static/labelbee/js/OverlayControl.js:5`; nothing changes it). The Tags structure, the tag file loaders (local file,
 server tag file, tags CSV) and the Tags display mode are legacy: kept working for now, candidates for removal. The refactor does
 not invest in them: no new features, and a slice moves them only as far as it already touches them (`AnnotationStore` keeps `Tags`
-for compatibility). Checked in the browser tests: a tags file is stored but not shown, the tracks_tagged pipeline is
-(`refactor/tests/browser/README.md`, finding F4).
+for compatibility). Checked in the browser tests (`refactor/tests/browser/README.md`, finding F4): a legacy tags file still works in
+the default mode, because `augmentTrackWithTag` (`ChronoControl.js:1015`) copies each of its tags onto the observation with the same id
+and frame; only the standalone display of the Tags structure (`tagMode == 'Tags'`) is unreachable.
 
 - **Links:** [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import"), [BEH-722](view_cap-700-annotation-model-io.md#beh-722-load-tags-from-a-local-file "Load Tags from a local file"), [BEH-724](view_cap-700-annotation-model-io.md#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh"), [BEH-728](view_cap-700-annotation-model-io.md#beh-728-loading-a-tag-file-from-the-server "Loading a tag file from the server"), [BEH-736](view_cap-700-annotation-model-io.md#beh-736-import-of-a-tracks_tagged-csv "Import of a tracks_tagged CSV"), [BEH-737](view_cap-700-annotation-model-io.md#beh-737-import-of-a-tags-csv-tracks-and-tags-together "Import of a tags CSV (Tracks and Tags together)"), [DEBT-118](view_debt.md#debt-118-tag-file-load-uses-a-nonexistent-route "Tag-file load uses a nonexistent route"), [DEBT-719](view_debt.md#debt-719-server-tag-loading-unrouted-url-undefined-return-empties-tags-on-failure "Server tag loading: unrouted URL, undefined return, empties Tags on failure"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection")
 - **Decided by:** maintainer (2026-11-13)
