@@ -1,7 +1,8 @@
 // Synthetic fixtures (Q8) for setTracks/setTags and the loaders of AnnotationIO.js (slice 3, ADR 0005).
 // Case: {name, fn, args(), init?, net?, confirm?, prompt?, pinReturn?}. `args` builds FRESH inputs per run.
-// net: {ajax|getJSON|get: {ok: payload} | {err: true}, csv: {ok: rows} | {err: true}}; file text is
-// given by the event (`files[0].text`, `target.result`).
+// net: {ajax|getJSON|get: {ok: payload} | {err: true}, csv: {ok: rows} | {err: true}, visible: {selector: true}
+// for the elements on screen (the from-server dialog)}; file text is given by the event (`files[0].text`,
+// `target.result`).
 'use strict';
 
 const INFO_EVENTS = { type: 'events-multiframe', source: 'synthetic' };
@@ -25,7 +26,7 @@ const csvTag = (pre) => ({
   [pre + 'p2x']: '5', [pre + 'p2y']: '6', [pre + 'p3x']: '7', [pre + 'p3y']: '8',
 });
 const text = (o) => JSON.stringify(o);
-const file = (o) => ({ target: { files: [{ text: typeof o === 'string' ? o : text(o) }], value: 'C:\\f.json' } });
+const file = (o) => ({ target: { files: [{ name: 'f.json', text: typeof o === 'string' ? o : text(o) }], value: 'C:\\f.json' } });
 const read = (s) => ({ target: { result: typeof s === 'string' ? s : text(s) } });
 const OLD_TRACKS = () => ({ 9: { 9: evt(9) } });
 const OLD_INFO = () => ({ ...INFO_EVENTS, source: 'old', notes: 'old notes' });
@@ -56,6 +57,8 @@ const cases = [
   { name: 'onReaderLoad wrong format keeps the model', fn: 'onReaderLoad', args: () => [read({ a: 1 })], init: OLD() },
   { name: 'loadEventsFromFile v2', fn: 'loadEventsFromFile', args: () => [file(v2())] },
   { name: 'loadEventsFromFile invalid JSON', fn: 'loadEventsFromFile', args: () => [file('{not json')], init: OLD() },
+  { name: 'loadEventsFromFile wrong format is an error shown to the user (Q23)', fn: 'loadEventsFromFile', args: () => [file({ a: 1 })], init: OLD() },
+  { name: 'loadEventsFromFile error text is escaped (Q23)', fn: 'loadEventsFromFile', args: () => [file('<img src=x onerror=alert(1)>')], init: OLD() },
   { name: 'loadEventsFromFile canceled', fn: 'loadEventsFromFile', args: () => [{ target: { files: [], value: 'x' } }] },
   { name: 'loadEventsFromFile0 from URL', fn: 'loadEventsFromFile0', args: () => ['data/Tracks.json'], net: { get: { ok: text(v2()) } } },
 
@@ -86,6 +89,7 @@ const cases = [
   { name: 'onTagsReaderLoad v1', fn: 'onTagsReaderLoad', args: () => [read(tagsV1())], init: { Tags: {} } },
   { name: 'onTagsReaderLoad invalid JSON throws', fn: 'onTagsReaderLoad', args: () => [read('{no')], init: { Tags: tagsV1() } },
   { name: 'loadTagsFromFile v2', fn: 'loadTagsFromFile', args: () => [file(tagsV2())], init: { Tags: {} } },
+  { name: 'loadTagsFromFile rejected format is an error shown to the user (Q23)', fn: 'loadTagsFromFile', args: () => [file({ info: INFO_EVENTS, data: {} })], init: { Tags: tagsV1() } },
   { name: 'loadTagsFromFile canceled', fn: 'loadTagsFromFile', args: () => [{ target: { files: [], value: 'x' } }] },
 
   // ---- server: events ----
@@ -94,6 +98,7 @@ const cases = [
   { name: 'eventsFromServer error', fn: 'eventsFromServer', args: () => ['/some/url'], net: { ajax: { err: true } } },
   { name: 'loadEventsFromServerByID ok sets the lineage and the message (DEBT-722)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { ok: { data: { data: text(v2()) } } } } },
   { name: 'loadEventsFromServerByID wrong format shows the error and rejects (DEBT-722)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { ok: { data: { data: text({ a: 1 }) } } } }, init: OLD() },
+  { name: 'loadEventsFromServerByID request error with the dialog open writes in the dialog (Q23)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { err: true }, visible: { '#from-server-dialog': true } } },
   { name: 'loadEventsFromServerByID request error shows the error and rejects (DEBT-722)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { err: true } } },
 
   // ---- server: tags ----

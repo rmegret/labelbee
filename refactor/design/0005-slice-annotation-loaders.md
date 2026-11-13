@@ -102,7 +102,16 @@ codec, the rest stays as apply. Not touched: `FromServerDialog`, `eventsToServer
    identical in all 61 cases; four cases differ only in where an apply-stage exception surfaces (an unhandled promise
    rejection instead of an uncaught callback exception, the same console report; the page has no global
    `onerror`/`unhandledrejection` handler). `FileReader` and `$.get` failures, silent before, now reject the Promise.
-5. **Bug fixes, each in its own commit, after the moves, golden diff shown for approval** ([Q19](../QUESTIONS.md#q19): DEBT-713, 733, 710-rest, 722).
+5. **Bug fixes, each in its own commit, after the moves, golden diff shown for approval** ([Q19](../QUESTIONS.md#q19): DEBT-713, 733, 710-rest, 722), then visible load errors ([Q23](../QUESTIONS.md#q23)). [done]
+   DEBT-713: the v1 key check validates the loaded file. DEBT-733: `decodeTags` rejects a v2 file whose `data` is not an
+   object, and `setTags` puts the previous Tags, info, DM flag and `ttags` back when a step throws. DEBT-710: null and
+   primitives reach the unsupported-format message of `sanitizeEvents` and `decodeTags` (the slice 1 golden changed for
+   4 cases). DEBT-722: `loadEventsFromServerByID` uses `fromServerDialog` and its own id (sets `basedOn`) and returns its
+   promise, `onhashchange` keeps the seek when it rejects. Q23: `showLoadError` / `reportLoadError` in `AnnotationIO.js`
+   write the error in the from-server dialog when it is visible, else in the main alert (HTML-escaped), then rethrow;
+   a rejected format is an error (`setTracks`/`setTags` result checked) in the file, `eventsFromServer`,
+   `loadEventsFromServerByID` and CSV loaders. `tagsFromServer` and the dialog's own `loadEvents` are not changed
+   (DEBT-719, DEBT-718).
 6. **Record**: PLAN (bridge worklist), SEAM-701/702, BEH and DEBT entries, regenerate `intent/docs/`.
 
 ## 6. Checks

@@ -9,6 +9,11 @@ const { loadIoEnv } = require('../harness/io-env');
 const csvRow = { frame: '0', track_id: '1', cx: '1', cy: '2', angle: '3' };
 const evts = JSON.stringify({ info: { type: 'events-multiframe', source: 's' }, data: { 0: [{ id: 1, cx: 1, cy: 2 }] } });
 const isThenable = (p) => p && typeof p.then === 'function';
+// The html written in the main alert, if any
+const alertHtml = (rec) => {
+  const f = rec.fx.find((e) => e[0] === '$' && e[1] === '#mainAlertDialog .modal-body' && e[2] === 'html');
+  return f && f[3];
+};
 
 test('tagsFromServer keeps returning undefined: FromServerDialog.loadEvents reads it as "success" (DEBT-719)', async () => {
   const { ctx } = (await loadIoEnv())({ net: { getJSON: { ok: { data: { data: { info: { type: 'tags-multiframe' }, data: {} } } } } }, init: { Tags: {} } });
@@ -25,11 +30,11 @@ test('loadEventsFromServerByID resolves once the events are loaded and sets the 
   assert.deepEqual(rec.fx.filter((f) => f[0] === 'basedOn'), [['basedOn', 12]]);
 });
 
-test('loadEventsFromServerByID rejects on a request error or invalid data, and shows the message (DEBT-722)', async () => {
+test('loadEventsFromServerByID rejects on a request error or invalid data, and shows the message (DEBT-722, Q23)', async () => {
   for (const net of [{ ajax: { err: true } }, { ajax: { ok: { data: { data: JSON.stringify({ a: 1 }) } } } }]) {
     const { ctx, rec } = (await loadIoEnv())({ net });
     await assert.rejects(ctx.loadEventsFromServerByID(12), (e) => e.name === 'Error' && /video_data id=12/.test(e.message));
-    assert.equal(rec.fx.some((f) => f[0] === 'setMessage' && f[1] === 'red'), true);
+    assert.match(alertHtml(rec), /loading events with ID 12/);
     assert.equal(rec.fx.some((f) => f[0] === 'basedOn'), false);
   }
 });
@@ -56,11 +61,41 @@ test('eventsFromServer returns a Promise that resolves after the apply stage', a
 });
 
 test('an exception of the apply stage is not handled as a request error', async () => {
-  // eventsFromServer: a failing setTracks must reject, not call showAjaxError (which would read jqXHR.responseText)
+  // eventsFromServer: a failing setTracks is reported as a load error, not through showAjaxError
+  // (which would read jqXHR.responseText of an undefined jqXHR), and the rejection goes on
   const { ctx, rec } = (await loadIoEnv())({ net: { ajax: { ok: JSON.parse(evts) } } });
   ctx.setTracks = () => { throw new RangeError('apply failed'); };
   await assert.rejects(ctx.eventsFromServer('/u'), (e) => e.name === 'RangeError');
-  assert.equal(rec.fx.some((f) => f[0] === '$' && f[1] === '#mainAlertDialog .modal-body'), false);
+  assert.match(alertHtml(rec), /loading events from \/u<br>apply failed/);
+  assert.doesNotMatch(alertHtml(rec), /Status:/);
+});
+
+test('a load error goes to the from-server dialog when it is open, else to the main alert (Q23)', async () => {
+  const open = (await loadIoEnv())({ net: { ajax: { err: true }, visible: { '#from-server-dialog': true } } });
+  await assert.rejects(open.ctx.loadEventsFromServerByID(12));
+  assert.equal(open.rec.fx.some((f) => f[0] === 'setMessage' && f[1] === 'red' && /Could not load video_data id=12/.test(f[2])), true);
+  assert.equal(alertHtml(open.rec), undefined);
+  const closed = (await loadIoEnv())({ net: { ajax: { err: true } } });
+  await assert.rejects(closed.ctx.loadEventsFromServerByID(12));
+  assert.equal(closed.rec.fx.some((f) => f[0] === 'setMessage' && f[1] === 'red'), false);
+  assert.match(alertHtml(closed.rec), /Could not load video_data id=12/);
+});
+
+test('markup in an error message or file name is escaped in the alert (Q23)', async () => {
+  const { ctx, rec } = (await loadIoEnv())({});
+  await assert.rejects(ctx.loadEventsFromFile({ target: { files: [{ name: '<b>x.json', text: '<img src=x onerror=alert(1)>' }], value: 'x' } }));
+  const html = alertHtml(rec);
+  assert.doesNotMatch(html.replace('<br>', ''), /</);   // the only markup left is our own <br>
+  assert.match(html, /&lt;b&gt;x\.json/);
+});
+
+test('a rejected format is an error: nothing is refreshed, the model is kept, the user is told (Q23)', async () => {
+  const old = { 9: { 9: { id: 9 } } };
+  const { ctx, rec } = (await loadIoEnv())({ net: { ajax: { ok: { a: 1 } } }, init: { Tracks: old, TracksInfo: { n: 1 } } });
+  await assert.rejects(ctx.eventsFromServer('/u'), (e) => /Invalid events format/.test(e.message));
+  assert.equal(rec.fx.some((f) => f[0] === 'refreshChronogram'), false);
+  assert.equal(JSON.stringify(Object.keys(ctx.Tracks)), '["9"]');
+  assert.match(alertHtml(rec), /Invalid events format/);
 });
 
 test('CSV loaders return their Promise', async () => {

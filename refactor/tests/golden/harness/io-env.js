@@ -24,6 +24,8 @@ const IO_FUNCTIONS = [
   'tagsFromServer', 'mainAlert', 'showAjaxError', 'updateEventsNotes',
   // loader helpers (slice 3 step 4)
   'readFileAsText', 'ajaxGetJSON', 'getJSONPromise', 'eventsFromText', 'tagsFromText',
+  // load errors (slice 3 step 5, Q23)
+  'escapeHTML', 'showLoadError', 'reportLoadError',
 ];
 const CODEC_FUNCTIONS = [
   'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'tracks_csv_to_json', 'tags_csv_to_json',
@@ -45,6 +47,8 @@ function makeJQuery(rec, net, ctx) {
   const chain = (sel) => new Proxy(function () {}, {
     get: (_, m) => {
       if (m === 'find') return (s) => chain(sel + ' > ' + s);
+      // case.visible: {selector: true} for the elements that are on screen
+      if (m === 'is') return (q) => { rec.fx.push(['$', sel, 'is', q]); return !!(net.visible && net.visible[sel]); };
       if (m === 'val') return (...a) => { rec.fx.push(['$', sel, 'val', ...a.map(ser)]); return ''; };
       return (...a) => { rec.fx.push(['$', sel, String(m), ...a.map(ser)]); return chain(sel); };
     },
@@ -80,19 +84,12 @@ function makeJQuery(rec, net, ctx) {
   return $;
 }
 
-// d3.csv stub: a real Promise wrapped so that a rejection nobody handles is recorded, not fatal.
+// d3.csv stub: a real Promise. A rejection nobody handles is recorded by run-io-case (unhandledRejection).
 function makeD3(rec, net) {
   return {
     csv: (url) => {
       rec.fx.push(['csv', url]);
-      const p = net.csv && net.csv.ok !== undefined ? Promise.resolve(net.csv.ok) : Promise.reject(new Error('csv'));
-      return {
-        then: (a, b) => {
-          const q = p.then(a, b);
-          q.catch((e) => rec.rejections.push(e && e.name));
-          return q;
-        },
-      };
+      return net.csv && net.csv.ok !== undefined ? Promise.resolve(net.csv.ok) : Promise.reject(new Error('csv'));
     },
   };
 }

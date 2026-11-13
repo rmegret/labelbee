@@ -363,6 +363,28 @@ function getJSONPromise(url) {
   });
 }
 
+/* LOAD ERRORS (refactor ADR 0005, Q23): a failed load is told to the user, in the from-server dialog when
+ * it is open, else in the main alert, and the rejection goes on to whoever awaits the loader. */
+function escapeHTML(text) {
+  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function showLoadError(what, error) {
+  console.error(what, error);
+  var html = "ERROR " + escapeHTML(what) + "<br>" + escapeHTML((error && error.message) || error);
+  if ($("#from-server-dialog").is(":visible")) {
+    fromServerDialog.setMessage("red", html);
+  } else {
+    mainAlert(html);
+  }
+}
+// To be used as the last `.catch` of a loader pipeline
+function reportLoadError(what) {
+  return function (error) {
+    showLoadError(what, error);
+    throw error;
+  };
+}
+
 function eventsFromText(text) {
   if (logging.io) {
     console.log(text);
@@ -372,7 +394,7 @@ function eventsFromText(text) {
     console.log(obj);
   }
 
-  setTracks(obj);
+  if (!setTracks(obj)) throw new Error("Invalid events format (details in the console)");
 }
 function onReaderLoad(event) {
   eventsFromText(event.target.result);
@@ -385,8 +407,8 @@ function loadEventsFromFile0(fileToRead) {
   }).then(function (data) {
     console.log("JSON loaded: ", data);
     var obj = JSON.parse(data);
-    setTracks(obj);
-  });
+    if (!setTracks(obj)) throw new Error("Invalid events format (details in the console)");
+  }).catch(reportLoadError("loading events from " + fileToRead));
 }
 function loadEventsFromFile(event) {
   console.log("loadEventsFromFile: importing from JSON...");
@@ -400,7 +422,8 @@ function loadEventsFromFile(event) {
   }
   console.log("loadEventsFromFile: importing from JSON file:", fileToRead);
 
-  return readFileAsText(fileToRead).then(eventsFromText);
+  return readFileAsText(fileToRead).then(eventsFromText)
+    .catch(reportLoadError("loading events from file " + fileToRead.name));
 }
 
 function eraseTags() {
@@ -461,7 +484,7 @@ function tagsFromText(text) {
   var obj = JSON.parse(text);
   //console.log(obj) // Caution: heavy
 
-  setTags(obj);
+  if (!setTags(obj)) throw new Error("Invalid tags format (details in the console)");
 
   console.log("loadTagsFromFile: importing from JSON file. DONE");
 }
@@ -482,7 +505,8 @@ function loadTagsFromFile(event) {
   }
   console.log("loadTagsFromFile: importing from JSON file:", fileToRead);
 
-  return readFileAsText(fileToRead).then(tagsFromText);
+  return readFileAsText(fileToRead).then(tagsFromText)
+    .catch(reportLoadError("loading tags from file " + fileToRead.name));
 }
 
 function saveTagsToFile(version) {
@@ -1163,15 +1187,13 @@ async function loadEventsFromServerByID(video_data_id) {
           fromServerDialog.setMessage("black","Events loaded.");
         }
         else{
-          fromServerDialog.setMessage("red","ERROR <br> setTracks: Invalid event information obtained from server.");
-          throw new Error("loadEventsFromServerByID: invalid event data for video_data id="+video_data_id)
+          throw new Error("Invalid event information obtained from server (video_data id="+video_data_id+")")
         }
       },
       function () {
-        fromServerDialog.setMessage("red","ERROR in loading tag or event with ID " + video_data_id);
-        throw new Error("loadEventsFromServerByID: could not load video_data id="+video_data_id)
+        throw new Error("Could not load video_data id="+video_data_id)
       }
-    );
+    ).catch(reportLoadError("loading events with ID " + video_data_id));
 }
 
 function eventsFromServer(url) {
@@ -1183,7 +1205,7 @@ function eventsFromServer(url) {
       console.log("eventsFromServer: SUCCESS\njson=", json);
       let obj = json; //JSON.parse(json);
 
-      setTracks(obj);
+      if (!setTracks(obj)) throw new Error("Invalid events format (details in the console)");
 
       videoControl.onFrameChanged();
 
@@ -1194,7 +1216,7 @@ function eventsFromServer(url) {
     function (err) {
       showAjaxError("ERROR in eventsFromServer")(err.jqXHR, err.textStatus, err.errorThrown);
     }
-  );
+  ).catch(reportLoadError("loading events from " + url));
 }
 
 function loadTracksCSVFromDB(limit = 100) {
@@ -1234,13 +1256,13 @@ function loadTracksCSVFromServer(url) {
 
       let obj = tracks_csv_to_json(data, info)
 
-      setTracks(obj)
-      //setTracks(obj);
+      if (!setTracks(obj)) throw new Error("Invalid events in the CSV (details in the console)")
 
       videoControl.onFrameChanged();
 
       refreshChronogram();
     })
+  .catch(reportLoadError("loading tracks CSV from " + url))
 
 }
 function loadTagsCSVFromServer(url) {
@@ -1258,8 +1280,7 @@ function loadTagsCSVFromServer(url) {
         history: `Loaded in Labelbee on ${new Date().toISOString()}`,
       }
       let obj = tags_csv_to_json(data, info)
-      setTracks(obj)
-      //setTracks(obj);
+      if (!setTracks(obj)) throw new Error("Invalid events in the CSV (details in the console)")
 
       info = {
         type: "tags-multiframe",
@@ -1267,12 +1288,13 @@ function loadTagsCSVFromServer(url) {
         history: `Loaded in Labelbee on ${new Date().toISOString()}`,
       }
       obj = tags_csv_to_tagjson(data, info)
-      setTags(obj)
+      if (!setTags(obj)) throw new Error("Invalid tags in the CSV (details in the console)")
 
       videoControl.onFrameChanged();
 
       refreshChronogram();
     })
+  .catch(reportLoadError("loading tags CSV from " + url))
 
 }
 function loadTrackTaggedCSVFromServer(url) {
@@ -1290,13 +1312,13 @@ function loadTrackTaggedCSVFromServer(url) {
         history: `Loaded in Labelbee on ${new Date().toISOString()}`,
       }
       let obj = tracks_tagged_csv_to_json(data, info)
-      setTracks(obj)
-      //setTracks(obj);
+      if (!setTracks(obj)) throw new Error("Invalid events in the CSV (details in the console)")
 
       videoControl.onFrameChanged();
 
       refreshChronogram();
     })
+  .catch(reportLoadError("loading tracks_tagged CSV from " + url))
 
 }
 
