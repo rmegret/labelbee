@@ -12,11 +12,10 @@ README section 9.2 are not listed here yet: they must be re-derived (README 9.2,
 ## INV-001: No annotation loss
 
 A long session of manual work is never corrupted or silently dropped, by editing, saving
-or loading. Today saving violates it: see C1 in [analysis/06](../analysis/06-smells-and-risks.md)
-(save mutates live `Tracks`). Defines what the first characterization tests protect.
+or loading. The v1 save used to violate it (C1 in [analysis/06](../analysis/06-smells-and-risks.md): it mutated live `Tracks`); fixed in slice 2 step 4 (DEBT-707), as was the mutation of `TracksInfo` by the v2 save (DEBT-706). Defines what the first characterization tests protect.
 
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV1`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV1`
 - **Links:** CAP-701, CAP-702, CAP-703, OQ-003
 
 ## INV-002: Interactive responsiveness

@@ -1,6 +1,7 @@
 /*
  * AnnotationCodec, load side: pure conversion of file/server payloads into the Tracks/Tags
  * JSON structures. Moved verbatim from AnnotationIO.js (refactor slice 1, ADR 0002).
+ * The save/export side is at the end of the file (slice 2, ADR 0004).
  *
  * Pure: no access to Tracks/Tags/DOM/network/window. Alerts and logs go through core/Notifier.js
  * (ADR 0003); the global hasLabel is connected with configure() by AnnotationCodecBridge.js.
@@ -428,4 +429,214 @@ export function tracks_tagged_csv_to_json(data, info) {
   const evts = {info: info, data: obj};
 
   return evts;
+}
+
+/*
+ * Save/export side (refactor slice 2, ADR 0004): conversion of the model into JSON/CSV objects and
+ * text. Moved verbatim from AnnotationIO.js; the page globals Tracks, TracksInfo and videoinfo are now
+ * parameters (the same references, so in-place effects are unchanged: DEBT-706, DEBT-707).
+ * The legacy zero-argument signatures of convertTracksToV1/V2 are kept by AnnotationCodecBridge.js.
+ */
+
+export function convertTracksToV1(Tracks) {
+  let obj = [];
+
+  let nitems = 0;
+
+  for (let f in Tracks) {
+    let frameItem = Tracks[f];
+    if (frameItem == null) continue;
+
+    log("saveEventsToFile: frame " + f);
+
+    let frameItem1 = {};
+    obj[Number(f)] = frameItem1;
+
+    for (let i in frameItem) {
+      let evt = frameItem[i];
+      if (evt == null) continue;
+
+      log("saveEventsToFile: frame " + f + "  id " + evt.ID);
+
+      let evt1 = Object.assign({}, evt);
+      //delete evt1.ID
+      //delete evt1.bool_acts
+      delete evt1.marked;
+      delete evt1.permanent;
+      evt1.cx = evt1.x + evt1.width / 2;
+      evt1.cy = evt1.y + evt1.height / 2;
+
+      evt1.x = Math.round(evt1.x * 1000) / 1000;
+      evt1.y = Math.round(evt1.y * 1000) / 1000;
+      evt1.width = Math.round(evt1.width * 1000) / 1000;
+      evt1.height = Math.round(evt1.height * 1000) / 1000;
+      evt1.cx = Math.round(evt1.cx * 1000) / 1000;
+      evt1.cy = Math.round(evt1.cy * 1000) / 1000;
+
+      frameItem1[String(i)] = evt1;
+
+      nitems++;
+    }
+  }
+
+  log("convertTracksToV1: converted " + nitems + " items");
+
+  return obj;
+}
+
+export function convertTracksToV2(Tracks, TracksInfo, videoinfo) {
+  // info and videoinfo are deep copies: the live TracksInfo and videoinfo are not modified by a save
+  let obj = { info: structuredClone(TracksInfo), data: {} };
+  // TracksInfo should come with a few built-in fields:
+  // notes
+
+  obj.info.formatnote =
+    "Warning: data[f][i] is `i`ˆth event in frame `f`, with id `id` obtained by data[f][i].id, do not access directly as data[f][id] !";
+
+  // history is always an array (CSV and DB imports set it to a string)
+  if (!obj.info.history) obj.info.history = [];
+  else if (!Array.isArray(obj.info.history)) obj.info.history = [obj.info.history];
+  obj.info.history.push("Saved using labelbee on " + Date());
+  //let {preview: _, ...videoinfo_without_preview} = videoinfo;
+  obj.info.videoinfo = structuredClone(videoinfo)
+
+  let nitems = 0;
+
+  for (let f in Tracks) {
+    let frameItem = Tracks[f];
+    if (frameItem == null) continue;
+
+    log("saveEventsToFile: frame " + f);
+
+    let frameItem1 = [];
+    obj.data[String(f)] = frameItem1;
+
+    for (let i in frameItem) {
+      let evt = frameItem[i];
+      if (evt == null) continue;
+
+      log("saveEventsToFile: frame " + f + "  id " + evt.ID);
+
+      let evt1 = Object.assign({ id: String(i) }, evt);
+      delete evt1.ID;
+      delete evt1.bool_acts;
+      delete evt1.marked;
+      delete evt1.permanent;
+      evt1.cx = evt1.x + evt1.width / 2;
+      evt1.cy = evt1.y + evt1.height / 2;
+
+      evt1.x = Math.round(evt1.x * 1000) / 1000;
+      evt1.y = Math.round(evt1.y * 1000) / 1000;
+      evt1.width = Math.round(evt1.width * 1000) / 1000;
+      evt1.height = Math.round(evt1.height * 1000) / 1000;
+      evt1.cx = Math.round(evt1.cx * 1000) / 1000;
+      evt1.cy = Math.round(evt1.cy * 1000) / 1000;
+
+      frameItem1.push(evt1);
+
+      nitems++;
+    }
+  }
+
+  log("convertTracksToV2: converted " + nitems + " items");
+
+  return obj;
+}
+
+export function tracksToCSV(Tracks) {
+  var csv = "Date,Time (frame),ID,Action,Cargo,Shift\n";
+  if (Tracks === undefined) return csv;
+  for (let F in Tracks)
+    for (let id in Tracks[F]) {
+      var obs = Tracks[F][id];
+      var action = "",
+        cargo = "";
+      var conc = function (s1, s2) {
+        if (s2 === "") s1 += s2;
+        else s1 += ";" + s2;
+      };
+      if (obs.bool_acts[0]) action += (action === "" ? "" : ";") + "fanning";
+      if (obs.bool_acts[2]) action += (action === "" ? "" : ";") + "came in";
+      if (obs.bool_acts[3]) action += (action === "" ? "" : ";") + "went out";
+
+      if (obs.bool_acts[1]) cargo += "pollen";
+      csv += "nodate," + F + "," + obs.ID + "," + action + "," + cargo;
+
+      csv += ","; // Shift ?
+
+      csv += "\n";
+    }
+  return csv;
+}
+
+export function tracksToBBoxes(Tracks) {
+  var csv =
+    "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n";
+  if (Tracks === undefined) return csv;
+  for (let F in Tracks)
+    for (let id in Tracks[F]) {
+      var obs = Tracks[F][id];
+
+      csv +=
+        F +
+        "," +
+        obs.x +
+        "," +
+        obs.y +
+        "," +
+        (obs.x + obs.width) +
+        "," +
+        (obs.y + obs.height) +
+        "," +
+        Number(obs.bool_acts[1]) + // pollen
+        "," +
+        Number(obs.bool_acts[2]) + // arrive
+        "," +
+        Number(obs.bool_acts[3]) + // leave
+        "," +
+        Number(obs.bool_acts[0]) + // fanning
+        "," +
+        Number(obs.angle) + // angle
+        "\n";
+    }
+  return csv;
+}
+
+export function tracksToBBoxes2(Tracks) {
+  var csv =
+    "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n";
+  if (Tracks === undefined) return csv;
+  for (let F in Tracks)
+    for (let id in Tracks[F]) {
+      var obs = Tracks[F][id];
+
+      csv +=
+        F +
+        "," +
+        obs.ID +
+        "," +
+        (obs.x + obs.width / 2) +
+        "," +
+        (obs.y + obs.height / 2) +
+        "," +
+        Number(obs.angle) + // angle
+        "," +
+        obs.x +
+        "," +
+        obs.y +
+        "," +
+        (obs.x + obs.width) +
+        "," +
+        (obs.y + obs.height) +
+        "," +
+        Number(obs.bool_acts[1]) + // pollen
+        "," +
+        Number(obs.bool_acts[2]) + // arrive
+        "," +
+        Number(obs.bool_acts[3]) + // leave
+        "," +
+        Number(obs.bool_acts[0]) + // fanning
+        "\n";
+    }
+  return csv;
 }

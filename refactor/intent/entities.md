@@ -51,7 +51,8 @@ Format table: [analysis/04](../analysis/04-data-model.md) 4.4.
 
 - **Code:**
   - `labelbee/models.py`: `VideoData`
-  - `AnnotationIO.js`: `convertTracksToV1`, `convertTracksToV2`, `setTracks`
+  - `AnnotationIO.js`: `setTracks`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV1`, `convertTracksToV2`
 - **Links:** CAP-702, CAP-703, INV-003, OQ-003
 
 ## ENT-005: Dataset

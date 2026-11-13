@@ -1023,8 +1023,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 - **Code:**
   - `Model.js`: `Observation`, `copyObs`
-  - `AnnotationIO.js`: `tracksToCSV`
-  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
+  - `annotation/AnnotationCodec.js`: `tracksToCSV`, `sanitizeEvents`
 - **Links:** BEH-701, BEH-717, BEH-738, DEC-003, OQ-715
 
 ## DEBT-702: copyObs copies a hand-maintained field list
@@ -1048,7 +1047,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] `labelbee/static/labelbee/js/ChronoControl.js` augmentTrackWithTag assigns `obs.tag` (the tag object) on stored observations; `labelbee/static/labelbee/js/AnnotationIO.js` convertTracksToV2 copies every own field, so `tag` (the full tag record) and `span` are saved, contradicting ENT-001. Proposed: explicit save whitelist, or runtime fields kept outside `Tracks`; decision in OQ-702.
 
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV2`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV2`
   - `Model.js`: `copyObs`
   - `ChronoControl.js`: `augmentTrackWithTag`
 - **Links:** BEH-708, ENT-001, OQ-702
@@ -1064,19 +1063,19 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-706: v2 save mutates TracksInfo and crashes when history is a string
 
-[read] convertTracksToV2 uses `info: TracksInfo` by reference, sets formatnote, pushes to history, stores a `videoinfo` reference; CSV/DB imports set `history` to a string, so `.push` throws and the save aborts (file and server, before the request). Proposed: build `info` as a copy; history always an array (convert on load). Whether to embed `videoinfo` at all is OQ-712.
+[read] FIXED in slice 2 step 4 (`annotation/AnnotationCodec.js` `convertTracksToV2`: `info` and `videoinfo` are deep copies, `history` is always an array, the whole `videoinfo` stays embedded per OQ-712). Was: `info: TracksInfo` by reference, formatnote set, history pushed, a `videoinfo` reference stored; CSV/DB imports set `history` to a string, so `.push` threw and the save aborted (file and server, before the request). Still open: `history` stays a string in memory after an import (converted at save only).
 
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV2`, `eventsToServer`
-  - `annotation/AnnotationCodec.js`: `tracks_csv_to_json`, `tracks_tagged_csv_to_json`
+  - `AnnotationIO.js`: `eventsToServer`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV2`, `tracks_csv_to_json`, `tracks_tagged_csv_to_json`
 - **Links:** BEH-711, BEH-735, INV-001, OQ-712
 
 ## DEBT-707: C1, convertTracksToV1 mutates live Tracks
 
-[read] `Object.assign(evt)` with one argument aliases the observation; it deletes marked/permanent and rewrites cx, cy, x, y, width, height in place. Latent (v1 not exposed in the page). Proposed: `Object.assign({}, evt)`.
+[read] FIXED in slice 2 step 4 (`Object.assign({}, evt)`). Was: `Object.assign(evt)` with one argument aliased the observation; it deleted marked/permanent and rewrote cx, cy, x, y, width, height in place. Latent (v1 not exposed in the page).
 
 - **Code:**
-  - `AnnotationIO.js`: `convertTracksToV1`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV1`
 - **Links:** BEH-712, INV-001
 
 ## DEBT-708: saveEventsToFile with an unknown format downloads "null"
@@ -1242,7 +1241,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] `tracksToCSV` and `tracksToBBoxes2` export only the bool_acts flags (CSV) or geometry plus flags (BBox), no escaping; an observation that is `null` or lacks `bool_acts` throws `TypeError`.
 
 - **Code:**
-  - `AnnotationIO.js`: `tracksToCSV`, `tracksToBBoxes2`
+  - `annotation/AnnotationCodec.js`: `tracksToCSV`, `tracksToBBoxes2`
 - **Links:** BEH-738, BEH-739, DEBT-701
 
 ## DEBT-728: tracksToBBoxes unused and log message stale
@@ -1250,7 +1249,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [inferred, `saveEventsToBBoxes` not re-read] saveEventsToBBoxes calls tracksToBBoxes2 but logs the format of tracksToBBoxes.
 
 - **Code:**
-  - `AnnotationIO.js`: `tracksToBBoxes`, `saveEventsToBBoxes`
+  - `AnnotationIO.js`: `saveEventsToBBoxes`
+  - `annotation/AnnotationCodec.js`: `tracksToBBoxes`
 - **Links:** BEH-739
 
 ## DEBT-729: Experimental DB path is unreachable and half-built

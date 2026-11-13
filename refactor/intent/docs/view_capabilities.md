@@ -280,7 +280,8 @@ Load and save tracks and tags as local files (JSON v1/v2, CSV).
 
 - **Group:** [CAP-700](#cap-700-annotation-model-and-io "Annotation model and IO")
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadEventsFromFile`, `saveEventsToFile`, `loadTagsFromFile`, `saveTagsToFile`, `convertTracksToV2`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadEventsFromFile`, `saveEventsToFile`, `loadTagsFromFile`, `saveTagsToFile`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV2`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `I/O Local storage panel`
 - **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for"), [OQ-010](../../QUESTIONS.md#oq-010 "Server versus local storage")
 
@@ -310,7 +311,8 @@ Export tracks as CSV and as bounding boxes.
 
 - **Group:** [CAP-700](#cap-700-annotation-model-and-io "Annotation model and IO")
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracksToCSV`, `tracksToBBoxes`, `saveEventsToCSV`, `saveEventsToBBoxes`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `saveEventsToCSV`, `saveEventsToBBoxes`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracksToCSV`, `tracksToBBoxes`
 - **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record")
 
 ### CAP-706: Experimental DB sources

@@ -23,8 +23,8 @@ recorded as DEBT, not specified as intended behavior.
 | BEH-708 | [Runtime-only fields of an observation, and what leaks into saves](#beh-708-runtime-only-fields-of-an-observation-and-what-leaks-into-saves) |
 | BEH-709 | [Initial state of the model at page load](#beh-709-initial-state-of-the-model-at-page-load) |
 | BEH-710 | [Events JSON v2 format (data contract, save side)](#beh-710-events-json-v2-format-data-contract-save-side) |
-| BEH-711 | [Saving v2 mutates TracksInfo and fails after a CSV import](#beh-711-saving-v2-mutates-tracksinfo-and-fails-after-a-csv-import) |
-| BEH-712 | [Events JSON v1 format and the save-mutates-Tracks defect (C1)](#beh-712-events-json-v1-format-and-the-save-mutates-tracks-defect-c1) |
+| BEH-711 | [Saving v2 works on copies of TracksInfo and videoinfo (fixed; was: mutated TracksInfo, failed after a CSV import)](#beh-711-saving-v2-works-on-copies-of-tracksinfo-and-videoinfo-fixed-was-mutated-tracksinfo-failed-after-a-csv-import) |
+| BEH-712 | [Events JSON v1 format (the save-mutates-Tracks defect C1 is fixed)](#beh-712-events-json-v1-format-the-save-mutates-tracks-defect-c1-is-fixed) |
 | BEH-713 | [Save Events to a local file](#beh-713-save-events-to-a-local-file) |
 | BEH-714 | [Load Events from a local file](#beh-714-load-events-from-a-local-file) |
 | BEH-715 | [Erase Events and Erase Tags buttons](#beh-715-erase-events-and-erase-tags-buttons) |
@@ -91,7 +91,7 @@ absent ID reads as "no observation": `obsDoesExist(frame,id)` is false when `Tra
 `Tracks[frame][id]` is null/undefined. `getObsHandle(frame,id,createIfEmpty=false)` returns the live
 object (not a copy) or `undefined`; with `createIfEmpty` it creates the missing frame object `{}` and a
 `new Observation(id)`. Deleting an observation (`delete Tracks[f][id]`, done by other modules) leaves an
-empty `{}` frame object; it is kept (and saved, [BEH-709](#beh-709-initial-state-of-the-model-at-page-load "Initial state of the model at page load"), [BEH-712](#beh-712-events-json-v1-format-and-the-save-mutates-tracks-defect-c1 "Events JSON v1 format and the save-mutates-Tracks defect (C1)")).
+empty `{}` frame object; it is kept (and saved, [BEH-709](#beh-709-initial-state-of-the-model-at-page-load "Initial state of the model at page load"), [BEH-712](#beh-712-events-json-v1-format-the-save-mutates-tracks-defect-c1-is-fixed "Events JSON v1 format (the save-mutates-Tracks defect C1 is fixed)")).
 
 - **Group:** [CAP-701](view_capabilities.md#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo")
 - **Origin:** essential
@@ -200,7 +200,7 @@ is not saved: that is not true of the code.
 - **Origin:** accident
 - **Code:**
   - [labelbee/static/labelbee/js/Model.js](../../../labelbee/static/labelbee/js/Model.js): `copyObs`
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV2`
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `augmentTrackWithTag`
   - [labelbee/static/labelbee/js/SelectionControl.js](../../../labelbee/static/labelbee/js/SelectionControl.js): `modifyCurrentObsSpan`
 - **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [DEBT-704](view_debt.md#debt-704-runtime-fields-tag-span-are-written-into-saved-files "Runtime fields (tag, span) are written into saved files"), [OQ-702](../../QUESTIONS.md#oq-702 "Should `tag` and `span` be in saved files")
@@ -233,11 +233,11 @@ Shape:
 ```
 { "info": { ...TracksInfo..., "formatnote": "<fixed warning text>",
             "history": [ ...previous entries, "Saved using labelbee on <Date()>" ],
-            "videoinfo": <current videoinfo object> },
+            "videoinfo": <deep copy of the current videoinfo object> },
   "data": { "<frame>": [ <event>, ... ], ... } }
 ```
 
-`info` is the live `TracksInfo` object itself ([BEH-711](#beh-711-saving-v2-mutates-tracksinfo-and-fails-after-a-csv-import "Saving v2 mutates TracksInfo and fails after a CSV import")): all its fields round-trip (`type` must be
+`info` is a deep copy of `TracksInfo` ([BEH-711](#beh-711-saving-v2-works-on-copies-of-tracksinfo-and-videoinfo-fixed-was-mutated-tracksinfo-failed-after-a-csv-import "Saving v2 works on copies of TracksInfo and videoinfo (fixed; was: mutated TracksInfo, failed after a CSV import)"); it was the live object before slice 2 step 4): all its fields round-trip (`type` must be
 `"events-multiframe"`, `source`, `notes` from `#events-notes`, `basedon`, anything loaded from a previous
 file). `data` is keyed by `String(frame)` for every key of `Tracks` whose value is not null, including frames
 that became empty (written as `[]`); each value is an ARRAY of events (one per non-null observation, in
@@ -257,45 +257,46 @@ width, height, cx, cy` are always written (a missing one gives `NaN`, serialized
 - **Group:** [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
 - **Origin:** essential
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`, `saveObjToJsonFile`
-- **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for"), [OQ-712](../../QUESTIONS.md#oq-712 "Should the whole videoinfo be embedded in every saved events file"), [OQ-715](../../QUESTIONS.md#oq-715 "What does 'all Observation fields are preserved' cover"), [BEH-711](#beh-711-saving-v2-mutates-tracksinfo-and-fails-after-a-csv-import "Saving v2 mutates TracksInfo and fails after a CSV import"), [BEH-708](#beh-708-runtime-only-fields-of-an-observation-and-what-leaks-into-saves "Runtime-only fields of an observation, and what leaks into saves"), [BEH-712](#beh-712-events-json-v1-format-and-the-save-mutates-tracks-defect-c1 "Events JSON v1 format and the save-mutates-Tracks defect (C1)")
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `saveObjToJsonFile`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV2`
+- **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for"), [OQ-712](../../QUESTIONS.md#oq-712 "Should the whole videoinfo be embedded in every saved events file"), [OQ-715](../../QUESTIONS.md#oq-715 "What does 'all Observation fields are preserved' cover"), [BEH-711](#beh-711-saving-v2-works-on-copies-of-tracksinfo-and-videoinfo-fixed-was-mutated-tracksinfo-failed-after-a-csv-import "Saving v2 works on copies of TracksInfo and videoinfo (fixed; was: mutated TracksInfo, failed after a CSV import)"), [BEH-708](#beh-708-runtime-only-fields-of-an-observation-and-what-leaks-into-saves "Runtime-only fields of an observation, and what leaks into saves"), [BEH-712](#beh-712-events-json-v1-format-the-save-mutates-tracks-defect-c1-is-fixed "Events JSON v1 format (the save-mutates-Tracks defect C1 is fixed)")
 
-## BEH-711: Saving v2 mutates TracksInfo and fails after a CSV import
+## BEH-711: Saving v2 works on copies of TracksInfo and videoinfo (fixed; was: mutated TracksInfo, failed after a CSV import)
 
-`convertTracksToV2` does not copy `TracksInfo` (`obj = {info: TracksInfo, ...}`) and then, in place:
-sets `info.formatnote`, creates `info.history = []` if falsy, pushes `"Saved using labelbee on " + Date()`,
-and sets `info.videoinfo = videoinfo` (a reference to the live global, which also contains the
-`preview` sub-object and `tags`, `videoPath`, etc.). So each save (file or server) appends one entry
-to the in-memory history, and all saved files contain the video info at the time of save. If `info.history` is a
-non-empty string, as for every tracks CSV / `tracks_tagged` CSV / DB import ([BEH-735](#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)"), [BEH-736](#beh-736-import-of-a-tracks_tagged-csv "Import of a tracks_tagged CSV"), [BEH-737](#beh-737-import-of-a-tags-csv-tracks-and-tags-together "Import of a tags CSV (Tracks and Tags together)"), [BEH-740](#beh-740-experimental-db-source-load-tracks-from-sqlite "Experimental DB source: load tracks from SQLite")) which
-set `history: "Loaded in Labelbee on <ISO date>"`, `.push` throws `TypeError` and the save aborts
-(file: nothing downloaded; server: no request sent), after `formatnote` was already set. Also
-`TracksInfo` undefined (no `setTracks` ever called) would throw `ReferenceError`; in practice init sets it ([BEH-709](#beh-709-initial-state-of-the-model-at-page-load "Initial state of the model at page load")).
+FIXED in slice 2 step 4 ([DEBT-706](view_debt.md#debt-706-v2-save-mutates-tracksinfo-and-crashes-when-history-is-a-string "v2 save mutates TracksInfo and crashes when history is a string")). `convertTracksToV2` works on deep copies (`structuredClone`) of
+`TracksInfo` and `videoinfo`: on the copy it sets `info.formatnote`, makes `info.history` an array (a string, as
+set by every tracks CSV / `tracks_tagged` CSV / DB import ([BEH-735](#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)"), [BEH-736](#beh-736-import-of-a-tracks_tagged-csv "Import of a tracks_tagged CSV"), [BEH-737](#beh-737-import-of-a-tags-csv-tracks-and-tags-together "Import of a tags CSV (Tracks and Tags together)"), [BEH-740](#beh-740-experimental-db-source-load-tracks-from-sqlite "Experimental DB source: load tracks from SQLite")), becomes
+`[string]`; a missing history becomes `[]`), appends `"Saved using labelbee on " + Date()` and embeds the whole
+`videoinfo` ([OQ-712](../../QUESTIONS.md#oq-712 "Should the whole videoinfo be embedded in every saved events file"): kept whole, `preview` is only a URL). The live objects are not modified, so saves of one
+session do not accumulate: each saved file lists the history as loaded plus its own save (maintainer decision,
+2026-11-12). Before the fix the function modified the live `TracksInfo` in place (each save added a history
+entry that later saves also listed) and `.push` threw `TypeError` on a string history, so the file and the
+server save aborted after every CSV import, after `formatnote` had been set. An undeclared `TracksInfo` (no
+`setTracks` ever called) would make the bridge wrapper throw `ReferenceError`; in practice init sets it ([BEH-709](#beh-709-initial-state-of-the-model-at-page-load "Initial state of the model at page load")).
 
 - **Group:** [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
 - **Origin:** accident
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`, `eventsToServer`, `saveEventsToFile`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `eventsToServer`, `saveEventsToFile`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV2`
 - **Links:** [DEBT-706](view_debt.md#debt-706-v2-save-mutates-tracksinfo-and-crashes-when-history-is-a-string "v2 save mutates TracksInfo and crashes when history is a string"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [BEH-710](#beh-710-events-json-v2-format-data-contract-save-side "Events JSON v2 format (data contract, save side)")
 
-## BEH-712: Events JSON v1 format and the save-mutates-Tracks defect (C1)
+## BEH-712: Events JSON v1 format (the save-mutates-Tracks defect C1 is fixed)
 
 `convertTracksToV1()` (reachable only through `saveEventsToFile('v1')`; the v1 button is commented
 out in the page) returns a JS ARRAY indexed by `Number(frame)`: `obj[f] = { "<id>": evt, ... }`, so
 JSON.stringify writes `null` for every frame index without observations (holes) and the output length
-is `max frame + 1`. Frames with an empty dict are kept as `{}`. Event = the live observation object
-itself: `Object.assign(evt)` with one argument returns `evt`, so the following edits are applied IN PLACE
-on `Tracks` (analysis C1): fields `marked` and `permanent` are deleted; `cx = x + width/2`,
+is `max frame + 1`. Frames with an empty dict are kept as `{}`. Event = a copy of the observation (`Object.assign({}, evt)`, slice 2 step 4, [DEBT-707](view_debt.md#debt-707-c1-converttrackstov1-mutates-live-tracks "C1, convertTracksToV1 mutates live Tracks") FIXED; it used to be the live observation itself, so the edits below were applied IN PLACE on `Tracks`, analysis C1). The copy gets: fields `marked` and `permanent` are deleted; `cx = x + width/2`,
 `cy = y + height/2`; `x, y, width, height, cx, cy` rounded to 3 decimals. `ID` and `bool_acts`
-are kept in v1 (the deletes are commented out), and `time, frame, angle, notes, labels, parts, tag, span...` stay. Live
-`Tracks` therefore changes at every v1 save (precision loss of the working coordinates, `cx,cy` re-derived).
-The v2 conversion ([BEH-710](#beh-710-events-json-v2-format-data-contract-save-side "Events JSON v2 format (data contract, save side)")) does not alias observations; the UI only ever exposes v2, so C1 is latent for
-users but active for any caller of `convertTracksToV1`.
+are kept in v1 (the deletes are commented out), and `time, frame, angle, notes, labels, parts, tag, span...` stay. Live `Tracks` is no longer changed by a v1 save (before the fix: precision loss of the working coordinates,
+`cx,cy` re-derived, `marked`/`permanent` deleted). The UI only exposes v2; v1 is reachable only by calling
+`convertTracksToV1`.
 
 - **Group:** [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
 - **Origin:** accident
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV1`, `saveEventsToFile`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `saveEventsToFile`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV1`
 - **Links:** [DEBT-707](view_debt.md#debt-707-c1-converttrackstov1-mutates-live-tracks "C1, convertTracksToV1 mutates live Tracks"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record")
 
 ## BEH-713: Save Events to a local file
@@ -314,7 +315,7 @@ revoked. There is no confirmation and no change of any dirty state.
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `saveEventsToFile`, `saveObjToJsonFile`, `saveBlobToFile`, `getTimestampNow`, `getTimestampedVideoname`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `#save`
-- **Links:** [BEH-710](#beh-710-events-json-v2-format-data-contract-save-side "Events JSON v2 format (data contract, save side)"), [BEH-711](#beh-711-saving-v2-mutates-tracksinfo-and-fails-after-a-csv-import "Saving v2 mutates TracksInfo and fails after a CSV import"), [DEBT-708](view_debt.md#debt-708-saveeventstofile-with-an-unknown-format-downloads-null "saveEventsToFile with an unknown format downloads 'null'"), [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
+- **Links:** [BEH-710](#beh-710-events-json-v2-format-data-contract-save-side "Events JSON v2 format (data contract, save side)"), [BEH-711](#beh-711-saving-v2-works-on-copies-of-tracksinfo-and-videoinfo-fixed-was-mutated-tracksinfo-failed-after-a-csv-import "Saving v2 works on copies of TracksInfo and videoinfo (fixed; was: mutated TracksInfo, failed after a CSV import)"), [DEBT-708](view_debt.md#debt-708-saveeventstofile-with-an-unknown-format-downloads-null "saveEventsToFile with an unknown format downloads 'null'"), [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
 
 ## BEH-714: Load Events from a local file
 
@@ -723,7 +724,7 @@ promise rejection) and `tracks_csv_to_json` converts each row (all CSV values ar
 `+<name>_visibility > 0`: `{posFrame:{x:+<name>_x, y:+<name>_y}, label:<name>}`. Not set: `time`, `notes`, `ID`. Structure
 `{frame: {track_id: item}}` keyed by the row's raw `frame` string (a repeated `track_id` in a frame overwrites the earlier row).
 `info = {type:"events-multiframe", source:'Converted from CSV "<url>"', history:"Loaded in Labelbee on <ISO date>"}`
-(history is a STRING, [BEH-711](#beh-711-saving-v2-mutates-tracksinfo-and-fails-after-a-csv-import "Saving v2 mutates TracksInfo and fails after a CSV import")). Then `setTracks(obj)` (goes through the v2 branch of sanitizing), `onFrameChanged`,
+(history is a STRING, [BEH-711](#beh-711-saving-v2-works-on-copies-of-tracksinfo-and-videoinfo-fixed-was-mutated-tracksinfo-failed-after-a-csv-import "Saving v2 works on copies of TracksInfo and videoinfo (fixed; was: mutated TracksInfo, failed after a CSV import)")). Then `setTracks(obj)` (goes through the v2 branch of sanitizing), `onFrameChanged`,
 `refreshChronogram`. The 300x600 box and +90 angle are fixed conventions of the external producer ([DEC-001](view_decisions.md#dec-001-tag-detection-and-bee-tracking-happen-outside-labelbee "Tag detection and bee tracking happen outside LabelBee")), not read from the file.
 
 - **Group:** [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import")
@@ -781,7 +782,8 @@ and nothing is downloaded. (`conc` helper inside is dead code.)
 - **Group:** [CAP-705](view_capabilities.md#cap-705-export "Export")
 - **Origin:** intentional
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracksToCSV`, `saveEventsToCSV`, `saveCSVToFile`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `saveEventsToCSV`, `saveCSVToFile`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracksToCSV`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `#saveCSV`
 - **Links:** [DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic"), [DEBT-727](view_debt.md#debt-727-exports-ignore-labels-and-notes-and-crash-on-missing-bool_acts "Exports ignore labels and notes and crash on missing bool_acts"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")
 
@@ -798,7 +800,8 @@ Same failure case as [BEH-738](#beh-738-export-events-csv "Export Events (CSV)")
 - **Group:** [CAP-705](view_capabilities.md#cap-705-export "Export")
 - **Origin:** intentional
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracksToBBoxes2`, `tracksToBBoxes`, `saveEventsToBBoxes`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `saveEventsToBBoxes`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracksToBBoxes2`, `tracksToBBoxes`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `#saveBBoxes`
 - **Links:** [DEBT-727](view_debt.md#debt-727-exports-ignore-labels-and-notes-and-crash-on-missing-bool_acts "Exports ignore labels and notes and crash on missing bool_acts"), [DEBT-728](view_debt.md#debt-728-trackstobboxes-unused-and-log-message-stale "tracksToBBoxes unused and log message stale"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for")
 
@@ -892,8 +895,7 @@ that are integer-like (`"12"`) iterate in ascending numeric order before non-int
 - **Group:** [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising")
 - **Origin:** essential
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`
-  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV2`, `sanitizeEvents`
 - **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [OQ-003](../../QUESTIONS.md#oq-003 "What the saved annotations are used for"), [OQ-703](../../QUESTIONS.md#oq-703 "Are v1 events files and ID-less events still produced anywhere"), [BEH-746](#beh-746-a-v2-file-without-data-loads-as-an-empty-model "A v2 file without `data` loads as an empty model")
 
 ## BEH-746: A v2 file without `data` loads as an empty model

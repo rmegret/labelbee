@@ -1207,8 +1207,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 - **Code:**
   - [labelbee/static/labelbee/js/Model.js](../../../labelbee/static/labelbee/js/Model.js): `Observation`, `copyObs`
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracksToCSV`
-  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracksToCSV`, `sanitizeEvents`
 - **Links:** [BEH-701](view_cap-700-annotation-model-io.md#beh-701-observation-record-and-its-defaults "Observation record and its defaults"), [BEH-717](view_cap-700-annotation-model-io.md#beh-717-events-json-v2-format-load-side-via-sanitizeevents "Events JSON v2 format (load side) via sanitizeEvents"), [BEH-738](view_cap-700-annotation-model-io.md#beh-738-export-events-csv "Export Events (CSV)"), [DEC-003](view_decisions.md#dec-003-labels-are-generic "Labels are generic"), [OQ-715](../../QUESTIONS.md#oq-715 "What does 'all Observation fields are preserved' cover")
 
 ## DEBT-702: copyObs copies a hand-maintained field list
@@ -1232,7 +1231,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] `labelbee/static/labelbee/js/ChronoControl.js` augmentTrackWithTag assigns `obs.tag` (the tag object) on stored observations; `labelbee/static/labelbee/js/AnnotationIO.js` convertTracksToV2 copies every own field, so `tag` (the full tag record) and `span` are saved, contradicting [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"). Proposed: explicit save whitelist, or runtime fields kept outside `Tracks`; decision in [OQ-702](../../QUESTIONS.md#oq-702 "Should `tag` and `span` be in saved files").
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV2`
   - [labelbee/static/labelbee/js/Model.js](../../../labelbee/static/labelbee/js/Model.js): `copyObs`
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `augmentTrackWithTag`
 - **Links:** [BEH-708](view_cap-700-annotation-model-io.md#beh-708-runtime-only-fields-of-an-observation-and-what-leaks-into-saves "Runtime-only fields of an observation, and what leaks into saves"), [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [OQ-702](../../QUESTIONS.md#oq-702 "Should `tag` and `span` be in saved files")
@@ -1248,20 +1247,20 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-706: v2 save mutates TracksInfo and crashes when history is a string
 
-[read] convertTracksToV2 uses `info: TracksInfo` by reference, sets formatnote, pushes to history, stores a `videoinfo` reference; CSV/DB imports set `history` to a string, so `.push` throws and the save aborts (file and server, before the request). Proposed: build `info` as a copy; history always an array (convert on load). Whether to embed `videoinfo` at all is [OQ-712](../../QUESTIONS.md#oq-712 "Should the whole videoinfo be embedded in every saved events file").
+[read] FIXED in slice 2 step 4 (`annotation/AnnotationCodec.js` `convertTracksToV2`: `info` and `videoinfo` are deep copies, `history` is always an array, the whole `videoinfo` stays embedded per [OQ-712](../../QUESTIONS.md#oq-712 "Should the whole videoinfo be embedded in every saved events file")). Was: `info: TracksInfo` by reference, formatnote set, history pushed, a `videoinfo` reference stored; CSV/DB imports set `history` to a string, so `.push` threw and the save aborted (file and server, before the request). Still open: `history` stays a string in memory after an import (converted at save only).
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV2`, `eventsToServer`
-  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracks_csv_to_json`, `tracks_tagged_csv_to_json`
-- **Links:** [BEH-711](view_cap-700-annotation-model-io.md#beh-711-saving-v2-mutates-tracksinfo-and-fails-after-a-csv-import "Saving v2 mutates TracksInfo and fails after a CSV import"), [BEH-735](view_cap-700-annotation-model-io.md#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [OQ-712](../../QUESTIONS.md#oq-712 "Should the whole videoinfo be embedded in every saved events file")
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `eventsToServer`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV2`, `tracks_csv_to_json`, `tracks_tagged_csv_to_json`
+- **Links:** [BEH-711](view_cap-700-annotation-model-io.md#beh-711-saving-v2-works-on-copies-of-tracksinfo-and-videoinfo-fixed-was-mutated-tracksinfo-failed-after-a-csv-import "Saving v2 works on copies of TracksInfo and videoinfo (fixed; was: mutated TracksInfo, failed after a CSV import)"), [BEH-735](view_cap-700-annotation-model-io.md#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [OQ-712](../../QUESTIONS.md#oq-712 "Should the whole videoinfo be embedded in every saved events file")
 
 ## DEBT-707: C1, convertTracksToV1 mutates live Tracks
 
-[read] `Object.assign(evt)` with one argument aliases the observation; it deletes marked/permanent and rewrites cx, cy, x, y, width, height in place. Latent (v1 not exposed in the page). Proposed: `Object.assign({}, evt)`.
+[read] FIXED in slice 2 step 4 (`Object.assign({}, evt)`). Was: `Object.assign(evt)` with one argument aliased the observation; it deleted marked/permanent and rewrote cx, cy, x, y, width, height in place. Latent (v1 not exposed in the page).
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `convertTracksToV1`
-- **Links:** [BEH-712](view_cap-700-annotation-model-io.md#beh-712-events-json-v1-format-and-the-save-mutates-tracks-defect-c1 "Events JSON v1 format and the save-mutates-Tracks defect (C1)"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss")
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV1`
+- **Links:** [BEH-712](view_cap-700-annotation-model-io.md#beh-712-events-json-v1-format-the-save-mutates-tracks-defect-c1-is-fixed "Events JSON v1 format (the save-mutates-Tracks defect C1 is fixed)"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss")
 
 ## DEBT-708: saveEventsToFile with an unknown format downloads "null"
 
@@ -1426,7 +1425,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [read] `tracksToCSV` and `tracksToBBoxes2` export only the bool_acts flags (CSV) or geometry plus flags (BBox), no escaping; an observation that is `null` or lacks `bool_acts` throws `TypeError`.
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracksToCSV`, `tracksToBBoxes2`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracksToCSV`, `tracksToBBoxes2`
 - **Links:** [BEH-738](view_cap-700-annotation-model-io.md#beh-738-export-events-csv "Export Events (CSV)"), [BEH-739](view_cap-700-annotation-model-io.md#beh-739-export-events-bbox "Export Events (BBox)"), [DEBT-701](#debt-701-observation-carries-bool_acts-next-to-labels "Observation carries bool_acts next to labels")
 
 ## DEBT-728: tracksToBBoxes unused and log message stale
@@ -1434,7 +1433,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 [inferred, `saveEventsToBBoxes` not re-read] saveEventsToBBoxes calls tracksToBBoxes2 but logs the format of tracksToBBoxes.
 
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tracksToBBoxes`, `saveEventsToBBoxes`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `saveEventsToBBoxes`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracksToBBoxes`
 - **Links:** [BEH-739](view_cap-700-annotation-model-io.md#beh-739-export-events-bbox "Export Events (BBox)")
 
 ## DEBT-729: Experimental DB path is unreachable and half-built

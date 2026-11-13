@@ -242,7 +242,8 @@ Load and save tracks and tags as local files (JSON v1/v2, CSV).
 
 - **Group:** CAP-700
 - **Code:**
-  - `AnnotationIO.js`: `loadEventsFromFile`, `saveEventsToFile`, `loadTagsFromFile`, `saveTagsToFile`, `convertTracksToV2`
+  - `AnnotationIO.js`: `loadEventsFromFile`, `saveEventsToFile`, `loadTagsFromFile`, `saveTagsToFile`
+  - `annotation/AnnotationCodec.js`: `convertTracksToV2`
   - `labelbee_page.html`: `~I/O Local storage panel`
 - **Links:** ENT-004, INV-001, INV-003, OQ-003, OQ-010
 
@@ -272,7 +273,8 @@ Export tracks as CSV and as bounding boxes.
 
 - **Group:** CAP-700
 - **Code:**
-  - `AnnotationIO.js`: `tracksToCSV`, `tracksToBBoxes`, `saveEventsToCSV`, `saveEventsToBBoxes`
+  - `AnnotationIO.js`: `saveEventsToCSV`, `saveEventsToBBoxes`
+  - `annotation/AnnotationCodec.js`: `tracksToCSV`, `tracksToBBoxes`
 - **Links:** ENT-004
 
 ### CAP-706: Experimental DB sources

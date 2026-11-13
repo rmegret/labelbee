@@ -53,4 +53,4 @@ function makeHasLabel() {
   return ctx.hasLabel;
 }
 
-module.exports = { makeRecorder, makeHasLabel, FUNCTIONS };
+module.exports = { makeRecorder, makeHasLabel, extractFunction, FUNCTIONS };
