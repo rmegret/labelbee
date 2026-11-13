@@ -38,7 +38,7 @@ every write, delete or define through it (or through any handle the code kept) i
 1 one frame, 2 one observation, 3+ nested), field and the source `file:line` that made it. The report lists them per source line.
 Working copies (`rect.obs`, made by `cloneObs`) are separate objects and are deliberately not recorded. Opt-in (about 10% slower);
 the suite passes with it. Purpose: the exact list of writers that the `Events` API of
-[ADR 0007](../../design/0007-slice-migrate-readers.md) must replace, and later a guard that nothing writes around it.
+[ADR 0007](../../design/0007-slice-events-api.md) must replace, and later a guard that nothing writes around it.
 A site never shown is a site no test exercises: add a test, run it again.
 
 `ui.settle()` (used by `click_box` and `shift_click_background`) waits for the `hardRefresh` that the page schedules 500 ms after a

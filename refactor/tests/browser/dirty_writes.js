@@ -1,4 +1,4 @@
-// Dirty-write detector (refactor/design/0007-slice-migrate-readers.md): finds every place that modifies the stored
+// Dirty-write detector (refactor/design/0007-slice-events-api.md): finds every place that modifies the stored
 // events directly. Injected into every page by conftest.py when pytest runs with --dirty-writes=REPORT.json.
 //
 // AnnotationStore.getTracks() is patched to return a recursive Proxy of the stored structure:
