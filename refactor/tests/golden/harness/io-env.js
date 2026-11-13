@@ -160,6 +160,7 @@ async function loadIoEnv() {
     CODEC_FUNCTIONS.forEach((n) => { sandbox[n] = codec[n]; });
     const ctx = vm.createContext(sandbox);
     installLegacyGlobals(ctx, createAnnotationStore());
+    vm.runInContext('var ttags;', ctx); // declared in the page by ChronoControl.js (`var ttags = {}`)
     ctx.$ = makeJQuery(rec, net, ctx);
     vm.runInContext(code, ctx, { filename: 'AnnotationIO.js(extracted)' });
     writeState(ctx, c.init || {});

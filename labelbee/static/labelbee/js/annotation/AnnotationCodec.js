@@ -185,7 +185,7 @@ export function tagsAddFrames(Tags) {
 /* Decode a Tags JSON (v1: dictionary of frames, v2: {info, data}) into {data, info}.
  * Returns null when the format is rejected (setTags returns 0 then).
  * Moved from setTags (refactor slice 3, ADR 0005). `info` is always the dummy one, the v2 info is
- * dropped (DEBT-715); a v2 file without `data` gives `data: undefined` (DEBT-733).
+ * dropped (DEBT-715); a v2 file whose `data` is missing or not an object is rejected (DEBT-733).
  * The v1 key check validates `obj` (DEBT-713: it used to read the previously loaded Tags global). */
 export function decodeTags(obj) {
   var info;
@@ -206,6 +206,13 @@ export function decodeTags(obj) {
 
       // obj['data'].tags[tag_id_in_frame]
       obj = obj["data"];
+      if (obj === null || typeof obj != "object") {
+        log(
+          'setTags: ABORTED, unsupported file format. "data" should be an object, found ' +
+            (obj === null ? "null" : typeof obj)
+        );
+        return null;
+      }
     }
     else {
       // Old format v1: Tags JSON directly stored in the json

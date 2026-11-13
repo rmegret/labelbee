@@ -420,14 +420,30 @@ function setTags(obj, div) {
   var decoded = decodeTags(obj);
   if (!decoded) return 0;
 
-  AnnotationStore.replaceTags(decoded.data, decoded.info);
+  // Apply as a whole: if one step throws on a malformed file, the previous Tags are put back (DEBT-733)
+  var previous = {
+    data: AnnotationStore.getTags(),
+    info: AnnotationStore.getTagsInfo(),
+    haveDM: AnnotationStore.getTagsHaveDM(),
+    ttags: ttags,
+  };
+  try {
+    AnnotationStore.replaceTags(decoded.data, decoded.info);
 
-  tagsAddFrames(AnnotationStore.getTags());
+    tagsAddFrames(AnnotationStore.getTags());
 
-  ttags = getTTags();
+    ttags = getTTags();
 
-  // Check if Tags data structure support the DM field
-  AnnotationStore.updateTagsHaveDM();
+    // Check if Tags data structure support the DM field
+    AnnotationStore.updateTagsHaveDM();
+  } catch (error) {
+    console.error(error);
+    AnnotationStore.replaceTags(previous.data, previous.info);
+    AnnotationStore.setTagsHaveDM(previous.haveDM);
+    ttags = previous.ttags;
+    console.log("setTags: ABORTED, malformed tag data. The previous Tags are kept.");
+    return 0;
+  }
   // Disable DM field if not there
   $(".requireDM").prop("disabled", !AnnotationStore.getTagsHaveDM());
   $(".requireDM").toggleClass("disabled", !AnnotationStore.getTagsHaveDM());

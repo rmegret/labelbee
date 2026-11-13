@@ -2144,8 +2144,8 @@
    ""
   ]
  },
- "setTags v2 without data: Tags replaced by undefined (DEBT-733)": {
-  "returned": 1,
+ "setTags v2 without data is rejected, Tags kept (DEBT-733)": {
+  "returned": 0,
   "state": {
    "Tracks": {
     "$": "undefined"
@@ -2154,50 +2154,44 @@
     "$": "undefined"
    },
    "Tags": {
-    "$": "undefined"
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
    },
    "TagsInfo": {
-    "type": "tags-multiframe",
-    "source": "Converted from Tags v1"
+    "$": "undefined"
    },
-   "tagsHaveDM": false,
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
    "ttags": {
-    "stub": "ttags"
+    "$": "undefined"
    }
   },
-  "fx": [
-   [
-    "getTTags",
-    []
-   ],
-   [
-    "$",
-    ".requireDM",
-    "prop",
-    "disabled",
-    true
-   ],
-   [
-    "$",
-    ".requireDM",
-    "toggleClass",
-    "disabled",
-    true
-   ],
-   [
-    "refreshChronogram"
-   ],
-   [
-    "adjustChronogramHeight"
-   ],
-   [
-    "onFrameChanged"
-   ]
-  ],
+  "fx": [],
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. \"data\" should be an object, found undefined"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -2209,8 +2203,8 @@
    ""
   ]
  },
- "setTags v2 frame without tags: throws after Tags replaced (DEBT-733)": {
-  "threw": "TypeError",
+ "setTags v2 data null is rejected": {
+  "returned": 0,
   "state": {
    "Tracks": {
     "$": "undefined"
@@ -2219,15 +2213,154 @@
     "$": "undefined"
    },
    "Tags": {
-    "0": {}
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. \"data\" should be an object, found null"
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    },
+    "data": null
+   },
+   ""
+  ]
+ },
+ "setTags v2 data not an object is rejected": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. \"data\" should be an object, found string"
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    },
+    "data": "abc"
+   },
+   ""
+  ]
+ },
+ "setTags v2 frame without tags: rolled back, previous Tags, DM flag and ttags kept (DEBT-733, DEBT-715)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
    },
    "TagsInfo": {
     "type": "tags-multiframe",
-    "source": "Converted from Tags v1"
+    "source": "old"
    },
-   "tagsHaveDM": false,
+   "tagsHaveDM": true,
    "ttags": {
-    "stub": "ttags"
+    "old": 1
    }
   },
   "fx": [
@@ -2241,8 +2374,12 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
-  "errors": [],
+  "logs": [
+   "setTags: ABORTED, malformed tag data. The previous Tags are kept."
+  ],
+  "errors": [
+   "TypeError"
+  ],
   "argsAfter": [
    {
     "info": {
@@ -2251,6 +2388,68 @@
     },
     "data": {
      "0": {}
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v2 null frame: rolled back before getTTags (DEBT-733)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "old": 1
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, malformed tag data. The previous Tags are kept."
+  ],
+  "errors": [
+   "TypeError"
+  ],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    },
+    "data": {
+     "0": null
     }
    },
    ""
