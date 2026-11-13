@@ -1,0 +1,2 @@
+track_id,track_shape,track_event,track_startframe,track_startx,track_starty,track_starta,track_endframe,track_endx,track_endy,track_enda,track_length,track_starttime,track_endtime,track_tagid,track_hastag,track_dm,track_ntagidunique,track_ntagid
+36,outside_inside,unknown,39,842.3565939331055,112.01687573242184,100.73370597987318,58,631.3656005859375,1417.0048828125,80.25603557369017,20,2019-08-17 09:00:14.450,2019-08-17 09:00:15.400,1641.0,True,38.61,1,4
