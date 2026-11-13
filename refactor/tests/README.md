@@ -60,3 +60,8 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
 - Run `generate.js` only before a step that changes behavior on purpose, and review the golden diff.
 - `golden/slice3/store.test.js`: contract tests (assertions, no golden) of `AnnotationStore.js` and the bridge: defaults,
   same-object identity, in-place edits seen on both sides, assignments reaching the store, bare-name access from sloppy code in a `vm`.
+- `golden/slice3/loaders.test.js`: assertions on what the loaders return (step 4): `tagsFromServer` stays `undefined`,
+  `loadEventsFromServerByID` resolves at once, an exception of the apply stage is not treated as a request error.
+- `golden/slice3/diff-against-golden.js`: prints per case what differs from the golden; run it before `generate.js`.
+- `golden/harness/unhandled.js`: takes over the `unhandledRejection` event while a case runs (the node test runner would
+  fail the test otherwise); unhandled rejections are pinned in the golden as `rejections`.

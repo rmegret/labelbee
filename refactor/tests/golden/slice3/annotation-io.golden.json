@@ -1356,10 +1356,10 @@
     "readAsText"
    ]
   ],
-  "cbErrors": [
+  "cbErrors": [],
+  "rejections": [
    "SyntaxError"
   ],
-  "rejections": [],
   "alerts": [],
   "logs": [],
   "errors": [],
@@ -3115,10 +3115,10 @@
     "refreshChronogram"
    ]
   ],
-  "cbErrors": [
+  "cbErrors": [],
+  "rejections": [
    "ReferenceError"
   ],
-  "rejections": [],
   "alerts": [],
   "logs": [],
   "errors": [],
@@ -3173,10 +3173,10 @@
     "refreshChronogram"
    ]
   ],
-  "cbErrors": [
+  "cbErrors": [],
+  "rejections": [
    "ReferenceError"
   ],
-  "rejections": [],
   "alerts": [],
   "logs": [
    "sanitizeEvents: ABORTED, unsupported file format. All keys should be positive integers (frame ids).",
@@ -3215,10 +3215,10 @@
     "URL:api/v1/annotation/12"
    ]
   ],
-  "cbErrors": [
+  "cbErrors": [],
+  "rejections": [
    "ReferenceError"
   ],
-  "rejections": [],
   "alerts": [],
   "logs": [],
   "errors": [],

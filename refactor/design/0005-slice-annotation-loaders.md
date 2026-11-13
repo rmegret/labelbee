@@ -92,7 +92,16 @@ codec, the rest stays as apply. Not touched: `FromServerDialog`, `eventsToServer
 3. **`setTracks`, `setTags`, `setEventsProp` write through `AnnotationStore`**, `decodeTags` moved to the codec
    (with a `previousTags` parameter for the DEBT-713 check), the DM rule into `updateTagsHaveDM()` of the store.
    Goldens pass unchanged. [done]
-4. **Loaders as promise pipelines** in `AnnotationIO.js`, legacy names kept. Goldens pass (same call order).
+4. **Loaders as promise pipelines** in `AnnotationIO.js`, legacy names kept, nothing deleted. [done]
+   Helpers `readFileAsText`, `ajaxGetJSON`, `getJSONPromise`; `eventsFromText`/`tagsFromText` carry the decode+apply
+   of the file loaders (`onReaderLoad`/`onTagsReaderLoad` stay, for manual calls). The file loaders, `loadEventsFromFile0`,
+   `eventsFromServer` and the CSV loaders return their Promise. Two returns are NOT the natural ones, on purpose:
+   `tagsFromServer` still returns `undefined` (the dialog reads it as "success", DEBT-719) and
+   `loadEventsFromServerByID` still resolves at once (`onhashchange` awaits it and its handlers always throw, DEBT-722);
+   both change in step 5. Apply stages are chained with `.then(apply, onError)`. Golden: call order, state, logs, alerts
+   identical in all 61 cases; four cases differ only in where an apply-stage exception surfaces (an unhandled promise
+   rejection instead of an uncaught callback exception, the same console report; the page has no global
+   `onerror`/`unhandledrejection` handler). `FileReader` and `$.get` failures, silent before, now reject the Promise.
 5. **Bug fixes, each in its own commit, after the moves, golden diff shown for approval** ([Q19](../QUESTIONS.md#q19): DEBT-713, 733, 710-rest, 722).
 6. **Record**: PLAN (bridge worklist), SEAM-701/702, BEH and DEBT entries, regenerate `intent/docs/`.
 

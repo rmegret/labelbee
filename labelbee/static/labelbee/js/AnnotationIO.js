@@ -327,21 +327,62 @@ function setEventsProp(option, value) {
   info[option] = value;
 }
 
-function onReaderLoad(event) {
+/* LOADER HELPERS (refactor ADR 0005). A loader is: get (a Promise) -> decode (the codec) -> apply
+ * (setTracks / setTags). Chain the apply stage with `.then(apply, onError)`, never with
+ * `.then(apply).catch(onError)`: an exception of the apply stage is not a request error. */
+function readFileAsText(file) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function (event) {
+      resolve(event.target.result);
+    };
+    reader.onerror = function () {
+      reject(reader.error);
+    };
+    reader.readAsText(file);
+  });
+}
+// Resolves with the JSON of the response; rejects with {jqXHR, textStatus, errorThrown}
+function ajaxGetJSON(url) {
+  return new Promise(function (resolve, reject) {
+    $.ajax({
+      url: url,
+      type: "GET",
+      contentType: "application/json",
+      data: "",
+      success: resolve,
+      error: function (jqXHR, textStatus, errorThrown) {
+        reject({ jqXHR: jqXHR, textStatus: textStatus, errorThrown: errorThrown });
+      },
+    });
+  });
+}
+function getJSONPromise(url) {
+  return new Promise(function (resolve, reject) {
+    $.getJSON(url).done(resolve).fail(reject);
+  });
+}
+
+function eventsFromText(text) {
   if (logging.io) {
-    console.log(event.target.result);
+    console.log(text);
   }
-  var obj = JSON.parse(event.target.result);
+  var obj = JSON.parse(text);
   if (logging.io) {
     console.log(obj);
   }
 
   setTracks(obj);
 }
+function onReaderLoad(event) {
+  eventsFromText(event.target.result);
+}
 function loadEventsFromFile0(fileToRead) {
   console.log("loadFromFile0: importing from JSON...");
 
-  $.get(fileToRead, function (data) {
+  return new Promise(function (resolve, reject) {
+    $.get(fileToRead, resolve).fail(reject);
+  }).then(function (data) {
     console.log("JSON loaded: ", data);
     var obj = JSON.parse(data);
     setTracks(obj);
@@ -359,9 +400,7 @@ function loadEventsFromFile(event) {
   }
   console.log("loadEventsFromFile: importing from JSON file:", fileToRead);
 
-  var reader = new FileReader();
-  reader.onload = onReaderLoad;
-  reader.readAsText(fileToRead);
+  return readFileAsText(fileToRead).then(eventsFromText);
 }
 
 function eraseTags() {
@@ -402,14 +441,17 @@ function setTags(obj, div) {
   videoControl.onFrameChanged();
   return 1;
 }
-function onTagsReaderLoad(event) {
-  //console.log(event.target.result);
-  var obj = JSON.parse(event.target.result);
+function tagsFromText(text) {
+  var obj = JSON.parse(text);
   //console.log(obj) // Caution: heavy
 
   setTags(obj);
 
   console.log("loadTagsFromFile: importing from JSON file. DONE");
+}
+function onTagsReaderLoad(event) {
+  //console.log(event.target.result);
+  tagsFromText(event.target.result);
 }
 
 function loadTagsFromFile(event) {
@@ -424,9 +466,7 @@ function loadTagsFromFile(event) {
   }
   console.log("loadTagsFromFile: importing from JSON file:", fileToRead);
 
-  var reader = new FileReader();
-  reader.onload = onTagsReaderLoad;
-  reader.readAsText(fileToRead);
+  return readFileAsText(fileToRead).then(tagsFromText);
 }
 
 function saveTagsToFile(version) {
@@ -1087,12 +1127,10 @@ function tracksListFromServer() {
 
 async function loadEventsFromServerByID(video_data_id) {
     //Sending GET request to flask API to retrieve json containing annotation data
-    $.ajax({
-      url: url_for("api/v1/annotation/" + video_data_id), // url to tag/event file
-      type: "GET", //passing data as get method
-      contentType: "application/json", // returning data as json
-      data: "",
-      success: function (json) {
+    // The Promise of the request is deliberately not returned: onhashchange (labelBee.js) awaits this
+    // function and must keep seeing it resolve at once, because the handlers below always throw (DEBT-722)
+    ajaxGetJSON(url_for("api/v1/annotation/" + video_data_id)).then(
+      function (json) {
         //alert("success");  //response from the server given as alert message
 
         console.log("loadEvents: Loaded events data:", json["data"]["data"]);
@@ -1114,23 +1152,19 @@ async function loadEventsFromServerByID(video_data_id) {
           throw new Error("loadEventsFromServerByID: invalid event data for video_data id="+video_data_id)
         }
       },
-      error:  function () {
+      function () {
         div.find(".modal-message h4").css("color","red");
         div.find(".modal-message h4").html("ERROR in loading tag or event with ID " + tag_event_ID);
         throw new Error("loadEventsFromServerByID: could not load video_data id="+video_data_id)
-        },
-    });
+      }
+    );
 }
 
 function eventsFromServer(url) {
   console.log("eventsFromServer: importing Tracks from URL '" + url + "'...");
 
-  $.ajax({
-    url: url, //server url
-    type: "GET", 
-    contentType: "application/json", 
-    data: "",
-    success: function (json) {
+  return ajaxGetJSON(url).then(
+    function (json) {
       //alert("success");  
       console.log("eventsFromServer: SUCCESS\njson=", json);
       let obj = json; //JSON.parse(json);
@@ -1143,8 +1177,10 @@ function eventsFromServer(url) {
 
       $("#loadTracksFromServerDialog").modal("hide");
     },
-    error: showAjaxError("ERROR in eventsFromServer"),
-  });
+    function (err) {
+      showAjaxError("ERROR in eventsFromServer")(err.jqXHR, err.textStatus, err.errorThrown);
+    }
+  );
 }
 
 function loadTracksCSVFromDB(limit = 100) {
@@ -1170,7 +1206,7 @@ function loadTracksCSVFromDB(limit = 100) {
 function loadTracksCSVFromServer(url) {
   console.log("loadTracksDataFrameFromServer: importing Tracks in CSV format from URL '" + url + "'...");
 
-  d3.csv(url)
+  return d3.csv(url)
   .then(function (data) {
       console.log("loadTracksDataFrameFromServer: SUCCESS\ncsv=", data);
 
@@ -1196,7 +1232,7 @@ function loadTracksCSVFromServer(url) {
 function loadTagsCSVFromServer(url) {
   console.log("loadTagsCSVFromServer: importing Tags+Tracks in CSV format from URL '" + url + "'...");
 
-  d3.csv(url)
+  return d3.csv(url)
   .then(function (data) {
       console.log("loadTagsCSVFromServer: SUCCESS\ncsv=", data);
 
@@ -1228,7 +1264,7 @@ function loadTagsCSVFromServer(url) {
 function loadTrackTaggedCSVFromServer(url) {
   console.log("loadTrackWithTagsCSVFromServer: importing Tags+Tracks in CSV format from URL '" + url + "'...");
 
-  d3.csv(url)
+  return d3.csv(url)
   .then(function (data) {
       console.log("loadTrackWithTagsCSVFromServer: SUCCESS\ncsv=", data);
 
@@ -1257,7 +1293,7 @@ async function clickLoadTracksCSVFromServer() {
     console.log("clickLoadTracksCSVFromServer: no URL entered");
     return;
   }
-  loadTracksCSVFromServer(url);
+  return loadTracksCSVFromServer(url);
 }
 async function clickLoadTracksTaggedCSVFromServer() {
   console.log("clickLoadTracksTaggedCSVFromServer: loading video and .tracks_tagged.csv from URL");
@@ -1272,7 +1308,7 @@ async function clickLoadTracksTaggedCSVFromServer() {
   
   const tracksURL = url_for("/data")+`/datasets/gurabo4/tracks/${col_videoname}.tracks_tagged.csv`
   console.log(`Trying to load tracks_tagged from ${tracksURL}`)
-  loadTrackTaggedCSVFromServer(tracksURL)
+  return loadTrackTaggedCSVFromServer(tracksURL)
 }
 
 
@@ -1397,16 +1433,12 @@ function tagsFromServer(tagFileID, div) {
   }
   statusWidget.statusRequest("tagsLoad", "");
 
-  $.getJSON(url_for("rest/v2/annotation/" + tagFileID), function () {
-    console.log('tagsFromServer: loaded tag file with ID "' + tagFileID + '"');
-    statusWidget.statusUpdate("tagsLoad", true, "");
-  })
-    .fail(function () {
-      console.log('tagsFromServer: ERROR loading tag file with ID "' + tagFileID + '"');
-      statusWidget.statusUpdate("tagsLoad", false, "");
-      return setTags([], div);
-    })
-    .done(function (data) {
+  // The Promise is deliberately not returned: FromServerDialog.loadEvents reads the return value as
+  // "success", and it has always been undefined (DEBT-719)
+  getJSONPromise(url_for("rest/v2/annotation/" + tagFileID)).then(
+    function (data) {
+      console.log('tagsFromServer: loaded tag file with ID "' + tagFileID + '"');
+      statusWidget.statusUpdate("tagsLoad", true, "");
       tags = data["data"]["data"];
       console.log("Loaded tag data:", tags)
       if (tags == null){
@@ -1414,7 +1446,13 @@ function tagsFromServer(tagFileID, div) {
         return
       }
       return setTags(tags, div);
-    });
+    },
+    function () {
+      console.log('tagsFromServer: ERROR loading tag file with ID "' + tagFileID + '"');
+      statusWidget.statusUpdate("tagsLoad", false, "");
+      return setTags([], div);
+    }
+  );
 }
 
 // function tagsFromServer(videoID){

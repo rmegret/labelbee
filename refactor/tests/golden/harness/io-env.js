@@ -22,6 +22,8 @@ const IO_FUNCTIONS = [
   'eventsFromServer', 'loadTracksCSVFromDB', 'loadTracksCSVFromServer', 'loadTagsCSVFromServer',
   'loadTrackTaggedCSVFromServer', 'clickLoadTracksCSVFromServer', 'clickLoadTracksTaggedCSVFromServer',
   'tagsFromServer', 'mainAlert', 'showAjaxError', 'updateEventsNotes',
+  // loader helpers (slice 3 step 4)
+  'readFileAsText', 'ajaxGetJSON', 'getJSONPromise', 'eventsFromText', 'tagsFromText',
 ];
 const CODEC_FUNCTIONS = [
   'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'tracks_csv_to_json', 'tags_csv_to_json',
@@ -59,12 +61,15 @@ function makeJQuery(rec, net, ctx) {
   };
   $.get = (url, cb) => {
     rec.fx.push(['get', url]);
-    if (net.get && net.get.ok !== undefined) guard(cb, net.get.ok);
+    const fail = [];
+    const jq = { fail: (f) => { fail.push(f); return jq; } };
+    if (net.get && net.get.ok !== undefined) { if (cb) guard(cb, net.get.ok); } else Promise.resolve().then(() => fail.forEach((f) => guard(f)));
+    return jq;
   };
   // jQuery runs the callbacks later: success, then .done / .fail in registration order.
   $.getJSON = (url, cb) => {
     rec.fx.push(['getJSON', url]);
-    const done = [cb]; const fail = [];
+    const done = cb ? [cb] : []; const fail = [];
     const jq = { fail: (f) => { fail.push(f); return jq; }, done: (f) => { done.push(f); return jq; } };
     Promise.resolve().then(() => {
       if (net.getJSON && net.getJSON.ok !== undefined) done.forEach((f) => guard(f, net.getJSON.ok));
