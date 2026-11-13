@@ -55,6 +55,8 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
   they are today: DEBT-710, 712 (double refresh), 713, 719, 722, 733, 734.
 - `golden/harness/io-env.js`: loads the REAL functions of `AnnotationIO.js` into a `vm` (the file stays the
   implementation under test during the whole slice, so one golden checks every step) with jQuery, d3,
-  `FileReader`, the views and `Date` stubbed. `readState`/`writeState` read the page globals; step 2 of the slice
-  replaces them by the store bridge. `golden/harness/run-io-case.js` runs a case and waits for the promises.
+  `FileReader`, the views and `Date` stubbed. The page globals (`Tracks`, `Tags`, ...) are the accessors of
+  `AnnotationStoreBridge.js` over a fresh store per case; `readState`/`writeState` use them. `golden/harness/run-io-case.js` runs a case and waits for the promises.
 - Run `generate.js` only before a step that changes behavior on purpose, and review the golden diff.
+- `golden/slice3/store.test.js`: contract tests (assertions, no golden) of `AnnotationStore.js` and the bridge: defaults,
+  same-object identity, in-place edits seen on both sides, assignments reaching the store, bare-name access from sloppy code in a `vm`.

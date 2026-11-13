@@ -26,9 +26,12 @@ No function is deleted in this slice: dead or deprecated loaders (`loadEventsFro
 
 **Store** (`annotation/AnnotationStore.js`, pure, no `window`, no events, testable in Node):
 `getTracks()`, `getTracksInfo()`, `getTags()`, `getTagsInfo()`, `getTagsHaveDM()`, `replaceTracks(data, info)`,
-`replaceTags(data, info)` (names from the SEAM-701 contract). `replaceTags` computes `tagsHaveDM` with today's
-rule (`"dm" in` the first tag of the first frame, `setTags` lines 443-449, DEBT-715 kept as is); the `.requireDM`
-DOM toggle stays in `setTags` and reads the store. Initial values: `tracks = []`, `tags = []`, infos `undefined`,
+`replaceTags(data, info)` (names from the SEAM-701 contract), `setTagsHaveDM(v)`. Step 2: `tagsHaveDM` is a plain
+flag the store holds; `replaceTags` does not touch it, because computing it inside the legacy `Tags = obj`
+assignment would run the rule (which throws on a malformed file, DEBT-715/733) before `tagsAddFrames` and
+`getTTags`, a visible order change pinned by the golden. Step 3 moves today's rule (`"dm" in` the first tag of
+the first frame, `setTags` lines 443-449, DEBT-715 kept as is) into the store as a method that `setTags` calls
+at the same point of its sequence; the `.requireDM` DOM toggle stays in `setTags` and reads the store. Initial values: `tracks = []`, `tags = []`, infos `undefined`,
 `tagsHaveDM = false` (the global was undefined before the first `setTags`; both falsy). It returns the stored object itself, never a copy: the ~170 call sites mutate
 `Tracks[f][id]` in place and must keep seeing the same object.
 
@@ -84,7 +87,8 @@ codec, the rest stays as apply. Not touched: `FromServerDialog`, `eventsToServer
    `setTracks` false; `setTags` v1 ok / bad key / v2 / wrong type / without `data` / `null`.
 2. **Store + bridge**: `AnnotationStore.js`, `AnnotationStoreBridge.js`, script tag in `labelbee_page.html`,
    removal of `var Tracks`/`var Tags` from `Model.js`. Node tests: store contract, accessor identity (same object
-   in, same object out; `Tracks = x` reaches the store). Goldens pass unchanged.
+   in, same object out; `Tracks = x` reaches the store), bare-name access from sloppy code in a `vm`. The step 1
+   goldens pass unchanged, the harness now running the legacy code through the bridge. [done]
 3. **`setTracks`, `setTags`, `setEventsProp` write through `AnnotationStore`**, `decodeTags` moved to the codec.
    Goldens pass.
 4. **Loaders as promise pipelines** in `AnnotationIO.js`, legacy names kept. Goldens pass (same call order).

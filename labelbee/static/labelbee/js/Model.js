@@ -1,7 +1,7 @@
 /*jshint esversion: 6, asi: true */
 
-var Tracks = [];
-var Tags = [];
+// Tracks, Tags (and TracksInfo, TagsInfo, tagsHaveDM) are owned by AnnotationStore; the globals
+// are accessors installed by annotation/AnnotationStoreBridge.js (refactor ADR 0005).
 
 // ######################################################################
 // MODEL: Tracks data structure

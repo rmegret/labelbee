@@ -1,7 +1,8 @@
 // Environment for the slice 3 golden tests (ADR 0005): the REAL setTracks/setTags/loaders of
 // AnnotationIO.js evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
 // The AnnotationIO.js functions stay in that file during the whole slice, so the same golden checks
-// the code before and after each step; only readState/writeState change when the store arrives (step 2).
+// the code before and after each step. Since step 2 the page globals Tracks, TracksInfo, Tags, TagsInfo and
+// tagsHaveDM are the accessors of AnnotationStoreBridge.js over a fresh AnnotationStore per case.
 // Every effect on the outside is recorded in order in `rec.fx`.
 'use strict';
 const fs = require('fs');
@@ -95,6 +96,8 @@ function makeD3(rec, net) {
 async function loadIoEnv() {
   const codec = await import(urlOf('annotation/AnnotationCodec.js'));
   const { setNotifier, logging } = await import(urlOf('core/Notifier.js'));
+  const { createAnnotationStore } = await import(urlOf('annotation/AnnotationStore.js'));
+  const { installLegacyGlobals } = await import(urlOf('annotation/AnnotationStoreBridge.js'));
   const src = fs.readFileSync(path.join(JS_DIR, 'AnnotationIO.js'), 'utf8');
   const code = IO_FUNCTIONS.map((n) => extractTopLevel(src, n)).join('\n');
 
@@ -151,6 +154,7 @@ async function loadIoEnv() {
     };
     CODEC_FUNCTIONS.forEach((n) => { sandbox[n] = codec[n]; });
     const ctx = vm.createContext(sandbox);
+    installLegacyGlobals(ctx, createAnnotationStore());
     ctx.$ = makeJQuery(rec, net, ctx);
     vm.runInContext(code, ctx, { filename: 'AnnotationIO.js(extracted)' });
     writeState(ctx, c.init || {});
@@ -158,9 +162,10 @@ async function loadIoEnv() {
   };
 }
 
-// State access: plain globals of the context (step 2 replaces these two by the store bridge).
+// State access: the globals of the context. What a case does not give is undefined (as before the store
+// existed), not the store's defaults; `ttags` is not store data and stays a plain global.
 function writeState(ctx, init) {
-  for (const k of STATE_NAMES) if (k in init) ctx[k] = init[k];
+  for (const k of STATE_NAMES) if (k in init || k !== 'ttags') ctx[k] = init[k];
 }
 function readState(ctx) {
   const out = {};
