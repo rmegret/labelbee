@@ -4,7 +4,7 @@ Automated version of [../CHECKLIST.md](../CHECKLIST.md): the real page in headle
 the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design/0006-browser-tests.md).
 
     conda activate labelbeedev                  # see ../devenv/README.md
-    pytest refactor/tests/browser               # ~1 minute, 55 tests, all passing
+    pytest refactor/tests/browser               # ~3 minutes, 63 tests, all passing
     pytest refactor/tests/browser -k c9 -x      # one item, stop at the first failure
     pytest refactor/tests/browser --headed      # watch the browser (pytest-playwright option)
 
@@ -17,6 +17,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_c_server.py` | C8-C13: "Load Events from DB", `#video_data=` hash, tracks CSV, bad URL, gurabo4 |
 | `test_d_saving.py` | D1-D6: save v2 and reload, history, CSV and BBox export, tags, save to the server and its lineage |
 | `test_e_console.py` | E1: the console watcher itself. Every test also runs it at teardown |
+| `test_f_writers.py` | The writers of the stored events that no other test reaches (span, the zoom deletes, clean obsolete events), for the dirty-write detector: [ADR 0007](../../design/0007-slice-events-api.md) step 0 |
 | `test_alerts.py` | The main alert modal: alerts in quick succession (F3) |
 
 ## How it works
@@ -41,6 +42,12 @@ the suite passes with it. Purpose: the exact list of writers that the `Events` A
 [ADR 0007](../../design/0007-slice-events-api.md) must replace, and later a guard that nothing writes around it.
 A site never shown is a site no test exercises: add a test, run it again.
 
+    pytest refactor/tests/browser --dirty-writes-strict
+Strict mode: each test fails when a write to the stored events comes from a site (`file`, `function`, `operation`, `depth`) that is not in
+[`dirty_writes_allowed.json`](dirty_writes_allowed.json); the summary lists the entries not seen in the run (on a full run, those are to delete).
+The list starts at the 21 current writers and loses entries as the steps of ADR 0007 move them behind `Events`; the end state is empty.
+Not reachable from the page, so not in the list: the `span` creation in `OverlayControl.js` `hardRefresh` (`:1537`). A write from there would fail the strict run.
+
 `ui.settle()` (used by `click_box` and `shift_click_background`) waits for the `hardRefresh` that the page schedules 500 ms after a
 video loads (`VideoControl.js` `onVideoLoaded2`); it rebuilds the fabric objects and made the drag test fail about 1 run in 8.
 
@@ -55,6 +62,7 @@ Not caused by the refactor unless noted. Recorded in the intent spec: F1 in `DEB
 | F4 | **By design, not a defect** (maintainer, 2026-11-13). `tagMode` is hard-coded to `'Tracks'`: the separate tag file is marked for obsolescence and the current pipeline adds the tag information to the Tracks (`obs.tag`) before it reaches LabelBee. A legacy tags file still works in that mode: `augmentTrackWithTag` copies each of its tags onto the observation with the same id and frame (the chronogram counts it); a tag whose id matches no observation attaches to nothing. Only the standalone display of the Tags structure (`tagMode == 'Tags'`) is unreachable. **Correction (2026-11-13):** the first version of this row said a tags file "shows nothing"; that came from a sample whose tag ids matched no observation | `OverlayControl.js:5`, `ChronoControl.js:1015` | `test_c13_...` (embedded tag), `test_a10_a_tags_file_attaches...`, `test_a10_a_tag_with_no_matching...`, `test_a10_the_standalone_tags_display...` |
 | F5 | The backend tests cannot be collected: `tests/conftest.py` imports `labelbee.init_app`, which no longer exists, and `pytest-flask` (the `client` fixture) is not in `requirements.txt` | `tests/conftest.py:10` | not covered here (PLAN Phase 2) **Deferred** (maintainer 2026-11-13): left as is, to be replaced by tests under `refactor/tests/` when the refactor stabilizes |
 | F6 | Playwright's Chromium cannot decode H.264 (`tests/webapp/make_sample_video.sh` encodes H.264); the tests use VP9 inside `.mp4`, which the page accepts | `conftest.py` | all |
+| F7 | An observation with an embedded `tag` that is not in the `Tags` structure makes the tag-track overlay throw (`Cannot read properties of undefined (reading 'c')`) at every redraw. Found while testing `cleanObsoleteEvents` with tags in an events file; the test declares it with `ui.allow`. Not fixed (outside slice 4) | `labelbee/static/labelbee/js/OverlayControl.js:2972` `plotTagsTracks` | `test_f6_...` |
 
 Undo only knows deletions (`undoPush('delete')` is the only caller): checklist item A7 was reworded.
 

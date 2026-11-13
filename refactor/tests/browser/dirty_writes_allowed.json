@@ -1,0 +1,26 @@
+{
+ "_comment": "Strict allow-list of the sites that may write to the stored events (refactor/design/0007-slice-events-api.md, step 0). `pytest refactor/tests/browser --dirty-writes-strict` fails a test whose write comes from a site not listed here. Matched on file, function, operation (set, delete, define, replace) and depth (0 frames, 1 one frame, 2 one observation, 3+ nested); the line and the field are not part of the key. Entries are removed as the steps of slice 4 move each writer behind Events; the end state is empty (annotation/Events.js writes to a private structure). `note` is for the reader only.",
+ "allowed": [
+  {"file": "AnnotationIO.js", "function": "setTracks", "operation": "replace", "depth": 0, "note": "replace everything (load)"},
+  {"file": "ChronoControl.js", "function": "augmentTrackWithTag", "operation": "set", "depth": 2, "note": "tag: the legacy tag file attached to an observation"},
+  {"file": "ChronoControl.js", "function": "cleanObsoleteEvents", "operation": "delete", "depth": 1, "note": "delete (3 sites); leaves {} for an emptied frame"},
+  {"file": "ChronoControl.js", "function": "updateChronogramData", "operation": "set", "depth": 2, "note": "cx, cy rewritten at every chronogram refresh (DEBT-739)"},
+  {"file": "Model.js", "function": "changeObservationID", "operation": "delete", "depth": 1, "note": "rename and swap: old key removed"},
+  {"file": "Model.js", "function": "changeObservationID", "operation": "set", "depth": 1, "note": "rename and swap: new key"},
+  {"file": "Model.js", "function": "changeObservationID", "operation": "set", "depth": 2, "note": "rename and swap: ID mirrors the key"},
+  {"file": "Model.js", "function": "copyObs", "operation": "set", "depth": 2, "note": "commit (storeObs): 17-field copy"},
+  {"file": "Model.js", "function": "copyObs", "operation": "set", "depth": 3, "note": "commit (storeObs): bool_acts elements"},
+  {"file": "Model.js", "function": "getObsHandle", "operation": "set", "depth": 1, "note": "create an observation in a frame"},
+  {"file": "OverlayControl.js", "function": "HTMLButtonElement.doSetSpanEnd", "operation": "set", "depth": 3, "note": "span: pick-frame Set End (closure inside hardRefresh)"},
+  {"file": "OverlayControl.js", "function": "HTMLButtonElement.doSetSpanStart", "operation": "set", "depth": 3, "note": "span: pick-frame Set Start (closure inside hardRefresh)"},
+  {"file": "SelectionControl.js", "function": "deleteEvent", "operation": "delete", "depth": 1, "note": "delete the selected observation"},
+  {"file": "SelectionControl.js", "function": "modifyCurrentObsSpan", "operation": "set", "depth": 2, "note": "span created from the chronogram interval"},
+  {"file": "SelectionControl.js", "function": "modifyCurrentObsSpan", "operation": "set", "depth": 3, "note": "span f1/f2 extended or restricted"},
+  {"file": "ZoomView.js", "function": "ZoomOverlay.bakeTagFix", "operation": "set", "depth": 2, "note": "fix created on a falsealarm observation"},
+  {"file": "ZoomView.js", "function": "ZoomOverlay.deleteFalsealarmEvents", "operation": "delete", "depth": 0, "note": "prune the emptied frame"},
+  {"file": "ZoomView.js", "function": "ZoomOverlay.deleteFalsealarmEvents", "operation": "delete", "depth": 1, "note": "delete"},
+  {"file": "ZoomView.js", "function": "ZoomOverlay.deleteWrongIdEvents", "operation": "delete", "depth": 0, "note": "prune the emptied frame"},
+  {"file": "ZoomView.js", "function": "ZoomOverlay.deleteWrongIdEvents", "operation": "delete", "depth": 1, "note": "delete"},
+  {"file": "ZoomView.js", "function": "getCoveredTags", "operation": "set", "depth": 2, "note": "span created (chronogram interval, or the observation's own frame)"}
+ ]
+}

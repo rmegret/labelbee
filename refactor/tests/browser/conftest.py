@@ -26,6 +26,13 @@ REPO = Path(__file__).resolve().parents[3]
 SAMPLE_SRC = REPO / "tests" / "webapp" / "data" / "sample"
 VIDEO_FPS, VIDEO_SECONDS = 20, 2
 DIRTY_WRITES_JS = Path(__file__).with_name("dirty_writes.js")
+DIRTY_WRITES_ALLOWED = Path(__file__).with_name("dirty_writes_allowed.json")
+
+
+def _allowed_writers():
+    """The strict allow-list: {(file, function, operation, depth)}; see dirty_writes_allowed.json."""
+    entries = json.loads(DIRTY_WRITES_ALLOWED.read_text())["allowed"]
+    return {(e["file"], e["function"], e["operation"], e["depth"]) for e in entries}
 
 
 def _free_port():
@@ -115,7 +122,8 @@ def ui(page, server, saved_dir, tmp_path, request):
     At teardown every test checks the console (checklist item E1): an error the test provokes on purpose must be
     declared with `ui.allow(regex)`. Not called `app`: pytest-flask treats a fixture of that name as a Flask app.
     With --dirty-writes the dirty-write detector (dirty_writes.js) is injected and its findings are collected."""
-    detector = request.config.getoption("--dirty-writes")
+    strict = request.config.getoption("--dirty-writes-strict")
+    detector = request.config.getoption("--dirty-writes") or strict
     if detector:
         page.add_init_script(path=str(DIRTY_WRITES_JS))
     a = App(page, server, tmp_path)
@@ -130,6 +138,13 @@ def ui(page, server, saved_dir, tmp_path, request):
             merged = all_writes.setdefault(key, {**e, "count": 0, "tests": set()})
             merged["count"] += e["count"]
             merged["tests"].add(request.node.name)
+            request.config._dirty_seen.add((e["file"], e["fn"], e["op"], e["depth"]))
+        if strict:
+            allowed = _allowed_writers()
+            unlisted = sorted({(e["file"], e["line"], e["fn"], e["op"], e["depth"]) for e in found.values()
+                               if (e["file"], e["fn"], e["op"], e["depth"]) not in allowed})
+            assert not unlisted, ("write(s) to the stored events from a site that is not in dirty_writes_allowed.json:\n  "
+                                  + "\n  ".join(f"{f}:{l} {fn}  {op}@{d}" for f, l, fn, op, d in unlisted))
     a.assert_clean()
 
 
@@ -137,10 +152,14 @@ def ui(page, server, saved_dir, tmp_path, request):
 def pytest_addoption(parser):
     parser.addoption("--dirty-writes", action="store", default=None, metavar="REPORT.json",
                      help="inject dirty_writes.js in every page and write the writers of the stored events to REPORT.json")
+    parser.addoption("--dirty-writes-strict", action="store_true", default=False,
+                     help="inject dirty_writes.js and fail each test whose write to the stored events comes from a site "
+                          "that is not in dirty_writes_allowed.json")
 
 
 def pytest_configure(config):
     config._dirty_writes = {}
+    config._dirty_seen = set()      # (file, function, operation, depth) seen in this run
 
 
 def _dirty_rows(config):
@@ -158,6 +177,13 @@ def pytest_sessionfinish(session):
 
 def pytest_terminal_summary(terminalreporter):
     cfg = terminalreporter.config
+    if cfg.getoption("--dirty-writes-strict"):
+        unused = sorted(_allowed_writers() - cfg._dirty_seen)
+        terminalreporter.section("dirty-write allow-list")
+        terminalreporter.write_line(f"{len(_allowed_writers())} allowed writers, {len(unused)} not seen in this run"
+                                    f"{' (a partial run proves nothing; on the full run, delete them)' if unused else ''}")
+        for f, fn, op, d in unused:
+            terminalreporter.write_line(f"  not seen: {f} {fn} {op}@{d}")
     if not cfg.getoption("--dirty-writes"):
         return
     rows = _dirty_rows(cfg)
