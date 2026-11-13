@@ -117,3 +117,22 @@ test('the bridge module does nothing without a window', async () => {
   assert.equal(typeof globalThis.window, 'undefined');
   await load('annotation/AnnotationStoreBridge.js'); // import must not throw
 });
+
+test('updateTagsHaveDM: the rule moved from setTags (first tag of the first frame, DEBT-715)', async () => {
+  const { store } = await fresh();
+  const run = (tags) => { store.replaceTags(tags, undefined); store.updateTagsHaveDM(); return store.getTagsHaveDM(); };
+  assert.equal(run({ 0: { tags: [{ id: 1, dm: 60 }] } }), true);
+  assert.equal(run({ 0: { tags: [{ id: 1 }] } }), false);
+  assert.equal(run({ 0: { tags: [] }, 1: { tags: [{ dm: 1 }] } }), false); // only the first frame is looked at
+  assert.equal(run({}), false);
+  assert.equal(run([]), false);
+  assert.equal(run(undefined), false);  // v2 file without data (DEBT-733): empty by the jQuery test
+});
+
+test('updateTagsHaveDM resets to false before a malformed Tags throws', async () => {
+  const { store } = await fresh();
+  store.setTagsHaveDM(true);
+  store.replaceTags({ 0: {} }, undefined);          // first frame without `tags`
+  assert.throws(() => store.updateTagsHaveDM(), TypeError);
+  assert.equal(store.getTagsHaveDM(), false);
+});

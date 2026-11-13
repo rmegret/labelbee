@@ -24,7 +24,7 @@ const IO_FUNCTIONS = [
   'tagsFromServer', 'mainAlert', 'showAjaxError', 'updateEventsNotes',
 ];
 const CODEC_FUNCTIONS = [
-  'sanitizeEvents', 'tagsAddFrames', 'db_to_json', 'tracks_csv_to_json', 'tags_csv_to_json',
+  'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'tracks_csv_to_json', 'tags_csv_to_json',
   'tags_csv_to_tagjson', 'tracks_tagged_csv_to_json',
 ];
 const STATE_NAMES = ['Tracks', 'TracksInfo', 'Tags', 'TagsInfo', 'tagsHaveDM', 'ttags'];

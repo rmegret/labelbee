@@ -10,7 +10,7 @@ import * as codec from './AnnotationCodec.js';
 codec.configure({ hasLabel: (obs, label) => hasLabel(obs, label) });
 
 for (const name of [
-  'sanitizeEvents', 'tagsAddFrames', 'db_to_json', 'flatjson_to_json', 'resultToObjects',
+  'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'flatjson_to_json', 'resultToObjects',
   'tracks_csv_to_json', 'tags_csv_to_json', 'tags_csv_to_tagjson', 'tracks_tagged_csv_to_json',
   'tracksToCSV', 'tracksToBBoxes', 'tracksToBBoxes2',
 ]) {

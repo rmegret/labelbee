@@ -307,8 +307,7 @@ function setTracks(obj, skipRefresh) {
     return false;
   }
 
-  Tracks = evts.data;
-  TracksInfo = evts.info;
+  AnnotationStore.replaceTracks(evts.data, evts.info);
 
   updateEventsNotes();
 
@@ -319,11 +318,13 @@ function setTracks(obj, skipRefresh) {
   return true;
 }
 function setEventsProp(option, value) {
-  if (!TracksInfo) {
-    TracksInfo = {};
+  var info = AnnotationStore.getTracksInfo();
+  if (!info) {
+    info = {};
+    AnnotationStore.replaceTracks(AnnotationStore.getTracks(), info);
     console.log("setEventsProp: ERROR TracksInfo non existing. Created it");
   }
-  TracksInfo[option] = value;
+  info[option] = value;
 }
 
 function onReaderLoad(event) {
@@ -376,80 +377,21 @@ function eraseTags() {
 function setTags(obj, div) {
   console.log("setTags: changing Tags data structure and refreshing...");
 
-  var info;
-  try{
-    if ("info" in obj) {
-      // New tag format v2 with metainfo
-  
-      // obj['info']
-      info = obj["info"];
-  
-      if (info["type"] != "tags-multiframe") {
-        console.log(
-          'setTags: ABORTED, unsupported file format. info["type"]=' +
-            info["type"]
-        );
-        return 0;
-      }
-  
-      // obj['data'].tags[tag_id_in_frame]
-      obj = obj["data"];
-    }
-    else {
-      // Old format v1: Tags JSON directly stored in the json
-      // obj is an object
-      // obj[frame].tags[tag_id_in_frame]
-  
-      console.log("setTags: Tags JSON v1, dictionary of frames");
-      if (typeof obj != "object") {
-        console.log(
-          'setTags: ABORTED, unsupported file format. typeof(obj) is "' +
-            typeof obj +
-            '", should be "object"'
-        );
-        return 0;
-      }
-      if (
-        !Object.keys(Tags).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
-        !Object.keys(Tags).every((v) => Number.isInteger(v))
-      ) {
-        console.log(
-          "setTags: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
-        );
-        return 0;
-      }
-    }
-    // Just use obj directly
+  // Decode and validate (pure, in the codec); the v1 key check still reads the previous Tags (DEBT-713)
+  var decoded = decodeTags(obj, AnnotationStore.getTags());
+  if (!decoded) return 0;
 
-    // Create dummy info header
-    info = {
-      type: "tags-multiframe",
-      source: "Converted from Tags v1",
-    };
-  }
-  catch(error){ // Case: loaded json from server does not match expected structure
-    console.error(error);
-    return 0;
-  }
+  AnnotationStore.replaceTags(decoded.data, decoded.info);
 
-  Tags = obj;
-  TagsInfo = info;
-
-  tagsAddFrames(Tags);
+  tagsAddFrames(AnnotationStore.getTags());
 
   ttags = getTTags();
 
   // Check if Tags data structure support the DM field
-  tagsHaveDM = false;
-  if (!jQuery.isEmptyObject(Tags)) {
-    let tags0 = Tags[Object.keys(Tags)[0]].tags;
-    if (tags0.length > 0) {
-      tagsHaveDM = "dm" in tags0[0];
-    }
-  }
+  AnnotationStore.updateTagsHaveDM();
   // Disable DM field if not there
-  $(".requireDM").prop("disabled", !tagsHaveDM);
-  $(".requireDM").toggleClass("disabled", !tagsHaveDM);
+  $(".requireDM").prop("disabled", !AnnotationStore.getTagsHaveDM());
+  $(".requireDM").toggleClass("disabled", !AnnotationStore.getTagsHaveDM());
 
   console.log(
     "setTags: done. Sending signals to refresh chronogram and video..."

@@ -89,8 +89,9 @@ codec, the rest stays as apply. Not touched: `FromServerDialog`, `eventsToServer
    removal of `var Tracks`/`var Tags` from `Model.js`. Node tests: store contract, accessor identity (same object
    in, same object out; `Tracks = x` reaches the store), bare-name access from sloppy code in a `vm`. The step 1
    goldens pass unchanged, the harness now running the legacy code through the bridge. [done]
-3. **`setTracks`, `setTags`, `setEventsProp` write through `AnnotationStore`**, `decodeTags` moved to the codec.
-   Goldens pass.
+3. **`setTracks`, `setTags`, `setEventsProp` write through `AnnotationStore`**, `decodeTags` moved to the codec
+   (with a `previousTags` parameter for the DEBT-713 check), the DM rule into `updateTagsHaveDM()` of the store.
+   Goldens pass unchanged. [done]
 4. **Loaders as promise pipelines** in `AnnotationIO.js`, legacy names kept. Goldens pass (same call order).
 5. **Bug fixes, each in its own commit, after the moves, golden diff shown for approval** ([Q19](../QUESTIONS.md#q19): DEBT-713, 733, 710-rest, 722).
 6. **Record**: PLAN (bridge worklist), SEAM-701/702, BEH and DEBT entries, regenerate `intent/docs/`.

@@ -7,6 +7,12 @@
  * Legacy code reaches it through the globals defined by AnnotationStoreBridge.js.
  */
 
+// Same test as jQuery.isEmptyObject (no enumerable property, inherited ones included; true for undefined).
+function isEmptyObject(obj) {
+  for (const key in obj) return false; // eslint-disable-line no-unused-vars
+  return true;
+}
+
 export function createAnnotationStore() {
   let tracks = [];
   let tracksInfo;
@@ -33,6 +39,18 @@ export function createAnnotationStore() {
     },
     setTagsHaveDM(value) {
       tagsHaveDM = value;
+    },
+    /** Decides whether the loaded Tags carry the DM field, looking at the first tag of the first frame
+     * (rule moved from setTags, DEBT-715 kept). Like the old code it resets the flag first, so a
+     * malformed Tags that throws below leaves it false. */
+    updateTagsHaveDM() {
+      tagsHaveDM = false;
+      if (!isEmptyObject(tags)) {
+        const tags0 = tags[Object.keys(tags)[0]].tags;
+        if (tags0.length > 0) {
+          tagsHaveDM = "dm" in tags0[0];
+        }
+      }
     },
   };
 }

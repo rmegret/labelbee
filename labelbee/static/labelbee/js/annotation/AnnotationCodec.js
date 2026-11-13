@@ -182,6 +182,71 @@ export function tagsAddFrames(Tags) {
   }
 }
 
+/* Decode a Tags JSON (v1: dictionary of frames, v2: {info, data}) into {data, info}.
+ * Returns null when the format is rejected (setTags returns 0 then).
+ * Moved from setTags (refactor slice 3, ADR 0005). `previousTags` stands for the global `Tags` that the
+ * old v1 key check read instead of `obj` (DEBT-713, kept until its fix step); `info` is always the
+ * dummy one, the v2 info is dropped (DEBT-715); a v2 file without `data` gives `data: undefined` (DEBT-733). */
+export function decodeTags(obj, previousTags) {
+  var info;
+  try{
+    if ("info" in obj) {
+      // New tag format v2 with metainfo
+
+      // obj['info']
+      info = obj["info"];
+
+      if (info["type"] != "tags-multiframe") {
+        log(
+          'setTags: ABORTED, unsupported file format. info["type"]=' +
+            info["type"]
+        );
+        return null;
+      }
+
+      // obj['data'].tags[tag_id_in_frame]
+      obj = obj["data"];
+    }
+    else {
+      // Old format v1: Tags JSON directly stored in the json
+      // obj is an object
+      // obj[frame].tags[tag_id_in_frame]
+
+      log("setTags: Tags JSON v1, dictionary of frames");
+      if (typeof obj != "object") {
+        log(
+          'setTags: ABORTED, unsupported file format. typeof(obj) is "' +
+            typeof obj +
+            '", should be "object"'
+        );
+        return null;
+      }
+      if (
+        !Object.keys(previousTags).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
+        !Object.keys(previousTags).every((v) => Number.isInteger(v))
+      ) {
+        log(
+          "setTags: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
+        );
+        return null;
+      }
+    }
+    // Just use obj directly
+
+    // Create dummy info header
+    info = {
+      type: "tags-multiframe",
+      source: "Converted from Tags v1",
+    };
+  }
+  catch(error){ // Case: loaded json from server does not match expected structure
+    logError(error);
+    return null;
+  }
+
+  return { data: obj, info: info };
+}
+
 export function db_to_json(db, info, limit = 100) {
   log("db_to_json: converting CSV to JSON...");
 
