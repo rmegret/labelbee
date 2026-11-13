@@ -58,6 +58,8 @@ and is its own commit series and review. The next slice is chosen after the prev
     Also `window.decodeTags` (`annotation/AnnotationCodecBridge.js`, called by `setTags`), added to the codec bridge entries listed for slices 1 and 2.
   - Left for later: store change events and a per-observation API (SEAM-701; the double refresh of DEBT-712 goes with it), `ttags`/`flatTags`/`allTagsID` to a `Derived` module (DEBT-736), DEBT-719 (`tagsFromServer` returns `undefined` for the dialog and empties the Tags on failure, [OQ-706](QUESTIONS.md#oq-706)), DEBT-734 (a v2 events file without `data` empties the model, [OQ-714](QUESTIONS.md#oq-714)), DEBT-715 (DM rule looks at one tag; a first frame without `tags` is rejected), DEBT-718 (`FromServerDialog.loadEvents` writes into a selector that matches nothing), `success` and `tags` implicit globals (DEBT-712), the rethrow after the alert leaves an extra "Uncaught (in promise)" console line, lineage `basedOn` semantics ([OQ-707](QUESTIONS.md#oq-707), now also set by `loadEventsFromServerByID`).
 
+- [ ] **Slice 4: migrate the readers off the legacy globals** (chosen by the maintainer 2026-11-13). [ADR 0007](design/0007-slice-migrate-readers.md) proposed; [Q24](QUESTIONS.md#q24) (form of the replacement) and [Q25](QUESTIONS.md#q25) (console aliases) open. ~106 code references in 7 files; steps: (0) tests for the uncovered mutation paths + a ratchet test [ ]; (1) `AnnotationCodecBridge.js` + `AnnotationIO.js` [ ]; (2) `OverlayControl.js` [ ]; (3) `SelectionControl.js` [ ]; (4) `Model.js` [ ]; (5) `ZoomView.js` [ ]; (6) `ChronoControl.js` [ ]; (7) remove the accessors [ ]; (8) record [ ]. Starts from the `refactor` tip once the branch `plan-housekeeping-checklist` is merged.
+
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 
 | Area | Candidate slices |
@@ -80,3 +82,4 @@ budget. They can be revisited when a slice needs them.
 - [ADR 0004](design/0004-slice-annotation-save-codec.md): slice 2, annotation save/export codec (proposed)
 - [ADR 0005](design/0005-slice-annotation-loaders.md): slice 3, `AnnotationStore` and the annotation loaders (proposed)
 - [ADR 0006](design/0006-browser-tests.md): automated browser tests, Playwright for Python in `tests/browser/` (proposed)
+- [ADR 0007](design/0007-slice-migrate-readers.md): slice 4, migrate the readers off the legacy globals (proposed)
