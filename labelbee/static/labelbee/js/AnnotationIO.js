@@ -416,8 +416,8 @@ function eraseTags() {
 function setTags(obj, div) {
   console.log("setTags: changing Tags data structure and refreshing...");
 
-  // Decode and validate (pure, in the codec); the v1 key check still reads the previous Tags (DEBT-713)
-  var decoded = decodeTags(obj, AnnotationStore.getTags());
+  // Decode and validate (pure, in the codec)
+  var decoded = decodeTags(obj);
   if (!decoded) return 0;
 
   AnnotationStore.replaceTags(decoded.data, decoded.info);

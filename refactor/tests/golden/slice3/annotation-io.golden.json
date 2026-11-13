@@ -1762,8 +1762,8 @@
    ""
   ]
  },
- "setTags v1 bad key, Tags empty: not detected (DEBT-713)": {
-  "returned": 1,
+ "setTags v1 bad key is rejected whatever the previous Tags (DEBT-713)": {
+  "returned": 0,
   "state": {
    "Tracks": {
     "$": "undefined"
@@ -1771,55 +1771,24 @@
    "TracksInfo": {
     "$": "undefined"
    },
-   "Tags": {
-    "a": {
-     "tags": []
-    }
-   },
+   "Tags": {},
    "TagsInfo": {
-    "type": "tags-multiframe",
-    "source": "Converted from Tags v1"
+    "$": "undefined"
    },
-   "tagsHaveDM": false,
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
    "ttags": {
-    "stub": "ttags"
+    "$": "undefined"
    }
   },
-  "fx": [
-   [
-    "getTTags",
-    [
-     "a"
-    ]
-   ],
-   [
-    "$",
-    ".requireDM",
-    "prop",
-    "disabled",
-    true
-   ],
-   [
-    "$",
-    ".requireDM",
-    "toggleClass",
-    "disabled",
-    true
-   ],
-   [
-    "refreshChronogram"
-   ],
-   [
-    "adjustChronogramHeight"
-   ],
-   [
-    "onFrameChanged"
-   ]
-  ],
+  "fx": [],
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -1830,7 +1799,7 @@
    ""
   ]
  },
- "setTags v1 good keys, previous Tags has a bad key: aborted (DEBT-713)": {
+ "setTags v1 bad key among good ones is rejected": {
   "returned": 0,
   "state": {
    "Tracks": {
@@ -1840,8 +1809,25 @@
     "$": "undefined"
    },
    "Tags": {
-    "a": {
-     "tags": []
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
     }
    },
    "TagsInfo": {
@@ -1865,14 +1851,36 @@
   "argsAfter": [
    {
     "0": {
+     "tags": []
+    },
+    "b": {
+     "tags": []
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v1 good keys are accepted whatever the previous Tags (DEBT-713)": {
+  "returned": 1,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
      "tags": [
       {
        "id": 5,
-       "dm": 60
+       "dm": 60,
+       "frame": 0
       },
       {
        "id": 6,
-       "dm": 55
+       "dm": 55,
+       "frame": 0
       }
      ]
     },
@@ -1880,7 +1888,80 @@
      "tags": [
       {
        "id": 5,
-       "dm": 59
+       "dm": 59,
+       "frame": 3
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "getTTags",
+    [
+     "0",
+     "3"
+    ]
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    false
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    false
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60,
+       "frame": 0
+      },
+      {
+       "id": 6,
+       "dm": 55,
+       "frame": 0
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59,
+       "frame": 3
       }
      ]
     }

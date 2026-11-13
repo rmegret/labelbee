@@ -16,11 +16,14 @@ const golden = JSON.parse(fs.readFileSync(path.join(__dirname, 'annotation-io.go
   for (const c of cases) {
     const got = await runIoCase(makeEnv, c);
     const want = golden[c.name];
+    if (!want) { n++; console.log(c.name + '\n   NEW CASE (not in the golden)'); continue; }
     const keys = Object.keys({ ...want, ...got }).filter((k) => JSON.stringify(got[k]) !== JSON.stringify(want[k]));
     if (!keys.length) continue;
     n++;
     console.log(c.name);
     for (const k of keys) console.log('   ' + k + ': ' + JSON.stringify(want[k]) + '  ->  ' + JSON.stringify(got[k]));
   }
+  const gone = Object.keys(golden).filter((k) => !cases.some((c) => c.name === k));
+  for (const k of gone) { n++; console.log(k + '\n   REMOVED CASE (only in the golden)'); }
   console.log(n + ' case(s) differ from the golden');
 })();
