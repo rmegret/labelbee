@@ -32,6 +32,7 @@ group of the drafter (ID block `DEBT-G01..`).
 | DEBT-122 | [Two `Marshmallow` objects, the one used by the schemas is never initialised](#debt-122-two-marshmallow-objects-the-one-used-by-the-schemas-is-never-initialised) |
 | DEBT-123 | [Gallery POST handlers copy the profile form onto the current user](#debt-123-gallery-post-handlers-copy-the-profile-form-onto-the-current-user) |
 | DEBT-124 | [Posted `timestamp` of an annotation record is loaded as a datetime](#debt-124-posted-timestamp-of-an-annotation-record-is-loaded-as-a-datetime) |
+| DEBT-125 | [The backend tests of `tests/` cannot be collected and test another app](#debt-125-the-backend-tests-of-tests-cannot-be-collected-and-test-another-app) |
 | DEBT-201 | [Ctrl+Right and Ctrl+Shift+Right fall through to a second move](#debt-201-ctrlright-and-ctrlshiftright-fall-through-to-a-second-move) |
 | DEBT-202 | [delayedSeekFrame is cleared before it is used](#debt-202-delayedseekframe-is-cleared-before-it-is-used) |
 | DEBT-203 | [Router and hash-listener bugs](#debt-203-router-and-hash-listener-bugs) |
@@ -168,6 +169,7 @@ group of the drafter (ID block `DEBT-G01..`).
 | DEBT-735 | [labelListFromServer reports success when nothing was loaded, no error path in the dialog](#debt-735-labellistfromserver-reports-success-when-nothing-was-loaded-no-error-path-in-the-dialog) |
 | DEBT-736 | [setTags builds ttags from stale chronogram data](#debt-736-settags-builds-ttags-from-stale-chronogram-data) |
 | DEBT-737 | [tagsAddFrames silently skips non-object tag entries](#debt-737-tagsaddframes-silently-skips-non-object-tag-entries) |
+| DEBT-738 | [mainAlert loses an alert opened while the previous one is fading out](#debt-738-mainalert-loses-an-alert-opened-while-the-previous-one-is-fading-out) |
 | DEBT-801 | [Stale intervals when "Show Events" is off](#debt-801-stale-intervals-when-show-events-is-off) |
 | DEBT-802 | [Read path mutates Tracks (obs.tag never cleared)](#debt-802-read-path-mutates-tracks-obstag-never-cleared) |
 | DEBT-803 | [Implicit globals and shared mutable products](#debt-803-implicit-globals-and-shared-mutable-products) |
@@ -362,6 +364,7 @@ Datasets and dataset header show empty "Date and Time" and the creator as a bare
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tagsFromServer`
   - [labelbee/blueprints/api/__init__.py](../../../labelbee/blueprints/api/__init__.py): `api`
+- **Decision:** [DEC-006](view_decisions.md#dec-006-the-separate-tag-file-is-obsolescent-tag-information-travels-in-the-tracks "The separate tag file is obsolescent; tag information travels in the Tracks") (the separate tag file is obsolescent: removal may replace repair).
 - **Links:** [BEH-145](view_cap-100-manage-data-users.md#beh-145-api-load-one-annotation-record-server-load-step-2 "API load one annotation record (server load, step 2)"), [OQ-107](../../QUESTIONS.md#oq-107 "Size limits and tag-record storage of annotation records")
 
 ## DEBT-121: API login reports SUCCESS for inactive users
@@ -403,6 +406,16 @@ Intended replacement: drop the form from these handlers.
 
 Numbers 212, 218 and 222 of this block are unused (never assigned, not reused). Tags: [read] = code text seen in the evidence of round 2; [inferred] = from code order or DOM semantics, not run; [round 1] = kept from the first reading, not re-checked in round 2.
 
+## DEBT-125: The backend tests of `tests/` cannot be collected and test another app
+
+[ran] `pytest tests` fails at collection: `tests/conftest.py:10-11` imports `labelbee.init_app` and `labelbee.manage_commands`, deleted in earlier cleanups (the app factory is `create_app()` in `labelbee/app.py`; `labelbee/legacy/views.py:34` imports the same missing module and is not registered). `tests/test_page_urls.py` is the SolidBuilds Flask-User starter test (routes `home_page`, `user.login`, users `user@example.com` / `admin@example.com`), unrelated to the current blueprints, and uses a `client` fixture that only `pytest-flask` provides (not in `requirements.txt`). `create_app()` has no test configuration: it needs `LABELBEE_LOGDIR` and the tracked `labelbee/settings/local_settings.py` (a MySQL URL built from environment variables). Deferred (maintainer 2026-11-13): left as is, to be replaced by tests under `refactor/tests/` when the refactor stabilizes. Idea for then: a conftest that points `local_settings` at SQLite and a temporary `LABELBEE_LOGDIR` before `create_app()`, with no production change.
+
+- **Code:**
+  - [tests/conftest.py](../../../tests/conftest.py)
+  - [tests/test_page_urls.py](../../../tests/test_page_urls.py): `test_page_urls`
+  - [labelbee/app.py](../../../labelbee/app.py): `create_app`
+- **Links:** [DEBT-115](#debt-115-dead-duplicated-or-inconsistent-backend-code "Dead, duplicated or inconsistent backend code"), finding F5 of `refactor/tests/browser/README.md`
+
 ## DEBT-201: Ctrl+Right and Ctrl+Shift+Right fall through to a second move
 
 `onKeyDown` ArrowRight branch is `if (ctrl&&shift) forward4(); else if (ctrl) forward3();` followed by an independent `if (shift) forward2(); else forward();`: the second `if` is not chained with an `else` to the first [read]. Ctrl+Right = +10 s then +1 frame; Ctrl+Shift+Right = +60 s then +1 s. The Left branch is a proper if/else chain [read]. Intended: Ctrl = 10 s, Ctrl+Shift = 60 s only (to be confirmed, [OQ-207](../../QUESTIONS.md#oq-207 "Intended keyboard step distances")). Replacement: one table-driven step function shared by both directions.
@@ -412,14 +425,14 @@ Numbers 212, 218 and 222 of this block are unused (never assigned, not reused). 
 
 ## DEBT-202: delayedSeekFrame is cleared before it is used
 
-`onVideoLoaded2` does `this.delayedSeekFrame = undefined` and then, in the 500 ms `setTimeout`, calls `videoControl.seekFrame(this.delayedSeekFrame)` which reads `undefined` [read]. `seekFrame(undefined)` passes the bounds test and in `video` mode calls `seekTo({frame: NaN})` (no effective seek) [read]. Also `flagLoadingVideo` is set only in `loadVideo2` (after the video-record ajax returns), so a `frame=` hash processed by the router earlier takes the immediate branch [read]; on a cold page `videoinfo.nframes` is still the placeholder 1, so `seekFrame` rejects every frame `>= 1` [read: placeholder and bounds test]; with a video already loaded the seek applies to the previous video. Net: `#video_id=..&frame=..` links probably do not land on the requested frame (not run). Replacement: keep the value in a local, make the seek part of the load promise.
+[ran] FIXED 2026-11-13 (commit `6e1ea944`, `VideoControl.js` `onVideoLoaded2`: the frame is read into a local before `delayedSeekFrame` is cleared). Verified in a real browser by `refactor/tests/browser/test_c_server.py::test_c9_opening_a_url_with_a_frame_seeks`: a page opened cold with `#video_id=1&video_data=4&frame=10` lands on frame 10 and keeps `frame=10` in the hash until the frame changes. The other concerns below (placeholder `nframes`, `flagLoadingVideo` set late) did not prevent the seek in that test (dev webapp, 40-frame video, fast server); a slow real server is not checked. Was: `onVideoLoaded2` does `this.delayedSeekFrame = undefined` and then, in the 500 ms `setTimeout`, calls `videoControl.seekFrame(this.delayedSeekFrame)` which reads `undefined` [read]. `seekFrame(undefined)` passes the bounds test and in `video` mode calls `seekTo({frame: NaN})` (no effective seek) [read]. Also `flagLoadingVideo` is set only in `loadVideo2` (after the video-record ajax returns), so a `frame=` hash processed by the router earlier takes the immediate branch [read]; on a cold page `videoinfo.nframes` is still the placeholder 1, so `seekFrame` rejects every frame `>= 1` [read: placeholder and bounds test]; with a video already loaded the seek applies to the previous video. Net: `#video_id=..&frame=..` links probably do not land on the requested frame (not run). Replacement: keep the value in a local, make the seek part of the load promise.
 - **Code:**
   - [labelbee/static/labelbee/js/VideoControl.js](../../../labelbee/static/labelbee/js/VideoControl.js): `VideoControl.onVideoLoaded2`, `VideoControl.delayedSeek`, `VideoControl.seekFrame`
 - **Links:** [BEH-208](view_cap-200-load-play-video.md#beh-208-url-hash-router-video_id-video_data-frame "URL hash router (video_id, video_data, frame)"), [BEH-209](view_cap-200-load-play-video.md#beh-209-delayed-seek-seek-requested-before-the-video-is-ready "Delayed seek (seek requested before the video is ready)"), [BEH-234](view_cap-200-load-play-video.md#beh-234-effects-of-a-completed-video-load "Effects of a completed video load"), [OQ-202](../../QUESTIONS.md#oq-202 "Deep links `#video_id=..&frame=..`")
 
 ## DEBT-203: Router and hash-listener bugs
 
-(1) `onhashchange` is assigned as `window.onhashchange` (event-handler property) by `onhashchange = async function...`; the preceding `addEventListener("hashchange", onhashchange)` at script start evaluates the property before that assignment, so it receives its default value `null` (not `undefined`) and registers nothing [read: statement order]. `onFrameChanged` later calls `removeEventListener(.., onhashchange)` (finds nothing) then `addEventListener(.., onhashchange)` with the function, so after the first hash cleanup the router is registered twice (property and listener) and likely runs twice per hashchange [inferred, DOM semantics]. (2) `if (newhash == lasthash)` only logs "ABORT" and continues (no `return`) [read]; the test could not match anyway: `location.hash` includes `#` while `lasthash = String(parsedHash)` (set in `onFrameChanged`) does not [read]. (3) `parsedHash.get("frame","0")` was meant to be `set` (default frame 0 is never applied) [read]. (4) `need_push`, the `history` calls and the listener remove/add pair in the router are commented out dead code [read]. (5) The remove/add pair in `onFrameChanged` runs synchronously before the asynchronous `hashchange` event fires, so the re-added listener does receive the event; the intended "avoid feedback loop" is not achieved [inferred]. The same-id skip (`id == currentVideoID`) is what stops the loop in practice [inferred].
+(1) `onhashchange` is assigned as `window.onhashchange` (event-handler property) by `onhashchange = async function...`; the preceding `addEventListener("hashchange", onhashchange)` at script start evaluates the property before that assignment, so it receives its default value `null` (not `undefined`) and registers nothing [read: statement order]. `onFrameChanged` later calls `removeEventListener(.., onhashchange)` (finds nothing) then `addEventListener(.., onhashchange)` with the function, so after the first hash cleanup the router is registered twice (property and listener) and likely runs twice per hashchange [inferred, DOM semantics]. (2) `if (newhash == lasthash)` only logs "ABORT" and continues (no `return`) [read]; the test could not match anyway: `location.hash` includes `#` while `lasthash = String(parsedHash)` (set in `onFrameChanged`) does not [read]. (3) `parsedHash.get("frame","0")` was meant to be `set` (default frame 0 is never applied) [read]. (4) `need_push`, the `history` calls and the listener remove/add pair in the router are commented out dead code [read]. (5) The remove/add pair in `onFrameChanged` runs synchronously before the asynchronous `hashchange` event fires, so the re-added listener does receive the event; the intended "avoid feedback loop" is not achieved [inferred]. The same-id skip (`id == currentVideoID`) is what stops the loop in practice [inferred]. (6) [ran] Consequence of (4): the `video_data` part of the hash is never removed; only `frame=` is, by `onFrameChanged`, when the frame later changes (`refactor/tests/browser/test_c_server.py::test_c9_hash_change_on_an_open_page_loads_the_events_and_seeks`). The slice 3 comment in `labelBee.js` and [BEH-731](view_cap-700-annotation-model-io.md#beh-731-loading-events-from-a-url-fragment-video_dataid "Loading events from a URL fragment (#video_data=<id>)") said "hash cleanup" by mistake (corrected in `4fa76e20`).
 - **Code:**
   - [labelbee/static/labelbee/js/labelBee.js](../../../labelbee/static/labelbee/js/labelBee.js): `onhashchange`, `lasthash`
   - [labelbee/static/labelbee/js/VideoControl.js](../../../labelbee/static/labelbee/js/VideoControl.js): `VideoControl.onFrameChanged`
@@ -1361,6 +1374,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `tagsFromServer`, `loadEvents`
+- **Decision:** [DEC-006](view_decisions.md#dec-006-the-separate-tag-file-is-obsolescent-tag-information-travels-in-the-tracks "The separate tag file is obsolescent; tag information travels in the Tracks") (the separate tag file is obsolescent: removal may replace the proposed repair).
 - **Links:** [BEH-728](view_cap-700-annotation-model-io.md#beh-728-loading-a-tag-file-from-the-server "Loading a tag file from the server"), [OQ-706](../../QUESTIONS.md#oq-706 "Is server loading of tags supposed to work")
 
 ## DEBT-720: eventsToServer: ignored argument, undefined fields, CSS-only gating
@@ -1514,6 +1528,14 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 - **Code:**
   - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tagsAddFrames`
 - **Links:** [BEH-724](view_cap-700-annotation-model-io.md#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh")
+
+## DEBT-738: mainAlert loses an alert opened while the previous one is fading out
+
+[ran] FIXED 2026-11-13 (commit `747fd33b`, `AnnotationIO.js` `mainAlert`). With Bootstrap 3.3.6, `hide()` sets `isShown = false` at once but finishes later (transition, `hideModal()`, backdrop fade, `hidden.bs.modal`); a `show()` in that window was accepted, then the pending `hideModal` hid the new modal and left its backdrop, so the message never appeared. Needed two failures within about 300 ms. Now `mainAlert` waits for `hidden.bs.modal` when a hide is in progress. Tests: `refactor/tests/browser/test_alerts.py` (fails without the fix); `refactor/tests/golden/slice3` gained the recorded `data("bs.modal")` call. Unchanged: a second alert while one is open replaces its text (one modal).
+
+- **Code:**
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `mainAlert`
+- **Links:** [BEH-714](view_cap-700-annotation-model-io.md#beh-714-load-events-from-a-local-file "Load Events from a local file"), [BEH-731](view_cap-700-annotation-model-io.md#beh-731-loading-events-from-a-url-fragment-video_dataid "Loading events from a URL fragment (#video_data=<id>)"), [DEBT-709](#debt-709-silent-failures-when-loading-local-files "Silent failures when loading local files")
 
 ## DEBT-801: Stale intervals when "Show Events" is off
 

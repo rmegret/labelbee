@@ -1349,8 +1349,20 @@ async function clickLoadTracksTaggedCSVFromServer() {
 
 
 function mainAlert(text) {
-  $("#mainAlertDialog .modal-body").html(text);
-  $("#mainAlertDialog").modal("show");
+  var modal = $("#mainAlertDialog");
+  var bs = modal.data("bs.modal");
+  // Bootstrap 3 loses a modal opened while the previous one is still fading out: its pending hide runs after the
+  // new show and hides it again, leaving the backdrop. While a hide is in progress, wait for it to finish.
+  var hiding = bs && !bs.isShown && (bs.$backdrop || modal.is(":visible"));
+  var show = function () {
+    $("#mainAlertDialog .modal-body").html(text);
+    modal.modal("show");
+  };
+  if (hiding) {
+    modal.one("hidden.bs.modal", show);
+  } else {
+    show();
+  }
 }
 
 function typesetAjaxError(title, hook) {

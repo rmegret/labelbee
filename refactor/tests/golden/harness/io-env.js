@@ -49,6 +49,8 @@ function makeJQuery(rec, net, ctx) {
       if (m === 'find') return (s) => chain(sel + ' > ' + s);
       // case.visible: {selector: true} for the elements that are on screen
       if (m === 'is') return (q) => { rec.fx.push(['$', sel, 'is', q]); return !!(net.visible && net.visible[sel]); };
+      // jQuery data() of an element that was never made a bootstrap modal: undefined (mainAlert reads bs.modal)
+      if (m === 'data') return (...a) => { rec.fx.push(['$', sel, 'data', ...a.map(ser)]); return undefined; };
       if (m === 'val') return (...a) => { rec.fx.push(['$', sel, 'val', ...a.map(ser)]); return ''; };
       return (...a) => { rec.fx.push(['$', sel, String(m), ...a.map(ser)]); return chain(sel); };
     },

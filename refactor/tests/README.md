@@ -3,6 +3,10 @@
 Layout: `golden/harness/` is the shared harness; each slice has its own `golden/sliceN/` folder
 (fixtures, generator, test, golden file).
 
+Browser tests (real page in headless Chromium, 55 tests, [browser/README.md](browser/README.md)) automate the manual
+[CHECKLIST.md](CHECKLIST.md): `pytest refactor/tests/browser`. Run them and the golden tests before merging a slice;
+keep the checklist for what a script cannot judge (see its first lines). Environment: [devenv/README.md](devenv/README.md).
+
 ## Golden tests: annotation load codec (slice 1, [ADR 0002](../design/0002-slice-annotation-load-codec.md))
 Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node/v20.20.2/bin`.
 
