@@ -1055,7 +1055,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-704: Runtime fields (tag, span) are written into saved files
 
-[read] `labelbee/static/labelbee/js/ChronoControl.js` augmentTrackWithTag assigns `obs.tag` (the tag object) on stored observations; `labelbee/static/labelbee/js/AnnotationIO.js` convertTracksToV2 copies every own field, so `tag` (the full tag record) and `span` are saved, contradicting ENT-001. Proposed: explicit save whitelist, or runtime fields kept outside `Tracks`; decision in OQ-702.
+[maintainer 2026-11-13] `tag` and `span` are part of the event data, not runtime attachments: `Events` keeps and saves them like any field (OQ-702 answered); the premise of this entry is withdrawn, what stays is the question of where a tag that comes from the legacy `Tags` file is merged (below, DEC-006) and that the merge happens at every refresh. [read] `labelbee/static/labelbee/js/ChronoControl.js` augmentTrackWithTag assigns `obs.tag` (the tag object) on stored observations; `labelbee/static/labelbee/js/AnnotationIO.js` convertTracksToV2 copies every own field, so `tag` (the full tag record) and `span` are saved, contradicting ENT-001. Proposed: explicit save whitelist, or runtime fields kept outside `Tracks`; decision in OQ-702.
 
 - **Code:**
   - `annotation/AnnotationCodec.js`: `convertTracksToV2`
@@ -1350,6 +1350,16 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 - **Code:**
   - `AnnotationIO.js`: `mainAlert`
 - **Links:** BEH-714, BEH-731, DEBT-709
+
+## DEBT-739: cx/cy are stored next to x, y, width, height and written by several paths with different conventions
+
+[read] `Observation` stores both the box (`x`, `y`, `width`, `height`, `angle`) and its center (`cx`, `cy`): redundant. Writers: `OverlayControl.js:2043-2044` (rect update: `x`, `y` and size from the rectangle, then `cx = left + width/2`, so `x`, `y` are primary); `OverlayControl.js:2053-2056` (virtual rectangle: `cx`, `cy` from the rectangle, then `x = cx - width/2`, so the center is primary); `ChronoControl.js:1112-1113` (recomputes `cx`, `cy` of every kept observation at each refresh from `x + width/2`, DEBT-804); the CSV importers (`annotation/AnnotationCodec.js` `tracks_csv_to_json`: `x = cx - 150`, `y = cy - 300` for a fixed 300x600 box, BEH-735). Nothing states which pair is canonical, nor whether `x`, `y` are the unrotated corner when `angle != 0` (comment at `OverlayControl.js:2047`). Decision (maintainer 2026-11-13): to be resolved on its own later; until then the automatic recompute stays where it is, and the future `Events` API must not fix it silently: a clone, a put or a patch keeps both pairs as given (DEC-007).
+
+- **Code:**
+  - `OverlayControl.js`: `updateRectObsGeometry` (lines 2038-2056)
+  - `ChronoControl.js`: `updateChronogramData`
+  - `annotation/AnnotationCodec.js`: `tracks_csv_to_json`
+- **Links:** ENT-001, DEBT-701, DEBT-804, BEH-735, DEC-007
 
 ## DEBT-801: Stale intervals when "Show Events" is off
 

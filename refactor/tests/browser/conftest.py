@@ -25,6 +25,7 @@ from helpers import App
 REPO = Path(__file__).resolve().parents[3]
 SAMPLE_SRC = REPO / "tests" / "webapp" / "data" / "sample"
 VIDEO_FPS, VIDEO_SECONDS = 20, 2
+DIRTY_WRITES_JS = Path(__file__).with_name("dirty_writes.js")
 
 
 def _free_port():
@@ -109,10 +110,63 @@ def browser_context_args(browser_context_args):
 
 
 @pytest.fixture
-def ui(page, server, saved_dir, tmp_path):
+def ui(page, server, saved_dir, tmp_path, request):
     """The page, with the watchers of helpers.App already attached (nothing is opened yet).
     At teardown every test checks the console (checklist item E1): an error the test provokes on purpose must be
-    declared with `ui.allow(regex)`. Not called `app`: pytest-flask treats a fixture of that name as a Flask app."""
+    declared with `ui.allow(regex)`. Not called `app`: pytest-flask treats a fixture of that name as a Flask app.
+    With --dirty-writes the dirty-write detector (dirty_writes.js) is injected and its findings are collected."""
+    detector = request.config.getoption("--dirty-writes")
+    if detector:
+        page.add_init_script(path=str(DIRTY_WRITES_JS))
     a = App(page, server, tmp_path)
     yield a
+    if detector:
+        try:
+            found = page.evaluate("window.__dirtyWrites || {}")
+        except Exception:                      # the page was closed or navigated away by the test
+            found = {}
+        all_writes = request.config._dirty_writes
+        for key, e in found.items():
+            merged = all_writes.setdefault(key, {**e, "count": 0, "tests": set()})
+            merged["count"] += e["count"]
+            merged["tests"].add(request.node.name)
     a.assert_clean()
+
+
+# ---- dirty-write detector: option, collection and report
+def pytest_addoption(parser):
+    parser.addoption("--dirty-writes", action="store", default=None, metavar="REPORT.json",
+                     help="inject dirty_writes.js in every page and write the writers of the stored events to REPORT.json")
+
+
+def pytest_configure(config):
+    config._dirty_writes = {}
+
+
+def _dirty_rows(config):
+    rows = []
+    for e in config._dirty_writes.values():
+        rows.append({k: e[k] for k in ("op", "depth", "field", "file", "line", "fn", "count")} | {"tests": sorted(e["tests"])})
+    return sorted(rows, key=lambda r: (r["file"], r["line"], r["op"], r["field"]))
+
+
+def pytest_sessionfinish(session):
+    path = session.config.getoption("--dirty-writes")
+    if path:
+        Path(path).write_text(json.dumps(_dirty_rows(session.config), indent=1))
+
+
+def pytest_terminal_summary(terminalreporter):
+    cfg = terminalreporter.config
+    if not cfg.getoption("--dirty-writes"):
+        return
+    rows = _dirty_rows(cfg)
+    terminalreporter.section("dirty writes to the stored events")
+    sites = {}
+    for r in rows:
+        sites.setdefault((r["file"], r["line"], r["fn"]), []).append(r)
+    terminalreporter.write_line(f"{len(rows)} (operation, depth, field, site) combinations from {len(sites)} source lines; "
+                                f"depth 0 = frames, 1 = one frame, 2 = one observation, 3+ = nested")
+    for (f, l, fn), rs in sorted(sites.items()):
+        what = ", ".join(f"{r['op']}@{r['depth']}:{r['field']} x{r['count']}" for r in rs)
+        terminalreporter.write_line(f"  {f}:{l} {fn}  ->  {what}")

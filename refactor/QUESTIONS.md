@@ -457,6 +457,7 @@ _Proposed_: Pass-through of unknown fields at load/save (already true at load an
 The v2 save writes `obs.tag` (whole tag record) and `span` into each event whenever they are present in memory (BEH-708, DEBT-704). ENT-001 says `tag` is not saved, while OQ-003 says all `Observation` fields are preserved on load and save; note that `tag` is a runtime attachment (assigned by `augmentTrackWithTag`) or an import-time field (`tracks_tagged`, BEH-736), not one of the fields created by `new Observation` (ENT-001). Is the embedded tag wanted in the files (e.g. for the `tracks_tagged` workflow, where it is the only tag source)?
 _Significance_: Decides the save whitelist and whether files are reproducible regardless of UI state.
 _Proposed_: `tag` is not saved when it came from `Tags`; it is kept when it came from a `tracks_tagged` import; `span` is saved. Both consistent with OQ-003 only if "Observation fields" is read as the ENT-001 field list.
+_Answer_: `tag` and `span` are part of the event data (maintainer, 2026-11-13): `Events` keeps them and they are saved with the event, as today. See [DEC-007](intent/decisions.md); DEBT-704's premise is withdrawn.
 
 **<a id='oq-703'>OQ-703</a>: Are v1 events files and ID-less events still produced anywhere**
 Load of v1 (no `info`) files keeps the file's `ID` and `bool_acts` and does no normalization (BEH-718, DEBT-711), while v2 files regenerate `bool_acts` from `labels` and require `id` (BEH-717). Do archives still contain v1 files, and may they lack `bool_acts` or `labels`?
@@ -651,11 +652,37 @@ _Proposed_: Implement the helper and the three changes as one commit of step 5, 
 _Answer_: Yes, make errors visible (maintainer, 2026-11-12). Done as its own commit of step 5, after the four fixes of Q19, golden diff shown first. The alert style (full `error.message` prefixed by what was being loaded) and clearing of a stale message follow the proposal above unless the maintainer changes them on review of that diff. Done in slice 3 step 5, commit `7f1bedfc`, as proposed (error text with the message prefixed by what was loading; report, then rethrow).
 
 **<a id='q24'>Q24</a>: Form of the replacement in slice 4: inline `AnnotationStore.getTracks()` or a local per function?**
-[ADR 0007](design/0007-slice-migrate-readers.md) replaces ~106 references to the legacy globals (`Tracks` 65, `Tags` 35, `TracksInfo` 5, `tagsHaveDM` 1). Either each read becomes `AnnotationStore.getTracks()` in place, or each function that reads it several times starts with `const tracks = AnnotationStore.getTracks()` and uses the local.
+[ADR 0007](design/0007-slice-events-api.md) replaces ~106 references to the legacy globals (`Tracks` 65, `Tags` 35, `TracksInfo` 5, `tagsHaveDM` 1). Either each read becomes `AnnotationStore.getTracks()` in place, or each function that reads it several times starts with `const tracks = AnnotationStore.getTracks()` and uses the local.
 _Significance_: Inline gives the smallest, purely mechanical diff and keeps every line independent; locals give shorter lines and one call per function (loops in `ChronoControl.js`) but touch more lines and introduce new names. Both disappear when the per-observation API of SEAM-701 replaces these expressions.
 _Proposed_: Inline everywhere, no hoisting, no new names. Used only once the maintainer confirms.
+_Answer_: Superseded (maintainer, 2026-11-13): no inlining of `getTracks()`; the accesses become operations of an `Events` API ([ADR 0007](design/0007-slice-events-api.md), [Q27](#q27)).
 
 **<a id='q25'>Q25</a>: After the migration, keep `Tracks` and `Tags` as console aliases?**
 The five accessors of `annotation/AnnotationStoreBridge.js` exist so that legacy code keeps working. When no code reads them any more they can be deleted; but typing `Tracks[0]` in the browser console to inspect or fix data is a habit (and some functions are designed to be called by hand for debugging). `window.AnnotationStore` stays in any case (`AnnotationStore.getTracks()[0]`).
 _Significance_: Deleting makes the migration verifiable (a reference to a removed global fails loudly) and removes the last coupling; keeping read-only aliases costs a few lines and a documented exception, but hides any new accidental use.
 _Proposed_: Delete the five accessors; the browser tests and the ratchet test then guarantee that no code uses them. If console aliases are wanted, add them in a separate, clearly named debug helper that no code reads. Used only once the maintainer confirms.
+_Answer_: Superseded by [Q29](#q29): the end state is a private structure, with `events.toObject()` for the console.
+
+**<a id='q26'>Q26</a>: Tags readers in slice 4: migrate, leave, or delete the unreachable branches?**
+The slice touches 35 references to `Tags`. Some sit in code that cannot run since `tagMode` is fixed to `'Tracks'` ([DEC-006](intent/decisions.md)): the legacy branch of `getTTags` (`labelbee/static/labelbee/js/ChronoControl.js:1378`) and the non-`Tracks` branch of `getTag` (`labelbee/static/labelbee/js/OverlayControl.js:2695`). Others are live: `augmentTrackWithTag` (`ChronoControl.js:1015`, merges a legacy tags file into the observations by id) and the "Delete FA Tags..." button (`labelbee/blueprints/labelbee/templates/labelbee_page.html:795`, `ZoomView.js:1966`).
+_Significance_: Deleting the dead branches is not a pure move, so it would be separate steps; leaving `Tags` on its accessor keeps one accessor alive until the tag code is removed.
+_Proposed_: Rename all `Tags` readers to `AnnotationStore.getTags()` in step 5, no deletion in this slice; the dead branches are deleted later as their own steps. Used only once the maintainer confirms.
+_Answer_: Accepted (maintainer, 2026-11-13): rename the readers to `AnnotationStore.getTags()` in step 5, delete nothing in this slice. The maintainer's expectation, confirmed as the end state: `getTags()` becomes obsolete when the tags are merged into the events. Not yet true today: 36 code lines still read the `Tags` structure directly, live consumers included (tag drawing in `OverlayControl.js`, tag editing in `ZoomView.js`, `SelectionControl.js:630`), against 18 lines that read `obs.tag`; those move to `obs.tag` in the later slice that merges the tags ([ADR 0007](design/0007-slice-events-api.md)).
+
+**<a id='q27'>Q27</a>: Names and ownership of `Events`**
+[ADR 0007](design/0007-slice-events-api.md) proposes `class Events` in `annotation/Events.js`, one instance `events` owned by `AnnotationStore` (`AnnotationStore.events`) and exposed as the global `window.events` like `overlay` or `videoControl` (no code uses the identifier `events` or `Events`, and both are undefined in the page), with lowercase properties `events.tracks` (temporary) and `events.info`. `Tags` stays on `AnnotationStore`.
+_Significance_: The names reach every call site. The alternatives are `Tracks`/`TracksInfo` capitalised as written in the discussion, or `Events` replacing the Tracks half of `AnnotationStore` and `AnnotationStore` disappearing.
+_Proposed_: As above. Used only once the maintainer confirms.
+_Answer_: Accepted (maintainer, 2026-11-13).
+
+**<a id='q28'>Q28</a>: Iteration over every observation: callback or generator?**
+Eight sites loop over all observations (`SelectionControl.js:1031`, `ZoomView.js:1957,1984,2000`, `ChronoControl.js:1016,1032,1085,1996`); two of them use `continue` (`ChronoControl.js:1032-1050`, `1085-1105`). Measured on one pass over 200 000 observations: legacy loop 9.2 ms, `forEach(callback)` 9.6 ms, generator 16.1 ms, array of entries 48 ms.
+_Significance_: A callback turns `continue` into `return` (mechanical) and costs nothing; a generator keeps the loop bodies unchanged and costs about 7 ms per pass at that size.
+_Proposed_: `forEach(callback)` for the six sites without `continue`, a generator for the two with `continue`. Used only once the maintainer confirms.
+_Answer_: Accepted (maintainer, 2026-11-13).
+
+**<a id='q29'>Q29</a>: End state: private structure, and how the console reads the events**
+During the migration `events.tracks` is a public escape hatch that the detector counts (steps 1 to 5). The end state of [ADR 0007](design/0007-slice-events-api.md) is a private field (`#frames`), so a remaining direct access throws. The console habit `Tracks[0]` then becomes a query: `events.getFrame(0)` (a new `{id: observation}` object, O(size of the frame)), `events.get(0, 1)`, `events.frames()`, `events.forEach(...)`. `events.toObject()` returns the live structure in O(1) and is kept for the codec export only. A deep copy (`snapshot()`) is not part of the production API (a deep copy of a whole video is slow); tests that need one use `JSON.parse(JSON.stringify(...))` in their own helper. `get` and `getFrame` hand out live observations, which stay a dirty-write door until read-only views exist.
+_Significance_: Queries make the console shortcut cheap and keep the structure verifiably private; read-only observations would close the last door but cost a copy or a `Proxy` per read.
+_Proposed_: As above: queries for the console, `toObject()` for the codec only, no production `snapshot()`, `events.tracks` public until step 6 as the documented temporary placeholder, live observations until undo is designed. Used only once the maintainer confirms.
+_Answer_: Accepted (maintainer, 2026-11-13).

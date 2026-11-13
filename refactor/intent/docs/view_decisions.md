@@ -16,6 +16,7 @@ until then.
 | DEC-004 | [The code is the reference for behavior](#dec-004-the-code-is-the-reference-for-behavior) |
 | DEC-005 | [Keyboard shortcuts belong in one place](#dec-005-keyboard-shortcuts-belong-in-one-place) |
 | DEC-006 | [The separate tag file is obsolescent; tag information travels in the Tracks](#dec-006-the-separate-tag-file-is-obsolescent-tag-information-travels-in-the-tracks) |
+| DEC-007 | [Events is the single source of truth for the event data; all changes go through its operations](#dec-007-events-is-the-single-source-of-truth-for-the-event-data-all-changes-go-through-its-operations) |
 
 ## DEC-001: Tag detection and bee tracking happen outside LabelBee
 
@@ -87,4 +88,19 @@ the default mode, because `augmentTrackWithTag` (`ChronoControl.js:1015`) copies
 and frame; only the standalone display of the Tags structure (`tagMode == 'Tags'`) is unreachable.
 
 - **Links:** [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import"), [BEH-722](view_cap-700-annotation-model-io.md#beh-722-load-tags-from-a-local-file "Load Tags from a local file"), [BEH-724](view_cap-700-annotation-model-io.md#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh"), [BEH-728](view_cap-700-annotation-model-io.md#beh-728-loading-a-tag-file-from-the-server "Loading a tag file from the server"), [BEH-736](view_cap-700-annotation-model-io.md#beh-736-import-of-a-tracks_tagged-csv "Import of a tracks_tagged CSV"), [BEH-737](view_cap-700-annotation-model-io.md#beh-737-import-of-a-tags-csv-tracks-and-tags-together "Import of a tags CSV (Tracks and Tags together)"), [DEBT-118](view_debt.md#debt-118-tag-file-load-uses-a-nonexistent-route "Tag-file load uses a nonexistent route"), [DEBT-719](view_debt.md#debt-719-server-tag-loading-unrouted-url-undefined-return-empties-tags-on-failure "Server tag loading: unrouted URL, undefined return, empties Tags on failure"), [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection")
+- **Decided by:** maintainer (2026-11-13)
+
+## DEC-007: Events is the single source of truth for the event data; all changes go through its operations
+
+The collection of events (today `Tracks`, with `TracksInfo`) becomes a class `Events` with one instance, `events`, owned by
+`AnnotationStore`. It keeps every field of every event, including `tag`, `span`, `parts`, `fix`, `newid`, `visit` and fields it does
+not know, so that a load and a save lose nothing. An `Observation` is a working view of one event on the current frame, created
+for editing and viewing (today `rect.obs`); it may hold only part of the event, and is committed back through an `Events` operation.
+No code outside `Events` modifies the stored data directly: every change passes through a well defined operation. Cloning an event
+copies all its fields (deep, unknown ones included) but respects the conventions of the formats: `id` in files versus `ID` in memory,
+`labels` and the `bool_acts` flags derived from them, `cx`/`cy` as stored ([DEBT-739](view_debt.md#debt-739-cxcy-are-stored-next-to-x-y-width-height-and-written-by-several-paths-with-different-conventions "cx/cy are stored next to x, y, width, height and written by several paths with different conventions")). Undo is out of scope: the current undo may
+break during the refactor and is not tested; it will be redesigned on top of the clean API (the operations can then log
+transactions). `Model.js` is kept as a staging area of wrappers over `events` and removed when empty.
+
+- **Links:** [DEBT-701](view_debt.md#debt-701-observation-carries-bool_acts-next-to-labels "Observation carries bool_acts next to labels"), [DEBT-702](view_debt.md#debt-702-copyobs-copies-a-hand-maintained-field-list "copyObs copies a hand-maintained field list"), [DEBT-704](view_debt.md#debt-704-runtime-fields-tag-span-are-written-into-saved-files "Runtime fields (tag, span) are written into saved files"), [DEBT-739](view_debt.md#debt-739-cxcy-are-stored-next-to-x-y-width-height-and-written-by-several-paths-with-different-conventions "cx/cy are stored next to x, y, width, height and written by several paths with different conventions"), [DEBT-804](view_debt.md#debt-804-obscxcy-written-by-the-read-path-bool_acts-used-for-activity "obs.cx/cy written by the read path, bool_acts used for activity"), [OQ-702](../../QUESTIONS.md#oq-702 "Should `tag` and `span` be in saved files"), [SEAM-701](view_seams.md#seam-701-annotationstore-interface-model-vs-views "AnnotationStore interface (model vs views)"), [DEC-006](#dec-006-the-separate-tag-file-is-obsolescent-tag-information-travels-in-the-tracks "The separate tag file is obsolescent; tag information travels in the Tracks")
 - **Decided by:** maintainer (2026-11-13)

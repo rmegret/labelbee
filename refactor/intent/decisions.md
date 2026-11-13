@@ -80,3 +80,18 @@ and frame; only the standalone display of the Tags structure (`tagMode == 'Tags'
 
 - **Links:** CAP-704, BEH-722, BEH-724, BEH-728, BEH-736, BEH-737, DEBT-118, DEBT-719, ENT-002
 - **Decided by:** maintainer (2026-11-13)
+
+## DEC-007: Events is the single source of truth for the event data; all changes go through its operations
+
+The collection of events (today `Tracks`, with `TracksInfo`) becomes a class `Events` with one instance, `events`, owned by
+`AnnotationStore`. It keeps every field of every event, including `tag`, `span`, `parts`, `fix`, `newid`, `visit` and fields it does
+not know, so that a load and a save lose nothing. An `Observation` is a working view of one event on the current frame, created
+for editing and viewing (today `rect.obs`); it may hold only part of the event, and is committed back through an `Events` operation.
+No code outside `Events` modifies the stored data directly: every change passes through a well defined operation. Cloning an event
+copies all its fields (deep, unknown ones included) but respects the conventions of the formats: `id` in files versus `ID` in memory,
+`labels` and the `bool_acts` flags derived from them, `cx`/`cy` as stored (DEBT-739). Undo is out of scope: the current undo may
+break during the refactor and is not tested; it will be redesigned on top of the clean API (the operations can then log
+transactions). `Model.js` is kept as a staging area of wrappers over `events` and removed when empty.
+
+- **Links:** DEBT-701, DEBT-702, DEBT-704, DEBT-739, DEBT-804, OQ-702, SEAM-701, DEC-006
+- **Decided by:** maintainer (2026-11-13)

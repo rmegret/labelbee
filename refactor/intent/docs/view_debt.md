@@ -170,6 +170,7 @@ group of the drafter (ID block `DEBT-G01..`).
 | DEBT-736 | [setTags builds ttags from stale chronogram data](#debt-736-settags-builds-ttags-from-stale-chronogram-data) |
 | DEBT-737 | [tagsAddFrames silently skips non-object tag entries](#debt-737-tagsaddframes-silently-skips-non-object-tag-entries) |
 | DEBT-738 | [mainAlert loses an alert opened while the previous one is fading out](#debt-738-mainalert-loses-an-alert-opened-while-the-previous-one-is-fading-out) |
+| DEBT-739 | [cx/cy are stored next to x, y, width, height and written by several paths with different conventions](#debt-739-cxcy-are-stored-next-to-x-y-width-height-and-written-by-several-paths-with-different-conventions) |
 | DEBT-801 | [Stale intervals when "Show Events" is off](#debt-801-stale-intervals-when-show-events-is-off) |
 | DEBT-802 | [Read path mutates Tracks (obs.tag never cleared)](#debt-802-read-path-mutates-tracks-obstag-never-cleared) |
 | DEBT-803 | [Implicit globals and shared mutable products](#debt-803-implicit-globals-and-shared-mutable-products) |
@@ -1241,7 +1242,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-704: Runtime fields (tag, span) are written into saved files
 
-[read] `labelbee/static/labelbee/js/ChronoControl.js` augmentTrackWithTag assigns `obs.tag` (the tag object) on stored observations; `labelbee/static/labelbee/js/AnnotationIO.js` convertTracksToV2 copies every own field, so `tag` (the full tag record) and `span` are saved, contradicting [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"). Proposed: explicit save whitelist, or runtime fields kept outside `Tracks`; decision in [OQ-702](../../QUESTIONS.md#oq-702 "Should `tag` and `span` be in saved files").
+[maintainer 2026-11-13] `tag` and `span` are part of the event data, not runtime attachments: `Events` keeps and saves them like any field ([OQ-702](../../QUESTIONS.md#oq-702 "Should `tag` and `span` be in saved files") answered); the premise of this entry is withdrawn, what stays is the question of where a tag that comes from the legacy `Tags` file is merged (below, [DEC-006](view_decisions.md#dec-006-the-separate-tag-file-is-obsolescent-tag-information-travels-in-the-tracks "The separate tag file is obsolescent; tag information travels in the Tracks")) and that the merge happens at every refresh. [read] `labelbee/static/labelbee/js/ChronoControl.js` augmentTrackWithTag assigns `obs.tag` (the tag object) on stored observations; `labelbee/static/labelbee/js/AnnotationIO.js` convertTracksToV2 copies every own field, so `tag` (the full tag record) and `span` are saved, contradicting [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"). Proposed: explicit save whitelist, or runtime fields kept outside `Tracks`; decision in [OQ-702](../../QUESTIONS.md#oq-702 "Should `tag` and `span` be in saved files").
 
 - **Code:**
   - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `convertTracksToV2`
@@ -1536,6 +1537,16 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `mainAlert`
 - **Links:** [BEH-714](view_cap-700-annotation-model-io.md#beh-714-load-events-from-a-local-file "Load Events from a local file"), [BEH-731](view_cap-700-annotation-model-io.md#beh-731-loading-events-from-a-url-fragment-video_dataid "Loading events from a URL fragment (#video_data=<id>)"), [DEBT-709](#debt-709-silent-failures-when-loading-local-files "Silent failures when loading local files")
+
+## DEBT-739: cx/cy are stored next to x, y, width, height and written by several paths with different conventions
+
+[read] `Observation` stores both the box (`x`, `y`, `width`, `height`, `angle`) and its center (`cx`, `cy`): redundant. Writers: `OverlayControl.js:2043-2044` (rect update: `x`, `y` and size from the rectangle, then `cx = left + width/2`, so `x`, `y` are primary); `OverlayControl.js:2053-2056` (virtual rectangle: `cx`, `cy` from the rectangle, then `x = cx - width/2`, so the center is primary); `ChronoControl.js:1112-1113` (recomputes `cx`, `cy` of every kept observation at each refresh from `x + width/2`, [DEBT-804](#debt-804-obscxcy-written-by-the-read-path-bool_acts-used-for-activity "obs.cx/cy written by the read path, bool_acts used for activity")); the CSV importers (`annotation/AnnotationCodec.js` `tracks_csv_to_json`: `x = cx - 150`, `y = cy - 300` for a fixed 300x600 box, [BEH-735](view_cap-700-annotation-model-io.md#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)")). Nothing states which pair is canonical, nor whether `x`, `y` are the unrotated corner when `angle != 0` (comment at `OverlayControl.js:2047`). Decision (maintainer 2026-11-13): to be resolved on its own later; until then the automatic recompute stays where it is, and the future `Events` API must not fix it silently: a clone, a put or a patch keeps both pairs as given ([DEC-007](view_decisions.md#dec-007-events-is-the-single-source-of-truth-for-the-event-data-all-changes-go-through-its-operations "Events is the single source of truth for the event data; all changes go through its operations")).
+
+- **Code:**
+  - [labelbee/static/labelbee/js/OverlayControl.js](../../../labelbee/static/labelbee/js/OverlayControl.js): `updateRectObsGeometry`
+  - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `updateChronogramData`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tracks_csv_to_json`
+- **Links:** [ENT-001](view_entities.md#ent-001-observation-annotation-of-one-bee-in-one-frame "Observation (annotation of one bee in one frame)"), [DEBT-701](#debt-701-observation-carries-bool_acts-next-to-labels "Observation carries bool_acts next to labels"), [DEBT-804](#debt-804-obscxcy-written-by-the-read-path-bool_acts-used-for-activity "obs.cx/cy written by the read path, bool_acts used for activity"), [BEH-735](view_cap-700-annotation-model-io.md#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)"), [DEC-007](view_decisions.md#dec-007-events-is-the-single-source-of-truth-for-the-event-data-all-changes-go-through-its-operations "Events is the single source of truth for the event data; all changes go through its operations")
 
 ## DEBT-801: Stale intervals when "Show Events" is off
 
