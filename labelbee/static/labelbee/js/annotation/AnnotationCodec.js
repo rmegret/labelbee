@@ -22,6 +22,13 @@ export function sanitizeEvents(obj) {
   var info;
   var data;
   try{
+    // null and primitives would make `"info" in obj` throw (DEBT-710)
+    if (obj === null || typeof obj != "object") {
+      log(
+        "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys."
+      );
+      return;
+    }
     if ("info" in obj) {
       // New events format v2 with metainfo
   
@@ -135,16 +142,11 @@ export function sanitizeEvents(obj) {
           return acc;
         }, {});
         info.source = "Converted from Tracks v1 array";
-      } else if (typeof obj == "object") {
+      } else {
         if (logIO())
           log("sanitizeEvents: got an object, use directly");
         data = obj;
         info.source = "Converted from Tracks v1 object";
-      } else {
-        log(
-          "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys."
-        );
-        return;
       }
       if (
         !Object.keys(data).every((v) => /^(0|[1-9]\d*)$/.test(v)) &&
@@ -190,6 +192,15 @@ export function tagsAddFrames(Tags) {
 export function decodeTags(obj) {
   var info;
   try{
+    // null and primitives would make `"info" in obj` throw (DEBT-710)
+    if (obj === null || typeof obj != "object") {
+      log(
+        'setTags: ABORTED, unsupported file format. typeof(obj) is "' +
+          (obj === null ? "null" : typeof obj) +
+          '", should be "object"'
+      );
+      return null;
+    }
     if ("info" in obj) {
       // New tag format v2 with metainfo
 
@@ -220,14 +231,6 @@ export function decodeTags(obj) {
       // obj[frame].tags[tag_id_in_frame]
 
       log("setTags: Tags JSON v1, dictionary of frames");
-      if (typeof obj != "object") {
-        log(
-          'setTags: ABORTED, unsupported file format. typeof(obj) is "' +
-            typeof obj +
-            '", should be "object"'
-        );
-        return null;
-      }
       if (
         !Object.keys(obj).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
         !Object.keys(obj).every((v) => Number.isInteger(v))

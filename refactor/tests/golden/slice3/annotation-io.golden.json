@@ -578,7 +578,7 @@
    }
   ]
  },
- "setTracks null: error caught in sanitizeEvents, returns false": {
+ "setTracks null is rejected with the unsupported-format message (DEBT-710)": {
   "returned": false,
   "state": {
    "Tracks": {
@@ -618,13 +618,60 @@
   "rejections": [],
   "alerts": [],
   "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys.",
    "setTracks: ABORTED, wrong format."
   ],
-  "errors": [
-   "TypeError"
-  ],
+  "errors": [],
   "argsAfter": [
    null
+  ]
+ },
+ "setTracks number is rejected (DEBT-710)": {
+  "returned": false,
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys.",
+   "setTracks: ABORTED, wrong format."
+  ],
+  "errors": [],
+  "argsAfter": [
+   5
   ]
  },
  "setTracks v2 duplicate ids alerts": {
@@ -2512,7 +2559,7 @@
    ""
   ]
  },
- "setTags null caught (DEBT-710)": {
+ "setTags null is rejected (DEBT-710)": {
   "returned": 0,
   "state": {
    "Tracks": {
@@ -2557,16 +2604,16 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
-  "errors": [
-   "TypeError"
+  "logs": [
+   "setTags: ABORTED, unsupported file format. typeof(obj) is \"null\", should be \"object\""
   ],
+  "errors": [],
   "argsAfter": [
    null,
    ""
   ]
  },
- "setTags string caught": {
+ "setTags undefined is rejected (DEBT-710)": {
   "returned": 0,
   "state": {
    "Tracks": {
@@ -2611,10 +2658,120 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
-  "errors": [
-   "TypeError"
+  "logs": [
+   "setTags: ABORTED, unsupported file format. typeof(obj) is \"undefined\", should be \"object\""
   ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "$": "undefined"
+   },
+   ""
+  ]
+ },
+ "setTags number is rejected (DEBT-710)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. typeof(obj) is \"number\", should be \"object\""
+  ],
+  "errors": [],
+  "argsAfter": [
+   5,
+   ""
+  ]
+ },
+ "setTags string is rejected": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. typeof(obj) is \"string\", should be \"object\""
+  ],
+  "errors": [],
   "argsAfter": [
    "abc",
    ""
