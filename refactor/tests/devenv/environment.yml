@@ -1,0 +1,19 @@
+# Conda environment "labelbeedev": everything needed to run LabelBee and all its tests.
+# Only what pip cannot provide is here (interpreter, Node, ffmpeg); the Python packages are installed by pip
+# from the repository's own pinned requirements.txt plus requirements-dev.txt (see README.md in this folder).
+#
+#   conda env create -f refactor/tests/devenv/environment.yml
+#   conda activate labelbeedev
+#   pip install -r requirements.txt -r refactor/tests/devenv/requirements-dev.txt     # from the repo root
+#   playwright install chromium                                                    # browser for the browser tests
+name: labelbeedev
+channels:
+  - conda-forge
+dependencies:
+  # 3.11, not newer: requirements.txt pins numpy==1.24.4 (wheels up to Python 3.11) and greenlet==3.0.3
+  - python=3.11
+  - pip
+  # golden tests: `node --test refactor/tests/golden/` (Node >= 18, no npm package needed); 20 is what they ran on
+  - nodejs=20
+  # tests/webapp/make_sample_video.sh needs ffmpeg and ffprobe (with libx264 and libvpx)
+  - ffmpeg

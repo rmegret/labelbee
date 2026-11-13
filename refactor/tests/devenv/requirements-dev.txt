@@ -1,0 +1,9 @@
+# Test tooling for refactor/tests (not part of the application). Install AFTER the app requirements, from the repo root:
+#   pip install -r requirements.txt -r refactor/tests/devenv/requirements-dev.txt
+# Ranges, not exact pins: the versions below could not be checked against an index when this file was written.
+# Once the environment works, freeze what pip resolved: `pip freeze > refactor/tests/devenv/requirements-dev.lock.txt`.
+
+pytest>=8.2,<9             # runner for the backend and the browser tests
+pytest-flask>=1.3,<2       # provides the `client` fixture that tests/test_page_urls.py uses (tests/conftest.py defines `app`)
+pytest-playwright>=0.5,<1  # browser tests: pulls in `playwright`; then run `playwright install chromium`
+pytest-timeout>=2.3,<3     # a stuck video or page must fail the test, not hang the run
