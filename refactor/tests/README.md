@@ -69,3 +69,17 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
 - `golden/slice3/diff-against-golden.js`: prints per case what differs from the golden; run it before `generate.js`.
 - `golden/harness/unhandled.js`: takes over the `unhandledRejection` event while a case runs (the node test runner would
   fail the test otherwise); unhandled rejections are pinned in the golden as `rejections`.
+
+## Differential tests: `Events` (slice 4, [ADR 0007](../design/0007-slice-events-api.md))
+
+    node --test refactor/tests/golden/slice4/        # run
+
+- `golden/slice4/legacy-model.js`: frozen copy of the legacy direct operations on `Tracks` (the `Model.js` functions and the
+  plain deletes of the writers outside it, commit `07314c1e`). It is the reference: do not edit it. Step 2 turns the `Model.js`
+  functions into wrappers, so the reference cannot live there any more.
+- `golden/slice4/events.test.js`: 300 random sequences of 40 operations (null frames and entries, array or object start, numeric
+  and string ids, swap with collisions, forced renames, deletes) run on `annotation/Events.js` and on the reference; after each
+  operation the structure (content, key order, array or object), the return value and the queries must be equal. Then contract
+  tests for what the ADR states (prune, `getFrame` is a new object, `update`, `commit`, observer, iteration order) and the store.
+- The only deliberate difference from the legacy code: `delete` prunes the emptied frame (the reference does it after an actual
+  deletion, as the ADR says); the legacy `deleteEvent` and `cleanObsoleteEvents` did not.

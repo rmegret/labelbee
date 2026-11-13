@@ -1,7 +1,7 @@
 /*
  * Bridge between the classic scripts and the ES module AnnotationStore.js (refactor slice 3, ADR 0005).
- * Exposes the store as `window.AnnotationStore` and keeps the legacy globals `Tracks`, `TracksInfo`,
- * `Tags`, `TagsInfo`, `tagsHaveDM` working as accessors on it, so every legacy read and assignment
+ * Exposes the store as `window.AnnotationStore` (and its `events` as `window.events`) and keeps the legacy
+ * globals `Tracks`, `TracksInfo`, `Tags`, `TagsInfo`, `tagsHaveDM` working as accessors on it, so every legacy read and assignment
  * reaches the store. Replacement is progressive: when a file calls `AnnotationStore.getTracks()` etc.
  * instead of the global, and no file reads the global any more, its entry is removed from `LEGACY_GLOBALS`.
  * The accessors need `var Tracks` / `var Tags` gone from Model.js (a top-level `var` cannot become one).
@@ -29,6 +29,7 @@ export function installLegacyGlobals(target, store) {
     });
   }
   target.AnnotationStore = store;
+  target.events = store.events; // the stored events (ADR 0007, Q27), like `overlay` or `videoControl`
 }
 
 if (typeof window !== 'undefined') installLegacyGlobals(window, AnnotationStore);
