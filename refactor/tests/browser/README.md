@@ -4,7 +4,7 @@ Automated version of [../CHECKLIST.md](../CHECKLIST.md): the real page in headle
 the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design/0006-browser-tests.md).
 
     conda activate labelbeedev                  # see ../devenv/README.md
-    pytest refactor/tests/browser               # ~1 minute, 52 tests
+    pytest refactor/tests/browser               # ~1 minute, 52 tests, all passing
     pytest refactor/tests/browser -k c9 -x      # one item, stop at the first failure
     pytest refactor/tests/browser --headed      # watch the browser (pytest-playwright option)
 
@@ -35,7 +35,7 @@ Not caused by the refactor unless noted. Each is a candidate `DEBT` entry; none 
 
 | ID | Finding | Where | Test |
 |---|---|---|---|
-| F1 | A `frame=<n>` in a URL opened while the video is still loading never seeks: `onVideoLoaded2` sets `delayedSeekFrame = undefined` and then the timer reads it, so `seekFrame(undefined)` runs. It works when the video is already loaded (hash changed on an open page) | `labelbee/static/labelbee/js/VideoControl.js:1315-1316` (commit `01ee8e27`) | `test_c9_opening_a_url_with_a_frame_seeks` (`xfail`, strict: it fails the day the bug is fixed) |
+| F1 | **Fixed.** A `frame=<n>` in a URL opened while the video was still loading never seeked: `onVideoLoaded2` set `delayedSeekFrame = undefined` and then the timer read it, so `seekFrame(undefined)` ran. It worked when the video was already loaded (hash changed on an open page). Now the frame is read before it is cleared | `labelbee/static/labelbee/js/VideoControl.js:1313-1317` (bug from commit `01ee8e27`) | `test_c9_opening_a_url_with_a_frame_seeks` |
 | F2 | `onhashchange` never rewrites the hash: that code is commented out. Only `frame=` is removed, when the frame changes. The slice 3 code comment and BEH-731 say "hash cleanup": wrong wording | `labelBee.js:271`, `intent/behaviors/cap-700-annotation-model-io.md` BEH-731 | `test_c9_hash_change_on_an_open_page...` |
 | F3 | An alert opened while the previous one is still fading out is lost: the modal state says shown, nothing appears and the backdrop stays. Needs two failures within ~300 ms | `mainAlert` (`AnnotationIO.js`), Bootstrap 3 modal | worked around in `helpers.App.close_main_alert` |
 | F4 | `tagMode` is hard-coded to `'Tracks'` and nothing changes it: Tags loaded from a tags file or the server are stored but not indexed (`ttags` stays empty) nor drawn; the chronogram says "0 tags". The Tags display is reachable only from the console | `OverlayControl.js:5` | `test_a10_tags_reach_the_chronogram_in_the_tags_mode` |

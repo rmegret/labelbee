@@ -3,8 +3,6 @@ the tracks CSV entries of "Server storage". The dev webapp seeds five annotation
 id 4 is events_v2.json, the most recent event file."""
 import json
 
-import pytest
-
 
 def test_c8_load_events_from_db_dialog(ui):
     ui.open()
@@ -40,11 +38,14 @@ def test_c9_opening_a_url_with_video_data_loads_the_events(ui):
     assert ui.n_observations() == 13
 
 
-@pytest.mark.xfail(strict=True, reason="F1 (README.md): VideoControl.js onVideoLoaded2 clears delayedSeekFrame before the "
-                   "timer reads it, so a #frame=n in the URL never seeks while the video is still loading")
 def test_c9_opening_a_url_with_a_frame_seeks(ui):
+    """F1 (README.md), fixed: the delayed seek of a URL opened while the video is still loading used to read an
+    already cleared frame number and never happened."""
     ui.open(HASH)
-    ui.page.wait_for_function("videoControl.getCurrentFrame() === 10", timeout=4000)
+    ui.page.wait_for_function("videoControl.getCurrentFrame() === 10")
+    assert "frame=10" in ui.js("location.hash")                              # kept until the user moves to another frame
+    ui.goto_frame(11)
+    ui.page.wait_for_function("!location.hash.includes('frame=')")
 
 
 def test_c10_wrong_video_data_id_alerts_and_the_seek_still_happens(ui):

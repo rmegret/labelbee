@@ -57,7 +57,7 @@ Record each run in the log at the end.
 | C6 ★ | Load Tags: v1, then v2 | Tags drawn on the video and the chronogram |
 | C7 **[fail]** | Load Tags: a v2 file without `data`, then an events v2 file | Alert each time; the previously loaded Tags stay |
 | C8 | Server storage, "Load Events from DB": pick a file | The events appear; the dialog shows "Events loaded." |
-| C9 ★ | With the video open, change the hash to `#video_id=<video id>&video_data=<data id>&frame=<n>` (address bar, no reload) | The events load, the video seeks to frame `<n>`; moving to another frame removes `frame=` from the hash. (Opening such a URL cold does NOT seek: finding F1, `tests/browser/README.md`) |
+| C9 ★ | With the video open, change the hash to `#video_id=<video id>&video_data=<data id>&frame=<n>` (address bar, no reload) | The events load, the video seeks to frame `<n>`; moving to another frame removes `frame=` from the hash. Opening such a URL cold seeks too (finding F1, fixed) |
 | C10 **[fail]** | Same with a `video_data` id that does not exist | Alert "ERROR loading events with ID <id>"; the seek to `<n>` still happens |
 | C11 | Tracks CSV: "from URI" with a valid URL, then "from /data" | Tracks load; boxes are 300x600 with the +90 angle convention |
 | C12 **[fail]** | "from URI" with a bad URL | Alert "ERROR loading tracks CSV from <url>" |

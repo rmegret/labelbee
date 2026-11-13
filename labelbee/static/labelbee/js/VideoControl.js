@@ -1312,8 +1312,9 @@ VideoControl.prototype.onVideoLoaded2 = async function () {
 
   if (this.delayedSeekFrame != undefined) {
     console.log("onVideoLoaded2 delayedSeekFrame",this.delayedSeekFrame)
+    const frame = this.delayedSeekFrame // read before clearing: the timer used to read the cleared value
     this.delayedSeekFrame = undefined
-    setTimeout(() => { videoControl.seekFrame(this.delayedSeekFrame); }, 500);
+    setTimeout(() => { videoControl.seekFrame(frame); }, 500);
   } else {
     console.log("onVideoLoaded2 delayedSeekFrame undefined")
     setTimeout(() => { videoControl.hardRefresh(); }, 500);
