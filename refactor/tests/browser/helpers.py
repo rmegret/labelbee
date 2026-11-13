@@ -122,9 +122,6 @@ class App:
         """Click the "Close" button of the main alert, as a user does, and wait until it is gone."""
         self.page.click("#mainAlertDialog .modal-footer button")
         self.page.wait_for_selector("#mainAlertDialog", state="hidden")
-        # the backdrop fades out after the modal: an alert opened before that is lost (Bootstrap 3 race, see the
-        # test report of refactor/tests/browser), a person never acts that fast
-        self.page.wait_for_function("document.querySelectorAll('.modal-backdrop').length === 0")
 
     # ---- downloads
     def download(self, click_selector=None, js=None, name="download"):

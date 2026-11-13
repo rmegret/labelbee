@@ -1412,6 +1412,12 @@
    ],
    [
     "$",
+    "#mainAlertDialog",
+    "data",
+    "bs.modal"
+   ],
+   [
+    "$",
     "#mainAlertDialog .modal-body",
     "html",
     "ERROR loading events from file f.json<br>Expected property name or '}' in JSON at position 1"
@@ -1489,6 +1495,12 @@
     "#from-server-dialog",
     "is",
     ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "data",
+    "bs.modal"
    ],
    [
     "$",
@@ -1572,6 +1584,12 @@
     "#from-server-dialog",
     "is",
     ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "data",
+    "bs.modal"
    ],
    [
     "$",
@@ -3420,6 +3438,12 @@
    ],
    [
     "$",
+    "#mainAlertDialog",
+    "data",
+    "bs.modal"
+   ],
+   [
+    "$",
     "#mainAlertDialog .modal-body",
     "html",
     "ERROR loading tags from file f.json<br>Invalid tags format (details in the console)"
@@ -3658,6 +3682,12 @@
    ],
    [
     "$",
+    "#mainAlertDialog",
+    "data",
+    "bs.modal"
+   ],
+   [
+    "$",
     "#mainAlertDialog .modal-body",
     "html",
     "ERROR loading events from /some/url<br>Invalid events format (details in the console)"
@@ -3711,6 +3741,12 @@
     "ajax",
     "GET",
     "/some/url"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "data",
+    "bs.modal"
    ],
    [
     "$",
@@ -3909,6 +3945,12 @@
    ],
    [
     "$",
+    "#mainAlertDialog",
+    "data",
+    "bs.modal"
+   ],
+   [
+    "$",
     "#mainAlertDialog .modal-body",
     "html",
     "ERROR loading events with ID 12<br>Invalid event information obtained from server (video_data id=12)"
@@ -4020,6 +4062,12 @@
     "#from-server-dialog",
     "is",
     ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "data",
+    "bs.modal"
    ],
    [
     "$",
@@ -4477,6 +4525,12 @@
     "#from-server-dialog",
     "is",
     ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "data",
+    "bs.modal"
    ],
    [
     "$",

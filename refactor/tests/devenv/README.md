@@ -15,7 +15,7 @@ Check it works:
 
     python -c "import flask, cv2, numpy; print(flask.__version__, cv2.__version__)"
     node --test refactor/tests/golden/                     # 211 tests
-    pytest refactor/tests/browser                          # 52 browser tests, about a minute
+    pytest refactor/tests/browser                          # 55 browser tests, about a minute
     python tests/webapp/serve.py --port 8000               # dev webapp, then open http://127.0.0.1:8000/
     playwright --version
 

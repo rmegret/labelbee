@@ -25,7 +25,7 @@ a slice touches. Nothing here is a prerequisite to keep growing.
 Minimal, only what the first slices need.
 - [x] Maintainer answers for the first slice: [Q2](analysis/07-questions-and-proposals.md#q2) (ES modules, same libs), [Q8](analysis/07-questions-and-proposals.md#q8) (synthetic fixtures), [Q11](analysis/07-questions-and-proposals.md#q11) (run tests; tooling under `refactor/tests/` only). Others are asked when a slice needs them.
 - [ ] Confirm [ADR 0001](design/0001-strangler-migration.md)
-- [x] [`tests/CHECKLIST.md`](tests/CHECKLIST.md): manual browser checklist (smoke, store, loading, saving), automated by [`tests/browser/`](tests/browser/README.md) (52 tests, `pytest refactor/tests/browser`, [ADR 0006](design/0006-browser-tests.md))
+- [x] [`tests/CHECKLIST.md`](tests/CHECKLIST.md): manual browser checklist (smoke, store, loading, saving), automated by [`tests/browser/`](tests/browser/README.md) (55 tests, `pytest refactor/tests/browser`, [ADR 0006](design/0006-browser-tests.md))
 - [ ] Backend: make `pytest` collect and add a few smoke tests (login, `/api/v1/videos`, annotations round-trip, `/labelbee/gui` renders)
 - [ ] Frontend runner for pure-logic golden tests (Node, no browser), added with the first slice that needs it
 
