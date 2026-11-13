@@ -615,3 +615,31 @@ _Answer_: Full fix now (maintainer, 2026-11-12): copy `info`, `history` always a
 _Significance_: Moving dead code costs a golden and a bridge entry for nothing; deleting it is a change outside a pure move.
 _Proposed_: Do not move it. Delete it in step 3 as a separate commit, after the grep is rechecked. The stale log message of `saveEventsToBBoxes` stays in `DEBT-728`. Used only once the maintainer confirms.
 _Answer_: Keep it next to `tracksToBBoxes2` (maintainer, 2026-11-12, free-text answer): move both into the module. It stays unused by `saveEventsToBBoxes`, which calls `tracksToBBoxes2`; confirmed by the maintainer the same day ("yes, move both").
+
+**<a id='q18'>Q18</a>: Cut of slice 3: split get+decode from apply, no store yet?**
+The loaders of `labelbee/static/labelbee/js/AnnotationIO.js` fetch, decode and apply (`setTracks`/`setTags` write the globals, the DOM and the views) in one function. Should slice 3 leave the globals alone and only move fetch+decode out?
+_Significance_: Decides the size of the slice and whether the globals get an owner now.
+_Answer_: No (maintainer, 2026-11-12): this slice creates `AnnotationStore`, which owns only the in-memory data structures; a bridge keeps the legacy globals working and is replaced little by little by getters/setters; `AnnotationIO` owns the loaders and the promise logic. Written up in [ADR 0005](design/0005-slice-annotation-loaders.md).
+
+**<a id='q19'>Q19</a>: Which bugs to fix in slice 3 (step 5)?**
+Clear-cut candidates in code the slice touches: [DEBT-713](intent/debt.md) (`setTags` v1 key check reads the old `Tags`, not the loaded `obj`), [DEBT-733](intent/debt.md) (`setTags` assigns `Tags` before validating, a bad file leaves it half-replaced), [DEBT-710](intent/debt.md) rest (`null`/primitives throw before the format check, in `sanitizeEvents` and `setTags`), [DEBT-722](intent/debt.md) (`loadEventsFromServerByID` uses out-of-scope `div`, `tag_event_ID`, `theDialog`, so every path ends in a `ReferenceError`, and it does not return its promise although `labelBee.js:267` awaits it). Ambiguous, kept as `DEBT`: DEBT-719 (tag server failure wipes Tags, depends on OQ-706), DEBT-734 (empty v2 file, OQ-714), DEBT-709 (silent file errors: needs a message design).
+_Significance_: Each changes observable behavior; DEBT-733 and DEBT-722 change what the user sees on failure.
+_Proposed_: Fix DEBT-713, 733, 710-rest and 722 as four commits, each with its golden diff for approval; for DEBT-722 show the failure messages in the dialog as the code evidently intends and return the ajax promise.
+_Answer_: Fix in separate commits (maintainer, 2026-11-12), after the moves; each golden diff is still shown before its commit.
+
+**<a id='q20'>Q20</a>: Dead loaders: delete or move?**
+`loadEventsFromFile0`, `loadTagsCSVFromServer`, `loadTracksCSVFromDB`, `eventsFromServer` have no live caller or are deprecated ([DEBT-731](intent/debt.md), [DEBT-726](intent/debt.md), [DEBT-729](intent/debt.md), [DEBT-723](intent/debt.md)).
+_Significance_: Deleting changes what can be done by hand.
+_Answer_: Delete nothing (maintainer, 2026-11-12): some are designed to be called manually for debugging or manual loading, and anything that loads belongs in `AnnotationIO`. They stay in `AnnotationIO.js`, restructured with the others.
+
+**<a id='q21'>Q21</a>: What exactly does `AnnotationStore` own, and does it emit events?**
+[SEAM-701](intent/seams.md) proposes `replace(...)` emitting `annotations:changed` and a full `get/put/delete/rename(frame,id)` API. Today the refresh is explicit (`videoControl.onFrameChanged`, `refreshChronogram`), and derived data (`ttags`, `tagsHaveDM`, `flatTags`, `tagCache`) is computed by the views.
+_Significance_: Events would change who triggers refreshes (and the double refresh of DEBT-712); a larger API means more code in a slice that must stay behavior-preserving.
+_Proposed_: Own only `tracks`, `tracksInfo`, `tags`, `tagsInfo`; API `get*` and `replace*` returning the stored object itself; no events and no per-observation API in this slice (refresh stays explicit, derived data stays where it is). Events and `get/put/delete/rename` come with the writers that need them.
+_Answer_: Confirmed, with one addition (maintainer, 2026-11-12): `tagsHaveDM` goes into the store, as a property of the currently loaded tags. `ttags` and `flatTags` go to a `Derived` module when it is ready for them.
+
+**<a id='q22'>Q22</a>: Bridge technique: accessors on `window`, installed by a deferred module**
+The legacy code reads and writes `Tracks`, `Tags`, `TracksInfo`, `TagsInfo` as globals. [ADR 0005](design/0005-slice-annotation-loaders.md) section 2 proposes `Object.defineProperty(window, ...)` accessors set by `annotation/AnnotationStoreBridge.js` (an ES module, deferred like the codec bridge), and removal of `var Tracks`/`var Tags` from `labelbee/static/labelbee/js/Model.js:3-4`. Alternative: a classic script placed before `Model.js` that owns the accessors and a plain holder, with the ES module store adopting it later.
+_Significance_: With the module bridge, any read of `Tracks` while the page is still parsing would see `undefined` (none found by grep; the browser check confirms). The classic alternative removes that risk but keeps the data outside the ES module until a second step.
+_Proposed_: Module bridge, as for the codec; the `window.AnnotationStore` instance is exposed so migrated files call it directly.
+_Answer_: Confirmed (maintainer, 2026-11-12).
