@@ -150,7 +150,10 @@ async function loadIoEnv() {
         statusRequest: (...a) => fx('statusRequest', ...a),
         statusUpdate: (...a) => fx('statusUpdate', ...a),
       },
-      fromServerDialog: { setMessage: (...a) => fx('setMessage', ...a) },
+      // `basedOn` (lineage of the next save, BEH-730) is recorded as an effect when it is assigned
+      fromServerDialog: Object.defineProperty({ setMessage: (...a) => fx('setMessage', ...a) }, 'basedOn', {
+        get: () => undefined, set: (v) => fx('basedOn', v), enumerable: true,
+      }),
       theDialog: {},
       refreshChronogram: () => fx('refreshChronogram'),
       adjustChronogramHeight: () => fx('adjustChronogramHeight'),

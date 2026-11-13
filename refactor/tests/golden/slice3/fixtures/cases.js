@@ -92,9 +92,9 @@ const cases = [
   { name: 'eventsFromServer ok', fn: 'eventsFromServer', args: () => ['/some/url'], net: { ajax: { ok: v2() } } },
   { name: 'eventsFromServer wrong format keeps the model', fn: 'eventsFromServer', args: () => ['/some/url'], net: { ajax: { ok: { a: 1 } } }, init: OLD() },
   { name: 'eventsFromServer error', fn: 'eventsFromServer', args: () => ['/some/url'], net: { ajax: { err: true } } },
-  { name: 'loadEventsFromServerByID ok (ReferenceError after apply, DEBT-722)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { ok: { data: { data: text(v2()) } } } } },
-  { name: 'loadEventsFromServerByID wrong format (ReferenceError, DEBT-722)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { ok: { data: { data: text({ a: 1 }) } } } }, init: OLD() },
-  { name: 'loadEventsFromServerByID error (ReferenceError, DEBT-722)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { err: true } } },
+  { name: 'loadEventsFromServerByID ok sets the lineage and the message (DEBT-722)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { ok: { data: { data: text(v2()) } } } } },
+  { name: 'loadEventsFromServerByID wrong format shows the error and rejects (DEBT-722)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { ok: { data: { data: text({ a: 1 }) } } } }, init: OLD() },
+  { name: 'loadEventsFromServerByID request error shows the error and rejects (DEBT-722)', fn: 'loadEventsFromServerByID', args: () => [12], net: { ajax: { err: true } } },
 
   // ---- server: tags ----
   { name: 'tagsFromServer ok', fn: 'tagsFromServer', args: () => ['T1', 'div'], net: { getJSON: { ok: { data: { data: tagsV2() } } } }, init: { Tags: {} } },

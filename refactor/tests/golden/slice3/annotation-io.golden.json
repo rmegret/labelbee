@@ -3449,7 +3449,7 @@
    "/some/url"
   ]
  },
- "loadEventsFromServerByID ok (ReferenceError after apply, DEBT-722)": {
+ "loadEventsFromServerByID ok sets the lineage and the message (DEBT-722)": {
   "state": {
    "Tracks": {
     "0": {
@@ -3550,12 +3550,19 @@
    ],
    [
     "refreshChronogram"
+   ],
+   [
+    "basedOn",
+    12
+   ],
+   [
+    "setMessage",
+    "black",
+    "Events loaded."
    ]
   ],
   "cbErrors": [],
-  "rejections": [
-   "ReferenceError"
-  ],
+  "rejections": [],
   "alerts": [],
   "logs": [],
   "errors": [],
@@ -3563,7 +3570,7 @@
    12
   ]
  },
- "loadEventsFromServerByID wrong format (ReferenceError, DEBT-722)": {
+ "loadEventsFromServerByID wrong format shows the error and rejects (DEBT-722)": {
   "state": {
    "Tracks": {
     "9": {
@@ -3608,11 +3615,16 @@
    ],
    [
     "refreshChronogram"
+   ],
+   [
+    "setMessage",
+    "red",
+    "ERROR <br> setTracks: Invalid event information obtained from server."
    ]
   ],
   "cbErrors": [],
   "rejections": [
-   "ReferenceError"
+   "Error"
   ],
   "alerts": [],
   "logs": [
@@ -3624,7 +3636,7 @@
    12
   ]
  },
- "loadEventsFromServerByID error (ReferenceError, DEBT-722)": {
+ "loadEventsFromServerByID request error shows the error and rejects (DEBT-722)": {
   "state": {
    "Tracks": {
     "$": "undefined"
@@ -3650,11 +3662,16 @@
     "ajax",
     "GET",
     "URL:api/v1/annotation/12"
+   ],
+   [
+    "setMessage",
+    "red",
+    "ERROR in loading tag or event with ID 12"
    ]
   ],
   "cbErrors": [],
   "rejections": [
-   "ReferenceError"
+   "Error"
   ],
   "alerts": [],
   "logs": [],

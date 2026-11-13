@@ -1143,9 +1143,9 @@ function tracksListFromServer() {
 
 async function loadEventsFromServerByID(video_data_id) {
     //Sending GET request to flask API to retrieve json containing annotation data
-    // The Promise of the request is deliberately not returned: onhashchange (labelBee.js) awaits this
-    // function and must keep seeing it resolve at once, because the handlers below always throw (DEBT-722)
-    ajaxGetJSON(url_for("api/v1/annotation/" + video_data_id)).then(
+    // Resolves once the events are loaded; rejects when the request fails or the data is invalid
+    // (the message is also written in the from-server dialog)
+    return ajaxGetJSON(url_for("api/v1/annotation/" + video_data_id)).then(
       function (json) {
         //alert("success");  //response from the server given as alert message
 
@@ -1158,19 +1158,17 @@ async function loadEventsFromServerByID(video_data_id) {
 
         refreshChronogram();
         if(success){
-          console.log("Loaded event. ID:", tag_event_ID)
-          theDialog.basedOn = tag_event_ID;
+          console.log("Loaded event. ID:", video_data_id)
+          fromServerDialog.basedOn = video_data_id;
           fromServerDialog.setMessage("black","Events loaded.");
         }
         else{
-          div.find(".modal-message h4").css("color","red");
-          div.find('.modal-message h4').html("ERROR <br> setTracks: Invalid event information obtained from server.");
+          fromServerDialog.setMessage("red","ERROR <br> setTracks: Invalid event information obtained from server.");
           throw new Error("loadEventsFromServerByID: invalid event data for video_data id="+video_data_id)
         }
       },
       function () {
-        div.find(".modal-message h4").css("color","red");
-        div.find(".modal-message h4").html("ERROR in loading tag or event with ID " + tag_event_ID);
+        fromServerDialog.setMessage("red","ERROR in loading tag or event with ID " + video_data_id);
         throw new Error("loadEventsFromServerByID: could not load video_data id="+video_data_id)
       }
     );
