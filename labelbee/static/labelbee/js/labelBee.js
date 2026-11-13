@@ -264,8 +264,13 @@ onhashchange = async function(event) {
   if (parsedHash.has("video_data")) {
     let video_data_id = parsedHash.get("video_data")
     console.log("onhashchange: loading video_data="+video_data_id)
-    await loadEventsFromServerByID(video_data_id)
-    console.log("onhashchange: loadEventsFromServerByID SUCCESS")
+    try {
+      await loadEventsFromServerByID(video_data_id)
+      console.log("onhashchange: loadEventsFromServerByID SUCCESS")
+    } catch (error) {
+      // A failed load must not cancel the delayed seek and the hash cleanup below
+      console.log("onhashchange: loadEventsFromServerByID FAILED", error)
+    }
     parsedHash.delete("video_data")
     need_push = true
   }

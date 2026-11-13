@@ -43,6 +43,21 @@ and is its own commit series and review. The next slice is chosen after the prev
   - Bridge entries that stay until the callers move to modules (`saveEventsToFile`, `saveEventsToCSV`, `saveEventsToBBoxes`, `eventsToServer`): `window.tracksToCSV`, `tracksToBBoxes`, `tracksToBBoxes2`, and the zero-argument wrappers `window.convertTracksToV1` and `window.convertTracksToV2` that read the page globals `Tracks`, `TracksInfo`, `videoinfo` at call time (`annotation/AnnotationCodecBridge.js`).
   - Left for later: DEBT-727 (exports crash on an observation without `bool_acts`, no escaping), DEBT-708 (`saveEventsToFile` with an unknown format downloads "null"), `history` stays a string in memory after an import, unused `tracksToBBoxes` still moved with its sibling (DEBT-728).
 
+- [~] **Slice 3: `AnnotationStore` and the annotation loaders** (chosen by the maintainer 2026-11-12), done, branch `slice-annotation-loaders`, awaiting merge and the browser checks of [ADR 0005](design/0005-slice-annotation-loaders.md) section 6. ADR 0005 is still proposed; [Q18](QUESTIONS.md#q18)-[Q23](QUESTIONS.md#q23) answered 2026-11-12. `AnnotationStore` owns the in-memory data only (`Tracks`, `TracksInfo`, `Tags`, `TagsInfo`, `tagsHaveDM`); the loaders and their promise logic stay in `AnnotationIO.js`; nothing was deleted.
+  - Steps: (0) ADR 0005 and questions [x]; (1) goldens `refactor/tests/golden/slice3/` (72 cases) [x]; (2) `annotation/AnnotationStore.js` + `AnnotationStoreBridge.js`, `var Tracks/Tags` removed from `Model.js` [x]; (3) `setTracks`/`setTags`/`setEventsProp` write through the store, `decodeTags` in the codec, DM rule in the store [x]; (4) loaders as get/decode/apply promise pipelines in `AnnotationIO.js` [x]; (5) fixes, one commit each: DEBT-713, DEBT-733, DEBT-710 (rest), DEBT-722, then visible load errors ([Q23](QUESTIONS.md#q23)) [x]; (6) record [x]. Manual browser checks (ADR 0005 section 6) not run yet: the page loads, plays and draws with the bridge (an observation drawn, edited, erased); load a v1 and a v2 events file, a tags file, a bad file (alert appears) and a duplicate-id file; events from the server dialog and by `#video_data=<id>` (lineage set, delayed seek still runs after a bad id); tags through a video of the list; CSV by URL; save v2 after each.
+  - Bridge entries that stay until their callers move to modules: the five accessors of `annotation/AnnotationStoreBridge.js`, one per legacy global, removed when no file reads the name any more (`window.AnnotationStore` stays). References still using them, `grep -w` per file, lines, comments included, so `~`:
+
+    | Global | Files (~lines) |
+    |---|---|
+    | `Tracks` | `ChronoControl.js` 31, `Model.js` 28, `ZoomView.js` 16, `AnnotationIO.js` 13, `OverlayControl.js` 6, `SelectionControl.js` 4, `labelBee.js` 1 |
+    | `Tags` | `ChronoControl.js` 19, `AnnotationIO.js` 15, `OverlayControl.js` 9, `ZoomView.js` 9, `Model.js` 4, `VideoList.js` 1, `SelectionControl.js` 1 |
+    | `TracksInfo` | `AnnotationIO.js` 5 |
+    | `TagsInfo` | none (written through the store) |
+    | `tagsHaveDM` | `OverlayControl.js` 1 |
+
+    Also `window.decodeTags` (`annotation/AnnotationCodecBridge.js`, called by `setTags`), added to the codec bridge entries listed for slices 1 and 2.
+  - Left for later: store change events and a per-observation API (SEAM-701; the double refresh of DEBT-712 goes with it), `ttags`/`flatTags`/`allTagsID` to a `Derived` module (DEBT-736), DEBT-719 (`tagsFromServer` returns `undefined` for the dialog and empties the Tags on failure, [OQ-706](QUESTIONS.md#oq-706)), DEBT-734 (a v2 events file without `data` empties the model, [OQ-714](QUESTIONS.md#oq-714)), DEBT-715 (DM rule looks at one tag; a first frame without `tags` is rejected), DEBT-718 (`FromServerDialog.loadEvents` writes into a selector that matches nothing), `success` and `tags` implicit globals (DEBT-712), the rethrow after the alert leaves an extra "Uncaught (in promise)" console line, lineage `basedOn` semantics ([OQ-707](QUESTIONS.md#oq-707), now also set by `loadEventsFromServerByID`).
+
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 
 | Area | Candidate slices |
@@ -63,3 +78,4 @@ budget. They can be revisited when a slice needs them.
 - [ADR 0001](design/0001-strangler-migration.md): strangler migration (proposed)
 - [ADR 0003](design/0003-notifier.md): `core/Notifier.js`, shared alert/log module (proposed)
 - [ADR 0004](design/0004-slice-annotation-save-codec.md): slice 2, annotation save/export codec (proposed)
+- [ADR 0005](design/0005-slice-annotation-loaders.md): slice 3, `AnnotationStore` and the annotation loaders (proposed)

@@ -227,10 +227,10 @@
       null
     ],
     "alerts": [],
-    "logs": [],
-    "errors": [
-      "TypeError"
+    "logs": [
+      "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys."
     ],
+    "errors": [],
     "sql": []
   },
   "sanitize undefined": {
@@ -243,10 +243,10 @@
       }
     ],
     "alerts": [],
-    "logs": [],
-    "errors": [
-      "TypeError"
+    "logs": [
+      "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys."
     ],
+    "errors": [],
     "sql": []
   },
   "sanitize number": {
@@ -257,10 +257,10 @@
       5
     ],
     "alerts": [],
-    "logs": [],
-    "errors": [
-      "TypeError"
+    "logs": [
+      "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys."
     ],
+    "errors": [],
     "sql": []
   },
   "sanitize string": {
@@ -271,10 +271,10 @@
       "abc"
     ],
     "alerts": [],
-    "logs": [],
-    "errors": [
-      "TypeError"
+    "logs": [
+      "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys."
     ],
+    "errors": [],
     "sql": []
   },
   "sanitize v2 plain": {

@@ -1,0 +1,5309 @@
+{
+ "setTracks v2": {
+  "returned": true,
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     "2": {
+      "ID": "2",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    },
+    "4": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "synthetic",
+    "notes": "my notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "$",
+    "#events-notes",
+    "val",
+    "my notes"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "events-multiframe",
+     "source": "synthetic",
+     "notes": "my notes"
+    },
+    "data": {
+     "0": [
+      {
+       "id": 1,
+       "cx": 10,
+       "cy": 20,
+       "angle": 30,
+       "width": 5,
+       "height": 6,
+       "x": 1,
+       "y": 2
+      },
+      {
+       "id": 2,
+       "cx": 10,
+       "cy": 20,
+       "angle": 30,
+       "width": 5,
+       "height": 6,
+       "x": 1,
+       "y": 2
+      }
+     ],
+     "4": [
+      {
+       "id": 1,
+       "cx": 10,
+       "cy": 20,
+       "angle": 30,
+       "width": 5,
+       "height": 6,
+       "x": 1,
+       "y": 2
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "setTracks v2 skipRefresh": {
+  "returned": true,
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     "2": {
+      "ID": "2",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    },
+    "4": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "synthetic"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "events-multiframe",
+     "source": "synthetic"
+    },
+    "data": {
+     "0": [
+      {
+       "id": 1,
+       "cx": 10,
+       "cy": 20,
+       "angle": 30,
+       "width": 5,
+       "height": 6,
+       "x": 1,
+       "y": 2
+      },
+      {
+       "id": 2,
+       "cx": 10,
+       "cy": 20,
+       "angle": 30,
+       "width": 5,
+       "height": 6,
+       "x": 1,
+       "y": 2
+      }
+     ],
+     "4": [
+      {
+       "id": 1,
+       "cx": 10,
+       "cy": 20,
+       "angle": 30,
+       "width": 5,
+       "height": 6,
+       "x": 1,
+       "y": 2
+      }
+     ]
+    }
+   },
+   true
+  ]
+ },
+ "setTracks v1 object": {
+  "returned": true,
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "id": 1,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "pollen"
+     }
+    },
+    "5": {}
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from Tracks v1 object"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "0": {
+     "1": {
+      "id": 1,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "pollen"
+     }
+    },
+    "5": {}
+   }
+  ]
+ },
+ "setTracks v1 array": {
+  "returned": true,
+  "state": {
+   "Tracks": {
+    "0": {
+     "3": {
+      "id": 3,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from Tracks v1 array"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   [
+    {
+     "3": {
+      "id": 3,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   ]
+  ]
+ },
+ "setTracks empty array (erase)": {
+  "returned": true,
+  "state": {
+   "Tracks": {},
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from Tracks v1 array"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   []
+  ]
+ },
+ "setTracks wrong format keeps the model": {
+  "returned": false,
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. All keys should be positive integers (frame ids).",
+   "setTracks: ABORTED, wrong format."
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "a": 1
+   }
+  ]
+ },
+ "setTracks wrong info.type keeps the model": {
+  "returned": false,
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. info[\"type\"]=tags-multiframe",
+   "setTracks: ABORTED, wrong format."
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    },
+    "data": {}
+   }
+  ]
+ },
+ "setTracks null is rejected with the unsupported-format message (DEBT-710)": {
+  "returned": false,
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys.",
+   "setTracks: ABORTED, wrong format."
+  ],
+  "errors": [],
+  "argsAfter": [
+   null
+  ]
+ },
+ "setTracks number is rejected (DEBT-710)": {
+  "returned": false,
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. Should be either array of frames, or object with frame ids as keys.",
+   "setTracks: ABORTED, wrong format."
+  ],
+  "errors": [],
+  "argsAfter": [
+   5
+  ]
+ },
+ "setTracks v2 duplicate ids alerts": {
+  "returned": true,
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "synthetic"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [
+   "WARNING: Events file was loaded, but it has duplicate entries. Current version of software deleted redundant events."
+  ],
+  "logs": [
+   "sanitizeEvents: WARNING duplicate entry: data[0][1] with id=1 ignored."
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "events-multiframe",
+     "source": "synthetic"
+    },
+    "data": {
+     "0": [
+      {
+       "id": 1,
+       "cx": 10,
+       "cy": 20,
+       "angle": 30,
+       "width": 5,
+       "height": 6,
+       "x": 1,
+       "y": 2
+      },
+      {
+       "id": 1,
+       "cx": 10,
+       "cy": 20,
+       "angle": 30,
+       "width": 5,
+       "height": 6,
+       "x": 1,
+       "y": 2
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "setTracks v2 without data replaces by empty (DEBT-734)": {
+  "returned": true,
+  "state": {
+   "Tracks": {},
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "synthetic"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "events-multiframe",
+     "source": "synthetic"
+    }
+   }
+  ]
+ },
+ "setEventsProp with TracksInfo": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "x"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "notes",
+   "x"
+  ]
+ },
+ "setEventsProp without TracksInfo creates it": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "notes": "x"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "notes",
+   "x"
+  ]
+ },
+ "eraseEvents confirmed": {
+  "state": {
+   "Tracks": {},
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from Tracks v1 array"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "confirm"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ },
+ "eraseEvents canceled": {
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "confirm"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ },
+ "onReaderLoad v2": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     "2": {
+      "ID": "2",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    },
+    "4": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "synthetic"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "result": "{\"info\":{\"type\":\"events-multiframe\",\"source\":\"synthetic\"},\"data\":{\"0\":[{\"id\":1,\"cx\":10,\"cy\":20,\"angle\":30,\"width\":5,\"height\":6,\"x\":1,\"y\":2},{\"id\":2,\"cx\":10,\"cy\":20,\"angle\":30,\"width\":5,\"height\":6,\"x\":1,\"y\":2}],\"4\":[{\"id\":1,\"cx\":10,\"cy\":20,\"angle\":30,\"width\":5,\"height\":6,\"x\":1,\"y\":2}]}}"
+    }
+   }
+  ]
+ },
+ "onReaderLoad v1": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "id": 1,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "pollen"
+     }
+    },
+    "5": {}
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from Tracks v1 object"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "result": "{\"0\":{\"1\":{\"id\":1,\"cx\":10,\"cy\":20,\"angle\":30,\"width\":5,\"height\":6,\"x\":1,\"y\":2,\"labels\":\"pollen\"}},\"5\":{}}"
+    }
+   }
+  ]
+ },
+ "onReaderLoad invalid JSON throws, model kept": {
+  "threw": "SyntaxError",
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "result": "{not json"
+    }
+   }
+  ]
+ },
+ "onReaderLoad wrong format keeps the model": {
+  "threw": "Error",
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. All keys should be positive integers (frame ids).",
+   "setTracks: ABORTED, wrong format."
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "result": "{\"a\":1}"
+    }
+   }
+  ]
+ },
+ "loadEventsFromFile v2": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     "2": {
+      "ID": "2",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    },
+    "4": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "synthetic"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "readAsText"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "files": [
+      {
+       "name": "f.json",
+       "text": "{\"info\":{\"type\":\"events-multiframe\",\"source\":\"synthetic\"},\"data\":{\"0\":[{\"id\":1,\"cx\":10,\"cy\":20,\"angle\":30,\"width\":5,\"height\":6,\"x\":1,\"y\":2},{\"id\":2,\"cx\":10,\"cy\":20,\"angle\":30,\"width\":5,\"height\":6,\"x\":1,\"y\":2}],\"4\":[{\"id\":1,\"cx\":10,\"cy\":20,\"angle\":30,\"width\":5,\"height\":6,\"x\":1,\"y\":2}]}}"
+      }
+     ],
+     "value": ""
+    }
+   }
+  ]
+ },
+ "loadEventsFromFile invalid JSON": {
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "readAsText"
+   ],
+   [
+    "$",
+    "#from-server-dialog",
+    "is",
+    ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog .modal-body",
+    "html",
+    "ERROR loading events from file f.json<br>Expected property name or '}' in JSON at position 1"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "modal",
+    "show"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [
+   "SyntaxError"
+  ],
+  "alerts": [],
+  "logs": [],
+  "errors": [
+   "loading events from file f.json SyntaxError"
+  ],
+  "argsAfter": [
+   {
+    "target": {
+     "files": [
+      {
+       "name": "f.json",
+       "text": "{not json"
+      }
+     ],
+     "value": ""
+    }
+   }
+  ]
+ },
+ "loadEventsFromFile wrong format is an error shown to the user (Q23)": {
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "readAsText"
+   ],
+   [
+    "$",
+    "#from-server-dialog",
+    "is",
+    ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog .modal-body",
+    "html",
+    "ERROR loading events from file f.json<br>Invalid events format (details in the console)"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "modal",
+    "show"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [
+   "Error"
+  ],
+  "alerts": [],
+  "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. All keys should be positive integers (frame ids).",
+   "setTracks: ABORTED, wrong format."
+  ],
+  "errors": [
+   "loading events from file f.json Error"
+  ],
+  "argsAfter": [
+   {
+    "target": {
+     "files": [
+      {
+       "name": "f.json",
+       "text": "{\"a\":1}"
+      }
+     ],
+     "value": ""
+    }
+   }
+  ]
+ },
+ "loadEventsFromFile error text is escaped (Q23)": {
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "readAsText"
+   ],
+   [
+    "$",
+    "#from-server-dialog",
+    "is",
+    ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog .modal-body",
+    "html",
+    "ERROR loading events from file f.json<br>Unexpected token '&lt;', \"&lt;img src=x\"... is not valid JSON"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "modal",
+    "show"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [
+   "SyntaxError"
+  ],
+  "alerts": [],
+  "logs": [],
+  "errors": [
+   "loading events from file f.json SyntaxError"
+  ],
+  "argsAfter": [
+   {
+    "target": {
+     "files": [
+      {
+       "name": "f.json",
+       "text": "<img src=x onerror=alert(1)>"
+      }
+     ],
+     "value": ""
+    }
+   }
+  ]
+ },
+ "loadEventsFromFile canceled": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "files": [],
+     "value": ""
+    }
+   }
+  ]
+ },
+ "loadEventsFromFile0 from URL": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     "2": {
+      "ID": "2",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    },
+    "4": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "synthetic"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "get",
+    "data/Tracks.json"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "data/Tracks.json"
+  ]
+ },
+ "setTags v1 with dm": {
+  "returned": 1,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60,
+       "frame": 0
+      },
+      {
+       "id": 6,
+       "dm": 55,
+       "frame": 0
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59,
+       "frame": 3
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "getTTags",
+    [
+     "0",
+     "3"
+    ]
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    false
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    false
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60,
+       "frame": 0
+      },
+      {
+       "id": 6,
+       "dm": 55,
+       "frame": 0
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59,
+       "frame": 3
+      }
+     ]
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v1 without dm": {
+  "returned": 1,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "1": {
+     "tags": [
+      {
+       "id": 7,
+       "frame": 1
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": false,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "getTTags",
+    [
+     "1"
+    ]
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    true
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    true
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "1": {
+     "tags": [
+      {
+       "id": 7,
+       "frame": 1
+      }
+     ]
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v1 empty object": {
+  "returned": 1,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {},
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": false,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "getTTags",
+    []
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    true
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    true
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {},
+   ""
+  ]
+ },
+ "setTags v1 bad key is rejected whatever the previous Tags (DEBT-713)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {},
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "a": {
+     "tags": []
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v1 bad key among good ones is rejected": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "0": {
+     "tags": []
+    },
+    "b": {
+     "tags": []
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v1 good keys are accepted whatever the previous Tags (DEBT-713)": {
+  "returned": 1,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60,
+       "frame": 0
+      },
+      {
+       "id": 6,
+       "dm": 55,
+       "frame": 0
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59,
+       "frame": 3
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "getTTags",
+    [
+     "0",
+     "3"
+    ]
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    false
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    false
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60,
+       "frame": 0
+      },
+      {
+       "id": 6,
+       "dm": 55,
+       "frame": 0
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59,
+       "frame": 3
+      }
+     ]
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v2": {
+  "returned": 1,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60,
+       "frame": 0
+      },
+      {
+       "id": 6,
+       "dm": 55,
+       "frame": 0
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59,
+       "frame": 3
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "getTTags",
+    [
+     "0",
+     "3"
+    ]
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    false
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    false
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    },
+    "data": {
+     "0": {
+      "tags": [
+       {
+        "id": 5,
+        "dm": 60,
+        "frame": 0
+       },
+       {
+        "id": 6,
+        "dm": 55,
+        "frame": 0
+       }
+      ]
+     },
+     "3": {
+      "tags": [
+       {
+        "id": 5,
+        "dm": 59,
+        "frame": 3
+       }
+      ]
+     }
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v2 wrong info.type": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. info[\"type\"]=events-multiframe"
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "events-multiframe",
+     "source": "synthetic"
+    },
+    "data": {}
+   },
+   ""
+  ]
+ },
+ "setTags v2 without data is rejected, Tags kept (DEBT-733)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. \"data\" should be an object, found undefined"
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v2 data null is rejected": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. \"data\" should be an object, found null"
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    },
+    "data": null
+   },
+   ""
+  ]
+ },
+ "setTags v2 data not an object is rejected": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. \"data\" should be an object, found string"
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    },
+    "data": "abc"
+   },
+   ""
+  ]
+ },
+ "setTags v2 frame without tags: rolled back, previous Tags, DM flag and ttags kept (DEBT-733, DEBT-715)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "old"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "old": 1
+   }
+  },
+  "fx": [
+   [
+    "getTTags",
+    [
+     "0"
+    ]
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, malformed tag data. The previous Tags are kept."
+  ],
+  "errors": [
+   "TypeError"
+  ],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    },
+    "data": {
+     "0": {}
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v2 null frame: rolled back before getTTags (DEBT-733)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "old": 1
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, malformed tag data. The previous Tags are kept."
+  ],
+  "errors": [
+   "TypeError"
+  ],
+  "argsAfter": [
+   {
+    "info": {
+     "type": "tags-multiframe",
+     "source": "synthetic"
+    },
+    "data": {
+     "0": null
+    }
+   },
+   ""
+  ]
+ },
+ "setTags v2 info null caught": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [
+   "TypeError"
+  ],
+  "argsAfter": [
+   {
+    "info": null,
+    "data": {}
+   },
+   ""
+  ]
+ },
+ "setTags null is rejected (DEBT-710)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. typeof(obj) is \"null\", should be \"object\""
+  ],
+  "errors": [],
+  "argsAfter": [
+   null,
+   ""
+  ]
+ },
+ "setTags undefined is rejected (DEBT-710)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. typeof(obj) is \"undefined\", should be \"object\""
+  ],
+  "errors": [],
+  "argsAfter": [
+   {
+    "$": "undefined"
+   },
+   ""
+  ]
+ },
+ "setTags number is rejected (DEBT-710)": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. typeof(obj) is \"number\", should be \"object\""
+  ],
+  "errors": [],
+  "argsAfter": [
+   5,
+   ""
+  ]
+ },
+ "setTags string is rejected": {
+  "returned": 0,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. typeof(obj) is \"string\", should be \"object\""
+  ],
+  "errors": [],
+  "argsAfter": [
+   "abc",
+   ""
+  ]
+ },
+ "setTags array": {
+  "returned": 1,
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": [],
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": false,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "getTTags",
+    []
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    true
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    true
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   [],
+   ""
+  ]
+ },
+ "eraseTags confirmed": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {},
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": false,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "confirm"
+   ],
+   [
+    "getTTags",
+    []
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    true
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    true
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ },
+ "eraseTags canceled": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "confirm"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ },
+ "onTagsReaderLoad v1": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60,
+       "frame": 0
+      },
+      {
+       "id": 6,
+       "dm": 55,
+       "frame": 0
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59,
+       "frame": 3
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "getTTags",
+    [
+     "0",
+     "3"
+    ]
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    false
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    false
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "result": "{\"0\":{\"tags\":[{\"id\":5,\"dm\":60},{\"id\":6,\"dm\":55}]},\"3\":{\"tags\":[{\"id\":5,\"dm\":59}]}}"
+    }
+   }
+  ]
+ },
+ "onTagsReaderLoad invalid JSON throws": {
+  "threw": "SyntaxError",
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "result": "{no"
+    }
+   }
+  ]
+ },
+ "loadTagsFromFile v2": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60,
+       "frame": 0
+      },
+      {
+       "id": 6,
+       "dm": 55,
+       "frame": 0
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59,
+       "frame": 3
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "readAsText"
+   ],
+   [
+    "getTTags",
+    [
+     "0",
+     "3"
+    ]
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    false
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    false
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "files": [
+      {
+       "name": "f.json",
+       "text": "{\"info\":{\"type\":\"tags-multiframe\",\"source\":\"synthetic\"},\"data\":{\"0\":{\"tags\":[{\"id\":5,\"dm\":60},{\"id\":6,\"dm\":55}]},\"3\":{\"tags\":[{\"id\":5,\"dm\":59}]}}}"
+      }
+     ],
+     "value": ""
+    }
+   }
+  ]
+ },
+ "loadTagsFromFile rejected format is an error shown to the user (Q23)": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "readAsText"
+   ],
+   [
+    "$",
+    "#from-server-dialog",
+    "is",
+    ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog .modal-body",
+    "html",
+    "ERROR loading tags from file f.json<br>Invalid tags format (details in the console)"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "modal",
+    "show"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [
+   "Error"
+  ],
+  "alerts": [],
+  "logs": [
+   "setTags: ABORTED, unsupported file format. info[\"type\"]=events-multiframe"
+  ],
+  "errors": [
+   "loading tags from file f.json Error"
+  ],
+  "argsAfter": [
+   {
+    "target": {
+     "files": [
+      {
+       "name": "f.json",
+       "text": "{\"info\":{\"type\":\"events-multiframe\",\"source\":\"synthetic\"},\"data\":{}}"
+      }
+     ],
+     "value": ""
+    }
+   }
+  ]
+ },
+ "loadTagsFromFile canceled": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   {
+    "target": {
+     "files": [],
+     "value": ""
+    }
+   }
+  ]
+ },
+ "eventsFromServer ok": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     "2": {
+      "ID": "2",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    },
+    "4": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "synthetic"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "ajax",
+    "GET",
+    "/some/url"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "$",
+    "#loadTracksFromServerDialog",
+    "modal",
+    "hide"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "/some/url"
+  ]
+ },
+ "eventsFromServer wrong format keeps the model": {
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "ajax",
+    "GET",
+    "/some/url"
+   ],
+   [
+    "$",
+    "#from-server-dialog",
+    "is",
+    ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog .modal-body",
+    "html",
+    "ERROR loading events from /some/url<br>Invalid events format (details in the console)"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "modal",
+    "show"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [
+   "Error"
+  ],
+  "alerts": [],
+  "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. All keys should be positive integers (frame ids).",
+   "setTracks: ABORTED, wrong format."
+  ],
+  "errors": [
+   "loading events from /some/url Error"
+  ],
+  "argsAfter": [
+   "/some/url"
+  ]
+ },
+ "eventsFromServer error": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "ajax",
+    "GET",
+    "/some/url"
+   ],
+   [
+    "$",
+    "#mainAlertDialog .modal-body",
+    "html",
+    "ERROR in eventsFromServer<br>Status: ST<br>Error: ET<br>RT"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "modal",
+    "show"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "/some/url"
+  ]
+ },
+ "loadEventsFromServerByID ok sets the lineage and the message (DEBT-722)": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     },
+     "2": {
+      "ID": "2",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    },
+    "4": {
+     "1": {
+      "ID": "1",
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2,
+      "labels": "",
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "synthetic"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "ajax",
+    "GET",
+    "URL:api/v1/annotation/12"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "basedOn",
+    12
+   ],
+   [
+    "setMessage",
+    "black",
+    "Events loaded."
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   12
+  ]
+ },
+ "loadEventsFromServerByID wrong format shows the error and rejects (DEBT-722)": {
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "ajax",
+    "GET",
+    "URL:api/v1/annotation/12"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "$",
+    "#from-server-dialog",
+    "is",
+    ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog .modal-body",
+    "html",
+    "ERROR loading events with ID 12<br>Invalid event information obtained from server (video_data id=12)"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "modal",
+    "show"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [
+   "Error"
+  ],
+  "alerts": [],
+  "logs": [
+   "sanitizeEvents: ABORTED, unsupported file format. All keys should be positive integers (frame ids).",
+   "setTracks: ABORTED, wrong format."
+  ],
+  "errors": [
+   "loading events with ID 12 Error"
+  ],
+  "argsAfter": [
+   12
+  ]
+ },
+ "loadEventsFromServerByID request error with the dialog open writes in the dialog (Q23)": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "ajax",
+    "GET",
+    "URL:api/v1/annotation/12"
+   ],
+   [
+    "$",
+    "#from-server-dialog",
+    "is",
+    ":visible"
+   ],
+   [
+    "setMessage",
+    "red",
+    "ERROR loading events with ID 12<br>Could not load video_data id=12"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [
+   "Error"
+  ],
+  "alerts": [],
+  "logs": [],
+  "errors": [
+   "loading events with ID 12 Error"
+  ],
+  "argsAfter": [
+   12
+  ]
+ },
+ "loadEventsFromServerByID request error shows the error and rejects (DEBT-722)": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "ajax",
+    "GET",
+    "URL:api/v1/annotation/12"
+   ],
+   [
+    "$",
+    "#from-server-dialog",
+    "is",
+    ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog .modal-body",
+    "html",
+    "ERROR loading events with ID 12<br>Could not load video_data id=12"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "modal",
+    "show"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [
+   "Error"
+  ],
+  "alerts": [],
+  "logs": [],
+  "errors": [
+   "loading events with ID 12 Error"
+  ],
+  "argsAfter": [
+   12
+  ]
+ },
+ "tagsFromServer ok": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60,
+       "frame": 0
+      },
+      {
+       "id": 6,
+       "dm": 55,
+       "frame": 0
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59,
+       "frame": 3
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "statusRequest",
+    "tagsLoad",
+    ""
+   ],
+   [
+    "getJSON",
+    "URL:rest/v2/annotation/T1"
+   ],
+   [
+    "statusUpdate",
+    "tagsLoad",
+    true,
+    ""
+   ],
+   [
+    "getTTags",
+    [
+     "0",
+     "3"
+    ]
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    false
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    false
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "T1",
+   "div"
+  ]
+ },
+ "tagsFromServer null data": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 60
+      },
+      {
+       "id": 6,
+       "dm": 55
+      }
+     ]
+    },
+    "3": {
+     "tags": [
+      {
+       "id": 5,
+       "dm": 59
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "statusRequest",
+    "tagsLoad",
+    ""
+   ],
+   [
+    "getJSON",
+    "URL:rest/v2/annotation/T1"
+   ],
+   [
+    "statusUpdate",
+    "tagsLoad",
+    true,
+    ""
+   ],
+   [
+    "setMessage",
+    "red",
+    "ERROR: Tag data stored in server is null."
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "T1",
+   "div"
+  ]
+ },
+ "tagsFromServer failure empties Tags (DEBT-719)": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": [],
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": false,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "statusRequest",
+    "tagsLoad",
+    ""
+   ],
+   [
+    "getJSON",
+    "URL:rest/v2/annotation/T1"
+   ],
+   [
+    "statusUpdate",
+    "tagsLoad",
+    false,
+    ""
+   ],
+   [
+    "getTTags",
+    []
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    true
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    true
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "T1",
+   "div"
+  ]
+ },
+ "loadTracksCSVFromServer ok": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "frame": 0,
+      "cx": 100.5,
+      "cy": 200,
+      "angle": 100,
+      "width": 300,
+      "height": 600,
+      "x": -49.5,
+      "y": -100,
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "labels": "",
+      "parts": [
+       {
+        "posFrame": {
+         "x": 1,
+         "y": 2
+        },
+        "label": "head"
+       },
+       {
+        "posFrame": {
+         "x": 5,
+         "y": 6
+        },
+        "label": "thorax"
+       },
+       {
+        "posFrame": {
+         "x": 7,
+         "y": 8
+        },
+        "label": "tail"
+       }
+      ]
+     }
+    },
+    "3": {
+     "1": {
+      "ID": "1",
+      "frame": 3,
+      "cx": 100.5,
+      "cy": 200,
+      "angle": 100,
+      "width": 300,
+      "height": 600,
+      "x": -49.5,
+      "y": -100,
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "labels": "",
+      "parts": [
+       {
+        "posFrame": {
+         "x": 1,
+         "y": 2
+        },
+        "label": "head"
+       },
+       {
+        "posFrame": {
+         "x": 5,
+         "y": 6
+        },
+        "label": "thorax"
+       },
+       {
+        "posFrame": {
+         "x": 7,
+         "y": 8
+        },
+        "label": "tail"
+       }
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from CSV \"/t.csv\"",
+    "history": "Loaded in Labelbee on 2000-01-02T03:04:05.000Z"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "csv",
+    "/t.csv"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "/t.csv"
+  ]
+ },
+ "loadTracksCSVFromServer request failure (unhandled)": {
+  "state": {
+   "Tracks": {
+    "9": {
+     "9": {
+      "id": 9,
+      "cx": 10,
+      "cy": 20,
+      "angle": 30,
+      "width": 5,
+      "height": 6,
+      "x": 1,
+      "y": 2
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "old",
+    "notes": "old notes"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "csv",
+    "/t.csv"
+   ],
+   [
+    "$",
+    "#from-server-dialog",
+    "is",
+    ":visible"
+   ],
+   [
+    "$",
+    "#mainAlertDialog .modal-body",
+    "html",
+    "ERROR loading tracks CSV from /t.csv<br>csv"
+   ],
+   [
+    "$",
+    "#mainAlertDialog",
+    "modal",
+    "show"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [
+   "Error"
+  ],
+  "alerts": [],
+  "logs": [],
+  "errors": [
+   "loading tracks CSV from /t.csv Error"
+  ],
+  "argsAfter": [
+   "/t.csv"
+  ]
+ },
+ "loadTracksCSVFromServer empty csv": {
+  "state": {
+   "Tracks": {},
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from CSV \"/t.csv\"",
+    "history": "Loaded in Labelbee on 2000-01-02T03:04:05.000Z"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "csv",
+    "/t.csv"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "/t.csv"
+  ]
+ },
+ "loadTrackTaggedCSVFromServer ok": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "42": {
+      "ID": "42",
+      "tag": {
+       "id": 42,
+       "frame": 0,
+       "c": [
+        11,
+        12
+       ],
+       "hamming": 0,
+       "goodness": 45.5,
+       "dm": 60,
+       "p": [
+        [
+         1,
+         2
+        ],
+        [
+         3,
+         4
+        ],
+        [
+         5,
+         6
+        ],
+        [
+         7,
+         8
+        ]
+       ]
+      },
+      "frame": 0,
+      "cx": 100.5,
+      "cy": 200,
+      "angle": 100,
+      "width": 300,
+      "height": 600,
+      "x": -49.5,
+      "y": -100,
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "labels": "",
+      "parts": [
+       {
+        "posFrame": {
+         "x": 1,
+         "y": 2
+        },
+        "label": "head"
+       },
+       {
+        "posFrame": {
+         "x": 5,
+         "y": 6
+        },
+        "label": "thorax"
+       },
+       {
+        "posFrame": {
+         "x": 7,
+         "y": 8
+        },
+        "label": "tail"
+       }
+      ]
+     }
+    },
+    "1": {
+     "T2": {
+      "ID": "T2",
+      "frame": 1,
+      "cx": 100.5,
+      "cy": 200,
+      "angle": 100,
+      "width": 300,
+      "height": 600,
+      "x": -49.5,
+      "y": -100,
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "labels": "",
+      "parts": [
+       {
+        "posFrame": {
+         "x": 1,
+         "y": 2
+        },
+        "label": "head"
+       },
+       {
+        "posFrame": {
+         "x": 5,
+         "y": 6
+        },
+        "label": "thorax"
+       },
+       {
+        "posFrame": {
+         "x": 7,
+         "y": 8
+        },
+        "label": "tail"
+       }
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from CSV \"/tt.csv\"",
+    "history": "Loaded in Labelbee on 2000-01-02T03:04:05.000Z"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "csv",
+    "/tt.csv"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "/tt.csv"
+  ]
+ },
+ "loadTagsCSVFromServer ok (Tracks then Tags)": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "12": {
+      "ID": "12",
+      "frame": 0,
+      "cx": 11,
+      "cy": 12,
+      "angle": 100,
+      "width": 300,
+      "height": 600,
+      "x": -139,
+      "y": -288,
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "labels": "",
+      "parts": [
+       {
+        "posFrame": {
+         "x": 1,
+         "y": 2
+        },
+        "label": "head"
+       },
+       {
+        "posFrame": {
+         "x": 5,
+         "y": 6
+        },
+        "label": "thorax"
+       },
+       {
+        "posFrame": {
+         "x": 7,
+         "y": 8
+        },
+        "label": "tail"
+       }
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from CSV \"/g.csv\"",
+    "history": "Loaded in Labelbee on 2000-01-02T03:04:05.000Z"
+   },
+   "Tags": {
+    "0": {
+     "tags": [
+      {
+       "id": "12",
+       "frame": 0,
+       "c": [
+        {
+         "$": "NaN"
+        },
+        {
+         "$": "NaN"
+        }
+       ],
+       "hamming": 0,
+       "goodness": 45.5,
+       "dm": 60,
+       "p": [
+        [
+         1,
+         2
+        ],
+        [
+         3,
+         4
+        ],
+        [
+         5,
+         6
+        ],
+        [
+         7,
+         8
+        ]
+       ]
+      }
+     ]
+    }
+   },
+   "TagsInfo": {
+    "type": "tags-multiframe",
+    "source": "Converted from Tags v1"
+   },
+   "tagsHaveDM": true,
+   "ttags": {
+    "stub": "ttags"
+   }
+  },
+  "fx": [
+   [
+    "csv",
+    "/g.csv"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "getTTags",
+    [
+     "0"
+    ]
+   ],
+   [
+    "$",
+    ".requireDM",
+    "prop",
+    "disabled",
+    false
+   ],
+   [
+    "$",
+    ".requireDM",
+    "toggleClass",
+    "disabled",
+    false
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "adjustChronogramHeight"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": [
+   "/g.csv"
+  ]
+ },
+ "loadTracksCSVFromDB": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "frame": 0,
+      "cx": 10,
+      "cy": 20,
+      "angle": 100,
+      "width": 300,
+      "height": 600,
+      "x": -140,
+      "y": -280,
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "labels": ""
+     }
+    },
+    "3": {
+     "1": {
+      "ID": "1",
+      "frame": 3,
+      "cx": 12,
+      "cy": 22,
+      "angle": 102,
+      "width": 300,
+      "height": 600,
+      "x": -138,
+      "y": -278,
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "labels": ""
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Imported form DB",
+    "history": "Loaded in Labelbee on 2000-01-02T03:04:05.000Z"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "db.exec",
+    "SELECT frame,CAST(track_id AS TEXT) as id, cx, cy, angle + 90 AS angle, 300 as width, 600 as height, cx-300/2 as x, cy-600/2 as y \n  FROM data \n  LIMIT 100"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ },
+ "clickLoadTracksCSVFromServer with URL": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "1": {
+      "ID": "1",
+      "frame": 0,
+      "cx": 100.5,
+      "cy": 200,
+      "angle": 100,
+      "width": 300,
+      "height": 600,
+      "x": -49.5,
+      "y": -100,
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "labels": "",
+      "parts": [
+       {
+        "posFrame": {
+         "x": 1,
+         "y": 2
+        },
+        "label": "head"
+       },
+       {
+        "posFrame": {
+         "x": 5,
+         "y": 6
+        },
+        "label": "thorax"
+       },
+       {
+        "posFrame": {
+         "x": 7,
+         "y": 8
+        },
+        "label": "tail"
+       }
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from CSV \"/u.csv\"",
+    "history": "Loaded in Labelbee on 2000-01-02T03:04:05.000Z"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "prompt",
+    "Enter tracks URL",
+    "URL:/data/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv"
+   ],
+   [
+    "csv",
+    "/u.csv"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ },
+ "clickLoadTracksCSVFromServer canceled": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "prompt",
+    "Enter tracks URL",
+    "URL:/data/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ },
+ "clickLoadTracksCSVFromServer empty": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "prompt",
+    "Enter tracks URL",
+    "URL:/data/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ },
+ "clickLoadTracksTaggedCSVFromServer with video": {
+  "state": {
+   "Tracks": {
+    "0": {
+     "T1": {
+      "ID": "T1",
+      "frame": 0,
+      "cx": 100.5,
+      "cy": 200,
+      "angle": 100,
+      "width": 300,
+      "height": 600,
+      "x": -49.5,
+      "y": -100,
+      "bool_acts": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "labels": "",
+      "parts": [
+       {
+        "posFrame": {
+         "x": 1,
+         "y": 2
+        },
+        "label": "head"
+       },
+       {
+        "posFrame": {
+         "x": 5,
+         "y": 6
+        },
+        "label": "thorax"
+       },
+       {
+        "posFrame": {
+         "x": 7,
+         "y": 8
+        },
+        "label": "tail"
+       }
+      ]
+     }
+    }
+   },
+   "TracksInfo": {
+    "type": "events-multiframe",
+    "source": "Converted from CSV \"URL:/data/datasets/gurabo4/tracks/col1/v.mp4.tracks_tagged.csv\"",
+    "history": "Loaded in Labelbee on 2000-01-02T03:04:05.000Z"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "prompt",
+    "Enter gurabo4 col_videoname",
+    "col10/9_02_R_190809120000.cfr.mp4"
+   ],
+   [
+    "loadVideoManual",
+    "URL:/data/datasets/gurabo4/mp4/col1/v.mp4"
+   ],
+   [
+    "csv",
+    "URL:/data/datasets/gurabo4/tracks/col1/v.mp4.tracks_tagged.csv"
+   ],
+   [
+    "$",
+    "#events-notes",
+    "val",
+    {
+     "$": "undefined"
+    }
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ],
+   [
+    "onFrameChanged"
+   ],
+   [
+    "refreshChronogram"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ },
+ "clickLoadTracksTaggedCSVFromServer canceled": {
+  "state": {
+   "Tracks": {
+    "$": "undefined"
+   },
+   "TracksInfo": {
+    "$": "undefined"
+   },
+   "Tags": {
+    "$": "undefined"
+   },
+   "TagsInfo": {
+    "$": "undefined"
+   },
+   "tagsHaveDM": {
+    "$": "undefined"
+   },
+   "ttags": {
+    "$": "undefined"
+   }
+  },
+  "fx": [
+   [
+    "prompt",
+    "Enter gurabo4 col_videoname",
+    "col10/9_02_R_190809120000.cfr.mp4"
+   ]
+  ],
+  "cbErrors": [],
+  "rejections": [],
+  "alerts": [],
+  "logs": [],
+  "errors": [],
+  "argsAfter": []
+ }
+}

@@ -277,14 +277,14 @@ Defined/written/read, [read] from `labelbee/static/labelbee/js/` (read-by lists 
 
 | Name | Defined in | Read by | Written by |
 |---|---|---|---|
-| `Tracks` | `Model.js` | everywhere (Overlay, Chrono, Zoom, Selection, labelBee, IO) | `setTracks` (replace), `storeObs`, `getObsHandle(create)`, `changeObservationID`, `deleteEvent` (`SelectionControl.js:663`), `ChronoControl.js` clean-up (`delete Tracks[F][id]`) [inferred], `ZoomView.js` clean-up [inferred], `augmentTrackWithTag` (adds `obs.tag`; called only from `updateChronoData`), `modifyCurrentObsSpan` in `SelectionControl.js` (adds `obs.span` on the stored observation), `convertTracksToV1` (C1) |
-| `Tags` | `Model.js` | `ChronoControl.js` (`getTTags` legacy mode, `getFlatTags`, `augmentTrackWithTag`), `OverlayControl.js` [inferred], `saveTagsToFile` | `setTags` only (+ `tagsAddFrames` adds `tag.frame`) |
-| `TracksInfo` | implicit global, first created by `setTracks` (`AnnotationIO.js`) | `convertTracksToV2`, `onChanged_events_notes`, `updateEventsNotes` | `setTracks`, `setEventsProp`, notes textarea (`convertTracksToV2` no longer mutates it since slice 2) |
-| `TagsInfo` | implicit global (`setTags`) | none found | `setTags` |
+| `Tracks` | `AnnotationStore` (global accessor from `annotation/AnnotationStoreBridge.js`; was a `var` in `Model.js`) | everywhere (Overlay, Chrono, Zoom, Selection, labelBee, IO) | `setTracks` (`AnnotationStore.replaceTracks`), `storeObs`, `getObsHandle(create)`, `changeObservationID`, `deleteEvent` (`SelectionControl.js:663`), `ChronoControl.js` clean-up (`delete Tracks[F][id]`) [inferred], `ZoomView.js` clean-up [inferred], `augmentTrackWithTag` (adds `obs.tag`; called only from `updateChronoData`), `modifyCurrentObsSpan` in `SelectionControl.js` (adds `obs.span` on the stored observation), `convertTracksToV1` (C1) |
+| `Tags` | `AnnotationStore` (global accessor; was a `var` in `Model.js`) | `ChronoControl.js` (`getTTags` legacy mode, `getFlatTags`, `augmentTrackWithTag`), `OverlayControl.js` [inferred], `saveTagsToFile` | `setTags` only (+ `tagsAddFrames` adds `tag.frame`) |
+| `TracksInfo` | `AnnotationStore` (global accessor; was an implicit global created by `setTracks`) | `convertTracksToV2`, `onChanged_events_notes`, `updateEventsNotes` | `setTracks`, `setEventsProp`, notes textarea (`convertTracksToV2` no longer mutates it since slice 2) |
+| `TagsInfo` | `AnnotationStore` (global accessor; was an implicit global) | none found | `setTags` |
 | `tagCache` | implicit global, `Model.js` `cacheTags` | `getTags` (called from `ChronoControl.js` `computeMotionDirection`) [inferred] | `cacheTags` |
 | `ttags` | `ChronoControl.js` (`var ttags = {}`) [inferred], also reset in `initAnnotationIO` | `OverlayControl.js` (draw tag lines) [inferred], `Model.js` `cacheTags` (bug, reads `ttags[key]`) | `setTags`, `updateChronoData` in `ChronoControl.js:984`, `initAnnotationIO` |
 | `flatTags`, `allTagsID` | `ChronoControl.js` | `getTTags` (tagMode `Tracks` reads `flatTags`; resets `allTagsID`) | `updateChronoData` (`flatTags` at `:982`; `allTagsID` converted to an array at `:986`), `getTTags` (`allTagsID`) |
-| `tagsHaveDM` | implicit global (`setTags`) | UI classes `.requireDM` (set in `setTags`) | `setTags` |
+| `tagsHaveDM` | `AnnotationStore` (global accessor; was an implicit global) | UI classes `.requireDM` (set in `setTags`), `OverlayControl.js` | `AnnotationStore.updateTagsHaveDM()` (called by `setTags`) |
 | `videoinfo` | `VideoList.js` [inferred] | `convertTracksToV2` (embedded in info as a deep copy since slice 2), `getTimestampedVideoname`, dialogs (`videoinfo.videoPath`), `getFramesWithID` (`nframes`) | `VideoList.js`, `VideoControl.js` [inferred] |
 | `user_id` | `labelBee.js` | `eventsToServer` | `whoami` (authenticated branch only) |
 | `user_data` | implicit global, assigned in `whoami` (`AnnotationIO.js`) | `VideoList.js:531` and `:634` (`user_data.is_authenticated`) | `whoami` |
@@ -307,7 +307,7 @@ Functions of `AnnotationIO.js` called from other modules: `setTracks` (labelBee 
 
 | Module | Responsibility | Contents today |
 |---|---|---|
-| `AnnotationStore` | owns `Tracks`, `Tags`, infos; read/write API by (frame,id); change notification | `Model.js` + `setTracks`/`setTags` data part, `setEventsProp`, `printTracks` (debug, to delete) |
+| `AnnotationStore` | owns `Tracks`, `Tags`, infos; read/write API by (frame,id); change notification [slice 3 created it with the data and `tagsHaveDM` only, `get*`/`replace*`, no events yet; ADR 0005] | `Model.js` + `setTracks`/`setTags` data part, `setEventsProp`, `printTracks` (debug, to delete) |
 | `ObservationSchema` | field list, defaults, copy/clone, runtime-field policy | `Observation`, `copyObs`, `cloneObs`, whitelist for save |
 | `AnnotationCodec` | pure format conversion: events v1/v2 <-> store, tags v1/v2, sanitizing, CSV/`tracks_tagged`/DB converters, CSV/BBox export text; receives the label normaliser (owned by the group-6 labels module, `SelectionControl.js` `hasLabel`/`normalizeLabel`) as a dependency | `convertTracksTo*`, `sanitizeEvents`, `*_csv_to_json`, `tracksTo*`, `db_to_json` |
 | `LocalFileIO` | file picker/reader and Blob download for events and tags | `loadEventsFromFile`, `loadTagsFromFile`, `saveEventsToFile`, `saveTagsToFile`, `saveBlobToFile`, `getTimestampedVideoname`, CSV/BBox download |
@@ -344,7 +344,7 @@ Files: CC = `ChronoControl.js`, CCI = `ChronoControlInteraction.js`, CCL = `Chro
 | `ROI`, `flag_useROI` | OC (constructor: ROI `{175,250,2305,1240}`, flag false) | CC `updateChronogramData`, `createIntervalList`; OC `plotROI` | OC `onROITextChanged` (ROI), `onClickROI` (flag); `updateROIFromVideo` writes only the `#ROI` text |
 | `excludeRects`, `flag_useExcludeRects` | OC | OC filters; CC via `tagsSampleFilterExcludeRects` | OC dialog, `onClickExcludeRectAdd`, `onClickExcludeRectDelete`, `onClickExcludeRects` |
 | `tagsHammingSampleFilter`, `tagsDMSampleFilter`, `tagsRGBSampleFilter`, `tagsSampleFilterROI`, `tagsSampleFilterExcludeRects`, `tagsSampleFilterCustom`, `tagsSampleFilter`, `tagsIntervalFilter`, `tagsIDFilter` | OC (end of file) | CC (`updateTagIntervals`, `interpolateTags`, `cleanObsoleteEvents`), OC (tag tracks drawing) | OC `refreshTagsParameters`, `chronoFilter`, `ROIChanged`, `excludeRectsChanged` |
-| `tagsHaveDM` | AIO `setTags` (implicit) | OC `refreshTagsParameters` | AIO |
+| `tagsHaveDM` | `AnnotationStore` (set by `updateTagsHaveDM`, called from AIO `setTags`) | OC `refreshTagsParameters` | AIO |
 | `defaultSelectedBee` | CCI (definition site not verified) | CC `restrictIDFromSelection`, `renderSelection` | CCI, SC, `labelBee.js` (init to `undefined`; set after an ID edit in `onKeyDown_IDEdit`) |
 | `flag_autoEventMode` | CC `initChrono` | CC, CCI | CCI |
 | `obs`, `obs_for_id`, `acts` | CC (implicit leaks) | CC | CC (`obs` also assigned in `SelectionControl.js` `deleteEvent`) |

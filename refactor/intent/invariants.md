@@ -32,5 +32,5 @@ Readers for JSON v1, CSV and `tracks_tagged` files survive the refactor.
 
 - **Code:**
   - `AnnotationIO.js`: `setTags`
-  - `annotation/AnnotationCodec.js`: `sanitizeEvents`, `tracks_tagged_csv_to_json`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`, `decodeTags`, `tracks_tagged_csv_to_json`
 - **Links:** ENT-004, CAP-702, CAP-704, CAP-707, OQ-003

@@ -1088,19 +1088,19 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-709: Silent failures when loading local files
 
-[read] invalid JSON throws uncaught in onReaderLoad; sanitizeEvents failures only reach the console (setTracks returns false); [inferred] the same for onTagsReaderLoad and the ignored `setTags` return value. The user sees nothing. Proposed: visible error message.
+[read] FIXED in slice 3 step 5 (Q23, `AnnotationIO.js` `showLoadError` / `reportLoadError`): invalid JSON, a rejected format (the result of `setTracks` / `setTags` is now checked and turned into an `Error`) and a failing `FileReader` are told to the user, HTML-escaped, in the from-server dialog when it is visible, else in the main alert; they are also logged with `console.error` and the rejection reaches the caller. Was: invalid JSON threw uncaught in `onReaderLoad`; `sanitizeEvents` failures only reached the console (`setTracks` returned false); the `setTags` return value was ignored; the user saw nothing.
 
 - **Code:**
-  - `AnnotationIO.js`: `onReaderLoad`, `onTagsReaderLoad`
+  - `AnnotationIO.js`: `onReaderLoad`, `onTagsReaderLoad`, `eventsFromText`, `tagsFromText`, `readFileAsText`, `showLoadError`, `reportLoadError`
   - `annotation/AnnotationCodec.js`: `sanitizeEvents`
 - **Links:** BEH-714, BEH-719, BEH-722
 
 ## DEBT-710: Dead "array" branch, unreachable non-object branch, misleading v1 source string
 
-[read] FIXED in slice 1 step 4 (`Array.isArray`, `labelbee/static/labelbee/js/annotation/AnnotationCodec.js` sanitizeEvents): arrays used to go to the object branch because `typeof obj == "array"` is never true, so `info.source` was always "Converted from Tracks v1 object". Still open: `"info" in obj` throws for `null` and primitives before the `typeof obj == "object"` test, so the "unsupported file format. Should be either array..." branch is unreachable (same in `setTags`).
+[read] FIXED in slice 1 step 4 (`Array.isArray`, `labelbee/static/labelbee/js/annotation/AnnotationCodec.js` sanitizeEvents): arrays used to go to the object branch because `typeof obj == "array"` is never true, so `info.source` was always "Converted from Tracks v1 object". The rest FIXED in slice 3 step 5 (`annotation/AnnotationCodec.js`: `sanitizeEvents` and `decodeTags` test `obj === null || typeof obj != "object"` before the `in` test, so `null`, `undefined` and primitives reach the "unsupported file format" message instead of a caught `TypeError`; the branches that had become unreachable were removed). Was: `"info" in obj` threw for them first (same in `setTags`).
 
 - **Code:**
-  - `AnnotationIO.js`: `setTags`
+  - `annotation/AnnotationCodec.js`: `decodeTags`
   - `annotation/AnnotationCodec.js`: `sanitizeEvents`
 - **Links:** BEH-718, BEH-721
 
@@ -1114,7 +1114,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-712: Implicit globals and double refresh in the IO code
 
-[read] undeclared assignments in `labelbee/static/labelbee/js/AnnotationIO.js`: `data0`, `hasDuplicateEntries` (sanitizeEvents), `evts`, `src` (tracks_csv_to_json), `dataToSend`, `alertMSG` (eventsToServer), `fileData` (openRecentLoadingDialog), `html`, `idx`, `buttonHTML` (showAdvancedLoadingDialog), `success` (loadEvents, loadEventsFromServerByID), `tags` (tagsFromServer), `obj` (saveTagsToFile), `user_data` (whoami), and `TracksInfo` / `TagsInfo` / `tagsHaveDM` / `ttags` implicit; [inferred, not re-read] `result`, `data` (db_to_json), `tagCache` (`Model.js`). setTracks already refreshes, then callers refresh again (loadEvents, loadEventsFromServerByID, loadTracksCSVFromDB). Proposed: declared module state, one refresh.
+[read] undeclared assignments in `labelbee/static/labelbee/js/AnnotationIO.js`: `data0`, `hasDuplicateEntries` (sanitizeEvents), `evts`, `src` (tracks_csv_to_json), `dataToSend`, `alertMSG` (eventsToServer), `fileData` (openRecentLoadingDialog), `html`, `idx`, `buttonHTML` (showAdvancedLoadingDialog), `success` (loadEvents, loadEventsFromServerByID), `tags` (tagsFromServer), `obj` (saveTagsToFile), `user_data` (whoami), and `ttags` implicit (`TracksInfo`, `TagsInfo` and `tagsHaveDM` are, since slice 3, accessors of `annotation/AnnotationStoreBridge.js` over `AnnotationStore`); [inferred, not re-read] `result`, `data` (db_to_json), `tagCache` (`Model.js`). setTracks already refreshes, then callers refresh again (loadEvents, loadEventsFromServerByID, loadTracksCSVFromDB). Proposed: declared module state, one refresh.
 
 - **Code:**
   - `AnnotationIO.js`: `setTracks`, `eventsToServer`, `showAdvancedLoadingDialog`
@@ -1123,10 +1123,10 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-713: setTags v1 validation inspects the previous Tags global
 
-[read] `Object.keys(Tags)` instead of `Object.keys(obj)`: the check never validates the loaded file.
+[read] FIXED in slice 3 step 5 (`annotation/AnnotationCodec.js` `decodeTags` validates `Object.keys(obj)`). Was: `Object.keys(Tags)`, the previously loaded global: the check never validated the loaded file, so a file with a bad key was accepted when the old Tags were empty, and a good file was rejected when the old Tags had a bad key.
 
 - **Code:**
-  - `AnnotationIO.js`: `setTags`
+  - `annotation/AnnotationCodec.js`: `decodeTags`
 - **Links:** BEH-721
 
 ## DEBT-714: saveTagsToFile v2 writes an undeclared global obj
@@ -1139,7 +1139,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-715: setTags DM detection and discarded file info
 
-[read] `tagsHaveDM` is decided by the first tag of the first key only, and a first key without `.tags` throws; `TagsInfo` is always replaced by the dummy info (the v2 info is dropped).
+[read] `tagsHaveDM` is decided by the first tag of the first key only, and a first key without `.tags` throws; `TagsInfo` is always replaced by the dummy info (the v2 info is dropped). Slice 3: the DM rule moved unchanged to `AnnotationStore.updateTagsHaveDM()` and the dummy info to `decodeTags`; since DEBT-733 a throwing first key no longer leaves the Tags half-replaced (`setTags` rolls back and returns `0`).
 
 - **Code:**
   - `AnnotationIO.js`: `setTags`
@@ -1164,7 +1164,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-718: Invisible error messages in FromServerDialog.loadEvents
 
-[read] `labelbee/static/labelbee/js/AnnotationIO.js` loadEvents writes to `.modal-message h4`, but all messages go through `setMessage`, which sets the content of `.modal-message` itself, and `resetAllHTML` clears it on open, so no `h4` exists and the selector matches nothing; loadEvents reads `this.dataType` while the dialog assigns `this.data_type` (`openRecentLoadingDialog`); no assignment of `dataType` was seen in the excerpts.
+[read] `labelbee/static/labelbee/js/AnnotationIO.js` loadEvents writes to `.modal-message h4`, but all messages go through `setMessage`, which sets the content of `.modal-message` itself, and `resetAllHTML` clears it on open, so no `h4` exists and the selector matches nothing; loadEvents reads `this.dataType` while the dialog assigns `this.data_type` (`openRecentLoadingDialog`); no assignment of `dataType` was seen in the excerpts. Slice 3: `loadEventsFromServerByID` no longer uses this selector (DEBT-722); `loadEvents` still does.
 
 - **Code:**
   - `AnnotationIO.js`: `loadEvents`
@@ -1173,7 +1173,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-719: Server tag loading: unrouted URL, undefined return, empties Tags on failure
 
-[read] tagsFromServer requests `rest/v2/annotation/<id>`, returns undefined so `loadEvents` always reports an error, and its failure path calls `setTags([], div)`, which wipes the loaded Tags; [read, grep of `rest/v2`] no route `rest/v2/annotation` exists in `labelbee/legacy/views.py` or `labelbee/blueprints/api/` (the listed `rest/v2` routes are video, dataset and video-data ones). Proposed: use `api/v1/annotation/<id>`, parse like events, do not wipe on failure; decision in OQ-706.
+[read] tagsFromServer requests `rest/v2/annotation/<id>`, returns undefined so `loadEvents` always reports an error, and its failure path calls `setTags([], div)`, which wipes the loaded Tags; [read, grep of `rest/v2`] no route `rest/v2/annotation` exists in `labelbee/legacy/views.py` or `labelbee/blueprints/api/` (the listed `rest/v2` routes are video, dataset and video-data ones). Proposed: use `api/v1/annotation/<id>`, parse like events, do not wipe on failure; decision in OQ-706. Slice 3: `tagsFromServer` is a promise pipeline (`getJSONPromise`, `.then(onSuccess, onFailure)`) but still returns `undefined` on purpose, because the dialog reads the return value as success, and its failure path still empties the Tags (`setTags([], div)`).
 
 - **Code:**
   - `AnnotationIO.js`: `tagsFromServer`, `loadEvents`
@@ -1189,7 +1189,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-721: Stale lineage basedOn
 
-[read] `fromServerDialog.basedOn` is set by `loadEvents` only, not reset by `setTracks`, and not updated by `eventsToServer`; [inferred] it also survives erase, local loads and video change.
+[read] `fromServerDialog.basedOn` is set by `loadEvents` (and, since slice 3 step 5, by `loadEventsFromServerByID`), not reset by `setTracks`, and not updated by `eventsToServer`; [inferred] it also survives erase, local loads and video change.
 
 - **Code:**
   - `AnnotationIO.js`: `loadEvents`, `eventsToServer`
@@ -1197,7 +1197,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-722: loadEventsFromServerByID uses undefined variables and does not await
 
-[read] references `tag_event_ID`, `theDialog`, `div` (not in scope), so the success path ends in a `ReferenceError` after `setTracks` and the failure paths in a `ReferenceError` before their `throw new Error`; the `async` function does not return the ajax promise (`onhashchange` awaiting it is [inferred]).
+[read] FIXED in slice 3 step 5 (`AnnotationIO.js`). It was copied from `FromServerDialog.loadEvents` and referenced `tag_event_ID`, `theDialog`, `div`, which do not exist in its scope, so every path ended in a `ReferenceError` (after `setTracks` on success, so `basedOn` was never set and no message shown); it also returned before the request completed. Now: the id is `video_data_id`, the lineage is `fromServerDialog.basedOn`, the failures throw an `Error` reported by `showLoadError` (Q23), the function returns its request promise (resolves after the events are loaded, rejects on a request error or invalid data) and `onhashchange` in `labelBee.js` catches the rejection so the delayed seek still runs. Open: `success` is still an implicit global (DEBT-712); a double refresh remains (`setTracks` then the loader).
 
 - **Code:**
   - `AnnotationIO.js`: `loadEventsFromServerByID`
@@ -1221,7 +1221,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-725: CSV loaders: no error handling, hard-coded paths, unsequenced video and CSV
 
-[read for `loadTracksCSVFromServer`] `d3.csv(...).then` without catch; [inferred for the click handlers] default URLs under `datasets/bee_feeder` and `datasets/gurabo4`; the gurabo4 link starts the video load and the CSV fetch independently.
+[read for `loadTracksCSVFromServer`] `d3.csv(...).then` without catch; [inferred for the click handlers] default URLs under `datasets/bee_feeder` and `datasets/gurabo4`; the gurabo4 link starts the video load and the CSV fetch independently. Slice 3 step 5: the three CSV loaders now return their promise and report a request failure, a parse failure or a rejected `setTracks`/`setTags` with `showLoadError`; the default URLs and the unsequenced video/CSV remain.
 
 - **Code:**
   - `AnnotationIO.js`: `loadTracksCSVFromServer`, `clickLoadTracksCSVFromServer`, `clickLoadTracksTaggedCSVFromServer`
@@ -1273,7 +1273,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-731: Dead loaders and debug helpers
 
-[read] `labelbee/static/labelbee/js/AnnotationIO.js` `loadEventsFromFile0` (only a commented-out call at `labelbee/static/labelbee/js/labelBee.js:198`), `FromServerDialog.clickedShowMetadata` / `showMetadata` (read `theDialog.json[k]["metadata"]`; no caller in the excerpts read), `labelbee/static/labelbee/js/Model.js` `printTracks` (debug print; callers not searched). Proposed: delete after a caller search.
+[read] `labelbee/static/labelbee/js/AnnotationIO.js` `loadEventsFromFile0` (only a commented-out call at `labelbee/static/labelbee/js/labelBee.js:198`), `FromServerDialog.clickedShowMetadata` / `showMetadata` (read `theDialog.json[k]["metadata"]`; no caller in the excerpts read), `labelbee/static/labelbee/js/Model.js` `printTracks` (debug print; callers not searched). Decision for the loaders (Q20, maintainer 2026-11-12): nothing is deleted; `loadEventsFromFile0` and the other loaders stay in `AnnotationIO.js`, restructured with the rest, because loading functions are meant to be callable by hand (debugging, manual loading). `printTracks`: caller search still pending.
 
 - **Code:**
   - `AnnotationIO.js`: `loadEventsFromFile0`, `FromServerDialog`
@@ -1290,7 +1290,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-733: setTags replaces Tags before unguarded steps
 
-[read] `labelbee/static/labelbee/js/AnnotationIO.js` setTags assigns `Tags` and `TagsInfo` after the `try` block, then runs `tagsAddFrames` (reads `Tags[f].tags` without a null guard on `Tags[f]`) and the DM check (reads the first key's `.tags`) unguarded: a structurally bad file throws with `Tags` already replaced and no refresh. A v2 file without `data` sets `Tags = undefined`. Proposed: validate completely before assigning; return `0` on failure.
+[read] FIXED in slice 3 step 5. `decodeTags` rejects a v2 file whose `data` is missing, `null` or not an object (it used to set `Tags = undefined`), and `setTags` applies as a whole: it saves the previous Tags, info, `tagsHaveDM` and `ttags`, and if `tagsAddFrames`, `getTTags` or `AnnotationStore.updateTagsHaveDM()` throws (a `null` frame entry, a first frame without `.tags`) it puts them back, logs `console.error` and "ABORTED, malformed tag data. The previous Tags are kept." and returns `0`. Was: the Tags and info were replaced first and a throw left them half-replaced with no refresh. Open: `allTagsID` (reset inside `getTTags`) may stay partial until the next refresh (DEBT-736); a file whose first frame has no `tags` is still rejected (DEBT-715).
 
 - **Code:**
   - `AnnotationIO.js`: `setTags`
@@ -1316,7 +1316,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-736: setTags builds ttags from stale chronogram data
 
-[read] `setTags` calls `getTTags()`, which in `tagMode == 'Tracks'` iterates the global `flatTags` assigned by `updateChronoData` (`labelbee/static/labelbee/js/ChronoControl.js:982`), so `ttags` is computed from the previous refresh; `getTTags` also resets `allTagsID` as a side effect. [read] the following `refreshChronogram()` runs `updateChronoData`, which recomputes `flatTags` and `ttags` (`ChronoControl.js:982-984`), so the staleness is transient. Proposed: a single derived-data update after the store changes.
+[read] `setTags` calls `getTTags()`, which in `tagMode == 'Tracks'` iterates the global `flatTags` assigned by `updateChronoData` (`labelbee/static/labelbee/js/ChronoControl.js:982`), so `ttags` is computed from the previous refresh; `getTTags` also resets `allTagsID` as a side effect. [read] the following `refreshChronogram()` runs `updateChronoData`, which recomputes `flatTags` and `ttags` (`ChronoControl.js:982-984`), so the staleness is transient. Proposed: a single derived-data update after the store changes. Slice 3 step 5: when a step of `setTags` throws, `ttags` is restored but `allTagsID` may stay partial until the next refresh.
 
 - **Code:**
   - `AnnotationIO.js`: `setTags`
