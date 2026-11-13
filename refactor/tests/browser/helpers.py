@@ -1,6 +1,7 @@
 """Helpers of the browser tests: `App` wraps a Playwright page opened on the dev webapp (see conftest.py)."""
 import json
 import re
+import time
 from pathlib import Path
 
 # Requests the dev webapp cannot answer and the page makes at every start (not findings)
@@ -21,6 +22,7 @@ class App:
         self.dialog_accepts = True  # False: confirm() is answered "Cancel"
         self.prompt_answers = []   # answers given to prompt(), in order
         self.allowed = []          # regexes of errors the test expects (the [fail] items of the checklist)
+        self._video_loaded_at = None   # when the page logged onVideoLoaded2 (see settle())
         page.on("console", self._on_console)
         page.on("pageerror", lambda e: self.page_errors.append(str(e)))
         page.on("response", lambda r: self.not_found.append(r.url) if r.status == 404 else None)
@@ -28,6 +30,8 @@ class App:
 
     # ---- watchers
     def _on_console(self, msg):
+        if msg.text.startswith("onVideoLoaded2"):
+            self._video_loaded_at = time.monotonic()
         if msg.type == "error" and not msg.text.startswith("Failed to load resource"):
             self.console_errors.append(msg.text)
 
@@ -165,6 +169,15 @@ class App:
             self.page.wait_for_function("(l) => getComputedStyle(l.nextElementSibling).display !== 'none'", arg=label.element_handle())
 
     # ---- the overlay (a fabric.js canvas, overlay.canvas1) and the frame
+    def settle(self, ms=800):
+        """Wait until the refresh that the page schedules 500 ms after a video is loaded has run
+        (VideoControl.js onVideoLoaded2: setTimeout(hardRefresh, 500)). It rebuilds the fabric objects, so a click or a drag
+        started just before it can hit a box that no longer exists (it made the drag test fail about 1 run in 8)."""
+        if self._video_loaded_at is not None:
+            left = ms / 1000 - (time.monotonic() - self._video_loaded_at)
+            if left > 0:
+                self.page.wait_for_timeout(int(left * 1000))
+
     def box_center(self, obs_id):
         """Client coordinates of the centre of the box of observation `obs_id` in the current frame."""
         pos = self.js("""(id) => {
@@ -181,6 +194,7 @@ class App:
         return self.js("overlay.canvas1.getObjects().filter(o => o.obs).map(o => String(o.obs.ID))")
 
     def click_box(self, obs_id):
+        self.settle()
         p = self.box_center(obs_id)
         self.page.mouse.click(p["x"], p["y"])
         self.page.wait_for_function("(id) => String(getCurrentID()) === String(id)", arg=str(obs_id))
@@ -190,6 +204,7 @@ class App:
 
     def shift_click_background(self, fx=0.1, fy=0.9):
         """Shift-click on the background (fractions of the video area): creates a new observation."""
+        self.settle()
         r = self.canvas_rect()
         self.page.keyboard.down("Shift")
         self.page.mouse.click(r["x"] + fx * r["w"], r["y"] + fy * r["h"])

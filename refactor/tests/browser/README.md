@@ -31,6 +31,19 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 - Native `alert`/`confirm`/`prompt` are answered automatically and recorded in `ui.dialogs`
   (`ui.dialog_accepts = False` answers Cancel, `ui.prompt_answers` feeds prompts).
 
+## Dirty-write detector
+    pytest refactor/tests/browser --dirty-writes=refactor/scratch/dirty-writes.json
+Injects `dirty_writes.js` in every page. `AnnotationStore.getTracks()` then returns a recursive `Proxy` of the stored events and
+every write, delete or define through it (or through any handle the code kept) is counted by operation, depth (0 frames,
+1 one frame, 2 one observation, 3+ nested), field and the source `file:line` that made it. The report lists them per source line.
+Working copies (`rect.obs`, made by `cloneObs`) are separate objects and are deliberately not recorded. Opt-in (about 10% slower);
+the suite passes with it. Purpose: the exact list of writers that the `Events` API of
+[ADR 0007](../../design/0007-slice-migrate-readers.md) must replace, and later a guard that nothing writes around it.
+A site never shown is a site no test exercises: add a test, run it again.
+
+`ui.settle()` (used by `click_box` and `shift_click_background`) waits for the `hardRefresh` that the page schedules 500 ms after a
+video loads (`VideoControl.js` `onVideoLoaded2`); it rebuilds the fabric objects and made the drag test fail about 1 run in 8.
+
 ## Findings of the first run
 Not caused by the refactor unless noted. Recorded in the intent spec: F1 in `DEBT-202`, F2 in `DEBT-203` (6), F3 as `DEBT-738`, F4 as `DEC-006`, F5 as `DEBT-125`.
 
