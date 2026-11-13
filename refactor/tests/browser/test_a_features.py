@@ -21,9 +21,11 @@ def test_a10_zoom_view_shows_the_video_and_follows_the_selection(ui, sample_dir)
                               arg=first["hash"])
 
 
-def test_a10_tags_reach_the_chronogram_in_the_tags_mode(ui, sample_dir):
-    """`tagMode` is hard-coded to 'Tracks' in OverlayControl.js and nothing in the page changes it, so the Tags of a tags
-    file (and of a server tag file) are stored but not shown: the Tags-based display is only reachable from the console."""
+def test_a10_tags_of_the_obsolescent_tag_file_reach_the_chronogram_in_the_tags_mode(ui, sample_dir):
+    """By design (maintainer, 2026-11-13): `tagMode` is 'Tracks' in OverlayControl.js and nothing changes it, because the
+    separate tag file is obsolescent: the current pipeline adds the tag information to the Tracks before it reaches
+    LabelBee (tracks_tagged CSV, see test_c13). A tags file is still read and stored, so the legacy Tags display is only
+    reachable by switching the mode in the console, which is what this test does."""
     ui.open()
     ui.load_tags(sample_dir / "tags_v2.json")
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")

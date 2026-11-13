@@ -26,7 +26,7 @@ Minimal, only what the first slices need.
 - [x] Maintainer answers for the first slice: [Q2](analysis/07-questions-and-proposals.md#q2) (ES modules, same libs), [Q8](analysis/07-questions-and-proposals.md#q8) (synthetic fixtures), [Q11](analysis/07-questions-and-proposals.md#q11) (run tests; tooling under `refactor/tests/` only). Others are asked when a slice needs them.
 - [ ] Confirm [ADR 0001](design/0001-strangler-migration.md)
 - [x] [`tests/CHECKLIST.md`](tests/CHECKLIST.md): manual browser checklist (smoke, store, loading, saving), automated by [`tests/browser/`](tests/browser/README.md) (55 tests, `pytest refactor/tests/browser`, [ADR 0006](design/0006-browser-tests.md))
-- [ ] Backend: make `pytest` collect and add a few smoke tests (login, `/api/v1/videos`, annotations round-trip, `/labelbee/gui` renders)
+- [ ] Backend tests: deferred (maintainer 2026-11-13). The old `tests/` stay as they are, broken ([finding F5](tests/browser/README.md)); they will be replaced by tests under `refactor/tests/` when the refactor stabilizes (login, `/api/v1/videos`, annotations round-trip, `/labelbee/gui` renders). Idea for then: a conftest that points `labelbee.settings.local_settings` at SQLite and a temp `LABELBEE_LOGDIR` before `create_app()`, no production change
 - [ ] Frontend runner for pure-logic golden tests (Node, no browser), added with the first slice that needs it
 
 ## Phase 3: Slices

@@ -3,7 +3,7 @@
 **Automated:** every item below (A1 to E1) is now a test in [browser/](browser/README.md): `pytest refactor/tests/browser`
 (about a minute, headless Chromium against the dev webapp, [ADR 0006](../design/0006-browser-tests.md)). Run that first.
 This list stays for what a script cannot judge: how the drawing looks, H.264 playback in your usual browser, the real
-backend (database, login) and the Tags display (finding F4). Originally written to be run by hand
+backend (database, login) and the legacy Tags mode (finding F4: by design, the tag file is obsolescent). Originally written to be run by hand
 ([ADR 0001](../design/0001-strangler-migration.md) step 3): The golden tests
 (`node --test refactor/tests/golden/`) cover the pure logic and the loaders against stubs; this list covers
 what they cannot: the real page, jQuery, d3, `FileReader`, the video and the server.

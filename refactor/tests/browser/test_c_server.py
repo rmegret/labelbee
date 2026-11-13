@@ -113,3 +113,9 @@ def test_c13_gurabo4_video_and_tracks_tagged(ui):
     assert ui.js("videoControl.video.currentSrc").endswith("/datasets/gurabo4/mp4/test/v.mp4")
     ids = sorted(ui.tracks()["0"])
     assert ids == ["42", "T2"]                      # track_tagid when there is one, else "T" + track_id (BEH-736)
+    # The current pipeline puts the tag information into the Tracks (obs.tag): the separate tag file is obsolescent
+    tag = ui.tracks()["0"]["42"]["tag"]
+    assert (tag["id"], tag["dm"]) == (42, 60)
+    assert "tag" not in ui.tracks()["0"]["T2"]      # a track without tag id has none
+    ui.page.wait_for_function("/\\b[1-9]\\d* tags/.test(document.body.innerText)")     # the chronogram counts them
+    assert len(ui.tags()) == 0                      # the separate Tags structure is not used by this pipeline
