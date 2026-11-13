@@ -654,7 +654,11 @@ sends `GET api/v1/annotation/<id>` (`ajaxGetJSON`), parses `response.data.data`,
 [DEBT-722](view_debt.md#debt-722-loadeventsfromserverbyid-uses-undefined-variables-and-does-not-await "loadEventsFromServerByID uses undefined variables and does not await") fixed; before, out-of-scope variables made every path end in a `ReferenceError`, `basedOn` was never set, and the function
 returned before the request completed). When the request fails or `setTracks` returns `false` it throws, `showLoadError` tells the
 user (dialog when visible, else main alert) and the returned Promise rejects; `onhashchange` catches it, logs "FAILED" and goes on
-with the delayed seek and the hash cleanup. The function comment says it replaces the deprecated `tracksListFromServer`.
+with the delayed seek of `frame=<n>`. The hash itself is left as typed: the code that would rewrite it after the load is commented
+out in `onhashchange`; only `frame=` is removed, by `onFrameChanged`, when the frame later changes ([BEH-217](view_cap-200-load-play-video.md#beh-217-frame-hash-removal-on-navigation "Frame hash removal on navigation")). A `frame=` seeks
+whether the hash changes on an open page or the page is opened with it while the video loads (the latter fixed in
+`VideoControl.js` `onVideoLoaded2`, finding F1 of `tests/browser/README.md`). The function comment says it replaces the
+deprecated `tracksListFromServer`.
 
 - **Group:** [CAP-703](view_capabilities.md#cap-703-server-load-and-save "Server load and save")
 - **Origin:** accident

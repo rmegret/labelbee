@@ -268,7 +268,7 @@ onhashchange = async function(event) {
       await loadEventsFromServerByID(video_data_id)
       console.log("onhashchange: loadEventsFromServerByID SUCCESS")
     } catch (error) {
-      // A failed load must not cancel the delayed seek and the hash cleanup below
+      // A failed load must not cancel the delayed seek below
       console.log("onhashchange: loadEventsFromServerByID FAILED", error)
     }
     parsedHash.delete("video_data")
