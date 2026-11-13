@@ -73,24 +73,12 @@ function hasParts(obs) {
   return !!obs.parts && obs.parts.length > 0;
 }
 
+// The functions below are wrappers over `events` (annotation/Events.js, refactor slice 4, ADR 0007): the stored
+// events are read and written only through its operations. They keep their names and behavior until their callers
+// move to `events` directly, then disappear.
+
 function getValidIDsForFrame(frame) {
-  // Return an Iterator to Tracks[frame]
-
-  if (Tracks[frame] == null) {
-    return [];
-  }
-  //NO: var ids = Array.from(Tracks[frame].keys()) // Problem: includes ids to undefined values also
-
-  let trackf = Tracks[frame];
-  let ids = [];
-  for (let id in trackf) {
-    if (trackf[id] != null) {
-      ids.push(id);
-    }
-  }
-  //console.log("getValidIDsForFrame: frame=",frame,",  Tracks[frame]=",trackf)
-  //console.log("getValidIDsForFrame: ids=",ids)
-  return ids;
+  return events.frameIds(frame);
 }
 function getValidIDsForFrames(interval) {
   let fmin = interval[0];
@@ -107,41 +95,20 @@ function getValidIDsForFrames(interval) {
 }
 
 function obsDoesExist(frame, id) {
-  if (Tracks[frame] == null) {
-    return false;
-  }
-  if (Tracks[frame][id] == null) {
-    return false;
-  }
-  return true;
+  return events.has(frame, id);
 }
 
 function getObsHandle(frame, id, createIfEmpty) {
   if (createIfEmpty == null) createIfEmpty = false;
 
-  var obs;
-  if (Tracks[frame] == null) {
-    if (createIfEmpty) {
-      Tracks[frame] = {};
-    } else {
-      return undefined;
-    }
+  if (createIfEmpty) {
+    return events.getOrCreate(frame, id);
   }
-
-  if (Tracks[frame][id] == null) {
-    if (createIfEmpty) {
-      Tracks[frame][id] = new Observation(id);
-    } else {
-      return undefined;
-    }
-  }
-  return Tracks[frame][id];
+  return events.get(frame, id);
 }
 
 function storeObs(tmpObs) {
-  var obs = getObsHandle(tmpObs.frame, tmpObs.ID, true);
-
-  copyObs(obs, tmpObs);
+  var obs = events.commit(tmpObs);
 
   if (logging.submitEvents) console.log("Submitting obs = ", obs);
 }
@@ -156,58 +123,25 @@ function storeObs(tmpObs) {
  */
 function changeObservationID(frame, old_id, new_id, force) {
   // REMI: modified to be be independent of View
+  if (events.rename(frame, old_id, new_id, force)) {
+    if (logging.submitEvents)
+      console.log("changeObservationID: frame=", frame, "old_id=", old_id, " new_id=", new_id);
+    return true;
+  }
+  // Not performed: say why, in the order the checks are made
   if (old_id == new_id) {
     console.log("changeObservationID: ABORT, old_id=", old_id, " same as new_id=", new_id);
-    return false
-  }
-  if (Tracks[frame] != null) {
-    if (!force) {
-      if (Tracks[frame][new_id] != null) {
-        console.log("changeObservationID: ABORT, new_id=", new_id, " already exists");
-        return false
-      }
-    }
-    if (Tracks[frame][old_id] != null) {
-      if (logging.submitEvents)
-        console.log("changeObservationID: frame=", frame, "old_id=", old_id, " new_id=", new_id);
-      let backup_new_id = Tracks[frame][new_id]
-      Tracks[frame][new_id] = Tracks[frame][old_id];
-      if ((backup_new_id) && (force == 'swap')) {
-        Tracks[frame][old_id] = backup_new_id
-        Tracks[frame][old_id].ID = old_id;
-      } else {
-        delete Tracks[frame][old_id];
-      }
-      Tracks[frame][new_id].ID = new_id;
-      return true;
-    } else {
-      console.log(
-        "changeObservationID: There's no bee id=",
-        old_id,
-        " on frame=",
-        frame
-      );
-      return false;
-    }
-  } else {
+  } else if (events.frameIds(frame).length == 0) {
     console.log("changeObservationID: Empty frame, frame=", frame);
-    return false;
+  } else if (!force && events.has(frame, new_id)) {
+    console.log("changeObservationID: ABORT, new_id=", new_id, " already exists");
+  } else {
+    console.log("changeObservationID: There's no bee id=", old_id, " on frame=", frame);
   }
+  return false;
 }
 function getFramesWithID(interval, id) {
-    let fmin = interval[0];
-    let fmax = interval[1];
-    if (fmax==-1) {
-        fmax = videoinfo.nframes-1
-    }
-    
-    var frames = []
-    for (let f=fmin; f<=fmax; f++) {
-        if (obsDoesExist(f, id)) {
-            frames.push(f)
-        }
-    }    
-    return frames;
+    return events.framesWithId(interval, id, interval[1]==-1 ? videoinfo.nframes : undefined)
 }
 function getFramesWithSwapID(interval, id, new_id) {
     let fmin = interval[0];
@@ -225,27 +159,7 @@ function getFramesWithSwapID(interval, id, new_id) {
     return frames;
 }
 function obs_swapID(interval, old_id, new_id) {
-    let fmin = interval[0];
-    let fmax = interval[1];
-    if (fmax==-1) {
-        fmax = videoinfo.nframes-1
-    }
-
-    for (let f=fmin; f<=fmax; f++) {
-        if (obsDoesExist(f, old_id)) {
-            let exist = obsDoesExist(f, new_id)
-            if (exist) {
-                if (logging.submitEvents) {
-                    console.log('swapID, existing event frame='+f+' id='+new_id+' swapped down to id='+old_id)
-                }
-                changeObservationID(f, new_id, 'SWAP_save_'+new_id)
-            }
-            changeObservationID(f, old_id, new_id)
-            if (exist) {
-                changeObservationID(f, 'SWAP_save_'+new_id, old_id)
-            }
-        }
-    }    
+    events.swap(interval, old_id, new_id, interval[1]==-1 ? videoinfo.nframes : undefined)
 }
 
 

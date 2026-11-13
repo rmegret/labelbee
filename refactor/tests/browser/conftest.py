@@ -131,8 +131,13 @@ def ui(page, server, saved_dir, tmp_path, request):
     if detector:
         try:
             found = page.evaluate("window.__dirtyWrites || {}")
+            api = page.evaluate("window.__dirtyApi || {}")
         except Exception:                      # the page was closed or navigated away by the test
-            found = {}
+            found, api = {}, {}
+        for key, e in api.items():             # operations of Events called from the page code ("through the API")
+            merged = request.config._dirty_api.setdefault(key, {**e, "count": 0, "tests": set()})
+            merged["count"] += e["count"]
+            merged["tests"].add(request.node.name)
         all_writes = request.config._dirty_writes
         for key, e in found.items():
             merged = all_writes.setdefault(key, {**e, "count": 0, "tests": set()})
@@ -159,6 +164,7 @@ def pytest_addoption(parser):
 
 def pytest_configure(config):
     config._dirty_writes = {}
+    config._dirty_api = {}          # "through the API": operations of Events called by the page code
     config._dirty_seen = set()      # (file, function, operation, depth) seen in this run
 
 
@@ -169,10 +175,19 @@ def _dirty_rows(config):
     return sorted(rows, key=lambda r: (r["file"], r["line"], r["op"], r["field"]))
 
 
+def _api_rows(config):
+    rows = [{k: e[k] for k in ("op", "file", "line", "fn", "count")} | {"tests": sorted(e["tests"])} for e in config._dirty_api.values()]
+    return sorted(rows, key=lambda r: (r["op"], r["file"], r["line"]))
+
+
+# every command of Events (annotation/Events.js): an operation that no test calls from the page is a coverage gap
+EVENTS_OPERATIONS = ("replace", "create", "commit", "update", "delete", "rename", "swap", "setInfo")
+
+
 def pytest_sessionfinish(session):
     path = session.config.getoption("--dirty-writes")
     if path:
-        Path(path).write_text(json.dumps(_dirty_rows(session.config), indent=1))
+        Path(path).write_text(json.dumps({"dirty": _dirty_rows(session.config), "api": _api_rows(session.config)}, indent=1))
 
 
 def pytest_terminal_summary(terminalreporter):
@@ -196,3 +211,11 @@ def pytest_terminal_summary(terminalreporter):
     for (f, l, fn), rs in sorted(sites.items()):
         what = ", ".join(f"{r['op']}@{r['depth']}:{r['field']} x{r['count']}" for r in rs)
         terminalreporter.write_line(f"  {f}:{l} {fn}  ->  {what}")
+    api = _api_rows(cfg)
+    terminalreporter.section("operations of Events called by the page code (through the API)")
+    terminalreporter.write_line(f"{len(api)} (operation, call site) combinations")
+    for r in api:
+        terminalreporter.write_line(f"  {r['file']}:{r['line']} {r['fn']}  ->  {r['op']} x{r['count']}")
+    missing = [op for op in EVENTS_OPERATIONS if op not in {r["op"] for r in api}]
+    if missing:
+        terminalreporter.write_line(f"  operations no test called from the page: {', '.join(missing)}")

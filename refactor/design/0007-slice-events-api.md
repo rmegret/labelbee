@@ -86,7 +86,7 @@ It holds the frames and the info. No change events and no undo in this slice; ea
 0. **Tests first, no production change.** Browser tests that exercise the six unseen writers (span x3, the two zoom deletes, the clean-up), so the
    detector sees every writer; and an allow-list (`refactor/tests/browser/dirty_writes_allowed.json`, entries `file`, `function`,
    `operation`, `depth`) with a strict mode of the detector that fails when a write comes from a site not in it. It starts at the
-   current writers and loses entries step by step; the end state is `annotation/Events.js` only. The detector also learns the "through the API" report once `Events` exists (step 1).
+   current writers and loses entries step by step; the end state is `annotation/Events.js` only. The detector also learns the "through the API" report once `Events` has callers (step 2).
 1. **`annotation/Events.js`** (with the operation observer) and differential Node tests: random operation sequences (null frames, array start, numeric and string ids,
    swap with collisions, delete then prune) run on `Events` and on a reference that does the legacy direct operations; the results must be equal. `AnnotationStore.events` holds
    the data; `getTracks()` returns `events.tracks`, the temporary dirty path ([Q29](../QUESTIONS.md#q29)). No call site changes.

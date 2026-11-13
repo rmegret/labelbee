@@ -30,6 +30,8 @@ export function installLegacyGlobals(target, store) {
   }
   target.AnnotationStore = store;
   target.events = store.events; // the stored events (ADR 0007, Q27), like `overlay` or `videoControl`
+  // New observations are built by the page's `Observation` (Model.js, a classic script); looked up at call time.
+  store.events.setObservationFactory((id) => new target.Observation(id));
 }
 
 if (typeof window !== 'undefined') installLegacyGlobals(window, AnnotationStore);

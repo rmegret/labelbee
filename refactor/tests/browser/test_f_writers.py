@@ -143,3 +143,23 @@ def test_f6_clean_obsolete_events_leaves_the_emptied_frame(ui):
     ui.page.click("#cleanObsoleteEventsButton")
     assert ui.dialogs[-1][0] == "confirm"                              # the confirmation was asked (and accepted)
     assert frames_of(ui) == {"0": ["1"], "5": [], "10": ["5"], "15": [], "20": []}
+
+
+# ---- rename: the ID field (labelBee.js onKeyDown_IDEdit -> changeObservationID -> events.rename); not a writer the detector
+# missed (it showed through swapID), but an operation of Events that no other test called from the page (step 2 of the ADR)
+def test_f7_change_the_id_in_the_id_field(ui, sample_dir):
+    load(ui, sample_dir / "events_v2.json")
+    ui.open_panel("Annotations")
+    ui.open_subpanel("BeeID")
+    ui.goto_frame(10)                                                  # ids 1 and 2
+    ui.click_box("1")
+    ui.page.fill("#I", "2")                                            # taken: refused, nothing changes
+    ui.page.press("#I", "Enter")
+    assert sorted(ui.tracks()["10"]) == ["1", "2"]
+    ui.click_box("1")
+    ui.page.fill("#I", "9")
+    ui.page.press("#I", "Enter")
+    ui.page.wait_for_function("!!AnnotationStore.getTracks()[10][9]")
+    assert sorted(ui.tracks()["10"]) == ["2", "9"]
+    assert str(ui.tracks()["10"]["9"]["ID"]) == "9"
+    assert sorted(ui.tracks()["5"]) == ["1"]                           # only the current frame is renamed

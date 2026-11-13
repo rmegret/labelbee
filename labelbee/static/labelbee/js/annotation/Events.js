@@ -75,6 +75,10 @@ export class Events {
   setObserver(fn) {
     this.#observer = fn || null;
   }
+  /** Replaces the builder of new observations (the page registers `new Observation(id)`, Model.js). */
+  setObservationFactory(fn) {
+    this.#createObservation = fn;
+  }
   #emit(event) {
     if (this.#observer) this.#observer(event);
   }
@@ -96,12 +100,14 @@ export class Events {
 
   /** Does the observation exist? (`obsDoesExist`: a null entry does not.) */
   has(frame, id) {
-    const f = this.#frames[frame];
-    if (f == null) return false;
-    return f[id] != null;
+    return this.#get(frame, id) !== undefined;
   }
   /** The live observation, or undefined (`getObsHandle(frame, id)` without creation). */
   get(frame, id) {
+    return this.#get(frame, id);
+  }
+  // The operations use this one, never the public `get`, which the dirty-write detector replaces.
+  #get(frame, id) {
     const f = this.#frames[frame];
     if (f == null) return undefined;
     return f[id] == null ? undefined : f[id];
@@ -156,7 +162,7 @@ export class Events {
     let fmax = interval[1];
     if (fmax == -1) fmax = nframes - 1;
     const out = [];
-    for (let f = fmin; f <= fmax; f++) if (this.has(f, id)) out.push(f);
+    for (let f = fmin; f <= fmax; f++) if (this.#get(f, id) !== undefined) out.push(f);
     return out;
   }
 
@@ -171,6 +177,9 @@ export class Events {
 
   /** The observation of (frame, id), created empty when missing (`getObsHandle(frame, id, true)`). */
   getOrCreate(frame, id) {
+    return this.#getOrCreate(frame, id);
+  }
+  #getOrCreate(frame, id) {
     let created = false;
     if (this.#frames[frame] == null) {
       this.#frames[frame] = {};
@@ -188,7 +197,7 @@ export class Events {
   commit(workingCopy) {
     const frame = workingCopy.frame;
     const id = workingCopy.ID;
-    const obs = this.getOrCreate(frame, id);
+    const obs = this.#getOrCreate(frame, id);
     copyFields(obs, workingCopy);
     this.#emit({ op: 'commit', frame, id });
     return obs;
@@ -197,7 +206,7 @@ export class Events {
   /** `Object.assign` on the stored observation: sets the given fields, a value of undefined means "none".
    * Returns the observation, or undefined when it does not exist (nothing is created). */
   update(frame, id, fields) {
-    const obs = this.get(frame, id);
+    const obs = this.#get(frame, id);
     if (obs === undefined) return undefined;
     Object.assign(obs, fields);
     this.#emit({ op: 'update', frame, id, fields: Object.keys(fields) });
@@ -249,8 +258,8 @@ export class Events {
     let fmax = interval[1];
     if (fmax == -1) fmax = nframes - 1;
     for (let f = fmin; f <= fmax; f++) {
-      if (this.has(f, oldId)) {
-        const exist = this.has(f, newId);
+      if (this.#get(f, oldId) !== undefined) {
+        const exist = this.#get(f, newId) !== undefined;
         const tmp = 'SWAP_save_' + newId;
         if (exist) this.#rename(f, newId, tmp);
         this.#rename(f, oldId, newId);
