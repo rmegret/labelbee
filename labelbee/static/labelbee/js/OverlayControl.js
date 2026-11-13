@@ -1534,7 +1534,7 @@ OverlayControl.prototype.hardRefresh = function () {
       return
     }
     if (!('span' in obs)) {
-      obs.span = { 'f1': frame, 'f2': frame }
+      events.update(frame, id, { span: { 'f1': frame, 'f2': frame } })
     }
 
     function doSwap2(interval, old_id, new_id) {
@@ -1544,7 +1544,7 @@ OverlayControl.prototype.hardRefresh = function () {
     }
     function doSetSpanStart() {
       let f = videoControl.getCurrentFrame()
-      obs.span.f1 = f
+      events.update(frame, id, { span: { f1: f, f2: obs.span.f2 } })
       //$('#alerttext').html('Set Start DONE')
       //overlay.setInteractionMode('main')
       overlay.hardRefresh()
@@ -1561,7 +1561,7 @@ OverlayControl.prototype.hardRefresh = function () {
     }
     function doSetSpanEnd() {
       let f = videoControl.getCurrentFrame()
-      obs.span.f2 = f
+      events.update(frame, id, { span: { f1: obs.span.f1, f2: f } })
       //$('#alerttext').html('Set Start DONE')
       //overlay.setInteractionMode('main')
       overlay.hardRefresh()

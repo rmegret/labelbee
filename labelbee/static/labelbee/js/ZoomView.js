@@ -1843,12 +1843,12 @@ function getCoveredTags(obs) {
   if (tracks.length > 0) {
     let track = tracks[0];
     if (!("span" in obs)) {
-      obs.span = { f1: track.span.f1, f2: track.span.f2 };
+      events.update(obs.frame, obs.ID, { span: { f1: track.span.f1, f2: track.span.f2 } });
     }
   }
 
   if (!obs.span) {
-    obs.span = { f1: obs.frame, f2: obs.frame };
+    events.update(obs.frame, obs.ID, { span: { f1: obs.frame, f2: obs.frame } });
   }
   var f1 = obs.span.f1;
   var f2 = obs.span.f2;
@@ -1918,9 +1918,7 @@ ZoomOverlay.prototype.bakeTagFix = function (obs) {
   }
   if (hasLabel(obs, "falsealarm")) {
     if (!obs.fix) {
-      obs.fix = {
-        newid: "falsealarm",
-      };
+      events.update(obs.frame, obs.ID, { fix: { newid: "falsealarm" } });
     }
   }
   if (!obs.fix) {
@@ -1981,34 +1979,20 @@ ZoomOverlay.prototype.deleteFalsealarmTags = function () {
   refreshChronogram();
 };
 ZoomOverlay.prototype.deleteFalsealarmEvents = function () {
-  for (let F in Tracks) {
-    for (let id in Tracks[F]) {
-      let obs = Tracks[F][id];
-
-      if (hasLabel(obs, "falsealarm")) {
-        delete Tracks[F][id];
-      }
+  events.forEach(function (obs, F, id) {
+    if (hasLabel(obs, "falsealarm")) {
+      events.delete(F, id); // also removes the frame when it ends up empty
     }
-    if ($.isEmptyObject(Tracks[F])) {
-      delete Tracks[F];
-    }
-  }
+  });
 
   refreshChronogram();
 };
 ZoomOverlay.prototype.deleteWrongIdEvents = function () {
-  for (let F in Tracks) {
-    for (let id in Tracks[F]) {
-      let obs = Tracks[F][id];
-
-      if (hasLabel(obs, "wrongid")) {
-        delete Tracks[F][id];
-      }
+  events.forEach(function (obs, F, id) {
+    if (hasLabel(obs, "wrongid")) {
+      events.delete(F, id); // also removes the frame when it ends up empty
     }
-    if ($.isEmptyObject(Tracks[F])) {
-      delete Tracks[F];
-    }
-  }
+  });
 
   refreshChronogram();
 };

@@ -1018,7 +1018,7 @@ function augmentTrackWithTag() {
       for (var i = 0; i < Tags[F].tags.length; i++) {
         let id = String(Tags[F].tags[i].id);
         if (Tracks[F] && Tracks[F][id]) {
-          Tracks[F][id].tag = Tags[F].tags[i];
+          events.update(F, id, { tag: Tags[F].tags[i] });
         }
       }
     }
@@ -1109,8 +1109,7 @@ function updateChronogramData() {
         }
         let inROI = true
 
-        obs.cx = obs.x + obs.width/2
-        obs.cy = obs.y + obs.height/2
+        events.update(F, id, { cx: obs.x + obs.width/2, cy: obs.y + obs.height/2 })
 
         //if (flag_useROI) {  // TODO; Check x vs cx
             inROI = (obs.cx >= ROI.left &&

@@ -995,25 +995,30 @@ function modifyCurrentObsSpan(mode) {
   let track = tracks[0];
 
   if (!("span" in obs)) {
-    obs.span = { f1: track.span.f1, f2: track.span.f2 };
+    events.update(frame, id, { span: { f1: track.span.f1, f2: track.span.f2 } });
   }
   if (mode == "copy") {
     return;
   }
+  let f1 = obs.span.f1;
+  let f2 = obs.span.f2;
   if (mode == "extendleft") {
-    obs.span.f1 = obs.span.f1 - 10;
-    if (obs.span.f1 < 0) obs.span.f1 = 0;
+    f1 = f1 - 10;
+    if (f1 < 0) f1 = 0;
   }
   if (mode == "extendright") {
-    obs.span.f2 = obs.span.f2 + 10;
+    f2 = f2 + 10;
   }
   if (mode == "restrictleft") {
-    obs.span.f1 = obs.span.f1 + 10;
-    if (obs.span.f1 > obs.frame) obs.span.f1 = obs.frame;
+    f1 = f1 + 10;
+    if (f1 > obs.frame) f1 = obs.frame;
   }
   if (mode == "restrictright") {
-    obs.span.f2 = obs.span.f2 - 10;
-    if (obs.span.f2 < obs.frame) obs.span.f2 = obs.frame;
+    f2 = f2 - 10;
+    if (f2 < obs.frame) f2 = obs.frame;
+  }
+  if (f1 != obs.span.f1 || f2 != obs.span.f2) {
+    events.update(frame, id, { span: { f1: f1, f2: f2 } });
   }
 
   if (mode=='setspan') {
