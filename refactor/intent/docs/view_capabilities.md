@@ -334,7 +334,7 @@ Validate and normalise loaded files into a valid `Tracks`/`Tags` (duplicate ids,
 - **Group:** [CAP-700](#cap-700-annotation-model-and-io "Annotation model and IO")
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTracks`, `setTags`
-  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `sanitizeEvents`, `decodeTags`
 - **Links:** [ENT-004](view_entities.md#ent-004-annotation-file--record "Annotation file / record"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable")
 
 ## CAP-800: Data filtering and processing

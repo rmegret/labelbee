@@ -296,7 +296,7 @@ Validate and normalise loaded files into a valid `Tracks`/`Tags` (duplicate ids,
 - **Group:** CAP-700
 - **Code:**
   - `AnnotationIO.js`: `setTracks`, `setTags`
-  - `annotation/AnnotationCodec.js`: `sanitizeEvents`
+  - `annotation/AnnotationCodec.js`: `sanitizeEvents`, `decodeTags`
 - **Links:** ENT-004, INV-003
 
 ## CAP-800: Data filtering and processing

@@ -321,17 +321,19 @@ revoked. There is no confirmation and no change of any dirty state.
 
 The `<label for="load">Load Events</label>` + hidden `<input type="file" id="load">` (no `accept` filter) fire
 `loadEventsFromFile` on `change`: takes the first file, resets `input.value = ""` (so the same file can be
-reloaded), returns silently if no file; reads it as text with `FileReader`; `onReaderLoad` does `JSON.parse`
-(an exception on invalid JSON is uncaught: console only, no message to the user, Tracks unchanged) and
-calls `setTracks(obj)` ([BEH-720](#beh-720-settracks-replace-the-model-and-refresh "setTracks: replace the model and refresh")). There is no confirmation: the current `Tracks` is silently replaced even
-when it has unsaved work. A wrong-format file is rejected with console logs only ([BEH-718](#beh-718-events-json-v1-format-load-side-via-sanitizeevents "Events JSON v1 format (load side) via sanitizeEvents")/719), no user message.
+reloaded), returns silently if no file; reads it as text with `readFileAsText` (a Promise over `FileReader`); `eventsFromText` does `JSON.parse` and
+`setTracks(obj)` ([BEH-720](#beh-720-settracks-replace-the-model-and-refresh "setTracks: replace the model and refresh")) and throws an `Error` when `setTracks` returns `false` (`onReaderLoad(event)` stays for manual calls and delegates to it).
+Invalid JSON and a rejected format end in `showLoadError`: a message in the main alert (HTML-escaped; in the from-server dialog
+when it is visible), a `console.error`, and the rejection of the returned Promise; the Tracks are unchanged (since slice 3 step 5, Q23;
+before: console only). There is no confirmation: the current `Tracks` is silently replaced even
+when it has unsaved work. A wrong-format file is rejected ([BEH-718](#beh-718-events-json-v1-format-load-side-via-sanitizeevents "Events JSON v1 format (load side) via sanitizeEvents")/719) and shown to the user as above.
 Console logs the whole file content when `logging.io`. (`loadEventsFromFile0(path)`, a variant that loads via `$.get`,
 has no caller except a commented-out line in `labelBee.js`, [DEBT-731](view_debt.md#debt-731-dead-loaders-and-debug-helpers "Dead loaders and debug helpers").)
 
 - **Group:** [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
 - **Origin:** essential
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadEventsFromFile`, `onReaderLoad`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadEventsFromFile`, `eventsFromText`, `onReaderLoad`, `readFileAsText`, `showLoadError`, `reportLoadError`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `#load`
 - **Links:** [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [INV-003](view_invariants.md#inv-003-old-annotation-files-stay-loadable "Old annotation files stay loadable"), [BEH-720](#beh-720-settracks-replace-the-model-and-refresh "setTracks: replace the model and refresh"), [DEBT-709](view_debt.md#debt-709-silent-failures-when-loading-local-files "Silent failures when loading local files"), [DEBT-731](view_debt.md#debt-731-dead-loaders-and-debug-helpers "Dead loaders and debug helpers"), [OQ-710](../../QUESTIONS.md#oq-710 "Silent replacement of unsaved work on load and erase")
 
@@ -418,7 +420,7 @@ In the v2 branch, if two events of one frame have the same `id`, the first is ke
 dropped (console warning for each), and after the whole file `alert("WARNING: Events file was loaded, but it has
 duplicate entries. Current version of software deleted redundant events.")` is shown once. Any exception
 while reading (wrong structure) is caught: `console.error`, `sanitizeEvents` returns `undefined`, and
-`setTracks` returns `false`: no change to the model and no visible message for local files. v2 events with
+`setTracks` returns `false`: no change to the model (since slice 3 step 5 the loaders turn this into a message for the user, [BEH-714](#beh-714-load-events-from-a-local-file "Load Events from a local file")). `null`, `undefined` and primitives are rejected before the format test, with the same unsupported-format message ([DEBT-710](view_debt.md#debt-710-dead-array-branch-unreachable-non-object-branch-misleading-v1-source-string "Dead 'array' branch, unreachable non-object branch, misleading v1 source string")). v2 events with
 `id` missing become the ID `"undefined"` (and collide with each other, being treated as duplicates).
 
 - **Group:** [CAP-707](view_capabilities.md#cap-707-load-time-sanitising "Load-time sanitising")
@@ -431,8 +433,8 @@ while reading (wrong structure) is caught: `console.error`, `sanitizeEvents` ret
 ## BEH-720: setTracks: replace the model and refresh
 
 `setTracks(obj, skipRefresh)` runs `sanitizeEvents`; on failure logs "ABORTED, wrong format." and returns
-`false` (model untouched). On success: `Tracks = evts.data`, `TracksInfo = evts.info` (both globals replaced,
-previous content discarded), `updateEventsNotes()`, then unless `skipRefresh`: `videoControl.onFrameChanged()` and
+`false` (model untouched). On success: `AnnotationStore.replaceTracks(evts.data, evts.info)` (both replaced,
+previous content discarded; the globals `Tracks`/`TracksInfo` are accessors of the store, ADR 0005), `updateEventsNotes()`, then unless `skipRefresh`: `videoControl.onFrameChanged()` and
 `refreshChronogram()`; returns `true`. Callers (server load, CSV import, DB import) call
 `videoControl.onFrameChanged()` and `refreshChronogram()` again after it (double refresh). It does
 not clear the selection, the undo stack, nor `fromServerDialog.basedOn`.
@@ -441,6 +443,7 @@ not clear the selection, the undo stack, nor `fromServerDialog.basedOn`.
 - **Origin:** essential
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTracks`, `setEventsProp`
+  - [labelbee/static/labelbee/js/annotation/AnnotationStore.js](../../../labelbee/static/labelbee/js/annotation/AnnotationStore.js): `replaceTracks`
 - **Links:** [CAP-701](view_capabilities.md#cap-701-annotation-model-selection-and-undo "Annotation model, selection and undo"), [INV-001](view_invariants.md#inv-001-no-annotation-loss "No annotation loss"), [BEH-715](#beh-715-erase-events-and-erase-tags-buttons "Erase Events and Erase Tags buttons"), [BEH-746](#beh-746-a-v2-file-without-data-loads-as-an-empty-model "A v2 file without `data` loads as an empty model"), [DEBT-712](view_debt.md#debt-712-implicit-globals-and-double-refresh-in-the-io-code "Implicit globals and double refresh in the IO code"), [OQ-710](../../QUESTIONS.md#oq-710 "Silent replacement of unsaved work on load and erase")
 
 ## BEH-721: Tags JSON v1 and v2 formats
@@ -467,15 +470,16 @@ native files; the tags CSV import produces string ids ([BEH-737](#beh-737-import
 ## BEH-722: Load Tags from a local file
 
 Hidden `<input type="file" id="loadtags">` (label "Load Tags") fires `loadTagsFromFile` on `change`: first
-file, input value reset, silent return if none; `FileReader.readAsText`; `onTagsReaderLoad` does
-`JSON.parse` (invalid JSON: uncaught exception, no message) and `setTags(obj)` ([BEH-724](#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh")). The success/fail
-return of `setTags` is ignored; the console logs "importing from JSON file. DONE" regardless. No confirmation
+file, input value reset, silent return if none; `readFileAsText`; `tagsFromText` does
+`JSON.parse` and `setTags(obj)` ([BEH-724](#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh")) and throws an `Error` when `setTags` returns `0`. Invalid JSON and a rejected format are shown
+with `showLoadError` (alert, `console.error`, rejected Promise); the console logs "importing from JSON file. DONE" only on
+success (since slice 3 step 5; before: uncaught exception, ignored return, DONE logged regardless). `onTagsReaderLoad(event)` stays for manual calls. No confirmation
 before replacing the existing `Tags`.
 
 - **Group:** [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
 - **Origin:** essential
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTagsFromFile`, `onTagsReaderLoad`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadTagsFromFile`, `tagsFromText`, `onTagsReaderLoad`
   - [labelbee/blueprints/labelbee/templates/labelbee_page.html](../../../labelbee/blueprints/labelbee/templates/labelbee_page.html): `#loadtags`
 - **Links:** [BEH-724](#beh-724-settags-replace-tags-and-refresh "setTags: replace tags and refresh"), [BEH-721](#beh-721-tags-json-v1-and-v2-formats "Tags JSON v1 and v2 formats")
 
@@ -495,30 +499,31 @@ server by the client (there is no tag-save request).
 
 ## BEH-724: setTags: replace tags and refresh
 
-Parse stage (inside a `try`): returns `0` and leaves `Tags` unchanged when the object has `info` with `info.type !=
-"tags-multiframe"`, or when the object is `null` or a primitive (`"info" in obj` throws, caught with `console.error`).
-For an accepted v2 object `obj = obj.data` (so a v2 file without `data` sets `obj` to `undefined`, [DEBT-733](view_debt.md#debt-733-settags-replaces-tags-before-unguarded-steps "setTags replaces Tags before unguarded steps")). Then the
-apply stage runs OUTSIDE the `try`, in this order: `Tags = obj`, `TagsInfo` = dummy info ([BEH-721](#beh-721-tags-json-v1-and-v2-formats "Tags JSON v1 and v2 formats")), `tagsAddFrames(Tags)`
-(adds `tag.frame = Number(f)` to every tag of every frame, overwriting any `frame` in the file; a frame whose `.tags` is
-`null` or a tag that is `null` is skipped, but a `null` frame entry throws because `Tags[f].tags` is read unguarded),
-`ttags = getTTags()` (from `ChronoControl.js`; in `tagMode == 'Tracks'` it builds the id to frame index from the global
-`flatTags` assigned by `updateChronoData`, so at that point it reflects the previous chronogram data, otherwise it
-iterates `Tags`; it also resets the global `allTagsID` to a `Set`, which stays a Set until `updateChronoData` converts it
-to an array). The following `refreshChronogram()` runs `updateChronoData`, which recomputes `flatTags = getFlatTags(false)`
-then `ttags = getTTags()`, so `ttags` is correct again after the call; the DM check, then `refreshChronogram()`, `adjustChronogramHeight()`,
-`videoControl.onFrameChanged()`; returns `1`.
-DM check: if `Tags` is not empty (`jQuery.isEmptyObject`), takes `Tags[firstKey].tags` and, when it has at least one
-element, `tagsHaveDM = "dm" in tags0[0]` (only the first tag of the first key decides; `tagsHaveDM` is set to false
-before the check, so an empty first frame leaves it false). Elements with class `.requireDM` get the `disabled` property
-and CSS class `disabled` = `!tagsHaveDM`. An exception in `tagsAddFrames` or in the DM check (for instance a first key
-without `.tags`) propagates uncaught after `Tags` and `TagsInfo` were already replaced: no refresh, no return value. Only
-the parse-stage failures return `0` with `Tags` unchanged.
+Decode stage (`decodeTags`, `annotation/AnnotationCodec.js`, pure, inside a `try`): returns `null`, so `setTags` returns `0` and leaves
+`Tags` unchanged, when `obj` is `null` or not an object (message with its `typeof`, [DEBT-710](view_debt.md#debt-710-dead-array-branch-unreachable-non-object-branch-misleading-v1-source-string "Dead 'array' branch, unreachable non-object branch, misleading v1 source string")), when it has `info` with `info.type !=
+"tags-multiframe"`, when it is v2 and its `data` is missing, `null` or not an object (DEBT-733), or when it is v1 and a key of `obj` is
+not a non-negative integer string ([DEBT-713](view_debt.md#debt-713-settags-v1-validation-inspects-the-previous-tags-global "setTags v1 validation inspects the previous Tags global")); an error thrown while testing (for instance `info: null`) is caught with `console.error`.
+For an accepted v2 object `data = obj.data`; the info is always the dummy info ([BEH-721](#beh-721-tags-json-v1-and-v2-formats "Tags JSON v1 and v2 formats")).
+Apply stage, as a whole with rollback: `setTags` saves the previous `Tags`, `TagsInfo`, `tagsHaveDM` and `ttags`, then runs, in this
+order: `AnnotationStore.replaceTags(data, info)`, `tagsAddFrames(Tags)` (adds `tag.frame = Number(f)` to every tag of every frame,
+overwriting any `frame` in the file; a frame whose `.tags` is `null` or a tag that is `null` is skipped, but a `null` frame entry throws
+because `Tags[f].tags` is read unguarded), `ttags = getTTags()` (from `ChronoControl.js`; in `tagMode == 'Tracks'` it builds the id to
+frame index from the global `flatTags` assigned by `updateChronoData`, so at that point it reflects the previous chronogram data,
+otherwise it iterates `Tags`; it also resets the global `allTagsID` to a `Set`, which stays a Set until `updateChronoData` converts it to
+an array; the following `refreshChronogram()` runs `updateChronoData`, which recomputes `flatTags` then `ttags`), then
+`AnnotationStore.updateTagsHaveDM()`. If any of these throws (a `null` frame entry, a first frame without `.tags`, [DEBT-715](view_debt.md#debt-715-settags-dm-detection-and-discarded-file-info "setTags DM detection and discarded file info")) the saved
+values are put back, `console.error` and "ABORTED, malformed tag data. The previous Tags are kept." are logged and `0` is returned
+([DEBT-733](view_debt.md#debt-733-settags-replaces-tags-before-unguarded-steps "setTags replaces Tags before unguarded steps"); `allTagsID` may stay partial). On success: the `.requireDM` elements get the `disabled` property and CSS class `disabled` =
+`!tagsHaveDM`, then `refreshChronogram()`, `adjustChronogramHeight()`, `videoControl.onFrameChanged()`; returns `1`.
+DM rule (`updateTagsHaveDM`): `tagsHaveDM` is set to false, then, if `Tags` is not empty, `tagsHaveDM = "dm" in tags0[0]` for the first
+tag of the first key (only that one decides; an empty first frame leaves it false).
 
 - **Group:** [CAP-702](view_capabilities.md#cap-702-local-file-load-and-save "Local file load and save")
 - **Origin:** essential
 - **Code:**
   - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `setTags`
-  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `tagsAddFrames`
+  - [labelbee/static/labelbee/js/annotation/AnnotationCodec.js](../../../labelbee/static/labelbee/js/annotation/AnnotationCodec.js): `decodeTags`, `tagsAddFrames`
+  - [labelbee/static/labelbee/js/annotation/AnnotationStore.js](../../../labelbee/static/labelbee/js/annotation/AnnotationStore.js): `replaceTags`, `updateTagsHaveDM`
   - [labelbee/static/labelbee/js/ChronoControl.js](../../../labelbee/static/labelbee/js/ChronoControl.js): `getTTags`
 - **Links:** [ENT-002](view_entities.md#ent-002-tag-detection "Tag detection"), [CAP-502](view_capabilities.md#cap-502-tag-id-assignment-and-fix "Tag ID assignment and fix"), [BEH-721](#beh-721-tags-json-v1-and-v2-formats "Tags JSON v1 and v2 formats"), [DEBT-715](view_debt.md#debt-715-settags-dm-detection-and-discarded-file-info "setTags DM detection and discarded file info"), [DEBT-733](view_debt.md#debt-733-settags-replaces-tags-before-unguarded-steps "setTags replaces Tags before unguarded steps"), [DEBT-736](view_debt.md#debt-736-settags-builds-ttags-from-stale-chronogram-data "setTags builds ttags from stale chronogram data")
 
@@ -644,19 +649,17 @@ commented out.
 ## BEH-731: Loading events from a URL fragment (#video_data=<id>)
 
 `loadEventsFromServerByID(video_data_id)` (async) is awaited by `onhashchange` in `labelBee.js` when the URL hash has `video_data`. It
-sends `GET api/v1/annotation/<id>`, parses `response.data.data` and calls `setTracks`, `onFrameChanged`,
-`refreshChronogram`. The function returns before the request completes (the promise does not wait for the AJAX
-call) and its success and error callbacks reference variables that are not defined in scope (`tag_event_ID`,
-`theDialog`, `div`): after `setTracks` succeeds a `ReferenceError` is thrown at the `console.log`
-line, so `fromServerDialog.basedOn` is NOT set and no message is shown; the Tracks are nevertheless loaded. The failure
-paths (`setTracks` false, request error) also reference undefined `div` and `tag_event_ID` before reaching their
-`throw new Error(...)`, so they end in a `ReferenceError` instead. The
-function comment says it replaces the deprecated `tracksListFromServer`.
+sends `GET api/v1/annotation/<id>` (`ajaxGetJSON`), parses `response.data.data`, calls `setTracks`, `onFrameChanged`,
+`refreshChronogram` and, on success, sets `fromServerDialog.basedOn = <id>` and the message "Events loaded." (since slice 3 step 5,
+[DEBT-722](view_debt.md#debt-722-loadeventsfromserverbyid-uses-undefined-variables-and-does-not-await "loadEventsFromServerByID uses undefined variables and does not await") fixed; before, out-of-scope variables made every path end in a `ReferenceError`, `basedOn` was never set, and the function
+returned before the request completed). When the request fails or `setTracks` returns `false` it throws, `showLoadError` tells the
+user (dialog when visible, else main alert) and the returned Promise rejects; `onhashchange` catches it, logs "FAILED" and goes on
+with the delayed seek and the hash cleanup. The function comment says it replaces the deprecated `tracksListFromServer`.
 
 - **Group:** [CAP-703](view_capabilities.md#cap-703-server-load-and-save "Server load and save")
 - **Origin:** accident
 - **Code:**
-  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadEventsFromServerByID`
+  - [labelbee/static/labelbee/js/AnnotationIO.js](../../../labelbee/static/labelbee/js/AnnotationIO.js): `loadEventsFromServerByID`, `ajaxGetJSON`, `showLoadError`, `reportLoadError`
   - [labelbee/static/labelbee/js/labelBee.js](../../../labelbee/static/labelbee/js/labelBee.js): `onhashchange handler`
 - **Links:** [DEBT-722](view_debt.md#debt-722-loadeventsfromserverbyid-uses-undefined-variables-and-does-not-await "loadEventsFromServerByID uses undefined variables and does not await"), [CAP-202](view_capabilities.md#cap-202-play-and-seek "Play and seek")
 
@@ -717,8 +720,8 @@ loaded. Closing." and closes the dialog. This is configuration, not annotation d
 Entry points: link "from URI" (`clickLoadTracksCSVFromServer`: `prompt("Enter tracks URL", <default
 /data/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv>)`; empty/cancel: nothing) and link "from /data"
 (`pickEventsCSVDialog.open()`: `EventsCSVManualFilePicker`, a `FilePickerFromServerDialog` defined in `labelBee.js`
-over `/api/v1/rawdata/`, titled "Load tracks CSV Manually", [BEH-748](#beh-748-server-file-picker-used-by-the-tracks-csv-import "Server file picker used by the tracks CSV import"), which calls `loadTracksCSVFromServer(uri)`). `d3.csv(url)` parses it (no `.catch`: network or parse errors are silent, only unhandled
-promise rejection) and `tracks_csv_to_json` converts each row (all CSV values are strings). Row to event: `id = track_id`
+over `/api/v1/rawdata/`, titled "Load tracks CSV Manually", [BEH-748](#beh-748-server-file-picker-used-by-the-tracks-csv-import "Server file picker used by the tracks CSV import"), which calls `loadTracksCSVFromServer(uri)`). `d3.csv(url)` parses it (a network or parse error, or a rejected `setTracks`, ends in `showLoadError` and a rejected Promise,
+since slice 3 step 5; before: silent, only an unhandled rejection) and `tracks_csv_to_json` converts each row (all CSV values are strings). Row to event: `id = track_id`
 (string), `frame = +frame`, `cx = +cx`, `cy = +cy`, `angle = +angle + 90`, `width = 300`, `height = 600`,
 `x = cx - 150`, `y = cy - 300`, `bool_acts = [false x4]`, `labels = ""`, `parts` = for each of head, neck, thorax, waist, tail with
 `+<name>_visibility > 0`: `{posFrame:{x:+<name>_x, y:+<name>_y}, label:<name>}`. Not set: `time`, `notes`, `ID`. Structure
@@ -745,7 +748,7 @@ name `gurabo4`). `tracks_tagged_csv_to_json` is as [BEH-735](#beh-735-import-of-
 otherwise `String(+track_tagid)`; if `tag_id` is non-empty an embedded `tag` object is attached to the event:
 `{id:+tag_id, frame:+frame, c:[+tag_cx,+tag_cy], hamming:+tag_hamming, goodness:+tag_goodness, dm:+tag_dm,
 p:[[+tag_p0x,+tag_p0y],...[+tag_p3x,+tag_p3y]]}`. The `Tags` global is not touched (tags live in `obs.tag`; consumers
-select with `tagMode == 'Tracks'`). The video load and the CSV load are not sequenced (CSV fetch starts immediately).
+select with `tagMode == 'Tracks'`). The video load and the CSV load are not sequenced (CSV fetch starts immediately). Failures are reported as in [BEH-735](#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)").
 
 - **Group:** [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import")
 - **Origin:** intentional
@@ -761,7 +764,7 @@ select with `tagMode == 'Tracks'`). The video load and the CSV load are not sequ
 Tracks as [BEH-735](#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)") but with `id = <row>.id` (instead of `track_id`), and `tags_csv_to_tagjson` gives Tags: rows with `+dm == 0`
 are skipped (their frame still gets an empty `{tags:[]}` entry); item = `{id: <row.id string>, frame:+frame, c:[+cx_tag,+cy_tag],
 hamming:+hamming, goodness:+goodness, dm:+dm, p:[[+p0x,+p0y],...,[+p3x,+p3y]]}`; info `{type:"tags-multiframe", source, history:string}`
-(replaced by the dummy info in `setTags`). Tag ids are strings here, ints in `tracks_tagged` and native tag files.
+(replaced by the dummy info in `setTags`). Tag ids are strings here, ints in `tracks_tagged` and native tag files. Failures (including a rejected `setTags`) are reported as in [BEH-735](#beh-735-import-of-a-tracks-csv-tracks_csv_to_json "Import of a tracks CSV (tracks_csv_to_json)").
 
 - **Group:** [CAP-704](view_capabilities.md#cap-704-external-tool-import "External-tool import")
 - **Origin:** debt
