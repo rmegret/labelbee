@@ -1,0 +1,278 @@
+{
+ "0": {
+  "1": {
+   "time": 0,
+   "frame": 0,
+   "x": 60,
+   "y": 80,
+   "cx": 84.0,
+   "cy": 104.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ "5": {
+  "1": {
+   "time": 5,
+   "frame": 5,
+   "x": 90,
+   "y": 82,
+   "cx": 114.0,
+   "cy": 106.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ "10": {
+  "1": {
+   "time": 10,
+   "frame": 10,
+   "x": 120,
+   "y": 85,
+   "cx": 144.0,
+   "cy": 109.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  "2": {
+   "time": 10,
+   "frame": 10,
+   "x": 300,
+   "y": 150,
+   "cx": 324.0,
+   "cy": 174.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "fans",
+   "labels": "fanning",
+   "ID": 2,
+   "bool_acts": [
+    true,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ "15": {
+  "1": {
+   "time": 15,
+   "frame": 15,
+   "x": 150,
+   "y": 87,
+   "cx": 174.0,
+   "cy": 111.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  "2": {
+   "time": 15,
+   "frame": 15,
+   "x": 300,
+   "y": 150,
+   "cx": 324.0,
+   "cy": 174.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "fanning",
+   "ID": 2,
+   "bool_acts": [
+    true,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ "20": {
+  "1": {
+   "time": 20,
+   "frame": 20,
+   "x": 180,
+   "y": 90,
+   "cx": 204.0,
+   "cy": 114.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "pollen",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    true,
+    false,
+    false
+   ]
+  },
+  "2": {
+   "time": 20,
+   "frame": 20,
+   "x": 300,
+   "y": 150,
+   "cx": 324.0,
+   "cy": 174.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "fanning",
+   "ID": 2,
+   "bool_acts": [
+    true,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ "25": {
+  "1": {
+   "time": 25,
+   "frame": 25,
+   "x": 210,
+   "y": 92,
+   "cx": 234.0,
+   "cy": 116.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "pollen",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    true,
+    false,
+    false
+   ]
+  },
+  "2": {
+   "time": 25,
+   "frame": 25,
+   "x": 300,
+   "y": 150,
+   "cx": 324.0,
+   "cy": 174.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "fanning",
+   "ID": 2,
+   "bool_acts": [
+    true,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ "30": {
+  "1": {
+   "time": 30,
+   "frame": 30,
+   "x": 240,
+   "y": 95,
+   "cx": 264.0,
+   "cy": 119.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "pollen",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    true,
+    false,
+    false
+   ]
+  },
+  "2": {
+   "time": 30,
+   "frame": 30,
+   "x": 300,
+   "y": 150,
+   "cx": 324.0,
+   "cy": 174.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "fanning",
+   "ID": 2,
+   "bool_acts": [
+    true,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ "35": {
+  "1": {
+   "time": 35,
+   "frame": 35,
+   "x": 270,
+   "y": 97,
+   "cx": 294.0,
+   "cy": 121.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "pollen",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    true,
+    false,
+    false
+   ]
+  }
+ }
+}

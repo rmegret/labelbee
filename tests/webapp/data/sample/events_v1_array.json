@@ -1,0 +1,97 @@
+[
+ {
+  "1": {
+   "time": 0,
+   "frame": 0,
+   "x": 60,
+   "y": 80,
+   "cx": 84.0,
+   "cy": 104.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ null,
+ null,
+ null,
+ null,
+ {
+  "1": {
+   "time": 5,
+   "frame": 5,
+   "x": 90,
+   "y": 82,
+   "cx": 114.0,
+   "cy": 106.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ null,
+ null,
+ null,
+ null,
+ {
+  "1": {
+   "time": 10,
+   "frame": 10,
+   "x": 120,
+   "y": 85,
+   "cx": 144.0,
+   "cy": 109.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "",
+   "labels": "",
+   "ID": 1,
+   "bool_acts": [
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  "2": {
+   "time": 10,
+   "frame": 10,
+   "x": 300,
+   "y": 150,
+   "cx": 324.0,
+   "cy": 174.0,
+   "width": 48,
+   "height": 48,
+   "angle": 0,
+   "notes": "fans",
+   "labels": "fanning",
+   "ID": 2,
+   "bool_acts": [
+    true,
+    false,
+    false,
+    false
+   ]
+  }
+ },
+ null
+]

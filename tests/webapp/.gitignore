@@ -1,0 +1,9 @@
+# The root .gitignore ignores every data/ folder. This one holds the synthetic samples of the dev webapp
+# (tests/webapp/data/sample/), so it is re-included; what must not be committed is ignored below.
+!data/
+
+# annotations saved by "Save to server" in the dev webapp
+data/_saved/
+# synthetic fallback video and its metadata (the committed ones are data/sample/sample.mp4 and sample.info.json)
+data/sample/sample.synthetic.*
+__pycache__/

@@ -1,0 +1,55 @@
+{
+ "info": {
+  "type": "events-multiframe",
+  "source": "tests/webapp synthetic sample",
+  "notes": "two synthetic bees"
+ },
+ "data": {
+  "0": [
+   {
+    "id": "1",
+    "time": 0,
+    "frame": 0,
+    "x": 60,
+    "y": 80,
+    "cx": 84.0,
+    "cy": 104.0,
+    "width": 48,
+    "height": 48,
+    "angle": 0,
+    "notes": "",
+    "labels": ""
+   },
+   {
+    "id": "1",
+    "time": 0,
+    "frame": 0,
+    "x": 70,
+    "y": 90,
+    "cx": 94.0,
+    "cy": 114.0,
+    "width": 48,
+    "height": 48,
+    "angle": 0,
+    "notes": "",
+    "labels": ""
+   }
+  ],
+  "5": [
+   {
+    "id": "2",
+    "time": 5,
+    "frame": 5,
+    "x": 300,
+    "y": 150,
+    "cx": 324.0,
+    "cy": 174.0,
+    "width": 48,
+    "height": 48,
+    "angle": 0,
+    "notes": "",
+    "labels": ""
+   }
+  ]
+ }
+}
