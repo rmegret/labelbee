@@ -457,6 +457,7 @@ _Proposed_: Pass-through of unknown fields at load/save (already true at load an
 The v2 save writes `obs.tag` (whole tag record) and `span` into each event whenever they are present in memory (BEH-708, DEBT-704). ENT-001 says `tag` is not saved, while OQ-003 says all `Observation` fields are preserved on load and save; note that `tag` is a runtime attachment (assigned by `augmentTrackWithTag`) or an import-time field (`tracks_tagged`, BEH-736), not one of the fields created by `new Observation` (ENT-001). Is the embedded tag wanted in the files (e.g. for the `tracks_tagged` workflow, where it is the only tag source)?
 _Significance_: Decides the save whitelist and whether files are reproducible regardless of UI state.
 _Proposed_: `tag` is not saved when it came from `Tags`; it is kept when it came from a `tracks_tagged` import; `span` is saved. Both consistent with OQ-003 only if "Observation fields" is read as the ENT-001 field list.
+_Answer_: `tag` and `span` are part of the event data (maintainer, 2026-11-13): `Events` keeps them and they are saved with the event, as today. See [DEC-007](intent/decisions.md); DEBT-704's premise is withdrawn.
 
 **<a id='oq-703'>OQ-703</a>: Are v1 events files and ID-less events still produced anywhere**
 Load of v1 (no `info`) files keeps the file's `ID` and `bool_acts` and does no normalization (BEH-718, DEBT-711), while v2 files regenerate `bool_acts` from `labels` and require `id` (BEH-717). Do archives still contain v1 files, and may they lack `bool_acts` or `labels`?
