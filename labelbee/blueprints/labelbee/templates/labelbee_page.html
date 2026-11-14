@@ -59,8 +59,9 @@
   <script type="text/javascript" src="js/ZoomView.js"></script>
   <script type="text/javascript" src="js/labelBee.js"></script>
   <!-- ES module bridges (deferred, run in order after the classic scripts, before window.onload):
-       global `logging` from core/Notifier.js; the annotation data globals (Tracks, Tags, ...) from
-       annotation/AnnotationStore.js; converters of AnnotationIO.js -->
+       global `logging` from core/Notifier.js; `AnnotationStore` and `events` (the stored events) from
+       annotation/AnnotationStore.js (no data globals: Tracks, Tags, ... are console-only debug views, see
+       annotation/DebugGlobals.js); converters of AnnotationIO.js -->
   <script type="module" src="js/core/NotifierBridge.js"></script>
   <script type="module" src="js/annotation/AnnotationStoreBridge.js"></script>
   <script type="module" src="js/annotation/AnnotationCodecBridge.js"></script>

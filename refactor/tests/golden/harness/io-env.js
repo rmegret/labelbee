@@ -1,8 +1,8 @@
 // Environment for the slice 3 golden tests (ADR 0005): the REAL setTracks/setTags/loaders of
 // AnnotationIO.js evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
 // The AnnotationIO.js functions stay in that file during the whole slice, so the same golden checks
-// the code before and after each step. Since step 2 the page globals Tags, TagsInfo and
-// tagsHaveDM are the accessors of AnnotationStoreBridge.js over a fresh AnnotationStore per case.
+// the code before and after each step. Since step 2 the data lives in a fresh
+// AnnotationStore per case (the bridge installs `AnnotationStore` and `events`; there are no data globals any more).
 // Every effect on the outside is recorded in order in `rec.fx`.
 'use strict';
 const fs = require('fs');
@@ -31,7 +31,6 @@ const CODEC_FUNCTIONS = [
   'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'tracks_csv_to_json', 'tags_csv_to_json',
   'tags_csv_to_tagjson', 'tracks_tagged_csv_to_json',
 ];
-const STATE_NAMES = ['Tracks', 'TracksInfo', 'Tags', 'TagsInfo', 'tagsHaveDM', 'ttags'];
 
 // Top-level function: from its `function` line to the first line that is exactly `}`.
 function extractTopLevel(src, name) {
@@ -157,7 +156,7 @@ async function loadIoEnv() {
       refreshChronogram: () => fx('refreshChronogram'),
       adjustChronogramHeight: () => fx('adjustChronogramHeight'),
       // Called with the Tags at that moment: shows what setTags builds ttags from (DEBT-736).
-      getTTags: () => { fx('getTTags', Object.keys(ctx.Tags || {})); return { stub: 'ttags' }; },
+      getTTags: () => { fx('getTTags', Object.keys(ctx.AnnotationStore.getTags() || {})); return { stub: 'ttags' }; },
     };
     CODEC_FUNCTIONS.forEach((n) => { sandbox[n] = codec[n]; });
     const ctx = vm.createContext(sandbox);
@@ -172,20 +171,25 @@ async function loadIoEnv() {
 
 // State access: the globals of the context. What a case does not give is undefined (as before the store
 // existed), not the store's defaults; `ttags` is not store data and stays a plain global.
-// `Tracks` and `TracksInfo` are no longer page globals (slice 4 step 5a): the stored events are read and set
-// through the store, under the same names, so the golden keys do not change.
+// The stored events and the tags are no longer page globals (slice 4 step 5): they are read and set through the
+// store, under the same names, so the golden keys do not change. Only `ttags` is a plain global.
 function writeState(ctx, init) {
-  ctx.AnnotationStore.replaceTracks(init.Tracks, init.TracksInfo);
-  for (const k of STATE_NAMES) if (k !== 'Tracks' && k !== 'TracksInfo' && (k in init || k !== 'ttags')) ctx[k] = init[k];
+  const store = ctx.AnnotationStore;
+  store.replaceTracks(init.Tracks, init.TracksInfo);
+  store.replaceTags(init.Tags, init.TagsInfo);
+  store.setTagsHaveDM(init.tagsHaveDM);
+  if ('ttags' in init) ctx.ttags = init.ttags;
 }
 function readState(ctx) {
-  const out = {};
-  for (const k of STATE_NAMES) {
-    if (k === 'Tracks') out[k] = ser(ctx.AnnotationStore.getTracks());
-    else if (k === 'TracksInfo') out[k] = ser(ctx.AnnotationStore.getTracksInfo());
-    else out[k] = ser(vm.runInContext('typeof ' + k + " === 'undefined' ? undefined : " + k, ctx));
-  }
-  return out;
+  const store = ctx.AnnotationStore;
+  return {
+    Tracks: ser(store.getTracks()),
+    TracksInfo: ser(store.getTracksInfo()),
+    Tags: ser(store.getTags()),
+    TagsInfo: ser(store.getTagsInfo()),
+    tagsHaveDM: ser(store.getTagsHaveDM()),
+    ttags: ser(vm.runInContext("typeof ttags === 'undefined' ? undefined : ttags", ctx)),
+  };
 }
 
 module.exports = { loadIoEnv, readState, extractTopLevel, IO_FUNCTIONS, FIXED_DATE };

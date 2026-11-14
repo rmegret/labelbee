@@ -1,6 +1,6 @@
 /*
- * Console-only debug globals (refactor slice 4, ADR 0007, step 5): `Tracks`, `TracksInfo` as read-only views of the
- * stored events, for inspection in the browser console and in watch expressions. Page code must not use them: the
+ * Console-only debug globals (refactor slice 4, ADR 0007, step 5): `Tracks`, `TracksInfo`, `Tags`, `TagsInfo`, `tagsHaveDM` as
+ * read-only views of the stored events and tags, for inspection in the browser console and in watch expressions. Page code must not use them: the
  * accessor throws when its caller is a script (a stack frame with a URL), and allows it when the caller is the console
  * (an anonymous frame, `<anonymous>:1:1` in Chromium, `debugger eval code` in Firefox).
  *
@@ -13,6 +13,9 @@
 const DEBUG_GLOBALS = {
   Tracks: [(store) => store.events.toObject(), 'events (events.get, events.getFrame, events.forEach)'],
   TracksInfo: [(store) => store.events.info, 'events.info'],
+  Tags: [(store) => store.getTags(), 'AnnotationStore.getTags()'],
+  TagsInfo: [(store) => store.getTagsInfo(), 'AnnotationStore.getTagsInfo()'],
+  tagsHaveDM: [(store) => store.getTagsHaveDM(), 'AnnotationStore.getTagsHaveDM()'],
 };
 
 /** Is the caller of the accessor a script? `stack` is `new Error().stack` taken in the accessor; frame 0 is the accessor. */

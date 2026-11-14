@@ -627,7 +627,7 @@ function getIdsInFocus() {
 
   ids = new Set();
   for (let f = fmin; f <= fmax; f++) {
-    let tagsFrame = Tags[f];
+    let tagsFrame = AnnotationStore.getTags()[f];
     if (typeof tagsFrame === "undefined") continue;
     let tags = tagsFrame.tags;
 

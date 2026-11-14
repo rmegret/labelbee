@@ -1,14 +1,13 @@
 """Section B of tests/CHECKLIST.md: the annotation store and its bridge (slice 3, refactor/design/0005-slice-annotation-loaders.md;
-slice 4 step 5a: `Tracks` and `TracksInfo` are retired, the stored events are `events`)."""
+slice 4 step 5: the data globals `Tracks`, `TracksInfo`, `Tags`, `TagsInfo`, `tagsHaveDM` are retired: `events` and `AnnotationStore`)."""
 
 
-def test_b1_store_and_legacy_globals_are_the_same_objects(ui):
+def test_b1_the_page_has_the_store_and_the_events_and_no_data_global(ui):
     ui.open()
-    assert ui.js("AnnotationStore.getTracks() === events.tracks && AnnotationStore.getTags() === Tags")
-    assert ui.js("AnnotationStore.getTracksInfo() === events.info && AnnotationStore.getTagsInfo() === TagsInfo")
+    assert ui.js("AnnotationStore.getTracks() === events.tracks && AnnotationStore.getTracksInfo() === events.info")
     assert ui.js("events === AnnotationStore.events")
-    assert ui.js("typeof Tracks === 'undefined' && typeof TracksInfo === 'undefined'")      # retired in slice 4 step 5a
-    assert ui.js("AnnotationStore.getTagsHaveDM() === tagsHaveDM")
+    # retired in slice 4 step 5: the stored events and the tags are read through events and the store
+    assert ui.js("['Tracks', 'TracksInfo', 'Tags', 'TagsInfo', 'tagsHaveDM'].every(n => typeof window[n] === 'undefined')")
 
 
 def test_b2_edits_made_with_the_mouse_reach_the_store(ui, sample_dir):

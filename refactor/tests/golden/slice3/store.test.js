@@ -54,68 +54,37 @@ test('replaceTracks / replaceTags are independent and keep tagsHaveDM', async ()
   assert.deepEqual(store.getTagsInfo(), { b: 2 });
 });
 
-test('legacy globals read the store and in-place edits are seen by both sides', async () => {
+test('the bridge installs AnnotationStore and events, and no data global (slice 4 step 5)', async () => {
   const { store, target } = await fresh();
-  store.replaceTags({}, { n: 1 });
-  assert.equal(target.Tags, store.getTags());
-  target.Tags[3] = { tags: [{ id: 7 }] };        // legacy in-place edit
-  assert.deepEqual(store.getTags()[3], { tags: [{ id: 7 }] });
-  delete target.Tags[3];
-  assert.deepEqual(store.getTags(), {});
-  assert.equal(target.TagsInfo, store.getTagsInfo());
   assert.equal(target.AnnotationStore, store);
-});
-
-test('Tracks and TracksInfo are no longer globals: the stored events are `events` (slice 4 step 5a)', async () => {
-  const { store, target } = await fresh();
-  assert.ok(!('Tracks' in target));
-  assert.ok(!('TracksInfo' in target));
   assert.equal(target.events, store.events);
+  for (const name of ['Tracks', 'TracksInfo', 'Tags', 'TagsInfo', 'tagsHaveDM']) assert.ok(!(name in target), name);
 });
 
-test('legacy assignment reaches the store and keeps the sibling', async () => {
-  const { store, target } = await fresh();
-  const info = { n: 1 };
-  target.TagsInfo = info;
-  const tags = { 0: { tags: [] } };
-  target.Tags = tags;                            // setTags does Tags = ...; TagsInfo = ...
-  assert.equal(store.getTags(), tags);
-  assert.equal(store.getTagsInfo(), info);
-  target.TagsInfo = { t: 1 };
-  assert.equal(store.getTags(), tags);           // assigning one half keeps the other
-  assert.deepEqual(store.getTagsInfo(), { t: 1 });
-  target.tagsHaveDM = true;
-  assert.equal(store.getTagsHaveDM(), true);
-  assert.equal(target.tagsHaveDM, true);
+test('in-place edits of the tags are seen through the getters (the structure is the stored object)', async () => {
+  const { store } = await fresh();
+  store.replaceTags({}, { n: 1 });
+  store.getTags()[3] = { tags: [{ id: 7 }] };
+  assert.deepEqual(store.getTags()[3], { tags: [{ id: 7 }] });
+  delete store.getTags()[3];
+  assert.deepEqual(store.getTags(), {});
 });
 
-test('accessors are configurable, so a step can remove an entry', async () => {
-  const { target } = await fresh();
-  for (const name of ['Tags', 'TagsInfo', 'tagsHaveDM']) {
-    const d = Object.getOwnPropertyDescriptor(target, name);
-    assert.equal(typeof d.get, 'function', name);
-    assert.equal(typeof d.set, 'function', name);
-    assert.equal(d.configurable, true, name);
-  }
-});
-
-test('sloppy classic code reads and assigns the bare globals (vm context as the page)', async () => {
+test('sloppy classic code gets a ReferenceError for the retired data globals (vm context as the page)', async () => {
   const { store } = await fresh();
   const { installLegacyGlobals } = await load('annotation/AnnotationStoreBridge.js');
   const ctx = vm.createContext({});
   installLegacyGlobals(ctx, store);
-  vm.runInContext('Tags = {2: {tags: []}}; TagsInfo = {k: 1}; tagsHaveDM = true;', ctx);
+  for (const name of ['Tracks', 'TracksInfo', 'Tags', 'TagsInfo', 'tagsHaveDM']) {
+    assert.equal(vm.runInContext('typeof ' + name, ctx), 'undefined', name);
+    assert.throws(() => vm.runInContext(name, ctx), { name: 'ReferenceError' }, name);
+  }
+  vm.runInContext('AnnotationStore.replaceTags({2: {tags: []}}, {k: 1}); AnnotationStore.setTagsHaveDM(true)', ctx);
   // objects built inside the vm come from another realm: compare as JSON
   assert.equal(JSON.stringify(store.getTags()), '{"2":{"tags":[]}}');
   assert.equal(JSON.stringify(store.getTagsInfo()), '{"k":1}');
   assert.equal(store.getTagsHaveDM(), true);
-  store.replaceTags({ 9: {} }, { z: 1 });
-  assert.equal(vm.runInContext('Object.keys(Tags).join()', ctx), '9');
-  assert.equal(vm.runInContext('TagsInfo.z', ctx), 1);
-  vm.runInContext('Tags[4] = {tags: []}', ctx);       // in-place edit through the bare name
-  assert.deepEqual(Object.keys(store.getTags()), ['4', '9']);
-  assert.equal(vm.runInContext('typeof Tracks', ctx), 'undefined');   // retired: a bare read of the name is undefined
-  assert.throws(() => vm.runInContext('Tracks[0]', ctx), { name: 'ReferenceError' });
+  assert.equal(vm.runInContext('Object.keys(AnnotationStore.getTags()).join()', ctx), '2');
 });
 
 test('the bridge module does nothing without a window', async () => {

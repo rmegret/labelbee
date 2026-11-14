@@ -32,7 +32,7 @@ test('callerIsPageCode looks at the frame that called the accessor', async () =>
   assert.equal(callerIsPageCode('Error\n    at Object.get (x.js:1:1)'), false);   // no caller frame at all
 });
 
-test('off by default: the page has no Tracks or TracksInfo until installDebugGlobals() runs', async () => {
+test('off by default: the page has none of the five debug globals until installDebugGlobals() runs', async () => {
   const { ctx } = await setup();
   assert.equal(typeof ctx.installDebugGlobals, 'function');
   assert.equal(vm.runInContext('typeof Tracks', ctx), 'undefined');
@@ -70,10 +70,18 @@ test('installed: the globals are read-only, not enumerable, and installing twice
   assert.equal(JSON.stringify(vm.runInContext('Tracks', ctx)), '{"5":{}}');   // always the current structure
 });
 
-test('the legacy Tags globals are untouched by the debug install', async () => {
+test('installed: Tags, TagsInfo and tagsHaveDM are guarded like Tracks (slice 4 step 5b)', async () => {
   const { store, ctx } = await setup();
+  store.replaceTags({ 1: { tags: [] } }, { t: 1 });
+  store.setTagsHaveDM(true);
+  assert.equal(vm.runInContext('typeof Tags', ctx), 'undefined');       // off until installed
   ctx.installDebugGlobals();
-  store.replaceTags({ 1: { tags: [] } }, undefined);
-  vm.runInContext('function readTags() { return Tags }', ctx, { filename: 'http://host/labelbee/js/ChronoControl.js' });
-  assert.equal(JSON.stringify(vm.runInContext('readTags()', ctx)), '{"1":{"tags":[]}}');   // page code still reads Tags (until step 5b)
+  assert.equal(vm.runInContext('Tags', ctx), store.getTags());
+  assert.equal(vm.runInContext('TagsInfo', ctx), store.getTagsInfo());
+  assert.equal(vm.runInContext('tagsHaveDM', ctx), true);
+  for (const [name, hint] of [['Tags', 'getTags'], ['TagsInfo', 'getTagsInfo'], ['tagsHaveDM', 'getTagsHaveDM']]) {
+    vm.runInContext(`function read_${name}() { return ${name} }`, ctx, { filename: 'http://host/labelbee/js/ChronoControl.js' });
+    assert.throws(() => vm.runInContext(`read_${name}()`, ctx), (e) => /console-only debug global/.test(e.message) && e.message.includes(hint), name);
+    assert.throws(() => vm.runInContext(`${name} = 1`, ctx), /read-only/, name);
+  }
 });

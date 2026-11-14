@@ -182,8 +182,8 @@ function printTracks() {
 
 function cacheTags() {
   tagCache = [];
-  for (let F in Tags) {
-    let tags = Tags[F].tags;
+  for (let F in AnnotationStore.getTags()) {
+    let tags = AnnotationStore.getTags()[F].tags;
     for (let i in tags) {
       let tag = tags[i];
       let id = String(tag.id);

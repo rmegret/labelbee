@@ -1014,11 +1014,11 @@ function updateChronoData() {
 /* Augment Tracks with tag id if same (frame,id) exist for both */
 function augmentTrackWithTag() {
   for (let F of events.frames()) {
-    if (Tags[F] != undefined) {
-      for (var i = 0; i < Tags[F].tags.length; i++) {
-        let id = String(Tags[F].tags[i].id);
+    if (AnnotationStore.getTags()[F] != undefined) {
+      for (var i = 0; i < AnnotationStore.getTags()[F].tags.length; i++) {
+        let id = String(AnnotationStore.getTags()[F].tags[i].id);
         if (events.has(F, id)) {
-          events.update(F, id, { tag: Tags[F].tags[i] });
+          events.update(F, id, { tag: AnnotationStore.getTags()[F].tags[i] });
         }
       }
     }
@@ -1327,8 +1327,8 @@ function getFlatTags(useFilter) {
       }
     }
   } else { // Legacy
-    for (let F in Tags) {
-      let tags = Tags[F].tags;
+    for (let F in AnnotationStore.getTags()) {
+      let tags = AnnotationStore.getTags()[F].tags;
       for (let i in tags) {
         let id = tags[i].id;
 
@@ -1366,8 +1366,8 @@ function getTTags() {
       ttags[id][String(F)] = tag;
     }
   } else { // Legacy
-    for (let F in Tags) {
-      let tags = Tags[F].tags;
+    for (let F in AnnotationStore.getTags()) {
+      let tags = AnnotationStore.getTags()[F].tags;
       for (let i in tags) {
         let id = String(tags[i].id);
 
@@ -1856,8 +1856,8 @@ function interpolateTags(maxgap) {
   function getAllTTags() {
     /* Transpose Tags data structure */
     let ttags = {};
-    for (let F in Tags) {
-      let tags = Tags[F].tags;
+    for (let F in AnnotationStore.getTags()) {
+      let tags = AnnotationStore.getTags()[F].tags;
       for (let i in tags) {
         let id = String(tags[i].id);
 
@@ -1891,12 +1891,12 @@ function interpolateTags(maxgap) {
         [P1[2][0] + dx, P1[2][1] + dy],
         [P1[3][0] + dx, P1[3][1] + dy],
       ];
-      if (Tags[j] == null) {
-        Tags[j] = { tags: [] };
+      if (AnnotationStore.getTags()[j] == null) {
+        AnnotationStore.getTags()[j] = { tags: [] };
       }
       // XXX Define y
       let y = chrono.config.idAxisMap(id)
-      Tags[j].tags.push({
+      AnnotationStore.getTags()[j].tags.push({
         id: id,
         y: y,
         c: [cx, cy],

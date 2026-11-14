@@ -512,7 +512,7 @@ function saveTagsToFile(version) {
   let filename = getTimestampedVideoname() + "_Tags.json";
 
   if (version == "v1") {
-    saveObjToJsonFile(Tags, filename);
+    saveObjToJsonFile(AnnotationStore.getTags(), filename);
   } else if (version == "v2") {
     obj = {
       info: {
@@ -520,7 +520,7 @@ function saveTagsToFile(version) {
         "data-format": "root.data[frame].tags[id_in_frame]",
         //"source": "Exported from labelbee on "+Date()
       },
-      data: Tags,
+      data: AnnotationStore.getTags(),
     };
     saveObjToJsonFile(obj, filename);
   } else {

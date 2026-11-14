@@ -19,3 +19,21 @@ def test_g1_update_statistics_counts_the_observations(ui, sample_dir):
     assert f"unique_ids={len(ids)}" in text
     assert f"unique_frames={len(frames)}" in text
     assert "ids=" + ",".join(ids) in text
+
+
+def test_g2_delete_fa_tags_edits_the_tags_structure(ui):
+    """`deleteFalsealarmTags` (ZoomView.js) edits the Tags structure of the store directly (the tags are not in `events`; they go
+    when the tags are merged into the events, DEC-006): the "Delete FA Tags..." button of Labeling > Clean up features."""
+    def tag(i):
+        return {"id": i, "frame": 0, "c": [150, 100], "hamming": 0, "goodness": 45.5, "dm": 60, "p": [[142, 92], [158, 92], [158, 108], [142, 108]]}
+    ui.open()
+    ui.load_tags(ui.write("fa_tags.json", {"info": {"type": "tags-multiframe"}, "data": {
+        "0": {"tags": [tag("falsealarm"), tag("5")]}, "4": {"tags": [tag("falsealarm")]}}}))
+    ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length === 2")
+    ui.open_panel("Labeling")
+    ui.open_subpanel("Clean up features")
+    ui.page.click("input[value^='Delete FA Tags']")
+    tags = ui.tags()
+    assert list(tags) == ["0"]                                           # frame 4 held only a falsealarm: removed
+    # the helper filters Object.keys of the array: the surviving tags come back as an object keyed by their old index
+    assert {k: str(t["id"]) for k, t in tags["0"]["tags"].items()} == {"1": "5"}

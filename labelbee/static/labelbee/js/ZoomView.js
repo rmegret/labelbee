@@ -1856,12 +1856,12 @@ function getCoveredTags(obs) {
   //console.log('f1 =',f1,'f2=',f2)
 
   let coveredTags = [];
-  for (let F in Tags) {
+  for (let F in AnnotationStore.getTags()) {
     let frame = Number(F);
 
     if (frame < f1 || frame > f2) continue;
 
-    let tags = Tags[F].tags;
+    let tags = AnnotationStore.getTags()[F].tags;
     for (let i in tags) {
       let tag = tags[i];
 
@@ -1963,12 +1963,12 @@ ZoomOverlay.prototype.deleteFalsealarmTags = function () {
       .filter((key) => predicate(obj[key]))
       .reduce((res, key) => Object.assign(res, { [key]: obj[key] }), {});
 
-  for (let F in Tags) {
-    let tags = Tags[F].tags;
+  for (let F in AnnotationStore.getTags()) {
+    let tags = AnnotationStore.getTags()[F].tags;
 
-    Tags[F].tags = filter(Tags[F].tags, (tag) => tag.id != "falsealarm");
-    if ($.isEmptyObject(Tags[F].tags)) {
-      delete Tags[F];
+    AnnotationStore.getTags()[F].tags = filter(AnnotationStore.getTags()[F].tags, (tag) => tag.id != "falsealarm");
+    if ($.isEmptyObject(AnnotationStore.getTags()[F].tags)) {
+      delete AnnotationStore.getTags()[F];
     }
   }
 
@@ -2008,8 +2008,8 @@ ZoomOverlay.prototype.undoTagFix = function (tag) {
   }
 };
 ZoomOverlay.prototype.undoAllTagFixes = function () {
-  for (let F in Tags) {
-    let tags = Tags[F].tags;
+  for (let F in AnnotationStore.getTags()) {
+    let tags = AnnotationStore.getTags()[F].tags;
     for (let i in tags) {
       let tag = tags[i];
 
