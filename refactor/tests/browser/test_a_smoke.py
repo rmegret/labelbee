@@ -50,7 +50,7 @@ def test_a5_shift_click_creates_an_observation(ui, sample_dir):
     ui.wait_tracks()
     before = ui.n_observations()
     ui.shift_click_background()
-    ui.page.wait_for_function("(n) => Object.values(AnnotationStore.getTracks()).reduce((a, f) => a + Object.keys(f || {}).length, 0) === n + 1", arg=before)
+    ui.page.wait_for_function("(n) => Object.values(events.toObject()).reduce((a, f) => a + Object.keys(f || {}).length, 0) === n + 1", arg=before)
     assert len(ui.boxes()) == 2                   # frame 0 had one box, now two
     new_id = ui.selected_id()
     assert new_id in ui.tracks()["0"]
@@ -69,7 +69,7 @@ def test_a6_edit_a_box_and_its_label_and_keep_it(ui, sample_dir):
     ui.page.mouse.move(p["x"] + 15, p["y"], steps=5)
     ui.page.mouse.move(p["x"] + 30, p["y"], steps=5)
     ui.page.mouse.up()
-    ui.page.wait_for_function("(x0) => AnnotationStore.getTracks()['0']['1'].x > x0 + 10", arg=x0)
+    ui.page.wait_for_function("(x0) => events.toObject()['0']['1'].x > x0 + 10", arg=x0)
     ui.open_subpanel("Labels")
     ui.page.click("button.labeltoggle[thelabel=pollen]:visible")
     ui.goto_frame(10)                             # leave the frame and come back: the edit must be kept
@@ -89,10 +89,10 @@ def test_a7_undo_restores_a_deleted_observation(ui, sample_dir):
     n = ui.n_observations()
     ui.click_box("1")
     ui.page.click("#deleteButton")
-    ui.page.wait_for_function("(n) => !AnnotationStore.getTracks()['0']['1']", arg=n)
+    ui.page.wait_for_function("(n) => !(events.toObject()['0'] || {})['1']", arg=n)     # the emptied frame is pruned
     assert ui.n_observations() == n - 1
     ui.page.click("#undoButton")
-    ui.page.wait_for_function("!!AnnotationStore.getTracks()['0']['1']")
+    ui.page.wait_for_function("!!(events.toObject()['0'] || {})['1']")
     assert ui.n_observations() == n
 
 
@@ -107,7 +107,7 @@ def test_a8_swap_id_from_the_current_frame_to_the_end(ui, sample_dir):
     ui.page.fill("#swapNewIDInput", "7")
     ui.page.click("#alerttext button:has-text('SWAP')")
     ui.page.click("#alerttext button:has-text('CONFIRM')")
-    ui.page.wait_for_function("Object.values(AnnotationStore.getTracks()[10] || {}).some(o => String(o.ID) === '7')")
+    ui.page.wait_for_function("Object.values(events.toObject()[10] || {}).some(o => String(o.ID) === '7')")
     original = json.loads((sample_dir / "events_v2.json").read_text())["data"]
     expected = {f: sorted(("7" if str(e["id"]) == "1" and int(f) >= 10 else str(e["id"])) for e in evs) for f, evs in original.items()}
     tracks = ui.tracks()
@@ -123,6 +123,6 @@ def test_a9_delete_removes_the_box_and_the_chronogram_interval(ui, sample_dir):
     items = ui.js("document.body.innerText.match(/data: (\\d+) items/)[1]")
     ui.click_box("1")
     ui.page.click("#deleteButton")
-    ui.page.wait_for_function("!AnnotationStore.getTracks()['0']['1']")
+    ui.page.wait_for_function("!(events.toObject()['0'] || {})['1']")     # the emptied frame is pruned
     assert ui.boxes() == []
     ui.page.wait_for_function("(n) => document.body.innerText.includes('data: ' + (Number(n) - 1) + ' items')", arg=items)

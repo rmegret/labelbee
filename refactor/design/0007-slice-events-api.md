@@ -34,11 +34,12 @@ working view of one event on the current frame, and `storeObs` is the commit. Th
 | `deleteEvent` `SelectionControl.js:663` | delete | seen |
 | `updateChronogramData` `ChronoControl.js:1112-1113` | `cx`, `cy` rewritten at every refresh | seen, 1005 |
 | `augmentTrackWithTag` `ChronoControl.js:1021` | `tag` | seen |
-| `getCoveredTags` `ZoomView.js:1846,1851` | `span` | not exercised |
-| `modifyCurrentObsSpan` `SelectionControl.js:998` | `span` | not exercised |
-| `OverlayControl.prototype.hardRefresh` `OverlayControl.js:1537` | `span`, inside a refresh function | not exercised |
-| `deleteFalsealarmEvents`, `deleteWrongIdEvents` `ZoomView.js:1989-2009` | delete, then prune the empty frame | not exercised |
-| `cleanObsoleteEvents` `ChronoControl.js:2003-2014` | 3 deletes | not exercised |
+| `getCoveredTags` `ZoomView.js:1846,1851` | `span` | seen (step 0, `test_f3`) |
+| `modifyCurrentObsSpan` `SelectionControl.js:998,1004-1015` | `span`, created then its `f1`/`f2` | seen (step 0, `test_f1`) |
+| `OverlayControl.prototype.hardRefresh` `OverlayControl.js:1537` | `span`, inside a refresh function | not reachable from the page: the only entry to pick-frame mode, `modifyCurrentObsSpan('setspan')`, has already created the span. The closures `doSetSpanStart`/`doSetSpanEnd` `:1547,1564` write `span.f1`/`span.f2` and are seen (step 0, `test_f2`) |
+| `deleteFalsealarmEvents`, `deleteWrongIdEvents` `ZoomView.js:1989-2009` | delete, then prune the empty frame | seen (step 0, `test_f4`, `test_f5`) |
+| `cleanObsoleteEvents` `ChronoControl.js:2003-2014` | 3 deletes | seen (step 0, `test_f6`) |
+| `bakeTagFix` `ZoomView.js:1921` | `fix`, created on a falsealarm observation (found by step 0, not in the first inventory) | seen (`test_f3`) |
 
 Other writes to observations (`ZoomView.js` for `parts`, `newid`, `fix`; `labelBee.js:787-790`; the geometry and label writes of
 `OverlayControl.js`) hit the working copy `rect.obs` and reach the store through the commit.
@@ -85,7 +86,7 @@ It holds the frames and the info. No change events and no undo in this slice; ea
 0. **Tests first, no production change.** Browser tests that exercise the six unseen writers (span x3, the two zoom deletes, the clean-up), so the
    detector sees every writer; and an allow-list (`refactor/tests/browser/dirty_writes_allowed.json`, entries `file`, `function`,
    `operation`, `depth`) with a strict mode of the detector that fails when a write comes from a site not in it. It starts at the
-   current writers and loses entries step by step; the end state is `annotation/Events.js` only. The detector also learns the "through the API" report once `Events` exists (step 1).
+   current writers and loses entries step by step; the end state is `annotation/Events.js` only. The detector also learns the "through the API" report once `Events` has callers (step 2).
 1. **`annotation/Events.js`** (with the operation observer) and differential Node tests: random operation sequences (null frames, array start, numeric and string ids,
    swap with collisions, delete then prune) run on `Events` and on a reference that does the legacy direct operations; the results must be equal. `AnnotationStore.events` holds
    the data; `getTracks()` returns `events.tracks`, the temporary dirty path ([Q29](../QUESTIONS.md#q29)). No call site changes.

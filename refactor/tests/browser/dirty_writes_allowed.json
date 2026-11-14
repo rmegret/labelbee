@@ -1,0 +1,11 @@
+{
+ "_comment": "Strict allow-list of the sites that may write to the stored events (refactor/design/0007-slice-events-api.md, step 0). `pytest refactor/tests/browser --dirty-writes-strict` fails a test whose write comes from a site not listed here. Matched on file, function, operation (set, delete, define, replace) and depth (0 frames, 1 one frame, 2 one observation, 3+ nested); the line and the field are not part of the key. Entries are removed as the steps of slice 4 move each writer behind Events; the end state is empty (annotation/Events.js writes to a private structure). `note` is for the reader only.",
+ "allowed": [
+  {"file": "OverlayControl.js", "function": "OverlayControl.drawImagePickFlowerMode", "operation": "set", "depth": 2, "note": "visit created on the observation (Pick Flower); found by step 4b, not in the ADR inventory"},
+  {"file": "OverlayControl.js", "function": "HTMLCanvasElement.pickFlower_mouseClick", "operation": "set", "depth": 3, "note": "visit.flowerid set in place; the stored visit is shared by reference with the working copy (copyObs)"},
+  {"file": "OverlayControl.js", "function": "HTMLButtonElement.removeVisit", "operation": "set", "depth": 3, "note": "visit.flowerid cleared in place (same sharing)"},
+  {"file": "OverlayControl.js", "function": "VisitWidget.setSpanFrame", "operation": "set", "depth": 3, "note": "span.f1 / span.f2 set in place (Set start / Set end), through the handle the widget keeps; found by step 4b"},
+  {"file": "ZoomView.js", "function": "ZoomOverlay.bakeTagFix", "operation": "set", "depth": 3, "note": "tag.fix / tag.id written on a tag object shared with obs.tag (augmentTrackWithTag); goes with the tag merge (DEC-006); found by the detector's tracking of shared references"},
+  {"file": "ZoomView.js", "function": "ZoomOverlay.undoTagFix", "operation": "set", "depth": 3, "note": "tag.id / tag.p restored on a tag object shared with obs.tag (same sharing)"}
+ ]
+}

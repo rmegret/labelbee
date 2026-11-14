@@ -1386,7 +1386,7 @@ OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displayS
         function isFlower(obs) {
             return String(obs.ID).startsWith('F')
         }
-        let flowers = Object.values(Tracks[0]).filter(isFlower)
+        let flowers = Object.values(events.getFrame(0)).filter(isFlower)
 
         function drawCenter(obs, selected) {
             let x0 = crop.x
@@ -1534,7 +1534,7 @@ OverlayControl.prototype.hardRefresh = function () {
       return
     }
     if (!('span' in obs)) {
-      obs.span = { 'f1': frame, 'f2': frame }
+      events.update(frame, id, { span: { 'f1': frame, 'f2': frame } })
     }
 
     function doSwap2(interval, old_id, new_id) {
@@ -1544,7 +1544,7 @@ OverlayControl.prototype.hardRefresh = function () {
     }
     function doSetSpanStart() {
       let f = videoControl.getCurrentFrame()
-      obs.span.f1 = f
+      events.update(frame, id, { span: { f1: f, f2: obs.span.f2 } })
       //$('#alerttext').html('Set Start DONE')
       //overlay.setInteractionMode('main')
       overlay.hardRefresh()
@@ -1561,7 +1561,7 @@ OverlayControl.prototype.hardRefresh = function () {
     }
     function doSetSpanEnd() {
       let f = videoControl.getCurrentFrame()
-      obs.span.f2 = f
+      events.update(frame, id, { span: { f1: obs.span.f1, f2: f } })
       //$('#alerttext').html('Set Start DONE')
       //overlay.setInteractionMode('main')
       overlay.hardRefresh()
@@ -2688,13 +2688,13 @@ function onShowObsChanged() {
 /* Access */
 function getTag(f, id) {
   if (tagMode == 'Tracks') {
-    const obj = Tracks?.[f]?.[id]
+    const obj = events.get(f, id)
     if (obj == undefined) return undefined
     return obj.tag
   }
   // Else tagMode == 'Tags'
-  if (typeof Tags === "undefined") return undefined;
-  let tagsFrame = Tags[f];
+  if (typeof AnnotationStore.getTags() === "undefined") return undefined;
+  let tagsFrame = AnnotationStore.getTags()[f];
   if (typeof tagsFrame === "undefined") return undefined;
   let tags = tagsFrame.tags;
   for (let i in tags) {
@@ -2872,7 +2872,7 @@ function plotTagOrientation(ctx, tag, color) {
 }
 function plotTags(ctx) {
   let F = getCurrentFrame();
-  let tagsFrame = Tags[F];
+  let tagsFrame = AnnotationStore.getTags()[F];
   if (tagsFrame !== undefined) {
     let tags = tagsFrame.tags;
     //console.log('Found tags',tags)
@@ -3028,7 +3028,7 @@ function plotTagsTracks(ctx) {
       //console.log('defaultSelectedBee=',defaultSelectedBee)
       let p0 = [];
       for (let f = fmin; f <= fmax; f++) {
-        let tagsFrame = Tags[f];
+        let tagsFrame = AnnotationStore.getTags()[f];
         if (typeof tagsFrame === "undefined") continue;
         let tags = tagsFrame.tags;
 
@@ -3097,7 +3097,7 @@ function plotTagsTracks(ctx) {
     // Done in plotTag
     // Plot current tag position
     let f = F;
-    let tagsFrame = Tags[f];
+    let tagsFrame = AnnotationStore.getTags()[f];
     if (typeof tagsFrame !== "undefined") {
       let tags = tagsFrame.tags;
       let color = setColor(f);
@@ -3516,7 +3516,7 @@ function refreshTagsParameters() {
   let minDM = Number($("#tagsMinDM").val());
   if (minDM > 0) {
     tagsDMSampleFilter = function (tag) {
-      return !tagsHaveDM || tag.dm >= minDM;
+      return !AnnotationStore.getTagsHaveDM() || tag.dm >= minDM;
     };
   } else {
     tagsDMSampleFilter = function (tag) {
@@ -3775,7 +3775,7 @@ function predictIdFromObsMultiframe(frameInterval, pt, mode) {
 }
 
 function predictIdFromTags(frame, pt, mode) {
-  var tmp = Tags[frame];
+  var tmp = AnnotationStore.getTags()[frame];
   if (tmp == null) return { id: undefined, tag: undefined, reason: "notFound" };
   var frame_tags = tmp.tags;
   if (frame_tags != null) {
@@ -3799,7 +3799,7 @@ function predictIdFromTagsMultiframe(frameInterval, pt, mode) {
   };
 
   for (let frame = frameInterval[0]; frame <= frameInterval[1]; frame++) {
-    var tmp = Tags[frame];
+    var tmp = AnnotationStore.getTags()[frame];
     if (tmp == null) continue;
     var frame_tags = tmp.tags;
     if (frame_tags != null) {

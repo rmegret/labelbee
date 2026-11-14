@@ -49,7 +49,7 @@ def test_d2_save_after_a_csv_import_works_and_history_is_an_array(ui):
     ui.open_subpanel("Server storage")
     ui.prompt_answers.append("/data/sample/tracks.csv")
     ui.page.click("a[onclick*='clickLoadTracksCSVFromServer']")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert isinstance(ui.tracks_info()["history"], str)                  # an import keeps its history as a string in memory
     saved = ui.save_events_v2()                                          # it used to fail here (DEBT-706)
     assert isinstance(saved["info"]["history"], list)
@@ -139,7 +139,7 @@ def test_d6_save_to_the_server_and_reload_it(ui, sample_dir, saved_dir):
     ui.page.wait_for_selector("#from-server-dialog", state="visible")
     assert row["file_name"] in ui.page.inner_text("#from-server-dialog")
     ui.page.click("#from-server-dialog button:has-text('Yes')")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert ui.n_observations() == n
 
 
@@ -149,7 +149,7 @@ def test_d6_the_lineage_of_a_server_load_is_sent_with_the_next_save(ui, saved_di
     ui.page.click("input[value='Load Events from DB']")                # loads annotation 4 (events_v2.json)
     ui.page.wait_for_selector("#from-server-dialog", state="visible")
     ui.page.click("#from-server-dialog button:has-text('Yes')")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     ui.page.keyboard.press("Escape")
     ui.page.click("#eventsToServerV2")
     row = _wait_saved(saved_dir)[0]
@@ -159,7 +159,7 @@ def test_d6_the_lineage_of_a_server_load_is_sent_with_the_next_save(ui, saved_di
 def test_d6_the_lineage_of_a_hash_load_is_sent_with_the_next_save(ui, saved_dir):
     ui.open()
     ui.js("location.hash = '#video_id=1&video_data=4'")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     ui.open_subpanel("Server storage")
     ui.page.click("#eventsToServerV2")
     row = _wait_saved(saved_dir)[0]

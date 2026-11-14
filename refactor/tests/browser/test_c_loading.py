@@ -22,7 +22,7 @@ def test_c2_load_events_v1_object_and_v1_array(ui, sample_dir):
     ui.wait_tracks()
     assert ui.tracks_info()["source"] == "Converted from Tracks v1 object"
     ui.load_events(sample_dir / "events_v1_array.json")
-    ui.page.wait_for_function("AnnotationStore.getTracksInfo().source === 'Converted from Tracks v1 array'")
+    ui.page.wait_for_function("events.info.source === 'Converted from Tracks v1 array'")
     assert ui.n_observations() > 0
 
 

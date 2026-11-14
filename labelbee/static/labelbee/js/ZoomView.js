@@ -1835,7 +1835,7 @@ ZoomOverlay.prototype.rotateTag = function (angle) {
 };
 
 function getCoveredTags(obs) {
-  obs = Tracks[obs.frame][obs.ID];
+  obs = events.get(obs.frame, obs.ID);
 
   let tracks = flatTracksAll.filter(function (element) {
     return element.obs == obs;
@@ -1843,12 +1843,12 @@ function getCoveredTags(obs) {
   if (tracks.length > 0) {
     let track = tracks[0];
     if (!("span" in obs)) {
-      obs.span = { f1: track.span.f1, f2: track.span.f2 };
+      events.update(obs.frame, obs.ID, { span: { f1: track.span.f1, f2: track.span.f2 } });
     }
   }
 
   if (!obs.span) {
-    obs.span = { f1: obs.frame, f2: obs.frame };
+    events.update(obs.frame, obs.ID, { span: { f1: obs.frame, f2: obs.frame } });
   }
   var f1 = obs.span.f1;
   var f2 = obs.span.f2;
@@ -1856,12 +1856,12 @@ function getCoveredTags(obs) {
   //console.log('f1 =',f1,'f2=',f2)
 
   let coveredTags = [];
-  for (let F in Tags) {
+  for (let F in AnnotationStore.getTags()) {
     let frame = Number(F);
 
     if (frame < f1 || frame > f2) continue;
 
-    let tags = Tags[F].tags;
+    let tags = AnnotationStore.getTags()[F].tags;
     for (let i in tags) {
       let tag = tags[i];
 
@@ -1918,9 +1918,7 @@ ZoomOverlay.prototype.bakeTagFix = function (obs) {
   }
   if (hasLabel(obs, "falsealarm")) {
     if (!obs.fix) {
-      obs.fix = {
-        newid: "falsealarm",
-      };
+      events.update(obs.frame, obs.ID, { fix: { newid: "falsealarm" } });
     }
   }
   if (!obs.fix) {
@@ -1954,13 +1952,9 @@ ZoomOverlay.prototype.bakeTagFix = function (obs) {
   }
 };
 ZoomOverlay.prototype.bakeAllTagFixes = function () {
-  for (let F in Tracks) {
-    for (let id in Tracks[F]) {
-      let obs = Tracks[F][id];
-
-      this.bakeTagFix(obs);
-    }
-  }
+  events.forEach((obs) => {
+    this.bakeTagFix(obs);
+  });
   refreshChronogram();
 };
 ZoomOverlay.prototype.deleteFalsealarmTags = function () {
@@ -1969,46 +1963,32 @@ ZoomOverlay.prototype.deleteFalsealarmTags = function () {
       .filter((key) => predicate(obj[key]))
       .reduce((res, key) => Object.assign(res, { [key]: obj[key] }), {});
 
-  for (let F in Tags) {
-    let tags = Tags[F].tags;
+  for (let F in AnnotationStore.getTags()) {
+    let tags = AnnotationStore.getTags()[F].tags;
 
-    Tags[F].tags = filter(Tags[F].tags, (tag) => tag.id != "falsealarm");
-    if ($.isEmptyObject(Tags[F].tags)) {
-      delete Tags[F];
+    AnnotationStore.getTags()[F].tags = filter(AnnotationStore.getTags()[F].tags, (tag) => tag.id != "falsealarm");
+    if ($.isEmptyObject(AnnotationStore.getTags()[F].tags)) {
+      delete AnnotationStore.getTags()[F];
     }
   }
 
   refreshChronogram();
 };
 ZoomOverlay.prototype.deleteFalsealarmEvents = function () {
-  for (let F in Tracks) {
-    for (let id in Tracks[F]) {
-      let obs = Tracks[F][id];
-
-      if (hasLabel(obs, "falsealarm")) {
-        delete Tracks[F][id];
-      }
+  events.forEach(function (obs, F, id) {
+    if (hasLabel(obs, "falsealarm")) {
+      events.delete(F, id); // also removes the frame when it ends up empty
     }
-    if ($.isEmptyObject(Tracks[F])) {
-      delete Tracks[F];
-    }
-  }
+  });
 
   refreshChronogram();
 };
 ZoomOverlay.prototype.deleteWrongIdEvents = function () {
-  for (let F in Tracks) {
-    for (let id in Tracks[F]) {
-      let obs = Tracks[F][id];
-
-      if (hasLabel(obs, "wrongid")) {
-        delete Tracks[F][id];
-      }
+  events.forEach(function (obs, F, id) {
+    if (hasLabel(obs, "wrongid")) {
+      events.delete(F, id); // also removes the frame when it ends up empty
     }
-    if ($.isEmptyObject(Tracks[F])) {
-      delete Tracks[F];
-    }
-  }
+  });
 
   refreshChronogram();
 };
@@ -2028,8 +2008,8 @@ ZoomOverlay.prototype.undoTagFix = function (tag) {
   }
 };
 ZoomOverlay.prototype.undoAllTagFixes = function () {
-  for (let F in Tags) {
-    let tags = Tags[F].tags;
+  for (let F in AnnotationStore.getTags()) {
+    let tags = AnnotationStore.getTags()[F].tags;
     for (let i in tags) {
       let tag = tags[i];
 

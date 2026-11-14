@@ -3,7 +3,7 @@
 Layout: `golden/harness/` is the shared harness; each slice has its own `golden/sliceN/` folder
 (fixtures, generator, test, golden file).
 
-Browser tests (real page in headless Chromium, 55 tests, [browser/README.md](browser/README.md)) automate the manual
+Browser tests (real page in headless Chromium, 79 tests, [browser/README.md](browser/README.md)) automate the manual
 [CHECKLIST.md](CHECKLIST.md): `pytest refactor/tests/browser`. Run them and the golden tests before merging a slice;
 keep the checklist for what a script cannot judge (see its first lines). Environment: [devenv/README.md](devenv/README.md).
 
@@ -59,7 +59,7 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
   they are today: DEBT-710, 712 (double refresh), 713, 719, 722, 733, 734.
 - `golden/harness/io-env.js`: loads the REAL functions of `AnnotationIO.js` into a `vm` (the file stays the
   implementation under test during the whole slice, so one golden checks every step) with jQuery, d3,
-  `FileReader`, the views and `Date` stubbed. The page globals (`Tracks`, `Tags`, ...) are the accessors of
+  `FileReader`, the views and `Date` stubbed. The page globals (`Tags`, `TagsInfo`, `tagsHaveDM`; `Tracks` and `TracksInfo` went in slice 4 step 5a, the harness reads them through the store) are the accessors of
   `AnnotationStoreBridge.js` over a fresh store per case; `readState`/`writeState` use them. `golden/harness/run-io-case.js` runs a case and waits for the promises.
 - Run `generate.js` only before a step that changes behavior on purpose, and review the golden diff.
 - `golden/slice3/store.test.js`: contract tests (assertions, no golden) of `AnnotationStore.js` and the bridge: defaults,
@@ -69,3 +69,23 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
 - `golden/slice3/diff-against-golden.js`: prints per case what differs from the golden; run it before `generate.js`.
 - `golden/harness/unhandled.js`: takes over the `unhandledRejection` event while a case runs (the node test runner would
   fail the test otherwise); unhandled rejections are pinned in the golden as `rejections`.
+
+## Differential tests: `Events` (slice 4, [ADR 0007](../design/0007-slice-events-api.md))
+
+    node --test refactor/tests/golden/slice4/        # run
+
+- `golden/slice4/legacy-model.js`: frozen copy of the legacy direct operations on `Tracks` (the `Model.js` functions and the
+  plain deletes of the writers outside it, commit `07314c1e`). It is the reference: do not edit it. Step 2 turns the `Model.js`
+  functions into wrappers, so the reference cannot live there any more.
+- `golden/slice4/events.test.js`: 300 random sequences of 40 operations (null frames and entries, array or object start, numeric
+  and string ids, swap with collisions, forced renames, deletes) run on `annotation/Events.js` and on the reference; after each
+  operation the structure (content, key order, array or object), the return value and the queries must be equal. Then contract
+  tests for what the ADR states (prune, `getFrame` is a new object, `update`, `commit`, observer, iteration order) and the store.
+- The deliberate differences from the legacy code: `delete` prunes the emptied frame (the reference does it after an actual
+  deletion, as the ADR says; the legacy `deleteEvent` and `cleanObsoleteEvents` did not), and, since step 7a, `commit` keeps the other
+  fields of the working copy (the driver of the test applies the same rule to the reference).
+- `golden/slice4/roundtrip.test.js` (step 7d): on the sample events files (v2, v1, v1 array, v2 duplicates), load, save, load is the identity
+  (modulo the conventions: `ID` as a string, 3 decimals, null and empty frames not saved); a commit of every unchanged working copy (made
+  by the real `cloneObs`, `Model.js` run in a `vm`) changes nothing in the saved file; a stored field that the working copy does not
+  carry (an unknown field, `span`, `tag`) survives the commit and the save; an edit of one field changes only that field.
+- `golden/slice4/debug-globals.test.js`: the console-only debug globals (`annotation/DebugGlobals.js`).

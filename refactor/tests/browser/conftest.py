@@ -8,6 +8,7 @@ fixes its paths relative to its own location, so a throw-away copy of the dev we
     <tmp>/labelbee                     symlink to the labelbee/ folder under test
 VP9 inside an .mp4: the Chromium of Playwright cannot decode H.264, which tests/webapp/make_sample_video.sh uses.
 """
+import argparse
 import json
 import os
 import shutil
@@ -26,6 +27,13 @@ REPO = Path(__file__).resolve().parents[3]
 SAMPLE_SRC = REPO / "tests" / "webapp" / "data" / "sample"
 VIDEO_FPS, VIDEO_SECONDS = 20, 2
 DIRTY_WRITES_JS = Path(__file__).with_name("dirty_writes.js")
+DIRTY_WRITES_ALLOWED = Path(__file__).with_name("dirty_writes_allowed.json")
+
+
+def _allowed_writers():
+    """The strict allow-list: {(file, function, operation, depth)}; see dirty_writes_allowed.json."""
+    entries = json.loads(DIRTY_WRITES_ALLOWED.read_text())["allowed"]
+    return {(e["file"], e["function"], e["operation"], e["depth"]) for e in entries}
 
 
 def _free_port():
@@ -115,7 +123,11 @@ def ui(page, server, saved_dir, tmp_path, request):
     At teardown every test checks the console (checklist item E1): an error the test provokes on purpose must be
     declared with `ui.allow(regex)`. Not called `app`: pytest-flask treats a fixture of that name as a Flask app.
     With --dirty-writes the dirty-write detector (dirty_writes.js) is injected and its findings are collected."""
-    detector = request.config.getoption("--dirty-writes")
+    strict_opt = request.config.getoption("--dirty-writes-strict")    # on by default: every test runs under the detector
+    # a test that mutates the stored events on purpose (test_i_detector.py) declares it with @pytest.mark.dirty_writes_expected
+    expected = request.node.get_closest_marker("dirty_writes_expected") is not None
+    strict = strict_opt and not expected
+    detector = request.config.getoption("--dirty-writes") or strict_opt
     if detector:
         page.add_init_script(path=str(DIRTY_WRITES_JS))
     a = App(page, server, tmp_path)
@@ -123,13 +135,25 @@ def ui(page, server, saved_dir, tmp_path, request):
     if detector:
         try:
             found = page.evaluate("window.__dirtyWrites || {}")
+            api = page.evaluate("window.__dirtyApi || {}")
         except Exception:                      # the page was closed or navigated away by the test
-            found = {}
+            found, api = {}, {}
+        for key, e in api.items():             # operations of Events called from the page code ("through the API")
+            merged = request.config._dirty_api.setdefault(key, {**e, "count": 0, "tests": set()})
+            merged["count"] += e["count"]
+            merged["tests"].add(request.node.name)
         all_writes = request.config._dirty_writes
-        for key, e in found.items():
+        for key, e in ({} if expected else found).items():      # a test that mutates on purpose does not feed the report
             merged = all_writes.setdefault(key, {**e, "count": 0, "tests": set()})
             merged["count"] += e["count"]
             merged["tests"].add(request.node.name)
+            request.config._dirty_seen.add((e["file"], e["fn"], e["op"], e["depth"]))
+        if strict:
+            allowed = _allowed_writers()
+            unlisted = sorted({(e["file"], e["line"], e["fn"], e["op"], e["depth"]) for e in found.values()
+                               if (e["file"], e["fn"], e["op"], e["depth"]) not in allowed})
+            assert not unlisted, ("write(s) to the stored events from a site that is not in dirty_writes_allowed.json:\n  "
+                                  + "\n  ".join(f"{f}:{l} {fn}  {op}@{d}" for f, l, fn, op, d in unlisted))
     a.assert_clean()
 
 
@@ -137,10 +161,15 @@ def ui(page, server, saved_dir, tmp_path, request):
 def pytest_addoption(parser):
     parser.addoption("--dirty-writes", action="store", default=None, metavar="REPORT.json",
                      help="inject dirty_writes.js in every page and write the writers of the stored events to REPORT.json")
+    parser.addoption("--dirty-writes-strict", action=argparse.BooleanOptionalAction, default=True,
+                     help="inject dirty_writes.js in every test and fail each test whose write to the stored events comes from a "
+                          "site that is not in dirty_writes_allowed.json (the default; --no-dirty-writes-strict turns it off)")
 
 
 def pytest_configure(config):
     config._dirty_writes = {}
+    config._dirty_api = {}          # "through the API": operations of Events called by the page code
+    config._dirty_seen = set()      # (file, function, operation, depth) seen in this run
 
 
 def _dirty_rows(config):
@@ -150,14 +179,30 @@ def _dirty_rows(config):
     return sorted(rows, key=lambda r: (r["file"], r["line"], r["op"], r["field"]))
 
 
+def _api_rows(config):
+    rows = [{k: e[k] for k in ("op", "file", "line", "fn", "count")} | {"tests": sorted(e["tests"])} for e in config._dirty_api.values()]
+    return sorted(rows, key=lambda r: (r["op"], r["file"], r["line"]))
+
+
+# every command of Events (annotation/Events.js): an operation that no test calls from the page is a coverage gap
+EVENTS_OPERATIONS = ("replace", "create", "commit", "update", "delete", "rename", "swap", "setInfo")
+
+
 def pytest_sessionfinish(session):
     path = session.config.getoption("--dirty-writes")
     if path:
-        Path(path).write_text(json.dumps(_dirty_rows(session.config), indent=1))
+        Path(path).write_text(json.dumps({"dirty": _dirty_rows(session.config), "api": _api_rows(session.config)}, indent=1))
 
 
 def pytest_terminal_summary(terminalreporter):
     cfg = terminalreporter.config
+    if cfg.getoption("--dirty-writes-strict"):
+        unused = sorted(_allowed_writers() - cfg._dirty_seen)
+        terminalreporter.section("dirty-write allow-list")
+        terminalreporter.write_line(f"{len(_allowed_writers())} allowed writers, {len(unused)} not seen in this run"
+                                    f"{' (a partial run proves nothing; on the full run, delete them)' if unused else ''}")
+        for f, fn, op, d in unused:
+            terminalreporter.write_line(f"  not seen: {f} {fn} {op}@{d}")
     if not cfg.getoption("--dirty-writes"):
         return
     rows = _dirty_rows(cfg)
@@ -170,3 +215,11 @@ def pytest_terminal_summary(terminalreporter):
     for (f, l, fn), rs in sorted(sites.items()):
         what = ", ".join(f"{r['op']}@{r['depth']}:{r['field']} x{r['count']}" for r in rs)
         terminalreporter.write_line(f"  {f}:{l} {fn}  ->  {what}")
+    api = _api_rows(cfg)
+    terminalreporter.section("operations of Events called by the page code (through the API)")
+    terminalreporter.write_line(f"{len(api)} (operation, call site) combinations")
+    for r in api:
+        terminalreporter.write_line(f"  {r['file']}:{r['line']} {r['fn']}  ->  {r['op']} x{r['count']}")
+    missing = [op for op in EVENTS_OPERATIONS if op not in {r["op"] for r in api}]
+    if missing:
+        terminalreporter.write_line(f"  operations no test called from the page: {', '.join(missing)}")

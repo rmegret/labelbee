@@ -1,11 +1,14 @@
-"""Section B of tests/CHECKLIST.md: the annotation store and its bridge (slice 3, refactor/design/0005-slice-annotation-loaders.md)."""
+"""Section B of tests/CHECKLIST.md: the annotation store and its bridge (slice 3, refactor/design/0005-slice-annotation-loaders.md;
+slice 4 step 5: the data globals `Tracks`, `TracksInfo`, `Tags`, `TagsInfo`, `tagsHaveDM` are retired: `events` and `AnnotationStore`)."""
 
 
-def test_b1_store_and_legacy_globals_are_the_same_objects(ui):
+def test_b1_the_page_has_the_store_and_the_events_and_no_data_global(ui):
     ui.open()
-    assert ui.js("AnnotationStore.getTracks() === Tracks && AnnotationStore.getTags() === Tags")
-    assert ui.js("AnnotationStore.getTracksInfo() === TracksInfo && AnnotationStore.getTagsInfo() === TagsInfo")
-    assert ui.js("AnnotationStore.getTagsHaveDM() === tagsHaveDM")
+    assert ui.js("events === AnnotationStore.events")
+    # slice 4 step 6: the structure is private, the doors to the live data are gone (only events.toObject() is left)
+    assert ui.js("events.tracks === undefined && AnnotationStore.getTracks === undefined && AnnotationStore.getTracksInfo === undefined")
+    # retired in slice 4 step 5: the stored events and the tags are read through events and the store
+    assert ui.js("['Tracks', 'TracksInfo', 'Tags', 'TagsInfo', 'tagsHaveDM'].every(n => typeof window[n] === 'undefined')")
 
 
 def test_b2_edits_made_with_the_mouse_reach_the_store(ui, sample_dir):
@@ -14,9 +17,9 @@ def test_b2_edits_made_with_the_mouse_reach_the_store(ui, sample_dir):
     ui.wait_tracks()
     ui.shift_click_background()
     new_id = ui.js("getCurrentID()")
-    ui.page.wait_for_function("(id) => !!AnnotationStore.getTracks()[0][id]", arg=new_id)
-    assert ui.js("(id) => Tracks[0][id] === AnnotationStore.getTracks()[0][id]", new_id)
-    assert ui.js("Object.keys(Tracks[0]).length") == 2
+    ui.page.wait_for_function("(id) => !!events.toObject()[0][id]", arg=new_id)
+    assert ui.js("(id) => events.get(0, id) === events.toObject()[0][id]", new_id)
+    assert ui.js("events.frameIds(0).length") == 2
 
 
 def test_b3_erase_events_asks_confirmation(ui, sample_dir):
@@ -31,7 +34,7 @@ def test_b3_erase_events_asks_confirmation(ui, sample_dir):
     assert ("confirm", "Are you sure you want to ERASE all manual annotations (Tracks)?") in ui.dialogs
     ui.dialog_accepts = True
     ui.page.click("#erase")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length === 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length === 0")
     assert ui.boxes() == []
     assert ui.tracks() == {}
 

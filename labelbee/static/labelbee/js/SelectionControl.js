@@ -627,7 +627,7 @@ function getIdsInFocus() {
 
   ids = new Set();
   for (let f = fmin; f <= fmax; f++) {
-    let tagsFrame = Tags[f];
+    let tagsFrame = AnnotationStore.getTags()[f];
     if (typeof tagsFrame === "undefined") continue;
     let tags = tagsFrame.tags;
 
@@ -659,8 +659,8 @@ function deleteEvent(frame, id) {
     console.log('deleteEvent: Event not found (frame,id)=', frame, id)
     return false
   }
-  obs = cloneObs(Tracks[frame][id])
-  delete Tracks[frame][id];
+  obs = cloneObs(events.get(frame, id))
+  events.delete(frame, id); // also removes the frame when it ends up empty
   undoPush('delete', obs)
 
   videoControl.refresh();
@@ -982,7 +982,7 @@ function modifyCurrentObsSpan(mode) {
   let frame = r.obs.frame;
   let id = r.obs.ID;
 
-  let obs = Tracks[frame][id];
+  let obs = events.get(frame, id);
 
   let tracks = flatTracksAll.filter(
     function (element) {
@@ -995,25 +995,30 @@ function modifyCurrentObsSpan(mode) {
   let track = tracks[0];
 
   if (!("span" in obs)) {
-    obs.span = { f1: track.span.f1, f2: track.span.f2 };
+    events.update(frame, id, { span: { f1: track.span.f1, f2: track.span.f2 } });
   }
   if (mode == "copy") {
     return;
   }
+  let f1 = obs.span.f1;
+  let f2 = obs.span.f2;
   if (mode == "extendleft") {
-    obs.span.f1 = obs.span.f1 - 10;
-    if (obs.span.f1 < 0) obs.span.f1 = 0;
+    f1 = f1 - 10;
+    if (f1 < 0) f1 = 0;
   }
   if (mode == "extendright") {
-    obs.span.f2 = obs.span.f2 + 10;
+    f2 = f2 + 10;
   }
   if (mode == "restrictleft") {
-    obs.span.f1 = obs.span.f1 + 10;
-    if (obs.span.f1 > obs.frame) obs.span.f1 = obs.frame;
+    f1 = f1 + 10;
+    if (f1 > obs.frame) f1 = obs.frame;
   }
   if (mode == "restrictright") {
-    obs.span.f2 = obs.span.f2 - 10;
-    if (obs.span.f2 < obs.frame) obs.span.f2 = obs.frame;
+    f2 = f2 - 10;
+    if (f2 < obs.frame) f2 = obs.frame;
+  }
+  if (f1 != obs.span.f1 || f2 != obs.span.f2) {
+    events.update(frame, id, { span: { f1: f1, f2: f2 } });
   }
 
   if (mode=='setspan') {
@@ -1028,7 +1033,7 @@ function modifyCurrentObsSpan(mode) {
 
 
 function updateAnnotationStatistics() {
-  let L=[]; for (i in Tracks) {T=Tracks[i]; for (j in T) {L.push(T[j])}}; 
+  let L=[]; events.forEach((obs) => {L.push(obs)})
   let S=new Set(L.map(x => x.ID))
   let F=new Set(L.map(x => x.frame))
   console.log("num_events=",L.length)

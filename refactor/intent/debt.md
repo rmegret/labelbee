@@ -1039,7 +1039,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-702: copyObs copies a hand-maintained field list
 
-[read] `labelbee/static/labelbee/js/Model.js` copyObs lists fields; `span`, `tag` and unknown fields are dropped by storeObs/cloneObs (so undo snapshots from `deleteEvent` lose `span`; the visit-creation `tmpObs` in `labelbee/static/labelbee/js/OverlayControl.js` carries a `span` that `storeObs` drops); `visit` is never cleared; `parts` is shared by reference. Proposed: copy all own fields minus runtime ones, with explicit deep copy of nested objects; whether `span` must survive is OQ-701.
+[read] PARTLY FIXED in slice 4 step 7a: `Events.commit` (what `storeObs` calls) keeps the fields of the working copy outside the 17 (the `span` of `newVisit` now survives); `cloneObs`/`copyObs` still copy the hand-maintained list, so undo of a delete still loses `span`, `tag`, and `parts`/`visit` are still shared by reference with the working copy (the dirty-write detector flags the writers; [ADR 0008](../design/0008-field-ownership.md) steps 3-4, [Q30](../QUESTIONS.md#q30), [Q33](../QUESTIONS.md#q33)). Before: `labelbee/static/labelbee/js/Model.js` copyObs lists fields; `span`, `tag` and unknown fields are dropped by storeObs/cloneObs (so undo snapshots from `deleteEvent` lose `span`; the visit-creation `tmpObs` in `labelbee/static/labelbee/js/OverlayControl.js` carries a `span` that `storeObs` drops); `visit` is never cleared; `parts` is shared by reference. Proposed: copy all own fields minus runtime ones, with explicit deep copy of nested objects; whether `span` must survive is OQ-701.
 
 - **Code:**
   - `Model.js`: `copyObs`, `cloneObs`, `storeObs`
@@ -1124,6 +1124,8 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 - **Links:** BEH-718, INV-003, OQ-703
 
 ## DEBT-712: Implicit globals and double refresh in the IO code
+
+_Slice 4 step 4c removed the implicit globals `obs` (`ChronoControl.js` `updateFlatTracks`) and `i`, `T`, `j` (`SelectionControl.js` `updateAnnotationStatistics`): a run of the browser tests with `window.obs` instrumented showed that nothing read them without assigning them first. The ones listed below (IO code) and the double refresh remain._
 
 [read] undeclared assignments in `labelbee/static/labelbee/js/AnnotationIO.js`: `data0`, `hasDuplicateEntries` (sanitizeEvents), `evts`, `src` (tracks_csv_to_json), `dataToSend`, `alertMSG` (eventsToServer), `fileData` (openRecentLoadingDialog), `html`, `idx`, `buttonHTML` (showAdvancedLoadingDialog), `success` (loadEvents, loadEventsFromServerByID), `tags` (tagsFromServer), `obj` (saveTagsToFile), `user_data` (whoami), and `ttags` implicit (`TracksInfo`, `TagsInfo` and `tagsHaveDM` are, since slice 3, accessors of `annotation/AnnotationStoreBridge.js` over `AnnotationStore`); [inferred, not re-read] `result`, `data` (db_to_json), `tagCache` (`Model.js`). setTracks already refreshes, then callers refresh again (loadEvents, loadEventsFromServerByID, loadTracksCSVFromDB). Proposed: declared module state, one refresh.
 

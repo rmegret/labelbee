@@ -4,8 +4,11 @@
  * telling whether the loaded Tags carry the DM field. No decoding, no I/O, no DOM, no refresh, no
  * derived data. The getters return the stored object itself, not a copy: the page code edits
  * `Tracks[frame][id]` in place and must keep seeing the same object.
- * Legacy code reaches it through the globals defined by AnnotationStoreBridge.js.
+ * The stored events and their info live in `events` (annotation/Events.js, refactor slice 4, ADR 0007) and are read
+ * and written through it; the store only replaces them (`replaceTracks`, used by the loaders). The page reaches the
+ * store through `window.AnnotationStore` (AnnotationStoreBridge.js).
  */
+import { Events } from './Events.js';
 
 // Same test as jQuery.isEmptyObject (no enumerable property, inherited ones included; true for undefined).
 function isEmptyObject(obj) {
@@ -14,23 +17,20 @@ function isEmptyObject(obj) {
 }
 
 export function createAnnotationStore() {
-  let tracks = [];
-  let tracksInfo;
+  const events = new Events();
   let tags = [];
   let tagsInfo;
   let tagsHaveDM = false;
 
   return {
-    getTracks: () => tracks,
-    getTracksInfo: () => tracksInfo,
+    events,
     getTags: () => tags,
     getTagsInfo: () => tagsInfo,
     getTagsHaveDM: () => tagsHaveDM,
 
     /** Replaces the Tracks and their info together (no validation: decoding is the codec's job). */
     replaceTracks(data, info) {
-      tracks = data;
-      tracksInfo = info;
+      events.replace(data, info);
     },
     /** Replaces the Tags and their info together. Does not touch tagsHaveDM. */
     replaceTags(data, info) {

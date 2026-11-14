@@ -26,7 +26,7 @@ test('loadEventsFromServerByID resolves once the events are loaded and sets the 
   const p = ctx.loadEventsFromServerByID(12);
   assert.ok(isThenable(p));
   await p;
-  assert.equal(JSON.stringify(Object.keys(ctx.Tracks)), '["0"]');
+  assert.equal(JSON.stringify(Object.keys(ctx.AnnotationStore.events.toObject())), '["0"]');
   assert.deepEqual(rec.fx.filter((f) => f[0] === 'basedOn'), [['basedOn', 12]]);
 });
 
@@ -44,7 +44,7 @@ test('file loaders return a Promise that resolves once the model is applied; a c
   const p = ctx.loadEventsFromFile({ target: { files: [{ text: evts }], value: 'x' } });
   assert.ok(isThenable(p));
   await p;
-  assert.equal(JSON.stringify(Object.keys(ctx.Tracks)), '["0"]');
+  assert.equal(JSON.stringify(Object.keys(ctx.AnnotationStore.events.toObject())), '["0"]');
   assert.equal(ctx.loadEventsFromFile({ target: { files: [], value: 'x' } }), undefined);
 });
 
@@ -57,7 +57,7 @@ test('invalid JSON rejects the returned Promise of loadEventsFromFile', async ()
 test('eventsFromServer returns a Promise that resolves after the apply stage', async () => {
   const { ctx } = (await loadIoEnv())({ net: { ajax: { ok: JSON.parse(evts) } } });
   await ctx.eventsFromServer('/u');
-  assert.equal(JSON.stringify(Object.keys(ctx.Tracks)), '["0"]');
+  assert.equal(JSON.stringify(Object.keys(ctx.AnnotationStore.events.toObject())), '["0"]');
 });
 
 test('an exception of the apply stage is not handled as a request error', async () => {
@@ -94,7 +94,7 @@ test('a rejected format is an error: nothing is refreshed, the model is kept, th
   const { ctx, rec } = (await loadIoEnv())({ net: { ajax: { ok: { a: 1 } } }, init: { Tracks: old, TracksInfo: { n: 1 } } });
   await assert.rejects(ctx.eventsFromServer('/u'), (e) => /Invalid events format/.test(e.message));
   assert.equal(rec.fx.some((f) => f[0] === 'refreshChronogram'), false);
-  assert.equal(JSON.stringify(Object.keys(ctx.Tracks)), '["9"]');
+  assert.equal(JSON.stringify(Object.keys(ctx.AnnotationStore.events.toObject())), '["9"]');
   assert.match(alertHtml(rec), /Invalid events format/);
 });
 
@@ -103,7 +103,7 @@ test('CSV loaders return their Promise', async () => {
   const p = ctx.loadTracksCSVFromServer('/t.csv');
   assert.ok(isThenable(p));
   await p;
-  assert.equal(JSON.stringify(Object.keys(ctx.Tracks)), '["0"]');
+  assert.equal(JSON.stringify(Object.keys(ctx.AnnotationStore.events.toObject())), '["0"]');
 });
 
 test('a failed request still rejects the CSV loader Promise (no catch, DEBT-725)', async () => {
