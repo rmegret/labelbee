@@ -272,7 +272,7 @@ function saveEventsToFile(format) {
 function saveEventsToCSV() {
   console.log("saveEventsToCSV: exporting to CSV...");
 
-  var txt = tracksToCSV(Tracks);
+  var txt = tracksToCSV(events.toObject());
 
   saveCSVToFile(txt, "Tracks.csv");
 }
@@ -281,7 +281,7 @@ function saveEventsToBBoxes() {
   console.log("saveEventsToBBoxes: exporting bounding boxes to CSV...");
   console.log("with simple format: frame, left, top, right, bottom, pollen");
 
-  var txt = tracksToBBoxes2(Tracks);
+  var txt = tracksToBBoxes2(events.toObject());
 
   saveCSVToFile(txt, "BBoxes.csv");
 }
@@ -318,13 +318,10 @@ function setTracks(obj, skipRefresh) {
   return true;
 }
 function setEventsProp(option, value) {
-  var info = AnnotationStore.getTracksInfo();
-  if (!info) {
-    info = {};
-    AnnotationStore.replaceTracks(AnnotationStore.getTracks(), info);
+  if (!events.info) {
     console.log("setEventsProp: ERROR TracksInfo non existing. Created it");
   }
-  info[option] = value;
+  events.setInfo(option, value); // creates the info when missing
 }
 
 /* LOADER HELPERS (refactor ADR 0005). A loader is: get (a Promise) -> decode (the codec) -> apply
@@ -1513,13 +1510,13 @@ function tagsFromServer(tagFileID, div) {
 /* METADATA EDITION */
 
 function onChanged_events_notes(event) {
-  if (TracksInfo) {
-    TracksInfo["notes"] = $("#events-notes").val();
+  if (events.info) {
+    events.setInfo("notes", $("#events-notes").val());
   }
 }
 function updateEventsNotes() {
-  if (TracksInfo) {
-    $("#events-notes").val(TracksInfo["notes"]);
+  if (events.info) {
+    $("#events-notes").val(events.info["notes"]);
   }
 }
 

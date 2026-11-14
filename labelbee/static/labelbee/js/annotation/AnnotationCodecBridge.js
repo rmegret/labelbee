@@ -17,6 +17,6 @@ for (const name of [
   window[name] = codec[name];
 }
 
-// Save side: the legacy functions took no argument and read the page globals, read here at call time.
-window.convertTracksToV1 = () => codec.convertTracksToV1(Tracks);
-window.convertTracksToV2 = () => codec.convertTracksToV2(Tracks, TracksInfo, videoinfo);
+// Save side: the legacy functions took no argument and read the page globals (the stored events, `events`, and `videoinfo`), read here at call time.
+window.convertTracksToV1 = () => codec.convertTracksToV1(events.toObject());
+window.convertTracksToV2 = () => codec.convertTracksToV2(events.toObject(), events.info, videoinfo);
