@@ -3,7 +3,7 @@
 Layout: `golden/harness/` is the shared harness; each slice has its own `golden/sliceN/` folder
 (fixtures, generator, test, golden file).
 
-Browser tests (real page in headless Chromium, 64 tests, [browser/README.md](browser/README.md)) automate the manual
+Browser tests (real page in headless Chromium, 65 tests, [browser/README.md](browser/README.md)) automate the manual
 [CHECKLIST.md](CHECKLIST.md): `pytest refactor/tests/browser`. Run them and the golden tests before merging a slice;
 keep the checklist for what a script cannot judge (see its first lines). Environment: [devenv/README.md](devenv/README.md).
 

@@ -1,7 +1,4 @@
 {
  "_comment": "Strict allow-list of the sites that may write to the stored events (refactor/design/0007-slice-events-api.md, step 0). `pytest refactor/tests/browser --dirty-writes-strict` fails a test whose write comes from a site not listed here. Matched on file, function, operation (set, delete, define, replace) and depth (0 frames, 1 one frame, 2 one observation, 3+ nested); the line and the field are not part of the key. Entries are removed as the steps of slice 4 move each writer behind Events; the end state is empty (annotation/Events.js writes to a private structure). `note` is for the reader only.",
- "allowed": [
-  {"file": "ChronoControl.js", "function": "cleanObsoleteEvents", "operation": "delete", "depth": 1, "note": "delete (3 sites); leaves {} for an emptied frame"},
-  {"file": "SelectionControl.js", "function": "deleteEvent", "operation": "delete", "depth": 1, "note": "delete the selected observation"}
- ]
+ "allowed": []
 }

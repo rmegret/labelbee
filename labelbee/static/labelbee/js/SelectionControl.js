@@ -660,7 +660,7 @@ function deleteEvent(frame, id) {
     return false
   }
   obs = cloneObs(Tracks[frame][id])
-  delete Tracks[frame][id];
+  events.delete(frame, id); // also removes the frame when it ends up empty
   undoPush('delete', obs)
 
   videoControl.refresh();

@@ -1999,18 +1999,18 @@ function cleanObsoleteEvents() {
       if (hasLabel(obs, "falsealarm") || hasLabel(obs, "wrongid")) {
         if (!obs.tag) {
           console.log("No tag: Delete Tracks[" + F + "][" + id + "] = ", obs);
-          delete Tracks[F][id];
+          events.delete(F, id);
         } else {
           if (obs.tag.dm < 20) {
             console.log("low DM: Delete Tracks[" + F + "][" + id + "] = ", obs);
-            delete Tracks[F][id];
+            events.delete(F, id);
           }
           if (!tagsSampleFilterExcludeRects(obs.tag)) {
             console.log(
               "excludeRect: Delete Tracks[" + F + "][" + id + "] = ",
               obs
             );
-            delete Tracks[F][id];
+            events.delete(F, id);
           }
         }
       }

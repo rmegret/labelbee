@@ -7,8 +7,8 @@ other tests never reach, so the dirty-write detector (--dirty-writes, dirty_writ
     delete    cleanObsoleteEvents (ChronoControl.js): it leaves the emptied frame as {}
 
 The assertions describe today's behavior; the model is read through the store, as the other tests do.
-The "frame pruned or left as {}" difference is deliberate: step 3 of the ADR changes it (`delete` prunes) and these
-tests will then show it."""
+Since step 3b every delete prunes the emptied frame (`events.delete`); before, `deleteEvent` and `cleanObsoleteEvents`
+left `{}` (`test_f6` and `test_f8` show the change)."""
 
 
 def event(frame, id, labels="", x=60, **extra):
@@ -119,7 +119,7 @@ def test_f5_delete_wrong_id_events_prunes_the_emptied_frame(ui):
     assert frames_of(ui) == {"0": ["1"], "10": ["3"]}
 
 
-# ---- delete: cleanObsoleteEvents ("Clean obsolete Events", confirmed): it leaves the emptied frame as {}
+# ---- delete: cleanObsoleteEvents ("Clean obsolete Events", confirmed): it prunes the emptied frame since step 3b (it left {})
 def test_f6_clean_obsolete_events_leaves_the_emptied_frame(ui):
     def tag(dm, cx=84):
         return {"id": 9, "dm": dm, "c": [cx, 104], "hamming": 0, "goodness": 45.5, "p": [[60, 80], [108, 80], [108, 128], [60, 128]]}
@@ -142,7 +142,7 @@ def test_f6_clean_obsolete_events_leaves_the_emptied_frame(ui):
     assert ui.js("flag_useExcludeRects") is True
     ui.page.click("#cleanObsoleteEventsButton")
     assert ui.dialogs[-1][0] == "confirm"                              # the confirmation was asked (and accepted)
-    assert frames_of(ui) == {"0": ["1"], "5": [], "10": ["5"], "15": [], "20": []}
+    assert frames_of(ui) == {"0": ["1"], "10": ["5"]}                  # emptied frames are pruned (step 3b; they stayed as {} before)
 
 
 # ---- rename: the ID field (labelBee.js onKeyDown_IDEdit -> changeObservationID -> events.rename); not a writer the detector
@@ -163,3 +163,24 @@ def test_f7_change_the_id_in_the_id_field(ui, sample_dir):
     assert sorted(ui.tracks()["10"]) == ["2", "9"]
     assert str(ui.tracks()["10"]["9"]["ID"]) == "9"
     assert sorted(ui.tracks()["5"]) == ["1"]                           # only the current frame is renamed
+
+
+# ---- delete: deleteEvent (the Delete button) prunes the emptied frame, and the saved file no longer carries [] for it
+def test_f8_delete_prunes_the_emptied_frame_and_the_saved_file_has_no_empty_frame(ui):
+    path = write_events(ui, "two.json", [event(0, 1), event(5, 1), event(5, 2, x=250)])
+    load(ui, path)
+    ui.open_panel("Annotations")
+    ui.click_box("1")
+    ui.page.click("#deleteButton")                                      # frame 0 holds only id 1
+    ui.page.wait_for_function("!(AnnotationStore.getTracks()[0] || {})[1]")
+    assert frames_of(ui) == {"5": ["1", "2"]}                          # before step 3b: {"0": [], "5": [...]}
+    saved = ui.save_events_v2()
+    assert sorted(saved["data"]) == ["5"]                              # before step 3b the file carried "0": []
+    ui.goto_frame(5)
+    ui.click_box("1")
+    ui.page.click("#deleteButton")
+    ui.page.wait_for_function("!(AnnotationStore.getTracks()[5] || {})[1]")
+    assert frames_of(ui) == {"5": ["2"]}                               # a frame that still holds an observation stays
+    ui.page.click("#undoButton")                                       # undo of a delete into a pruned frame recreates it
+    ui.page.wait_for_function("!!(AnnotationStore.getTracks()[5] || {})[1]")
+    assert frames_of(ui) == {"5": ["1", "2"]}

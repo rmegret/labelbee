@@ -4,7 +4,7 @@ Automated version of [../CHECKLIST.md](../CHECKLIST.md): the real page in headle
 the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design/0006-browser-tests.md).
 
     conda activate labelbeedev                  # see ../devenv/README.md
-    pytest refactor/tests/browser               # ~3 minutes, 64 tests, all passing
+    pytest refactor/tests/browser               # ~3 minutes, 65 tests, all passing
     pytest refactor/tests/browser -k c9 -x      # one item, stop at the first failure
     pytest refactor/tests/browser --headed      # watch the browser (pytest-playwright option)
 
@@ -45,7 +45,7 @@ A site never shown is a site no test exercises: add a test, run it again.
     pytest refactor/tests/browser --dirty-writes-strict
 Strict mode: each test fails when a write to the stored events comes from a site (`file`, `function`, `operation`, `depth`) that is not in
 [`dirty_writes_allowed.json`](dirty_writes_allowed.json); the summary lists the entries not seen in the run (on a full run, those are to delete).
-The list started at 21 writers and loses entries as the steps of ADR 0007 move them behind `Events` (14 after step 2, 2 after step 3a: `deleteEvent` and `cleanObsoleteEvents`, which step 3b moves); the end state is empty.
+The list started at 21 writers and loses entries as the steps of ADR 0007 move them behind `Events` (14 after step 2, 2 after step 3a, empty after step 3b: nothing writes to the stored events outside `Events`; the list stays as the guard); the end state is empty.
 **Through the API.** Since step 2 the detector also wraps what `events.tracks`, `get`, `getOrCreate`, `commit`, `update`, `getFrame`, `toObject`, `forEach` and `observations` hand out, and subscribes to the observer of `Events`: the summary lists each operation of `Events` called by the page code with its call site outside `Events.js` (report key `api`; `dirty` holds the writes), and the operations no test called from the page (a coverage gap: today `setInfo`, until its caller moves).
 
 Not reachable from the page, so not in the list: the `span` creation in `OverlayControl.js` `hardRefresh` (`:1537`). A write from there would fail the strict run.

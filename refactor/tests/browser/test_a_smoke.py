@@ -89,10 +89,10 @@ def test_a7_undo_restores_a_deleted_observation(ui, sample_dir):
     n = ui.n_observations()
     ui.click_box("1")
     ui.page.click("#deleteButton")
-    ui.page.wait_for_function("(n) => !AnnotationStore.getTracks()['0']['1']", arg=n)
+    ui.page.wait_for_function("(n) => !(AnnotationStore.getTracks()['0'] || {})['1']", arg=n)     # the emptied frame is pruned
     assert ui.n_observations() == n - 1
     ui.page.click("#undoButton")
-    ui.page.wait_for_function("!!AnnotationStore.getTracks()['0']['1']")
+    ui.page.wait_for_function("!!(AnnotationStore.getTracks()['0'] || {})['1']")
     assert ui.n_observations() == n
 
 
@@ -123,6 +123,6 @@ def test_a9_delete_removes_the_box_and_the_chronogram_interval(ui, sample_dir):
     items = ui.js("document.body.innerText.match(/data: (\\d+) items/)[1]")
     ui.click_box("1")
     ui.page.click("#deleteButton")
-    ui.page.wait_for_function("!AnnotationStore.getTracks()['0']['1']")
+    ui.page.wait_for_function("!(AnnotationStore.getTracks()['0'] || {})['1']")     # the emptied frame is pruned
     assert ui.boxes() == []
     ui.page.wait_for_function("(n) => document.body.innerText.includes('data: ' + (Number(n) - 1) + ' items')", arg=items)
