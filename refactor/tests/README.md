@@ -81,5 +81,11 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
   and string ids, swap with collisions, forced renames, deletes) run on `annotation/Events.js` and on the reference; after each
   operation the structure (content, key order, array or object), the return value and the queries must be equal. Then contract
   tests for what the ADR states (prune, `getFrame` is a new object, `update`, `commit`, observer, iteration order) and the store.
-- The only deliberate difference from the legacy code: `delete` prunes the emptied frame (the reference does it after an actual
-  deletion, as the ADR says); the legacy `deleteEvent` and `cleanObsoleteEvents` did not.
+- The deliberate differences from the legacy code: `delete` prunes the emptied frame (the reference does it after an actual
+  deletion, as the ADR says; the legacy `deleteEvent` and `cleanObsoleteEvents` did not), and, since step 7a, `commit` keeps the other
+  fields of the working copy (the driver of the test applies the same rule to the reference).
+- `golden/slice4/roundtrip.test.js` (step 7d): on the sample events files (v2, v1, v1 array, v2 duplicates), load, save, load is the identity
+  (modulo the conventions: `ID` as a string, 3 decimals, null and empty frames not saved); a commit of every unchanged working copy (made
+  by the real `cloneObs`, `Model.js` run in a `vm`) changes nothing in the saved file; a stored field that the working copy does not
+  carry (an unknown field, `span`, `tag`) survives the commit and the save; an edit of one field changes only that field.
+- `golden/slice4/debug-globals.test.js`: the console-only debug globals (`annotation/DebugGlobals.js`).
