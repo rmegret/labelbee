@@ -686,3 +686,23 @@ During the migration `events.tracks` is a public escape hatch that the detector 
 _Significance_: Queries make the console shortcut cheap and keep the structure verifiably private; read-only observations would close the last door but cost a copy or a `Proxy` per read.
 _Proposed_: As above: queries for the console, `toObject()` for the codec only, no production `snapshot()`, `events.tracks` public until step 6 as the documented temporary placeholder, live observations until undo is designed. Used only once the maintainer confirms.
 _Answer_: Accepted (maintainer, 2026-11-13).
+
+**<a id='q30'>Q30</a>: Adopt the field-ownership principle and its rules (ADR 0008)?**
+[ADR 0008](design/0008-field-ownership.md) section 3 turns the maintainer's principle (2026-11-14) into six rules: a field belongs to one unit and one concern (R1); a module reads with `events.get` and copies what it owns (R2); it writes its unit with `events.update`, the other fields untouched (R3); coupled fields are written together (R4); creating an observation is the one full commit, `delete` and `rename` stay commands, undo of a delete uses a per-observation deep copy (R5); the working copy of the editor holds only the units the editor owns (R6). Steps 7b (deep copy of `visit` and `parts` with the Pick Flower writers moved and the working copy kept in sync) and 7c (undo keeps all fields) of [ADR 0007](design/0007-slice-events-api.md) would then be replaced by steps 3 and 4 of ADR 0008.
+_Significance_: It decides the shape of every editor in slice 5 and what "a module" may know about another; the alternative is to keep the whole-observation commit and only fix its leaks one by one (7b, 7c), which leaves the lost-update hazard (DEBT-739) and the hard-coded field list.
+_Proposed_: Adopt the rules as written; put steps 7b and 7c on hold (7a is committed) and run slice 5 from ADR 0008. Used only once the maintainer confirms.
+
+**<a id='q31'>Q31</a>: The units, their groupings and their owners**
+[ADR 0008](design/0008-field-ownership.md) section 3 proposes the units `geometry` (`x y width height angle cx cy`), `labeling` (`labels bool_acts`), `notes`, `parts`, `wrongid` (`newid fix`), `visit`, `span`, `tag`, with `ID`, `frame`, `time` written only at creation (and `ID` by `rename`). Two groupings are judgment calls: `cx`/`cy` inside `geometry` although they are derived ([DEBT-739](intent/debt.md), they could instead be computed on read and not stored), and `newid`/`fix` as one unit although `fix` also carries tag-fix data.
+_Significance_: A unit written in part is the bug this design is meant to remove; a unit that is too large brings the lost-update hazard back.
+_Proposed_: The units as listed; `cx`/`cy` stay in `geometry` for now (removing them is [DEBT-739](intent/debt.md), a later step). Used only once the maintainer confirms.
+
+**<a id='q32'>Q32</a>: Enforce ownership with a field-level allow-list for `update`?**
+The observer of `Events` already carries the fields of each `update`. The detector could record them per call site, and a second allow-list (`refactor/tests/browser/api_writes_allowed.json`: file, function, fields) would fail a browser test whose module updates a field it does not own, the same way `dirty_writes_allowed.json` does for writes around the API. It starts permissive (the current sites) and is tightened as steps 2 and 3 of ADR 0008 move each concern.
+_Significance_: Without it the principle is a convention that the next change can break silently; with it a wrong update fails the whole suite, at the cost of one more list to maintain.
+_Proposed_: Adopt. Used only once the maintainer confirms.
+
+**<a id='q33'>Q33</a>: Undo snapshot, and the order of the migration**
+(a) R5 needs `events.snapshot(frame, id)`, a deep copy of one observation with all its fields, for undo of a delete. [Q29](QUESTIONS.md#q29) excluded a production `snapshot()` because a copy of a whole video is slow; one observation is not. (b) Proposed order of ADR 0008 step 2: `parts`, then `wrongid` (the three writers become one function), `labeling`, `notes`, `geometry` last; the visit concern (step 3) after them; the tag-fix writers (2 allow-listed entries) wait for the tag merge ([DEC-006](intent/decisions.md)).
+_Significance_: The editor path is the riskiest code of the refactor and several of its edit paths have no test yet (step 0); the order puts the simplest concern first and the most coupled last.
+_Proposed_: (a) a per-observation `snapshot` is allowed, whole-video snapshots stay excluded; (b) the order as listed. Used only once the maintainer confirms.
