@@ -4,9 +4,9 @@
  * telling whether the loaded Tags carry the DM field. No decoding, no I/O, no DOM, no refresh, no
  * derived data. The getters return the stored object itself, not a copy: the page code edits
  * `Tracks[frame][id]` in place and must keep seeing the same object.
- * Legacy code reaches it through the globals defined by AnnotationStoreBridge.js.
- * The Tracks and their info live in `events` (annotation/Events.js, refactor slice 4, ADR 0007):
- * `getTracks()` returns its live structure, the temporary dirty path of Q29.
+ * The stored events and their info live in `events` (annotation/Events.js, refactor slice 4, ADR 0007) and are read
+ * and written through it; the store only replaces them (`replaceTracks`, used by the loaders). The page reaches the
+ * store through `window.AnnotationStore` (AnnotationStoreBridge.js).
  */
 import { Events } from './Events.js';
 
@@ -24,8 +24,6 @@ export function createAnnotationStore() {
 
   return {
     events,
-    getTracks: () => events.tracks,
-    getTracksInfo: () => events.info,
     getTags: () => tags,
     getTagsInfo: () => tagsInfo,
     getTagsHaveDM: () => tagsHaveDM,

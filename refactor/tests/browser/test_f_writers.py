@@ -100,6 +100,27 @@ def test_f3_apply_all_tag_fixes_stores_a_span_and_a_fix(ui):
     assert "span" not in tracks["0"]["1"]
 
 
+# ---- tag fix on a tag object shared with obs.tag: a tags file whose tag matches an observation shares the tag object between the Tags
+# structure and the observation (augmentTrackWithTag); bakeTagFix then writes `fix` and `id` on that shared object, an indirect
+# mutation of the stored events (found by the detector's tracking of shared references).
+def test_f12_apply_tag_fixes_writes_on_the_tag_shared_with_the_observation(ui):
+    path = write_events(ui, "fa_tag.json", [event(0, 1, "falsealarm"), event(0, 2)])
+    load(ui, path)
+    tag = {"id": 1, "dm": 60, "c": [84, 104], "hamming": 0, "goodness": 45.5, "p": [[70, 90], [98, 90], [98, 118], [70, 118]]}
+    ui.load_tags(ui.write("t.json", {"0": {"tags": [tag]}}))
+    ui.page.wait_for_function("!!(events.get(0, 1) || {}).tag")
+    ui.open_panel("Zoom")
+    ui.open_subpanel("Alternate Tags")
+    ui.page.click("input[value^='Apply All Tag Fixes']")
+    stored = ui.tracks()["0"]["1"]["tag"]                               # the tag as the observation holds it
+    assert stored["id"] == "falsealarm"                                # bakeTagFix changed the shared tag object
+    assert stored["fix"]["newid"] == "falsealarm"
+    assert ui.tags()["0"]["tags"][0]["id"] == "falsealarm"             # ... which is the same object as in the Tags structure
+    ui.page.click("input[value^='Undo All Tag Fixes']")                # undoTagFix writes on the same shared object
+    assert str(ui.tracks()["0"]["1"]["tag"]["id"]) == "1"
+    assert str(ui.tags()["0"]["tags"][0]["id"]) == "1"
+
+
 # ---- delete: "Delete FA Events..." and "Delete WId Events..." (ZoomView.js): they prune the emptied frame
 def test_f4_delete_falsealarm_events_prunes_the_emptied_frame(ui):
     path = write_events(ui, "fa.json", [event(0, 1), event(0, 3, "falsealarm"), event(5, 3, "falsealarm"), event(10, 4, "wrongid")])
@@ -159,7 +180,7 @@ def test_f7_change_the_id_in_the_id_field(ui, sample_dir):
     ui.click_box("1")
     ui.page.fill("#I", "9")
     ui.page.press("#I", "Enter")
-    ui.page.wait_for_function("!!AnnotationStore.getTracks()[10][9]")
+    ui.page.wait_for_function("!!events.toObject()[10][9]")
     assert sorted(ui.tracks()["10"]) == ["2", "9"]
     assert str(ui.tracks()["10"]["9"]["ID"]) == "9"
     assert sorted(ui.tracks()["5"]) == ["1"]                           # only the current frame is renamed
@@ -172,17 +193,17 @@ def test_f8_delete_prunes_the_emptied_frame_and_the_saved_file_has_no_empty_fram
     ui.open_panel("Annotations")
     ui.click_box("1")
     ui.page.click("#deleteButton")                                      # frame 0 holds only id 1
-    ui.page.wait_for_function("!(AnnotationStore.getTracks()[0] || {})[1]")
+    ui.page.wait_for_function("!(events.toObject()[0] || {})[1]")
     assert frames_of(ui) == {"5": ["1", "2"]}                          # before step 3b: {"0": [], "5": [...]}
     saved = ui.save_events_v2()
     assert sorted(saved["data"]) == ["5"]                              # before step 3b the file carried "0": []
     ui.goto_frame(5)
     ui.click_box("1")
     ui.page.click("#deleteButton")
-    ui.page.wait_for_function("!(AnnotationStore.getTracks()[5] || {})[1]")
+    ui.page.wait_for_function("!(events.toObject()[5] || {})[1]")
     assert frames_of(ui) == {"5": ["2"]}                               # a frame that still holds an observation stays
     ui.page.click("#undoButton")                                       # undo of a delete into a pruned frame recreates it
-    ui.page.wait_for_function("!!(AnnotationStore.getTracks()[5] || {})[1]")
+    ui.page.wait_for_function("!!(events.toObject()[5] || {})[1]")
     assert frames_of(ui) == {"5": ["1", "2"]}
 
 
@@ -204,7 +225,7 @@ def test_f9_pick_flower_sets_the_visit_of_the_observation(ui):
     ui.page.wait_for_selector("#pickflowerdiv canvas")
     box = ui.page.locator("#pickflowerdiv canvas").bounding_box()
     ui.page.mouse.click(box["x"] + box["width"] * 0.6, box["y"] + box["height"] * 0.5)     # the nearest flower is picked
-    ui.page.wait_for_function("(AnnotationStore.getTracks()[0][1].visit || {}).flowerid !== undefined")
+    ui.page.wait_for_function("(events.toObject()[0][1].visit || {}).flowerid !== undefined")
     assert ui.tracks()["0"]["1"]["visit"] == {"flowerid": "F1"}
     ui.page.click("#pickflowerdiv button:has-text('No visit')")                        # removeVisit
     assert "flowerid" not in ui.tracks()["0"]["1"]["visit"]
@@ -229,7 +250,7 @@ def test_f10_visit_widget_creates_a_visit_and_sets_its_span(ui):
     ui.page.mouse.click(p["x"], p["y"])
     ui.page.wait_for_function("document.querySelector('#visitblockdiv #flower_id').textContent === 'F1'")
     ui.page.click("#visitblockdiv .new-visit")
-    ui.page.wait_for_function("!!(AnnotationStore.getTracks()[0] || {})['V-P1-F1']")
+    ui.page.wait_for_function("!!(events.toObject()[0] || {})['V-P1-F1']")
     assert "span" not in ui.tracks()["0"]["V-P1-F1"]                   # dropped by the commit
     assert ui.tracks()["0"]["V-P1-F1"]["visit"] == {"pollinator": "P1", "flower": "F1"}
     ui.goto_frame(3)

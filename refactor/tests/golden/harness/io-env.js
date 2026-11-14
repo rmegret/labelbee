@@ -183,8 +183,8 @@ function writeState(ctx, init) {
 function readState(ctx) {
   const store = ctx.AnnotationStore;
   return {
-    Tracks: ser(store.getTracks()),
-    TracksInfo: ser(store.getTracksInfo()),
+    Tracks: ser(store.events.toObject()),
+    TracksInfo: ser(store.events.info),
     Tags: ser(store.getTags()),
     TagsInfo: ser(store.getTagsInfo()),
     tagsHaveDM: ser(store.getTagsHaveDM()),

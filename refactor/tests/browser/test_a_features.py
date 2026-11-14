@@ -30,7 +30,7 @@ def test_a10_a_tags_file_attaches_its_tags_to_the_observations_with_the_same_id(
     ui.wait_tracks()
     tag = {"id": 1, "dm": 60, "c": [84, 104], "hamming": 0, "goodness": 45.5, "p": [[70, 90], [98, 90], [98, 118], [70, 118]]}
     ui.load_tags(ui.write("tags_same_id.json", {"0": {"tags": [tag]}}))
-    ui.page.wait_for_function("(AnnotationStore.getTracks()[0] || {})[1] && !!AnnotationStore.getTracks()[0][1].tag")
+    ui.page.wait_for_function("(events.toObject()[0] || {})[1] && !!events.toObject()[0][1].tag")
     assert ui.tracks()["0"]["1"]["tag"]["dm"] == 60
     assert ui.js("tagMode") == "Tracks"
     ui.page.wait_for_function("/\\b1 tags/.test(document.body.innerText)")
@@ -66,7 +66,7 @@ def test_a11_parts_of_a_tracks_csv_and_the_show_on_video_toggle(ui):
     ui.open_subpanel("Server storage")
     ui.prompt_answers.append("/data/sample/tracks.csv")
     ui.page.click("a[onclick*='clickLoadTracksCSVFromServer']")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert [p["label"] for p in ui.tracks()["0"]["1"]["parts"]] == ["head", "neck", "thorax", "tail"]
     ui.open_subpanel("Parts labeling")
     before = ui.js("zoomOverlay.flagShowParts")

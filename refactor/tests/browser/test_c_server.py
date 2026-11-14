@@ -11,7 +11,7 @@ def test_c8_load_events_from_db_dialog(ui):
     ui.page.wait_for_selector("#from-server-dialog", state="visible")
     assert "events_v2.json" in ui.page.inner_text("#from-server-dialog")      # the most recent event file is proposed
     ui.page.click("#from-server-dialog button:has-text('Yes')")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert ui.n_observations() == 13
     assert ui.js("fromServerDialog.basedOn") == "4" or ui.js("fromServerDialog.basedOn") == 4     # lineage of the next save
     assert "Events loaded." in ui.page.inner_text("#from-server-dialog .modal-message")
@@ -24,7 +24,7 @@ def test_c9_hash_change_on_an_open_page_loads_the_events_and_seeks(ui):
     """The bookmark flow: the video is already loaded, the hash changes."""
     ui.open()
     ui.js("location.hash = '%s'" % HASH)
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert ui.n_observations() == 13
     ui.page.wait_for_function("videoControl.getCurrentFrame() === 10")
     assert ui.js("fromServerDialog.basedOn") in ("4", 4)
@@ -34,7 +34,7 @@ def test_c9_hash_change_on_an_open_page_loads_the_events_and_seeks(ui):
 
 def test_c9_opening_a_url_with_video_data_loads_the_events(ui):
     ui.open("#video_id=1&video_data=4")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert ui.n_observations() == 13
 
 
@@ -75,7 +75,7 @@ def _tracks_csv_from_uri(ui, url):
 def test_c11_tracks_csv_from_a_uri(ui):
     ui.open()
     _tracks_csv_from_uri(ui, "/data/sample/tracks.csv")
-    ui.page.wait_for_function("AnnotationStore.getTracksInfo() && AnnotationStore.getTracksInfo().source.includes('CSV')")
+    ui.page.wait_for_function("events.info && events.info.source.includes('CSV')")
     assert ui.tracks_info()["source"] == 'Converted from CSV "/data/sample/tracks.csv"'
     assert ui.n_observations() == 20
     obs = ui.tracks()["0"]["1"]
@@ -91,7 +91,7 @@ def test_c11_tracks_csv_from_the_data_picker(ui):
     ui.page.click(".modal.in button:has-text('sample/')")
     ui.page.click(".modal.in button:has-text('tracks.csv [data]')")
     ui.page.click(".modal.in .modal-footer button:has-text('Load')")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert ui.n_observations() == 20
 
 
@@ -109,7 +109,7 @@ def test_c13_gurabo4_video_and_tracks_tagged(ui):
     ui.open_subpanel("Server storage")
     ui.prompt_answers.append("test/v.mp4")
     ui.page.click("a[onclick*='clickLoadTracksTaggedCSVFromServer']")
-    ui.page.wait_for_function("Object.keys(AnnotationStore.getTracks()).length > 0")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert ui.js("videoControl.video.currentSrc").endswith("/datasets/gurabo4/mp4/test/v.mp4")
     ids = sorted(ui.tracks()["0"])
     assert ids == ["42", "T2"]                      # track_tagid when there is one, else "T" + track_id (BEH-736)

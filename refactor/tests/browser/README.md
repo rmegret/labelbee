@@ -4,7 +4,7 @@ Automated version of [../CHECKLIST.md](../CHECKLIST.md): the real page in headle
 the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design/0006-browser-tests.md).
 
     conda activate labelbeedev                  # see ../devenv/README.md
-    pytest refactor/tests/browser               # ~3 minutes, 72 tests, all passing
+    pytest refactor/tests/browser               # ~3 minutes, 79 tests, all passing
     pytest refactor/tests/browser -k c9 -x      # one item, stop at the first failure
     pytest refactor/tests/browser --headed      # watch the browser (pytest-playwright option)
 
@@ -20,6 +20,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_f_writers.py` | The writers of the stored events that no other test reaches (span, the zoom deletes, clean obsolete events), for the dirty-write detector: [ADR 0007](../../design/0007-slice-events-api.md) step 0 |
 | `test_g_readers.py` | Readers of the stored events that no other test reaches, added as their loops move to `events` (slice 4 step 4): "Update Statistics", "Delete FA Tags..." (the tags structure of the store) |
 | `test_h_debug_globals.py` | The console-only debug globals `Tracks`, `TracksInfo` (and the `Tags` ones): off by default, `?debug_globals` or `installDebugGlobals()`, the console reads them, a script served from a URL gets an error |
+| `test_i_detector.py` | The dirty-write detector itself: direct and indirect mutations are seen (`dirty_writes_expected` tests) |
 | `test_alerts.py` | The main alert modal: alerts in quick succession (F3) |
 
 ## How it works
@@ -35,20 +36,35 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
   (`ui.dialog_accepts = False` answers Cancel, `ui.prompt_answers` feeds prompts).
 
 ## Dirty-write detector
-    pytest refactor/tests/browser --dirty-writes=refactor/scratch/dirty-writes.json
-Injects `dirty_writes.js` in every page. `AnnotationStore.getTracks()` then returns a recursive `Proxy` of the stored events and
+**On in every browser test, by default** (strict mode, below): no test is "designed for it", every one of them runs under the detector and fails if
+the stored events are mutated from a site that is not allow-listed. `--no-dirty-writes-strict` turns it off.
+
+    pytest refactor/tests/browser --dirty-writes=refactor/scratch/dirty-writes.json     # also write the report
+Injects `dirty_writes.js` in every page. What `events` hands out (`toObject()`, `get`, `getFrame`, ...) is then a recursive `Proxy` of the stored events and
 every write, delete or define through it (or through any handle the code kept) is counted by operation, depth (0 frames,
 1 one frame, 2 one observation, 3+ nested), field and the source `file:line` that made it. The report lists them per source line.
-Working copies (`rect.obs`, made by `cloneObs`) are separate objects and are deliberately not recorded. Opt-in (about 10% slower);
-the suite passes with it. Purpose: the exact list of writers that the `Events` API of
+Working copies (`rect.obs`, made by `cloneObs`) are separate objects and are deliberately not recorded, **except where they share a
+nested value with the stored observation** (below). About 10% slower. Purpose: the exact list of writers that the `Events` API of
 [ADR 0007](../../design/0007-slice-events-api.md) must replace, and later a guard that nothing writes around it.
 A site never shown is a site no test exercises: add a test, run it again.
 
-    pytest refactor/tests/browser --dirty-writes-strict
+    pytest refactor/tests/browser                      # strict is the default; --no-dirty-writes-strict to disable
 Strict mode: each test fails when a write to the stored events comes from a site (`file`, `function`, `operation`, `depth`) that is not in
 [`dirty_writes_allowed.json`](dirty_writes_allowed.json); the summary lists the entries not seen in the run (on a full run, those are to delete).
-The list started at 21 writers and loses entries as the steps of ADR 0007 move them behind `Events` (14 after step 2, 2 after step 3a, empty after step 3b, then 5 entries again: reading the code for step 4b found the Pick Flower writers of `visit` (`test_f9`) and the `VisitWidget` span writers (`test_f10`); they wait for step 7); the end state is empty.
-**Through the API.** Since step 2 the detector also wraps what `events.tracks`, `get`, `getOrCreate`, `commit`, `update`, `getFrame`, `toObject`, `forEach` and `observations` hand out, and subscribes to the observer of `Events`: the summary lists each operation of `Events` called by the page code with its call site outside `Events.js` (report key `api`; `dirty` holds the writes), and the operations no test called from the page (a coverage gap: today `setInfo`, until its caller moves).
+The list started at 21 writers and loses entries as the steps of ADR 0007 move them behind `Events` (14 after step 2, 2 after step 3a, empty after step 3b, then 5 entries again: reading the code for step 4b found the Pick Flower writers of `visit` (`test_f9`) and the `VisitWidget` span writers (`test_f10`); they wait for step 7; then 7: the detector learned to follow shared references and found `bakeTagFix` and `undoTagFix` writing on tag objects shared with `obs.tag`, `test_f12`, they wait for the tag merge); the end state is empty.
+**Through the API.** Since step 2 the detector wraps what `get`, `getOrCreate`, `commit`, `update`, `getFrame`, `toObject`, `forEach` and `observations` hand out (`events.tracks` and `AnnotationStore.getTracks()` were removed in step 6), and subscribes to the observer of `Events`: the summary lists each operation of `Events` called by the page code with its call site outside `Events.js` (report key `api`; `dirty` holds the writes), and the operations no test called from the page (a coverage gap: today `setInfo`, until its caller moves).
+
+**Indirect references.** A write through a handle that comes from `events` is seen. Two kinds of second door to the stored data are tracked as well,
+both found by probing (`test_i_detector.py` keeps them from regressing): (1) after `storeObs`, a nested value that the stored observation and the working
+copy hold as the same object (`parts`, `visit`): both get the proxy, so `rect.obs.parts.push(x)` is reported as a write to the stored data; (2) an object given
+to `events.update` (the tag object shared by `obs.tag` and the Tags structure): `AnnotationStore.getTags()` hands out a proxy that records writes to
+the objects shared with the events. What stays invisible: a path no test runs, an object that was never stored in or read from `events`, and the live
+references that `toObject()` and `get` hand out to code that was not wrapped (the detector wraps them all while it runs).
+
+**By hand, in a real session.** The detector is a test asset, not part of the page. Paste `dirty_writes.js` in the DevTools console (or run it as a snippet)
+on a page that is already open: it patches the running store in place. Use the page, then `console.table(Object.values(__dirtyWrites))` and
+`console.table(Object.values(__dirtyApi))`; clear with `for (const k in __dirtyWrites) delete __dirtyWrites[k]`. A test that mutates on purpose
+carries `@pytest.mark.dirty_writes_expected` (it skips the strict check of its own teardown and does not feed the report).
 
 Not reachable from the page, so not in the list: the `span` creation in `OverlayControl.js` `hardRefresh` (`:1537`). A write from there would fail the strict run.
 

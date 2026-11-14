@@ -76,10 +76,10 @@ class App:
 
     # ---- the annotation model (what the user cannot read directly)
     def tracks(self):
-        return self.js("JSON.parse(JSON.stringify(AnnotationStore.getTracks()))")
+        return self.js("JSON.parse(JSON.stringify(events.toObject()))")
 
     def tracks_info(self):
-        return self.js("JSON.parse(JSON.stringify(AnnotationStore.getTracksInfo() || null))")
+        return self.js("JSON.parse(JSON.stringify(events.info || null))")
 
     def tags(self):
         return self.js("JSON.parse(JSON.stringify(AnnotationStore.getTags()))")
@@ -88,14 +88,14 @@ class App:
         return self.js("AnnotationStore.getTagsHaveDM()")
 
     def n_observations(self):
-        return self.js("Object.values(AnnotationStore.getTracks()).reduce((n, f) => n + (f ? Object.keys(f).length : 0), 0)")
+        return self.js("Object.values(events.toObject()).reduce((n, f) => n + (f ? Object.keys(f).length : 0), 0)")
 
     def frame(self):
         return self.js("videoControl.getCurrentFrame()")
 
     def wait_tracks(self, predicate="n > 0", timeout=5000):
         self.page.wait_for_function(
-            "() => { const n = Object.values(AnnotationStore.getTracks()).reduce((a, f) => a + (f ? Object.keys(f).length : 0), 0); return (" + predicate + "); }",
+            "() => { const n = Object.values(events.toObject()).reduce((a, f) => a + (f ? Object.keys(f).length : 0), 0); return (" + predicate + "); }",
             timeout=timeout)
 
     # ---- loading files through the real file inputs

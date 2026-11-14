@@ -21,9 +21,9 @@ async function fresh() {
 
 test('store defaults equal the old page globals', async () => {
   const { store } = await fresh();
-  assert.deepEqual(store.getTracks(), []);
+  assert.deepEqual(store.events.toObject(), []);
   assert.deepEqual(store.getTags(), []);
-  assert.equal(store.getTracksInfo(), undefined);
+  assert.equal(store.events.info, undefined);
   assert.equal(store.getTagsInfo(), undefined);
   assert.equal(store.getTagsHaveDM(), false);
 });
@@ -33,8 +33,8 @@ test('getters return the stored object itself, never a copy', async () => {
   const tracks = { 0: { 1: { id: 1 } } };
   const info = { type: 'events-multiframe' };
   store.replaceTracks(tracks, info);
-  assert.equal(store.getTracks(), tracks);
-  assert.equal(store.getTracksInfo(), info);
+  assert.equal(store.events.toObject(), tracks);
+  assert.equal(store.events.info, info);
   const tags = { 0: { tags: [] } };
   const tinfo = { type: 'tags-multiframe' };
   store.replaceTags(tags, tinfo);
@@ -48,7 +48,7 @@ test('replaceTracks / replaceTags are independent and keep tagsHaveDM', async ()
   const tracks = {};
   store.replaceTracks(tracks, { a: 1 });
   store.replaceTags({ 1: { tags: [] } }, { b: 2 });
-  assert.equal(store.getTracks(), tracks);
+  assert.equal(store.events.toObject(), tracks);
   assert.equal(store.getTagsHaveDM(), true);
   store.replaceTracks({}, undefined);
   assert.deepEqual(store.getTagsInfo(), { b: 2 });

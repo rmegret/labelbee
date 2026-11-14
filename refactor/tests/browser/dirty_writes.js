@@ -1,7 +1,7 @@
 // Dirty-write detector (refactor/design/0007-slice-events-api.md): finds every place that modifies the stored
 // events directly. Injected into every page by conftest.py when pytest runs with --dirty-writes=REPORT.json.
 //
-// AnnotationStore.getTracks() is patched to return a recursive Proxy of the stored structure:
+// What `events` hands out is wrapped in a recursive Proxy of the stored structure:
 //   depth 0 = Tracks (frames), depth 1 = one frame (observations), depth 2 = one observation (its fields),
 //   depth 3+ = nested values (bool_acts, parts, fix, ...).
 // Every set / delete / defineProperty through the proxy is counted by (operation, depth, field, source file:line).
@@ -9,11 +9,24 @@
 // keeps (flatTracks, rect handles, ...) are proxies too, so writes through them are seen as well.
 // Working copies (rect.obs, made by cloneObs) are separate objects and are not recorded: that is the intended path.
 //
-// Since slice 4 step 2 the data lives in `AnnotationStore.events` (annotation/Events.js). The detector also wraps what
-// `events.tracks`, `get`, `getOrCreate`, `commit`, `update`, `getFrame`, `toObject`, `forEach` and `observations` hand out. The
+// Since slice 4 step 2 the data lives in `AnnotationStore.events` (annotation/Events.js) and, since step 6, in a private
+// structure: the doors to the live data are `toObject`, `get`, `getOrCreate`, `commit`, `update`, `getFrame`, `forEach` and
+// `observations`, and the detector wraps what each hands out. The
 // operations of `Events` write to their private data, so they are never "dirty"; the detector subscribes to the
 // observer of `Events` and reports each operation separately, "through the API", with the call site outside Events.js
 // (window.__dirtyApi). A site that moves from the dirty list to the API list is a migration made visible.
+//
+// Indirect references (found by probing): an object that the stored events hold by reference together with outside code
+// is a second door to the stored data. Two kinds are tracked:
+//   - after `commit`, a field of the stored observation that is the same object as in the working copy (`parts`, `visit`):
+//     both sides are given the proxy, so a write through the working copy is seen as a write to the stored data;
+//   - an object given to `update` (`obs.tag` is the tag object of the Tags structure): `AnnotationStore.getTags()` hands
+//     out a proxy that records writes only to objects that are shared with the events.
+// A write through either is reported like any other dirty write, from its own call site.
+//
+// By hand, in a real browser session: the detector is not part of the page. Paste this file in the console (or run it
+// as a DevTools snippet) and call `__dirtyWritesPatchNow()`: the current store is patched in place; then use the page,
+// and read `__dirtyWrites` (dirty writes) and `__dirtyApi` (operations of Events) as tables with console.table.
 (function () {
   if (window.__dirtyWritesInstalled) return;
   window.__dirtyWritesInstalled = true;
@@ -23,6 +36,45 @@
   window.__dirtyApi = apiStats;
   const proxies = new WeakMap(); // raw -> proxy
   const raws = new WeakMap(); // proxy -> raw
+  const shared = new WeakSet(); // raw objects held by the stored events AND by outside code (see the header)
+  const tagProxies = new WeakMap(); // raw -> proxy of the Tags structure (records only writes to shared objects)
+  const tagRaws = new WeakMap();
+  const unwrap = (v) => (v !== null && typeof v === 'object' ? raws.get(v) || tagRaws.get(v) || v : v);
+
+  function markShared(v, level) {
+    v = unwrap(v);
+    if (v === null || typeof v !== 'object' || shared.has(v) || (level || 0) > 4) return;
+    shared.add(v);
+    for (const k in v) markShared(v[k], (level || 0) + 1);
+  }
+  // The Tags structure as the page sees it: writes are recorded only when the target is shared with the events.
+  function wrapTags(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (tagRaws.has(obj)) return obj;
+    const hit = tagProxies.get(obj);
+    if (hit) return hit;
+    const p = new Proxy(obj, {
+      get(t, k) {
+        const v = Reflect.get(t, k);
+        return typeof k === 'string' && v !== null && typeof v === 'object' ? wrapTags(v) : v;
+      },
+      set(t, k, v) {
+        if (shared.has(t)) __dw_record('set', 3, k);
+        return Reflect.set(t, k, unwrap(v));
+      },
+      deleteProperty(t, k) {
+        if (shared.has(t)) __dw_record('delete', 3, k);
+        return Reflect.deleteProperty(t, k);
+      },
+      defineProperty(t, k, d) {
+        if (shared.has(t)) __dw_record('define', 3, k);
+        return Reflect.defineProperty(t, k, d);
+      },
+    });
+    tagProxies.set(obj, p);
+    tagRaws.set(p, obj);
+    return p;
+  }
 
   function __dw_site(skipFile) {
     const lines = new Error().stack.split('\n').slice(1);
@@ -84,16 +136,20 @@
   }
 
   function patch(store) {
-    if (!store || store.__dwPatched || typeof store.getTracks !== 'function') return;
+    if (!store || store.__dwPatched || !store.events || typeof store.replaceTracks !== 'function') return;
     store.__dwPatched = true;
-    const getTracks = store.getTracks;
     const replaceTracks = store.replaceTracks;
-    store.getTracks = function () {
-      return wrap(getTracks.call(store), 0);
-    };
     store.replaceTracks = function (data, info) {
       // replaceTracks goes through events.replace, reported through the API (no longer a dirty write)
       return replaceTracks.call(store, raws.get(data) || data, info);
+    };
+    const getTags = store.getTags;
+    const replaceTags = store.replaceTags;
+    store.getTags = function () {
+      return wrapTags(getTags.call(store));
+    };
+    store.replaceTags = function (data, info) {
+      return replaceTags.call(store, unwrap(data), info);
     };
     patchEvents(store.events);
   }
@@ -103,17 +159,38 @@
   function patchEvents(ev) {
     if (!ev || ev.__dwPatched) return;
     ev.__dwPatched = true;
-    const proto = Object.getPrototypeOf(ev);
-    const tracksGetter = Object.getOwnPropertyDescriptor(proto, 'tracks').get;
-    Object.defineProperty(ev, 'tracks', { configurable: true, get: () => wrap(tracksGetter.call(ev), 0) });
     for (const name of ['toObject']) {
       const orig = ev[name];
       ev[name] = (...args) => wrap(orig.apply(ev, args), 0);
     }
-    for (const name of ['get', 'getOrCreate', 'commit', 'update']) {
+    for (const name of ['get', 'getOrCreate']) {
       const orig = ev[name];
       ev[name] = (...args) => wrap(orig.apply(ev, args), 2);
     }
+    const commit = ev.commit;
+    ev.commit = (tmp) => {
+      const obs = commit.call(ev, tmp);
+      // a field that is now the same object in the working copy and in the stored observation is shared (parts, visit):
+      // give both sides the proxy, so that a later write through the working copy is seen as a write to the stored data
+      for (const k of Object.keys(obs)) {
+        const v = obs[k];
+        if (v !== null && typeof v === 'object' && unwrap(tmp[k]) === v) {
+          const p = wrap(v, 3);
+          obs[k] = p;
+          tmp[k] = p;
+        }
+      }
+      return wrap(obs, 2);
+    };
+    const update = ev.update;
+    ev.update = (frame, id, fields) => {
+      const raw = {};
+      for (const k of Object.keys(fields)) {
+        raw[k] = unwrap(fields[k]);
+        markShared(raw[k]);
+      }
+      return wrap(update.call(ev, frame, id, raw), 2);
+    };
     const getFrame = ev.getFrame;
     ev.getFrame = (...args) => {
       const out = getFrame.apply(ev, args);            // a new object: its observations are the live ones
@@ -129,8 +206,12 @@
     ev.setObserver(__dw_api);
   }
 
-  // The bridge assigns window.AnnotationStore once, at module load: patch the store at that moment.
-  let current;
+  // For a session by hand (see the header): patch the store that the page already has.
+  window.__dirtyWritesPatchNow = () => patch(window.AnnotationStore);
+
+  // The bridge assigns window.AnnotationStore once, at module load: patch the store at that moment. Pasted into a page
+  // that is already running, the store exists: it is kept and patched at once.
+  let current = window.AnnotationStore;
   Object.defineProperty(window, 'AnnotationStore', {
     configurable: true,
     get() {
@@ -141,4 +222,5 @@
       patch(v);
     },
   });
+  if (current) patch(current);
 })();

@@ -11,10 +11,11 @@
  * `obs_swapID` of Model.js with its temporary key made internal. `commit` is `copyObs` of Model.js: the
  * 17-field copy, unknown fields still dropped (step 7 of the ADR changes that).
  *
- * `tracks` is the live structure. It is the temporary dirty path of Q29 (`AnnotationStore.getTracks()`
- * returns it during the migration); `get` hands out live observations too. The operations write to the
- * structure directly, so the dirty-write detector, which wraps what `tracks`, `get`, `getFrame` and
- * `toObject` hand out, never sees them; the observer reports them instead.
+ * The structure is private (`#frames`, slice 4 step 6): there is no `tracks` property and no store getter any more.
+ * `toObject()` is the one door to the live structure, for the codec export (and the console debug view,
+ * DebugGlobals.js); `get` and `getFrame` hand out live observations until read-only views exist (Q29). The
+ * operations write to the private data directly, so the dirty-write detector, which wraps what `toObject`,
+ * `get`, `getFrame` and the callbacks hand out, never sees them; the observer reports them instead.
  *
  * Observer: `setObserver(fn)`; `fn({ op, frame, id, ... })` is called after each command that changed
  * something (the detector uses it for "through the API"; change events are built on it later).
@@ -85,15 +86,11 @@ export class Events {
 
   // ---- queries
 
-  /** The live structure (temporary, see the header). */
-  get tracks() {
-    return this.#frames;
-  }
   /** The info of the events (`type`, `notes`, `history`, ...), or undefined before the first load. */
   get info() {
     return this.#info;
   }
-  /** The live structure, for the codec export only (O(1)). */
+  /** The live structure, for the codec export and the console debug view (O(1)). The only door to it. */
   toObject() {
     return this.#frames;
   }

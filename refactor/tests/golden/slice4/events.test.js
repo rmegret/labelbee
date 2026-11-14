@@ -144,7 +144,7 @@ async function eventsDriver(seed) {
   const ev = new Events({ createObservation: (id) => new L.Observation(id) });
   ev.replace(i.data, i.info);
   return {
-    state: () => ({ tracks: ev.tracks, info: ev.info }),
+    state: () => ({ tracks: ev.toObject(), info: ev.info }),
     apply(op) {
       switch (op.kind) {
         case 'create': return ev.getOrCreate(op.f, op.id) && 'ok';
@@ -204,8 +204,8 @@ async function fresh(data, info) {
 
 test('a new Events starts like the page did: Tracks is [], no info', async () => {
   const ev = await fresh();
-  assert.deepEqual(ev.tracks, []);
-  assert.ok(Array.isArray(ev.tracks));
+  assert.deepEqual(ev.toObject(), []);
+  assert.ok(Array.isArray(ev.toObject()));
   assert.equal(ev.info, undefined);
   assert.deepEqual(ev.frames(), []);
 });
@@ -214,7 +214,7 @@ test('replace keeps the given objects, no copy; toObject and tracks are the live
   const data = { 0: { 1: { ID: '1' } } };
   const info = { notes: 'x' };
   const ev = await fresh(data, info);
-  assert.equal(ev.tracks, data);
+  assert.equal(ev.toObject(), data);
   assert.equal(ev.toObject(), data);
   assert.equal(ev.info, info);
   assert.equal(ev.get(0, 1), data[0][1]);
@@ -228,7 +228,7 @@ test('delete removes the frame when the deletion empties it, and only then', asy
   assert.deepEqual(ev.frames(), ['1', '2']);                     // frame 1 still holds id 2
   assert.equal(ev.delete(1, 9), false);                          // nothing deleted: nothing pruned
   assert.equal(ev.delete(2, 1), false);                          // a frame that was empty in the loaded data stays as loaded
-  assert.deepEqual(ev.tracks[2], {});
+  assert.deepEqual(ev.toObject()[2], {});
   assert.equal(ev.delete(7, 1), false);                          // missing frame
 });
 
@@ -237,7 +237,7 @@ test('getFrame is a new object: adding keys to it does not touch the store; null
   const frame = ev.getFrame(0);
   assert.deepEqual(Object.keys(frame), ['1']);
   frame[5] = { ID: '5' };
-  assert.deepEqual(Object.keys(ev.tracks[0]), ['1', '2']);
+  assert.deepEqual(Object.keys(ev.toObject()[0]), ['1', '2']);
   assert.equal(frame[1], ev.get(0, 1));                          // the observations themselves are live
   assert.deepEqual(ev.getFrame(9), {});
 });
@@ -276,7 +276,7 @@ test('rename aborts on identical ids, an existing target (unless forced) and a m
   assert.equal(ev.rename(0, 5, 6), false);
   assert.equal(ev.rename(3, 1, 6), false);
   assert.equal(ev.rename(0, 1, 7), true);
-  assert.deepEqual(Object.keys(ev.tracks[0]), ['2', '7']);
+  assert.deepEqual(Object.keys(ev.toObject()[0]), ['2', '7']);
   assert.equal(ev.get(0, 7).ID, 7);                               // ID mirrors the key, as given (a number here)
   assert.equal(ev.rename(0, 7, 2, 'swap'), true);
   assert.equal(ev.get(0, 2).ID, 2);
@@ -295,7 +295,7 @@ test('swap trades the observations of two ids over the interval and leaves no te
   assert.equal(ev.get(1, 1).n, 'b1');
   assert.equal(ev.get(2, 2).n, 'b2');                             // frame 2 has no id 1: untouched
   assert.deepEqual(ev.get(1, 1).ID, 1);
-  for (const f of ev.frames()) for (const id in ev.tracks[f]) assert.ok(!String(id).startsWith('SWAP_save_'));
+  for (const f of ev.frames()) for (const id in ev.toObject()[f]) assert.ok(!String(id).startsWith('SWAP_save_'));
 });
 
 test('setInfo creates the info when missing', async () => {
@@ -343,14 +343,16 @@ test('AnnotationStore.events holds the data: the getters return its live structu
   const { createAnnotationStore } = await load('annotation/AnnotationStore.js');
   const { installLegacyGlobals } = await load('annotation/AnnotationStoreBridge.js');
   const store = createAnnotationStore();
-  assert.deepEqual(store.getTracks(), []);
-  assert.equal(store.getTracks(), store.events.tracks);
+  assert.deepEqual(store.events.toObject(), []);
+  assert.equal(store.getTracks, undefined);                         // the store getters are gone (step 6)
+  assert.equal(store.getTracksInfo, undefined);
+  assert.equal(store.events.tracks, undefined);                    // and so is the public structure
   const data = { 0: { 1: { ID: '1' } } };
   const info = { notes: 'z' };
   store.replaceTracks(data, info);
-  assert.equal(store.getTracks(), data);
-  assert.equal(store.events.tracks, data);
-  assert.equal(store.getTracksInfo(), info);
+  assert.equal(store.events.toObject(), data);
+  assert.equal(store.events.toObject(), data);
+  assert.equal(store.events.info, info);
   assert.equal(store.events.info, info);
   const target = {};
   installLegacyGlobals(target, store);

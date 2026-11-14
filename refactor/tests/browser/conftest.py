@@ -8,6 +8,7 @@ fixes its paths relative to its own location, so a throw-away copy of the dev we
     <tmp>/labelbee                     symlink to the labelbee/ folder under test
 VP9 inside an .mp4: the Chromium of Playwright cannot decode H.264, which tests/webapp/make_sample_video.sh uses.
 """
+import argparse
 import json
 import os
 import shutil
@@ -122,8 +123,11 @@ def ui(page, server, saved_dir, tmp_path, request):
     At teardown every test checks the console (checklist item E1): an error the test provokes on purpose must be
     declared with `ui.allow(regex)`. Not called `app`: pytest-flask treats a fixture of that name as a Flask app.
     With --dirty-writes the dirty-write detector (dirty_writes.js) is injected and its findings are collected."""
-    strict = request.config.getoption("--dirty-writes-strict")
-    detector = request.config.getoption("--dirty-writes") or strict
+    strict_opt = request.config.getoption("--dirty-writes-strict")    # on by default: every test runs under the detector
+    # a test that mutates the stored events on purpose (test_i_detector.py) declares it with @pytest.mark.dirty_writes_expected
+    expected = request.node.get_closest_marker("dirty_writes_expected") is not None
+    strict = strict_opt and not expected
+    detector = request.config.getoption("--dirty-writes") or strict_opt
     if detector:
         page.add_init_script(path=str(DIRTY_WRITES_JS))
     a = App(page, server, tmp_path)
@@ -139,7 +143,7 @@ def ui(page, server, saved_dir, tmp_path, request):
             merged["count"] += e["count"]
             merged["tests"].add(request.node.name)
         all_writes = request.config._dirty_writes
-        for key, e in found.items():
+        for key, e in ({} if expected else found).items():      # a test that mutates on purpose does not feed the report
             merged = all_writes.setdefault(key, {**e, "count": 0, "tests": set()})
             merged["count"] += e["count"]
             merged["tests"].add(request.node.name)
@@ -157,9 +161,9 @@ def ui(page, server, saved_dir, tmp_path, request):
 def pytest_addoption(parser):
     parser.addoption("--dirty-writes", action="store", default=None, metavar="REPORT.json",
                      help="inject dirty_writes.js in every page and write the writers of the stored events to REPORT.json")
-    parser.addoption("--dirty-writes-strict", action="store_true", default=False,
-                     help="inject dirty_writes.js and fail each test whose write to the stored events comes from a site "
-                          "that is not in dirty_writes_allowed.json")
+    parser.addoption("--dirty-writes-strict", action=argparse.BooleanOptionalAction, default=True,
+                     help="inject dirty_writes.js in every test and fail each test whose write to the stored events comes from a "
+                          "site that is not in dirty_writes_allowed.json (the default; --no-dirty-writes-strict turns it off)")
 
 
 def pytest_configure(config):
