@@ -208,3 +208,36 @@ def test_f9_pick_flower_sets_the_visit_of_the_observation(ui):
     assert ui.tracks()["0"]["1"]["visit"] == {"flowerid": "F1"}
     ui.page.click("#pickflowerdiv button:has-text('No visit')")                        # removeVisit
     assert "flowerid" not in ui.tracks()["0"]["1"]["visit"]
+
+
+# ---- visit: the VisitWidget (Annotations > Visits, edit-visit mode). Pollinator ids start with "P", flower ids with "F".
+# `setSpanFrame` writes `span`, `span.f1` and `span.f2` on the stored visit observation through the handle the widget keeps
+# (OverlayControl.js). `newVisit` goes through storeObs, whose 17-field commit drops the `span` it was given (step 7 of the
+# ADR keeps unknown fields): that is why the span is created by the first Set.
+def test_f10_visit_widget_creates_a_visit_and_sets_its_span(ui):
+    path = write_events(ui, "visit.json", [event(0, "P1", x=100), event(0, "F1", x=300)])
+    load(ui, path)
+    ui.open_panel("Annotations")
+    ui.open_subpanel("Visits")
+    ui.click_box("P1")
+    ui.page.click("#visitblockdiv .pick-pollinator")
+    p = ui.box_center("P1")
+    ui.page.mouse.click(p["x"], p["y"])
+    ui.page.wait_for_function("document.querySelector('#visitblockdiv #pollinator_id').textContent === 'P1'")
+    ui.page.click("#visitblockdiv .pick-flower")
+    p = ui.box_center("F1")
+    ui.page.mouse.click(p["x"], p["y"])
+    ui.page.wait_for_function("document.querySelector('#visitblockdiv #flower_id').textContent === 'F1'")
+    ui.page.click("#visitblockdiv .new-visit")
+    ui.page.wait_for_function("!!(AnnotationStore.getTracks()[0] || {})['V-P1-F1']")
+    assert "span" not in ui.tracks()["0"]["V-P1-F1"]                   # dropped by the commit
+    assert ui.tracks()["0"]["V-P1-F1"]["visit"] == {"pollinator": "P1", "flower": "F1"}
+    ui.goto_frame(3)
+    ui.page.click("#visitblockdiv .set-end-frame")                    # creates the span, then f2
+    assert ui.tracks()["0"]["V-P1-F1"]["span"] == {"f1": 0, "f2": 3}
+    ui.goto_frame(0)
+    ui.page.click("#visitblockdiv .set-start-frame")
+    assert ui.tracks()["0"]["V-P1-F1"]["span"] == {"f1": 0, "f2": 3}
+    ui.goto_frame(3)
+    ui.page.click("#visitblockdiv .set-start-frame")                  # refused: the current frame is after the visit frame
+    assert ui.tracks()["0"]["V-P1-F1"]["span"] == {"f1": 0, "f2": 3}

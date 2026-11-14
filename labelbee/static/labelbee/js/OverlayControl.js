@@ -1386,7 +1386,7 @@ OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displayS
         function isFlower(obs) {
             return String(obs.ID).startsWith('F')
         }
-        let flowers = Object.values(Tracks[0]).filter(isFlower)
+        let flowers = Object.values(events.getFrame(0)).filter(isFlower)
 
         function drawCenter(obs, selected) {
             let x0 = crop.x

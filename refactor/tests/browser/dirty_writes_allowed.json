@@ -3,6 +3,8 @@
  "allowed": [
   {"file": "OverlayControl.js", "function": "OverlayControl.drawImagePickFlowerMode", "operation": "set", "depth": 2, "note": "visit created on the observation (Pick Flower); found by step 4b, not in the ADR inventory"},
   {"file": "OverlayControl.js", "function": "HTMLCanvasElement.pickFlower_mouseClick", "operation": "set", "depth": 3, "note": "visit.flowerid set in place; the stored visit is shared by reference with the working copy (copyObs)"},
-  {"file": "OverlayControl.js", "function": "HTMLButtonElement.removeVisit", "operation": "set", "depth": 3, "note": "visit.flowerid cleared in place (same sharing)"}
+  {"file": "OverlayControl.js", "function": "HTMLButtonElement.removeVisit", "operation": "set", "depth": 3, "note": "visit.flowerid cleared in place (same sharing)"},
+  {"file": "OverlayControl.js", "function": "VisitWidget.setSpanFrame", "operation": "set", "depth": 2, "note": "span created on the visit observation, through the handle the widget keeps; found by step 4b"},
+  {"file": "OverlayControl.js", "function": "VisitWidget.setSpanFrame", "operation": "set", "depth": 3, "note": "span.f1 / span.f2 set in place (Set start / Set end)"}
  ]
 }
