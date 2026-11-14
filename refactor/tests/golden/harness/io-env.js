@@ -1,7 +1,7 @@
 // Environment for the slice 3 golden tests (ADR 0005): the REAL setTracks/setTags/loaders of
 // AnnotationIO.js evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
 // The AnnotationIO.js functions stay in that file during the whole slice, so the same golden checks
-// the code before and after each step. Since step 2 the page globals Tracks, TracksInfo, Tags, TagsInfo and
+// the code before and after each step. Since step 2 the page globals Tags, TagsInfo and
 // tagsHaveDM are the accessors of AnnotationStoreBridge.js over a fresh AnnotationStore per case.
 // Every effect on the outside is recorded in order in `rec.fx`.
 'use strict';
@@ -172,12 +172,19 @@ async function loadIoEnv() {
 
 // State access: the globals of the context. What a case does not give is undefined (as before the store
 // existed), not the store's defaults; `ttags` is not store data and stays a plain global.
+// `Tracks` and `TracksInfo` are no longer page globals (slice 4 step 5a): the stored events are read and set
+// through the store, under the same names, so the golden keys do not change.
 function writeState(ctx, init) {
-  for (const k of STATE_NAMES) if (k in init || k !== 'ttags') ctx[k] = init[k];
+  ctx.AnnotationStore.replaceTracks(init.Tracks, init.TracksInfo);
+  for (const k of STATE_NAMES) if (k !== 'Tracks' && k !== 'TracksInfo' && (k in init || k !== 'ttags')) ctx[k] = init[k];
 }
 function readState(ctx) {
   const out = {};
-  for (const k of STATE_NAMES) out[k] = ser(vm.runInContext('typeof ' + k + " === 'undefined' ? undefined : " + k, ctx));
+  for (const k of STATE_NAMES) {
+    if (k === 'Tracks') out[k] = ser(ctx.AnnotationStore.getTracks());
+    else if (k === 'TracksInfo') out[k] = ser(ctx.AnnotationStore.getTracksInfo());
+    else out[k] = ser(vm.runInContext('typeof ' + k + " === 'undefined' ? undefined : " + k, ctx));
+  }
   return out;
 }
 

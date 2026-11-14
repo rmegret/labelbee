@@ -24,6 +24,11 @@ structure -> data model -> classes/interactions -> smells -> questions & proposa
 - Run / setup: see `README.md`, `README_deployment.md`, `gunicorn_start.sh`
 - Backend tests: `pytest tests/` (`tox.ini` is stale; do not rely on it)
 - Frontend tests: TBD (see `refactor/tests/`)
+- Debugging in the browser console: the page has no `Tracks` or `TracksInfo` global any more (slice 4); `window.events` is the stored
+  events (`events.get(f, id)`, `events.getFrame(f)`, `events.frames()`, `events.forEach(fn)`). For the old habit, open the page with `?debug_globals`
+  (or run `installDebugGlobals()` in the console): `Tracks` and `TracksInfo` then exist as read-only views for the console and watch
+  expressions, and throw an error when page code reads them (`labelbee/static/labelbee/js/annotation/DebugGlobals.js`). `Tags`, `TagsInfo`,
+  `tagsHaveDM` join them once step 5b has moved the page's readers.
 
 ## Conventions
 TBD after analysis.

@@ -355,8 +355,5 @@ test('AnnotationStore.events holds the data: the getters return its live structu
   const target = {};
   installLegacyGlobals(target, store);
   assert.equal(target.events, store.events);                      // window.events
-  assert.equal(target.Tracks, data);
-  target.Tracks = { 5: {} };                                      // a legacy assignment reaches the events
-  assert.deepEqual(store.events.frames(), ['5']);
-  assert.equal(store.events.info, info);                          // and keeps the info
+  assert.ok(!('Tracks' in target) && !('TracksInfo' in target));  // the legacy globals are retired (step 5a)
 });

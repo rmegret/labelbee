@@ -3,7 +3,7 @@
 Layout: `golden/harness/` is the shared harness; each slice has its own `golden/sliceN/` folder
 (fixtures, generator, test, golden file).
 
-Browser tests (real page in headless Chromium, 68 tests, [browser/README.md](browser/README.md)) automate the manual
+Browser tests (real page in headless Chromium, 71 tests, [browser/README.md](browser/README.md)) automate the manual
 [CHECKLIST.md](CHECKLIST.md): `pytest refactor/tests/browser`. Run them and the golden tests before merging a slice;
 keep the checklist for what a script cannot judge (see its first lines). Environment: [devenv/README.md](devenv/README.md).
 
@@ -59,7 +59,7 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
   they are today: DEBT-710, 712 (double refresh), 713, 719, 722, 733, 734.
 - `golden/harness/io-env.js`: loads the REAL functions of `AnnotationIO.js` into a `vm` (the file stays the
   implementation under test during the whole slice, so one golden checks every step) with jQuery, d3,
-  `FileReader`, the views and `Date` stubbed. The page globals (`Tracks`, `Tags`, ...) are the accessors of
+  `FileReader`, the views and `Date` stubbed. The page globals (`Tags`, `TagsInfo`, `tagsHaveDM`; `Tracks` and `TracksInfo` went in slice 4 step 5a, the harness reads them through the store) are the accessors of
   `AnnotationStoreBridge.js` over a fresh store per case; `readState`/`writeState` use them. `golden/harness/run-io-case.js` runs a case and waits for the promises.
 - Run `generate.js` only before a step that changes behavior on purpose, and review the golden diff.
 - `golden/slice3/store.test.js`: contract tests (assertions, no golden) of `AnnotationStore.js` and the bridge: defaults,

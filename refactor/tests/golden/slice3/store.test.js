@@ -56,28 +56,33 @@ test('replaceTracks / replaceTags are independent and keep tagsHaveDM', async ()
 
 test('legacy globals read the store and in-place edits are seen by both sides', async () => {
   const { store, target } = await fresh();
-  store.replaceTracks({}, { n: 1 });
-  assert.equal(target.Tracks, store.getTracks());
-  target.Tracks[3] = { 7: { id: 7 } };           // legacy in-place edit
-  assert.deepEqual(store.getTracks()[3], { 7: { id: 7 } });
-  delete target.Tracks[3];
-  assert.deepEqual(store.getTracks(), {});
-  assert.equal(target.TracksInfo, store.getTracksInfo());
+  store.replaceTags({}, { n: 1 });
+  assert.equal(target.Tags, store.getTags());
+  target.Tags[3] = { tags: [{ id: 7 }] };        // legacy in-place edit
+  assert.deepEqual(store.getTags()[3], { tags: [{ id: 7 }] });
+  delete target.Tags[3];
+  assert.deepEqual(store.getTags(), {});
+  assert.equal(target.TagsInfo, store.getTagsInfo());
   assert.equal(target.AnnotationStore, store);
+});
+
+test('Tracks and TracksInfo are no longer globals: the stored events are `events` (slice 4 step 5a)', async () => {
+  const { store, target } = await fresh();
+  assert.ok(!('Tracks' in target));
+  assert.ok(!('TracksInfo' in target));
+  assert.equal(target.events, store.events);
 });
 
 test('legacy assignment reaches the store and keeps the sibling', async () => {
   const { store, target } = await fresh();
   const info = { n: 1 };
-  target.TracksInfo = info;
-  const tracks = { 0: {} };
-  target.Tracks = tracks;                        // setTracks does Tracks = ...; TracksInfo = ...
-  assert.equal(store.getTracks(), tracks);
-  assert.equal(store.getTracksInfo(), info);
+  target.TagsInfo = info;
   const tags = { 0: { tags: [] } };
-  target.Tags = tags;
-  target.TagsInfo = { t: 1 };
+  target.Tags = tags;                            // setTags does Tags = ...; TagsInfo = ...
   assert.equal(store.getTags(), tags);
+  assert.equal(store.getTagsInfo(), info);
+  target.TagsInfo = { t: 1 };
+  assert.equal(store.getTags(), tags);           // assigning one half keeps the other
   assert.deepEqual(store.getTagsInfo(), { t: 1 });
   target.tagsHaveDM = true;
   assert.equal(store.getTagsHaveDM(), true);
@@ -86,7 +91,7 @@ test('legacy assignment reaches the store and keeps the sibling', async () => {
 
 test('accessors are configurable, so a step can remove an entry', async () => {
   const { target } = await fresh();
-  for (const name of ['Tracks', 'TracksInfo', 'Tags', 'TagsInfo', 'tagsHaveDM']) {
+  for (const name of ['Tags', 'TagsInfo', 'tagsHaveDM']) {
     const d = Object.getOwnPropertyDescriptor(target, name);
     assert.equal(typeof d.get, 'function', name);
     assert.equal(typeof d.set, 'function', name);
@@ -99,18 +104,18 @@ test('sloppy classic code reads and assigns the bare globals (vm context as the 
   const { installLegacyGlobals } = await load('annotation/AnnotationStoreBridge.js');
   const ctx = vm.createContext({});
   installLegacyGlobals(ctx, store);
-  vm.runInContext('Tracks = {5: {1: {id: 1}}}; TracksInfo = {k: 1}; Tags = {2: {tags: []}}; tagsHaveDM = true;', ctx);
+  vm.runInContext('Tags = {2: {tags: []}}; TagsInfo = {k: 1}; tagsHaveDM = true;', ctx);
   // objects built inside the vm come from another realm: compare as JSON
-  assert.equal(JSON.stringify(store.getTracks()), '{"5":{"1":{"id":1}}}');
-  assert.equal(JSON.stringify(store.getTracksInfo()), '{"k":1}');
   assert.equal(JSON.stringify(store.getTags()), '{"2":{"tags":[]}}');
+  assert.equal(JSON.stringify(store.getTagsInfo()), '{"k":1}');
   assert.equal(store.getTagsHaveDM(), true);
-  store.replaceTracks({ 9: {} }, { z: 1 });
-  assert.equal(vm.runInContext('typeof TagsInfo', ctx), 'undefined');
-  assert.equal(vm.runInContext('Object.keys(Tracks).join()', ctx), '9');
-  assert.equal(vm.runInContext('TracksInfo.z', ctx), 1);
-  vm.runInContext('Tracks[4] = {2: {id: 2}}', ctx);   // in-place edit through the bare name
-  assert.deepEqual(Object.keys(store.getTracks()), ['4', '9']);
+  store.replaceTags({ 9: {} }, { z: 1 });
+  assert.equal(vm.runInContext('Object.keys(Tags).join()', ctx), '9');
+  assert.equal(vm.runInContext('TagsInfo.z', ctx), 1);
+  vm.runInContext('Tags[4] = {tags: []}', ctx);       // in-place edit through the bare name
+  assert.deepEqual(Object.keys(store.getTags()), ['4', '9']);
+  assert.equal(vm.runInContext('typeof Tracks', ctx), 'undefined');   // retired: a bare read of the name is undefined
+  assert.throws(() => vm.runInContext('Tracks[0]', ctx), { name: 'ReferenceError' });
 });
 
 test('the bridge module does nothing without a window', async () => {

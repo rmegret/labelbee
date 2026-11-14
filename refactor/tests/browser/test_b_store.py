@@ -1,10 +1,13 @@
-"""Section B of tests/CHECKLIST.md: the annotation store and its bridge (slice 3, refactor/design/0005-slice-annotation-loaders.md)."""
+"""Section B of tests/CHECKLIST.md: the annotation store and its bridge (slice 3, refactor/design/0005-slice-annotation-loaders.md;
+slice 4 step 5a: `Tracks` and `TracksInfo` are retired, the stored events are `events`)."""
 
 
 def test_b1_store_and_legacy_globals_are_the_same_objects(ui):
     ui.open()
-    assert ui.js("AnnotationStore.getTracks() === Tracks && AnnotationStore.getTags() === Tags")
-    assert ui.js("AnnotationStore.getTracksInfo() === TracksInfo && AnnotationStore.getTagsInfo() === TagsInfo")
+    assert ui.js("AnnotationStore.getTracks() === events.tracks && AnnotationStore.getTags() === Tags")
+    assert ui.js("AnnotationStore.getTracksInfo() === events.info && AnnotationStore.getTagsInfo() === TagsInfo")
+    assert ui.js("events === AnnotationStore.events")
+    assert ui.js("typeof Tracks === 'undefined' && typeof TracksInfo === 'undefined'")      # retired in slice 4 step 5a
     assert ui.js("AnnotationStore.getTagsHaveDM() === tagsHaveDM")
 
 
@@ -15,8 +18,8 @@ def test_b2_edits_made_with_the_mouse_reach_the_store(ui, sample_dir):
     ui.shift_click_background()
     new_id = ui.js("getCurrentID()")
     ui.page.wait_for_function("(id) => !!AnnotationStore.getTracks()[0][id]", arg=new_id)
-    assert ui.js("(id) => Tracks[0][id] === AnnotationStore.getTracks()[0][id]", new_id)
-    assert ui.js("Object.keys(Tracks[0]).length") == 2
+    assert ui.js("(id) => events.get(0, id) === AnnotationStore.getTracks()[0][id]", new_id)
+    assert ui.js("events.frameIds(0).length") == 2
 
 
 def test_b3_erase_events_asks_confirmation(ui, sample_dir):

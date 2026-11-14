@@ -4,7 +4,7 @@ Automated version of [../CHECKLIST.md](../CHECKLIST.md): the real page in headle
 the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design/0006-browser-tests.md).
 
     conda activate labelbeedev                  # see ../devenv/README.md
-    pytest refactor/tests/browser               # ~3 minutes, 68 tests, all passing
+    pytest refactor/tests/browser               # ~3 minutes, 71 tests, all passing
     pytest refactor/tests/browser -k c9 -x      # one item, stop at the first failure
     pytest refactor/tests/browser --headed      # watch the browser (pytest-playwright option)
 
@@ -19,6 +19,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_e_console.py` | E1: the console watcher itself. Every test also runs it at teardown |
 | `test_f_writers.py` | The writers of the stored events that no other test reaches (span, the zoom deletes, clean obsolete events), for the dirty-write detector: [ADR 0007](../../design/0007-slice-events-api.md) step 0 |
 | `test_g_readers.py` | Readers of the stored events that no other test reaches, added as their loops move to `events` (slice 4 step 4): "Update Statistics" |
+| `test_h_debug_globals.py` | The console-only debug globals `Tracks`, `TracksInfo`: off by default, `?debug_globals` or `installDebugGlobals()`, the console reads them, a script served from a URL gets an error |
 | `test_alerts.py` | The main alert modal: alerts in quick succession (F3) |
 
 ## How it works
