@@ -184,3 +184,27 @@ def test_f8_delete_prunes_the_emptied_frame_and_the_saved_file_has_no_empty_fram
     ui.page.click("#undoButton")                                       # undo of a delete into a pruned frame recreates it
     ui.page.wait_for_function("!!(AnnotationStore.getTracks()[5] || {})[1]")
     assert frames_of(ui) == {"5": ["1", "2"]}
+
+
+# ---- visit: the Pick Flower tool of the pick-frame mode (OverlayControl.js drawImagePickFlowerMode) writes `visit` and
+# `visit.flowerid` on the stored observation, and reads the flowers (observations whose id starts with "F") of frame 0.
+# Not in the first inventory of the ADR: found by step 4b.
+def test_f9_pick_flower_sets_the_visit_of_the_observation(ui):
+    path = write_events(ui, "flowers.json", [event(0, 1, x=100), event(0, "F1", x=150), event(0, "F2", x=300)])
+    # finding F9 (browser README): every click throws after writing the visit (identifyBeeRect gets a rect without `obs`). Declared, not fixed here.
+    ui.allow(r"Cannot read properties of undefined \(reading 'labels'\)")
+    load(ui, path)
+    show_tabs(ui, "#showSelected", "#showPickFrame", "#showPickFlower")
+    # finding F8 (browser README): the page's VideoCache never answers here, so the frame crop is stubbed with a 1x1 image
+    ui.js("videoCache.getFrameCropDataURL = async () => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='")
+    ui.click_box("1")
+    ui.page.click("button[onclick=\"modifyCurrentObsSpan('setspan')\"]")
+    ui.page.wait_for_selector("#pickframediv button:has-text('Pick Flower')")
+    ui.page.click("#pickframediv button:has-text('Pick Flower')")
+    ui.page.wait_for_selector("#pickflowerdiv canvas")
+    box = ui.page.locator("#pickflowerdiv canvas").bounding_box()
+    ui.page.mouse.click(box["x"] + box["width"] * 0.6, box["y"] + box["height"] * 0.5)     # the nearest flower is picked
+    ui.page.wait_for_function("(AnnotationStore.getTracks()[0][1].visit || {}).flowerid !== undefined")
+    assert ui.tracks()["0"]["1"]["visit"] == {"flowerid": "F1"}
+    ui.page.click("#pickflowerdiv button:has-text('No visit')")                        # removeVisit
+    assert "flowerid" not in ui.tracks()["0"]["1"]["visit"]
