@@ -26,6 +26,9 @@ function rng(seed) {
 }
 const pick = (r, list) => list[Math.floor(r() * list.length)];
 
+// the fields that the legacy copyObs copies; the others used to be dropped by a commit and are kept since step 7a
+const COMMIT_FIELDS = new Set(['ID', 'time', 'frame', 'x', 'y', 'cx', 'cy', 'width', 'height', 'bool_acts', 'angle', 'notes',
+  'labels', 'parts', 'newid', 'fix', 'visit']);
 const FRAMES = [0, 1, 2, 3, 4];
 const IDS = [1, 2, 3, '1', 'a', 'SWAP_save_2'];
 const NFRAMES = 6;
@@ -65,7 +68,7 @@ function workingCopy(r) {
   const f = pick(r, FRAMES);
   const id = pick(r, IDS);
   const w = { ID: id, frame: f, time: f, x: Math.floor(r() * 100), y: 1, cx: 2, cy: 3, width: 4, height: 5, angle: 0, notes: 'w', labels: 'pollen',
-    extra: 'dropped by commit' };
+    extra: 'kept by commit since step 7a' };
   if (r() < 0.7) w.bool_acts = [true, false, r() < 0.5, false];
   if (r() < 0.5) w.parts = [{ label: 'tail' }];
   if (r() < 0.5) w.fix = { newid: 'x' };
@@ -104,7 +107,14 @@ function legacyDriver(seed) {
     apply(op) {
       switch (op.kind) {
         case 'create': return L.getObsHandle(S, op.f, op.id, true) && 'ok';
-        case 'commit': L.storeObs(S, clone(op.w)); return 'ok';
+        case 'commit': {
+          // the one deliberate difference from the frozen legacy code (step 7a): the other fields of the working copy are kept
+          const w = clone(op.w);
+          L.storeObs(S, w);
+          const obs = S.Tracks[w.frame][w.ID];
+          for (const k of Object.keys(w)) if (!COMMIT_FIELDS.has(k) && w[k] !== undefined) obs[k] = w[k];
+          return 'ok';
+        }
         case 'rename': return L.changeObservationID(S, op.f, op.a, op.b, op.force);
         case 'swap': L.obs_swapID(S, op.interval, op.a, op.b); return 'ok';
         case 'delete': {
@@ -253,17 +263,19 @@ test('update is Object.assign on the stored observation, never creates, undefine
   assert.deepEqual(ev.frames(), ['0']);
 });
 
-test('commit creates when missing, copies the 17 fields and drops unknown ones; shares parts and labels by reference', async () => {
+test('commit creates when missing, copies the 17 fields and keeps the other fields of the working copy (step 7a); shares parts by reference', async () => {
   const ev = await fresh({});
   const parts = [{ label: 'head' }];
   const w = { ID: '3', frame: 2, time: 2, x: 1, y: 2, cx: 3, cy: 4, width: 5, height: 6, angle: 7, notes: 'n', labels: 'pollen',
-    parts, bool_acts: [true, false, true, false], fix: { newid: 'q' }, extra: 'dropped' };
+    parts, bool_acts: [true, false, true, false], fix: { newid: 'q' }, extra: 'kept', span: { f1: 2, f2: 4 }, gone: undefined };
   const obs = ev.commit(w);
   assert.equal(obs, ev.get(2, '3'));
   assert.equal(obs.parts, parts);
   assert.notEqual(obs.fix, w.fix);                                // fix is deep-copied
   assert.deepEqual(obs.bool_acts, [true, false, true, false]);
-  assert.ok(!('extra' in obs));
+  assert.equal(obs.extra, 'kept');                                // unknown fields are kept (they were dropped before step 7a)
+  assert.deepEqual(obs.span, { f1: 2, f2: 4 });
+  assert.ok(!('gone' in obs));                                    // an undefined field is not created
   ev.commit({ ID: '3', frame: 2, x: 9 });                         // no bool_acts: the default four false
   assert.deepEqual(ev.get(2, '3').bool_acts, [false, false, false, false]);
   assert.equal(ev.get(2, '3').x, 9);

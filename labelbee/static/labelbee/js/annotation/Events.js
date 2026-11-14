@@ -9,7 +9,7 @@
  *   commands  replace, getOrCreate, commit, update, delete, rename, swap, setInfo
  * `delete` removes the frame too when the deletion leaves it empty (maintainer, 2026-11-13). `swap` is
  * `obs_swapID` of Model.js with its temporary key made internal. `commit` is `copyObs` of Model.js: the
- * 17-field copy, unknown fields still dropped (step 7 of the ADR changes that).
+ * 17-field copy, and since step 7a the other fields of the working copy are kept (they were dropped).
  *
  * The structure is private (`#frames`, slice 4 step 6): there is no `tracks` property and no store getter any more.
  * `toObject()` is the one door to the live structure, for the codec export (and the console debug view,
@@ -32,7 +32,12 @@ function deepcopy(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
-/** The 17-field copy of Model.js `copyObs`; shares `labels`, `parts`, `visit` by reference as it did. */
+// The fields that `copyFields` copies one by one; any other field of a working copy (`span` of a new visit, ...) is copied as it is.
+const COMMIT_FIELDS = new Set(['ID', 'time', 'frame', 'x', 'y', 'cx', 'cy', 'width', 'height', 'bool_acts', 'angle', 'notes',
+  'labels', 'parts', 'newid', 'fix', 'visit']);
+
+/** The 17-field copy of Model.js `copyObs`; shares `labels`, `parts`, `visit` by reference as it did. Since slice 4 step 7a the
+ * other fields of the working copy are kept too (they used to be dropped: the `span` that `newVisit` gives a new visit). */
 function copyFields(obs, tmp) {
   obs.ID = tmp.ID;
   obs.time = tmp.time;
@@ -60,6 +65,7 @@ function copyFields(obs, tmp) {
   obs.newid = tmp.newid; // in case of wrongid
   obs.fix = deepcopy(tmp.fix);
   if (tmp.visit) obs.visit = tmp.visit;
+  for (const k of Object.keys(tmp)) if (!COMMIT_FIELDS.has(k) && tmp[k] !== undefined) obs[k] = tmp[k];
 }
 
 export class Events {
