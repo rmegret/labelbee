@@ -1017,7 +1017,7 @@ function augmentTrackWithTag() {
     if (Tags[F] != undefined) {
       for (var i = 0; i < Tags[F].tags.length; i++) {
         let id = String(Tags[F].tags[i].id);
-        if (Tracks[F] && Tracks[F][id]) {
+        if (events.has(F, id)) {
           events.update(F, id, { tag: Tags[F].tags[i] });
         }
       }

@@ -659,7 +659,7 @@ function deleteEvent(frame, id) {
     console.log('deleteEvent: Event not found (frame,id)=', frame, id)
     return false
   }
-  obs = cloneObs(Tracks[frame][id])
+  obs = cloneObs(events.get(frame, id))
   events.delete(frame, id); // also removes the frame when it ends up empty
   undoPush('delete', obs)
 
@@ -982,7 +982,7 @@ function modifyCurrentObsSpan(mode) {
   let frame = r.obs.frame;
   let id = r.obs.ID;
 
-  let obs = Tracks[frame][id];
+  let obs = events.get(frame, id);
 
   let tracks = flatTracksAll.filter(
     function (element) {

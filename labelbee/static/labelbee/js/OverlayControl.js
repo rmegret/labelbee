@@ -2688,7 +2688,7 @@ function onShowObsChanged() {
 /* Access */
 function getTag(f, id) {
   if (tagMode == 'Tracks') {
-    const obj = Tracks?.[f]?.[id]
+    const obj = events.get(f, id)
     if (obj == undefined) return undefined
     return obj.tag
   }
