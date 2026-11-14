@@ -166,18 +166,16 @@ function obs_swapID(interval, old_id, new_id) {
 function printTracks() {
   //Just for debugging
   console.log("This is Tracks:");
-  for (let F in Tracks) {
-    for (let iid in Tracks[F]) {
-      console.log(
-        "F =",
-        F,
-        ", iid =",
-        iid,
-        ", Tracks[F][idd] =",
-        Tracks[F][iid]
-      );
-    }
-  }
+  events.forEach((obs, F, iid) => {
+    console.log(
+      "F =",
+      F,
+      ", iid =",
+      iid,
+      ", Tracks[F][idd] =",
+      obs
+    );
+  });
 }
 
 // Model of Tags

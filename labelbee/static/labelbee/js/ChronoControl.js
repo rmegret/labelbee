@@ -1013,7 +1013,7 @@ function updateChronoData() {
 
 /* Augment Tracks with tag id if same (frame,id) exist for both */
 function augmentTrackWithTag() {
-  for (let F in Tracks) {
+  for (let F of events.frames()) {
     if (Tags[F] != undefined) {
       for (var i = 0; i < Tags[F].tags.length; i++) {
         let id = String(Tags[F].tags[i].id);
@@ -1029,30 +1029,25 @@ function augmentTrackWithTag() {
 function updateFlatTracks() {
   // All obs sorted by frame,id
   flatTracksAll = [];
-  for (let F in Tracks) {
+  for (const [obs, F, id] of events.observations()) {
 
     // TODO: filter in only one place instead of both updateObsTable and refreshChronogram
     if (chrono.config.frameFilter.active) {
       if ((F < chrono.config.frameFilter.frameMin) || (F > chrono.config.frameFilter.frameMax)) continue // Just skip out of active zone
     }
 
-    for (let id in Tracks[F]) {
-      // var obs = Tracks[F][id]
-      obs = Tracks[F][id];
-
-      if (flag_restrictID) {
-        if ($.inArray(String(id), restrictIDArray) < 0) continue;
-      }
-      if (flag_excludeID) {
-        if ($.inArray(String(id), excludeIDArray) >= 0) continue;
-      }
-
-      // XX Define y
-      let y = chrono.config.idAxisMap(id)
-      let chronoObs = { frame: F, id: id, y: y, labels: obs.labels, obs: obs };
-
-      flatTracksAll.push(chronoObs);
+    if (flag_restrictID) {
+      if ($.inArray(String(id), restrictIDArray) < 0) continue;
     }
+    if (flag_excludeID) {
+      if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+    }
+
+    // XX Define y
+    let y = chrono.config.idAxisMap(id)
+    let chronoObs = { frame: F, id: id, y: y, labels: obs.labels, obs: obs };
+
+    flatTracksAll.push(chronoObs);
   }
   flatTracksValid = flatTracksAll.filter(function (d) {
     return (
@@ -1082,17 +1077,14 @@ function updateFlatTracks() {
 function updateChronogramData() {
   chronogramData.length = 0;
 
-  for (let F in Tracks) {
+  for (const [obs, F, id] of events.observations()) {   // a generator: the loop body uses continue
 
       if (chrono.config.frameFilter.active) {
         if ((F < chrono.config.frameFilter.frameMin) || (F > chrono.config.frameFilter.frameMax)) continue // Just skip out of active zone
       }
 
-      for (let id in Tracks[F]) {
-
         const id_eff = String(Number(id)%50)
 
-        let obs=Tracks[F][id]
         let labelArray = (obs.labels || '').split(",")
 
         if (flag_restrictID) {
@@ -1184,7 +1176,6 @@ function updateChronogramData() {
           });
         }
       }
-    }
 }
 
 // chronogramData => allIntervals  
@@ -1992,29 +1983,25 @@ function cleanObsoleteEventsCB() {
 }
 
 function cleanObsoleteEvents() {
-  for (let F in Tracks) {
-    for (let id in Tracks[F]) {
-      let obs = Tracks[F][id];
-
-      if (hasLabel(obs, "falsealarm") || hasLabel(obs, "wrongid")) {
-        if (!obs.tag) {
-          console.log("No tag: Delete Tracks[" + F + "][" + id + "] = ", obs);
+  events.forEach(function (obs, F, id) {
+    if (hasLabel(obs, "falsealarm") || hasLabel(obs, "wrongid")) {
+      if (!obs.tag) {
+        console.log("No tag: Delete Tracks[" + F + "][" + id + "] = ", obs);
+        events.delete(F, id);
+      } else {
+        if (obs.tag.dm < 20) {
+          console.log("low DM: Delete Tracks[" + F + "][" + id + "] = ", obs);
           events.delete(F, id);
-        } else {
-          if (obs.tag.dm < 20) {
-            console.log("low DM: Delete Tracks[" + F + "][" + id + "] = ", obs);
-            events.delete(F, id);
-          }
-          if (!tagsSampleFilterExcludeRects(obs.tag)) {
-            console.log(
-              "excludeRect: Delete Tracks[" + F + "][" + id + "] = ",
-              obs
-            );
-            events.delete(F, id);
-          }
+        }
+        if (!tagsSampleFilterExcludeRects(obs.tag)) {
+          console.log(
+            "excludeRect: Delete Tracks[" + F + "][" + id + "] = ",
+            obs
+          );
+          events.delete(F, id);
         }
       }
     }
-  }
+  });
   refreshChronogram();
 }

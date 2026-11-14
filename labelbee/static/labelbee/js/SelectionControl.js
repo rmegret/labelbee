@@ -1033,7 +1033,7 @@ function modifyCurrentObsSpan(mode) {
 
 
 function updateAnnotationStatistics() {
-  let L=[]; for (i in Tracks) {T=Tracks[i]; for (j in T) {L.push(T[j])}}; 
+  let L=[]; events.forEach((obs) => {L.push(obs)})
   let S=new Set(L.map(x => x.ID))
   let F=new Set(L.map(x => x.frame))
   console.log("num_events=",L.length)

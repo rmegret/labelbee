@@ -1952,13 +1952,9 @@ ZoomOverlay.prototype.bakeTagFix = function (obs) {
   }
 };
 ZoomOverlay.prototype.bakeAllTagFixes = function () {
-  for (let F in Tracks) {
-    for (let id in Tracks[F]) {
-      let obs = Tracks[F][id];
-
-      this.bakeTagFix(obs);
-    }
-  }
+  events.forEach((obs) => {
+    this.bakeTagFix(obs);
+  });
   refreshChronogram();
 };
 ZoomOverlay.prototype.deleteFalsealarmTags = function () {
