@@ -1,13 +1,10 @@
 /*
  * Bridge between the classic scripts and the ES module AnnotationCodec.js (refactor slice 1,
- * ADR 0002; save side slice 2, ADR 0004). Connects the page global hasLabel (read at call time as
- * the original code did) and exposes the legacy function names on window.
+ * ADR 0002; save side slice 2, ADR 0004). Exposes the legacy function names on window.
  * Entries are removed when their callers move to modules (the loaders and the save-to-file/server
  * functions of AnnotationIO.js).
  */
 import * as codec from './AnnotationCodec.js';
-
-codec.configure({ hasLabel: (obs, label) => hasLabel(obs, label) });
 
 for (const name of [
   'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'flatjson_to_json', 'resultToObjects',

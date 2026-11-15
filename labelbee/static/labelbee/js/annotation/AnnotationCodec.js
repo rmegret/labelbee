@@ -4,19 +4,10 @@
  * The save/export side is at the end of the file (slice 2, ADR 0004).
  *
  * Pure: no access to Tracks/Tags/DOM/network/window. Alerts and logs go through core/Notifier.js
- * (ADR 0003); the global hasLabel is connected with configure() by AnnotationCodecBridge.js.
+ * (ADR 0003); the labels helpers are the pure module Labels.js (ADR 0008 step 2).
  */
 import { alert, log, logError, logIO } from "../core/Notifier.js";
-
-let hasLabel = () => { throw new Error("AnnotationCodec: hasLabel not configured"); };
-
-/* Connect the module to the outside: {hasLabel(obs, label)} (required) */
-export function configure(deps) {
-  if (typeof deps.hasLabel !== "function") {
-    throw new Error("AnnotationCodec.configure: hasLabel is required");
-  }
-  hasLabel = deps.hasLabel;
-}
+import * as Labels from "./Labels.js";
 
 export function sanitizeEvents(obj) {
   var info;
@@ -91,12 +82,8 @@ export function sanitizeEvents(obj) {
           let evt = Object.assign({ ID: String(evt0.id) }, evt0);
           delete evt.id;
   
-          evt.bool_acts = [
-            hasLabel(evt, "fanning"),
-            hasLabel(evt, "pollen"),
-            hasLabel(evt, "entering"),
-            hasLabel(evt, "leaving"),
-          ];
+          if (evt.labels == null) evt.labels = ""; // what the legacy hasLabel wrote on the observation
+          evt.bool_acts = Labels.bool_acts(evt);
   
           if (frameItem[String(evt0.id)] == null) {
             frameItem[String(evt0.id)] = evt;

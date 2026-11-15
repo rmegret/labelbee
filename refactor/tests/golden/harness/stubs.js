@@ -1,10 +1,9 @@
 // Shared stubs for the slice 1 golden tests (ADR 0002): the recorder of observable side effects
-// and the REAL label helpers extracted from SelectionControl.js. The goldens were generated from
+// The goldens were generated from
 // the original functions of AnnotationIO.js (git history: commit 353ffa9e); step 3 deleted them.
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
 
 const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js');
 const FUNCTIONS = [
@@ -20,13 +19,6 @@ function extractFunction(src, name) {
   const rest = src.slice(start + 1);
   const end = rest.slice(1).search(/\n(function |var |\/\*|\/\/ )/);
   return end < 0 ? rest : rest.slice(0, end + 1);
-}
-
-function labelSources(sel) {
-  const labelMap = sel.match(/var labelMap = \{[\s\S]*?\n\};/)[0];
-  const labelFns = ['normalizeLabel', 'toLabelArray', 'hasLabel', 'containsLabel']
-    .map((n) => extractFunction(sel, n));
-  return [labelMap, ...labelFns].join('\n');
 }
 
 const PINNED_LOG = /ABORTED|unsupported|WARNING/;
@@ -45,12 +37,4 @@ function makeRecorder() {
   return { rec, stubs };
 }
 
-// The real label helpers of SelectionControl.js (hasLabel and what it calls), alone in a vm.
-function makeHasLabel() {
-  const sel = fs.readFileSync(path.join(JS_DIR, 'SelectionControl.js'), 'utf8');
-  const ctx = vm.createContext({ $: { inArray: (v, arr) => arr.indexOf(v) } });
-  vm.runInContext(labelSources(sel), ctx, { filename: 'SelectionControl.js(extracted)' });
-  return ctx.hasLabel;
-}
-
-module.exports = { makeRecorder, makeHasLabel, extractFunction, FUNCTIONS };
+module.exports = { makeRecorder, extractFunction, FUNCTIONS };
