@@ -1030,7 +1030,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-701: Observation carries bool_acts next to labels
 
-`Observation` and `copyObs` keep `bool_acts` (4 flags) redundant with `labels`; it is recomputed from labels at v2 load and dropped at v2 save, but v1 files and the CSV/BBox exports rely on it. [read] `labelbee/static/labelbee/js/Model.js` Observation, copyObs; `labelbee/static/labelbee/js/AnnotationIO.js` sanitizeEvents, convertTracksToV2; exports [inferred, not re-read]. Proposed: `labels` canonical, exports derive the flags (DEC-003 shim); see OQ-715 for the OQ-003 conflict.
+_Maintainer decision 2026-11-14 ([Q31](../QUESTIONS.md#q31)): `bool_acts` becomes a derived value computed from `labels` (cached only if measured to be needed); ADR 0008 step 3._ `Observation` and `copyObs` keep `bool_acts` (4 flags) redundant with `labels`; it is recomputed from labels at v2 load and dropped at v2 save, but v1 files and the CSV/BBox exports rely on it. [read] `labelbee/static/labelbee/js/Model.js` Observation, copyObs; `labelbee/static/labelbee/js/AnnotationIO.js` sanitizeEvents, convertTracksToV2; exports [inferred, not re-read]. Proposed: `labels` canonical, exports derive the flags (DEC-003 shim); see OQ-715 for the OQ-003 conflict.
 
 - **Code:**
   - `Model.js`: `Observation`, `copyObs`
@@ -1354,6 +1354,8 @@ _Slice 4 step 4c removed the implicit globals `obs` (`ChronoControl.js` `updateF
 - **Links:** BEH-714, BEH-731, DEBT-709
 
 ## DEBT-739: cx/cy are stored next to x, y, width, height and written by several paths with different conventions
+
+_Maintainer decision 2026-11-14 ([Q31](../QUESTIONS.md#q31), [ADR 0008](../design/0008-field-ownership.md)): the geometry editor writes `cx`, `cy` with the box and the chronogram stops writing them; `sanitizeEvents` takes a policy (which of `x`, `y` or `cx`, `cy` is the truth; `cx`, `cy` for the CSV formats, `x`, `y` for v1 and v2), warns when they disagree and fixes the other set; the long-term vision is that only `cx`, `cy`, `width`, `height`, `angle` are used inside LabelBee and `x`, `y` are computed for saving (the angle is around the center, which the top-left corner represents badly), each codec converting with its own conventions._
 
 [read] `Observation` stores both the box (`x`, `y`, `width`, `height`, `angle`) and its center (`cx`, `cy`): redundant. Writers: `OverlayControl.js:2043-2044` (rect update: `x`, `y` and size from the rectangle, then `cx = left + width/2`, so `x`, `y` are primary); `OverlayControl.js:2053-2056` (virtual rectangle: `cx`, `cy` from the rectangle, then `x = cx - width/2`, so the center is primary); `ChronoControl.js:1112-1113` (recomputes `cx`, `cy` of every kept observation at each refresh from `x + width/2`, DEBT-804); the CSV importers (`annotation/AnnotationCodec.js` `tracks_csv_to_json`: `x = cx - 150`, `y = cy - 300` for a fixed 300x600 box, BEH-735). Nothing states which pair is canonical, nor whether `x`, `y` are the unrotated corner when `angle != 0` (comment at `OverlayControl.js:2047`). Decision (maintainer 2026-11-13): to be resolved on its own later; until then the automatic recompute stays where it is, and the future `Events` API must not fix it silently: a clone, a put or a patch keeps both pairs as given (DEC-007).
 
