@@ -1365,6 +1365,14 @@ _Maintainer decision 2026-11-14 ([Q31](../QUESTIONS.md#q31), [ADR 0008](../desig
   - `annotation/AnnotationCodec.js`: `tracks_csv_to_json`
 - **Links:** ENT-001, DEBT-701, DEBT-804, BEH-735, DEC-007
 
+## DEBT-740: rotating the tag after switching `wrongid` on stores a NaN angle
+
+[read] The label toggle creates `fix = {newid: undefined}` (no `tagangle`); `rotateTag` then does `fix.tagangle += 90`, i.e. `undefined + 90 = NaN`, saved as `null` in JSON. Kept as it was when the four wrong-id writers became `annotation/WrongId.js` (slice 5 step 5, mechanical move); a candidate for a clear-cut fix (`tagangle` defaults to 0), to be approved with its test.
+
+- **Code:**
+  - `annotation/WrongId.js`: `tagRotated`
+- **Links:** ADR 0008, DEBT-739
+
 ## DEBT-801: Stale intervals when "Show Events" is off
 
 `updateChronoData` only rebuilds `allIntervals`, `crosses`, `rectIntervals`, `circlesIntervals`, `partsIntervals` inside `if (showObsChrono)`; `chronogramData` is emptied unconditionally. Unchecking `#showObsChrono` therefore leaves the intervals of the previous refresh in those globals [read]; the renderer that reads `allIntervals` (`ChronoIntervals`) was not in the evidence served, so whether the stale intervals are still drawn is [inferred]. Replacement: the pure stage returns empty lists when events are hidden.

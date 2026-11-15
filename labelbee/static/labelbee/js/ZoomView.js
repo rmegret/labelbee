@@ -413,16 +413,7 @@ ZoomOverlay.prototype.syncToTracks = function () {
     };
     parts.push(part);
   }
-  obs.parts = parts; // the working copy follows until it goes (ADR 0008 step 6)
-  let key = selectedKey();
-  if (key) {
-    // `parts` is a unit owned by this module (ADR 0008 R3): written alone, whole
-    events.update(key.frame, key.id, { parts: parts });
-    videoControl.refresh(); // manual refreshes stay (R8)
-    refreshChronogram();
-  } else {
-    automatic_sub(); // a rectangle not in the store yet: the working copy is the only holder
-  }
+  storeUnit(activeObject, { parts: parts }); // `parts` is a unit owned by this module (ADR 0008 R3): written alone, whole
 };
 // See also ZoomOverlay.prototype.onToggleButtonShowOnVideo
 
@@ -1732,35 +1723,10 @@ ZoomOverlay.prototype.onClickAlternateTag = function (id) {
   if (activeObject !== null) {
     let obs = activeObject.obs;
 
-    if (obs.fix) {
-    }
-    if (obs.ID == id) {
-      if (!obs.fix) {
-        // Just clicked on same tag
-      } else {
-        delete obs.fix["newid"];
-        delete obs.fix["tagangle"];
-      }
-      delete obs["newid"];
-      updateObsLabel(obs, "wrongid", false);
-    } else {
-      // different id
-      updateObsLabel(obs, "wrongid", true);
-      obs.newid = id;
-      if (!obs.fix) {
-        obs.fix = {
-          newid: undefined,
-          tagangle: 0,
-        };
-      }
-      obs.fix.newid = id;
-    }
+    // same id as the observation: cancels the fix; another id: sets it
+    storeUnit(activeObject, WrongId.alternateTagChosen(obs, id));
 
     this.spreadTagFix();
-
-    // Update the rest
-    updateRectObsActivity(activeObject);
-    automatic_sub();
 
     updateForm(activeObject);
     refreshChronogram();
@@ -1794,29 +1760,7 @@ ZoomOverlay.prototype.rotateTag = function (angle) {
   }
   let obs = activeObject.obs;
 
-  updateObsLabel(obs, "wrongid", true);
-  obs.newid = undefined;
-  if (!obs.fix) {
-    obs.fix = {
-      newid: undefined,
-      tagangle: 0,
-    };
-  }
-
-  if (angle == 90) {
-    obs.fix.tagangle += angle;
-    //rotate(tag.p, 1)
-  } else if (angle == -90) {
-    obs.fix.tagangle += angle;
-    //rotate(tag.p,-1)
-  }
-  // Normalize between (-180,180]
-  if (obs.fix.tagangle > 180) obs.fix.tagangle -= 360;
-  if (obs.fix.tagangle <= -180) obs.fix.tagangle += 360;
-
-  // Update the rest
-  updateRectObsActivity(activeObject);
-  automatic_sub();
+  storeUnit(activeObject, WrongId.tagRotated(obs, angle));
 
   updateForm(activeObject);
 

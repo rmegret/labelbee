@@ -481,6 +481,28 @@ function selectedKey() {
   return { frame: activeObject.obs.frame, id: activeObject.obs.ID };
 }
 
+/**
+ * Stores the fields of one unit edited on the selected rectangle (ADR 0008 R3): the working copy follows (until
+ * step 6) and the store gets only these fields, with `events.update`, then the manual refreshes as `automatic_sub`
+ * did. A rectangle not in the store yet has the working copy as only holder: `submitNew` submits a "new" one
+ * (the newid box did), otherwise `automatic_sub` leaves it alone as before. Returns whether the store was written.
+ */
+function storeUnit(rect, fields, submitNew) {
+  Object.assign(rect.obs, fields);
+  let key = selectedKey();
+  if (key) {
+    let stored = Object.assign({}, fields);
+    if (stored.fix) stored.fix = deepcopy(stored.fix); // the store never shares `fix` with the working copy
+    events.update(key.frame, key.id, stored);
+    videoControl.refresh();
+    refreshChronogram();
+    return true;
+  }
+  if (submitNew && rect.status === "new") submit_bee(rect);
+  else automatic_sub();
+  return false;
+}
+
 function automatic_sub() {
   var activeObject = overlay.getActiveObject();
   if (activeObject.status == "db") {
@@ -822,7 +844,12 @@ function labelToggle(thelabel, isOn) {
     isOn = !hasLabel(obs,thelabel)
   }
 
-  updateObsLabel(obs, thelabel, isOn);
+  let wrongid = thelabel == "wrongid"; // the wrong-id unit has its own editor (ADR 0008 step 5)
+  if (wrongid) {
+    storeUnit(activeObject, WrongId.wrongidToggled(obs, isOn));
+  } else {
+    updateObsLabel(obs, thelabel, isOn);
+  }
   updateButtonsForLabel(obs, thelabel)
 
   console.log(
@@ -834,17 +861,11 @@ function labelToggle(thelabel, isOn) {
     obs.labels
   );
 
-  if (thelabel == "wrongid" && isOn) {
-    if (!obs.fix) {
-      obs.fix = {
-        newid: undefined,
-      };
-    }
+  if (!wrongid) {
+    // Update the rest
+    updateRectObsActivity(activeObject);
+    automatic_sub();
   }
-
-  // Update the rest
-  updateRectObsActivity(activeObject);
-  automatic_sub();
 
   updateForm(activeObject);
   refreshChronogram();

@@ -155,6 +155,32 @@ def test_j7_the_wrong_id_edits(ui, sample_dir):
     assert "wrongid" in obs["labels"].split(",")
 
 
+def test_j7b_the_tag_rotation_and_the_alternate_tag_click(ui, sample_dir):
+    """The two other writers of `newid`/`fix`, now one module (`WrongId`): only labels, newid and fix change."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    open_editor_panels(ui)
+    before = ui.tracks()["0"]["1"]
+    ui.click_box("1")
+    ui.js("zoomOverlay.rotateTag(90)")
+    after = ui.tracks()["0"]["1"]
+    assert after["fix"] == {"tagangle": 90} and "newid" not in after and "wrongid" in after["labels"].split(",")
+    ui.js("zoomOverlay.rotateTag(90)")
+    assert ui.tracks()["0"]["1"]["fix"] == {"tagangle": 180}
+    ui.js("zoomOverlay.rotateTag(90)")
+    assert ui.tracks()["0"]["1"]["fix"] == {"tagangle": -90}              # kept in (-180, 180]
+    ui.js("zoomOverlay.onClickAlternateTag('7')")
+    obs = ui.tracks()["0"]["1"]
+    assert obs["newid"] == "7" and obs["fix"] == {"newid": "7", "tagangle": -90}
+    ui.js("zoomOverlay.onClickAlternateTag('1')")                           # the id of the observation itself: cancels
+    obs = ui.tracks()["0"]["1"]
+    assert "newid" not in obs and obs["fix"] == {} and "wrongid" not in obs["labels"].split(",")
+    assert obs["span"] == {"f1": 0, "f2": 0}                               # `spreadTagFix` -> `getCoveredTags` gives the observation a span, as before
+    own = ("newid", "fix", "labels", "span")
+    assert {k: v for k, v in obs.items() if k not in own} == {k: v for k, v in before.items() if k not in own}
+
+
 # ---- geometry gestures: fabric rectangle -> the stored geometry
 def select_at(ui, frame, obs_id):
     ui.goto_frame(frame)
