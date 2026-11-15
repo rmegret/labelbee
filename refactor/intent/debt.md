@@ -1030,7 +1030,7 @@ The branch testing `e.target == #I` and the following `e.target.type == "text"` 
 
 ## DEBT-701: Observation carries bool_acts next to labels
 
-_Maintainer decision 2026-11-14 ([Q31](../QUESTIONS.md#q31)): `bool_acts` becomes a derived value computed from `labels` (cached only if measured to be needed); ADR 0008 step 3._ `Observation` and `copyObs` keep `bool_acts` (4 flags) redundant with `labels`; it is recomputed from labels at v2 load and dropped at v2 save, but v1 files and the CSV/BBox exports rely on it. [read] `labelbee/static/labelbee/js/Model.js` Observation, copyObs; `labelbee/static/labelbee/js/AnnotationIO.js` sanitizeEvents, convertTracksToV2; exports [inferred, not re-read]. Proposed: `labels` canonical, exports derive the flags (DEC-003 shim); see OQ-715 for the OQ-003 conflict.
+_FIXED in slice 5 step 4 (ADR 0008): the field is not stored any more. `Labels.bool_acts(obs)` (`annotation/Labels.js`) computes it from `labels`; the three readers (`activityString`, the chronogram data, the CSV/BBox exports) call it, the writers and the prediction copy are gone, `Observation`, `copyObs` and `Events.commit` do not carry it, the loaders drop it from the files, the v1 export writes the derived value because it is a field of the v1 format. No cache: not measured to be needed._ _Maintainer decision 2026-11-14 ([Q31](../QUESTIONS.md#q31)): `bool_acts` becomes a derived value computed from `labels` (cached only if measured to be needed); ADR 0008 step 3._ `Observation` and `copyObs` keep `bool_acts` (4 flags) redundant with `labels`; it is recomputed from labels at v2 load and dropped at v2 save, but v1 files and the CSV/BBox exports rely on it. [read] `labelbee/static/labelbee/js/Model.js` Observation, copyObs; `labelbee/static/labelbee/js/AnnotationIO.js` sanitizeEvents, convertTracksToV2; exports [inferred, not re-read]. Proposed: `labels` canonical, exports derive the flags (DEC-003 shim); see OQ-715 for the OQ-003 conflict.
 
 - **Code:**
   - `Model.js`: `Observation`, `copyObs`
@@ -1252,7 +1252,7 @@ _Slice 4 step 4c removed the implicit globals `obs` (`ChronoControl.js` `updateF
 
 ## DEBT-727: Exports ignore labels and notes and crash on missing bool_acts
 
-[read] `tracksToCSV` and `tracksToBBoxes2` export only the bool_acts flags (CSV) or geometry plus flags (BBox), no escaping; an observation that is `null` or lacks `bool_acts` throws `TypeError`.
+_PARTLY FIXED in slice 5 step 4: the exports derive the flags from `labels`, so an observation without `bool_acts` no longer throws (a `null` observation still does); labels and notes are still not exported._ [read] `tracksToCSV` and `tracksToBBoxes2` export only the bool_acts flags (CSV) or geometry plus flags (BBox), no escaping; an observation that is `null` or lacks `bool_acts` throws `TypeError`.
 
 - **Code:**
   - `annotation/AnnotationCodec.js`: `tracksToCSV`, `tracksToBBoxes2`

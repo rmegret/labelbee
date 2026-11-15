@@ -371,13 +371,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "F, l",
-            "bool_acts": [
-              true,
-              false,
-              false,
-              true
-            ]
+            "labels": "F, l"
           },
           "2": {
             "ID": "2",
@@ -388,13 +382,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           }
         },
         "7": {
@@ -407,13 +395,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           }
         }
       }
@@ -487,13 +469,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "entering",
-            "bool_acts": [
-              false,
-              false,
-              true,
-              false
-            ]
+            "labels": "entering"
           }
         }
       }
@@ -545,13 +521,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           },
           "2": {
             "ID": "2",
@@ -562,13 +532,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           }
         }
       }
@@ -689,13 +653,7 @@
           "undefined": {
             "ID": "7",
             "cx": 1,
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           }
         }
       }
@@ -731,13 +689,7 @@
         "0": {
           "3": {
             "ID": "X",
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           }
         }
       }
@@ -780,13 +732,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "p,d,departing",
-            "bool_acts": [
-              false,
-              true,
-              false,
-              true
-            ]
+            "labels": "p,d,departing"
           },
           "2": {
             "ID": "2",
@@ -797,13 +743,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           },
           "3": {
             "ID": "3",
@@ -814,13 +754,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           }
         }
       }
@@ -889,13 +823,7 @@
             "0": "a",
             "1": "b",
             "ID": "undefined",
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           }
         },
         "1": {},
@@ -903,13 +831,7 @@
           "undefined": {
             "0": "x",
             "ID": "undefined",
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           }
         }
       }
@@ -978,13 +900,7 @@
             "height": 6,
             "x": 1,
             "y": 2,
-            "labels": "",
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "labels": ""
           }
         },
         "2": {}
@@ -1223,12 +1139,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -1264,12 +1174,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -1307,12 +1211,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -1465,12 +1363,6 @@
             "y": {
               "$": "NaN"
             },
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": []
           }
@@ -1509,12 +1401,6 @@
             "height": 600,
             "x": -149,
             "y": -298,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -1570,12 +1456,6 @@
             "height": 600,
             "x": -148,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -1679,12 +1559,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -1722,12 +1596,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -1835,12 +1703,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -2261,12 +2123,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -2363,12 +2219,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -2404,12 +2254,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -2447,12 +2291,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -2611,12 +2449,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": [
               {
@@ -2712,12 +2544,6 @@
             "height": 600,
             "x": -49.5,
             "y": -100,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": "",
             "parts": []
           }
@@ -2786,24 +2612,12 @@
           "frame": 0,
           "id": "1",
           "cx": 1,
-          "bool_acts": [
-            false,
-            false,
-            false,
-            false
-          ],
           "labels": ""
         },
         "2": {
           "frame": 0,
           "id": "2",
           "cx": 2,
-          "bool_acts": [
-            false,
-            false,
-            false,
-            false
-          ],
           "labels": ""
         }
       },
@@ -2812,12 +2626,6 @@
           "frame": 5,
           "id": "1",
           "cx": 3,
-          "bool_acts": [
-            false,
-            false,
-            false,
-            false
-          ],
           "labels": ""
         }
       }
@@ -2828,36 +2636,18 @@
           "frame": 0,
           "id": "1",
           "cx": 1,
-          "bool_acts": [
-            false,
-            false,
-            false,
-            false
-          ],
           "labels": ""
         },
         {
           "frame": 0,
           "id": "2",
           "cx": 2,
-          "bool_acts": [
-            false,
-            false,
-            false,
-            false
-          ],
           "labels": ""
         },
         {
           "frame": 5,
           "id": "1",
           "cx": 3,
-          "bool_acts": [
-            false,
-            false,
-            false,
-            false
-          ],
           "labels": ""
         }
       ]
@@ -2968,12 +2758,6 @@
             "height": 600,
             "x": -140,
             "y": -280,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": ""
           },
           "2": {
@@ -2986,12 +2770,6 @@
             "height": 600,
             "x": -139,
             "y": -279,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": ""
           }
         },
@@ -3006,12 +2784,6 @@
             "height": 600,
             "x": -138,
             "y": -278,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "labels": ""
           }
         }

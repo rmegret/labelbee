@@ -1111,7 +1111,7 @@ function updateChronogramData() {
             );
         //};
 
-        let b = obs.bool_acts;
+        let b = Labels.bool_acts(obs);
         let b0 = b[0];
         let b1 = b[1];
         let b2 = b[2];

@@ -120,7 +120,7 @@ export function sanitizeEvents(obj, options) {
           delete evt.id;
   
           if (evt.labels == null) evt.labels = ""; // what the legacy hasLabel wrote on the observation
-          evt.bool_acts = Labels.bool_acts(evt);
+          delete evt.bool_acts; // derived from labels (Labels.bool_acts), not stored (ADR 0008 step 4)
           if (fixCenter(evt, centerPolicy)) nFixed++;
   
           if (frameItem[String(evt0.id)] == null) {
@@ -185,6 +185,7 @@ export function sanitizeEvents(obj, options) {
       // v1: the observations of the file are used as they are, fixed in place
       for (let f in data) {
         for (let i in data[f]) {
+          if (data[f][i] != null && typeof data[f][i] === "object") delete data[f][i].bool_acts; // derived, not stored
           if (fixCenter(data[f][i], centerPolicy)) nFixed++;
         }
       }
@@ -333,7 +334,6 @@ export function flatjson_to_json(data) {
     const w = 300
     const h = 600
 
-    item['bool_acts'] = [false,false,false,false]
     item['labels'] = ''
     // let parts = []
     // for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
@@ -387,7 +387,6 @@ export function tracks_csv_to_json(data, info) {
     item["height"] = +h;
     item["x"] = +src["cx"]-w/2;
     item["y"] = +src["cy"]-h/2;
-    item['bool_acts'] = [false,false,false,false]
     item['labels'] = ''
     let parts = []
     for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
@@ -431,7 +430,6 @@ export function tags_csv_to_json(data, info) {
     item["height"] = +h;
     item["x"] = +src["cx"]-w/2;
     item["y"] = +src["cy"]-h/2;
-    item['bool_acts'] = [false,false,false,false]
     item['labels'] = ''
     let parts = []
     for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
@@ -527,7 +525,6 @@ export function tracks_tagged_csv_to_json(data, info) {
     item["height"] = +h;
     item["x"] = +src["cx"]-w/2;
     item["y"] = +src["cy"]-h/2;
-    item['bool_acts'] = [false,false,false,false]
     item['labels'] = ''
     let parts = []
     for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
@@ -573,7 +570,7 @@ export function convertTracksToV1(Tracks) {
 
       let evt1 = Object.assign({}, evt);
       //delete evt1.ID
-      //delete evt1.bool_acts
+      evt1.bool_acts = Labels.bool_acts(evt); // a field of the v1 format, derived from labels
       delete evt1.marked;
       delete evt1.permanent;
       evt1.cx = evt1.x + evt1.width / 2;
@@ -662,17 +659,18 @@ export function tracksToCSV(Tracks) {
   for (let F in Tracks)
     for (let id in Tracks[F]) {
       var obs = Tracks[F][id];
+      var acts = Labels.bool_acts(obs);
       var action = "",
         cargo = "";
       var conc = function (s1, s2) {
         if (s2 === "") s1 += s2;
         else s1 += ";" + s2;
       };
-      if (obs.bool_acts[0]) action += (action === "" ? "" : ";") + "fanning";
-      if (obs.bool_acts[2]) action += (action === "" ? "" : ";") + "came in";
-      if (obs.bool_acts[3]) action += (action === "" ? "" : ";") + "went out";
+      if (acts[0]) action += (action === "" ? "" : ";") + "fanning";
+      if (acts[2]) action += (action === "" ? "" : ";") + "came in";
+      if (acts[3]) action += (action === "" ? "" : ";") + "went out";
 
-      if (obs.bool_acts[1]) cargo += "pollen";
+      if (acts[1]) cargo += "pollen";
       csv += "nodate," + F + "," + obs.ID + "," + action + "," + cargo;
 
       csv += ","; // Shift ?
@@ -689,6 +687,7 @@ export function tracksToBBoxes(Tracks) {
   for (let F in Tracks)
     for (let id in Tracks[F]) {
       var obs = Tracks[F][id];
+      var acts = Labels.bool_acts(obs);
 
       csv +=
         F +
@@ -701,13 +700,13 @@ export function tracksToBBoxes(Tracks) {
         "," +
         (obs.y + obs.height) +
         "," +
-        Number(obs.bool_acts[1]) + // pollen
+        Number(acts[1]) + // pollen
         "," +
-        Number(obs.bool_acts[2]) + // arrive
+        Number(acts[2]) + // arrive
         "," +
-        Number(obs.bool_acts[3]) + // leave
+        Number(acts[3]) + // leave
         "," +
-        Number(obs.bool_acts[0]) + // fanning
+        Number(acts[0]) + // fanning
         "," +
         Number(obs.angle) + // angle
         "\n";
@@ -722,6 +721,7 @@ export function tracksToBBoxes2(Tracks) {
   for (let F in Tracks)
     for (let id in Tracks[F]) {
       var obs = Tracks[F][id];
+      var acts = Labels.bool_acts(obs);
 
       csv +=
         F +
@@ -742,13 +742,13 @@ export function tracksToBBoxes2(Tracks) {
         "," +
         (obs.y + obs.height) +
         "," +
-        Number(obs.bool_acts[1]) + // pollen
+        Number(acts[1]) + // pollen
         "," +
-        Number(obs.bool_acts[2]) + // arrive
+        Number(acts[2]) + // arrive
         "," +
-        Number(obs.bool_acts[3]) + // leave
+        Number(acts[3]) + // leave
         "," +
-        Number(obs.bool_acts[0]) + // fanning
+        Number(acts[0]) + // fanning
         "\n";
     }
   return csv;

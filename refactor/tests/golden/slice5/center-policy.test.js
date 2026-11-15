@@ -55,7 +55,7 @@ test('an observation that lacks one of the sets, or has no number, is left as it
   const b = { id: 2, cx: 5, cy: 5, width: 4, height: 6 };            // no x, y
   const c = { id: 3, x: '10', y: 20, width: 4, height: 6, cx: 1, cy: 1 }; // x is a string
   const { r, warnings } = await run(v2([a, b, c]), { centerPolicy: 'cxcy' });
-  assert.deepEqual(Object.keys(r.data[0][1]).sort(), ['ID', 'bool_acts', 'height', 'labels', 'width', 'x', 'y']);
+  assert.deepEqual(Object.keys(r.data[0][1]).sort(), ['ID', 'height', 'labels', 'width', 'x', 'y']);
   assert.equal(r.data[0][2].x, undefined);
   assert.equal(r.data[0][3].cx, 1);
   assert.equal(warnings.length, 0);

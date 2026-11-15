@@ -21,7 +21,6 @@ function Observation(ID) {
   //this.permanent = false;
   this.angle = 0;
 
-  this.bool_acts = [false, false, false, false]; //Should be kept numerical because Ram
   this.notes = "";
   this.labels = "";
 }
@@ -51,15 +50,6 @@ function copyObs(obs, tmpObs) {
   obs.height = tmpObs.height;
   //obs.marked = tmpObs.marked;
   //obs.permanent = tmpObs.permanent;
-  if (tmpObs.bool_acts) {
-    obs.bool_acts = []
-    obs.bool_acts[0] = tmpObs.bool_acts[0];
-    obs.bool_acts[1] = tmpObs.bool_acts[1];
-    obs.bool_acts[2] = tmpObs.bool_acts[2];
-    obs.bool_acts[3] = tmpObs.bool_acts[3];
-  } else {
-    obs.bool_acts = [false, false, false, false]
-  }
   obs.angle = tmpObs.angle;
   obs.notes = tmpObs.notes;
   obs.labels = tmpObs.labels;

@@ -9,7 +9,7 @@ const { loadNewImpl } = require('../harness/new-impl');
 
 const obs = (ID, extra = {}) => ({
   ID, time: 0, frame: 0, x: 10.12345, y: 20.6789, cx: 0, cy: 0, width: 30.5555, height: 40, angle: 1.5,
-  bool_acts: [false, true, false, false], notes: 'n', labels: 'pollen', ...extra,
+  notes: 'n', labels: 'pollen', ...extra,
 });
 
 test('v2 save leaves the live TracksInfo and videoinfo untouched; saves do not accumulate (DEBT-706)', async () => {
@@ -33,7 +33,7 @@ test('v2 save then sanitizeEvents returns the saved model', async () => {
   const save = (await loadNewSaveImpl())().fns;
   const load = (await loadNewImpl())().fns;
   const Tracks = {
-    0: { 1: obs(1), 2: obs(2, { labels: 'fanning', bool_acts: [true, false, false, false] }) },
+    0: { 1: obs(1), 2: obs(2, { labels: 'fanning' }) },
     3: { 1: obs(1, { frame: 3 }) },
   };
   const saved = save.convertTracksToV2(Tracks, { type: 'events-multiframe', source: 's' }, { name: 'v' });
@@ -49,7 +49,7 @@ test('v2 save then sanitizeEvents returns the saved model', async () => {
   assert.equal(e.cx, 25.401);
   assert.equal(e.notes, 'n');
   assert.equal(e.labels, 'pollen');
-  assert.deepEqual(e.bool_acts, [false, true, false, false]); // rebuilt from labels at load
-  assert.deepEqual(back.data['0']['2'].bool_acts, [true, false, false, false]);
+  assert.equal(e.bool_acts, undefined); // derived from labels (Labels.bool_acts), not stored (ADR 0008 step 4)
+  assert.equal(back.data['0']['2'].bool_acts, undefined);
   assert.equal(back.data['3']['1'].frame, 3);
 });

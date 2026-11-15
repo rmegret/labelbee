@@ -177,10 +177,14 @@ async function eventsDriver(seed) {
   };
 }
 
+// `bool_acts` is derived from `labels` and no longer stored (slice 5 step 4): `commit` does not copy it, the frozen legacy code does.
+// The comparison ignores that one field.
+const noActs = (x) => (x === undefined ? x : JSON.parse(JSON.stringify(x, (k, v) => (k === 'bool_acts' ? undefined : v))));
+
 function sameState(a, b, where) {
   assert.equal(Array.isArray(a.tracks), Array.isArray(b.tracks), where + ': array or object');
-  assert.deepEqual(a.tracks, b.tracks, where + ': content');
-  assert.equal(JSON.stringify(a.tracks), JSON.stringify(b.tracks), where + ': key order');
+  assert.deepEqual(noActs(a.tracks), noActs(b.tracks), where + ': content');
+  assert.equal(JSON.stringify(noActs(a.tracks)), JSON.stringify(noActs(b.tracks)), where + ': key order');
   assert.deepEqual(a.info, b.info, where + ': info');
 }
 
@@ -199,7 +203,7 @@ test('differential: 300 random sequences of 40 operations, Events equals the leg
       sameState(legacy.state(), events.state(), where);
       const f = pick(rq, FRAMES);
       const id = pick(rq, IDS);
-      assert.deepEqual(legacy.queries(f, id), events.queries(f, id), where + ': queries');
+      assert.deepEqual(noActs(legacy.queries(f, id)), noActs(events.queries(f, id)), where + ': queries');
     }
   }
 });
@@ -272,12 +276,12 @@ test('commit creates when missing, copies the 17 fields and keeps the other fiel
   assert.equal(obs, ev.get(2, '3'));
   assert.equal(obs.parts, parts);
   assert.notEqual(obs.fix, w.fix);                                // fix is deep-copied
-  assert.deepEqual(obs.bool_acts, [true, false, true, false]);
+  assert.equal(obs.bool_acts, undefined);                         // derived from labels, not stored (slice 5 step 4)
   assert.equal(obs.extra, 'kept');                                // unknown fields are kept (they were dropped before step 7a)
   assert.deepEqual(obs.span, { f1: 2, f2: 4 });
   assert.ok(!('gone' in obs));                                    // an undefined field is not created
-  ev.commit({ ID: '3', frame: 2, x: 9 });                         // no bool_acts: the default four false
-  assert.deepEqual(ev.get(2, '3').bool_acts, [false, false, false, false]);
+  ev.commit({ ID: '3', frame: 2, x: 9 });
+  assert.equal(ev.get(2, '3').bool_acts, undefined);
   assert.equal(ev.get(2, '3').x, 9);
 });
 

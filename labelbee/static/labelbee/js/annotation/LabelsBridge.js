@@ -4,6 +4,7 @@
  */
 import * as Labels from './Labels.js';
 
+window.Labels = Labels; // the namespace, for the classic scripts: Labels.bool_acts(obs), ...
 window.toLabelArray = Labels.toArray;
 window.toLabelString = Labels.toString;
 window.cleanLabels = Labels.clean;

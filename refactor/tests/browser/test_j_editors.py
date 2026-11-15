@@ -14,6 +14,12 @@ def frame_obs(ui, frame):
     return ui.tracks().get(str(frame), {})
 
 
+def acts(ui, obs):
+    """The four flags [fanning, pollen, entering, leaving]: derived from the labels, not stored (ADR 0008 step 4)."""
+    assert "bool_acts" not in obs
+    return ui.page.evaluate("(o) => Labels.bool_acts(o)", obs)
+
+
 def shift_click_at(ui, vx, vy):
     p = ui.video_to_client(vx, vy)
     ui.settle()
@@ -36,7 +42,7 @@ def test_j1_shift_click_far_from_anything_creates_a_default_box_with_a_free_id(u
     assert (obs["cx"], obs["cy"]) == (APPROX(400, abs=1.5), APPROX(220, abs=1.5))   # centered on the click
     assert (obs["x"], obs["y"]) == (APPROX(obs["cx"] - 50, abs=0.01), APPROX(obs["cy"] - 50, abs=0.01))
     assert obs["angle"] == 0 and obs["labels"] == "" and obs["notes"] == ""
-    assert obs["bool_acts"] == [False, False, False, False]
+    assert acts(ui, obs) == [False, False, False, False]
     assert obs["frame"] == 3
     assert str(ui.selected_id()) == "0"                                 # the new observation is the selected one
 
@@ -52,10 +58,10 @@ def test_j2_shift_click_near_an_observation_of_a_neighboring_frame_predicts_its_
     assert new_id == "2"                                                # the id of the nearby observation
     assert (obs["width"], obs["height"]) == (48, 48)                    # its size ...
     assert (obs["cx"], obs["cy"]) == (APPROX(330, abs=1.5), APPROX(180, abs=1.5))   # ... centered on the click, not at its position
-    # KNOWN (ADR 0008 steps 4 and 6): the activity FLAGS are copied but not the labels text, so the two disagree, and the save
-    # drops the flags. Creation will copy the whole `labels` and `bool_acts` will be derived from it.
+    # KNOWN (ADR 0008 step 6): nothing of the activities is copied (the flags were, until step 4, and were lost at the first save);
+    # creation will copy the whole `labels` of the source.
     assert obs["labels"] == ""
-    assert obs["bool_acts"][0] is True                                  # 'fanning' copied as a flag only
+    assert acts(ui, obs) == [False, False, False, False]
     assert obs["notes"] == ""                                           # notes, span, fix, newid, visit, parts, tag are not copied
     assert all(k not in obs for k in ("span", "fix", "newid", "visit", "parts", "tag"))
 
@@ -75,7 +81,7 @@ def test_j3_ctrl_drag_creates_the_box_that_was_dragged(ui, sample_dir):
     assert new_id == "0"
     assert (obs["x"], obs["y"]) == (APPROX(300, abs=2), APPROX(60, abs=2))
     assert (obs["width"], obs["height"]) == (APPROX(60, abs=2), APPROX(50, abs=2))
-    assert obs["labels"] == "" and obs["bool_acts"] == [False, False, False, False]
+    assert obs["labels"] == "" and acts(ui, obs) == [False, False, False, False]
 
 
 def test_j4_a_ctrl_drag_that_is_too_small_creates_nothing(ui, sample_dir):
@@ -109,11 +115,11 @@ def test_j5_label_text_is_normalized_and_the_flags_follow(ui, sample_dir):
     ui.page.press("#labels", "Enter")
     obs = ui.tracks()["0"]["1"]
     assert obs["labels"] == "pollen,fanning"                            # lower case, aliases (`f` is fanning), comma separated
-    assert obs["bool_acts"] == [True, True, False, False]               # fanning, pollen, entering, leaving
+    assert acts(ui, obs) == [True, True, False, False]                  # fanning, pollen, entering, leaving
     ui.page.fill("#labels", "")
     ui.page.press("#labels", "Enter")
     obs = ui.tracks()["0"]["1"]
-    assert obs["labels"] == "" and obs["bool_acts"] == [False, False, False, False]
+    assert obs["labels"] == "" and acts(ui, obs) == [False, False, False, False]
 
 
 def test_j6_notes_are_stored_and_the_rest_is_untouched(ui, sample_dir):

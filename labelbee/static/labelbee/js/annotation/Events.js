@@ -33,6 +33,7 @@ function deepcopy(obj) {
 }
 
 // The fields that `copyFields` copies one by one; any other field of a working copy (`span` of a new visit, ...) is copied as it is.
+// `bool_acts` is listed so that it is not copied as an extra: it is derived from `labels` (Labels.bool_acts) and not stored (ADR 0008 step 4).
 const COMMIT_FIELDS = new Set(['ID', 'time', 'frame', 'x', 'y', 'cx', 'cy', 'width', 'height', 'bool_acts', 'angle', 'notes',
   'labels', 'parts', 'newid', 'fix', 'visit']);
 
@@ -49,15 +50,6 @@ function copyFields(obs, tmp) {
   obs.cy = tmp.cy;
   obs.width = tmp.width;
   obs.height = tmp.height;
-  if (tmp.bool_acts) {
-    obs.bool_acts = [];
-    obs.bool_acts[0] = tmp.bool_acts[0];
-    obs.bool_acts[1] = tmp.bool_acts[1];
-    obs.bool_acts[2] = tmp.bool_acts[2];
-    obs.bool_acts[3] = tmp.bool_acts[3];
-  } else {
-    obs.bool_acts = [false, false, false, false];
-  }
   obs.angle = tmp.angle;
   obs.notes = tmp.notes;
   obs.labels = tmp.labels;

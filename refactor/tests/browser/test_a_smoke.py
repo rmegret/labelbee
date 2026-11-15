@@ -77,7 +77,8 @@ def test_a6_edit_a_box_and_its_label_and_keep_it(ui, sample_dir):
     obs = ui.tracks()["0"]["1"]
     assert obs["x"] > x0 + 10
     assert "pollen" in obs["labels"]
-    assert obs["bool_acts"][1] is True            # pollen is the second flag (BEH-701)
+    assert "bool_acts" not in obs                 # derived from the labels since slice 5 step 4
+    assert ui.page.evaluate("(o) => Labels.bool_acts(o)", obs)[1] is True   # pollen is the second flag (BEH-701)
 
 
 def test_a7_undo_is_off_for_now(ui, sample_dir):

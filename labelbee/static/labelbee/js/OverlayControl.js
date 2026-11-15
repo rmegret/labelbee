@@ -2297,12 +2297,7 @@ function updateRectObsActivity(activeObject) {
   updateObsActivityFromForm(obs);
 }
 function updateObsActivityFromForm(obs) {
-  // Update form --> obs.labels --> bool_acts
-
-  obs.bool_acts[0] = hasLabel(obs, "fanning");
-  obs.bool_acts[1] = hasLabel(obs, "pollen");
-  obs.bool_acts[2] = hasLabel(obs, "entering");
-  obs.bool_acts[3] = hasLabel(obs, "leaving");
+  // Update form --> obs.notes (bool_acts is derived from labels, ADR 0008 step 4)
 
   obs.notes = $("#notes").val();
 
@@ -2311,16 +2306,11 @@ function updateObsActivityFromForm(obs) {
 function setLabels(rect, labels) {
   let obs = rect.obs;
 
-  // Update labelsString --> obs.labels --> bool_acts --> form
+  // Update labelsString --> obs.labels --> form (bool_acts is derived from labels, ADR 0008 step 4)
 
   let labelArray = toLabelArray(labels);
   labels = toLabelString(labelArray);
   obs.labels = labels;
-
-  obs.bool_acts[0] = hasLabel(obs, "fanning");
-  obs.bool_acts[1] = hasLabel(obs, "pollen");
-  obs.bool_acts[2] = hasLabel(obs, "entering");
-  obs.bool_acts[3] = hasLabel(obs, "leaving");
 
   updateForm(rect);
 }
@@ -2369,10 +2359,11 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, splitToken) {
 }
 function activityString(obs) {
   let acti = "";
-  if (obs.bool_acts[0]) acti += "F";
-  if (obs.bool_acts[1]) acti += "P";
-  if (obs.bool_acts[2]) acti += "E";
-  if (obs.bool_acts[3]) acti += "L";
+  let b = Labels.bool_acts(obs);
+  if (b[0]) acti += "F";
+  if (b[1]) acti += "P";
+  if (b[2]) acti += "E";
+  if (b[3]) acti += "L";
   return acti;
 }
 function identify(ctx, rect, radius) {
@@ -3966,8 +3957,6 @@ function onMouseDown_predict(option) {
       // addRect takes canvas coordinates units
       let r = overlay.obsToCanvasRect(obs);
       rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new");
-      rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
-      rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
     } else {
       // Only found tag
       if (logging.mouseEvents)
@@ -3995,8 +3984,6 @@ function onMouseDown_predict(option) {
       height,
       "new"
     );
-    rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
-    rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
     if (logging.mouseEvents)
       console.log("onMouseDown_predict: copied rect from ", obs);
   } else {
