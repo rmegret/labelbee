@@ -297,10 +297,12 @@ function eraseEvents() {
     console.log("User CANCELED Erase Tracks ...");
   }
 }
-function setTracks(obj, skipRefresh) {
+/* options.centerPolicy: which fields are the truth for the center when x, y and cx, cy disagree, "xy" (default,
+ * the JSON formats) or "cxcy" (the CSV and database sources): the loader knows its source (ADR 0008 R7). */
+function setTracks(obj, skipRefresh, options) {
   console.log("setTracks: changing events data structure and refreshing...");
 
-  var evts = sanitizeEvents(obj);
+  var evts = sanitizeEvents(obj, options);
 
   if (!evts) {
     console.log("setTracks: ABORTED, wrong format.");
@@ -1228,7 +1230,7 @@ function loadTracksCSVFromDB(limit = 100) {
   let obj = db_to_json(db, info, limit)
   const b=performance.now(); 
   console.log('DB query + convert to JSON',b-a)
-  setTracks(obj)
+  setTracks(obj, false, { centerPolicy: "cxcy" })
   const c=performance.now(); 
   console.log('setTracks',c-b)
   videoControl.onFrameChanged();
@@ -1253,7 +1255,7 @@ function loadTracksCSVFromServer(url) {
 
       let obj = tracks_csv_to_json(data, info)
 
-      if (!setTracks(obj)) throw new Error("Invalid events in the CSV (details in the console)")
+      if (!setTracks(obj, false, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)")
 
       videoControl.onFrameChanged();
 
@@ -1277,7 +1279,7 @@ function loadTagsCSVFromServer(url) {
         history: `Loaded in Labelbee on ${new Date().toISOString()}`,
       }
       let obj = tags_csv_to_json(data, info)
-      if (!setTracks(obj)) throw new Error("Invalid events in the CSV (details in the console)")
+      if (!setTracks(obj, false, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)")
 
       info = {
         type: "tags-multiframe",
@@ -1309,7 +1311,7 @@ function loadTrackTaggedCSVFromServer(url) {
         history: `Loaded in Labelbee on ${new Date().toISOString()}`,
       }
       let obj = tracks_tagged_csv_to_json(data, info)
-      if (!setTracks(obj)) throw new Error("Invalid events in the CSV (details in the console)")
+      if (!setTracks(obj, false, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)")
 
       videoControl.onFrameChanged();
 

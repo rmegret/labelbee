@@ -82,7 +82,7 @@ and `undoPush('new')`, `undoPush('move')` have no caller. The prediction path co
   `labels`, nothing else (no `notes`, `span`, `fix`, `newid`, `visit`, `parts`; the `tag` is not copied, the tag merge gives the right one for
   the frame); one `events.commit`; a free id (predicted, else the first free integer). No `status`, no draft.
 - **R7 Derived.** `bool_acts` is computed by `bool_acts(obs)` from `labels` (shared pure module); not stored; a cache only if the
-  200 000-observation pass is measured to need it. **Geometry at load:** `sanitizeEvents(obj, {geometry})` takes a policy, `"xy"` or `"cxcy"`
+  200 000-observation pass is measured to need it. **Center at load:** `sanitizeEvents(obj, {centerPolicy})` takes a policy, `"xy"` or `"cxcy"`
   (which of the two sets is the truth), with a default per source format chosen by the loader: `"cxcy"` for the CSV formats, `"xy"` for v1 and v2. When
   `cx`, `cy` and `x`, `y` disagree (beyond the 3-decimal rounding of the files) it logs a warning (once per load, with the number of observations) and
   fixes the other set according to the policy. The code carries a comment saying which set is the truth: with `"xy"`, `x`, `y` are the truth and `cx`,
@@ -104,7 +104,7 @@ and `undoPush('new')`, `undoPush('move')` have no caller. The prediction path co
    text; notes; parts sync; the three wrong-id edits; drag, resize and rotate of a rectangle; dot mode.
 1. **Deactivate undo** (R8): the button disabled, the stack unreachable, `deleteEvent` without the clone; `test_a7` checks that undo is off.
 2. **`annotation/Labels.js`** (pure): normalize, `has`, `bool_acts`, moved from `SelectionControl.js:770-880` and the copy in the codec; Node tests.
-3. **`sanitizeEvents` geometry policy** (R7): the `geometry` parameter, the per-format default, the warning and the fix; the CSV loaders pass `"cxcy"`, the JSON loaders
+3. **`sanitizeEvents` center policy** (R7): the `centerPolicy` option, the per-format default, the warning and the fix; the CSV loaders pass `"cxcy"`, the JSON loaders
    `"xy"`. Behavior change if a file disagrees; golden diff shown.
 4. **`bool_acts` derived**: the three readers and the exports use `bool_acts(obs)`, the writers go, the field is not stored (DEBT-701, DEBT-727).
 5. **Editors, one concern per commit**, each writing its unit with `update`: `parts`, `wrongid`, `labels`, `notes`, `geometry` (adapter and release) last.

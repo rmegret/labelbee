@@ -6,8 +6,8 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -23,8 +23,8 @@
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -42,8 +42,8 @@
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -94,7 +94,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -149,8 +151,8 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -166,8 +168,8 @@
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -185,8 +187,8 @@
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -232,7 +234,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -287,8 +291,8 @@
     "0": {
      "1": {
       "id": 1,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -335,15 +339,17 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 1 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
     "0": {
      "1": {
       "id": 1,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -363,8 +369,8 @@
     "0": {
      "3": {
       "id": 3,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -409,15 +415,17 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 1 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    [
     {
      "3": {
       "id": 3,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -681,8 +689,8 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -737,7 +745,8 @@
    "WARNING: Events file was loaded, but it has duplicate entries. Current version of software deleted redundant events."
   ],
   "logs": [
-   "sanitizeEvents: WARNING duplicate entry: data[0][1] with id=1 ignored."
+   "sanitizeEvents: WARNING duplicate entry: data[0][1] with id=1 ignored.",
+   "sanitizeEvents: WARNING 2 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
   ],
   "errors": [],
   "argsAfter": [
@@ -988,8 +997,8 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1005,8 +1014,8 @@
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1024,8 +1033,8 @@
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1077,7 +1086,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -1093,8 +1104,8 @@
     "0": {
      "1": {
       "id": 1,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1141,7 +1152,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 1 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -1258,8 +1271,8 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1275,8 +1288,8 @@
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1294,8 +1307,8 @@
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1350,7 +1363,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -1669,8 +1684,8 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1686,8 +1701,8 @@
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1705,8 +1720,8 @@
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1762,7 +1777,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    "data/Tracks.json"
@@ -3522,8 +3539,8 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -3539,8 +3556,8 @@
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -3558,8 +3575,8 @@
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -3628,7 +3645,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    "/some/url"
@@ -3776,8 +3795,8 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -3793,8 +3812,8 @@
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -3812,8 +3831,8 @@
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -3885,7 +3904,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    12

@@ -9,8 +9,8 @@
         "0": {
           "1": {
             "id": 1,
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -27,8 +27,8 @@
         "0": {
           "1": {
             "id": 1,
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -41,7 +41,9 @@
       }
     ],
     "alerts": [],
-    "logs": [],
+    "logs": [
+      "sanitizeEvents: WARNING 1 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+    ],
     "errors": [],
     "sql": []
   },
@@ -55,8 +57,8 @@
         "0": {
           "3": {
             "id": 3,
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -67,8 +69,8 @@
         "1": {
           "4": {
             "id": 4,
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -83,8 +85,8 @@
         {
           "3": {
             "id": 3,
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -95,8 +97,8 @@
         {
           "4": {
             "id": 4,
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -107,7 +109,82 @@
       ]
     ],
     "alerts": [],
-    "logs": [],
+    "logs": [
+      "sanitizeEvents: WARNING 2 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+    ],
+    "errors": [],
+    "sql": []
+  },
+  "sanitize v1 array with null entry and hole": {
+    "returned": {
+      "info": {
+        "type": "events-multiframe",
+        "source": "Converted from Tracks v1 array"
+      },
+      "data": {
+        "0": {
+          "3": {
+            "id": 3,
+            "cx": 3.5,
+            "cy": 5,
+            "angle": 30,
+            "width": 5,
+            "height": 6,
+            "x": 1,
+            "y": 2
+          }
+        },
+        "1": null,
+        "3": {
+          "4": {
+            "id": 4,
+            "cx": 3.5,
+            "cy": 5,
+            "angle": 30,
+            "width": 5,
+            "height": 6,
+            "x": 1,
+            "y": 2
+          }
+        }
+      }
+    },
+    "argsAfter": [
+      [
+        {
+          "3": {
+            "id": 3,
+            "cx": 3.5,
+            "cy": 5,
+            "angle": 30,
+            "width": 5,
+            "height": 6,
+            "x": 1,
+            "y": 2
+          }
+        },
+        null,
+        {
+          "$": "undefined"
+        },
+        {
+          "4": {
+            "id": 4,
+            "cx": 3.5,
+            "cy": 5,
+            "angle": 30,
+            "width": 5,
+            "height": 6,
+            "x": 1,
+            "y": 2
+          }
+        }
+      ]
+    ],
+    "alerts": [],
+    "logs": [
+      "sanitizeEvents: WARNING 2 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+    ],
     "errors": [],
     "sql": []
   },
@@ -287,8 +364,8 @@
         "0": {
           "1": {
             "ID": "1",
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -304,8 +381,8 @@
           },
           "2": {
             "ID": "2",
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -323,8 +400,8 @@
         "7": {
           "1": {
             "ID": "1",
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -387,7 +464,9 @@
       }
     ],
     "alerts": [],
-    "logs": [],
+    "logs": [
+      "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+    ],
     "errors": [],
     "sql": []
   },
@@ -401,8 +480,8 @@
         "2": {
           "9": {
             "ID": "9",
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -443,7 +522,9 @@
       }
     ],
     "alerts": [],
-    "logs": [],
+    "logs": [
+      "sanitizeEvents: WARNING 1 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+    ],
     "errors": [],
     "sql": []
   },
@@ -457,8 +538,8 @@
         "0": {
           "1": {
             "ID": "1",
-            "cx": 1,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -474,8 +555,8 @@
           },
           "2": {
             "ID": "2",
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -538,7 +619,8 @@
       "WARNING: Events file was loaded, but it has duplicate entries. Current version of software deleted redundant events."
     ],
     "logs": [
-      "sanitizeEvents: WARNING duplicate entry: data[0][1] with id=1 ignored."
+      "sanitizeEvents: WARNING duplicate entry: data[0][1] with id=1 ignored.",
+      "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
     ],
     "errors": [],
     "sql": []
@@ -691,8 +773,8 @@
         "0": {
           "1": {
             "ID": "1",
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -708,8 +790,8 @@
           },
           "2": {
             "ID": "2",
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -725,8 +807,8 @@
           },
           "3": {
             "ID": "3",
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -789,7 +871,9 @@
       }
     ],
     "alerts": [],
-    "logs": [],
+    "logs": [
+      "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+    ],
     "errors": [],
     "sql": []
   },
@@ -887,8 +971,8 @@
         "1": {
           "5": {
             "ID": "5",
-            "cx": 10,
-            "cy": 20,
+            "cx": 3.5,
+            "cy": 5,
             "angle": 30,
             "width": 5,
             "height": 6,
@@ -932,7 +1016,9 @@
       }
     ],
     "alerts": [],
-    "logs": [],
+    "logs": [
+      "sanitizeEvents: WARNING 1 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+    ],
     "errors": [],
     "sql": []
   },
@@ -2975,76 +3061,5 @@
     "sql": [
       "SELECT frame,CAST(track_id AS TEXT) as id, cx, cy, angle + 90 AS angle, 300 as width, 600 as height, cx-300/2 as x, cy-600/2 as y \n  FROM data \n  LIMIT 7"
     ]
-  },
-  "sanitize v1 array with null entry and hole": {
-    "returned": {
-      "info": {
-        "type": "events-multiframe",
-        "source": "Converted from Tracks v1 array"
-      },
-      "data": {
-        "0": {
-          "3": {
-            "id": 3,
-            "cx": 10,
-            "cy": 20,
-            "angle": 30,
-            "width": 5,
-            "height": 6,
-            "x": 1,
-            "y": 2
-          }
-        },
-        "1": null,
-        "3": {
-          "4": {
-            "id": 4,
-            "cx": 10,
-            "cy": 20,
-            "angle": 30,
-            "width": 5,
-            "height": 6,
-            "x": 1,
-            "y": 2
-          }
-        }
-      }
-    },
-    "argsAfter": [
-      [
-        {
-          "3": {
-            "id": 3,
-            "cx": 10,
-            "cy": 20,
-            "angle": 30,
-            "width": 5,
-            "height": 6,
-            "x": 1,
-            "y": 2
-          }
-        },
-        null,
-        {
-          "$": "undefined"
-        },
-        {
-          "4": {
-            "id": 4,
-            "cx": 10,
-            "cy": 20,
-            "angle": 30,
-            "width": 5,
-            "height": 6,
-            "x": 1,
-            "y": 2
-          }
-        }
-      ]
-    ],
-    "alerts": [],
-    "logs": [],
-    "errors": [],
-    "sql": []
   }
 }

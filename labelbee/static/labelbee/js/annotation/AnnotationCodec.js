@@ -9,7 +9,44 @@
 import { alert, log, logError, logIO } from "../core/Notifier.js";
 import * as Labels from "./Labels.js";
 
-export function sanitizeEvents(obj) {
+/* Geometry of an observation: two sets describe the same box, the top-left corner (x, y) and the center
+ * (cx, cy), with width and height. They must agree: cx = x + width/2, cy = y + height/2 (the angle is around
+ * the center, so it does not change this). The policy says which set is the TRUTH when they disagree; the other
+ * set is recomputed (ADR 0008 R7):
+ *   "xy"   x, y are the truth, cx, cy are recomputed. Default, for the JSON formats v1 and v2.
+ *   "cxcy" cx, cy are the truth, x, y are recomputed. For the CSV formats, whose source is the center.
+ * Long-term (DEBT-739): only cx, cy, width, height, angle are used inside LabelBee and x, y become a field
+ * computed when saving, because the top-left corner is a poor reference for a rotated rectangle. Then "cxcy"
+ * becomes the only policy and this function goes.
+ * The files round cx, cy, x, y to 3 decimals, so differences below CENTER_TOLERANCE are not disagreements.
+ * An observation that lacks one of the sets is left as it is. Returns true when the observation was fixed. */
+const CENTER_TOLERANCE = 0.0015;
+
+function fixCenter(evt, policy) {
+  const num = (v) => typeof v === "number" && Number.isFinite(v);
+  if (evt == null || typeof evt !== "object") return false;
+  if (![evt.x, evt.y, evt.cx, evt.cy, evt.width, evt.height].every(num)) return false;
+  const dx = evt.cx - (evt.x + evt.width / 2);
+  const dy = evt.cy - (evt.y + evt.height / 2);
+  if (Math.abs(dx) <= CENTER_TOLERANCE && Math.abs(dy) <= CENTER_TOLERANCE) return false;
+  if (policy === "cxcy") {
+    evt.x = evt.cx - evt.width / 2;
+    evt.y = evt.cy - evt.height / 2;
+  } else {
+    evt.cx = evt.x + evt.width / 2;
+    evt.cy = evt.y + evt.height / 2;
+  }
+  return true;
+}
+
+/* options.centerPolicy: "xy" (default) or "cxcy", which set of fields is the truth for the center, see fixCenter.
+ * The loader passes it because it is the one that knows the source of the data. */
+export function sanitizeEvents(obj, options) {
+  const centerPolicy = (options && options.centerPolicy) || "xy";
+  if (centerPolicy !== "xy" && centerPolicy !== "cxcy") {
+    throw new Error('sanitizeEvents: options.centerPolicy should be "xy" or "cxcy", got ' + centerPolicy);
+  }
+  let nFixed = 0; // observations whose geometry sets disagreed
   var info;
   var data;
   try{
@@ -84,6 +121,7 @@ export function sanitizeEvents(obj) {
   
           if (evt.labels == null) evt.labels = ""; // what the legacy hasLabel wrote on the observation
           evt.bool_acts = Labels.bool_acts(evt);
+          if (fixCenter(evt, centerPolicy)) nFixed++;
   
           if (frameItem[String(evt0.id)] == null) {
             frameItem[String(evt0.id)] = evt;
@@ -144,6 +182,12 @@ export function sanitizeEvents(obj) {
         );
         return;
       }
+      // v1: the observations of the file are used as they are, fixed in place
+      for (let f in data) {
+        for (let i in data[f]) {
+          if (fixCenter(data[f][i], centerPolicy)) nFixed++;
+        }
+      }
     }
   }
   catch(error){ // Case: loaded json from server does not match expected structure
@@ -151,6 +195,13 @@ export function sanitizeEvents(obj) {
     return;
   }
 
+
+  if (nFixed > 0) {
+    log(
+      "sanitizeEvents: WARNING " + nFixed + " observation(s) had x, y and cx, cy that disagree; " +
+        (centerPolicy === "cxcy" ? "cx, cy are the truth, x, y recomputed" : "x, y are the truth, cx, cy recomputed")
+    );
+  }
 
   return { info: info, data: data };
 }
