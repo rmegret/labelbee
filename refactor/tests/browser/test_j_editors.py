@@ -122,6 +122,21 @@ def test_j5_label_text_is_normalized_and_the_flags_follow(ui, sample_dir):
     assert obs["labels"] == "" and acts(ui, obs) == [False, False, False, False]
 
 
+def test_j5b_a_label_button_writes_the_labels_only(ui, sample_dir):
+    """ADR 0008 step 5: the label editor stores `labels` alone; notes typed but not validated used to ride along."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    open_editor_panels(ui)
+    before = ui.tracks()["0"]["1"]
+    ui.click_box("1")
+    ui.page.fill("#notes", "typed, not validated")                      # no Enter, no change event
+    ui.page.click("button.labeltoggle[thelabel=pollen]:visible")
+    after = ui.tracks()["0"]["1"]
+    assert "pollen" in after["labels"].split(",")
+    assert {k: v for k, v in after.items() if k != "labels"} == {k: v for k, v in before.items() if k != "labels"}
+
+
 def test_j6_notes_are_stored_and_the_rest_is_untouched(ui, sample_dir):
     ui.open()
     ui.load_events(sample_dir / "events_v2.json")

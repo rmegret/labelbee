@@ -2303,17 +2303,6 @@ function updateObsActivityFromForm(obs) {
 
   if (logging.guiEvents) console.log("updateObsActivityFromForm: obs=", obs);
 }
-function setLabels(rect, labels) {
-  let obs = rect.obs;
-
-  // Update labelsString --> obs.labels --> form (bool_acts is derived from labels, ADR 0008 step 4)
-
-  let labelArray = toLabelArray(labels);
-  labels = toLabelString(labelArray);
-  obs.labels = labels;
-
-  updateForm(rect);
-}
 
 // #MARK # CANVAS DRAWING: TRACKS AND EVENTS
 

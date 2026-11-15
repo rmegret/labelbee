@@ -11,17 +11,6 @@ window.cleanLabels = Labels.clean;
 window.containsLabel = Labels.contains;
 window.getLabels = (obs) => Labels.toArray(obs.labels);
 
-// The legacy hasLabel and updateObsLabel wrote `labels = ""` on an observation that had none; kept
-// for now, they go with the editors that still use them (ADR 0008 step 5).
-window.hasLabel = (obs, label) => {
-  if (obs.labels == null) {
-    obs.labels = "";
-  }
-  return Labels.has(obs, label);
-};
-window.updateObsLabel = (obs, label, active) => {
-  if (obs.labels == null) {
-    obs.labels = "";
-  }
-  obs.labels = Labels.update(obs.labels, label, active);
-};
+// The legacy hasLabel wrote `labels = ""` on an observation that had none; it writes nothing now that the
+// label editors write through `events.update` (ADR 0008 step 5). updateObsLabel is gone.
+window.hasLabel = Labels.has;

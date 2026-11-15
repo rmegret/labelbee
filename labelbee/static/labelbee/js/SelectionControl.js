@@ -801,7 +801,7 @@ function updateUndoButton() {
 
 /* Labels Control */
 
-// The label helpers (labelMap, toLabelArray, hasLabel, updateObsLabel, ...) are in annotation/Labels.js,
+// The label helpers (labelMap, toLabelArray, hasLabel, ...) are in annotation/Labels.js,
 // exposed by annotation/LabelsBridge.js (ADR 0008 step 2).
 
 /* Labels GUI */
@@ -844,11 +844,11 @@ function labelToggle(thelabel, isOn) {
     isOn = !hasLabel(obs,thelabel)
   }
 
-  let wrongid = thelabel == "wrongid"; // the wrong-id unit has its own editor (ADR 0008 step 5)
-  if (wrongid) {
+  if (thelabel == "wrongid") {
+    // the wrong-id unit has its own editor (ADR 0008 step 5)
     storeUnit(activeObject, WrongId.wrongidToggled(obs, isOn));
   } else {
-    updateObsLabel(obs, thelabel, isOn);
+    storeUnit(activeObject, { labels: Labels.update(obs.labels, thelabel, isOn) });
   }
   updateButtonsForLabel(obs, thelabel)
 
@@ -860,12 +860,6 @@ function labelToggle(thelabel, isOn) {
     "obs.labels=",
     obs.labels
   );
-
-  if (!wrongid) {
-    // Update the rest
-    updateRectObsActivity(activeObject);
-    automatic_sub();
-  }
 
   updateForm(activeObject);
   refreshChronogram();
@@ -886,8 +880,8 @@ function onLabelsChanged() {
   if (logging.guiEvents) console.log("onLabelsChanged: labels=", labels);
   var activeObject = overlay.getActiveObject();
   if (activeObject !== null) {
-    setLabels(activeObject, labels);
-    automatic_sub();
+    storeUnit(activeObject, { labels: Labels.clean(labels) });
+    updateForm(activeObject);
   }
 }
 
