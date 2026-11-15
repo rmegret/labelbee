@@ -4,7 +4,7 @@ Automated version of [../CHECKLIST.md](../CHECKLIST.md): the real page in headle
 the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design/0006-browser-tests.md).
 
     conda activate labelbeedev                  # see ../devenv/README.md
-    pytest refactor/tests/browser               # ~3 minutes, 79 tests, all passing
+    pytest refactor/tests/browser               # ~3 minutes, 91 tests, all passing
     pytest refactor/tests/browser -k c9 -x      # one item, stop at the first failure
     pytest refactor/tests/browser --headed      # watch the browser (pytest-playwright option)
 
@@ -21,6 +21,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_g_readers.py` | Readers of the stored events that no other test reaches, added as their loops move to `events` (slice 4 step 4): "Update Statistics", "Delete FA Tags..." (the tags structure of the store) |
 | `test_h_debug_globals.py` | The console-only debug globals `Tracks`, `TracksInfo` (and the `Tags` ones): off by default, `?debug_globals` or `installDebugGlobals()`, the console reads them, a script served from a URL gets an error |
 | `test_i_detector.py` | The dirty-write detector itself: direct and indirect mutations are seen (`dirty_writes_expected` tests) |
+| `test_j_editors.py` | The edit paths of the editor, pinned before the working copy goes (slice 5 step 0, [ADR 0008](../../design/0008-field-ownership.md)): creation by shift-click and ctrl-drag, label text, notes, the wrong-id edits, move, resize, rotate, dot mode, parts in the zoom view |
 | `test_alerts.py` | The main alert modal: alerts in quick succession (F3) |
 
 ## How it works
