@@ -2291,11 +2291,6 @@ function findRect(id) {
   return undefined;
 }
 
-function updateRectObsActivity(activeObject) {
-  // Update Observation attached to rectangle from Form information
-  let obs = activeObject.obs;
-  updateObsActivityFromForm(obs);
-}
 function updateObsActivityFromForm(obs) {
   // Update form --> obs.notes (bool_acts is derived from labels, ADR 0008 step 4)
 

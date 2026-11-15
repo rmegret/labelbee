@@ -870,8 +870,8 @@ function onActivityChanged(event) {
   if (logging.guiEvents) console.log("onActivityChanged: event=", event);
   var activeObject = overlay.getActiveObject();
   if (activeObject !== null) {
-    updateRectObsActivity(activeObject);
-    automatic_sub();
+    // the notes unit has its own editor (ADR 0008 step 5)
+    storeUnit(activeObject, { notes: $("#notes").val() });
   }
 }
 // If labels textarea changed
