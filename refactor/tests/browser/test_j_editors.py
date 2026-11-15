@@ -230,6 +230,21 @@ def test_j8_move_changes_the_center_and_nothing_else(ui, sample_dir):
     assert after["labels"] == before["labels"] and after["notes"] == before["notes"]
 
 
+def test_j8b_the_store_is_written_on_release_not_during_the_drag(ui, sample_dir):
+    """ADR 0008 P3: fabric moves the rectangle, the store gets the geometry when the gesture ends."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    before = select_at(ui, 5, "1")
+    c = ui.box_center("1")
+    ui.page.mouse.move(c["x"], c["y"])
+    ui.page.mouse.down()
+    ui.page.mouse.move(c["x"] + 30, c["y"] + 15, steps=6)
+    assert ui.tracks()["5"]["1"]["cx"] == before["cx"]                  # mid-drag: the store has not moved
+    ui.page.mouse.up()
+    assert ui.tracks()["5"]["1"]["cx"] != before["cx"]                  # released: it has
+
+
 def test_j9_resize_with_a_corner_changes_the_size_and_the_opposite_corner_stays(ui, sample_dir):
     ui.open()
     ui.load_events(sample_dir / "events_v2.json")

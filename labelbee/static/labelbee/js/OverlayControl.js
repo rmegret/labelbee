@@ -1930,7 +1930,7 @@ function refreshRectFromObs() {
   //if (logging.overlay)
   //    console.log("refreshRectFromObs: updating ",rectList.length," rect(s)")
   for (let rect of rectList) {
-    if (typeof rect.obs !== "undefined") {
+    if (typeof rect.obs !== "undefined" && !rect.dragging) { // a rectangle being dragged is ahead of the store
       updateRectFromObsGeometry(rect);
     }
     refreshRectStyle(rect);
@@ -2081,7 +2081,8 @@ function addRectFromObs(inputObs, status) {
     return undefined;
   }
 
-  var obs = cloneObs(inputObs);
+  // A stored observation is not copied: the rectangle holds the stored object, the store is the only holder (ADR 0008 P2)
+  var obs = inputObs;
   if (typeof obs.angle === "undefined") {
     console.log("WARNING in addRectFromObs: obs.angle undefined, default to 0");
     obs.angle = 0;
@@ -4501,8 +4502,9 @@ function onObjectMoving(option) {
   if (logging.mouseMoveEvents)
     console.log("onObjectMoving: activeObject=", activeObject);
 
+  // The drag only moves the fabric rectangle; the geometry is stored on release (onObjectModified, ADR 0008 P3)
+  activeObject.dragging = true;
   fixRectSizeAfterScaling(activeObject);
-  updateRectObsGeometry(activeObject);
 
   //canvas1.renderAll(); // Refresh rectangles drawing
   overlay.refreshOverlay();
@@ -4521,7 +4523,8 @@ function onObjectModified(option) {
   if (logging.mouseEvents)
     console.log("onObjectModified: activeObject=", activeObject);
 
-  // Release: the geometry unit goes to the store (ADR 0008 P3); the drag above only moved the working copy
+  // Release: the geometry unit goes to the store (ADR 0008 P3); the drag only moved the fabric rectangle
+  activeObject.dragging = false;
   storeUnit(activeObject, rectToGeometry(activeObject));
 
   //canvas1.renderAll(); // Refresh rectangles drawing

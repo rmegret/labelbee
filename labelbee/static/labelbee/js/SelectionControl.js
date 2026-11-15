@@ -465,6 +465,7 @@ function submit_bee() {
 
   storeObs(tmpObs);
   activeObject.status = "db";
+  activeObject.obs = events.get(tmpObs.frame, final_id); // from now on the rectangle holds the stored object
 
   videoControl.refresh();
   refreshChronogram();
@@ -488,8 +489,8 @@ function selectedKey() {
  * (the newid box did), otherwise `automatic_sub` leaves it alone as before. Returns whether the store was written.
  */
 function storeUnit(rect, fields, submitNew) {
-  Object.assign(rect.obs, fields);
   let key = selectedKey();
+  if (!key) Object.assign(rect.obs, fields); // not in the store yet: the working copy is the only holder
   if (key) {
     let stored = Object.assign({}, fields);
     if (stored.fix) stored.fix = deepcopy(stored.fix); // the store never shares `fix` with the working copy
