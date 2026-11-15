@@ -58,11 +58,10 @@ def test_j2_shift_click_near_an_observation_of_a_neighboring_frame_predicts_its_
     assert new_id == "2"                                                # the id of the nearby observation
     assert (obs["width"], obs["height"]) == (48, 48)                    # its size ...
     assert (obs["cx"], obs["cy"]) == (APPROX(330, abs=1.5), APPROX(180, abs=1.5))   # ... centered on the click, not at its position
-    # KNOWN (ADR 0008 step 6): nothing of the activities is copied (the flags were, until step 4, and were lost at the first save);
-    # creation will copy the whole `labels` of the source.
-    assert obs["labels"] == ""
-    assert acts(ui, obs) == [False, False, False, False]
-    assert obs["notes"] == ""                                           # notes, span, fix, newid, visit, parts, tag are not copied
+    # ADR 0008 R6: creation copies the whole `labels` of the source (the flags were lost at the first save until step 4)
+    assert obs["labels"] == "fanning"
+    assert acts(ui, obs) == [True, False, False, False]
+    assert obs["notes"] == ""                                           # notes, span, fix, newid, visit, parts, tag are not copied (the source has notes "fans")
     assert all(k not in obs for k in ("span", "fix", "newid", "visit", "parts", "tag"))
 
 

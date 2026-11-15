@@ -2236,18 +2236,31 @@ fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
     ctx.restore();
   },
 });
+// A fresh observation on the current frame (ADR 0008 R6): the defaults, the geometry (video coordinates, unrotated
+// box) and, from the source observation of a prediction if any, its whole `labels` and nothing else.
+function newObservation(id, videoRect, angle, source) {
+  return {
+    ID: id,
+    time: videoControl.getCurrentVideoTime(),
+    frame: videoControl.getCurrentFrame(),
+    x: videoRect.left,
+    y: videoRect.top,
+    cx: videoRect.left + videoRect.width / 2,
+    cy: videoRect.top + videoRect.height / 2,
+    width: videoRect.width,
+    height: videoRect.height,
+    angle: angle == null ? 0 : angle,
+    notes: "",
+    labels: source && source.labels ? source.labels : "",
+  };
+}
 // Create a fabric rectangle at specific place, all units in canvas coordinates
 function addRect(id, startX, startY, width, height, status, inputObs, angle) {
   console.log("addRect: id=", id);
 
   var obs;
   if (status === "new") {
-    obs = new Observation(id);
-    obs.ID = id;
-    obs.frame = videoControl.getCurrentFrame();
-    obs.time = videoControl.getCurrentVideoTime();
-    updateObsActivityFromForm(obs);
-
+    // creation is one function (ADR 0008 R6); `inputObs` is the source of a prediction, if any
     let canvasRect = {
       left: startX,
       top: startY,
@@ -2255,12 +2268,7 @@ function addRect(id, startX, startY, width, height, status, inputObs, angle) {
       height: height,
     };
     let videoRect = overlay.canvasToVideoRect(canvasRect);
-    obs.x = videoRect.left;
-    obs.y = videoRect.top;
-    obs.width = videoRect.width;
-    obs.height = videoRect.height;
-    if (angle == null) angle = 0;
-    obs.angle = angle;
+    obs = newObservation(id, videoRect, angle, inputObs);
   } else if (status === "db") {
     obs = cloneObs(inputObs);
     if (typeof obs.angle === "undefined") {
@@ -2287,14 +2295,6 @@ function findRect(id) {
     }
   }
   return undefined;
-}
-
-function updateObsActivityFromForm(obs) {
-  // Update form --> obs.notes (bool_acts is derived from labels, ADR 0008 step 4)
-
-  obs.notes = $("#notes").val();
-
-  if (logging.guiEvents) console.log("updateObsActivityFromForm: obs=", obs);
 }
 
 // #MARK # CANVAS DRAWING: TRACKS AND EVENTS
@@ -3938,7 +3938,7 @@ function onMouseDown_predict(option) {
       // Copy rectangle from source of prediction
       // addRect takes canvas coordinates units
       let r = overlay.obsToCanvasRect(obs);
-      rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new");
+      rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new", obs);
     } else {
       // Only found tag
       if (logging.mouseEvents)
@@ -3964,7 +3964,8 @@ function onMouseDown_predict(option) {
       startY - height / 2,
       width,
       height,
-      "new"
+      "new",
+      obs
     );
     if (logging.mouseEvents)
       console.log("onMouseDown_predict: copied rect from ", obs);
