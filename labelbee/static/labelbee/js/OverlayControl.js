@@ -2020,41 +2020,39 @@ function updateRectFromObsGeometry(rect) {
   }
 }
 
-// Fabric BeeRect to obs
+// Fabric BeeRect to geometry fields (the adapter of ADR 0008 P3): what the rectangle says, in video coordinates.
+// Returns the fields only, it writes nothing; the caller stores them (storeUnit on release, the working copy while dragging).
+function rectToGeometry(rect) {
+    let obs = rect.obs
+    let geom = rotatedRectGeometry(rect);
+    let videoRect = overlay.canvasToVideoRect(geom.unrotated)
+    let cx = (videoRect.left + videoRect.width / 2);
+    let cy = (videoRect.top + videoRect.height / 2);
+
+    if (overlay.opts.showRect) {
+        return {
+            x: videoRect.left,    // unrotated left (rotation around center)
+            y: videoRect.top,     // unrotated top
+            width: videoRect.width,
+            height: videoRect.height,
+            angle: rect.angle,
+            cx: cx,
+            cy: cy,
+        };
+    }
+    // Virtual rect (dot): just the center, keep width, height, angle
+    return { cx: cx, cy: cy, x: cx - obs.width/2, y: cy - obs.height/2 };
+}
+
+// Fabric BeeRect to the working copy of the observation
 function updateRectObsGeometry(activeObject) {
     if (logging.overlay)
         console.log('updateRectObsGeometry: activeObject=',activeObject)
-    let obs = activeObject.obs
-        if (typeof obs === 'undefined') {
-            console.log('updateRectObsGeometry: activeObject.obs undefined')
-            return
+    if (typeof activeObject.obs === 'undefined') {
+        console.log('updateRectObsGeometry: activeObject.obs undefined')
+        return
     }
-
-    let geom = rotatedRectGeometry(activeObject);
-    let videoRect = overlay.canvasToVideoRect(geom.unrotated)
-    
-    if (overlay.opts.showRect) {
-        // Update Observation attached to rectangle from current Rect size
-        obs.x = videoRect.left    // unrotated left (rotation around center)
-        obs.y = videoRect.top     // unrotated top
-        obs.width = videoRect.width
-        obs.height = videoRect.height
-        obs.angle = activeObject.angle    
-        obs.cx = (videoRect.left + videoRect.width / 2);
-        obs.cy = (videoRect.top + videoRect.height / 2);
-    } else {
-        // `Virtual rect, just update center, keep width, height, angle
-        // Update Observation attached to rectangle from current Rect size
-        //obs.x = videoRect.left    // unrotated left (rotation around center)
-        //obs.y = videoRect.top     // unrotated top
-        //obs.width = videoRect.width
-        //obs.height = videoRect.height
-        //obs.angle = activeObject.angle    
-        obs.cx = (videoRect.left + videoRect.width / 2);
-        obs.cy = (videoRect.top + videoRect.height / 2);
-        obs.x = obs.cx - obs.width/2;
-        obs.y = obs.cy - obs.height/2;
-    }
+    Object.assign(activeObject.obs, rectToGeometry(activeObject))
 }
 
 function createRectsFromTracks(F) {
@@ -4522,13 +4520,13 @@ function onObjectModified(option) {
   if (logging.mouseEvents)
     console.log("onObjectModified: activeObject=", activeObject);
 
-  updateRectObsGeometry(activeObject);
+  // Release: the geometry unit goes to the store (ADR 0008 P3); the drag above only moved the working copy
+  storeUnit(activeObject, rectToGeometry(activeObject));
 
   //canvas1.renderAll(); // Refresh rectangles drawing
   overlay.refreshOverlay();
   updateForm(activeObject);
   //showZoom(activeObject)
-  automatic_sub();
 
   $(overlay).trigger("object:modified");
   //zoomOverlay.selectionChanged()
