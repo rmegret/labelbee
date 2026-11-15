@@ -403,7 +403,7 @@ ZoomOverlay.prototype.syncToTracks = function () {
 
   var obs = activeObject.obs;
 
-  obs.parts = [];
+  let parts = [];
   var rects = this.canvas1.getObjects();
   for (let i in rects) {
     let rect = rects[i];
@@ -411,9 +411,18 @@ ZoomOverlay.prototype.syncToTracks = function () {
       posFrame: Object.assign({}, rect.posFrame),
       label: rect.label,
     };
-    obs.parts.push(part);
+    parts.push(part);
   }
-  automatic_sub();
+  obs.parts = parts; // the working copy follows until it goes (ADR 0008 step 6)
+  let key = selectedKey();
+  if (key) {
+    // `parts` is a unit owned by this module (ADR 0008 R3): written alone, whole
+    events.update(key.frame, key.id, { parts: parts });
+    videoControl.refresh(); // manual refreshes stay (R8)
+    refreshChronogram();
+  } else {
+    automatic_sub(); // a rectangle not in the store yet: the working copy is the only holder
+  }
 };
 // See also ZoomOverlay.prototype.onToggleButtonShowOnVideo
 

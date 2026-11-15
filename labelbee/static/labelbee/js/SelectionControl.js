@@ -470,6 +470,17 @@ function submit_bee() {
   refreshChronogram();
 }
 
+/**
+ * The key {frame, id} of the selected observation in the store, or null when nothing is selected or the
+ * selected rectangle is not in the store yet (ADR 0008 R4). Today it reads the fabric active object;
+ * the selection slice will read the selection store, and no editor changes.
+ */
+function selectedKey() {
+  let activeObject = overlay.getActiveObject();
+  if (!activeObject || activeObject.status != "db" || !activeObject.obs) return null;
+  return { frame: activeObject.obs.frame, id: activeObject.obs.ID };
+}
+
 function automatic_sub() {
   var activeObject = overlay.getActiveObject();
   if (activeObject.status == "db") {

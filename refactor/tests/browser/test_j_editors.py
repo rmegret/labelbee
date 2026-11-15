@@ -243,6 +243,7 @@ def test_j12_dragging_a_part_in_the_zoom_view_updates_the_parts_of_the_observati
     ui.page.locator("#zoom").scroll_into_view_if_needed()                # the zoom canvas is partly below the viewport
     pos = ui.js("""() => { const o = zoomOverlay.canvas1.getObjects()[0]; o.setCoords(); const r = zoomOverlay.canvas1.upperCanvasEl.getBoundingClientRect();
         return {x: r.x + o.left + 3, y: r.y + o.top + 3}; }""")          # the marker is a 6 px box: its center
+    assert ui.js("selectedKey()") == {"frame": 0, "id": "1"}            # ADR 0008 R4: the target of the editors
     ui.drag(pos, {"x": pos["x"] + 20, "y": pos["y"] + 12})
     after = ui.tracks()["0"]["1"]
     assert [p["label"] for p in after["parts"]] == ["head", "neck", "thorax", "tail"]
