@@ -1365,9 +1365,11 @@ _Maintainer decision 2026-11-14 ([Q31](../QUESTIONS.md#q31), [ADR 0008](../desig
   - `annotation/AnnotationCodec.js`: `tracks_csv_to_json`
 - **Links:** ENT-001, DEBT-701, DEBT-804, BEH-735, DEC-007
 
-## DEBT-740: rotating the tag after switching `wrongid` on stores a NaN angle
+## DEBT-740: rotating the tag after switching `wrongid` on stored a NaN angle (fixed)
 
-[read] The label toggle creates `fix = {newid: undefined}` (no `tagangle`); `rotateTag` then does `fix.tagangle += 90`, i.e. `undefined + 90 = NaN`, saved as `null` in JSON. Kept as it was when the four wrong-id writers became `annotation/WrongId.js` (slice 5 step 5, mechanical move); a candidate for a clear-cut fix (`tagangle` defaults to 0), to be approved with its test.
+_Fixed in slice 5 step 5, approved by the maintainer 2026-11-15: `tagRotated` starts from a zero angle when `fix` has none; `refactor/tests/golden/slice5/wrongid.test.js` and `test_j7c` show it._
+
+[read] The label toggle creates `fix = {newid: undefined}` (no `tagangle`); `rotateTag` then did `fix.tagangle += 90`, i.e. `undefined + 90 = NaN`, saved as `null` in JSON. Kept as it was when the four wrong-id writers became `annotation/WrongId.js` (mechanical move), then fixed in its own commit.
 
 - **Code:**
   - `annotation/WrongId.js`: `tagRotated`

@@ -181,6 +181,18 @@ def test_j7b_the_tag_rotation_and_the_alternate_tag_click(ui, sample_dir):
     assert {k: v for k, v in obs.items() if k not in own} == {k: v for k, v in before.items() if k not in own}
 
 
+def test_j7c_rotating_the_tag_after_the_toggle_starts_from_a_zero_angle(ui, sample_dir):
+    """DEBT-740: the toggle makes a `fix` without `tagangle`; the rotation used to store NaN (null in JSON)."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    open_editor_panels(ui)
+    ui.click_box("1")
+    ui.page.click("button.labeltoggle[thelabel=wrongid]:visible")
+    ui.js("zoomOverlay.rotateTag(90)")
+    assert ui.tracks()["0"]["1"]["fix"] == {"tagangle": 90}
+
+
 # ---- geometry gestures: fabric rectangle -> the stored geometry
 def select_at(ui, frame, obs_id):
     ui.goto_frame(frame)

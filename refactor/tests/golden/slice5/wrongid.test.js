@@ -59,7 +59,7 @@ test('tagRotated: label on, newid cleared, angle added and kept in (-180, 180]',
   assert.equal(W.tagRotated({ ID: '1', labels: '', fix: { newid: '4', tagangle: 90 } }, 90).newid, undefined);
 });
 
-test('tagRotated after the toggle stores NaN (DEBT-740, kept as it was)', async () => {
+test('tagRotated after the toggle starts from a zero angle (DEBT-740; it stored NaN)', async () => {
   const W = await load();
-  assert.ok(Number.isNaN(W.tagRotated({ ID: '1', labels: '', fix: { newid: undefined } }, 90).fix.tagangle));
+  assert.equal(W.tagRotated({ ID: '1', labels: '', fix: { newid: undefined } }, 90).fix.tagangle, 90);
 });

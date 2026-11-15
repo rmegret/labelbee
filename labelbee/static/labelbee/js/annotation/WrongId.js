@@ -53,7 +53,8 @@ export function alternateTagChosen(obs, id) {
 /** The tag was rotated by `angle` (90 or -90 degrees); the angle is kept in (-180, 180]. */
 export function tagRotated(obs, angle) {
   const fix = copyFix(obs, { newid: undefined, tagangle: 0 });
-  if (angle == 90 || angle == -90) fix.tagangle += angle; // DEBT-740: NaN when `fix` has no `tagangle` (made by the toggle)
+  if (fix.tagangle == null) fix.tagangle = 0; // a `fix` made by the toggle has none (DEBT-740)
+  if (angle == 90 || angle == -90) fix.tagangle += angle;
   if (fix.tagangle > 180) fix.tagangle -= 360;
   if (fix.tagangle <= -180) fix.tagangle += 360;
   return { labels: Labels.update(obs.labels, LABEL, true), newid: undefined, fix: fix };
