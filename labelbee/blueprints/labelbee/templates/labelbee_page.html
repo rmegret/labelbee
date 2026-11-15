@@ -699,8 +699,8 @@
                         class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
                       <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-warning btn-sm"
                         style="position: inline" id="deleteButton">
-                      <button type="button" onclick="undoAction()" class="btn btn-info btn-sm" style="position: inline"
-                        id="undoButton">Undo</button>
+                      <button type="button" onclick="undoAction()" class="btn btn-info btn-sm disabled" style="position: inline"
+                        id="undoButton" disabled title="Undo is off until its own slice">Undo</button>
                       <br>
                       <small style="color:blue">newID<input type="text" size="6" value="" id="newid"
                           onkeypress="onKeyDown_NewIDEdit(event)""></input></small>

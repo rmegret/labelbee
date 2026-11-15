@@ -202,9 +202,6 @@ def test_f8_delete_prunes_the_emptied_frame_and_the_saved_file_has_no_empty_fram
     ui.page.click("#deleteButton")
     ui.page.wait_for_function("!(events.toObject()[5] || {})[1]")
     assert frames_of(ui) == {"5": ["2"]}                               # a frame that still holds an observation stays
-    ui.page.click("#undoButton")                                       # undo of a delete into a pruned frame recreates it
-    ui.page.wait_for_function("!!(events.toObject()[5] || {})[1]")
-    assert frames_of(ui) == {"5": ["1", "2"]}
 
 
 # ---- visit: the Pick Flower tool of the pick-frame mode (OverlayControl.js drawImagePickFlowerMode) writes `visit` and

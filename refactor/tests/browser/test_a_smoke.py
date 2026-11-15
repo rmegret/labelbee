@@ -80,20 +80,23 @@ def test_a6_edit_a_box_and_its_label_and_keep_it(ui, sample_dir):
     assert obs["bool_acts"][1] is True            # pollen is the second flag (BEH-701)
 
 
-def test_a7_undo_restores_a_deleted_observation(ui, sample_dir):
-    """Undo only knows about deletions (SelectionControl.js: undoPush('delete', ...) is the only caller)."""
+def test_a7_undo_is_off_for_now(ui, sample_dir):
+    """Undo is deactivated until its own slice (ADR 0008 step 1, Q33): the button is disabled before and after a delete, nothing is
+    pushed on the undo stack, and a delete is final. (Until then it only knew deletions.)"""
     ui.open()
     ui.load_events(sample_dir / "events_v2.json")
     ui.wait_tracks()
     ui.open_panel("Annotations")
+    assert ui.page.locator("#undoButton").is_disabled()
     n = ui.n_observations()
     ui.click_box("1")
     ui.page.click("#deleteButton")
     ui.page.wait_for_function("(n) => !(events.toObject()['0'] || {})['1']", arg=n)     # the emptied frame is pruned
     assert ui.n_observations() == n - 1
-    ui.page.click("#undoButton")
-    ui.page.wait_for_function("!!(events.toObject()['0'] || {})['1']")
-    assert ui.n_observations() == n
+    assert ui.page.locator("#undoButton").is_disabled()
+    assert ui.js("undoStack.length") == 0
+    ui.page.wait_for_timeout(300)
+    assert ui.n_observations() == n - 1
 
 
 def test_a8_swap_id_from_the_current_frame_to_the_end(ui, sample_dir):

@@ -31,7 +31,7 @@ Record each run in the log at the end.
 | A4 ★ | Click an observation box | It is selected, its id is shown |
 | A5 ★ | Create an observation (shift-click, as usual) | Box appears and the chronogram shows a new interval |
 | A6 ★ | Move/resize it; change its label (e.g. pollen) | The edit is kept after changing frame and coming back |
-| A7 | Undo after a delete (Undo only knows deletions) | The deleted observation comes back |
+| A7 | Undo is off (deactivated until its own slice, [ADR 0008](../design/0008-field-ownership.md) step 1) | The Undo button is disabled, also after a delete; a delete is final |
 | A8 | Change an id / swap two ids | Ids change in the overlay and in the chronogram |
 | A9 | Delete an observation | It disappears from the frame and the chronogram |
 | A10 | Open the zoom view on a tag (needs tags) | Tags are drawn, DM filter responds |

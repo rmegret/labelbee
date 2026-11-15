@@ -10,7 +10,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 
 | File | Checklist items |
 |---|---|
-| `test_a_smoke.py` | A1-A9: open, play, seek, select, create, edit, undo (a delete), swap id, delete |
+| `test_a_smoke.py` | A1-A9: open, play, seek, select, create, edit, undo (off since slice 5 step 1), swap id, delete |
 | `test_a_features.py` | A10-A12: zoom view, tags (tags file merged by id, standalone Tags mode), parts, notes |
 | `test_b_store.py` | B1-B4: store and legacy globals, erase with confirmation, DM controls |
 | `test_c_loading.py` | C1-C7: local events and tags files, bad files |
@@ -87,7 +87,7 @@ Not caused by the refactor unless noted. Recorded in the intent spec: F1 in `DEB
 | F8 | In headless Chromium with the VP9 sample the page's `VideoCache` never answers: `videoCache.getFrameCropDataURL` stalls after `seekWithCallback: duration workaround`, so the features that need frame crops (the pick-frame timeline, Pick Flower) cannot run unstubbed. The default display mode is `"video"`, the raw video tag (`VideoControl.js:32`): the cache is not used for playback or seeking; only the crop features call it directly, whatever the mode. `test_f9` stubs that call with a 1x1 image. Cause not investigated (the same stall with H.264 in a real browser is not known) | `labelbee/static/labelbee/js/VideoControl.js` (`VideoCache`), `OverlayControl.js:1185` | `test_f9_...` |
 | F9 | Every click of the Pick Flower tool throws `Cannot read properties of undefined (reading 'labels')` after it has written `visit.flowerid`: `drawFlowersMainCanvas` passes `identifyBeeRect` a rect from `obsToCanvasRect` that has no `obs`. The pick itself works. A flower is an observation of frame 0 whose id starts with `F` (a pollinator: `P`), the convention of `ChronoControl.js:1108` and `OverlayControl.js:499,535,1387`. The test declares the error with `ui.allow`. Not fixed (outside slice 4) | `labelbee/static/labelbee/js/OverlayControl.js:1496,2482` | `test_f9_...` |
 
-Undo only knows deletions (`undoPush('delete')` is the only caller): checklist item A7 was reworded.
+Undo only knew deletions (`undoPush('delete')` was the only caller): checklist item A7 was reworded; since slice 5 step 1 undo is deactivated and A7 checks that it is off.
 
 ## Not automated
 Visual quality of the drawing, H.264 playback in your usual browser, the real backend (database, login, uploads), the

@@ -659,9 +659,8 @@ function deleteEvent(frame, id) {
     console.log('deleteEvent: Event not found (frame,id)=', frame, id)
     return false
   }
-  obs = cloneObs(events.get(frame, id))
+  // Undo is deactivated until its own slice (ADR 0008 step 1): a delete is final, nothing is cloned or pushed.
   events.delete(frame, id); // also removes the frame when it ends up empty
-  undoPush('delete', obs)
 
   videoControl.refresh();
   refreshChronogram();
@@ -704,6 +703,7 @@ function updateDeleteButton() {
 /* Undo stack */
 
 var undoStack = [];
+var UNDO_OFF_TITLE = "Undo is off until its own slice";
 function undoPush(action, info) {
   if (action === "new") {
     let obs = info;
@@ -738,7 +738,8 @@ function undoPop() {
 }
 function updateUndoButton() {
   if (undoStack.length == 0) {
-    $("#undoButton").addClass("disabled");
+    // Nothing pushes on the stack any more (undo is deactivated, ADR 0008 step 1): the button stays off.
+    $("#undoButton").addClass("disabled").prop("disabled", true).attr("title", UNDO_OFF_TITLE);
     $("#undoButton").val("Undo");
     return;
   } else {
