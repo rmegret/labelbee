@@ -174,8 +174,10 @@ function initChrono() {
 
   flag_showPartsOnChrono = false;
   flag_showIndividualEvents = false; // false by default as it is way to expensive for full video tracks
+  flag_showSpans = false; // draw obs.span (e.g. whole track of a *.events.csv) behind the intervals
   updateButtons_showPartsOnChrono();
   updateButtons_showIndividualEvents();
+  updateButtons_showSpans();
 
   eventSeekMode = "eventframe";
   updateEventSeekMode();
@@ -333,6 +335,16 @@ function onToggleButton_showIndividualEvents(event) {
 }
 function updateButtons_showIndividualEvents(event) {
   updateButtons("button_showIndividualEvents", flag_showIndividualEvents);
+}
+
+function onToggleButton_showSpans(event) {
+  flag_showSpans = toggledNewState(event);
+  updateButtons_showSpans();
+
+  refreshChronogram();
+}
+function updateButtons_showSpans(event) {
+  updateButtons("button_showSpans", flag_showSpans);
 }
 
 // TODO unify all buttons and checkmarks click handling
@@ -1589,6 +1601,8 @@ function renderActivities(onlyScaling) {
 
     chronoIntervals.renderEnterLeavePollen()
 
+    renderChrono_spans()
+
     renderChrono_danglingTracks(onlyScaling)
 
     chronoIntervals.renderSelection()
@@ -1690,6 +1704,37 @@ class ChronoIntervals {
 }
 chronoIntervals = new ChronoIntervals()
 
+
+/* obs.span {f1, f2} drawn as a thin bar on the row of the id, behind the intervals (option "Show spans").
+   Observations sharing the same id and span (start and end event of a track) give one bar. */
+function renderChrono_spans() {
+  if (!flag_showSpans) {
+    svgSpanRects.selectAll(".spanbar").remove()
+    return;
+  }
+  const [ xmin, xmax ] = axes.xScale.domain()
+  const seen = new Set()
+  const spans = []
+  for (const ann of flatTracksAll) {
+    const sp = ann.obs.span
+    if (sp == null) continue
+    const f1 = Number(sp.f1), f2 = Number(sp.f2)
+    if (!(f2 + 2 >= xmin && f1 - 1 <= xmax)) continue
+    const key = ann.id + "|" + f1 + "|" + f2
+    if (seen.has(key)) continue
+    seen.add(key)
+    spans.push({ id: ann.id, y: ann.y, f1: f1, f2: f2 })
+  }
+  svgSpanRects.selectAll(".spanbar")
+    .data(spans)
+    .join("rect")
+      .attr("class", "spanbar")
+      .attr("x", d => axes.xScale(d.f1))
+      .attr("width", d => axes.xScale(d.f2 + 1) - axes.xScale(d.f1))
+      .attr("y", d => axes.yScale(d.y) + axes.yScale.bandwidth() * 0.15)
+      .attr("height", axes.yScale.bandwidth() * 0.2)
+      .append("title").text(d => `ID: ${d.id}, span: ${d.f1}-${d.f2}`)
+}
 
 function renderChrono_danglingTracks(onlyScaling) {
   const chart = svgTop;

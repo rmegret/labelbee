@@ -103,3 +103,20 @@ def test_k7_event_tree_is_not_rendered_while_the_tab_is_closed(ui):
     ui.open_panel("Annotations")
     ui.open_subpanel("Events info")
     ui.page.wait_for_function("document.getElementById('event-tree').textContent.includes('frame 3')")
+
+
+def test_k8_show_spans_in_the_chronogram(ui):
+    ui.open()
+    open_picker_in_sample(ui, "sample_gurabo")
+    ui.page.click(".modal.in button:has-text('.events.csv [data]')")
+    ui.page.wait_for_selector(".modal.in .file-schema-mapping")
+    ui.page.click(".modal.in .modal-footer button:has-text('Load')")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
+    bars = lambda: ui.page.locator("#svgVisualize .spanbar").count()
+    assert bars() == 0                                                  # off by default
+    ui.page.evaluate("flag_showSpans = true; refreshChronogram()")
+    assert bars() > 0
+    n_tracks = ui.page.evaluate("new Set(flatTracksAll.map(a => a.id)).size")
+    assert bars() <= n_tracks                                           # start and end event of a track give one bar
+    ui.page.evaluate("flag_showSpans = false; refreshChronogram()")
+    assert bars() == 0

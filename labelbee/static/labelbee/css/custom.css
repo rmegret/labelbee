@@ -917,3 +917,4 @@ table, th, td {
 .file-schema-mapping tr.map-partial td { background: #fff3cd; }
 .file-schema-mapping tr.map-absent td { color: #999; }
 .file-schema-mapping tr.map-ignored td { color: #777; font-style: italic; }
+.spanbar { fill: #9ec5e8; stroke: #3b7bbf; stroke-width: 0.5px; pointer-events: none; }
