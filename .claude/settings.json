@@ -1,28 +1,54 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git log:*)",
-      "Bash(git branch:*)",
-      "Bash(git show:*)",
-      "Bash(ls:*)",
-      "Bash(wc:*)",
-      "Bash(pytest:*)"
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git blame *)",
+      "Bash(git ls-files *)",
+      "Bash(git rev-parse *)",
+      "Bash(git branch --list *)",
+      "Bash(git branch --show-current)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(pytest *)",
+      "Bash(python -m pytest *)",
+      "Bash(flask routes)"
     ],
     "ask": [
-      "Edit(./.claude/settings.json)",
-      "Write(./.claude/settings.json)",
-      "Edit(./.mcp.json)",
-      "Write(./.mcp.json)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Edit(/.claude/**)",
+      "Edit(/.mcp.json)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(pip install *)",
+      "EnterWorktree",
+      "ExitWorktree"
     ],
     "deny": [
-      "Read(./.env)",
-      "Read(./labelbee/private/**)",
-      "Read(./.htpasswd)",
-      "Edit(./docs/build/**)"
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/.htpasswd)",
+      "Read(/labelbee/private/**)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Edit(**/.env*)",
+      "Edit(**/.htpasswd)",
+      "Edit(/labelbee/private/**)",
+      "Edit(/docs/build/**)",
+      "Bash(cat **/.env*)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(rm -rf *)",
+      "Bash(curl *)",
+      "Bash(wget *)"
     ]
   }
 }
