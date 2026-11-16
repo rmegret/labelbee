@@ -382,7 +382,7 @@ function updateForm(activeObject) {
     $("#W").html("Width: -");
     $("#H").html("Height: -");
     $("#CX").html("Center X: -");
-    $("#CY").html("Center X: -");
+    $("#CY").html("Center Y: -");
 
     //$('.labelcheckbox').prop('checked', false);
 
@@ -395,7 +395,8 @@ function updateForm(activeObject) {
 
     w = activeObject.width;
     h = activeObject.height;
-    let vr = overlay.canvasToVideoRect(activeObject);
+    // activeObject.left/top are the center of the rectangle (originX/Y = "center"): use the unrotated box
+    let vr = overlay.canvasToVideoRect(rotatedRectGeometry(activeObject).unrotated);
 
     $("#X").html("X: " + vr.left.toFixed(0));
     $("#Y").html("Y: " + vr.top.toFixed(0));

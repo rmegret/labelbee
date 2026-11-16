@@ -245,6 +245,21 @@ def test_j8b_the_store_is_written_on_release_not_during_the_drag(ui, sample_dir)
     assert ui.tracks()["5"]["1"]["cx"] != before["cx"]                  # released: it has
 
 
+def test_j8c_the_form_shows_the_geometry_of_the_selected_box(ui, sample_dir):
+    """`updateForm` reads the fabric rectangle, whose left/top are its center (originX/Y = center): X, Y, Width, Height,
+    Center X, Center Y show the stored box."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    obs = select_at(ui, 5, "1")
+    shown = {k: ui.js(f"$('#{k}').text()") for k in ("X", "Y", "W", "H", "CX", "CY")}
+    for key, label, value in (("X", "X: ", obs["x"]), ("Y", "Y: ", obs["y"]), ("W", "Width: ", obs["width"]),
+                              ("H", "Height: ", obs["height"]), ("CX", "Center X: ", obs["x"] + obs["width"] / 2),
+                              ("CY", "Center Y: ", obs["y"] + obs["height"] / 2)):
+        assert shown[key].startswith(label)
+        assert float(shown[key][len(label):]) == APPROX(value, abs=1.0), (key, shown[key], value)
+
+
 def test_j9_resize_with_a_corner_changes_the_size_and_the_opposite_corner_stays(ui, sample_dir):
     ui.open()
     ui.load_events(sample_dir / "events_v2.json")
