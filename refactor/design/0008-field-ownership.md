@@ -1,6 +1,6 @@
 # ADR 0008: Store-first editing and field ownership (slice 5)
 
-Status: **proposed**, nothing implemented. Direction and decisions from the maintainer, 2026-11-14: [Q30](../QUESTIONS.md#q30)-[Q33](../QUESTIONS.md#q33)
+Status: **accepted and implemented** (slice 5, merged into `refactor` as `011a3f84`). Direction and decisions from the maintainer, 2026-11-14: [Q30](../QUESTIONS.md#q30)-[Q33](../QUESTIONS.md#q33)
 answered. No question is open. This ADR is slice 5 of the plan ("observation operations" of [ADR 0007](0007-slice-events-api.md)); it replaces
 steps 7b and 7c of ADR 0007, which are dropped. Numbers are those of `refactor` at `763afbb3`.
 
