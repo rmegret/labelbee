@@ -1792,7 +1792,7 @@ function renderObsTable() {
         // evaluate column objects against the current row
         return columns.map(function (c) {
           var cell = {};
-          d3.keys(c).forEach(function (k) {
+          Object.keys(c).forEach(function (k) {
             cell[k] = typeof c[k] == "function" ? c[k](row, i) : c[k];
           });
           return cell;
