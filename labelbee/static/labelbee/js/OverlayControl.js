@@ -347,386 +347,6 @@ TimelineWidget.prototype.onClick = function (param, value) {
 }
 
 
-VisitWidget = function(overlay) {
-    this.overlay = overlay
-    
-    this.pollinator = undefined // obs
-    this.flower = undefined // obs
-    
-    this.visit = undefined // visit obs
-    this.id = undefined
-    this.frame = undefined
-
-    this.create()
-}
-VisitWidget.prototype.pickMode = function(mode) {
-    console.log('VisitWidget.pickMode', mode)
-    if (mode == 'pollinator') {
-        this.overlay.setInteractionMode('edit-visit',{pickMode:'pollinator'})
-    } else if (mode == 'flower') {
-        this.overlay.setInteractionMode('edit-visit',{pickMode:'flower'})
-    } else {
-        console.log('pickMode ABORT: Unknown pick mode', mode)
-        return
-    }
-    this.update()
-}
-VisitWidget.prototype.gotoObs = function(mode) {
-    console.log('VisitWidget.selectObs', mode)
-    if (mode == 'pollinator') {
-        if (!this.pollinator) return
-        selectBeeByIDandFrame(this.pollinator.ID, this.pollinator.frame)
-    } else if (mode == 'flower') {
-        if (!this.flower) return
-        selectBeeByIDandFrame(this.flower.ID,this.flower.frame)
-    } else if (mode == 'visit') {
-        if (!this.visit) return
-        selectBeeByIDandFrame(this.visit.ID,this.visit.frame)
-    } else {
-        console.log('pickMode ABORT: Unknown pick mode', mode)
-        return
-    }
-    this.update()
-}
-VisitWidget.prototype.selectVisit = function(obs) {
-    this.visit = obs
-    default_id = obs.ID
-    this.update()
-}
-VisitWidget.prototype.newVisit = function() {
-    if (!this.pollinator || !this.flower) {
-        console.log('VisitWidget.newVisit CANCELED, missing data',this.pollinator, this.flower)
-        return
-    }
-
-    let pollinator_id = this.pollinator.ID
-    let flower_id = this.flower.ID
-    let id = "V-"+pollinator_id+"-"+flower_id
-    let frame= getCurrentFrame()
-    let time = videoControl.getCurrentVideoTime()
-
-    let x1 = this.pollinator.x+this.pollinator.width/2
-    let y1 = this.pollinator.y+this.pollinator.height/2
-    let x2 = this.flower.x+this.flower.width/2
-    let y2 = this.flower.y+this.flower.height/2
-    let cx = (x1+x2)/2
-    let cy = (y1+y2)/2
-    let w = default_width
-    let h = default_height
-
-    // Create the new event in memory, then refresh
-    let tmpObs = {
-        ID: id,
-        frame: frame,
-        time: time,
-        x: cx-w/2,
-        y: cy-h/2,
-        cx: cx,
-        cy: cy,
-        width: w,
-        height: h,
-        angle: 0,
-        notes: '',
-        labels: '',
-        visit: {pollinator: pollinator_id, flower: flower_id},
-        span: {'f1':frame, 'f2':frame}
-    }
-    storeObs(tmpObs);
-    
-    this.visit = getObsHandle(frame, id)
-    default_id = id
-
-    overlay.hardRefresh()
-    refreshChronogram()
-
-    //submit_bee();
-    //rect.obs.visit = {pollinator: pollinator_id, flower: flower_id}
-
-    this.update()
-}
-VisitWidget.prototype.deleteVisit = function() {
-    let visit = this.visit
-    if (!visit) {
-        console.log('deleteVisit: no visit selected')
-        return
-    }
-    this.visit = undefined
-    deleteEvent(visit.frame, visit.ID)
-    this.update()
-}
-VisitWidget.prototype.close = function() {
-    this.visit = undefined
-    this.pollinator = undefined
-    this.flower = undefined
-    this.id = undefined
-    this.frame = undefined
-    this.update()
-}
-VisitWidget.prototype.create = function() {
-    let overlay = this.overlay
-    $('#visitblockdiv').html("EDIT VISIT: ")
-            .append($('<button>DISMISS</button>').click(()=>this.close()))
-        .append("<br>visit event, frame <span id='frame'></span>, id <span id='visit_id'></span>&nbsp;")
-        .append('<br>')
-            .append($('<button class="btn btn-default btn-xs goto-visit">Goto</button>').click(()=>this.gotoObs('visit')))
-            .append($('<button class="btn btn-default btn-xs new-visit">Create</button>').click(()=>this.newVisit()))
-            .append($('<button class="btn btn-default btn-xs delete-visit">Delete</button>').click(()=>this.deleteVisit()))
-        .append('<br>')
-        .append('&nbsp;&nbsp;&nbsp;Pollinator: <span id="pollinator_id"></span>')
-            .append($('<button class="btn btn-default btn-blue-toggle btn-xs select-pollinator">Goto</button>').click(()=>this.gotoObs('pollinator')))
-            .append($('<button class="btn btn-default btn-blue-toggle btn-xs pick-pollinator">Pick</button>').click(()=>this.pickMode('pollinator')))
-        .append('<br>')
-            .append('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Flower: <span id="flower_id"></span>')
-            .append($('<button class="btn btn-default btn-blue-toggle btn-xs select-flower">Goto</button>').click(()=>this.gotoObs('flower')))
-            .append($('<button class="btn btn-default btn-blue-toggle btn-xs pick-flower">Pick</button>').click(()=>this.pickMode('flower')))
-        .append('<br>')
-        .append('Start frame: <span id="start-frame"></span>')
-            .append($('<button class="btn btn-default btn-xs goto-start-frame">Goto</button>').click(()=>this.gotoSpanFrame('start')))
-            .append($('<button class="btn btn-default btn-xs set-start-frame">Set</button>').click(()=>this.setSpanFrame('start')))
-        .append('<br>')
-        .append('&nbsp;End frame: <span id="end-frame"></span>')
-            .append($('<button class="btn btn-default btn-xs goto-end-frame">Goto</button>').click(()=>this.gotoSpanFrame('end')))
-            .append($('<button class="btn btn-default btn-xs set-end-frame">Set</button>').click(()=>this.setSpanFrame('end')))
-}
-VisitWidget.prototype.setFlower = function(obs) {
-    console.log('VisitWidget.setFlower',obs); 
-    if (!obs) {
-        console.log('VisitWidget.setFlower, no obs',obs); 
-        overlay.setInteractionMode('main')
-        this.update()
-        return
-    }
-    if (!String(obs.ID).startsWith('F')) {
-        console.log('VisitWidget.setFlower, not a flower',obs); 
-        overlay.setInteractionMode('main')
-        this.update()
-        return
-    }
-    this.flower = obs
-    overlay.setInteractionMode('main')
-    this.update()
-}
-VisitWidget.prototype.setPollinator = function(obs) {
-    console.log('VisitWidget.setPollinator',obs); 
-    if (!obs) {
-        console.log('VisitWidget.setPollinator, no obs',obs);
-        overlay.setInteractionMode('main')
-        this.update()
-        return
-    }
-    if (!String(obs.ID).startsWith('P')) {
-        console.log('VisitWidget.setPollinator, not a pollinator',obs); 
-        overlay.setInteractionMode('main')
-        this.update()
-        return
-    }
-    this.pollinator = obs
-    overlay.setInteractionMode('main')
-    this.update()
-}
-VisitWidget.prototype.setFlower = function(obs) {
-    console.log('VisitWidget.setFlower',obs); 
-    if (!obs) {
-        console.log('VisitWidget.setFlower, no obs',obs); 
-        overlay.setInteractionMode('main')
-        this.update()
-        return
-    }
-    if (!String(obs.ID).startsWith('F')) {
-        console.log('VisitWidget.setFlower, not a flower',obs); 
-        overlay.setInteractionMode('main')
-        this.update()
-        return
-    }
-    this.flower = obs
-    overlay.setInteractionMode('main')
-    this.update()
-}
-VisitWidget.prototype.setSpanFrame = function(mode) {
-    console.log('VisitWidget.setSpanFrame'); 
-    let visit = this.visit
-    if (!visit) {
-        console.log('VisitWidget.setSpanFrame, no visit'); 
-        return
-    }
-    let frame = videoControl.getCurrentFrame()
-    if (! ('span' in visit)) {
-        // Fix visit if does not contain span info already
-        visit.span = {'f1':visit.frame, 'f2':visit.frame}
-    }
-    if (mode=='start') {
-        if (frame > visit.frame) {
-            console.log('VisitWidget.setSpanFrame: ABORT, current frame > visit frame',frame,visit.frame); 
-            this.update()
-            return
-        }
-        visit.span.f1 = frame
-    }
-    if (mode=='end') {
-        if (frame < visit.frame) {
-            console.log('VisitWidget.setSpanFrame: ABORT, current frame < visit frame',frame,visit.frame); 
-            this.update()
-            return
-        }
-        visit.span.f2 = frame
-    }
-    this.update()
-    refreshChronogram()
-}
-VisitWidget.prototype.gotoSpanFrame = function(mode) {
-    console.log('VisitWidget.gotoSpanFrame'); 
-    let visit = this.visit
-    if (!visit) {
-        console.log('VisitWidget.gotoSpanFrame, no visit'); 
-        return
-    }
-    if (!('span' in visit)) {
-        console.log('VisitWidget.gotoSpanFrame, no visit span'); 
-        return
-    }
-    if (mode=='start') {
-        selectBeeByIDandFrame(visit.ID,visit.span.f1)
-    }
-    if (mode=='end') {
-        selectBeeByIDandFrame(visit.ID,visit.span.f2)
-    }
-}
-VisitWidget.prototype.update = function() {
-    if (this.visit) {
-        this.pollinator = getObsHandle(this.visit.frame, this.visit.visit.pollinator)
-        this.flower = getObsHandle(this.visit.frame, this.visit.visit.flower)
-    }
-
-    let visit_id = this?.visit?.ID
-    let frame = this?.visit?.frame ?? this?.pollinator?.frame ?? this?.flower?.frame ?? undefined
-
-    let pollinator_id = this?.pollinator?.ID ?? this?.visit?.visit?.pollinator
-    let flower_id = this?.flower?.ID ?? this?.visit?.visit?.flower
-
-    if (!this.visit) {
-        let id = "V-"+pollinator_id+"-"+flower_id
-        this.visit = getObsHandle(frame, id)
-    }
-    this.frame = frame
-    $('#visitblockdiv > #pollinator_id').html(pollinator_id ?? "??")
-    $('#visitblockdiv > #flower_id').html(flower_id ?? "??")
-    $('#visitblockdiv > #frame').html(frame ?? "??")
-    $('#visitblockdiv > #visit_id').html(visit_id ?? "??")
-    $('#visitblockdiv > #start-frame').html(this?.visit?.span?.f1 ?? "??")
-    $('#visitblockdiv > #end-frame').html(this?.visit?.span?.f2 ?? "??")
-    if (this.overlay?.interaction?.mode == 'edit-visit') {
-        let pickMode = this.overlay.interaction.opts.pickMode
-        $('#visitblockdiv > .btn.pick-pollinator').toggleClass("active",pickMode =='pollinator')
-        $('#visitblockdiv > .btn.pick-flower').toggleClass("active",pickMode =='flower')
-    } else {
-        $('#visitblockdiv > .btn.pick-pollinator').toggleClass("active",false)
-        $('#visitblockdiv > .btn.pick-flower').toggleClass("active",false)
-    }
-
-    $('#visitblockdiv > .btn.new-visit').prop('disabled', !!(this.visit) || (!this.pollinator || !this.flower))
-    $('#visitblockdiv > .btn.delete-visit').prop('disabled', (!this.visit))
-
-    $('#visitblockdiv > .btn.select-pollinator').prop('disabled', (!this.pollinator))
-    $('#visitblockdiv > .btn.select-flower').prop('disabled', (!this.flower))
-
-    $('#visitblockdiv > .btn.pick-pollinator').prop('disabled', !!(this.visit))
-    $('#visitblockdiv > .btn.pick-flower').prop('disabled', !!(this.visit))
-
-}
-VisitWidget.prototype.open = function() {
-    let overlay = this.overlay
-    let centerframe = videoControl.currentFrame
-
-    if (this.interaction.mode != 'edit-visit') {
-        console.log('Not editiing visit... ABORT')
-        return
-    }
-
-
-    let activeObj = this.getActiveObject()
-    if (!activeObj) {
-        console.log('overlay.setInteractionMode: CANCELED, no active object')
-        return;
-    }
-    let obs = activeObj.obs
-    if (!obs) {
-        console.log('overlay.setInteractionMode: CANCELED, no obs')
-        return;
-    }
-    let frame = videoControl.getCurrentFrame()
-
-    
-    this.interaction.opts.obs = obs
-    this.interaction.opts.id = obs.ID
-    this.interaction.opts.frame = frame
-    this.interaction.opts.showTimeline = false // Hide timeline by default
-
-
-    function intervalRange(start, end) {
-        return Array.from({length: end-start+1}, (x, i) => start+i);
-    }
-    let deltas =  intervalRange(-overlay.opts.timelineMaxDelta, overlay.opts.timelineMaxDelta)  //[-3,-2,-1,0,1,2,3,4]
-    videoControl.pause()
-    printMessage("Paused, need to preload video frames")
-    console.log('Creating timeline...')
-
-
-    // let id = overlay.interaction.opts.id
-    // let frame0 = overlay.interaction.opts.frame
-    // let obs=getObsHandle(frame0,id) 
-    // if (!obs) {
-    //     printMessage("Timeline: didn't find annotation to pick frame for")
-    //     return
-    // }
-    // if (!size) {
-    //     size = obs.width>obs.height ? obs.width : obs.height
-    //     size *= overlay.opts.timelineZoom
-    //     size = Math.round(size)
-    // }
-    // if (!displaySize) {
-    //     displaySize = overlay.opts.timelineDisplaySize
-    // }
-    // let w = size
-    // let h = size
-    // let cx = obs.x + obs.width/2
-    // let cy = obs.y + obs.height/2
-    // let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
-    
-    // $('#pick-frame-timeline').html("Timeline:<br>")
-    // for (var delta of deltas) {
-    //     //console.log(i); 
-    //     let frame = Number(centerframe)+Number(delta)
-    //     let img = await this.getFrameCropImg(frame, crop)
-    //     img.width = displaySize
-    //     img.height = displaySize
-    //     if (img) {
-    //         let extra=''
-    //         let pref=''
-    //         let div = $('<div style="display: inline-block"></div>')
-    //         div.addClass('timeline')
-    //         $('#pick-frame-timeline').append(div)
-    //         if (frame == frame0) {
-    //             div.addClass('selected')
-    //             extra+=' Event'
-    //         }
-    //         if (frame == obs.span.f1) {
-    //             div.addClass('selected-f1')
-    //             extra+=' Start'
-    //         }
-    //         if (frame == obs.span.f2) {
-    //             div.addClass('selected-f2')
-    //             extra+=' End'
-    //         }
-    //         if (frame == centerframe) {
-    //             pref+='Current '
-    //         }
-    //         div.click(()=>gotoEvent(frame, id))
-    //         div.html('<small>'+pref+'Frame '+frame+extra+'</small><br>')
-    //         div.append(img)
-    //     }
-    // }
-
-}
 
 OverlayControl.prototype.optsClick = function(option) {
     console.log('overlay.onClickDisableAngle')
@@ -863,11 +483,7 @@ OverlayControl.prototype.onClickResetAngle = function () {
     console.log("onClickResetAngle: aborted, could not get an activeObject");
     return;
   }
-  const obs = activeObject.obs;
-
-  obs.angle = 0;
-
-  submit_bee();
+  storeUnit(activeObject, { angle: 0 });
 };
 OverlayControl.prototype.onClickAngleFromTag = function () {
   console.log("overlay.onClickAngleFromTag");
@@ -887,9 +503,7 @@ OverlayControl.prototype.onClickAngleFromTag = function () {
     return;
   }
 
-  obs.angle = tagAngle(tag);
-
-  submit_bee();
+  storeUnit(activeObject, { angle: tagAngle(tag) });
 
   //    this.refreshOverlay()
 };
@@ -1326,183 +940,6 @@ OverlayControl.prototype.drawTimelinePickFrameMode = async function(size, displa
         }
     }
 }
-OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displaySize) {
-    let overlay = this
-    
-    videoControl.pause()
-    printMessage("Paused, need to preload video frames")
-    console.log('Creating pick flower image ...')
-
-    if (this.interaction.mode != 'pick-frame') {
-        console.log('Not picking frame... ABORT')
-        return
-    }
-
-    let id = overlay.interaction.opts.id
-    let frame0 = overlay.interaction.opts.frame
-    let obs=getObsHandle(frame0,id) 
-    let currentObs = obs
-    if (!obs) {
-        printMessage("Timeline: didn't find annotation to pick flower for")
-        return
-    }
-    if (!currentObs.visit) currentObs.visit={}
-    if (!size) {
-        size = obs.width>obs.height ? obs.width : obs.height
-        size *= overlay.opts.timelineZoom
-        size = Math.round(size)
-    }
-    if (!displaySize) {
-        displaySize = overlay.opts.timelineDisplaySize
-    }
-    let w = size
-    let h = size
-    let cx = obs.x + obs.width/2
-    let cy = obs.y + obs.height/2
-    let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
-    
-    //$('#pickflowerdiv').html("Pick Flower for id="+id+" in frame="+frame0+"<br>")
-
-    let frame = frame0
-    let img = await this.getFrameCropImg(frame, crop)
-    //img.width = displaySize
-    //img.height = displaySize
-    if (img) {
-        let canvas = document.createElement('canvas'); // Precreated canvas
-        let ctx = canvas.getContext('2d');
-        canvas.width = w; canvas.height = h // pixel size
-        $(canvas).css({width: displaySize, height: displaySize}) // Display size
-        ctx.drawImage(img, 0, 0)
-
-        let div = $('<div style="display: inline-block"></div>')
-        //div.addClass('timeline')
-        $('#pickflowerdiv').append(div)
-        let text = $("<small>Pick Flower for id="+id+" in frame="+frame+"<br>")
-            .append($('<button class="btn btn-default btn-xs" style="inline">No visit</button>').click(removeVisit))
-        div.append(text)//html("<small>Pick Flower for id="+id+" in frame="+frame+"<br>")
-        //div.append(img)
-        div.append(canvas)
-
-        function isFlower(obs) {
-            return String(obs.ID).startsWith('F')
-        }
-        let flowers = Object.values(events.getFrame(0)).filter(isFlower)
-
-        function drawCenter(obs, selected) {
-            let x0 = crop.x
-            let y0 = crop.y
-
-            let x = obs.x+obs.width/2 - x0 // cx not reliable??
-            let y = obs.y+obs.height/2 - y0
-
-            let color = 'yellow'
-            let radius = 2
-
-            if (obs.ID == currentObs.visit.flowerid) {
-                color = 'green'
-            }
-            if (selected) {
-                color = 'green'
-                radius = 4
-            }
-
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = color;
-            ctx.closePath();
-            ctx.fill();    
-
-            ctx.font = "7px Arial";
-            ctx.fillStyle = color;
-            ctx.textAlign = 'center';
-            ctx.fillText(String(obs.ID), x, y - radius - 1);
-        }
-        function closestFlower(flowers, pt, maxdist) {
-            function euclid(pt1,pt2) {
-                return Math.sqrt((pt1.x-pt2.x)**2+(pt1.y-pt2.y)**2)
-            }
-            let dist = maxdist
-            let pickedObs = undefined
-            for (let obs of flowers) {
-                let ptf = {x:obs.x+obs.width/2, y: obs.y+obs.height/2}
-                let d = euclid(pt,ptf)
-                //console.log('d=',d,'pickedObs',pickedObs)
-                if (d<dist) {
-                    dist=d; pickedObs = obs
-                }
-            }
-            return pickedObs
-        }
-        function drawFlowers(flowers, selectedID) {
-            ctx.drawImage(img, 0, 0)
-            for (let obs of flowers) {
-                //console.log('Draw',obs)
-                let selected = (obs.ID==selectedID)
-                drawCenter(obs, selected)
-            }
-        }
-        function canvasPtToVideoPt(ptGUI) {
-            let pt = {x: ptGUI.x/displaySize*w+crop.x, y: ptGUI.y/displaySize*h+crop.y}
-            return pt
-        }
-        function pickFlower_mouseMove(option) {
-            console.log(option)
-            let ptGUI = {x: option.offsetX, y: option.offsetY}
-            let pt = canvasPtToVideoPt( ptGUI )
-            console.log(ptGUI, pt)
-
-            let pickedObs = closestFlower(flowers, pt, 200)
-            drawFlowers(flowers, pickedObs?pickedObs.ID:undefined)
-
-            // ctx.beginPath();
-            // ctx.arc(pt.x-crop.x, pt.y-crop.y, radius, 0, Math.PI * 2);
-            // ctx.fillStyle = 'red';
-            // ctx.closePath();
-            // ctx.fill();    
-
-        }
-        function pickFlower_mouseClick(option) {
-            console.log(option)
-            let ptGUI = {x: option.offsetX, y: option.offsetY}
-            let pt = canvasPtToVideoPt( ptGUI )
-
-            let pickedObs = closestFlower(flowers, pt, 200)
-
-            if (pickedObs) {
-                console.log('Change visited flower for ',currentObs, 'to flower', pickedObs)
-                if (!currentObs.visit) currentObs.visit={}
-                currentObs.visit.flowerid = pickedObs.ID
-            }
-            drawFlowers(flowers, currentObs.visit.flowerid)
-            drawFlowersMainCanvas(flowers, currentObs.visit.flowerid)
-        }
-        function pickFlower_mouseLeave(option) {
-            drawFlowers(flowers, currentObs.visit.flowerid)
-        }
-        function removeVisit() {
-            currentObs.visit.flowerid = undefined
-            drawFlowers(flowers, currentObs.visit.flowerid)
-        }
-        function drawFlowersMainCanvas(flowers, selectedID) {
-            //overlay.ctx.drawImage(img, 0, 0)
-            let ctx = overlay.ctx
-            for (let obs of flowers) {
-                //console.log('Draw',obs)
-                let isSelected = (obs.ID==selectedID)
-                //drawCenter(obs, selected)
-                let rect = overlay.obsToCanvasRect(obs)
-                let x = rect.left+rect.width/2
-                let y = rect.top+rect.height/2
-                identifyBeeRect(ctx, rect, radius, isSelected)
-            }
-        }
-
-        $(canvas).click(pickFlower_mouseClick)
-        $(canvas).mousemove(pickFlower_mouseMove)
-        $(canvas).mouseleave(pickFlower_mouseLeave)
-        drawFlowers(flowers, currentObs.visit.flowerid)
-    }
-}
 OverlayControl.prototype.hardRefresh = function () {
   // Recreate overlay from Tracks
 
@@ -1930,7 +1367,7 @@ function refreshRectFromObs() {
   //if (logging.overlay)
   //    console.log("refreshRectFromObs: updating ",rectList.length," rect(s)")
   for (let rect of rectList) {
-    if (typeof rect.obs !== "undefined") {
+    if (typeof rect.obs !== "undefined" && !rect.dragging) { // a rectangle being dragged is ahead of the store
       updateRectFromObsGeometry(rect);
     }
     refreshRectStyle(rect);
@@ -2020,41 +1457,39 @@ function updateRectFromObsGeometry(rect) {
   }
 }
 
-// Fabric BeeRect to obs
+// Fabric BeeRect to geometry fields (the adapter of ADR 0008 P3): what the rectangle says, in video coordinates.
+// Returns the fields only, it writes nothing; the caller stores them (storeUnit on release, the working copy while dragging).
+function rectToGeometry(rect) {
+    let obs = rect.obs
+    let geom = rotatedRectGeometry(rect);
+    let videoRect = overlay.canvasToVideoRect(geom.unrotated)
+    let cx = (videoRect.left + videoRect.width / 2);
+    let cy = (videoRect.top + videoRect.height / 2);
+
+    if (overlay.opts.showRect) {
+        return {
+            x: videoRect.left,    // unrotated left (rotation around center)
+            y: videoRect.top,     // unrotated top
+            width: videoRect.width,
+            height: videoRect.height,
+            angle: rect.angle,
+            cx: cx,
+            cy: cy,
+        };
+    }
+    // Virtual rect (dot): just the center, keep width, height, angle
+    return { cx: cx, cy: cy, x: cx - obs.width/2, y: cy - obs.height/2 };
+}
+
+// Fabric BeeRect to the working copy of the observation
 function updateRectObsGeometry(activeObject) {
     if (logging.overlay)
         console.log('updateRectObsGeometry: activeObject=',activeObject)
-    let obs = activeObject.obs
-        if (typeof obs === 'undefined') {
-            console.log('updateRectObsGeometry: activeObject.obs undefined')
-            return
+    if (typeof activeObject.obs === 'undefined') {
+        console.log('updateRectObsGeometry: activeObject.obs undefined')
+        return
     }
-
-    let geom = rotatedRectGeometry(activeObject);
-    let videoRect = overlay.canvasToVideoRect(geom.unrotated)
-    
-    if (overlay.opts.showRect) {
-        // Update Observation attached to rectangle from current Rect size
-        obs.x = videoRect.left    // unrotated left (rotation around center)
-        obs.y = videoRect.top     // unrotated top
-        obs.width = videoRect.width
-        obs.height = videoRect.height
-        obs.angle = activeObject.angle    
-        obs.cx = (videoRect.left + videoRect.width / 2);
-        obs.cy = (videoRect.top + videoRect.height / 2);
-    } else {
-        // `Virtual rect, just update center, keep width, height, angle
-        // Update Observation attached to rectangle from current Rect size
-        //obs.x = videoRect.left    // unrotated left (rotation around center)
-        //obs.y = videoRect.top     // unrotated top
-        //obs.width = videoRect.width
-        //obs.height = videoRect.height
-        //obs.angle = activeObject.angle    
-        obs.cx = (videoRect.left + videoRect.width / 2);
-        obs.cy = (videoRect.top + videoRect.height / 2);
-        obs.x = obs.cx - obs.width/2;
-        obs.y = obs.cy - obs.height/2;
-    }
+    Object.assign(activeObject.obs, rectToGeometry(activeObject))
 }
 
 function createRectsFromTracks(F) {
@@ -2071,19 +1506,14 @@ function createRectsFromTracks(F) {
   overlay.canvas1.renderAll(); // Render only once at the end
   overlay.canvas1.renderOnAddRemove = true
 }
-function addRectFromObs(inputObs, status) {
+function addRectFromObs(inputObs, draft) {
   if (typeof inputObs === "undefined") {
     console.log("ERROR in addRectFromObs: input obs undefined");
     return undefined;
   }
 
-  if (typeof status == "undefined") status = "db";
-  if (status !== "new" && status !== "db") {
-    console.log("ERROR in addRectFromObs: status=", status, " unknown");
-    return undefined;
-  }
-
-  var obs = cloneObs(inputObs);
+  // A stored observation is not copied: the rectangle holds the stored object, the store is the only holder (ADR 0008 P2)
+  var obs = inputObs;
   if (typeof obs.angle === "undefined") {
     console.log("WARNING in addRectFromObs: obs.angle undefined, default to 0");
     obs.angle = 0;
@@ -2091,7 +1521,7 @@ function addRectFromObs(inputObs, status) {
 
   var rect = new fabric.BeeRect({
     id: obs.ID,
-    status: status,
+    draft: !!draft,
     obs: obs,
     top: undefined,
     left: undefined,
@@ -2238,43 +1668,46 @@ fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
     ctx.restore();
   },
 });
-// Create a fabric rectangle at specific place, all units in canvas coordinates
-function addRect(id, startX, startY, width, height, status, inputObs, angle) {
-  console.log("addRect: id=", id);
-
-  var obs;
-  if (status === "new") {
-    obs = new Observation(id);
-    obs.ID = id;
-    obs.frame = videoControl.getCurrentFrame();
-    obs.time = videoControl.getCurrentVideoTime();
-    updateObsActivityFromForm(obs);
-
-    let canvasRect = {
-      left: startX,
-      top: startY,
-      width: width,
-      height: height,
-    };
-    let videoRect = overlay.canvasToVideoRect(canvasRect);
-    obs.x = videoRect.left;
-    obs.y = videoRect.top;
-    obs.width = videoRect.width;
-    obs.height = videoRect.height;
-    if (angle == null) angle = 0;
-    obs.angle = angle;
-  } else if (status === "db") {
-    obs = cloneObs(inputObs);
-    if (typeof obs.angle === "undefined") {
-      obs.angle = 0;
-    }
-  } else {
-    console.log("addRect: error, status unknown. status=", status);
+// A fresh observation on the current frame (ADR 0008 R6): the defaults, the geometry (video coordinates, unrotated
+// box) and, from the source observation of a prediction if any, its whole `labels` and nothing else.
+function newObservation(id, videoRect, angle, source) {
+  return {
+    ID: id,
+    time: videoControl.getCurrentVideoTime(),
+    frame: videoControl.getCurrentFrame(),
+    x: videoRect.left,
+    y: videoRect.top,
+    cx: videoRect.left + videoRect.width / 2,
+    cy: videoRect.top + videoRect.height / 2,
+    width: videoRect.width,
+    height: videoRect.height,
+    angle: angle == null ? 0 : angle,
+    notes: "",
+    labels: source && source.labels ? source.labels : "",
+  };
+}
+// Create an observation in the store at a specific place (all units in canvas coordinates), and its fabric rectangle.
+// Creation is immediate (ADR 0008 P4): `source` is the observation of a prediction, if any; an id that already exists
+// on the frame is replaced by the next free integer.
+function createRect(id, startX, startY, width, height, angle, source) {
+  let frame = videoControl.getCurrentFrame();
+  if (events.has(frame, id)) {
+    let free = Number(id);
+    if (isNaN(free)) free = 0;
+    while (events.has(frame, free) || events.has(frame, String(free))) free++;
+    printMessage("Bee " + id + " already exists in this frame: created with id " + free, "red");
+    id = free;
   }
-
-  var rect = addRectFromObs(obs, status);
-
-  return rect;
+  let canvasRect = { left: startX, top: startY, width: width, height: height };
+  let videoRect = overlay.canvasToVideoRect(canvasRect);
+  let obs = events.commit(newObservation(id, videoRect, angle, source));
+  return addRectFromObs(obs);
+}
+// The rectangle drawn while ctrl-dragging: not in the store until the drag is validated (submitDraft)
+function addDraftRect(id, startX, startY) {
+  let canvasRect = { left: startX, top: startY, width: 1, height: 1 };
+  let videoRect = overlay.canvasToVideoRect(canvasRect);
+  return addRectFromObs(newObservation(id, videoRect), true);
 }
 // Try to find a fabric rectangle with a given id
 function findRect(id) {
@@ -2289,40 +1722,6 @@ function findRect(id) {
     }
   }
   return undefined;
-}
-
-function updateRectObsActivity(activeObject) {
-  // Update Observation attached to rectangle from Form information
-  let obs = activeObject.obs;
-  updateObsActivityFromForm(obs);
-}
-function updateObsActivityFromForm(obs) {
-  // Update form --> obs.labels --> bool_acts
-
-  obs.bool_acts[0] = hasLabel(obs, "fanning");
-  obs.bool_acts[1] = hasLabel(obs, "pollen");
-  obs.bool_acts[2] = hasLabel(obs, "entering");
-  obs.bool_acts[3] = hasLabel(obs, "leaving");
-
-  obs.notes = $("#notes").val();
-
-  if (logging.guiEvents) console.log("updateObsActivityFromForm: obs=", obs);
-}
-function setLabels(rect, labels) {
-  let obs = rect.obs;
-
-  // Update labelsString --> obs.labels --> bool_acts --> form
-
-  let labelArray = toLabelArray(labels);
-  labels = toLabelString(labelArray);
-  obs.labels = labels;
-
-  obs.bool_acts[0] = hasLabel(obs, "fanning");
-  obs.bool_acts[1] = hasLabel(obs, "pollen");
-  obs.bool_acts[2] = hasLabel(obs, "entering");
-  obs.bool_acts[3] = hasLabel(obs, "leaving");
-
-  updateForm(rect);
 }
 
 // #MARK # CANVAS DRAWING: TRACKS AND EVENTS
@@ -2369,19 +1768,19 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, splitToken) {
 }
 function activityString(obs) {
   let acti = "";
-  if (obs.bool_acts[0]) acti += "F";
-  if (obs.bool_acts[1]) acti += "P";
-  if (obs.bool_acts[2]) acti += "E";
-  if (obs.bool_acts[3]) acti += "L";
+  let b = Labels.bool_acts(obs);
+  if (b[0]) acti += "F";
+  if (b[1]) acti += "P";
+  if (b[2]) acti += "E";
+  if (b[3]) acti += "L";
   return acti;
 }
 function identify(ctx, rect, radius) {
   // old prototype: obs, x,y, color){
 
   var color;
-  if (rect.status === "new") color = "green";
-  else if (rect.status === "db") color = "yellow";
-  else color = "red"; //problem
+  if (rect.draft) color = "green";
+  else color = "yellow";
 
   //let x = rect.left + rect.width / 2;
   //let y = rect.top + rect.height / 2;
@@ -3854,26 +3253,23 @@ function newRectForTag(tag) {
   if (typeof angle !== "undefined") {
     console.log("newObsForTag: found angle=", angle);
     let ds=getDefaultRectSizeCanvas()
-    rect = addRect(
+    rect = createRect(
       tag.id,
       pt.x - ds.w / 2,
       pt.y - ds.h / 2,
       ds.w,
       ds.h,
-      "new",
-      undefined,
       angle
     );
   } else {
     console.log("newObsForTag: angle not found");
     let ds=getDefaultRectSizeCanvas()
-    rect = addRect(
+    rect = createRect(
       tag.id,
       pt.x - ds.w / 2,
       pt.y - ds.h / 2,
       ds.w,
-      ds.h,
-      "new"
+      ds.h
     );
   }
   return rect;
@@ -3905,7 +3301,8 @@ function newRectForCurrentTag() {
   overlay.canvas1.setActiveObject(rect);
   overlay.canvas1.renderAll();
 
-  submit_bee();
+  videoControl.refresh();
+  refreshChronogram();
 }
 
 /* Create new rect from prediction */
@@ -3965,9 +3362,7 @@ function onMouseDown_predict(option) {
       // Copy rectangle from source of prediction
       // addRect takes canvas coordinates units
       let r = overlay.obsToCanvasRect(obs);
-      rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new");
-      rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
-      rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
+      rect = createRect(prediction.id, r.left, r.top, r.width, r.height, undefined, obs);
     } else {
       // Only found tag
       if (logging.mouseEvents)
@@ -3987,16 +3382,15 @@ function onMouseDown_predict(option) {
     let r = overlay.obsToCanvasRect(obs);
     let width = r.width,
       height = r.height;
-    rect = addRect(
+    rect = createRect(
       prediction.id,
       startX - width / 2,
       startY - height / 2,
       width,
       height,
-      "new"
+      undefined,
+      obs
     );
-    rect.obs.bool_acts[0] = obs.bool_acts[0]; // Copy fanning flag
-    rect.obs.bool_acts[1] = obs.bool_acts[1]; // Copy pollen flag
     if (logging.mouseEvents)
       console.log("onMouseDown_predict: copied rect from ", obs);
   } else {
@@ -4012,13 +3406,12 @@ function onMouseDown_predict(option) {
     }
     // Did not find any tag nor rect
     let ds=getDefaultRectSizeCanvas()
-    rect = addRect(
+    rect = createRect(
       id,
       startX - ds.w / 2,
       startY - ds.h / 2,
       ds.w,
-      ds.h,
-      "new"
+      ds.h
     );
     if (logging.mouseEvents)
       console.log(
@@ -4030,8 +3423,8 @@ function onMouseDown_predict(option) {
   overlay.canvas1.setActiveObject(rect);
   overlay.canvas1.renderAll();
 
-  //automatic_sub();
-  submit_bee();
+  videoControl.refresh();
+  refreshChronogram();
   // Fire mouse:down again, this time with the created target
   // overlay.canvas1.fire("mouse:down", {
   //     target: rect,
@@ -4075,7 +3468,7 @@ function onMouseDown_interactiveRect(option) {
 
   let id = prediction.id;
 
-  var rect = addRect(id, startX, startY, 1, 1, "new");
+  var rect = addDraftRect(id, startX, startY);
   var topleft = { x: startX, y: startY };
 
   var center = rect.getCenterPoint();
@@ -4153,7 +3546,7 @@ function onMouseDown_interactiveRect(option) {
       // printMessage("Press enter to validate ID", "green")
 
       updateForm(activeObject)
-      submit_bee()
+      submitDraft(activeObject)
     } else {
       // Not enough drag to define a new rectangle
       overlay.canvas1.deactivateAll();
@@ -4507,7 +3900,7 @@ function onObjectDeselected(option) {
   if (logging.selectionEvents) console.log("onObjectDeselected: ", option);
 
   if (overlay.lastSelected !== null) {
-    if (overlay.lastSelected.status == "new") {
+    if (overlay.lastSelected.draft) {
       if (logging.mouseEvents)
         console.log(
           "onObjectDeselected: removing non submitted lastSelected=",
@@ -4531,8 +3924,9 @@ function onObjectMoving(option) {
   if (logging.mouseMoveEvents)
     console.log("onObjectMoving: activeObject=", activeObject);
 
+  // The drag only moves the fabric rectangle; the geometry is stored on release (onObjectModified, ADR 0008 P3)
+  activeObject.dragging = true;
   fixRectSizeAfterScaling(activeObject);
-  updateRectObsGeometry(activeObject);
 
   //canvas1.renderAll(); // Refresh rectangles drawing
   overlay.refreshOverlay();
@@ -4551,13 +3945,14 @@ function onObjectModified(option) {
   if (logging.mouseEvents)
     console.log("onObjectModified: activeObject=", activeObject);
 
-  updateRectObsGeometry(activeObject);
+  // Release: the geometry unit goes to the store (ADR 0008 P3); the drag only moved the fabric rectangle
+  activeObject.dragging = false;
+  storeUnit(activeObject, rectToGeometry(activeObject));
 
   //canvas1.renderAll(); // Refresh rectangles drawing
   overlay.refreshOverlay();
   updateForm(activeObject);
   //showZoom(activeObject)
-  automatic_sub();
 
   $(overlay).trigger("object:modified");
   //zoomOverlay.selectionChanged()

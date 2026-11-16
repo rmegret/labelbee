@@ -735,9 +735,9 @@ function onKeyDown_IDEdit(event) {
 
     if (!activeObject) return;
 
-    if (activeObject.status === "new") {
+    if (activeObject.draft) {
       activeObject.id = new_id
-      submit_bee(activeObject)
+      submitDraft(activeObject)
       defaultSelectedBee = new_id
       printMessage("ID changed + submitted", "green")
     } else { /* status=="db"*/
@@ -783,26 +783,7 @@ function onKeyDown_NewIDEdit(event) {
 
     if (!activeObject) return;
 
-    let obs = activeObject.obs;
-    obs.newid = new_id;
-    if (new_id != null) {
-      if (!obs.fix) {
-        obs.fix = {
-          newid: undefined,
-        };
-      }
-      obs.fix.newid = new_id;
-    }
-
-    if (new_id != null && !hasLabel(obs, "wrongid")) {
-      updateObsLabel(obs, "wrongid", true);
-    }
-
-    if (activeObject.status === "new") {
-      submit_bee(activeObject);
-    } /* status=="db"*/ else {
-      storeObs(obs);
-    }
+    storeUnit(activeObject, WrongId.newidTyped(activeObject.obs, new_id), true);
     overlay.hardRefresh();
     refreshChronogram();
     updateForm(activeObject);

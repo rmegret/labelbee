@@ -50,6 +50,7 @@
   <script type="text/javascript" src="js/VideoList.js"></script>
   <script type="text/javascript" src="js/VideoControl.js"></script>
   <script type="text/javascript" src="js/OverlayControl.js"></script>
+  <script type="text/javascript" src="js/VisitControl.js"></script>
   <script type="text/javascript" src="js/SelectionControl.js"></script>
   <script type="text/javascript" src="js/AnnotationIO.js"></script>
   <script type="text/javascript" src="js/ChronoAxes.js"></script>
@@ -64,6 +65,8 @@
        annotation/DebugGlobals.js); converters of AnnotationIO.js -->
   <script type="module" src="js/core/NotifierBridge.js"></script>
   <script type="module" src="js/annotation/AnnotationStoreBridge.js"></script>
+  <script type="module" src="js/annotation/LabelsBridge.js"></script>
+  <script type="module" src="js/annotation/WrongIdBridge.js"></script>
   <script type="module" src="js/annotation/AnnotationCodecBridge.js"></script>
 
   <!-- <script type="text/javascript" src='https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js'></script>
@@ -699,8 +702,8 @@
                         class="btn btn-green-toggle btn-xs" title="Create an annotation from current Tag">Annotate</button>
                       <input type="button" value="Delete" onclick="deleteSelected()" class="btn btn-warning btn-sm"
                         style="position: inline" id="deleteButton">
-                      <button type="button" onclick="undoAction()" class="btn btn-info btn-sm" style="position: inline"
-                        id="undoButton">Undo</button>
+                      <button type="button" onclick="undoAction()" class="btn btn-info btn-sm disabled" style="position: inline"
+                        id="undoButton" disabled title="Undo is off until its own slice">Undo</button>
                       <br>
                       <small style="color:blue">newID<input type="text" size="6" value="" id="newid"
                           onkeypress="onKeyDown_NewIDEdit(event)""></input></small>

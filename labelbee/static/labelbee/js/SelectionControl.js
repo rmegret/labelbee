@@ -382,7 +382,7 @@ function updateForm(activeObject) {
     $("#W").html("Width: -");
     $("#H").html("Height: -");
     $("#CX").html("Center X: -");
-    $("#CY").html("Center X: -");
+    $("#CY").html("Center Y: -");
 
     //$('.labelcheckbox').prop('checked', false);
 
@@ -395,7 +395,8 @@ function updateForm(activeObject) {
 
     w = activeObject.width;
     h = activeObject.height;
-    let vr = overlay.canvasToVideoRect(activeObject);
+    // activeObject.left/top are the center of the rectangle (originX/Y = "center"): use the unrotated box
+    let vr = overlay.canvasToVideoRect(rotatedRectGeometry(activeObject).unrotated);
 
     $("#X").html("X: " + vr.left.toFixed(0));
     $("#Y").html("Y: " + vr.top.toFixed(0));
@@ -426,59 +427,63 @@ function updateForm(activeObject) {
   }
 }
 
-function submit_bee() {
-  var activeObject = overlay.getActiveObject();
-  if (activeObject === null) {
-    printMessage("No bee selected", "red");
+/**
+ * A draft rectangle (the one drawn while ctrl-dragging, the only rectangle that is not in the store) becomes an
+ * observation: stored with `events.commit`, and from then on the rectangle holds the stored object. Refuses an id
+ * that already exists on the frame.
+ */
+function submitDraft(rect) {
+  let frame = rect.obs.frame;
+  let id = rect.id;
+  if (getObsHandle(frame, id, false) !== undefined) {
+    console.log("submitDraft: trying to replace existing bee with new observation. ABORT");
+    printMessage("Conflict of ID: bee " + id + " already exists in this frame.", "red");
     return false;
   }
-
-  // Use current id
-  let final_id = activeObject.id;
-  if (
-    activeObject.status === "new" &&
-    getObsHandle(getCurrentFrame(), final_id, false) !== undefined
-  ) {
-    console.log(
-      "submit_bee: trying to replace existing bee with new observation. ABORT"
-    );
-    printMessage(
-      "Conflict of ID: bee " + final_id + " already exists in this frame.",
-      "red"
-    );
-    return false;
-  }
-  if (
-    activeObject.status === "db" &&
-    getObsHandle(getCurrentFrame(), final_id, false) === undefined
-  ) {
-    console.log(
-      "submit_bee: rectangle supposed to be existing in DB, but not found. Writing anyway."
-    );
-    printMessage("Internal issue. See console.log", "red");
-    return true;
-  }
-
-  let tmpObs = activeObject.obs;
-  tmpObs.ID = final_id;
-  //updateForm(activeObject);
-
-  storeObs(tmpObs);
-  activeObject.status = "db";
+  rect.obs.ID = id;
+  rect.obs = events.commit(rect.obs);
+  rect.draft = false;
 
   videoControl.refresh();
   refreshChronogram();
+  return true;
 }
 
-function automatic_sub() {
-  var activeObject = overlay.getActiveObject();
-  if (activeObject.status == "db") {
-    submit_bee();
+/**
+ * The key {frame, id} of the selected observation in the store, or null when nothing is selected or the
+ * selected rectangle is not in the store yet (ADR 0008 R4). Today it reads the fabric active object;
+ * the selection slice will read the selection store, and no editor changes.
+ */
+function selectedKey() {
+  let activeObject = overlay.getActiveObject();
+  if (!activeObject || activeObject.draft || !activeObject.obs) return null;
+  return { frame: activeObject.obs.frame, id: activeObject.obs.ID };
+}
+
+/**
+ * Stores the fields of one unit edited on the selected rectangle (ADR 0008 R3): the store gets only these fields,
+ * with `events.update` (the rectangle holds the stored object), then the manual refreshes. A draft rectangle (the
+ * ctrl-drag in progress) is not in the store: the fields go to its own observation, and `submitNew` submits it
+ * (the newid box did). Returns whether the store was written.
+ */
+function storeUnit(rect, fields, submitNew) {
+  let key = selectedKey();
+  if (!key) Object.assign(rect.obs, fields); // not in the store yet: the working copy is the only holder
+  if (key) {
+    let stored = Object.assign({}, fields);
+    if (stored.fix) stored.fix = deepcopy(stored.fix); // the store never shares `fix` with the working copy
+    events.update(key.frame, key.id, stored);
+    videoControl.refresh();
+    refreshChronogram();
+    return true;
+  }
+  if (submitNew && rect.draft) {
+    submitDraft(rect);
   } else {
-    console.log("automatic_sub: not submitted, as tmp rect");
-    videoControl.refresh(); // Just refresh
+    videoControl.refresh(); // a draft is not submitted, just refresh
     refreshChronogram();
   }
+  return false;
 }
 
 function swapID_findAll(ID) {
@@ -659,9 +664,8 @@ function deleteEvent(frame, id) {
     console.log('deleteEvent: Event not found (frame,id)=', frame, id)
     return false
   }
-  obs = cloneObs(events.get(frame, id))
+  // Undo is deactivated until its own slice (ADR 0008 step 1): a delete is final, nothing is cloned or pushed.
   events.delete(frame, id); // also removes the frame when it ends up empty
-  undoPush('delete', obs)
 
   videoControl.refresh();
   refreshChronogram();
@@ -676,12 +680,12 @@ function undoAction() {
 
       if (obs.frame != getCurrentFrame()) {
         // Put it back in the DB and jump to frame
-        storeObs(obs);
+        events.commit(obs);
         videoControl.seekFrame(obs.frame);
         return;
       }
 
-      storeObs(obs);
+      events.commit(obs);
       rect = addRectFromObs(obs);
       console.log("rect=", rect);
       overlay.setActiveObject(rect);
@@ -704,6 +708,7 @@ function updateDeleteButton() {
 /* Undo stack */
 
 var undoStack = [];
+var UNDO_OFF_TITLE = "Undo is off until its own slice";
 function undoPush(action, info) {
   if (action === "new") {
     let obs = info;
@@ -738,7 +743,8 @@ function undoPop() {
 }
 function updateUndoButton() {
   if (undoStack.length == 0) {
-    $("#undoButton").addClass("disabled");
+    // Nothing pushes on the stack any more (undo is deactivated, ADR 0008 step 1): the button stays off.
+    $("#undoButton").addClass("disabled").prop("disabled", true).attr("title", UNDO_OFF_TITLE);
     $("#undoButton").val("Undo");
     return;
   } else {
@@ -767,120 +773,8 @@ function updateUndoButton() {
 
 /* Labels Control */
 
-var labelMap = {
-  f: "fanning",
-  p: "pollen",
-  e: "entering",
-  d: "leaving",
-  l: "leaving",
-  pollen: "pollen",
-  entering: "entering",
-  leaving: "leaving",
-  departing: "leaving",
-  pollen: "pollen",
-  expulsion: "expulsion",
-};
-
-function normalizeLabel(label) {
-  return labelMap[label] == null ? label : labelMap[label];
-}
-function toLabelString(labelArray) {
-  return labelArray
-    .map(function (d) {
-      return d.toLowerCase();
-    })
-    .map(function (d) {
-      return d.trim();
-    })
-    .filter(function (d) {
-      return d != "";
-    })
-    .map(normalizeLabel)
-    .join(",");
-}
-function toLabelArray(labels) {
-  return labels
-    .split(",")
-    .map(function (d) {
-      return d.toLowerCase();
-    })
-    .map(function (d) {
-      return d.trim();
-    })
-    .filter(function (d) {
-      return d != "";
-    })
-    .map(normalizeLabel);
-}
-function cleanLabels(labels) {
-  return toLabelString(toLabelArray(labels));
-}
-
-function addLabel(labelArray, label) {
-  let k = $.inArray(label, labelArray);
-  if (k < 0) {
-    labelArray.push(label);
-  }
-}
-function removeLabel(labelArray, label) {
-  let k = $.inArray(label, labelArray);
-  if (k >= 0) {
-    labelArray.splice(k, 1);
-  }
-}
-function updateLabelArray(labelArray, label, active) {
-  let k = $.inArray(label, labelArray);
-  if (!active && k >= 0) {
-    labelArray.splice(k, 1);
-  }
-  if (active && k < 0) {
-    labelArray.push(label);
-  }
-}
-
-function updateObsLabel(obs, label, active) {
-  if (obs.labels == null) {
-    obs.labels = "";
-  }
-  let labelArray = toLabelArray(obs.labels);
-  let k = $.inArray(label, labelArray);
-  if (!active && k >= 0) {
-    labelArray.splice(k, 1);
-  }
-  if (active && k < 0) {
-    labelArray.push(label);
-  }
-  obs.labels = toLabelString(labelArray);
-}
-function hasLabel(obs, label) {
-  if (obs.labels == null) {
-    obs.labels = "";
-  }
-  return containsLabel(obs.labels, label);
-}
-function containsLabel(labels, label) {
-  if (labels == null) {
-    return false;
-  }
-  let labelArray = toLabelArray(labels);
-  let k = $.inArray(normalizeLabel(label), labelArray);
-  if (k >= 0) return true;
-  else return false;
-}
-
-function updateLabelsFromBool(labels, bool_acts) {
-  let labelArray = toLabelArray(labels);
-  let add = [];
-  updateLabel(labelArray, "fanning", bool_acts[0]);
-  updateLabel(labelArray, "pollen", bool_acts[1]);
-  updateLabel(labelArray, "entering", bool_acts[2]);
-  updateLabel(labelArray, "leaving", bool_acts[3]);
-  return toLabelString(labelArray);
-}
-
-function getLabels(obs) {
-  return toLabelArray(obs.labels);
-}
+// The label helpers (labelMap, toLabelArray, hasLabel, ...) are in annotation/Labels.js,
+// exposed by annotation/LabelsBridge.js (ADR 0008 step 2).
 
 /* Labels GUI */
 
@@ -922,7 +816,12 @@ function labelToggle(thelabel, isOn) {
     isOn = !hasLabel(obs,thelabel)
   }
 
-  updateObsLabel(obs, thelabel, isOn);
+  if (thelabel == "wrongid") {
+    // the wrong-id unit has its own editor (ADR 0008 step 5)
+    storeUnit(activeObject, WrongId.wrongidToggled(obs, isOn));
+  } else {
+    storeUnit(activeObject, { labels: Labels.update(obs.labels, thelabel, isOn) });
+  }
   updateButtonsForLabel(obs, thelabel)
 
   console.log(
@@ -934,18 +833,6 @@ function labelToggle(thelabel, isOn) {
     obs.labels
   );
 
-  if (thelabel == "wrongid" && isOn) {
-    if (!obs.fix) {
-      obs.fix = {
-        newid: undefined,
-      };
-    }
-  }
-
-  // Update the rest
-  updateRectObsActivity(activeObject);
-  automatic_sub();
-
   updateForm(activeObject);
   refreshChronogram();
 }
@@ -955,8 +842,8 @@ function onActivityChanged(event) {
   if (logging.guiEvents) console.log("onActivityChanged: event=", event);
   var activeObject = overlay.getActiveObject();
   if (activeObject !== null) {
-    updateRectObsActivity(activeObject);
-    automatic_sub();
+    // the notes unit has its own editor (ADR 0008 step 5)
+    storeUnit(activeObject, { notes: $("#notes").val() });
   }
 }
 // If labels textarea changed
@@ -965,8 +852,8 @@ function onLabelsChanged() {
   if (logging.guiEvents) console.log("onLabelsChanged: labels=", labels);
   var activeObject = overlay.getActiveObject();
   if (activeObject !== null) {
-    setLabels(activeObject, labels);
-    automatic_sub();
+    storeUnit(activeObject, { labels: Labels.clean(labels) });
+    updateForm(activeObject);
   }
 }
 

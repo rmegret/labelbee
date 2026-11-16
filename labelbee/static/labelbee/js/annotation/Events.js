@@ -21,6 +21,8 @@
  * something (the detector uses it for "through the API"; change events are built on it later).
  */
 
+import { logging } from "../core/Notifier.js";
+
 // Same test as jQuery.isEmptyObject (no enumerable property, inherited ones included; true for undefined).
 function isEmptyObject(obj) {
   for (const key in obj) return false; // eslint-disable-line no-unused-vars
@@ -33,6 +35,7 @@ function deepcopy(obj) {
 }
 
 // The fields that `copyFields` copies one by one; any other field of a working copy (`span` of a new visit, ...) is copied as it is.
+// `bool_acts` is listed so that it is not copied as an extra: it is derived from `labels` (Labels.bool_acts) and not stored (ADR 0008 step 4).
 const COMMIT_FIELDS = new Set(['ID', 'time', 'frame', 'x', 'y', 'cx', 'cy', 'width', 'height', 'bool_acts', 'angle', 'notes',
   'labels', 'parts', 'newid', 'fix', 'visit']);
 
@@ -49,15 +52,6 @@ function copyFields(obs, tmp) {
   obs.cy = tmp.cy;
   obs.width = tmp.width;
   obs.height = tmp.height;
-  if (tmp.bool_acts) {
-    obs.bool_acts = [];
-    obs.bool_acts[0] = tmp.bool_acts[0];
-    obs.bool_acts[1] = tmp.bool_acts[1];
-    obs.bool_acts[2] = tmp.bool_acts[2];
-    obs.bool_acts[3] = tmp.bool_acts[3];
-  } else {
-    obs.bool_acts = [false, false, false, false];
-  }
   obs.angle = tmp.angle;
   obs.notes = tmp.notes;
   obs.labels = tmp.labels;
@@ -173,6 +167,8 @@ export class Events {
 
   /** Replaces the whole structure and its info together (`setTracks`): no validation, decoding is the codec's job. */
   replace(data, info) {
+    if (logging.store)
+      console.log(`Events.replace(data,info):`,data, info)
     this.#frames = data;
     this.#info = info;
     this.#emit({ op: 'replace' });
@@ -192,12 +188,18 @@ export class Events {
       this.#frames[frame][id] = this.#createObservation(id);
       created = true;
     }
-    if (created) this.#emit({ op: 'create', frame, id });
+    if (created) {
+      if (logging.store)
+        console.log(`Events.#getOrCreate(frame,id): created=true`,frame,id)
+      this.#emit({ op: 'create', frame, id });
+    }
     return this.#frames[frame][id];
   }
 
   /** Commits a working copy (`storeObs`): creates the observation when needed, then the 17-field copy. */
   commit(workingCopy) {
+    if (logging.store)
+      console.log(`Events.commit(workingCopy):`, workingCopy)
     const frame = workingCopy.frame;
     const id = workingCopy.ID;
     const obs = this.#getOrCreate(frame, id);
@@ -209,6 +211,8 @@ export class Events {
   /** `Object.assign` on the stored observation: sets the given fields, a value of undefined means "none".
    * Returns the observation, or undefined when it does not exist (nothing is created). */
   update(frame, id, fields) {
+    if (logging.store)
+      console.log(`Events.update(frame,id,fields):`, frame, id, fields)
     const obs = this.#get(frame, id);
     if (obs === undefined) return undefined;
     Object.assign(obs, fields);
@@ -216,8 +220,28 @@ export class Events {
     return obs;
   }
 
+  /** Basci check that obs is valid */
+  checkValid(frame, id) {
+    if (logging.store)
+      console.log(`Events.checkValid(frame,id):`, frame, id)
+    const obs = this.#get(frame, id);
+    if (obs === undefined) return undefined;
+    
+    if (!logging.storeCheckValid) return;
+
+    let cx = obs.x + obs.width/2;
+    let cy = obs.y + obs.height/2;
+    const TOL = 1e-3;
+    if (Math.abs(cx-obs.cx) > TOL)
+      console.log(`Events.checkValid(${frame},${id}): WARNING x+w/2 <> cx`,cx,obs.cx);
+    if (Math.abs(cy-obs.cy) > TOL)
+      console.log(`Events.checkValid(${frame},${id}): WARNING y+h/2 <> cy`,cy,obs.cy);
+  }
+
   /** Deletes an observation; the frame goes too when the deletion leaves it empty. Returns whether the key existed. */
   delete(frame, id) {
+    if (logging.store)
+      console.log(`Events.delete(frame,id):`, frame, id)
     const f = this.#frames[frame];
     if (f == null || !(id in f)) return false;
     delete f[id];
@@ -232,6 +256,8 @@ export class Events {
    * @returns true if the change was performed
    */
   rename(frame, oldId, newId, force) {
+    if (logging.store)
+      console.log(`Events.rename(frame, oldId, newId, force):`, frame, oldId, newId, force)
     const done = this.#rename(frame, oldId, newId, force);
     if (done) this.#emit({ op: 'rename', frame, id: oldId, newId, force });
     return done;
@@ -257,6 +283,8 @@ export class Events {
   /** Swaps two ids over an interval (`obs_swapID`): where both exist their observations trade ids, where only
    * oldId exists it becomes newId. fmax -1 means `nframes - 1`. The temporary key is internal. */
   swap(interval, oldId, newId, nframes) {
+    if (logging.store)
+      console.log(`Events.swap(interval, oldId, newId, nframes):`, interval, oldId, newId, nframes)
     const fmin = interval[0];
     let fmax = interval[1];
     if (fmax == -1) fmax = nframes - 1;

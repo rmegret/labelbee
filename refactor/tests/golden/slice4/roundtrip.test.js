@@ -20,7 +20,17 @@ const FILES = ['events_v2.json', 'events_v1.json', 'events_v1_array.json', 'even
 
 const read = (name) => JSON.parse(fs.readFileSync(path.join(SAMPLES, name), 'utf8'));
 
-// The page's own cloneObs / copyObs (Model.js is a classic script: run it in a vm, as the page does)
+// The working copy the page used to make (`cloneObs` of Model.js, removed in slice 5 step 6): the 16 core fields, `fix` deep copied
+const CLONE_FIELDS = ['ID', 'time', 'frame', 'x', 'y', 'cx', 'cy', 'width', 'height', 'angle', 'notes', 'labels', 'parts', 'newid'];
+function cloneObs(obs) {
+  const c = {};
+  for (const k of CLONE_FIELDS) c[k] = obs[k];
+  c.fix = obs.fix ? JSON.parse(JSON.stringify(obs.fix)) : obs.fix;
+  if (obs.visit) c.visit = obs.visit;
+  return c;
+}
+
+// Model.js is a classic script: run it in a vm, as the page does (for `Observation`)
 function loadModel() {
   const ctx = vm.createContext({ console: { log() {} }, logging: {}, videoinfo: { nframes: 40 } });
   vm.runInContext(fs.readFileSync(path.join(JS_DIR, 'Model.js'), 'utf8'), ctx, { filename: 'Model.js' });
@@ -42,7 +52,7 @@ async function setup() {
   // an edit session that does nothing: a working copy of every observation, committed back
   const commitAll = (ev) => {
     const copies = [];
-    ev.forEach((obs) => copies.push(model.cloneObs(obs)));
+    ev.forEach((obs) => copies.push(cloneObs(obs)));
     for (const wc of copies) ev.commit(wc);
   };
   return { load, save, newEvents, commitAll, sanitizeEvents, model };
@@ -88,7 +98,7 @@ test('a field of the stored observation that the working copy does not carry sur
   stored.span = { f1: 0, f2: 9 };
   stored.tag = { id: 1, dm: 60 };
   stored.custom = { keep: 'me' };
-  const wc = model.cloneObs(stored);
+  const wc = cloneObs(stored);
   assert.ok(!('custom' in wc) && !('span' in wc) && !('tag' in wc));              // the working copy is the 17 fields (+visit)
   wc.x = 111;                                                                      // an edit of the editor's own field
   ev.commit(wc);
@@ -106,7 +116,7 @@ test('an edit of one field changes that field and what is derived from it, and n
   const { load, save, newEvents, model } = await setup();
   const ref = JSON.parse(JSON.stringify(save(load('events_v2.json').data, load('events_v2.json').info)));
   const ev = newEvents(load('events_v2.json'));
-  const wc = model.cloneObs(ev.get(10, 2));
+  const wc = cloneObs(ev.get(10, 2));
   wc.notes = 'edited';
   ev.commit(wc);
   const after = JSON.parse(JSON.stringify(save(ev.toObject(), ev.info)));

@@ -199,6 +199,29 @@ class App:
         self.page.mouse.click(p["x"], p["y"])
         self.page.wait_for_function("(id) => String(getCurrentID()) === String(id)", arg=str(obs_id))
 
+    def video_to_client(self, x, y):
+        """Client coordinates of the point (x, y) of the video (the overlay maps video units to canvas pixels)."""
+        return self.js("""([x, y]) => { const p = overlay.videoToCanvasPoint({x, y});
+          const r = document.querySelector('.upper-canvas').getBoundingClientRect(); return {x: r.x + p.x, y: r.y + p.y}; }""", [x, y])
+
+    def control(self, obs_id, name):
+        """Client coordinates of a fabric control (tl, tr, bl, br, mtr) of the rectangle of observation obs_id."""
+        return self.js("""([id, name]) => { const o = overlay.canvas1.getObjects().find(o => o.obs && String(o.obs.ID) === String(id));
+          o.setCoords(); const c = o.oCoords[name]; const r = document.querySelector('.upper-canvas').getBoundingClientRect();
+          return c ? {x: r.x + c.x, y: r.y + c.y} : null; }""", [obs_id, name])
+
+    def drag(self, a, b, steps=4):
+        """Press at client point a, move to b through an intermediate point, release."""
+        self.page.mouse.move(a["x"], a["y"])
+        self.page.mouse.down()
+        self.page.mouse.move((a["x"] + b["x"]) / 2, (a["y"] + b["y"]) / 2, steps=steps)
+        self.page.mouse.move(b["x"], b["y"], steps=steps)
+        self.page.mouse.up()
+
+    def video_scale(self):
+        """Video units per client pixel of the overlay (the video is drawn scaled)."""
+        return self.js("overlay.canvasToVideoRect({left: 0, top: 0, width: 1, height: 1}).width")
+
     def canvas_rect(self):
         return self.js("(() => { const r = document.querySelector('.upper-canvas').getBoundingClientRect(); return {x: r.x, y: r.y, w: r.width, h: r.height}; })()")
 

@@ -5,12 +5,13 @@
 'use strict';
 
 // bool_acts order: fanning, pollen, entering, leaving (BEH-701)
-const NO_ACTS = () => [false, false, false, false];
 const obs = (ID, extra = {}) => ({
   ID, time: 0, frame: 0, x: 10.12345, y: 20.6789, cx: 0, cy: 0, width: 30.5555, height: 40, angle: 1.5,
-  bool_acts: NO_ACTS(), notes: '', labels: '', ...extra,
+  notes: '', labels: '', ...extra,
 });
-const acts = (...idx) => NO_ACTS().map((_, i) => idx.includes(i));
+// the flags are derived from labels (ADR 0008 step 4): labels that give those flags
+const NAMES = ['fanning', 'pollen', 'entering', 'leaving'];
+const flags = (...idx) => ({ labels: idx.map((i) => NAMES[i]).join(',') });
 
 const tracks2 = () => ({
   0: { 1: obs(1, { frame: 0, labels: 'pollen' }), 2: obs(2, { frame: 0, notes: 'a note' }) },
@@ -28,12 +29,12 @@ const BB2 = (name, tracks) => ({ name, fn: 'tracksToBBoxes2', args: () => [track
 
 // observations with every flag combination, one per frame
 const flagTracks = () => ({
-  0: { 1: obs(1, { bool_acts: acts() }) },
-  1: { 1: obs(1, { bool_acts: acts(0) }) },
-  2: { 1: obs(1, { bool_acts: acts(1) }) },
-  3: { 1: obs(1, { bool_acts: acts(2) }) },
-  4: { 1: obs(1, { bool_acts: acts(3) }) },
-  5: { 1: obs(1, { bool_acts: acts(0, 1, 2, 3) }) },
+  0: { 1: obs(1, { ...flags() }) },
+  1: { 1: obs(1, { ...flags(0) }) },
+  2: { 1: obs(1, { ...flags(1) }) },
+  3: { 1: obs(1, { ...flags(2) }) },
+  4: { 1: obs(1, { ...flags(3) }) },
+  5: { 1: obs(1, { ...flags(0, 1, 2, 3) }) },
 });
 const noBoolActs = () => { const o = obs(1); delete o.bool_acts; return { 0: { 1: o } }; };
 
@@ -69,7 +70,7 @@ const cases = [
   V2('v2 non-numeric x gives NaN', () => ({ 0: { 1: obs(1, { x: 'a' }) } })),
   V2('v2 missing geometry gives NaN', () => { const o = obs(1); delete o.x; delete o.width; return { 0: { 1: o } }; }),
   V2('v2 absent time frame angle notes labels stay absent', () => {
-    const o = { ID: 1, x: 1, y: 2, width: 3, height: 4, bool_acts: NO_ACTS() };
+    const o = { ID: 1, x: 1, y: 2, width: 3, height: 4 };
     return { 0: { 1: o } };
   }),
   V2('v2 videoinfo undefined', tracks2, info, () => undefined),
@@ -82,7 +83,7 @@ const cases = [
   V1('v1 null frame and null event skipped', () => ({ 0: null, 1: { 1: null, 2: obs(2) } })),
   V1('v1 empty frame kept as {}', () => ({ 0: {} })),
   V1('v1 keeps ID and bool_acts, drops marked and permanent', () => ({
-    0: { 1: obs(1, { marked: true, permanent: true, bool_acts: acts(1) }) },
+    0: { 1: obs(1, { marked: true, permanent: true, ...flags(1) }) },
   })),
   V1('v1 rounding to 3 decimals', () => ({ 0: { 1: obs(1, { x: 1.0004, y: 1.0005, width: 2.0006, height: 0.0004 }) } })),
 
@@ -91,10 +92,10 @@ const cases = [
   CSV('csv every flag combination', flagTracks),
   CSV('csv empty Tracks', () => ({})),
   CSV('csv undefined Tracks', () => undefined),
-  CSV('csv null frame skipped', () => ({ 0: null, 1: { 1: obs(1, { bool_acts: acts(0) }) } })),
+  CSV('csv null frame skipped', () => ({ 0: null, 1: { 1: obs(1, { ...flags(0) }) } })),
   CSV('csv Tracks as array with holes', sparseArray),
-  CSV('csv uses ID, not the key', () => ({ 0: { 5: obs(99, { bool_acts: acts(2) }) } })),
-  CSV('csv missing bool_acts throws', noBoolActs),
+  CSV('csv uses ID, not the key', () => ({ 0: { 5: obs(99, { ...flags(2) }) } })),
+  CSV('csv an observation without bool_acts exports (DEBT-727 gone)', noBoolActs),
   CSV('csv null event throws', () => ({ 0: { 1: null } })),
 
   // ---- tracksToBBoxes (unused, header and column order differ) ----
@@ -102,7 +103,7 @@ const cases = [
   BB('bbox every flag combination', flagTracks),
   BB('bbox empty Tracks', () => ({})),
   BB('bbox undefined Tracks', () => undefined),
-  BB('bbox missing bool_acts throws', noBoolActs),
+  BB('bbox an observation without bool_acts exports (DEBT-727 gone)', noBoolActs),
 
   // ---- tracksToBBoxes2 ----
   BB2('bbox2 basic', tracks2),
@@ -113,7 +114,7 @@ const cases = [
   BB2('bbox2 Tracks as array with holes', sparseArray),
   BB2('bbox2 floating-point noise is not rounded', () => ({ 0: { 1: obs(1, { x: 0.1, y: 0.2, width: 0.2, height: 0.1 }) } })),
   BB2('bbox2 missing angle gives NaN', () => { const o = obs(1); delete o.angle; return { 0: { 1: o } }; }),
-  BB2('bbox2 missing bool_acts throws', noBoolActs),
+  BB2('bbox2 an observation without bool_acts exports (DEBT-727 gone)', noBoolActs),
   BB2('bbox2 null event throws', () => ({ 0: { 1: null } })),
 ];
 

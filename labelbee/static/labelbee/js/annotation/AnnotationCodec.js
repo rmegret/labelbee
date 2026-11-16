@@ -4,21 +4,49 @@
  * The save/export side is at the end of the file (slice 2, ADR 0004).
  *
  * Pure: no access to Tracks/Tags/DOM/network/window. Alerts and logs go through core/Notifier.js
- * (ADR 0003); the global hasLabel is connected with configure() by AnnotationCodecBridge.js.
+ * (ADR 0003); the labels helpers are the pure module Labels.js (ADR 0008 step 2).
  */
 import { alert, log, logError, logIO } from "../core/Notifier.js";
+import * as Labels from "./Labels.js";
 
-let hasLabel = () => { throw new Error("AnnotationCodec: hasLabel not configured"); };
+/* Geometry of an observation: two sets describe the same box, the top-left corner (x, y) and the center
+ * (cx, cy), with width and height. They must agree: cx = x + width/2, cy = y + height/2 (the angle is around
+ * the center, so it does not change this). The policy says which set is the TRUTH when they disagree; the other
+ * set is recomputed (ADR 0008 R7):
+ *   "xy"   x, y are the truth, cx, cy are recomputed. Default, for the JSON formats v1 and v2.
+ *   "cxcy" cx, cy are the truth, x, y are recomputed. For the CSV formats, whose source is the center.
+ * Long-term (DEBT-739): only cx, cy, width, height, angle are used inside LabelBee and x, y become a field
+ * computed when saving, because the top-left corner is a poor reference for a rotated rectangle. Then "cxcy"
+ * becomes the only policy and this function goes.
+ * The files round cx, cy, x, y to 3 decimals, so differences below CENTER_TOLERANCE are not disagreements.
+ * An observation that lacks one of the sets is left as it is. Returns true when the observation was fixed. */
+const CENTER_TOLERANCE = 0.0015;
 
-/* Connect the module to the outside: {hasLabel(obs, label)} (required) */
-export function configure(deps) {
-  if (typeof deps.hasLabel !== "function") {
-    throw new Error("AnnotationCodec.configure: hasLabel is required");
+function fixCenter(evt, policy) {
+  const num = (v) => typeof v === "number" && Number.isFinite(v);
+  if (evt == null || typeof evt !== "object") return false;
+  if (![evt.x, evt.y, evt.cx, evt.cy, evt.width, evt.height].every(num)) return false;
+  const dx = evt.cx - (evt.x + evt.width / 2);
+  const dy = evt.cy - (evt.y + evt.height / 2);
+  if (Math.abs(dx) <= CENTER_TOLERANCE && Math.abs(dy) <= CENTER_TOLERANCE) return false;
+  if (policy === "cxcy") {
+    evt.x = evt.cx - evt.width / 2;
+    evt.y = evt.cy - evt.height / 2;
+  } else {
+    evt.cx = evt.x + evt.width / 2;
+    evt.cy = evt.y + evt.height / 2;
   }
-  hasLabel = deps.hasLabel;
+  return true;
 }
 
-export function sanitizeEvents(obj) {
+/* options.centerPolicy: "xy" (default) or "cxcy", which set of fields is the truth for the center, see fixCenter.
+ * The loader passes it because it is the one that knows the source of the data. */
+export function sanitizeEvents(obj, options) {
+  const centerPolicy = (options && options.centerPolicy) || "xy";
+  if (centerPolicy !== "xy" && centerPolicy !== "cxcy") {
+    throw new Error('sanitizeEvents: options.centerPolicy should be "xy" or "cxcy", got ' + centerPolicy);
+  }
+  let nFixed = 0; // observations whose geometry sets disagreed
   var info;
   var data;
   try{
@@ -91,12 +119,9 @@ export function sanitizeEvents(obj) {
           let evt = Object.assign({ ID: String(evt0.id) }, evt0);
           delete evt.id;
   
-          evt.bool_acts = [
-            hasLabel(evt, "fanning"),
-            hasLabel(evt, "pollen"),
-            hasLabel(evt, "entering"),
-            hasLabel(evt, "leaving"),
-          ];
+          if (evt.labels == null) evt.labels = ""; // what the legacy hasLabel wrote on the observation
+          delete evt.bool_acts; // derived from labels (Labels.bool_acts), not stored (ADR 0008 step 4)
+          if (fixCenter(evt, centerPolicy)) nFixed++;
   
           if (frameItem[String(evt0.id)] == null) {
             frameItem[String(evt0.id)] = evt;
@@ -157,6 +182,13 @@ export function sanitizeEvents(obj) {
         );
         return;
       }
+      // v1: the observations of the file are used as they are, fixed in place
+      for (let f in data) {
+        for (let i in data[f]) {
+          if (data[f][i] != null && typeof data[f][i] === "object") delete data[f][i].bool_acts; // derived, not stored
+          if (fixCenter(data[f][i], centerPolicy)) nFixed++;
+        }
+      }
     }
   }
   catch(error){ // Case: loaded json from server does not match expected structure
@@ -164,6 +196,13 @@ export function sanitizeEvents(obj) {
     return;
   }
 
+
+  if (nFixed > 0) {
+    log(
+      "sanitizeEvents: WARNING " + nFixed + " observation(s) had x, y and cx, cy that disagree; " +
+        (centerPolicy === "cxcy" ? "cx, cy are the truth, x, y recomputed" : "x, y are the truth, cx, cy recomputed")
+    );
+  }
 
   return { info: info, data: data };
 }
@@ -295,7 +334,6 @@ export function flatjson_to_json(data) {
     const w = 300
     const h = 600
 
-    item['bool_acts'] = [false,false,false,false]
     item['labels'] = ''
     // let parts = []
     // for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
@@ -349,7 +387,6 @@ export function tracks_csv_to_json(data, info) {
     item["height"] = +h;
     item["x"] = +src["cx"]-w/2;
     item["y"] = +src["cy"]-h/2;
-    item['bool_acts'] = [false,false,false,false]
     item['labels'] = ''
     let parts = []
     for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
@@ -393,7 +430,6 @@ export function tags_csv_to_json(data, info) {
     item["height"] = +h;
     item["x"] = +src["cx"]-w/2;
     item["y"] = +src["cy"]-h/2;
-    item['bool_acts'] = [false,false,false,false]
     item['labels'] = ''
     let parts = []
     for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
@@ -489,7 +525,6 @@ export function tracks_tagged_csv_to_json(data, info) {
     item["height"] = +h;
     item["x"] = +src["cx"]-w/2;
     item["y"] = +src["cy"]-h/2;
-    item['bool_acts'] = [false,false,false,false]
     item['labels'] = ''
     let parts = []
     for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
@@ -535,7 +570,7 @@ export function convertTracksToV1(Tracks) {
 
       let evt1 = Object.assign({}, evt);
       //delete evt1.ID
-      //delete evt1.bool_acts
+      evt1.bool_acts = Labels.bool_acts(evt); // a field of the v1 format, derived from labels
       delete evt1.marked;
       delete evt1.permanent;
       evt1.cx = evt1.x + evt1.width / 2;
@@ -624,17 +659,18 @@ export function tracksToCSV(Tracks) {
   for (let F in Tracks)
     for (let id in Tracks[F]) {
       var obs = Tracks[F][id];
+      var acts = Labels.bool_acts(obs);
       var action = "",
         cargo = "";
       var conc = function (s1, s2) {
         if (s2 === "") s1 += s2;
         else s1 += ";" + s2;
       };
-      if (obs.bool_acts[0]) action += (action === "" ? "" : ";") + "fanning";
-      if (obs.bool_acts[2]) action += (action === "" ? "" : ";") + "came in";
-      if (obs.bool_acts[3]) action += (action === "" ? "" : ";") + "went out";
+      if (acts[0]) action += (action === "" ? "" : ";") + "fanning";
+      if (acts[2]) action += (action === "" ? "" : ";") + "came in";
+      if (acts[3]) action += (action === "" ? "" : ";") + "went out";
 
-      if (obs.bool_acts[1]) cargo += "pollen";
+      if (acts[1]) cargo += "pollen";
       csv += "nodate," + F + "," + obs.ID + "," + action + "," + cargo;
 
       csv += ","; // Shift ?
@@ -651,6 +687,7 @@ export function tracksToBBoxes(Tracks) {
   for (let F in Tracks)
     for (let id in Tracks[F]) {
       var obs = Tracks[F][id];
+      var acts = Labels.bool_acts(obs);
 
       csv +=
         F +
@@ -663,13 +700,13 @@ export function tracksToBBoxes(Tracks) {
         "," +
         (obs.y + obs.height) +
         "," +
-        Number(obs.bool_acts[1]) + // pollen
+        Number(acts[1]) + // pollen
         "," +
-        Number(obs.bool_acts[2]) + // arrive
+        Number(acts[2]) + // arrive
         "," +
-        Number(obs.bool_acts[3]) + // leave
+        Number(acts[3]) + // leave
         "," +
-        Number(obs.bool_acts[0]) + // fanning
+        Number(acts[0]) + // fanning
         "," +
         Number(obs.angle) + // angle
         "\n";
@@ -684,6 +721,7 @@ export function tracksToBBoxes2(Tracks) {
   for (let F in Tracks)
     for (let id in Tracks[F]) {
       var obs = Tracks[F][id];
+      var acts = Labels.bool_acts(obs);
 
       csv +=
         F +
@@ -704,13 +742,13 @@ export function tracksToBBoxes2(Tracks) {
         "," +
         (obs.y + obs.height) +
         "," +
-        Number(obs.bool_acts[1]) + // pollen
+        Number(acts[1]) + // pollen
         "," +
-        Number(obs.bool_acts[2]) + // arrive
+        Number(acts[2]) + // arrive
         "," +
-        Number(obs.bool_acts[3]) + // leave
+        Number(acts[3]) + // leave
         "," +
-        Number(obs.bool_acts[0]) + // fanning
+        Number(acts[0]) + // fanning
         "\n";
     }
   return csv;

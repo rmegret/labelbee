@@ -6,56 +6,38 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     },
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     }
    },
@@ -94,7 +76,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -149,56 +133,38 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     },
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     }
    },
@@ -232,7 +198,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -287,8 +255,8 @@
     "0": {
      "1": {
       "id": 1,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -335,15 +303,17 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 1 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
     "0": {
      "1": {
       "id": 1,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -363,8 +333,8 @@
     "0": {
      "3": {
       "id": 3,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -409,15 +379,17 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 1 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    [
     {
      "3": {
       "id": 3,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -681,20 +653,14 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     }
    },
@@ -737,7 +703,8 @@
    "WARNING: Events file was loaded, but it has duplicate entries. Current version of software deleted redundant events."
   ],
   "logs": [
-   "sanitizeEvents: WARNING duplicate entry: data[0][1] with id=1 ignored."
+   "sanitizeEvents: WARNING duplicate entry: data[0][1] with id=1 ignored.",
+   "sanitizeEvents: WARNING 2 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
   ],
   "errors": [],
   "argsAfter": [
@@ -988,56 +955,38 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     },
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     }
    },
@@ -1077,7 +1026,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -1093,8 +1044,8 @@
     "0": {
      "1": {
       "id": 1,
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
@@ -1141,7 +1092,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 1 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -1258,56 +1211,38 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     },
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     }
    },
@@ -1350,7 +1285,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    {
@@ -1669,56 +1606,38 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     },
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     }
    },
@@ -1762,7 +1681,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    "data/Tracks.json"
@@ -3522,56 +3443,38 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     },
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     }
    },
@@ -3628,7 +3531,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    "/some/url"
@@ -3776,56 +3681,38 @@
     "0": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      },
      "2": {
       "ID": "2",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     },
     "4": {
      "1": {
       "ID": "1",
-      "cx": 10,
-      "cy": 20,
+      "cx": 3.5,
+      "cy": 5,
       "angle": 30,
       "width": 5,
       "height": 6,
       "x": 1,
       "y": 2,
-      "labels": "",
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ]
+      "labels": ""
      }
     }
    },
@@ -3885,7 +3772,9 @@
   "cbErrors": [],
   "rejections": [],
   "alerts": [],
-  "logs": [],
+  "logs": [
+   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
+  ],
   "errors": [],
   "argsAfter": [
    12
@@ -4352,12 +4241,6 @@
       "height": 600,
       "x": -49.5,
       "y": -100,
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ],
       "labels": "",
       "parts": [
        {
@@ -4395,12 +4278,6 @@
       "height": 600,
       "x": -49.5,
       "y": -100,
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ],
       "labels": "",
       "parts": [
        {
@@ -4657,12 +4534,6 @@
       "height": 600,
       "x": -49.5,
       "y": -100,
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ],
       "labels": "",
       "parts": [
        {
@@ -4700,12 +4571,6 @@
       "height": 600,
       "x": -49.5,
       "y": -100,
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ],
       "labels": "",
       "parts": [
        {
@@ -4800,12 +4665,6 @@
       "height": 600,
       "x": -139,
       "y": -288,
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ],
       "labels": "",
       "parts": [
        {
@@ -4964,12 +4823,6 @@
       "height": 600,
       "x": -140,
       "y": -280,
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ],
       "labels": ""
      }
     },
@@ -4984,12 +4837,6 @@
       "height": 600,
       "x": -138,
       "y": -278,
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ],
       "labels": ""
      }
     }
@@ -5059,12 +4906,6 @@
       "height": 600,
       "x": -49.5,
       "y": -100,
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ],
       "labels": "",
       "parts": [
        {
@@ -5232,12 +5073,6 @@
       "height": 600,
       "x": -49.5,
       "y": -100,
-      "bool_acts": [
-       false,
-       false,
-       false,
-       false
-      ],
       "labels": "",
       "parts": [
        {

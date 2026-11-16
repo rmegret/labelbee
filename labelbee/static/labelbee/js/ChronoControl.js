@@ -1101,7 +1101,9 @@ function updateChronogramData() {
         }
         let inROI = true
 
-        events.update(F, id, { cx: obs.x + obs.width/2, cy: obs.y + obs.height/2 })
+        // Assume cx, cy already correct
+        //events.update(F, id, { cx: obs.x + obs.width/2, cy: obs.y + obs.height/2 })
+        events.checkValid(F, id)
 
         //if (flag_useROI) {  // TODO; Check x vs cx
             inROI = (obs.cx >= ROI.left &&
@@ -1111,7 +1113,7 @@ function updateChronogramData() {
             );
         //};
 
-        let b = obs.bool_acts;
+        let b = Labels.bool_acts(obs);
         let b0 = b[0];
         let b1 = b[1];
         let b2 = b[2];

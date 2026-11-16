@@ -4,13 +4,13 @@ Automated version of [../CHECKLIST.md](../CHECKLIST.md): the real page in headle
 the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design/0006-browser-tests.md).
 
     conda activate labelbeedev                  # see ../devenv/README.md
-    pytest refactor/tests/browser               # ~3 minutes, 79 tests, all passing
+    pytest refactor/tests/browser               # ~3 minutes, 91 tests, all passing
     pytest refactor/tests/browser -k c9 -x      # one item, stop at the first failure
     pytest refactor/tests/browser --headed      # watch the browser (pytest-playwright option)
 
 | File | Checklist items |
 |---|---|
-| `test_a_smoke.py` | A1-A9: open, play, seek, select, create, edit, undo (a delete), swap id, delete |
+| `test_a_smoke.py` | A1-A9: open, play, seek, select, create, edit, undo (off since slice 5 step 1), swap id, delete |
 | `test_a_features.py` | A10-A12: zoom view, tags (tags file merged by id, standalone Tags mode), parts, notes |
 | `test_b_store.py` | B1-B4: store and legacy globals, erase with confirmation, DM controls |
 | `test_c_loading.py` | C1-C7: local events and tags files, bad files |
@@ -21,6 +21,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_g_readers.py` | Readers of the stored events that no other test reaches, added as their loops move to `events` (slice 4 step 4): "Update Statistics", "Delete FA Tags..." (the tags structure of the store) |
 | `test_h_debug_globals.py` | The console-only debug globals `Tracks`, `TracksInfo` (and the `Tags` ones): off by default, `?debug_globals` or `installDebugGlobals()`, the console reads them, a script served from a URL gets an error |
 | `test_i_detector.py` | The dirty-write detector itself: direct and indirect mutations are seen (`dirty_writes_expected` tests) |
+| `test_j_editors.py` | The edit paths of the editor, pinned before the working copy goes (slice 5 step 0, [ADR 0008](../../design/0008-field-ownership.md)): creation by shift-click and ctrl-drag, label text, notes, the wrong-id edits, move, resize, rotate, dot mode, parts in the zoom view |
 | `test_alerts.py` | The main alert modal: alerts in quick succession (F3) |
 
 ## How it works
@@ -51,7 +52,7 @@ A site never shown is a site no test exercises: add a test, run it again.
     pytest refactor/tests/browser                      # strict is the default; --no-dirty-writes-strict to disable
 Strict mode: each test fails when a write to the stored events comes from a site (`file`, `function`, `operation`, `depth`) that is not in
 [`dirty_writes_allowed.json`](dirty_writes_allowed.json); the summary lists the entries not seen in the run (on a full run, those are to delete).
-The list started at 21 writers and loses entries as the steps of ADR 0007 move them behind `Events` (14 after step 2, 2 after step 3a, empty after step 3b, then 5 entries again: reading the code for step 4b found the Pick Flower writers of `visit` (`test_f9`) and the `VisitWidget` span writers (`test_f10`); they wait for step 7; then 7: the detector learned to follow shared references and found `bakeTagFix` and `undoTagFix` writing on tag objects shared with `obs.tag`, `test_f12`, they wait for the tag merge; 6 after step 7a, which keeps the `span` of a new visit); the end state is empty.
+The list started at 21 writers and loses entries as the steps of ADR 0007 move them behind `Events` (14 after step 2, 2 after step 3a, empty after step 3b, then 5 entries again: reading the code for step 4b found the Pick Flower writers of `visit` (`test_f9`) and the `VisitWidget` span writers (`test_f10`); they wait for step 7; then 7: the detector learned to follow shared references and found `bakeTagFix` and `undoTagFix` writing on tag objects shared with `obs.tag`, `test_f12`, they wait for the tag merge; 6 after step 7a, which keeps the `span` of a new visit; 2 after slice 5 step 7, where the visit module `VisitControl.js` writes through `events.update`); the end state is empty.
 **Through the API.** Since step 2 the detector wraps what `get`, `getOrCreate`, `commit`, `update`, `getFrame`, `toObject`, `forEach` and `observations` hand out (`events.tracks` and `AnnotationStore.getTracks()` were removed in step 6), and subscribes to the observer of `Events`: the summary lists each operation of `Events` called by the page code with its call site outside `Events.js` (report key `api`; `dirty` holds the writes), and the operations no test called from the page (a coverage gap: today `setInfo`, until its caller moves).
 
 **Indirect references.** A write through a handle that comes from `events` is seen. Two kinds of second door to the stored data are tracked as well,
@@ -86,7 +87,7 @@ Not caused by the refactor unless noted. Recorded in the intent spec: F1 in `DEB
 | F8 | In headless Chromium with the VP9 sample the page's `VideoCache` never answers: `videoCache.getFrameCropDataURL` stalls after `seekWithCallback: duration workaround`, so the features that need frame crops (the pick-frame timeline, Pick Flower) cannot run unstubbed. The default display mode is `"video"`, the raw video tag (`VideoControl.js:32`): the cache is not used for playback or seeking; only the crop features call it directly, whatever the mode. `test_f9` stubs that call with a 1x1 image. Cause not investigated (the same stall with H.264 in a real browser is not known) | `labelbee/static/labelbee/js/VideoControl.js` (`VideoCache`), `OverlayControl.js:1185` | `test_f9_...` |
 | F9 | Every click of the Pick Flower tool throws `Cannot read properties of undefined (reading 'labels')` after it has written `visit.flowerid`: `drawFlowersMainCanvas` passes `identifyBeeRect` a rect from `obsToCanvasRect` that has no `obs`. The pick itself works. A flower is an observation of frame 0 whose id starts with `F` (a pollinator: `P`), the convention of `ChronoControl.js:1108` and `OverlayControl.js:499,535,1387`. The test declares the error with `ui.allow`. Not fixed (outside slice 4) | `labelbee/static/labelbee/js/OverlayControl.js:1496,2482` | `test_f9_...` |
 
-Undo only knows deletions (`undoPush('delete')` is the only caller): checklist item A7 was reworded.
+Undo only knew deletions (`undoPush('delete')` was the only caller): checklist item A7 was reworded; since slice 5 step 1 undo is deactivated and A7 checks that it is off.
 
 ## Not automated
 Visual quality of the drawing, H.264 playback in your usual browser, the real backend (database, login, uploads), the

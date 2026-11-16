@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const { pathToFileURL } = require('url');
-const { makeRecorder, makeHasLabel } = require('./stubs');
+const { makeRecorder } = require('./stubs');
 const { ser } = require('./serialize');
 
 const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js');
@@ -109,7 +109,6 @@ async function loadIoEnv() {
     rec.fx = []; rec.cbErrors = []; rec.rejections = [];
     setNotifier({ alert: stubs.alert, log: stubs.log, logError: stubs.error });
     logging.io = false;
-    codec.configure({ hasLabel: makeHasLabel() });
     const net = c.net || {};
     const fx = (...a) => rec.fx.push(a.map(ser));
     function FileReader() {}

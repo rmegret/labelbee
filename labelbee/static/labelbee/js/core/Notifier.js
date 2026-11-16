@@ -24,6 +24,8 @@ export const logging = {
   zoomOverlay: false,
   videoList: true,
   io: false,
+  store: false,
+  storeCheckValid: false
 };
 
 const handlers = {

@@ -1,4 +1,4 @@
-// configure() of AnnotationCodec requires hasLabel; Notifier defaults and setNotifier (ADR 0003).
+// Notifier defaults and setNotifier (ADR 0003). (configure() of AnnotationCodec went with slice 5 step 2.)
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -7,13 +7,6 @@ const { pathToFileURL } = require('url');
 
 const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js');
 const load = (rel) => import(pathToFileURL(path.join(JS_DIR, rel)).href);
-
-test('configure throws unless hasLabel is a function', async () => {
-  const codec = await load('annotation/AnnotationCodec.js');
-  assert.throws(() => codec.configure({}), /hasLabel is required/);
-  assert.throws(() => codec.configure({ hasLabel: 'x' }), /hasLabel is required/);
-  codec.configure({ hasLabel: () => true });
-});
 
 test('Notifier: defaults, then setNotifier replaces a subset', async () => {
   const n = await load('core/Notifier.js');

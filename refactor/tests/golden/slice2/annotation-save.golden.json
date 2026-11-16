@@ -81,12 +81,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -101,12 +95,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -123,12 +111,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -227,12 +209,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -255,12 +231,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -422,12 +392,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -506,12 +470,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -589,12 +547,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -671,12 +623,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -785,12 +731,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -807,12 +747,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -829,12 +763,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -941,12 +869,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -961,12 +883,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -983,12 +899,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -1096,12 +1006,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -1116,12 +1020,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -1138,12 +1036,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -1254,12 +1146,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -1274,12 +1160,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -1296,12 +1176,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -1409,12 +1283,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -1429,12 +1297,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -1451,12 +1313,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -1574,12 +1430,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -1594,12 +1444,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -1616,12 +1460,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -1719,12 +1557,6 @@
             "width": 2.0006,
             "height": 0.0004,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           },
@@ -1739,12 +1571,6 @@
             "width": 100.9995,
             "height": 3,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -1833,12 +1659,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "",
             "marked": true,
@@ -1929,12 +1749,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2015,12 +1829,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2101,12 +1909,6 @@
             "cy": 0,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2172,13 +1974,7 @@
             "x": 1,
             "y": 2,
             "width": 3,
-            "height": 4,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ]
+            "height": 4
           }
         }
       },
@@ -2278,12 +2074,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -2298,12 +2088,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -2320,12 +2104,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2359,14 +2137,14 @@
           "width": 30.556,
           "height": 40,
           "angle": 1.5,
+          "notes": "",
+          "labels": "pollen",
           "bool_acts": [
             false,
-            false,
+            true,
             false,
             false
-          ],
-          "notes": "",
-          "labels": "pollen"
+          ]
         },
         "2": {
           "ID": 2,
@@ -2379,14 +2157,14 @@
           "width": 30.556,
           "height": 40,
           "angle": 1.5,
+          "notes": "a note",
+          "labels": "",
           "bool_acts": [
             false,
             false,
             false,
             false
-          ],
-          "notes": "a note",
-          "labels": ""
+          ]
         }
       },
       {
@@ -2407,14 +2185,14 @@
           "width": 31,
           "height": 41,
           "angle": 1.5,
+          "notes": "",
+          "labels": "",
           "bool_acts": [
             false,
             false,
             false,
             false
-          ],
-          "notes": "",
-          "labels": ""
+          ]
         }
       }
     ],
@@ -2432,12 +2210,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -2452,12 +2224,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -2474,12 +2240,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2511,14 +2271,14 @@
           "width": 30.556,
           "height": 40,
           "angle": 1.5,
+          "notes": "",
+          "labels": "",
           "bool_acts": [
             false,
             false,
             false,
             false
-          ],
-          "notes": "",
-          "labels": ""
+          ]
         }
       }
     ],
@@ -2536,12 +2296,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2573,14 +2327,14 @@
           "width": 30.556,
           "height": 40,
           "angle": 1.5,
+          "notes": "",
+          "labels": "",
           "bool_acts": [
             false,
             false,
             false,
             false
-          ],
-          "notes": "",
-          "labels": ""
+          ]
         }
       },
       {
@@ -2601,14 +2355,14 @@
           "width": 30.556,
           "height": 40,
           "angle": 1.5,
+          "notes": "",
+          "labels": "",
           "bool_acts": [
             false,
             false,
             false,
             false
-          ],
-          "notes": "",
-          "labels": ""
+          ]
         }
       }
     ],
@@ -2632,12 +2386,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2660,12 +2408,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2704,14 +2446,14 @@
           "width": 30.556,
           "height": 40,
           "angle": 1.5,
+          "notes": "",
+          "labels": "",
           "bool_acts": [
             false,
             false,
             false,
             false
-          ],
-          "notes": "",
-          "labels": ""
+          ]
         }
       }
     ],
@@ -2731,12 +2473,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2776,14 +2512,14 @@
           "width": 30.556,
           "height": 40,
           "angle": 1.5,
+          "notes": "",
+          "labels": "pollen",
           "bool_acts": [
             false,
             true,
             false,
             false
-          ],
-          "notes": "",
-          "labels": ""
+          ]
         }
       }
     ],
@@ -2801,14 +2537,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              true,
-              false,
-              false
-            ],
             "notes": "",
-            "labels": "",
+            "labels": "pollen",
             "marked": true,
             "permanent": true
           }
@@ -2834,14 +2564,14 @@
           "width": 2.001,
           "height": 0,
           "angle": 1.5,
+          "notes": "",
+          "labels": "",
           "bool_acts": [
             false,
             false,
             false,
             false
-          ],
-          "notes": "",
-          "labels": ""
+          ]
         }
       }
     ],
@@ -2859,12 +2589,6 @@
             "width": 2.0006,
             "height": 0.0004,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2877,7 +2601,7 @@
     "sql": []
   },
   "csv basic": {
-    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\nnodate,0,1,,,\nnodate,0,2,,,\nnodate,3,1,,,\n",
+    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\nnodate,0,1,,pollen,\nnodate,0,2,,,\nnodate,3,1,,,\n",
     "argsAfter": [
       {
         "0": {
@@ -2892,12 +2616,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -2912,12 +2630,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -2934,12 +2646,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2967,12 +2673,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -2989,14 +2689,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              true,
-              false,
-              false,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "fanning"
           }
         },
         "2": {
@@ -3011,14 +2705,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              true,
-              false,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "pollen"
           }
         },
         "3": {
@@ -3033,14 +2721,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              true,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "entering"
           }
         },
         "4": {
@@ -3055,14 +2737,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              true
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "leaving"
           }
         },
         "5": {
@@ -3077,14 +2753,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              true,
-              true,
-              true,
-              true
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "fanning,pollen,entering,leaving"
           }
         }
       }
@@ -3133,14 +2803,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              true,
-              false,
-              false,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "fanning"
           }
         }
       }
@@ -3172,12 +2836,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3200,12 +2858,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3233,14 +2885,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              true,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "entering"
           }
         }
       }
@@ -3250,8 +2896,8 @@
     "errors": [],
     "sql": []
   },
-  "csv missing bool_acts throws": {
-    "threw": "TypeError",
+  "csv an observation without bool_acts exports (DEBT-727 gone)": {
+    "returned": "Date,Time (frame),ID,Action,Cargo,Shift\nnodate,0,1,,,\n",
     "argsAfter": [
       {
         "0": {
@@ -3292,7 +2938,7 @@
     "sql": []
   },
   "bbox basic": {
-    "returned": "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n0,10.12345,20.6789,40.67895,60.6789,0,0,0,0,1.5\n0,10.12345,20.6789,40.67895,60.6789,0,0,0,0,1.5\n3,11,21,42,62,0,0,0,0,1.5\n",
+    "returned": "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n0,10.12345,20.6789,40.67895,60.6789,1,0,0,0,1.5\n0,10.12345,20.6789,40.67895,60.6789,0,0,0,0,1.5\n3,11,21,42,62,0,0,0,0,1.5\n",
     "argsAfter": [
       {
         "0": {
@@ -3307,12 +2953,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -3327,12 +2967,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -3349,12 +2983,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3382,12 +3010,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3404,14 +3026,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              true,
-              false,
-              false,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "fanning"
           }
         },
         "2": {
@@ -3426,14 +3042,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              true,
-              false,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "pollen"
           }
         },
         "3": {
@@ -3448,14 +3058,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              true,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "entering"
           }
         },
         "4": {
@@ -3470,14 +3074,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              true
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "leaving"
           }
         },
         "5": {
@@ -3492,14 +3090,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              true,
-              true,
-              true,
-              true
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "fanning,pollen,entering,leaving"
           }
         }
       }
@@ -3531,8 +3123,8 @@
     "errors": [],
     "sql": []
   },
-  "bbox missing bool_acts throws": {
-    "threw": "TypeError",
+  "bbox an observation without bool_acts exports (DEBT-727 gone)": {
+    "returned": "#frame,left,top,right,bottom,pollen,arrive,leave,fanning,angleAroundCenter\n0,10.12345,20.6789,40.67895,60.6789,0,0,0,0,1.5\n",
     "argsAfter": [
       {
         "0": {
@@ -3559,7 +3151,7 @@
     "sql": []
   },
   "bbox2 basic": {
-    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n0,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n0,2,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n3,1,26.5,41.5,1.5,11,21,42,62,0,0,0,0\n",
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n0,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,1,0,0,0\n0,2,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n3,1,26.5,41.5,1.5,11,21,42,62,0,0,0,0\n",
     "argsAfter": [
       {
         "0": {
@@ -3574,12 +3166,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": "pollen"
           },
@@ -3594,12 +3180,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "a note",
             "labels": ""
           }
@@ -3616,12 +3196,6 @@
             "width": 31,
             "height": 41,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3649,12 +3223,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3671,14 +3239,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              true,
-              false,
-              false,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "fanning"
           }
         },
         "2": {
@@ -3693,14 +3255,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              true,
-              false,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "pollen"
           }
         },
         "3": {
@@ -3715,14 +3271,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              true,
-              false
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "entering"
           }
         },
         "4": {
@@ -3737,14 +3287,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              true
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "leaving"
           }
         },
         "5": {
@@ -3759,14 +3303,8 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              true,
-              true,
-              true,
-              true
-            ],
             "notes": "",
-            "labels": ""
+            "labels": "fanning,pollen,entering,leaving"
           }
         }
       }
@@ -3815,12 +3353,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3854,12 +3386,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3882,12 +3408,6 @@
             "width": 30.5555,
             "height": 40,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3915,12 +3435,6 @@
             "width": 0.2,
             "height": 0.1,
             "angle": 1.5,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3947,12 +3461,6 @@
             "cy": 0,
             "width": 30.5555,
             "height": 40,
-            "bool_acts": [
-              false,
-              false,
-              false,
-              false
-            ],
             "notes": "",
             "labels": ""
           }
@@ -3964,8 +3472,8 @@
     "errors": [],
     "sql": []
   },
-  "bbox2 missing bool_acts throws": {
-    "threw": "TypeError",
+  "bbox2 an observation without bool_acts exports (DEBT-727 gone)": {
+    "returned": "#frame,id,tagx,tagy,angle,left,top,right,bottom,pollen,arrive,leave,fanning\n0,1,25.4012,40.6789,1.5,10.12345,20.6789,40.67895,60.6789,0,0,0,0\n",
     "argsAfter": [
       {
         "0": {
