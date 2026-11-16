@@ -395,6 +395,15 @@ export function tracks_csv_to_json(data, info) {
     }
     item['parts'] = parts
 
+    if ((src["tag_id"] != null) && (src["tag_id"] != '')) {
+      item["tag"] = {
+        id: +src["tag_id"], frame: +src['frame'],
+        c: [+src["tag_cx"],+src["tag_cy"]],
+        hamming: +src["tag_hamming"], goodness: +src['tag_goodness'], dm: +src['tag_dm'],
+        p: [[+src.tag_p0x,+src.tag_p0y],[+src.tag_p1x,+src.tag_p1y],[+src.tag_p2x,+src.tag_p2y],[+src.tag_p3x,+src.tag_p3y]]
+      }
+    }
+
     obj[frame][item['id']] = item;
   }
 

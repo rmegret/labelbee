@@ -180,7 +180,7 @@ def main():
     (out / f"{OUT_NAME}.events.csv.config.json").write_text(
         (tdir / f"{a.video}.events.csv.config.json").read_text())
 
-    (out / "source.json").write_text(json.dumps({
+    (out / (OUT_NAME + "source.json")).write_text(json.dumps({
         "source_root": a.root, "colony_dir": a.col, "source_video": a.video,
         "requested_source_frames": [req_start, req_end],
         "first_source_frame": a.start, "nframes": a.nframes, "fps": FPS,

@@ -32,6 +32,7 @@ USER = {"is_authenticated": True, "id": 1, "first_name": "Dev", "last_name": "Us
 VIDEO_FILES = ("sample.mp4", "sample.synthetic.mp4")  # first one that exists
 URL_FOR = {"home.home_page": "/", "gallery.videos_page": "/videos"}
 
+print(f'HERE={HERE}')
 
 def render_page():
     """The Jinja template needs five values: substituted here, so that Jinja is not required."""
@@ -225,20 +226,20 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({"data": found[0]}) if found else self.not_found()
         elif path.startswith("/api/v1/rawdata/") or path == "/api/v1/rawdata":
             self.rawdata(path[len("/api/v1/rawdata"):].strip("/"))
-        elif path.startswith("/data/") and path.endswith(".mp4.stream.json"):
-            # "From URI" asks for <video>.stream.json (ffprobe-like info): made from <video>.info.json
-            video = safe_join(DATA, path[len("/data/"):-len(".stream.json")])
-            if video and video.is_file() and SAVED not in video.parents:
-                info_file = video.with_name(video.name[:-len(".mp4")] + ".info.json")
-                info = json.loads(info_file.read_text()) if info_file.is_file() else {}
-                fps = info.get("fps", 20)
-                self.send_json({"video_info": {
-                    "nb_frames": str(info.get("nframes", 40)), "width": info.get("width", 480),
-                    "height": info.get("height", 270), "r_frame_rate": "%s/1" % fps,
-                    "duration": str(info.get("duration", info.get("nframes", 40) / fps)),
-                }})
-            else:
-                self.not_found()
+        # elif path.startswith("/data/") and path.endswith(".mp4.stream.json"):
+        #     # "From URI" asks for <video>.stream.json (ffprobe-like info): made from <video>.info.json
+        #     video = safe_join(DATA, path[len("/data/"):-len(".stream.json")])
+        #     if video and video.is_file() and SAVED not in video.parents:
+        #         info_file = video.with_name(video.name[:-len(".mp4")] + ".info.json")
+        #         info = json.loads(info_file.read_text()) if info_file.is_file() else {}
+        #         fps = info.get("fps", 20)
+        #         self.send_json({"video_info": {
+        #             "nb_frames": str(info.get("nframes", 40)), "width": info.get("width", 480),
+        #             "height": info.get("height", 270), "r_frame_rate": "%s/1" % fps,
+        #             "duration": str(info.get("duration", info.get("nframes", 40) / fps)),
+        #         }})
+        #     else:
+        #         self.not_found()
         elif path.startswith("/data/"):
             p = safe_join(DATA, path[len("/data/"):])
             if p and p.is_file() and SAVED not in p.parents:

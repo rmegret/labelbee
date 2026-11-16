@@ -28,12 +28,12 @@
         "time_base": "1/10240",
         "start_pts": 0,
         "start_time": "0.000000",
-        "duration_ts": 51200,
-        "duration": "5.000000",
-        "bit_rate": "8474907",
+        "duration_ts": 76800,
+        "duration": "7.500000",
+        "bit_rate": "8302320",
         "bits_per_raw_sample": "8",
-        "nb_frames": "100",
-        "nb_read_packets": "100",
+        "nb_frames": "150",
+        "nb_read_packets": "150",
         "disposition": {
             "default": 1,
             "dub": 0,
@@ -46,12 +46,18 @@
             "visual_impaired": 0,
             "clean_effects": 0,
             "attached_pic": 0,
-            "timed_thumbnails": 0
+            "timed_thumbnails": 0,
+            "non_diegetic": 0,
+            "captions": 0,
+            "descriptions": 0,
+            "metadata": 0,
+            "dependent": 0,
+            "still_image": 0,
+            "multilayer": 0
         },
         "tags": {
             "language": "und",
-            "handler_name": "VideoHandler",
-            "vendor_id": "[0][0][0][0]"
+            "handler_name": "VideoHandler"
         },
         "video_path": "sample_gurabo.cfr.mp4"
     },
@@ -111,7 +117,7 @@
     "extract": {
         "source_video": "152_01_R_190817090000.cfr.mp4",
         "first_source_frame": 250,
-        "nframes": 100,
+        "nframes": 150,
         "note": "video_info describes this clip; video_info_orig describes the full original file"
     }
 }

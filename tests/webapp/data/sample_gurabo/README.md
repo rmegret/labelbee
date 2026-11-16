@@ -3,8 +3,14 @@
 Test data for the LabelBee webapp, extracted from a real recording of the *gurabo4* dataset
 (colony `col03`, video `152_01_R_190817090000.cfr.mp4`, 2019-08-17 09:00, 1 h, 2560x1440, 20 fps).
 Unlike [`../sample/`](../sample/) (synthetic bees, LabelBee's own formats), these files are
-**unmodified output of the `cyindibee_video` pipeline** (detect -> track -> crop -> tags -> tagmerge -> events),
+**the same format as the output of the `cyindibee_video` pipeline** (detect -> track -> crop -> tags -> tagmerge -> events),
 restricted to a few seconds, so they show the real columns, ids and noise.
+
+To extract around 7s including track with `tag_id=1641` in track 36:
+```bash
+cd tests/webapp/data/sample_gurabo/
+python extract_sample.py --start 289 --nframes 100 --out 
+```
 
 | | |
 |---|---|
