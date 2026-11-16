@@ -1,6 +1,6 @@
 # ADR 0009: Refresh by notification, one ordered `Refresher` (slice 6)
 
-Status: **proposed**. Direction from the maintainer, 2026-11-16 ([Q34](../QUESTIONS.md#q34)-[Q36](../QUESTIONS.md#q36)). Numbers are those of `refactor` at `eb473985`.
+Status: **proposed**. Direction from the maintainer, 2026-11-16 ([Q34](../QUESTIONS.md#q34)-[Q36](../QUESTIONS.md#q36), all answered the same day; Q34 differs from the first proposal: no automatic injection at load, a manual one-shot only). Numbers are those of `refactor` at `eb473985`.
 Evidence tags as in `CLAUDE.md`: `[read]` seen in code, `[inferred]` from names or call shape, to be verified at step 1.
 Follows slice 4 ([ADR 0007](0007-slice-events-api.md): `Events` is the only door) and slice 5 ([ADR 0008](0008-field-ownership.md): every editor writes the store).
 What was missing: the other direction, store to views. SEAM-701 ([seams](../intent/seams.md)) and the end of PLAN slice 5 list it as the next slice.
