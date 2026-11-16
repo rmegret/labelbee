@@ -204,7 +204,7 @@ def test_f8_delete_prunes_the_emptied_frame_and_the_saved_file_has_no_empty_fram
     assert frames_of(ui) == {"5": ["2"]}                               # a frame that still holds an observation stays
 
 
-# ---- visit: the Pick Flower tool of the pick-frame mode (OverlayControl.js drawImagePickFlowerMode) writes `visit` and
+# ---- visit: the Pick Flower tool of the pick-frame mode (VisitControl.js drawImagePickFlowerMode) writes `visit` and
 # `visit.flowerid` on the stored observation, and reads the flowers (observations whose id starts with "F") of frame 0.
 # Not in the first inventory of the ADR: found by step 4b.
 def test_f9_pick_flower_sets_the_visit_of_the_observation(ui):
@@ -220,6 +220,7 @@ def test_f9_pick_flower_sets_the_visit_of_the_observation(ui):
     ui.page.wait_for_selector("#pickframediv button:has-text('Pick Flower')")
     ui.page.click("#pickframediv button:has-text('Pick Flower')")
     ui.page.wait_for_selector("#pickflowerdiv canvas")
+    assert "visit" not in ui.tracks()["0"]["1"]                    # opening the tool writes nothing (it used to store `visit: {}`)
     box = ui.page.locator("#pickflowerdiv canvas").bounding_box()
     ui.page.mouse.click(box["x"] + box["width"] * 0.6, box["y"] + box["height"] * 0.5)     # the nearest flower is picked
     ui.page.wait_for_function("(events.toObject()[0][1].visit || {}).flowerid !== undefined")
@@ -230,7 +231,7 @@ def test_f9_pick_flower_sets_the_visit_of_the_observation(ui):
 
 # ---- visit: the VisitWidget (Annotations > Visits, edit-visit mode). Pollinator ids start with "P", flower ids with "F".
 # `setSpanFrame` writes `span`, `span.f1` and `span.f2` on the stored visit observation through the handle the widget keeps
-# (OverlayControl.js). `newVisit` goes through storeObs with a `span`: until step 7a the 17-field commit dropped it, so the first
+# (VisitControl.js). `newVisit` goes through storeObs with a `span`: until step 7a the 17-field commit dropped it, so the first
 # Set had to create it (`VisitWidget.setSpanFrame` set@2); since 7a the new visit has its span {f1: frame, f2: frame}.
 def test_f10_visit_widget_creates_a_visit_and_sets_its_span(ui):
     path = write_events(ui, "visit.json", [event(0, "P1", x=100), event(0, "F1", x=300)])
