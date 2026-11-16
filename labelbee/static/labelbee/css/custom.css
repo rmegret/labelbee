@@ -890,3 +890,31 @@ table, th, td {
 .interval.fanning {
   fill: purple;
 }
+
+/* Event tree (Events info tab) and CSV schema badges (loader dialog) */
+.event-tree { font-family: monospace; font-size: 12px; max-height: 300px; overflow: auto; margin-bottom: 6px; }
+.event-tree details { margin-left: 0; }
+.event-tree details > details, .event-tree details > .event-tree-leaf { margin-left: 14px; }
+.event-tree summary { cursor: pointer; }
+.event-tree-key { color: #555; }
+.event-tree-number { color: #1a6fb0; }
+.event-tree-string { color: #a33; }
+.event-tree-boolean { color: #7a3ea8; }
+.event-tree-null, .event-tree-empty { color: #888; }
+.file-schema-badge { font-size: 11px; margin-left: 6px; padding: 0 5px; border-radius: 3px; background: #ddd; }
+.file-schema-badge.loadable { background: #cfe8cf; }
+.file-schema-validation .ok { color: #2a7a2a; }
+.file-schema-validation .bad { color: #b02a2a; }
+.file-schema-badge[data-schema="tracks"], .file-schema-badge[data-schema="tracks+tags"], .file-schema-badge[data-schema="tracks_tagged"] { background: #cfe8cf; }
+.file-schema-badge[data-schema="tags"], .file-schema-badge[data-schema="tags_pipeline"] { background: #f3dcb0; }
+.file-schema-badge[data-schema="events"] { background: #d3d9f3; }
+.file-schema-badge[data-schema="detections"] { background: #f0cfe6; }
+.file-schema-badge[data-schema="pollentag"], .file-schema-badge[data-schema="packets"] { background: #ddd; }
+.file-schema-badge:not(.loadable) { opacity: 0.7; }
+.file-schema-mapping { font-size: 11px; border-collapse: collapse; margin-top: 4px; }
+.file-schema-mapping th, .file-schema-mapping td { border: 1px solid #ccc; padding: 1px 5px; vertical-align: top; }
+.file-schema-mapping th { background: #eee; }
+.file-schema-mapping tr.map-partial td { background: #fff3cd; }
+.file-schema-mapping tr.map-absent td { color: #999; }
+.file-schema-mapping tr.map-ignored td { color: #777; font-style: italic; }
+.spanbar { fill: #9ec5e8; stroke: #3b7bbf; stroke-width: 0.5px; pointer-events: none; }

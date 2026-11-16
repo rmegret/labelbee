@@ -2367,6 +2367,10 @@ function plotTagsTracks(ctx) {
 
         let color = setColor(f);
 
+        if (!tagHasCenter(tag)) {
+          if (logging.tagMissCenter) console.log("plotTagsTracks, all tag tracks: tag " + id + " at frame " + f + " has no center c, skipped", tag);
+          continue;
+        }
         //console.log(tag)
         let p1 = overlay.videoToCanvasPoint({ x: tag.c[0], y: tag.c[1] });
         p1.frame = f;
@@ -2450,6 +2454,10 @@ function plotTagsTracks(ctx) {
 
           let color2 = setColor2(f);
 
+          if (!tagHasCenter(tag)) {
+            if (logging.tagMissCenter) console.log("plotTagsTracks, selectedTagTrack: tag " + tag.id + " at frame " + f + " has no center c, skipped", tag);
+            continue;
+          }
           //console.log(tag)
           let p1 = overlay.videoToCanvasPoint({ x: tag.c[0], y: tag.c[1] });
           p1.frame = f;
@@ -3956,4 +3964,10 @@ function onObjectModified(option) {
 
   $(overlay).trigger("object:modified");
   //zoomOverlay.selectionChanged()
+}
+
+
+/* A partial tag (for instance only {id, frame} from an events CSV) has no center `c` */
+function tagHasCenter(tag) {
+  return tag.c != null && tag.c[0] != null && tag.c[1] != null;
 }

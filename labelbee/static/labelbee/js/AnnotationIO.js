@@ -175,16 +175,61 @@ function show_log_in() {}
 
 // ## Manual load of events
 
+// Loaders of the CSV schemas of annotation/CsvSchemas.js (the `loader` field of a schema)
+function csvLoaderFor(name) {
+  return {
+    tracks: loadTracksCSVFromServer,
+    tags: loadTagsCSVFromServer,
+    tracks_tagged: loadTrackTaggedCSVFromServer,
+    events: (url) => loadConvertedCSVFromServer(url, events_csv_to_json, "cxcy", "events"),
+    detections: (url) => loadConvertedCSVFromServer(url, detections_csv_to_json, "xy", "detections"),
+  }[name];
+}
+
 class EventsCSVManualFilePicker {
   constructor() {
+    const picker = this;
     this.filePicker = new FilePickerFromServerDialog();
     this.filePicker.initDialog({
       base_uri: url_for("/api/v1/rawdata/"),
       loadFileFunction: function (uri) {
-        loadTracksCSVFromServer(uri);
+        return picker.loadCSV(uri);
+      },
+      schemaProvider: {
+        categories: () => CsvSchemas.categories(),
+        classify: (uri) => {
+          const schema = CsvSchemas.classifyFilename(uri);
+          return schema ? { key: schema.key, label: schema.label, loadable: schema.loader != null } : null;
+        },
+        inspect: (uri) => CsvSchemas.inspectUri(uri),
       },
       dialogName: "Load tracks CSV Manually",
     });
+  }
+  // Detect the schema from the suffix and the header, validate, then run the loader of that schema
+  async loadCSV(uri) {
+    const dialog = this.filePicker;
+    let res;
+    try {
+      res = await dialog.validateFile(uri);
+    } catch (e) {
+      return; // validateFile showed the error
+    }
+    if (!res.canLoad) {
+      printMessage($("<div>").text("Cannot load " + res.filename + ": " + res.message).html(), "red");
+      return;
+    }
+    if (res.status !== "ok" &&
+        !confirm(res.message + "\n\nLoad it as \"" + res.chosen.label + "\"?")) {
+      return;
+    }
+    console.log("EventsCSVManualFilePicker: loading", uri, "as", res.chosen.key);
+    try {
+      await csvLoaderFor(res.chosen.loader)(uri);
+    } catch (e) {
+      return; // reportLoadError already showed it
+    }
+    dialog.div.find(".modal-message").append($("<div>").text("Loaded as " + res.chosen.label + "."));
   }
   open() {
     this.filePicker.openDialog();
@@ -1319,6 +1364,25 @@ function loadTrackTaggedCSVFromServer(url) {
     })
   .catch(reportLoadError("loading tracks_tagged CSV from " + url))
 
+}
+
+// Same pipeline as the loaders above, for the CSV types converted by a codec function (see CsvSchemas.js)
+function loadConvertedCSVFromServer(url, converter, centerPolicy, what) {
+  return d3.csv(url)
+  .then(function (data) {
+      let info = {
+        type: "events-multiframe",
+        source: `Converted from CSV "${url}"`,
+        history: `Loaded in Labelbee on ${new Date().toISOString()}`,
+      }
+      let obj = converter(data, info)
+      if (!setTracks(obj, false, { centerPolicy: centerPolicy })) throw new Error("Invalid events in the CSV (details in the console)")
+
+      videoControl.onFrameChanged();
+
+      refreshChronogram();
+    })
+  .catch(reportLoadError("loading " + what + " CSV from " + url))
 }
 
 async function clickLoadTracksCSVFromServer() {

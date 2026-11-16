@@ -25,7 +25,8 @@ export const logging = {
   videoList: true,
   io: false,
   store: false,
-  storeCheckValid: false
+  storeCheckValid: false,
+  tagMissCenter: true // log a tag without center (partial tag, e.g. loaded from an events CSV) instead of failing
 };
 
 const handlers = {
