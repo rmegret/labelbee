@@ -69,6 +69,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - Tests: browser `refactor/tests/browser/test_k_csv_dialog_and_tree.py` (9 tests); golden `refactor/tests/golden/csvschemas/` (schemas on the real sample files) and `refactor/tests/golden/csvloaders/` (the two loaders, 9 tests with hand-written expectations: there is no old implementation to pin from).
   - Left for later: the two loaders have no `sanitizeEvents` / `setTracks` round-trip test; the dialog flow is in no `CHECKLIST.md` section; DEBT-725/726 (CSV loaders: error handling, near-identical converters) were not touched.
 
+- [~] **Slice 6: refresh by notification, one ordered `Refresher`** (maintainer 2026-11-16; branch `slice6-refresh-logic`). [ADR 0009](design/0009-slice-refresh-logic.md) proposed; [Q34](QUESTIONS.md#q34)-[Q36](QUESTIONS.md#q36) open. Sync and coarse notifications from `events`, one ordered subscriber, `events.batch` for loops, a refresh log (`logging.refresh`) as debugging tool and test oracle, selection included, tags / frame / filters left explicit. Performance baseline measured before any migration, budget: no scenario with more refreshes or more time. Steps: (0) refresh log, baseline and count test [ ]; (1) every call site read, coupling table [ ]; (2) `subscribe`, `batch`, `Refresher` [ ]; (3) `augmentTrackWithTag` out of the refresh [ ]; (4) writers one file per commit [ ]; (5) load: one refresh [ ]; (6) selection [ ]; (7) record [ ].
+
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 
 | Area | Candidate slices |
@@ -93,3 +95,4 @@ budget. They can be revisited when a slice needs them.
 - [ADR 0006](design/0006-browser-tests.md): automated browser tests, Playwright for Python in `tests/browser/` (proposed)
 - [ADR 0007](design/0007-slice-events-api.md): slice 4, the Events API, encapsulating the stored events (proposed)
 - [ADR 0008](design/0008-field-ownership.md): slice 5, store-first editing and field ownership ([Q30](QUESTIONS.md#q30)-[Q33](QUESTIONS.md#q33) answered 2026-11-14; accepted and implemented)
+- [ADR 0009](design/0009-slice-refresh-logic.md): slice 6, refresh by notification, one ordered `Refresher` (proposed)
