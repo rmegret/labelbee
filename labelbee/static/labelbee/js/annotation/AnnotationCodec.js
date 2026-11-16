@@ -550,6 +550,76 @@ export function tracks_tagged_csv_to_json(data, info) {
   return evts;
 }
 
+/* *.events.csv / *.events_tagged.csv: one row per track. Each row gives two observations, at track_startframe and
+ * at track_endframe (frames < 0 are before the clip and skipped), id T<track_id>, labels = track_event, track_shape,
+ * span {f1: track_startframe, f2: track_endframe} (the whole track, also on both events), partial tag {id: track_tagid} when there is one. See CsvSchemas.js for the mapping table. */
+export function events_csv_to_json(data, info) {
+  log("events_csv_to_json: converting CSV to JSON...");
+
+  let obj = {};
+  const w = 300
+  const h = 600
+
+  for (let i = 0; i < data.length; i++) {
+    const src = data[i]
+    for (const end of ["start", "end"]) {
+      const frame = +src["track_" + end + "frame"];
+      if (!(frame >= 0)) continue;
+      if (!(frame in obj)) obj[frame] = {};
+      const cx = +src["track_" + end + "x"], cy = +src["track_" + end + "y"];
+      const item = {
+        id: 'T' + src["track_id"],
+        frame: frame,
+        cx: cx, cy: cy,
+        angle: +src["track_" + end + "a"] + 90,
+        width: w, height: h,
+        x: cx - w / 2, y: cy - h / 2,
+        span: { f1: +src["track_startframe"], f2: +src["track_endframe"] },
+        labels: [src["track_event"], src["track_shape"]].filter(l => l != null && l !== '').join(','),
+        parts: [],
+      }
+      if ((src["track_tagid"] != null) && (src["track_tagid"] !== '')) {
+        item["tag"] = { id: +src["track_tagid"], frame: frame }
+      }
+      obj[frame][item['id']] = item;
+    }
+  }
+
+  return {info: info, data: obj};
+}
+
+/* *.detections.csv: one event per detection, id = detection_id, bbox_* = the box (x, y top-left), parts from
+ * the keypoints whose visibility is > 0. No angle in the file: 0. */
+export function detections_csv_to_json(data, info) {
+  log("detections_csv_to_json: converting CSV to JSON...");
+
+  let obj = {};
+
+  for (let i = 0; i < data.length; i++) {
+    const src = data[i]
+    const frame = +src["frame"];
+    if (!(frame in obj)) obj[frame] = {};
+    const x = +src["bbox_x"], y = +src["bbox_y"], width = +src["bbox_width"], height = +src["bbox_height"];
+    const item = {
+      id: String(src["detection_id"]),
+      frame: frame,
+      x: x, y: y, width: width, height: height,
+      cx: x + width / 2, cy: y + height / 2,
+      angle: 0,
+      labels: '',
+    }
+    let parts = []
+    for (let name of ["head", "neck", "thorax", "waist", "tail"]) {
+      if (+src[name+"_visibility"] > 0)
+        parts.push({"posFrame": {"x": +src[name+"_x"], "y": +src[name+"_y"]}, "label": name})
+    }
+    item['parts'] = parts
+    obj[frame][item['id']] = item;
+  }
+
+  return {info: info, data: obj};
+}
+
 /*
  * Save/export side (refactor slice 2, ADR 0004): conversion of the model into JSON/CSV objects and
  * text. Moved verbatim from AnnotationIO.js; the page globals Tracks, TracksInfo and videoinfo are now

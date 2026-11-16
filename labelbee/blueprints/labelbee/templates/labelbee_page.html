@@ -68,6 +68,8 @@
   <script type="module" src="js/annotation/LabelsBridge.js"></script>
   <script type="module" src="js/annotation/WrongIdBridge.js"></script>
   <script type="module" src="js/annotation/AnnotationCodecBridge.js"></script>
+  <script type="module" src="js/annotation/CsvSchemasBridge.js"></script>
+  <script type="module" src="js/annotation/EventTreeBridge.js"></script>
 
   <!-- <script type="text/javascript" src='https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js'></script>
   <script type="module" src="js/SQLiteDB.js"></script> -->
@@ -839,6 +841,9 @@
                         </tr>
                       </table>
 
+                      <p>Selected event:</p>
+                      <div id="event-tree" class="event-tree">No event selected</div>
+
                       <input onclick="updateAnnotationStatistics();" type="button" value="Update Statistics"
                       class="btn btn-s" title="Update Annotation Statistics">
                       
@@ -1541,6 +1546,9 @@
         <div class="modal-dir-uri" style="display: flex; flex-direction:row;">
           <input type="text" class="dir-uri-text text ui-widget-content ui-corner-all btn-xs" style="flex-grow:1;" />
           <button type="button" class="dir-uri-btn btn btn-success btn-xs">Load</button>
+        </div>
+        <div class="modal-filter" style="display:none;">
+          <label>Type: <select class="file-filter-type"></select></label>
         </div>
         <div class="modal-body">
           <!-- To be filled up by AJAX request -->

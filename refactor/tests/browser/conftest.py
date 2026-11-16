@@ -74,6 +74,11 @@ def devroot(tmp_path_factory):
     shutil.copy(sample / "sample.mp4", gurabo / "mp4" / "test" / "v.mp4")
     shutil.copy(sample / "sample.info.json", gurabo / "mp4" / "test" / "v.info.json")
     shutil.copy(SAMPLE_SRC / "tracks_tagged.csv", gurabo / "tracks" / "test" / "v.mp4.tracks_tagged.csv")
+    # the events and detections CSV of sample_gurabo, for the loader dialog (CSV schemas)
+    gur = web / "data" / "sample_gurabo"
+    gur.mkdir()
+    for suffix in (".events.csv", ".detections.csv"):
+        shutil.copy(REPO / "tests" / "webapp" / "data" / "sample_gurabo" / ("sample_gurabo.cfr.mp4" + suffix), gur)
     os.symlink(REPO / "labelbee", root / "labelbee")
     return root
 

@@ -365,6 +365,39 @@ function updateButtonsForLabel(obs, label) {
   );
 }
 
+/* Render the selected event (the stored observation) as a collapsible tree in the Events info tab.
+ * Nothing is rendered while the tab is closed (not visible): the latest observation is kept and rendered once,
+ * when the tab becomes visible. */
+let eventTreePending = null; // {obs} to render when visible, null when up to date
+let eventTreeObserver = null;
+
+function renderEventTreeNow(container, obs) {
+  let title = "event";
+  if (obs != null) title = "event (frame " + obs.frame + ", id " + (obs.id != null ? obs.id : obs.ID) + ")";
+  EventTree.renderEventTree(container, obs, title);
+}
+
+function updateEventTree(obs) {
+  const container = document.getElementById("event-tree");
+  if (container == null || typeof EventTree === "undefined") return;
+  if (container.getClientRects().length > 0) {
+    eventTreePending = null;
+    renderEventTreeNow(container, obs);
+    return;
+  }
+  eventTreePending = { obs: obs };
+  if (eventTreeObserver == null && typeof IntersectionObserver !== "undefined") {
+    eventTreeObserver = new IntersectionObserver(function (entries) {
+      if (eventTreePending != null && entries.some((e) => e.isIntersecting)) {
+        const pending = eventTreePending;
+        eventTreePending = null;
+        renderEventTreeNow(container, pending.obs);
+      }
+    });
+    eventTreeObserver.observe(container);
+  }
+}
+
 /* Update form rectangle data from activeObject */
 /* CAUTION: use updateForm(null) for empty form */
 function updateForm(activeObject) {
@@ -390,6 +423,8 @@ function updateForm(activeObject) {
     $("#labels").prop("value", "");
 
     $(".labeltoggle").toggleClass("active", false);
+
+    updateEventTree(null);
   } else {
     $("#I").val(activeObject.id);
 
@@ -413,6 +448,8 @@ function updateForm(activeObject) {
       );
       return;
     }
+
+    updateEventTree(obs);
 
     if (typeof obs.notes === "undefined") $("#notes").prop("value", "");
     else $("#notes").prop("value", obs.notes);

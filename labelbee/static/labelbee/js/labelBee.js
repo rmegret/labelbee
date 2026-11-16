@@ -444,6 +444,10 @@ function FilePickerFromServerDialog() {
       theDialog.hideOnSuccess = params.hideOnSuccess;
     else theDialog.hideOnSuccess = true;
 
+    // Optional: schema detection of the files (see EventsCSVManualFilePicker in AnnotationIO.js):
+    //   categories() -> [{key, label, loadable}], classify(uri) -> {key, label, loadable} or null,
+    //   inspect(uri) -> Promise<detection result of CsvSchemas.detectSchema>
+    theDialog.schemaProvider = params.schemaProvider ? params.schemaProvider : null;
   };
   
   this.openDialog = function () {
@@ -492,6 +496,8 @@ function FilePickerFromServerDialog() {
       .find(".dir-uri-btn-preview")
       .off("click")
       .on("click", theDialog.onClickPreview);
+
+    theDialog.setupFilter();
 
     div.find(".modal-body").html("[...]");
     div
@@ -552,6 +558,11 @@ function FilePickerFromServerDialog() {
 
         //let html = ""
         for (let item of json.files) {
+
+          if (theDialog.schemaProvider != null) {
+            listdiv.append(theDialog.makeSchemaFileRow(item));
+            continue;
+          }
           
           // Use direct download uri if defined (faster download)
           // Otherwise, use the uri to the api (less efficient)
@@ -587,6 +598,7 @@ function FilePickerFromServerDialog() {
         div.find(".dir-uri-text").val(route);
 
         div.find(".modal-message").html("");
+        theDialog.applyFilter();
 
         // Nothing else to do here:
         // The modal #loadTracksFromServerDialog is supposed to be open
@@ -626,8 +638,104 @@ function FilePickerFromServerDialog() {
 
     div.find(".dir-uri-text").val(uri);
     theDialog.previewFile(null);
+    if (theDialog.schemaProvider != null) theDialog.validateFile(uri);
     //theDialog.loadFile(uri)
   };
+
+  // #region SCHEMA DETECTION (only with a schemaProvider)
+
+  this.setupFilter = function () {
+    const provider = theDialog.schemaProvider;
+    const box = div.find(".modal-filter");
+    if (provider == null) {
+      box.hide();
+      return;
+    }
+    const select = box.find(".file-filter-type");
+    const previous = select.val();
+    select.empty();
+    select.append($("<option>").attr("value", "").text("All files"));
+    select.append($("<option>").attr("value", "*loadable").text("Loadable only"));
+    for (const cat of provider.categories()) {
+      select.append($("<option>").attr("value", cat.key).text(cat.label + (cat.loadable ? "" : " (no loader)")));
+    }
+    if (previous != null) select.val(previous);
+    select.off("change").on("change", theDialog.applyFilter);
+    box.show();
+  };
+
+  this.applyFilter = function () {
+    if (theDialog.schemaProvider == null) return;
+    const wanted = div.find(".file-filter-type").val() || "";
+    div.find(".file-row").each(function () {
+      const row = $(this);
+      let show = true;
+      if (wanted === "*loadable") show = row.attr("data-loadable") === "true";
+      else if (wanted !== "") show = row.attr("data-category") === wanted;
+      row.toggle(show);
+    });
+  };
+
+  this.makeSchemaFileRow = function (item) {
+    const uri = item["download_uri"] != null ? item["download_uri"] : item["uri"];
+    const cat = theDialog.schemaProvider.classify(item["filename"]);
+    const row = $("<div class='file-row'>");
+    row.attr("data-category", cat ? cat.key : "");
+    row.attr("data-loadable", cat && cat.loadable ? "true" : "false");
+    const button = $("<button>").text(item["filename"] + (item["download_uri"] != null ? " [data]" : "[api]"));
+    button.attr("data-uri", uri);
+    button.on("click", theDialog.onClickFile);
+    row.append(button);
+    if (cat) {
+      row.append($("<span class='file-schema-badge'>").toggleClass("loadable", cat.loadable)
+        .attr("data-schema", cat.key)
+        .attr("title", cat.loadable ? "Schema from the suffix; loadable" : "Schema from the suffix; no loader yet")
+        .text(cat.label));
+    }
+    return row;
+  };
+
+  // Show the detected schema and the column validation of the file in the message area
+  this.validateFile = function (uri) {
+    const msg = div.find(".modal-message");
+    msg.html("Reading header of " + $("<span>").text(uri).html() + "...");
+    return theDialog.schemaProvider.inspect(uri).then(function (res) {
+      if (div.find(".dir-uri-text").val() !== uri) return res; // another file was clicked meanwhile
+      msg.empty().append(theDialog.describeDetection(res));
+      return res;
+    }).catch(function (e) {
+      msg.empty().append($("<div class='file-schema-validation'>").append(
+        $("<span class='bad'>").text("Could not read the header: " + e.message)));
+      throw e;
+    });
+  };
+
+  // Table "LabelBee field | CSV columns | rule": how the columns are adapted, the unused ones in the `ignored` row
+  this.mappingTableElement = function (rows) {
+    const table = $("<table class='file-schema-mapping'>");
+    table.append($("<tr>").append($("<th>").text("LabelBee field"), $("<th>").text("CSV columns"), $("<th>").text("Conversion")));
+    rows.forEach(function (r) {
+      table.append($("<tr>").addClass("map-" + r.status).toggleClass("map-ignored", r.field === "ignored").append(
+        $("<td>").text(r.field), $("<td>").text(r.show), $("<td>").text(r.rule)));
+    });
+    return table;
+  };
+
+  this.describeDetection = function (res) {
+    const box = $("<div class='file-schema-validation'>");
+    const ok = res.canLoad && res.status === "ok";
+    box.append($("<div>").append($("<span>").addClass(ok ? "ok" : "bad").text(
+      (ok ? "Valid. " : res.canLoad ? "Loadable with a different schema. " : "Not loadable. ") + res.message)));
+    if (res.chosen) {
+      box.append($("<div>").text("Schema: " + res.chosen.label + " (" + res.chosen.key + ")"
+        + (res.chosen.loader ? ", loader '" + res.chosen.loader + "'" : "") + ". " + res.chosen.note));
+    }
+    box.append($("<div>").text(res.columns.length + " columns"));
+    if (res.mapping) box.append(theDialog.mappingTableElement(res.mapping));
+    return box;
+  };
+
+  // #endregion
 
   this.onClickLoad = function (evt) {
     console.log("FilePickerFromServerDialog: onClickLoad ", evt);

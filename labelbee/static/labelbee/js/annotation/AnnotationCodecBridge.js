@@ -8,7 +8,7 @@ import * as codec from './AnnotationCodec.js';
 
 for (const name of [
   'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'flatjson_to_json', 'resultToObjects',
-  'tracks_csv_to_json', 'tags_csv_to_json', 'tags_csv_to_tagjson', 'tracks_tagged_csv_to_json',
+  'tracks_csv_to_json', 'tags_csv_to_json', 'tags_csv_to_tagjson', 'tracks_tagged_csv_to_json', 'events_csv_to_json', 'detections_csv_to_json',
   'tracksToCSV', 'tracksToBBoxes', 'tracksToBBoxes2',
 ]) {
   window[name] = codec[name];
