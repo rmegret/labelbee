@@ -7,6 +7,11 @@ Browser tests (real page in headless Chromium, 91 tests, [browser/README.md](bro
 [CHECKLIST.md](CHECKLIST.md): `pytest refactor/tests/browser`. Run them and the golden tests before merging a slice;
 keep the checklist for what a script cannot judge (see its first lines). Environment: [devenv/README.md](devenv/README.md).
 
+## Golden tests: CSV loading (off plan, no slice)
+- `golden/csvschemas/csv-schemas.test.js`: schema detection of `annotation/CsvSchemas.js` on the real sample files.
+- `golden/csvloaders/csv-loaders.test.js`: `events_csv_to_json` and `detections_csv_to_json`. Expected values are written by
+  hand (new code, nothing to pin from). `node --test refactor/tests/golden/csvloaders/`
+
 ## Golden tests: annotation load codec (slice 1, [ADR 0002](../design/0002-slice-annotation-load-codec.md))
 Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node/v20.20.2/bin`.
 
