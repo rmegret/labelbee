@@ -275,6 +275,22 @@ def test_j10_rotate_with_the_handle_changes_the_angle_around_the_center(ui, samp
     assert (after["width"], after["height"]) == (before["width"], before["height"])
 
 
+def test_j10b_reset_angle_writes_the_angle_alone(ui, sample_dir):
+    """ADR 0008 R3: the button stores `{angle: 0}` with `events.update`, nothing else changes."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    select_at(ui, 5, "1")
+    handle, c = ui.control("1", "mtr"), ui.box_center("1")
+    ui.drag(handle, {"x": c["x"] + 80, "y": c["y"]})
+    rotated = ui.tracks()["5"]["1"]
+    assert rotated["angle"] != 0
+    ui.js("overlay.onClickResetAngle()")
+    after = ui.tracks()["5"]["1"]
+    assert after["angle"] == 0
+    assert {k: v for k, v in after.items() if k != "angle"} == {k: v for k, v in rotated.items() if k != "angle"}
+
+
 def test_j11_dot_mode_moves_the_center_and_keeps_the_size_and_the_angle(ui, sample_dir):
     """`showRect` off draws a dot instead of the box: a drag moves the center only (`updateRectObsGeometry`)."""
     ui.open()

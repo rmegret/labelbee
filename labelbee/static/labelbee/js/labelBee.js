@@ -735,9 +735,9 @@ function onKeyDown_IDEdit(event) {
 
     if (!activeObject) return;
 
-    if (activeObject.status === "new") {
+    if (activeObject.draft) {
       activeObject.id = new_id
-      submit_bee(activeObject)
+      submitDraft(activeObject)
       defaultSelectedBee = new_id
       printMessage("ID changed + submitted", "green")
     } else { /* status=="db"*/

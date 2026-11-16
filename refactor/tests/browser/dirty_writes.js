@@ -7,7 +7,7 @@
 // Every set / delete / defineProperty through the proxy is counted by (operation, depth, field, source file:line).
 // The stored data itself is never wrapped (the proxy writes through to the raw object), and handles that the code
 // keeps (flatTracks, rect handles, ...) are proxies too, so writes through them are seen as well.
-// Working copies (rect.obs, made by cloneObs) are separate objects and are not recorded: that is the intended path.
+// Since slice 5 step 6 there is no working copy: a rectangle holds the stored object (`rect.obs`), so a write through it is seen; only a draft rectangle's own observation is not recorded.
 //
 // Since slice 4 step 2 the data lives in `AnnotationStore.events` (annotation/Events.js) and, since step 6, in a private
 // structure: the doors to the live data are `toObject`, `get`, `getOrCreate`, `commit`, `update`, `getFrame`, `forEach` and

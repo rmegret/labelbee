@@ -431,7 +431,7 @@ VisitWidget.prototype.newVisit = function() {
         visit: {pollinator: pollinator_id, flower: flower_id},
         span: {'f1':frame, 'f2':frame}
     }
-    storeObs(tmpObs);
+    events.commit(tmpObs);
     
     this.visit = getObsHandle(frame, id)
     default_id = id
@@ -863,11 +863,7 @@ OverlayControl.prototype.onClickResetAngle = function () {
     console.log("onClickResetAngle: aborted, could not get an activeObject");
     return;
   }
-  const obs = activeObject.obs;
-
-  obs.angle = 0;
-
-  submit_bee();
+  storeUnit(activeObject, { angle: 0 });
 };
 OverlayControl.prototype.onClickAngleFromTag = function () {
   console.log("overlay.onClickAngleFromTag");
@@ -887,9 +883,7 @@ OverlayControl.prototype.onClickAngleFromTag = function () {
     return;
   }
 
-  obs.angle = tagAngle(tag);
-
-  submit_bee();
+  storeUnit(activeObject, { angle: tagAngle(tag) });
 
   //    this.refreshOverlay()
 };
@@ -2069,15 +2063,9 @@ function createRectsFromTracks(F) {
   overlay.canvas1.renderAll(); // Render only once at the end
   overlay.canvas1.renderOnAddRemove = true
 }
-function addRectFromObs(inputObs, status) {
+function addRectFromObs(inputObs, draft) {
   if (typeof inputObs === "undefined") {
     console.log("ERROR in addRectFromObs: input obs undefined");
-    return undefined;
-  }
-
-  if (typeof status == "undefined") status = "db";
-  if (status !== "new" && status !== "db") {
-    console.log("ERROR in addRectFromObs: status=", status, " unknown");
     return undefined;
   }
 
@@ -2090,7 +2078,7 @@ function addRectFromObs(inputObs, status) {
 
   var rect = new fabric.BeeRect({
     id: obs.ID,
-    status: status,
+    draft: !!draft,
     obs: obs,
     top: undefined,
     left: undefined,
@@ -2255,33 +2243,28 @@ function newObservation(id, videoRect, angle, source) {
     labels: source && source.labels ? source.labels : "",
   };
 }
-// Create a fabric rectangle at specific place, all units in canvas coordinates
-function addRect(id, startX, startY, width, height, status, inputObs, angle) {
-  console.log("addRect: id=", id);
-
-  var obs;
-  if (status === "new") {
-    // creation is one function (ADR 0008 R6); `inputObs` is the source of a prediction, if any
-    let canvasRect = {
-      left: startX,
-      top: startY,
-      width: width,
-      height: height,
-    };
-    let videoRect = overlay.canvasToVideoRect(canvasRect);
-    obs = newObservation(id, videoRect, angle, inputObs);
-  } else if (status === "db") {
-    obs = cloneObs(inputObs);
-    if (typeof obs.angle === "undefined") {
-      obs.angle = 0;
-    }
-  } else {
-    console.log("addRect: error, status unknown. status=", status);
+// Create an observation in the store at a specific place (all units in canvas coordinates), and its fabric rectangle.
+// Creation is immediate (ADR 0008 P4): `source` is the observation of a prediction, if any; an id that already exists
+// on the frame is replaced by the next free integer.
+function createRect(id, startX, startY, width, height, angle, source) {
+  let frame = videoControl.getCurrentFrame();
+  if (events.has(frame, id)) {
+    let free = Number(id);
+    if (isNaN(free)) free = 0;
+    while (events.has(frame, free) || events.has(frame, String(free))) free++;
+    printMessage("Bee " + id + " already exists in this frame: created with id " + free, "red");
+    id = free;
   }
-
-  var rect = addRectFromObs(obs, status);
-
-  return rect;
+  let canvasRect = { left: startX, top: startY, width: width, height: height };
+  let videoRect = overlay.canvasToVideoRect(canvasRect);
+  let obs = events.commit(newObservation(id, videoRect, angle, source));
+  return addRectFromObs(obs);
+}
+// The rectangle drawn while ctrl-dragging: not in the store until the drag is validated (submitDraft)
+function addDraftRect(id, startX, startY) {
+  let canvasRect = { left: startX, top: startY, width: 1, height: 1 };
+  let videoRect = overlay.canvasToVideoRect(canvasRect);
+  return addRectFromObs(newObservation(id, videoRect), true);
 }
 // Try to find a fabric rectangle with a given id
 function findRect(id) {
@@ -2353,9 +2336,8 @@ function identify(ctx, rect, radius) {
   // old prototype: obs, x,y, color){
 
   var color;
-  if (rect.status === "new") color = "green";
-  else if (rect.status === "db") color = "yellow";
-  else color = "red"; //problem
+  if (rect.draft) color = "green";
+  else color = "yellow";
 
   //let x = rect.left + rect.width / 2;
   //let y = rect.top + rect.height / 2;
@@ -3828,26 +3810,23 @@ function newRectForTag(tag) {
   if (typeof angle !== "undefined") {
     console.log("newObsForTag: found angle=", angle);
     let ds=getDefaultRectSizeCanvas()
-    rect = addRect(
+    rect = createRect(
       tag.id,
       pt.x - ds.w / 2,
       pt.y - ds.h / 2,
       ds.w,
       ds.h,
-      "new",
-      undefined,
       angle
     );
   } else {
     console.log("newObsForTag: angle not found");
     let ds=getDefaultRectSizeCanvas()
-    rect = addRect(
+    rect = createRect(
       tag.id,
       pt.x - ds.w / 2,
       pt.y - ds.h / 2,
       ds.w,
-      ds.h,
-      "new"
+      ds.h
     );
   }
   return rect;
@@ -3879,7 +3858,8 @@ function newRectForCurrentTag() {
   overlay.canvas1.setActiveObject(rect);
   overlay.canvas1.renderAll();
 
-  submit_bee();
+  videoControl.refresh();
+  refreshChronogram();
 }
 
 /* Create new rect from prediction */
@@ -3939,7 +3919,7 @@ function onMouseDown_predict(option) {
       // Copy rectangle from source of prediction
       // addRect takes canvas coordinates units
       let r = overlay.obsToCanvasRect(obs);
-      rect = addRect(prediction.id, r.left, r.top, r.width, r.height, "new", obs);
+      rect = createRect(prediction.id, r.left, r.top, r.width, r.height, undefined, obs);
     } else {
       // Only found tag
       if (logging.mouseEvents)
@@ -3959,13 +3939,13 @@ function onMouseDown_predict(option) {
     let r = overlay.obsToCanvasRect(obs);
     let width = r.width,
       height = r.height;
-    rect = addRect(
+    rect = createRect(
       prediction.id,
       startX - width / 2,
       startY - height / 2,
       width,
       height,
-      "new",
+      undefined,
       obs
     );
     if (logging.mouseEvents)
@@ -3983,13 +3963,12 @@ function onMouseDown_predict(option) {
     }
     // Did not find any tag nor rect
     let ds=getDefaultRectSizeCanvas()
-    rect = addRect(
+    rect = createRect(
       id,
       startX - ds.w / 2,
       startY - ds.h / 2,
       ds.w,
-      ds.h,
-      "new"
+      ds.h
     );
     if (logging.mouseEvents)
       console.log(
@@ -4001,8 +3980,8 @@ function onMouseDown_predict(option) {
   overlay.canvas1.setActiveObject(rect);
   overlay.canvas1.renderAll();
 
-  //automatic_sub();
-  submit_bee();
+  videoControl.refresh();
+  refreshChronogram();
   // Fire mouse:down again, this time with the created target
   // overlay.canvas1.fire("mouse:down", {
   //     target: rect,
@@ -4046,7 +4025,7 @@ function onMouseDown_interactiveRect(option) {
 
   let id = prediction.id;
 
-  var rect = addRect(id, startX, startY, 1, 1, "new");
+  var rect = addDraftRect(id, startX, startY);
   var topleft = { x: startX, y: startY };
 
   var center = rect.getCenterPoint();
@@ -4124,7 +4103,7 @@ function onMouseDown_interactiveRect(option) {
       // printMessage("Press enter to validate ID", "green")
 
       updateForm(activeObject)
-      submit_bee()
+      submitDraft(activeObject)
     } else {
       // Not enough drag to define a new rectangle
       overlay.canvas1.deactivateAll();
@@ -4478,7 +4457,7 @@ function onObjectDeselected(option) {
   if (logging.selectionEvents) console.log("onObjectDeselected: ", option);
 
   if (overlay.lastSelected !== null) {
-    if (overlay.lastSelected.status == "new") {
+    if (overlay.lastSelected.draft) {
       if (logging.mouseEvents)
         console.log(
           "onObjectDeselected: removing non submitted lastSelected=",

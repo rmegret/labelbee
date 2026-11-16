@@ -25,40 +25,11 @@ function Observation(ID) {
   this.labels = "";
 }
 
-function cloneObs(obs) {
-  let cloned = {};
-  copyObs(cloned, obs);
-  return cloned;
-}
-
 function deepcopy(obj) {
   if (!obj) return obj;
   return JSON.parse(JSON.stringify(obj));
 }
 
-function copyObs(obs, tmpObs) {
-  // Shallow copy: internal handles such aslabels or parts point to same thing...
-  obs.ID = tmpObs.ID;
-  obs.time = tmpObs.time;
-  obs.frame = tmpObs.frame;
-
-  obs.x = tmpObs.x;
-  obs.y = tmpObs.y;
-  obs.cx = tmpObs.cx;
-  obs.cy = tmpObs.cy;
-  obs.width = tmpObs.width;
-  obs.height = tmpObs.height;
-  //obs.marked = tmpObs.marked;
-  //obs.permanent = tmpObs.permanent;
-  obs.angle = tmpObs.angle;
-  obs.notes = tmpObs.notes;
-  obs.labels = tmpObs.labels;
-  obs.parts = tmpObs.parts;
-  obs.newid = tmpObs.newid; // in case of wrongid
-  obs.fix = deepcopy(tmpObs.fix);
-  if (tmpObs.visit)
-    obs.visit = tmpObs.visit
-}
 function hasParts(obs) {
   return !!obs.parts && obs.parts.length > 0;
 }
@@ -95,12 +66,6 @@ function getObsHandle(frame, id, createIfEmpty) {
     return events.getOrCreate(frame, id);
   }
   return events.get(frame, id);
-}
-
-function storeObs(tmpObs) {
-  var obs = events.commit(tmpObs);
-
-  if (logging.submitEvents) console.log("Submitting obs = ", obs);
 }
 
 /**

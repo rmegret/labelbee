@@ -426,49 +426,26 @@ function updateForm(activeObject) {
   }
 }
 
-function submit_bee() {
-  var activeObject = overlay.getActiveObject();
-  if (activeObject === null) {
-    printMessage("No bee selected", "red");
+/**
+ * A draft rectangle (the one drawn while ctrl-dragging, the only rectangle that is not in the store) becomes an
+ * observation: stored with `events.commit`, and from then on the rectangle holds the stored object. Refuses an id
+ * that already exists on the frame.
+ */
+function submitDraft(rect) {
+  let frame = rect.obs.frame;
+  let id = rect.id;
+  if (getObsHandle(frame, id, false) !== undefined) {
+    console.log("submitDraft: trying to replace existing bee with new observation. ABORT");
+    printMessage("Conflict of ID: bee " + id + " already exists in this frame.", "red");
     return false;
   }
-
-  // Use current id
-  let final_id = activeObject.id;
-  if (
-    activeObject.status === "new" &&
-    getObsHandle(getCurrentFrame(), final_id, false) !== undefined
-  ) {
-    console.log(
-      "submit_bee: trying to replace existing bee with new observation. ABORT"
-    );
-    printMessage(
-      "Conflict of ID: bee " + final_id + " already exists in this frame.",
-      "red"
-    );
-    return false;
-  }
-  if (
-    activeObject.status === "db" &&
-    getObsHandle(getCurrentFrame(), final_id, false) === undefined
-  ) {
-    console.log(
-      "submit_bee: rectangle supposed to be existing in DB, but not found. Writing anyway."
-    );
-    printMessage("Internal issue. See console.log", "red");
-    return true;
-  }
-
-  let tmpObs = activeObject.obs;
-  tmpObs.ID = final_id;
-  //updateForm(activeObject);
-
-  storeObs(tmpObs);
-  activeObject.status = "db";
-  activeObject.obs = events.get(tmpObs.frame, final_id); // from now on the rectangle holds the stored object
+  rect.obs.ID = id;
+  rect.obs = events.commit(rect.obs);
+  rect.draft = false;
 
   videoControl.refresh();
   refreshChronogram();
+  return true;
 }
 
 /**
@@ -478,15 +455,15 @@ function submit_bee() {
  */
 function selectedKey() {
   let activeObject = overlay.getActiveObject();
-  if (!activeObject || activeObject.status != "db" || !activeObject.obs) return null;
+  if (!activeObject || activeObject.draft || !activeObject.obs) return null;
   return { frame: activeObject.obs.frame, id: activeObject.obs.ID };
 }
 
 /**
- * Stores the fields of one unit edited on the selected rectangle (ADR 0008 R3): the working copy follows (until
- * step 6) and the store gets only these fields, with `events.update`, then the manual refreshes as `automatic_sub`
- * did. A rectangle not in the store yet has the working copy as only holder: `submitNew` submits a "new" one
- * (the newid box did), otherwise `automatic_sub` leaves it alone as before. Returns whether the store was written.
+ * Stores the fields of one unit edited on the selected rectangle (ADR 0008 R3): the store gets only these fields,
+ * with `events.update` (the rectangle holds the stored object), then the manual refreshes. A draft rectangle (the
+ * ctrl-drag in progress) is not in the store: the fields go to its own observation, and `submitNew` submits it
+ * (the newid box did). Returns whether the store was written.
  */
 function storeUnit(rect, fields, submitNew) {
   let key = selectedKey();
@@ -499,20 +476,13 @@ function storeUnit(rect, fields, submitNew) {
     refreshChronogram();
     return true;
   }
-  if (submitNew && rect.status === "new") submit_bee(rect);
-  else automatic_sub();
-  return false;
-}
-
-function automatic_sub() {
-  var activeObject = overlay.getActiveObject();
-  if (activeObject.status == "db") {
-    submit_bee();
+  if (submitNew && rect.draft) {
+    submitDraft(rect);
   } else {
-    console.log("automatic_sub: not submitted, as tmp rect");
-    videoControl.refresh(); // Just refresh
+    videoControl.refresh(); // a draft is not submitted, just refresh
     refreshChronogram();
   }
+  return false;
 }
 
 function swapID_findAll(ID) {
@@ -709,12 +679,12 @@ function undoAction() {
 
       if (obs.frame != getCurrentFrame()) {
         // Put it back in the DB and jump to frame
-        storeObs(obs);
+        events.commit(obs);
         videoControl.seekFrame(obs.frame);
         return;
       }
 
-      storeObs(obs);
+      events.commit(obs);
       rect = addRectFromObs(obs);
       console.log("rect=", rect);
       overlay.setActiveObject(rect);

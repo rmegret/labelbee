@@ -1,6 +1,6 @@
 """The dirty-write detector itself (dirty_writes.js): it is on in every browser test (strict mode, the default), and it sees
 mutations of the stored events through every kind of reference, including the indirect ones found by probing: a nested value shared
-with a working copy after `storeObs`, and a tag object shared with the Tags structure. These tests mutate on purpose, so they carry
+with the rectangle that holds the stored observation (`rect.obs`), and a tag object shared with the Tags structure. These tests mutate on purpose, so they carry
 `dirty_writes_expected` (the strict check of their own teardown is skipped; what they find is still collected)."""
 import pytest
 
@@ -43,13 +43,13 @@ def test_i2_a_field_of_a_stored_observation_through_any_handle(ui, sample_dir):
 
 
 @pytest.mark.dirty_writes_expected
-def test_i3_a_nested_value_shared_with_the_working_copy_after_a_commit(ui, sample_dir):
+def test_i3_a_nested_value_written_through_the_rectangle_that_holds_the_stored_observation(ui, sample_dir):
     loaded(ui, sample_dir)
     ui.js("""(() => { const rect = overlay.canvas1.getObjects().find(o => o.obs && String(o.obs.ID) === '1');
-                      rect.obs.parts = [{label: 'head'}]; storeObs(rect.obs); window.__rect = rect })()""")
+                      rect.obs.parts = [{label: 'head'}]; events.commit(rect.obs); window.__rect = rect })()""")
     ui.js(CLEAR)
-    ui.js("window.__rect.obs.parts.push({label: 'tail'})")               # a write through the WORKING COPY
-    assert ui.js("events.get(0, 1).parts.length") == 2                   # ... that changed the stored observation
+    ui.js("window.__rect.obs.parts.push({label: 'tail'})")               # a write through the RECTANGLE (rect.obs is the stored object)
+    assert ui.js("events.get(0, 1).parts.length") == 2                   # ... which is a write to the stored observation
     assert seen(ui) == [("set", 3, "#"), ("set", 3, "length")]
 
 
