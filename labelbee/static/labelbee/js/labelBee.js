@@ -115,6 +115,7 @@ function init(videoID, tagID) {
   $(".sortable").sortable({
     connectWith: ".sortable",
     handle: "> label, > .block-header",
+    forcePlaceholderSize: true, // shows where the panel will land (see layout/PanelRows.js)
   });
   //$( ".sortable" ).disableSelection();
 

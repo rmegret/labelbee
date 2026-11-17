@@ -21,8 +21,9 @@
     var splitter = document.getElementById("splitter2");
     var toggle = document.getElementById("layout-toggle");
     var chronoTab = document.getElementById("chronoTab");
-    var anchor = document.getElementById("chronoTabBR"); // empty div just before #chronoTab
-    if (!paneMain || !paneChrono || !splitter || !toggle || !chronoTab || !anchor) return;
+    if (!paneMain || !paneChrono || !splitter || !toggle || !chronoTab) return;
+    var anchor = document.createComment("chronoTab"); // marks the place of #chronoTab
+    chronoTab.parentNode.insertBefore(anchor, chronoTab);
 
     var horizontal = false;
     var width = parseInt(load(KEY_WIDTH), 10) || 0; // 0: half of the pane
@@ -38,15 +39,14 @@
     function applyWidth() {
       paneMain.style.setProperty("--chrono-width", clamp(width) + "px");
     }
-    // Default panels (with their optional line-break div "<id>BR") that sit above the
-    // chronogram in horizontal mode. A comment node marks their place in the vertical layout.
+    // Default panels that sit above the chronogram in horizontal mode. A comment node marks
+    // their place in the vertical layout. (Their row break is the data-newrow of the panel.)
     var panels = DEFAULT_PANELS.map(function (id) {
-      var group = [document.getElementById(id + "BR"), document.getElementById(id)]
-        .filter(function (e) { return e; });
-      if (!group.length) return null;
+      var e = document.getElementById(id);
+      if (!e) return null;
       var mark = document.createComment(id);
-      group[0].parentNode.insertBefore(mark, group[0]);
-      return { group: group, mark: mark };
+      e.parentNode.insertBefore(mark, e);
+      return { group: [e], mark: mark };
     }).filter(function (p) { return p; });
 
     function setHorizontal(h) {

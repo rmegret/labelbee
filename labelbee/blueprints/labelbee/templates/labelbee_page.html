@@ -64,6 +64,7 @@
   <script type="text/javascript" src="js/layout/ChronoLayout.js"></script>
   <script type="text/javascript" src="js/layout/FitControls.js"></script>
   <script type="text/javascript" src="js/layout/VideoSettings.js"></script>
+  <script type="text/javascript" src="js/layout/PanelRows.js"></script>
   <!-- ES module bridges (deferred, run in order after the classic scripts, before window.onload):
        global `logging` from core/Notifier.js; `AnnotationStore` and `events` (the stored events) from
        annotation/AnnotationStore.js (no data globals: Tracks, Tags, ... are console-only debug views, see
@@ -367,8 +368,8 @@
 
               <div class="sortable">
 
-                <div id="timelineBR" class="hidden"></div>
-                <div id="timeline" class="block inline-collapsible hidden">
+                <!-- data-newrow="true": the panel starts a new row, "false": it continues the row of the previous panel -->
+                <div id="timeline" data-newrow="false" class="block inline-collapsible hidden">
                   <div class="block-header small">Timeline</div>
                   
                   <div class="block-content">
@@ -378,8 +379,7 @@
                   </div>
                 </div>
                 
-                <div id="focusIntervalTabBR" class=""></div>
-                <div id="focusIntervalTab" class='block inline-collapsible'>
+                <div id="focusIntervalTab" data-newrow="true" class='block inline-collapsible'>
                   <div class="block-header small">Focus Interval</div>
                   
                   <span class="block-content">
@@ -412,8 +412,7 @@
                   </span>
                 </div>
 
-                <div id="selectedTabBR" class="hidden"></div>  
-                <div id="selectedTab" class='block inline-collapsible'>
+                <div id="selectedTab" data-newrow="false" class='block inline-collapsible'>
                   <div class="block-header small">Selected</div>
                   
                   <span class="block-content">
@@ -449,8 +448,7 @@
                   </span>
                 </div>
                 
-                <div id="eventsTabBR" class="hidden"></div>
-                <div id="eventsTab" class='block inline-collapsible'>
+                <div id="eventsTab" data-newrow="false" class='block inline-collapsible'>
                   <div class="block-header small">Events</div>
                   
                   <span class="block-content">
@@ -482,8 +480,7 @@
                   </span>
                 </div>
                 
-                <div id="filterTabBR" class=""></div>
-                <div id="filterTab" class='block inline-collapsible'>
+                <div id="filterTab" data-newrow="true" class='block inline-collapsible'>
                   <div class="block-header small">Filter</div>
                   
                   <span class="block-content">
@@ -559,8 +556,7 @@
               <button value="ghost" onclick="plotGhostImage()" type="button" class="btn btn-default btn-xs" title="Plot averaged image">Ghost</span></button>
               </div>
  -->
-                <div id="chronoTabBR"></div>
-                <div id="chronoTab" class="block inline-collapsible" width="100%">
+                <div id="chronoTab" data-newrow="true" class="block inline-collapsible" width="100%">
                   <div class="block-header small">Chronogram</div>
                     <span class="block-content">
                       <div class='block inline-collapsible'>
@@ -1039,54 +1035,6 @@
                 </div>
               </div>
 
-              <!-- #### FEATURES ####-->
-              <div id='features' class='collapsible'>
-                <label>Features</label>
-                <div>
-                  <label>Show menu tabs:</label>
-                  <br>
-                  <input id="showTimeline" type="checkbox" onchange="
-                    toggleHidden('timelineBR', this.checked); 
-                    toggleHidden('timeline', this.checked);">
-                  <label for="showTimeline">Timeline</label>
-                  <br>
-                  <input id="showFocusInterval" type="checkbox" onchange="
-                    toggleHidden('focusIntervalTabBR', this.checked); 
-                    toggleHidden('focusIntervalTab', this.checked);">
-                  <label for="showFocusInterval">Focus Interval</label>
-                  <br>
-                  <input id="showSelected" type="checkbox" onchange="
-                    toggleHidden('selectedTabBR', this.checked); 
-                    toggleHidden('selectedTab', this.checked);">
-                  <label for="showSelected">Selected</label>
-                  <br>
-                  <input id="showEvents" type="checkbox" checked onchange="
-                    toggleHidden('eventsTabBR', this.checked); 
-                    toggleHidden('eventsTab', this.checked);">
-                  <label for="showEvents">Events</label>
-                  <br>
-                  <input id="showFilter" type="checkbox" onchange="
-                    toggleHidden('filterTabBR', this.checked); 
-                    toggleHidden('filterTab', this.checked);">
-                  <label for="showFilter">Filter</label>
-                  <br>
-                  <input id="showChrono" type="checkbox" checked onchange="
-                    toggleHidden('chronoTabBR', this.checked);
-                    toggleHidden('chronoTab', this.checked);">
-                  <label for="showChrono">Chronogram</label>
-                  <br>
-                  <input id="showPickFrame" type="checkbox" onchange="
-                  toggleHidden('pickframetabBR', this.checked); 
-                  toggleHidden('pickframeblock', this.checked);">
-                  <label for="showPickFrame">Pick-Frame Mode</label>
-                  <br>
-                  <input id="showPickFlower" type="checkbox" onchange="
-                  toggleHidden('pickflowertabBR', this.checked); 
-                  toggleHidden('pickflowerblock', this.checked);">
-                  <label for="showPickFlower">Pick-Flower Mode</label>
-                </div>
-              </div>
-
               <!-- ## VIDEO ZOOM -->
 
               <div id='videozoom' class='collapsible'>
@@ -1259,6 +1207,48 @@
                   <div class="checkbox">
                     <label><input type="checkbox" checked="false" id="mousewheelMode"
                         onclick="onMousewheelModeToggled()" class='btn-sm'>Zoom in Chrono needs shift+mousewheel</label>
+                  </div>
+
+                  <!-- #### FEATURES ####-->
+                  <div id='features' class='subpanel collapsible'>
+                    <label>Features</label>
+                    <div>
+                      <label>Show menu tabs:</label>
+                      <br>
+                      <input id="showTimeline" type="checkbox" onchange="
+                        toggleHidden('timeline', this.checked);">
+                      <label for="showTimeline">Timeline</label>
+                      <br>
+                      <input id="showFocusInterval" type="checkbox" onchange="
+                        toggleHidden('focusIntervalTab', this.checked);">
+                      <label for="showFocusInterval">Focus Interval</label>
+                      <br>
+                      <input id="showSelected" type="checkbox" onchange="
+                        toggleHidden('selectedTab', this.checked);">
+                      <label for="showSelected">Selected</label>
+                      <br>
+                      <input id="showEvents" type="checkbox" checked onchange="
+                        toggleHidden('eventsTab', this.checked);">
+                      <label for="showEvents">Events</label>
+                      <br>
+                      <input id="showFilter" type="checkbox" onchange="
+                        toggleHidden('filterTab', this.checked);">
+                      <label for="showFilter">Filter</label>
+                      <br>
+                      <input id="showChrono" type="checkbox" checked onchange="
+                        toggleHidden('chronoTab', this.checked);">
+                      <label for="showChrono">Chronogram</label>
+                      <br>
+                      <input id="showPickFrame" type="checkbox" onchange="
+                        toggleHidden('pickframetabBR', this.checked);
+                        toggleHidden('pickframeblock', this.checked);">
+                      <label for="showPickFrame">Pick-Frame Mode</label>
+                      <br>
+                      <input id="showPickFlower" type="checkbox" onchange="
+                        toggleHidden('pickflowertabBR', this.checked);
+                        toggleHidden('pickflowerblock', this.checked);">
+                      <label for="showPickFlower">Pick-Flower Mode</label>
+                    </div>
                   </div>
 
                   <div class='subpanel collapsible'>

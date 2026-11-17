@@ -57,7 +57,28 @@ canvas {
     overflow: auto;
     padding: 5px;
 }
+/* Rows of panels in a sortable container: panels are floats on a row, and
+   data-newrow="true" on a panel starts a new row (clear). The flag stays attached to its panel,
+   whatever the order. Set while dragging by js/layout/PanelRows.js. */
+.sortable > .block {
+    float: left;
+}
+.sortable > .block[data-newrow="true"] {
+    clear: left;
+}
+.sortable::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+.block.ui-sortable-placeholder {
+    visibility: visible !important;
+    border: 1px dashed #888;
+    background: #f4f4f4;
+}
 #pane-main.horizontal #pane-chrono #chronoTab {
+    float: none;
+    clear: both;
     display: block;  /* fill the pane instead of shrink-to-fit */
 }
 #pane-main.horizontal #pane-chrono #chronoTab:not(.collapsed) > .block-content {
