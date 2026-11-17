@@ -59,6 +59,7 @@
   <script type="text/javascript" src="js/ChronoControlInteraction.js"></script>
   <script type="text/javascript" src="js/ZoomView.js"></script>
   <script type="text/javascript" src="js/labelBee.js"></script>
+  <script type="text/javascript" src="js/layout/NavMenu.js"></script>
   <script type="text/javascript" src="js/layout/SplitLayout.js"></script>
   <!-- ES module bridges (deferred, run in order after the classic scripts, before window.onload):
        global `logging` from core/Notifier.js; `AnnotationStore` and `events` (the stored events) from
@@ -100,43 +101,44 @@
 </script>
 
 <body>
-  <!--   <nav class="navbar navbar-inverse navbar-fixed-top"> -->
   <nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container">
+    <div class="topbar">
 
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
-          aria-expanded="false" aria-controls="navbar">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
+      <!-- Burger + logo + name: the whole group opens the main menu (js/layout/NavMenu.js) -->
+      <button type="button" id="menu-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="main-menu"
+        title="Menu">
+        <svg class="icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+          <rect x="2" y="4" width="16" height="2" rx="1"></rect>
+          <rect x="2" y="9" width="16" height="2" rx="1"></rect>
+          <rect x="2" y="14" width="16" height="2" rx="1"></rect>
+        </svg>
+        <img src="images/BeeTrackerlogo.png" width="25" height="25" alt="">
+        <span class="menu-title">labelBee</span>
+      </button>
+
+      <div class="topbar-actions">
+        <button type="button" id="fullscreen-button" class="topbar-icon" onclick="toggleFullScreen()"
+          title="Fullscreen">
+          <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
         </button>
+        <button type="button" id="sidebar-toggle" class="topbar-icon" aria-pressed="true"
+          title="Show/hide the sidebar">
+          <!-- two rects: the main pane (grey) and the sidebar (accent color) -->
+          <svg class="icon" width="22" height="20" viewBox="0 0 22 20" aria-hidden="true">
+            <rect class="main-rect" x="1.5" y="3.5" width="12" height="13" rx="1.5"></rect>
+            <rect class="side-rect" x="15" y="3.5" width="5.5" height="13" rx="1.5"></rect>
+          </svg>
+        </button>
+      </div>
+    </div>
 
-        <a class="navbar-brand" href="#"><img style="display:inline-block" src="images/BeeTrackerlogo.png" width="25px"
-            height="25px"> labelBee</a>
+    <div id="main-menu" role="menu" hidden>
+      <div class="main-menu-item" title="You need to quit LabelBee before logging-in/out">
+        <span id="whoami">-</span>
       </div>
-      <div id="navbar" class="collapse navbar-collapse">
-         
-        <ul class="nav navbar-nav">
-          <li><a>
-            <label for="fullscreen" value="Fullscreen" class="btn btn-black btn-xs">Fullscreen</label>
-            <input type="button" value="Fullscreen" style="display:none" id="fullscreen"
-              onclick="toggleFullScreen()">
-            </a>
-            </li>
-          <!-- <li class="active"><a href="#">Home</a></li>
-          <li><a href="#about">About</a></li>
-          <li><a href="#help">Help</a></li> -->
-        </ul>
- 
-        <ul class="nav navbar-nav navbar-right">
-          <li title="You need to quit LabelBee before logging-in/out"><a><span id="whoami">-</span></a></li>
-          <li><a href="{{url_for('home.home_page')}}"><span class="glyphicon glyphicon-log-out"></span>Quit</a>
-          </li>
-        </ul>
-      </div>
-      <!--/.nav-collapse -->
+      <a class="main-menu-item" role="menuitem" href="{{url_for('home.home_page')}}">
+        <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span> Quit
+      </a>
     </div>
   </nav>
 
@@ -324,7 +326,7 @@
                 <div id="timelineBR" class="hidden"></div>
                 <div id="timeline" class="block inline-collapsible hidden">
                   <div class="block-header small">Timeline</div>
-                  <br>
+                  
                   <div class="block-content">
                     <div id='timelineblockwrapper'>
                       <div id="timelineblockdiv"></div>
@@ -335,7 +337,7 @@
                 <div id="focusIntervalTabBR" class=""></div>
                 <div id="focusIntervalTab" class='block inline-collapsible'>
                   <div class="block-header small">Focus Interval</div>
-                  <br>
+                  
                   <span class="block-content">
                     <button onclick="shiftTrackWindow(-0.75)" type="button" class="btn btn-window btn-xs"
                       title="Reduce track window"><span class="glyphicon glyphicon-step-backward small"></span></button>
@@ -369,7 +371,7 @@
                 <div id="selectedTabBR" class="hidden"></div>  
                 <div id="selectedTab" class='block inline-collapsible'>
                   <div class="block-header small">Selected</div>
-                  <br>
+                  
                   <span class="block-content">
                     <input type="text" value="" size="6" id="selectID" onchange="onSelectIDChanged(event)"
                       class="small btn-green-border">
@@ -406,7 +408,7 @@
                 <div id="eventsTabBR" class="hidden"></div>
                 <div id="eventsTab" class='block inline-collapsible'>
                   <div class="block-header small">Events</div>
-                  <br>
+                  
                   <span class="block-content">
                     <button id="autoEventButton" onclick="onAutoEventButtonClick()" type="button"
                       class="btn btn-xs btn-green-toggle" title="Toggle Auto Seek Event Mode">AutoSeek <span
@@ -439,7 +441,7 @@
                 <div id="filterTabBR" class=""></div>
                 <div id="filterTab" class='block inline-collapsible'>
                   <div class="block-header small">Filter</div>
-                  <br>
+                  
                   <span class="block-content">
 
                     <div class='block inline-collapsible'>
@@ -516,41 +518,43 @@
                 <div id="chronoTabBR"></div>
                 <div id="chronoTab" class="block inline-collapsible" width="100%">
                   <div class="block-header small">Chronogram</div>
-                  <br>
+                    <span class="block-content">
+                      <div class='block inline-collapsible'>
+                        <div class="block-header small">View:</div>
+                        <span class="block-content">
+                          <div onclick="shiftTimeDomain(-0.5)" class="btn btn-info btn-xs" title="Shift left"><span
+                              class="glyphicon glyphicon-step-backward small"></span></div>
+                          <div onclick="shiftTimeDomain(0.5)" class="btn btn-info btn-xs" title="Shift right"><span
+                              class="glyphicon glyphicon-step-forward small"></span></div>
+                          <input value="Z+" onclick="scaleTimeDomain(2)" type="button" class="btn btn-info btn-xs"
+                            title="Zoom In time">
+                          <input value="Z-" onclick="scaleTimeDomain(1/2)" type="button" class="btn btn-info btn-xs"
+                            title="Zoom Out time">
+                          <input value="Video" onclick="onClickFocusVideo()" type="button"
+                            class="btn btn-default btn-video-border btn-xs" title="Reinit view">
+                        </span>
+                      </div>
+                      <div class='block inline-collapsible'>
+                        <div class="block-header small">Size:</div>
+                        <span class="block-content">
+                          <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs"
+                            title="Reduce chronogram height">h-</button>
+                          <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs"
+                            title="Reinit chronogram height">h=</button>
+                          <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs"
+                            title="Increase chronogram height">h+</button>
+                          &nbsp;
+                          <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs"
+                            title="Reduce chronogram width">w-</button>
+                          <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs"
+                            title="Reinit chronogram width">w=</button>
+                          <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs"
+                            title="Increase chronogram width">w+</button>
+                        </span>
+                      </div>
+                    </span>
+                    <br>
                   <span class="block-content">
-                    <div class='block inline-collapsible'>
-                      <div class="block-header small">View:</div>
-                      <span class="block-content">
-                        <div onclick="shiftTimeDomain(-0.5)" class="btn btn-info btn-xs" title="Shift left"><span
-                            class="glyphicon glyphicon-step-backward small"></span></div>
-                        <div onclick="shiftTimeDomain(0.5)" class="btn btn-info btn-xs" title="Shift right"><span
-                            class="glyphicon glyphicon-step-forward small"></span></div>
-                        <input value="Z+" onclick="scaleTimeDomain(2)" type="button" class="btn btn-info btn-xs"
-                          title="Zoom In time">
-                        <input value="Z-" onclick="scaleTimeDomain(1/2)" type="button" class="btn btn-info btn-xs"
-                          title="Zoom Out time">
-                        <input value="Video" onclick="onClickFocusVideo()" type="button"
-                          class="btn btn-default btn-video-border btn-xs" title="Reinit view">
-                      </span>
-                    </div>
-                    <div class='block inline-collapsible'>
-                      <div class="block-header small">Size:</div>
-                      <span class="block-content">
-                        <button value="H-" onclick="chronoAdjust('H-')" type="button" class="btn btn-default btn-xs"
-                          title="Reduce chronogram height">h-</button>
-                        <button value="H=" onclick="chronoAdjust('H=')" type="button" class="btn btn-default btn-xs"
-                          title="Reinit chronogram height">h=</button>
-                        <button value="H+" onclick="chronoAdjust('H+')" type="button" class="btn btn-default btn-xs"
-                          title="Increase chronogram height">h+</button>
-                        &nbsp;
-                        <button value="W-" onclick="chronoAdjust('W-')" type="button" class="btn btn-default btn-xs"
-                          title="Reduce chronogram width">w-</button>
-                        <button value="W=" onclick="chronoAdjust('W=')" type="button" class="btn btn-default btn-xs"
-                          title="Reinit chronogram width">w=</button>
-                        <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs"
-                          title="Increase chronogram width">w+</button>
-                      </span>
-                    </div>
                     <div>
                       <div class="">
                         <div id="chronoDiv" class="ui-widget-content" width="400" height="200"
@@ -569,9 +573,7 @@
       </div> <!-- pane-main -->
 
       <div id="splitter" role="separator" aria-orientation="vertical" tabindex="0"
-        title="Drag to resize the sidebar (double-click: default width)">
-        <button type="button" id="sidebar-toggle" title="Collapse/expand the sidebar"></button>
-      </div>
+        title="Drag to resize the sidebar (double-click: default width)"></div>
 
       <div id="pane-side">
             <div id='right-side' class='sortable'>
