@@ -384,6 +384,27 @@ div.float-right {
     stroke: #333;
     stroke-width: 1.3;
 }
+/* Video settings dialog (js/layout/VideoSettings.js) */
+.toolbar-hidden {
+    display: none !important;
+}
+#dialog-video-settings .settings-section {
+    display: block;
+    margin: 4px 0;
+    padding: 4px 6px;
+}
+.settings-section .block-header {
+    cursor: default;
+    font-weight: bold;
+}
+.settings-section label {
+    font-weight: normal;
+    margin-right: 10px;
+}
+#video-settings-button {
+    vertical-align: middle;
+    margin-left: 2px;
+}
 .ui-icon-gripsmall-diagonal-se {
     background-position: -68px -228px;
     width: 8px;

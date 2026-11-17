@@ -63,6 +63,7 @@
   <script type="text/javascript" src="js/layout/SplitLayout.js"></script>
   <script type="text/javascript" src="js/layout/ChronoLayout.js"></script>
   <script type="text/javascript" src="js/layout/FitControls.js"></script>
+  <script type="text/javascript" src="js/layout/VideoSettings.js"></script>
   <!-- ES module bridges (deferred, run in order after the classic scripts, before window.onload):
        global `logging` from core/Notifier.js; `AnnotationStore` and `events` (the stored events) from
        annotation/AnnotationStore.js (no data globals: Tracks, Tags, ... are console-only debug views, see
@@ -260,22 +261,25 @@
                 <div class="block-header small">
                   Video
                 </div>
+                <!-- outside the header: a click in the header collapses the block -->
+                <button type="button" id="video-settings-button" class="btn btn-default btn-xs nopad"
+                  title="Video settings: cache, display, toolbar"><span class="glyphicon glyphicon-cog"></span></button>
                 <span class="block-content">
                   <button value="Play Backwards" onclick="videoControl.playPauseVideoBackward()" id="playbackward"
                     type="button" class="btn btn-info btn-sm nopad"><span
                       class="glyphicon glyphicon-pause"></span><span
                       class="glyphicon glyphicon-play icon-flipped"></span></button>
-                  <span class="small">Speed </span><input type="text" class="btn-sm nopad small" size="4" value="1.0"
-                    id="playRate" onchange="videoControl.playRateInputChanged()""></input>
+                  <span id="playRateControl"><span class="small">Speed </span><input type="text" class="btn-sm nopad small" size="4" value="1.0"
+                    id="playRate" onchange="videoControl.playRateInputChanged()""></input></span>
                   <button value=" Play" onclick="videoControl.playPauseVideo()" id="play" type="button"
                     class="btn btn-success btn-sm nopad"><span class="glyphicon glyphicon-play"></span><span
                     class="glyphicon glyphicon-pause"></span></button>
 
-                  <button value="Previous minute" onclick="videoControl.rewind(200)" type="button"
-                    class="btn btn-info btn-xs x-small nopad fwbut fwbut3" title="-10s"><span
+                  <button value="Previous minute" onclick="videoControl.rewind(videoToolbar.stepMinute)" type="button"
+                    class="btn btn-info btn-xs x-small nopad fwbut fwbut3 toolbar-step-minute" title="-200 frames"><span
                       class="glyphicon glyphicon-fast-forward icon-flipped"></span></button>
-                  <button value="Previous second" onclick="videoControl.rewind(20)" type="button"
-                    class="btn btn-info btn-xs x-small nopad fwbut fbut2" title="-1s"><span
+                  <button value="Previous second" onclick="videoControl.rewind(videoToolbar.stepSecond)" type="button"
+                    class="btn btn-info btn-xs x-small nopad fwbut fbut2 toolbar-step-second" title="-20 frames"><span
                       class="glyphicon glyphicon-fast-forward icon-flipped"></span></button>
                   <button value="Previous frame" onclick="videoControl.rewind(1)" type="button"
                     class="btn btn-info btn-xs x-small nopad fwbut fwbut1" title="-1 frame"><span
@@ -287,30 +291,54 @@
                   <button value="Next frame" onclick="videoControl.forward(1)" type="button"
                     class="btn btn-info btn-xs x-small nopad fwbut fwbut1" title="+1 frame"><span
                       class="glyphicon glyphicon-step-forward"></span></button>
-                  <button value="Next second" onclick="videoControl.forward(20)" type="button"
-                    class="btn btn-info btn-xs x-small nopad fwbut fwbut2" title="+1s"><span
+                  <button value="Next second" onclick="videoControl.forward(videoToolbar.stepSecond)" type="button"
+                    class="btn btn-info btn-xs x-small nopad fwbut fwbut2 toolbar-step-second" title="+20 frames"><span
                       class="glyphicon glyphicon-fast-forward"></span></button>
-                  <button value="Next minute" onclick="videoControl.forward(200)" type="button"
-                    class="btn btn-info btn-xs x-small nopad fwbut fwbut3" title="+10s"><span
+                  <button value="Next minute" onclick="videoControl.forward(videoToolbar.stepMinute)" type="button"
+                    class="btn btn-info btn-xs x-small nopad fwbut fwbut3 toolbar-step-minute" title="+200 frames"><span
                       class="glyphicon glyphicon-fast-forward"></span></button>
 
-                  <div class="inline-block">
-                      <button value="Image Cache" onclick="overlay.optsClick('useImageCache')" type="button"
-                    class="btn btn-blue-toggle btn-xs x-small nopad overlayOpts overlayOpts-useImageCache" 
-                    title="Use image cache (yes), or open video directly (no)">Use Cache</button>
-                      <span id="cache-status"></span>
-                      <button value="Preload" onclick="videoControl.preloadCache()" type="button"
-                    class="btn btn-info btn-xs x-small nopad " title="Preload images around current frame">Preload</button>
-                      <button value="Cancel" onclick="videoControl.videoCache.cancelQueue()" type="button"
-                    class="btn btn-alert btn-xs x-small nopad " title="Cancel current queue"><span>Cancel</span></button>
-                    <button value="Reset Cache" onclick="videoControl.videoCache.resetCache()" type="button"
-                  class="btn btn-alert btn-xs x-small nopad " title="Empty and reset the cache"><span>Reset</span></button>
-
-                  <button value="Fixed Aspect" onclick="overlay.optsClick('fixedAspect')" type="button"
-                  class="btn btn-blue-toggle btn-xs x-small nopad overlayOpts overlayOpts-fixedAspect" 
-                  title="Toggle fixed aspect ratio equal to video"><span>Fixed Aspect</span></button>
-                  </div>
                 </span>
+              </div>
+
+              <!-- Video settings dialog (js/layout/VideoSettings.js): cache, display, toolbar -->
+              <div id="dialog-video-settings" title="Video settings" style="display:none">
+                <div class="block settings-section">
+                  <div class="block-header small">Cache</div>
+                  <div>
+                    <button value="Image Cache" onclick="overlay.optsClick('useImageCache')" type="button"
+                      class="btn btn-blue-toggle btn-xs x-small nopad overlayOpts overlayOpts-useImageCache"
+                      title="Use image cache (yes), or open video directly (no)">Use Cache</button>
+                    <span id="cache-status"></span>
+                    <button value="Preload" onclick="videoControl.preloadCache()" type="button"
+                      class="btn btn-info btn-xs x-small nopad " title="Preload images around current frame">Preload</button>
+                    <button value="Cancel" onclick="videoControl.videoCache.cancelQueue()" type="button"
+                      class="btn btn-alert btn-xs x-small nopad " title="Cancel current queue"><span>Cancel</span></button>
+                    <button value="Reset Cache" onclick="videoControl.videoCache.resetCache()" type="button"
+                      class="btn btn-alert btn-xs x-small nopad " title="Empty and reset the cache"><span>Reset</span></button>
+                  </div>
+                </div>
+                <div class="block settings-section">
+                  <div class="block-header small">Video Display</div>
+                  <div>
+                    <button value="Fixed Aspect" onclick="overlay.optsClick('fixedAspect')" type="button"
+                      class="btn btn-blue-toggle btn-xs x-small nopad overlayOpts overlayOpts-fixedAspect"
+                      title="Toggle fixed aspect ratio equal to video"><span>Fixed Aspect</span></button>
+                  </div>
+                </div>
+                <div class="block settings-section">
+                  <div class="block-header small">Toolbar</div>
+                  <div>
+                    <div class="small">Show:</div>
+                    <label class="small"><input type="checkbox" id="toolbar-show-playbackward" checked> Backward play</label>
+                    <label class="small"><input type="checkbox" id="toolbar-show-speed" checked> Speed</label>
+                    <div class="small">Frame step of the buttons (in frames):</div>
+                    <label class="small">Next second
+                      <input type="text" id="toolbar-step-second" size="4" title="Step of the Previous/Next second buttons"></label>
+                    <label class="small">Next minute
+                      <input type="text" id="toolbar-step-minute" size="4" title="Step of the Previous/Next minute buttons"></label>
+                  </div>
+                </div>
               </div>
               <br>
               <div id="pickframetabBR" class="hidden"></div>
