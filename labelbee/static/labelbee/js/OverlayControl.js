@@ -201,6 +201,12 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
         this.interaction.opts.id = obs.ID
         this.interaction.opts.frame = frame
         this.interaction.opts.showTimeline = false // Hide timeline by default
+
+        // Default span, written here and not in hardRefresh: a refresh never writes the store (DEBT-825)
+        let handle = getObsHandle(frame, obs.ID)
+        if (handle && !('span' in handle)) {
+            events.update(frame, obs.ID, { span: { 'f1': frame, 'f2': frame } })
+        }
     } else if (mode=='edit-visit') {
         console.log('overlay.setInteractionMode', 'changing to edit-visit')
         if (!opts) opts = {}
@@ -970,10 +976,6 @@ OverlayControl.prototype.hardRefresh = function () {
       updateUndoButton()
       return
     }
-    if (!('span' in obs)) {
-      events.update(frame, id, { span: { 'f1': frame, 'f2': frame } })
-    }
-
     function doSwap2(interval, old_id, new_id) {
       obs_swapID(interval, old_id, new_id)
       videoControl.refresh() // Just refresh

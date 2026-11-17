@@ -76,6 +76,19 @@ def test_f2_pick_frame_sets_the_span_start_and_end(ui, sample_dir):
     assert ui.js("overlay.interaction.mode") == "main"
 
 
+def test_f2b_pick_frame_default_span_is_written_at_entry_not_by_a_refresh(ui, sample_dir):
+    """DEBT-825: the default span {f1: f, f2: f} is written when the mode is entered; a later hardRefresh writes nothing."""
+    load(ui, sample_dir / "events_v2.json")
+    show_tabs(ui, "#showSelected", "#showPickFrame")
+    ui.click_box("1")
+    assert "span" not in ui.tracks()["0"]["1"]
+    ui.page.click("button[onclick=\"modifyCurrentObsSpan('setspan')\"]")
+    ui.page.wait_for_selector("#pickframediv button:has-text('Set End')")
+    assert ui.tracks()["0"]["1"]["span"] == {"f1": 0, "f2": 0}
+    ui.js("(() => { window.__n = 0; events.subscribe(() => { window.__n++ }); overlay.hardRefresh(); return 0 })()")
+    assert ui.js("window.__n") == 0
+
+
 # ---- span: getCoveredTags, reached through "Apply All Tag Fixes..." (bakeAllTagFixes -> bakeTagFix)
 def test_f3_apply_all_tag_fixes_stores_a_span_and_a_fix(ui):
     """Id 3 is on the chronogram: its span is copied from the chronogram interval (ZoomView.js:1846). Id 7 is excluded from
