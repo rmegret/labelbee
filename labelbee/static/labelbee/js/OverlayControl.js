@@ -1704,6 +1704,7 @@ function createRect(id, startX, startY, width, height, angle, source) {
   return addRectFromObs(obs);
 }
 // The rectangle drawn while ctrl-dragging: not in the store until the drag is validated (submitDraft)
+// LEGACY candidate (ADR 0009, refresh-triggers 1e): the draft rect only serves the ctrl-drag creation gesture.
 function addDraftRect(id, startX, startY) {
   let canvasRect = { left: startX, top: startY, width: 1, height: 1 };
   let videoRect = overlay.canvasToVideoRect(canvasRect);
@@ -3282,6 +3283,8 @@ function newRectForTag(tag) {
   }
   return rect;
 }
+// LEGACY, obsolete (ADR 0009, refactor/design/0009-refresh-triggers.md 1e): creates a rect by hand and refreshes
+// on its own. To be replaced by a plain events.create with default values.
 function newRectForCurrentTag() {
   if ($("#newRectForCurrentTag").hasClass("disabled")) {
     return;

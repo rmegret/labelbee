@@ -1576,3 +1576,11 @@ The ROI text checks only the number of comma-separated parts and stores `Number(
   - `OverlayControl.js`: `onROITextChanged`, `updateROIFromVideo`, `initExcludeRectsDialog`
   - `ChronoControl.js`: `setFrameFilter`
 - **Links:** BEH-827, BEH-841, BEH-843, DEBT-815, OQ-808
+
+## DEBT-825: `overlay.hardRefresh` writes the store (pick-frame default span)
+
+[read] In pick-frame mode, `hardRefresh` gives the observation a default `span` with `events.update` when it has none (`labelbee/static/labelbee/js/OverlayControl.js:970-972`). A view writes the model, inside a refresh: it breaks the rule that a refresh never writes the store (ADR 0009 section 0) and can notify during a refresh. The default belongs to the entry of the mode (`setInteractionMode('pick-frame')`, `OverlayControl.js:183-200`), which already has the observation and the frame.
+
+- **Code:**
+  - `OverlayControl.js`: `hardRefresh`, `setInteractionMode`
+- **Links:** ADR 0009, DEBT-712

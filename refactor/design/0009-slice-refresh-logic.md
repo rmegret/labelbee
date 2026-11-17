@@ -1,9 +1,34 @@
-# ADR 0009: Refresh by notification, one ordered `Refresher` (slice 6)
+# ADR 0009: Refresh by notification, one ordered `Refresher` (slice 6; explicit `refresh.*` first, see section 0)
 
 Status: **proposed**. Direction from the maintainer, 2026-11-16 ([Q34](../QUESTIONS.md#q34)-[Q36](../QUESTIONS.md#q36), all answered the same day; Q34 differs from the first proposal: no automatic injection at load, a manual one-shot only). Numbers are those of `refactor` at `eb473985`.
 Evidence tags as in `CLAUDE.md`: `[read]` seen in code, `[inferred]` from names or call shape, to be verified at step 1.
 Follows slice 4 ([ADR 0007](0007-slice-events-api.md): `Events` is the only door) and slice 5 ([ADR 0008](0008-field-ownership.md): every editor writes the store).
 What was missing: the other direction, store to views. SEAM-701 ([seams](../intent/seams.md)) and the end of PLAN slice 5 list it as the next slice.
+
+## 0. Amendment (maintainer, 2026-11-17): explicit `refresh.*` first, notification later
+
+Supersedes D1-D3 and D7 for the migration; D4-D6 and D8 stand. Reason: a hidden subscriber hides which writes forget their views (the "incomplete" rows of [0009-refresh-triggers.md](0009-refresh-triggers.md)); an explicit call sits where the change is requested, is greppable, and its list is the migration list for a later notification.
+
+**API** (`window.refresh`, a module with a bridge; replaces the unattached `Refresher` of step 2). Order inside a call is fixed: derived data, overlay, form, zoom.
+
+| call | runs | for |
+|---|---|---|
+| `refresh.update()` (soft) | `chrono()`, `overlayUpdate()`, `form()`, `zoom()` | a field of an observation changed |
+| `refresh.rebuild()` (hard) | `chrono()`, `overlayRebuild()` (includes the form), `zoom()` | an observation appeared, disappeared or changed id; a bulk change |
+| `refresh.chrono()` | `refreshChronogram` | filters and parameters (class B, C) |
+| `refresh.overlayRebuild()` | `videoControl.refresh` (rebuild + form) | display only: pan, zoom, show tags, track window, deselect |
+| `refresh.overlayUpdate()` | `overlay.refreshOverlay` | display only, no rect created |
+| `refresh.form()` | `updateForm` | only after `overlayUpdate()`; a rebuild already runs it |
+| `refresh.zoom()` | `refreshZoom` (already a no-op when the zoom view is closed) | explicit, and inside `update` and `rebuild` |
+| `refresh.frame()` | `onFrameChanged` | the video moved (D6) |
+
+- A site that does not need the chronogram (drag, angle, notes, parts: "needed" column of the triggers doc) calls the primitives (`overlayUpdate()`, `form()`), not `update()`: `chrono()` is the cost that scales (~60 ms at 18000 observations).
+- **MVC rule**: only a controller or a writer calls `refresh.*`; a view never does, and a view never writes the store. So a refresh cannot trigger a refresh. `refresh` keeps a cheap `#running` guard that logs a violation and drops the call.
+- **Audit** (dev only): `events.subscribe` logs "store written, no `refresh.*` call in this task", never triggers. A browser test asserts that no scenario logs it.
+- `events.batch` stays, for the loops (D4); the notification channel and `Refresher` come back only after every site is migrated and the audit is clean.
+- The refresh tests are written from the "needed" column of the triggers doc, not from the legacy sequences: counts may change either way, each change listed in the commit.
+- Retired with this step, not migrated: `newRectForCurrentTag`, `undoAction` (undo is off).
+- [DEBT-825](../intent/debt.md): `hardRefresh` writes `span` in pick-frame mode; fixed in its own commit by moving the default span to the entry of the mode.
 
 ## 1. Decisions (maintainer, 2026-11-16)
 
