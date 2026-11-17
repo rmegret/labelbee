@@ -216,3 +216,20 @@ def test_l14_show_tree_format(ui, sample_dir):
     assert any(re.match(r"^\d+ overlay VideoControl\.refresh [\d.]+ \[.+\] [\d.]+$", l) for l in lines)
     assert any(re.match(r"^  \d+ overlay OverlayControl\.hardRefresh [\d.]+ \[.+\] [\d.]+$", l) for l in lines)   # child: 2 spaces
     assert any(l.startswith("    ") for l in lines)                                              # grandchildren: 4 spaces
+
+
+def test_l15_refresher_is_a_subscriber(ui, sample_dir):
+    """Step 2 of ADR 0009: `window.refresher` exists, is not attached (the writers still refresh by hand), and when attached it is a
+    subscriber of `events` that runs the fixed sequence. Attached here by hand; nothing in the page does it yet."""
+    loaded(ui, sample_dir)
+    assert ui.js("refresher.attached") is False
+    ui.js("refreshLog.clear(); events.update(0, '1', {notes: 'a'})")
+    assert ui.js("refreshLog.tree()") == "store:update"                                       # nobody refreshes on a store write yet
+    ui.js("refresher.attach(events); refreshLog.clear(); events.update(0, '1', {notes: 'b'})")
+    got = ui.js("refreshLog.tree()")
+    print("\n[refresh] refresher:", got)
+    assert got.startswith("store:update,Refresher update(updateChronoData(")
+    names = ui.js("refreshLog.filter(e => e.depth === 1).map(e => e.what)")
+    assert names == ["updateChronoData", "drawChrono", "renderObsTable", "VideoControl.refresh", "updateForm"]
+    ui.js("refresher.detach(); refreshLog.clear(); events.update(0, '1', {notes: 'c'})")
+    assert ui.js("refreshLog.tree()") == "store:update"
