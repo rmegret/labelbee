@@ -59,13 +59,42 @@ The functions are called, not moved: the slice changes who calls them and when, 
 
 **`selection:changed`** ([Q35](../QUESTIONS.md#q35)): see the question.
 
-**Logging.** `logging.refresh` in `core/Notifier.js` (default off): `refresh#<n> <trigger> <phase> <ms>`, the trigger being the event op and `frame/id` or the caller label of an explicit refresh. A tiny `RefreshLog` array (last 200 entries, `window.refreshLog` for the console) is what the tests read.
+**Logging.** `refreshLog` in `core/Notifier.js` (a ring buffer of 2000 entries, `window.refreshLog` for the console; `logging.refresh = true` echoes each entry and records its trigger, the caller read from the stack). One entry per call of an *entry point*: a command of `events` (`store`, written by `Events.#emit`) or a function that redraws a view from the state. The view entry points are wrapped in one place, `core/RefreshInstrumentBridge.js` (a list, no change in the classic scripts: `refreshChronogram`, `updateChronoData`, `drawChrono`, `updateChrono`, `renderObsTable`, `updateTimeMark`, `updatePreviewTimeMark`, `updateTrackWindowSpan`, `updateChronoSelection`, `updateChronoXDomainFromVideo`, `updateTagIntervals`, `updateForm`, `updateEventTree`, `updateSelectID`, `updateFormButtons`, `updateDeleteButton`, `updateUndoButton`, `updateEventsNotes`, `VideoControl.refresh`, `VideoControl.onFrameChanged`, `OverlayControl.hardRefresh`, `OverlayControl.refreshOverlay`, `ZoomOverlay.refreshZoom`). An entry has a nesting `depth` (a call made while another entry point runs is its child) and its duration; `refreshLog.tree()` prints it as `a,b(c,d)`. The list is the inventory of the entry points of step 1, and it goes away with the scattered calls (step 7).
 
 ## 4. Performance: measured before, a budget after
 
 Step 0 (before any migration): the log, then a baseline on the largest sample file, scenarios: load, edit one observation, drag release, delete one, bulk delete (FA tags), rename, frame step, tab closed / open. Recorded per scenario: number of refreshes by phase, `updateChronoData` ms, total ms (`performance.now`, 5 runs, median). Budget after each step: no scenario has more refreshes or more milliseconds than its baseline (noise of 10% tolerated, anything above is explained or fixed). The counts are pinned by a browser test (`test_l_refresh.py`); the milliseconds are reported, not asserted.
 
 Where it can get worse (and the guard): a loop of `events.delete` or `update` becoming one refresh per call (`batch`, D4); a refresh also run for a store write that did not need it, such as `tag` (Q34); `renderObsTable` rebuilt while the tab is closed (it already checks the tab; unchanged). Where it can get better: the loaders' second refresh, and the three refreshes of an edit that call `videoControl.refresh()` + `refreshChronogram()` + `updateForm` separately and sometimes twice (counted at step 1).
+
+### Baseline (step 0, `[ran]`, `eb473985` + the refresh log)
+
+`refactor/tests/browser/test_l_refresh.py` pins the nested sequence of each scenario in `refactor/tests/browser/refresh_baseline.json` (13 scenarios, 3 runs identical; headless Chromium, the sample files have 13 observations, the last row 18000 generated ones). Milliseconds are the median of 5 runs, top-level entries only, written to `refactor/scratch/refresh-baseline.json` (git-ignored) for later comparison. Calls per scenario (nested calls included):
+
+| Scenario | `updateChronoData` | `videoControl.refresh` | `hardRefresh` | `updateForm` | `refreshZoom` | `updateDeleteButton` | ms |
+|---|---|---|---|---|---|---|---|
+| load (file "Load") | 1 | 1 | 1 | 1 | 0 | 1 | 40 |
+| load tracks CSV from a URI | **2** | **2** | 2 | 2 | 0 | 2 | 40 |
+| select a box | 0 | 0 | 0 | 1 | 4 | 2 | 6 |
+| label button | **2** | 1 | 1 | 3 | 8 | 6 | 22 |
+| notes (Enter) | 1 | 1 | 1 | 2 | 8 | 6 | 14 |
+| rotate tag | **2** | 1 | 1 | 3 | 9 | 6 | 23 |
+| create (shift-click) | 1 | 1 | 1 | 3 | 12 | 8 | 18 |
+| delete one | 1 | 1 | 1 | 1 | 1 | 4 | 10 |
+| swap id | 1 | 1 | 1 | 1 | 1 | 3 | 14 |
+| frame step | 0 | 1 | 1 | 1 | 0 | 1 | 6 |
+| drag a box (after the moves) | 1 | 1 | 1 | 3 | 10 | 6 | 27 |
+| bulk delete (13 commands) | 1 | 0 | 0 | 0 | 0 | 0 | 4 |
+| label button, **18000 observations** | **2** | 1 | 1 | 3 | 8 | 6 | **142**, of which `chrono` 124 |
+
+What the baseline says:
+- **`updateChronoData` is the cost that scales** (about 60 ms per call at 18000 observations against 1 ms at 13); the rest stays under 20 ms. The slice cannot make an edit cheaper than one `updateChronoData`; what it can do is run it once, not twice.
+- **Whole refreshes run twice today** in the label button, the tag rotation and the server / CSV loaders (`updateChronoData` x2, and `videoControl.refresh` x2 for the loaders). The file "Load" refreshes once, so the Q36 duplicates are in the server and CSV loaders (`setTracks`, then their own refresh). Removing them is a decrease against the budget, never an increase.
+- **`videoControl.refresh` is much more than one redraw**: its `hardRefresh` re-selects the active box (`selectBeeByID`), which runs the selection chain (`updateForm`, `updateChronoSelection`, `updateSelectID`, `updateFormButtons`, `updateDeleteButton`, `refreshZoom`) up to twice inside one refresh. After an edit `updateForm` runs 2 or 3 times, `refreshZoom` 8 to 12 times, `updateDeleteButton` 6 to 8 times. Those are the numbers step 6 (selection) has to bring down.
+- **`refreshZoom` is called from outside the store paths**: a plain selection click costs 4 `refreshZoom` and no store write.
+- A bulk loop is already one refresh for 13 commands: `events.batch` must keep it.
+- **`drawChrono` redraws the chronogram twice**: `updateChronoYDomain` changes the axes domain, whose `onAxesChanged` handler calls `updateChrono()` (`labelbee/static/labelbee/js/ChronoControlInteraction.js:72-76`, `[read]`), then `drawChrono` calls `updateChrono()` itself (`[ran]`: `updateChronox2` under every `drawChrono` in the baseline). So every `refreshChronogram` pays two `updateTagIntervals`, `updateTimeMark` and `updateTrackWindowSpan`; this is the second duplicate behind the budget, independent of the callers.
+- The wrappers are not measurable: the totals match the first, shallower instrumentation (load 41 -> 40 ms, label 24 -> 22 ms, 18000 observations 146 -> 142 ms).
 
 ## 5. Entanglement: before and after
 

@@ -21,7 +21,7 @@
  * something (the detector uses it for "through the API"; change events are built on it later).
  */
 
-import { logging } from "../core/Notifier.js";
+import { logging, logRefresh } from "../core/Notifier.js";
 
 // Same test as jQuery.isEmptyObject (no enumerable property, inherited ones included; true for undefined).
 function isEmptyObject(obj) {
@@ -81,6 +81,7 @@ export class Events {
     this.#createObservation = fn;
   }
   #emit(event) {
+    logRefresh('store', event.frame == null ? event.op : `${event.op} ${event.frame}/${event.id}`);
     if (this.#observer) this.#observer(event);
   }
 

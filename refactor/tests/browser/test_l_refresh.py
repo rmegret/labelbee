@@ -1,0 +1,218 @@
+"""Step 0 of slice 6 (refactor/design/0009-slice-refresh-logic.md): what refreshes, and in which order, for each user action, read from the
+refresh log of the page (`refreshLog`, core/Notifier.js, filled by the entry points wrapped in core/RefreshInstrumentBridge.js and the store
+commands of `events`). The nested sequences are pinned in `refresh_baseline.json` (the baseline of ADR 0009 section 4): a step that moves the
+refresh calls into a Refresher changes them on purpose, a count can only go down, and the diff of that file shows it. To record the
+sequences of the current code after such a step: `UPDATE_REFRESH_BASELINE=1 pytest refactor/tests/browser/test_l_refresh.py`, then review the diff.
+
+A sequence reads `a,b(c,d),e`: `b` called `c` and `d`; `xN` is N identical consecutive siblings; `store:op` is a command of `events`.
+The durations are not asserted; they are written to `refactor/scratch/refresh-baseline.json` (git-ignored) at each run, to compare two commits."""
+import json
+import os
+import pathlib
+import re
+
+import pytest
+
+SCRATCH = pathlib.Path(__file__).resolve().parents[2] / "scratch"
+BASELINE = pathlib.Path(__file__).with_name("refresh_baseline.json")
+RESULTS = {}
+
+
+def run(ui, name, action):
+    """Clears the log, runs `action()`, waits for the page to be quiet, returns the compact sequence of phases."""
+    ui.settle(300)
+    ui.js("refreshLog.clear()")
+    action()
+    last = None
+    for _ in range(50):                                    # quiet = the log did not grow during a 300 ms wait (late events on a loaded machine)
+        ui.settle(300)
+        seq = ui.js("refreshLog.length ? refreshLog[refreshLog.length - 1].seq : 0")
+        if seq == last:
+            break
+        last = seq
+    assert ui.js("refreshInstrumented.missing") == []      # every entry point of RefreshInstrumentBridge.js exists
+    compact = ui.js("refreshLog.tree()")                   # nested: parent(children), consecutive identical siblings as xN
+    log = ui.js("refreshLog.filter(e => e.depth === 0).map(e => ({phase: e.phase, ms: e.ms}))")
+    ms = {}                                                # top-level entries only: a nested call is already in its parent's time
+    for e in log:
+        ms[e["phase"]] = round(ms.get(e["phase"], 0) + e["ms"], 1)
+    RESULTS[name] = {"sequence": compact, "ms": ms}
+    return compact
+
+
+@pytest.fixture(scope="module", autouse=True)
+def write_results():
+    yield
+    if os.environ.get("UPDATE_REFRESH_BASELINE") and len(RESULTS) == 13:
+        BASELINE.write_text(json.dumps({k: normalize(k, v["sequence"]) for k, v in RESULTS.items()}, indent=1) + "\n")
+    try:
+        SCRATCH.mkdir(exist_ok=True)
+        (SCRATCH / "refresh-baseline.json").write_text(json.dumps(RESULTS, indent=1))
+    except OSError:
+        pass
+
+
+def loaded(ui, sample_dir):
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    ui.open_panel("Annotations")
+    ui.open_subpanel("Labels")
+    ui.open_subpanel("BeeID")
+    ui.settle()
+
+
+# The mouse moves of a drag each refresh the overlay and the form: their number follows the moves, not the code
+DRAG_MOVE = r"^(?:OverlayControl\.refreshOverlay,updateForm\(updateEventTree\),ZoomOverlay\.refreshZoomx2,?)+"
+
+
+def normalize(name, got):
+    return re.sub(DRAG_MOVE, "MOVE*,", got) if name == "drag" else got
+
+
+def check(name, got):
+    print(f"\n[refresh] {name}: {got}")
+    got = normalize(name, got)
+    if os.environ.get("UPDATE_REFRESH_BASELINE"):
+        return
+    assert got == json.loads(BASELINE.read_text())[name]
+
+
+def test_l1_load_events(ui, sample_dir):
+    ui.open()
+    got = run(ui, "load", lambda: (ui.load_events(sample_dir / "events_v2.json"), ui.wait_tracks()))
+    check("load", got)
+
+
+def test_l2_select_a_box(ui, sample_dir):
+    loaded(ui, sample_dir)
+    check("select", run(ui, "select", lambda: ui.click_box("1")))
+
+
+def test_l3_label_button(ui, sample_dir):
+    loaded(ui, sample_dir)
+    ui.click_box("1")
+    check("label", run(ui, "label", lambda: ui.page.click("button.labeltoggle[thelabel=pollen]:visible")))
+
+
+def test_l4_notes_enter(ui, sample_dir):
+    loaded(ui, sample_dir)
+    ui.click_box("1")
+    ui.page.fill("#notes", "x")
+
+    def act():
+        ui.page.press("#notes", "Enter")
+
+    check("notes", run(ui, "notes", act))
+
+
+def test_l5_rotate_tag(ui, sample_dir):
+    loaded(ui, sample_dir)
+    ui.click_box("1")
+    check("rotate_tag", run(ui, "rotate_tag", lambda: ui.js("zoomOverlay.rotateTag(90)")))
+
+
+def test_l6_create_by_shift_click(ui, sample_dir):
+    loaded(ui, sample_dir)
+    check("create", run(ui, "create", lambda: ui.shift_click_background()))
+
+
+def test_l7_delete_one(ui, sample_dir):
+    loaded(ui, sample_dir)
+    ui.click_box("1")
+    check("delete", run(ui, "delete", lambda: ui.page.click("#deleteButton")))
+
+
+def test_l8_swap_id(ui, sample_dir):
+    loaded(ui, sample_dir)
+    ui.goto_frame(10)
+    ui.click_box("1")
+
+    def act():
+        ui.page.click("#swapID")
+        ui.page.fill("#swapNewIDInput", "7")
+        ui.page.click("#alerttext button:has-text('SWAP')")
+        ui.page.click("#alerttext button:has-text('CONFIRM')")
+
+    check("swap", run(ui, "swap", act))
+
+
+def test_l9_frame_step(ui, sample_dir):
+    loaded(ui, sample_dir)
+    check("frame", run(ui, "frame", lambda: ui.goto_frame(5)))
+
+
+def test_l10_drag_a_box(ui, sample_dir):
+    loaded(ui, sample_dir)
+    ui.click_box("1")
+    c = ui.box_center("1")
+
+    def act():
+        ui.drag(c, {"x": c["x"] + 20, "y": c["y"] + 10})
+
+    check("drag", run(ui, "drag", act))
+
+
+def test_l11_bulk_delete_of_false_alarms(ui, sample_dir):
+    """The loop case of ADR 0009 D4: many store commands, which must not become many refreshes."""
+    loaded(ui, sample_dir)
+    ui.js("events.forEach((obs, F, id) => events.update(F, id, {labels: 'falsealarm'}))")
+    check("bulk_delete", run(ui, "bulk_delete", lambda: ui.js("zoomOverlay.deleteFalsealarmEvents()")))
+
+
+def test_l12_tracks_csv_from_a_uri(ui):
+    """The server and CSV loaders call `setTracks` (which refreshes) and then refresh again themselves (ADR 0009 Q36)."""
+    ui.open()
+    ui.settle()
+    ui.open_subpanel("Server storage")
+    ui.prompt_answers.append("/data/sample/tracks.csv")
+
+    def act():
+        ui.page.click("a[onclick*='clickLoadTracksCSVFromServer']")
+        ui.page.wait_for_function("events.info && events.info.source.includes('CSV')")
+
+    check("load_csv", run(ui, "load_csv", act))
+
+
+BIG = """(() => {
+  const data = {};
+  for (let f = 0; f < 600; f++) {
+    data[f] = [];
+    for (let i = 0; i < 30; i++)
+      data[f].push({id: String(i), frame: f, time: f / 20, x: 10 + 15 * i, y: 100, width: 12, height: 12, cx: 16 + 15 * i, cy: 106, angle: 0, notes: "", labels: ""});
+  }
+  setTracks({info: {type: "events-multiframe", source: "refresh test"}, data});
+})()"""
+
+
+def test_l13_edit_with_18000_observations(ui):
+    """The cost of one edit grows with the number of observations (`updateChronoData` rebuilds everything): the scenario of the budget."""
+    ui.open()
+    ui.open_panel("Annotations")
+    ui.open_subpanel("Labels")
+    ui.open_subpanel("BeeID")
+    ui.js(BIG)
+    ui.wait_tracks("n >= 18000")
+    ui.settle(1500)
+    ui.click_box("1")
+    got = run(ui, "label_18000", lambda: ui.page.click("button.labeltoggle[thelabel=pollen]:visible"))
+    check("label_18000", got)
+    print("[refresh] ms label_18000:", RESULTS["label_18000"]["ms"])
+
+
+def test_l14_show_tree_format(ui, sample_dir):
+    """`refreshLog.showTree()`: one line per entry, 2 spaces per nesting level, `seq phase what ms [trigger] total_ms`."""
+    loaded(ui, sample_dir)
+    ui.click_box("1")
+    ui.js("refreshLog.clear(); logging.refresh = true")
+    ui.page.fill("#notes", "x")
+    ui.page.press("#notes", "Enter")
+    ui.settle(500)
+    out = ui.js("(() => { let s; const l = console.log; console.log = (x) => { s = x; }; refreshLog.showTree(); console.log = l; return s; })()")
+    ui.js("logging.refresh = false")
+    lines = out.split("\n")
+    print("\n" + out)
+    assert re.match(r"^\d+ store update \d+/\S+ 0 \[.+\] 0$", lines[0])                                  # top level: no indent, instant, with its trigger
+    assert any(re.match(r"^\d+ overlay VideoControl\.refresh [\d.]+ \[.+\] [\d.]+$", l) for l in lines)
+    assert any(re.match(r"^  \d+ overlay OverlayControl\.hardRefresh [\d.]+ \[.+\] [\d.]+$", l) for l in lines)   # child: 2 spaces
+    assert any(l.startswith("    ") for l in lines)                                              # grandchildren: 4 spaces
