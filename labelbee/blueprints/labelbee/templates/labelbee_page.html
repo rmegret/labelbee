@@ -62,6 +62,7 @@
   <script type="text/javascript" src="js/layout/NavMenu.js"></script>
   <script type="text/javascript" src="js/layout/SplitLayout.js"></script>
   <script type="text/javascript" src="js/layout/ChronoLayout.js"></script>
+  <script type="text/javascript" src="js/layout/FitControls.js"></script>
   <!-- ES module bridges (deferred, run in order after the classic scripts, before window.onload):
        global `logging` from core/Notifier.js; `AnnotationStore` and `events` (the stored events) from
        annotation/AnnotationStore.js (no data globals: Tracks, Tags, ... are console-only debug views, see
@@ -241,6 +242,12 @@
 
               <!-- # VIDEO VIEW -->
               <div id="canvasresize" class="ui-widget-content">
+                <!-- top-right counterpart of the bottom-right resize grip (js/layout/FitControls.js) -->
+                <button type="button" id="video-fit-button" title="Expand to Fit">
+                  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                    <path d="M1 1v10M11 1v10M3 6h6M3 6l2-2M3 6l2 2M9 6l-2-2M9 6l-2 2" />
+                  </svg>
+                </button>
                 <div class="canvaswrapper">
                   <video src="" id="video" style="width:400px; z-index: -1"></video>
                   <canvas id="canvas" style="z-index: 2"></canvas>
@@ -559,6 +566,9 @@
                             title="Reinit chronogram width">w=</button>
                           <button value="W+" onclick="chronoAdjust('W+')" type="button" class="btn btn-default btn-xs"
                             title="Increase chronogram width">w+</button>
+                          &nbsp;
+                          <button id="chrono-fit-button" value="Fit" type="button" class="btn btn-default btn-xs"
+                            title="Use all the available width, without horizontal scrollbar">Fit</button>
                         </span>
                       </div>
                     </span>
@@ -582,7 +592,7 @@
       <!-- horizontal layout only (ChronoLayout.js moves #chronoTab here): chronogram beside the video -->
       <div id="splitter2" role="separator" aria-orientation="vertical" tabindex="0"
         title="Drag to resize the chronogram (double-click: half and half)"></div>
-      <div id="pane-chrono"></div>
+      <div id="pane-chrono" class="sortable"></div>
       </div> <!-- pane-main -->
 
       <div id="splitter" role="separator" aria-orientation="vertical" tabindex="0"

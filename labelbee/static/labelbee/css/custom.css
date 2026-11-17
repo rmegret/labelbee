@@ -356,6 +356,34 @@ div.float-right {
 /*     border: 1px solid black; */
     border: none;
 }
+/* Expand-to-fit button of the video, top-right (in the 16px right padding of #canvasresize) */
+#canvasresize {
+    position: relative;
+}
+#video-fit-button {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    z-index: 90;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    border: 1px solid #aaa;
+    border-radius: 2px;
+    background: #f4f4f4;
+    line-height: 0;
+    cursor: pointer;
+}
+#video-fit-button:hover {
+    background: #ffe070;
+}
+#video-fit-button svg {
+    width: 10px;
+    height: 10px;
+    fill: none;
+    stroke: #333;
+    stroke-width: 1.3;
+}
 .ui-icon-gripsmall-diagonal-se {
     background-position: -68px -228px;
     width: 8px;

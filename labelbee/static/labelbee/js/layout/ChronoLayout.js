@@ -7,6 +7,8 @@
 (function () {
   var MIN_LEFT = 300;   // px, video pane
   var MIN_CHRONO = 200; // px
+  // Panels that move above the chronogram in horizontal mode (others can be dragged there)
+  var DEFAULT_PANELS = ["focusIntervalTab", "selectedTab", "eventsTab"];
   var KEY = "labelbee.chronoLayout";
   var KEY_WIDTH = "labelbee.chronoWidth";
 
@@ -36,10 +38,35 @@
     function applyWidth() {
       paneMain.style.setProperty("--chrono-width", clamp(width) + "px");
     }
+    // Default panels (with their optional line-break div "<id>BR") that sit above the
+    // chronogram in horizontal mode. A comment node marks their place in the vertical layout.
+    var panels = DEFAULT_PANELS.map(function (id) {
+      var group = [document.getElementById(id + "BR"), document.getElementById(id)]
+        .filter(function (e) { return e; });
+      if (!group.length) return null;
+      var mark = document.createComment(id);
+      group[0].parentNode.insertBefore(mark, group[0]);
+      return { group: group, mark: mark };
+    }).filter(function (p) { return p; });
+
     function setHorizontal(h) {
       horizontal = h;
-      if (h) { paneChrono.appendChild(chronoTab); }
-      else { anchor.parentNode.insertBefore(chronoTab, anchor.nextSibling); }
+      if (h) {
+        paneChrono.appendChild(chronoTab);
+        panels.forEach(function (p) {
+          p.group.forEach(function (e) { paneChrono.insertBefore(e, chronoTab); });
+        });
+      } else {
+        // Panels dropped by the user in the chrono pane go above the chronogram,
+        // the default panels go back to their place
+        Array.prototype.slice.call(paneChrono.children).forEach(function (e) {
+          if (e !== chronoTab) anchor.parentNode.insertBefore(e, anchor);
+        });
+        panels.forEach(function (p) {
+          p.group.forEach(function (e) { p.mark.parentNode.insertBefore(e, p.mark); });
+        });
+        anchor.parentNode.insertBefore(chronoTab, anchor.nextSibling);
+      }
       paneMain.classList.toggle("horizontal", h);
       toggle.classList.toggle("horizontal", h);
       toggle.setAttribute("aria-pressed", h ? "true" : "false");
