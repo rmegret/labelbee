@@ -218,18 +218,23 @@ def test_l14_show_tree_format(ui, sample_dir):
     assert any(l.startswith("    ") for l in lines)                                              # grandchildren: 4 spaces
 
 
-def test_l15_refresher_is_a_subscriber(ui, sample_dir):
-    """Step 2 of ADR 0009: `window.refresher` exists, is not attached (the writers still refresh by hand), and when attached it is a
-    subscriber of `events` that runs the fixed sequence. Attached here by hand; nothing in the page does it yet."""
+def test_l15_refresh_calls_and_audit(ui, sample_dir):
+    """ADR 0009 section 0: `window.refresh` has the explicit calls (nothing refreshes on a store write by itself) and its audit
+    lists a store write that no `refresh.*` call followed."""
     loaded(ui, sample_dir)
-    assert ui.js("refresher.attached") is False
-    ui.js("refreshLog.clear(); events.update(0, '1', {notes: 'a'})")
-    assert ui.js("refreshLog.tree()") == "store:update"                                       # nobody refreshes on a store write yet
-    ui.js("refresher.attach(events); refreshLog.clear(); events.update(0, '1', {notes: 'b'})")
+    ui.js("refreshLog.clear(); refresh.unrefreshed.length = 0; events.update(0, '1', {notes: 'a'})")
+    assert ui.js("refreshLog.tree()") == "store:update"                                       # nobody refreshes on a store write
+    ui.page.wait_for_timeout(50)
+    assert ui.js("refresh.unrefreshed.map(e => e.op)") == ["update"]                          # the audit saw the write alone
+    ui.js("refresh.unrefreshed.length = 0; refreshLog.clear(); events.update(0, '1', {notes: 'b'}); refresh.update()")
+    ui.page.wait_for_timeout(50)
     got = ui.js("refreshLog.tree()")
-    print("\n[refresh] refresher:", got)
-    assert got.startswith("store:update,Refresher update(updateChronoData(")
+    print("\n[refresh] refresh.update:", got)
+    assert got.startswith("store:update,refresh.update(")
+    assert ui.js("refresh.unrefreshed.length") == 0
     names = ui.js("refreshLog.filter(e => e.depth === 1).map(e => e.what)")
-    assert names == ["updateChronoData", "drawChrono", "renderObsTable", "VideoControl.refresh", "updateForm"]
-    ui.js("refresher.detach(); refreshLog.clear(); events.update(0, '1', {notes: 'c'})")
-    assert ui.js("refreshLog.tree()") == "store:update"
+    assert [n for n in names if n != "refresh.update"][0] == "refreshChronogram"
+    ui.js("refreshLog.clear(); refresh.rebuild()")
+    got = ui.js("refreshLog.tree()")
+    print("[refresh] refresh.rebuild:", got)
+    assert got.startswith("refresh.rebuild(") and "VideoControl.refresh" in got

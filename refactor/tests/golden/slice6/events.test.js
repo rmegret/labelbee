@@ -1,6 +1,5 @@
-// Tests of `Events.subscribe` / `Events.batch` and of annotation/Refresher.js (slice 6 step 2, ADR 0009). Run: node --test refactor/tests/golden/slice6/
-// New behavior (nothing to pin from), expected values written by hand from the ADR: sync subscribers, one batched notification,
-// the observer unchanged, a fixed refresh sequence whatever the order of registration, no loop on a write during a refresh.
+// Tests of `Events.subscribe` / `Events.batch` (slice 6 step 2, ADR 0009). Run: node --test refactor/tests/golden/slice6/
+// New behavior (nothing to pin from), expected values written by hand from the ADR: sync subscribers, one batched notification, the observer unchanged.
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -104,80 +103,3 @@ test('a batch that throws still flushes what it did, then rethrows', async () =>
   assert.equal(sub[1].op, 'update');
 });
 
-async function refresherWith(calls, extra = {}) {
-  const { Refresher } = await load('annotation/Refresher.js');
-  return new Refresher({
-    derived: [() => calls.push('derive')],
-    views: [() => calls.push('chrono'), () => calls.push('table'), () => calls.push('overlay'), () => calls.push('form')],
-    ...extra,
-  });
-}
-
-test('the Refresher runs derived then views, in its own order, once per notification', async () => {
-  const ev = await fresh();
-  const calls = [];
-  const r = await refresherWith(calls);
-  r.attach(ev);
-  ev.update(0, 1, { a: 1 });
-  assert.deepEqual(calls, ['derive', 'chrono', 'table', 'overlay', 'form']);
-  calls.length = 0;
-  ev.batch(() => { ev.update(0, 1, { a: 2 }); ev.delete(0, 2); ev.update(1, 1, { a: 1 }); });
-  assert.deepEqual(calls, ['derive', 'chrono', 'table', 'overlay', 'form']);             // a loop of commands: one refresh
-});
-
-test('the order does not depend on who subscribed first', async () => {
-  const ev = await fresh();
-  const calls = [];
-  ev.subscribe(() => calls.push('other-before'));
-  const r = await refresherWith(calls);
-  r.attach(ev);
-  ev.subscribe(() => calls.push('other-after'));
-  ev.update(0, 1, { a: 1 });
-  assert.deepEqual(calls, ['other-before', 'derive', 'chrono', 'table', 'overlay', 'form', 'other-after']);
-});
-
-test('attach is idempotent, detach stops it', async () => {
-  const ev = await fresh();
-  const calls = [];
-  const r = await refresherWith(calls);
-  r.attach(ev);
-  r.attach(ev);
-  assert.equal(r.attached, true);
-  ev.update(0, 1, { a: 1 });
-  assert.equal(calls.filter((c) => c === 'derive').length, 1);                           // not twice
-  r.detach();
-  assert.equal(r.attached, false);
-  ev.update(0, 1, { a: 2 });
-  assert.equal(calls.filter((c) => c === 'derive').length, 1);
-});
-
-test('a store write during a refresh is an error and its notification is dropped, not a loop', async () => {
-  const ev = await fresh();
-  const calls = [];
-  const { setNotifier } = await load('core/Notifier.js');
-  const errors = [];
-  setNotifier({ logError: (...a) => errors.push(a.join(' ')) });
-  const r = await refresherWith(calls, { views: [() => { calls.push('view'); ev.update(0, 1, { written: true }); }] });
-  r.attach(ev);
-  ev.update(0, 1, { a: 1 });
-  assert.deepEqual(calls, ['derive', 'view']);                                           // not 'derive', 'view', 'derive', 'view', ...
-  assert.equal(ev.get(0, 1).written, true);                                              // the write itself went through
-  assert.equal(errors.length, 1);
-  assert.match(errors[0], /Refresher: the store was written during a refresh \(update\)/);
-  ev.update(0, 1, { a: 2 });                                                             // the guard is released afterwards
-  assert.equal(calls.length, 4);
-  setNotifier({ logError: (...a) => console.error(...a) });
-});
-
-test('the refresh log shows the sequence nested under the Refresher entry', async () => {
-  const ev = await fresh();
-  const { refreshLog, timedRefresh } = await load('core/Notifier.js');
-  const r = await refresherWith([], {
-    derived: [() => timedRefresh('derived', 'updateChronoData', () => {})],
-    views: [() => timedRefresh('chrono', 'drawChrono', () => {}), () => timedRefresh('form', 'updateForm', () => {})],
-  });
-  r.attach(ev);
-  refreshLog.clear();
-  ev.update(0, 1, { a: 1 });
-  assert.equal(refreshLog.tree(), 'store:update,Refresher update(updateChronoData,drawChrono,updateForm)');
-});
