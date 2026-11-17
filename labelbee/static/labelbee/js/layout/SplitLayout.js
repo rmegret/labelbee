@@ -58,7 +58,7 @@
     }
 
     // Content of the main pane keeps a minimum width: the pane scrolls beyond that.
-    $("#pane-main > *").css("min-width", MIN_MAIN + "px");
+    $("#left-side").css("min-width", MIN_MAIN + "px");
 
     splitter.addEventListener("pointerdown", function (e) {
       if (isCollapsed()) return;

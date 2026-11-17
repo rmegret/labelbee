@@ -61,6 +61,7 @@
   <script type="text/javascript" src="js/labelBee.js"></script>
   <script type="text/javascript" src="js/layout/NavMenu.js"></script>
   <script type="text/javascript" src="js/layout/SplitLayout.js"></script>
+  <script type="text/javascript" src="js/layout/ChronoLayout.js"></script>
   <!-- ES module bridges (deferred, run in order after the classic scripts, before window.onload):
        global `logging` from core/Notifier.js; `AnnotationStore` and `events` (the stored events) from
        annotation/AnnotationStore.js (no data globals: Tracks, Tags, ... are console-only debug views, see
@@ -117,6 +118,14 @@
       </button>
 
       <div class="topbar-actions">
+        <button type="button" id="layout-toggle" class="topbar-icon" aria-pressed="false"
+          title="Chronogram below the video (click: put it beside the video)">
+          <!-- two rects: the video (grey) and the chronogram (accent color), stacked or side by side -->
+          <svg class="icon" width="22" height="20" viewBox="0 0 22 20" aria-hidden="true">
+            <rect class="video-rect" x="1.5" y="2.5" width="19" height="8" rx="1.5"></rect>
+            <rect class="chrono-rect" x="1.5" y="12.5" width="19" height="5" rx="1.5"></rect>
+          </svg>
+        </button>
         <button type="button" id="fullscreen-button" class="topbar-icon" onclick="toggleFullScreen()"
           title="Fullscreen">
           <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
@@ -570,6 +579,10 @@
             </div>
 
       </div> <!-- left-side: was closed implicitly by the old </td> -->
+      <!-- horizontal layout only (ChronoLayout.js moves #chronoTab here): chronogram beside the video -->
+      <div id="splitter2" role="separator" aria-orientation="vertical" tabindex="0"
+        title="Drag to resize the chronogram (double-click: half and half)"></div>
+      <div id="pane-chrono"></div>
       </div> <!-- pane-main -->
 
       <div id="splitter" role="separator" aria-orientation="vertical" tabindex="0"

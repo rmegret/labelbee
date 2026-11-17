@@ -37,6 +37,56 @@ canvas {
     min-width: 0;          /* the minimum is enforced by SplitLayout.js */
     overflow: auto;        /* scrollbars when the window is too narrow */
 }
+/* Horizontal layout (js/layout/ChronoLayout.js): video and controls | splitter2 | chronogram */
+#splitter2, #pane-chrono {
+    display: none;
+}
+#pane-main.horizontal {
+    display: flex;
+    overflow: auto;
+}
+#pane-main.horizontal #left-side {
+    flex: 1 1 0;
+    min-width: 300px;
+    overflow: auto;
+}
+#pane-main.horizontal #pane-chrono {
+    display: block;
+    flex: 0 0 var(--chrono-width, 45%);
+    min-width: 200px;
+    overflow: auto;
+    padding: 5px;
+}
+#pane-main.horizontal #pane-chrono #chronoTab {
+    display: block;  /* fill the pane instead of shrink-to-fit */
+}
+#pane-main.horizontal #pane-chrono #chronoTab:not(.collapsed) > .block-content {
+    display: block;
+}
+#pane-main.horizontal #pane-chrono #chronoDiv {
+    width: auto !important;  /* the splitter sets the width; overrides the inline width of the W buttons */
+}
+#pane-main.horizontal #splitter2 {
+    display: block;
+    flex: 0 0 8px;
+    cursor: col-resize;
+    background: #e4e4e4;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    touch-action: none;
+    user-select: none;
+}
+#pane-main.horizontal #splitter2:hover, #pane-main.horizontal #splitter2:focus,
+#pane-main.horizontal.dragging #splitter2 {
+    background: #ffe070;
+    outline: none;
+}
+/* Layout icon: video rect grey, chronogram rect accent; stacked = chronogram below the video */
+#layout-toggle .video-rect { fill: #8a8a8a; stroke: none; }
+#layout-toggle .chrono-rect { fill: #5bc0de; stroke: none; }
+#layout-toggle.horizontal .video-rect { x: 1.5px; y: 3.5px; width: 11px; height: 13px; }
+#layout-toggle.horizontal .chrono-rect { x: 14px; y: 3.5px; width: 6.5px; height: 13px; }
+#layout-toggle.horizontal { background: #3a3a3a; box-shadow: inset 0 0 0 1px #5bc0de; }
 #pane-side {
     flex: 0 0 var(--sidebar-width);
     min-width: 0;
