@@ -34,17 +34,18 @@ What was missing: the other direction, store to views. SEAM-701 ([seams](../inte
 
 ### Classification of the `refreshChronogram` / `onFrameChanged` call sites
 
-By enclosing function; `[inferred]` until step 1 reads each one. Counts are of the inventory run on `eb473985` (refresh calls only, comments excluded).
+By enclosing function, each one read at step 1 (`[read]`). Counts are of the static inventory run on `eb473985` (`design/0009-refresh-coupling-inventory.js`; calls only, comments and definitions excluded): 169 calls of the 13 entry points, of which 57 `refreshChronogram` and 27 `videoControl.refresh`. The first draft said ~63 `refreshChronogram` sites; the count is 57.
 
 | Class | What | Sites (files) | Fate |
 |---|---|---|---|
-| A. Store write | after `events.update/commit/delete/rename/swap` | loaders in `AnnotationIO.js` (~9), `SelectionControl.js` (`submitDraft`, `storeUnit` x2, `doSwap2`, `deleteEvent`, `labelToggle`, dead `undoAction`), `OverlayControl.js` (`doSwap2`, `doSetSpanStart/End`, `newRectForCurrentTag`, `onMouseDown_predict`), `ZoomView.js` (tag fixes, delete FA / wrongid, ~6), `VisitControl.js` (2), `labelBee.js` (id edit, 2), `ChronoControl.js` (`cleanObsoleteEvents`), `ChronoControlInteraction.js` (`onAutoEventButtonClick`?) | removed, replaced by the notification (steps 4-5) |
-| B. Derived config | filters, toggles, restrict / exclude id, parameters | `ChronoControl.js` (~15), `OverlayControl.js` (`tagsSampleFilter*`, `onTagsParametersChanged`, `onChronoParametersChanged`), `ChronoControlInteraction.js` (next / prev id) | stay explicit (D6) |
-| C. Tags | `setTags` and the tag loaders | `AnnotationIO.js:522-524`, `loadTagsCSVFromServer` | stay explicit (D5) |
-| D. Frame / video | `onFrameChanged` after seek, `changeStartTime`, `changeFPS` | `VideoControl.js` (4), `VideoList.js` (2) | stay |
-| E. Display only | `drawChrono` alone | `SelectionControl.js:954` | stay |
+| A. Store write (39 sites: 29 `refreshChronogram`, 10 `videoControl.refresh`) | the function writes the store (`events.update/commit/delete`, `storeUnit`, `submitDraft`, `setTracks`) then refreshes | `AnnotationIO.js` 8 (`setTracks` + 7 loaders), `SelectionControl.js` 13 (`submitDraft`, `storeUnit` x2, `doSwap2`, `deleteEvent`, `labelToggle`, dead `undoAction`), `OverlayControl.js` 7 (`doSwap2`, `doSetSpanStart/End`, `newRectForCurrentTag`, `onMouseUp_interactiveRect`), `ZoomView.js` 5 (`onClickAlternateTag`, `rotateTag`, `bakeAllTagFixes`, `deleteFalsealarmEvents`, `deleteWrongIdEvents`), `VisitControl.js` 2, `labelBee.js` 3 (id edits), `ChronoControl.js` 1 (`cleanObsoleteEvents`) | removed, replaced by the notification (steps 4-5) |
+| B. Derived config (24, all `refreshChronogram`) | filters, toggles, restrict / exclude id, parameters, auto-event mode | `ChronoControl.js` 16, `OverlayControl.js` 5 (`ROIChanged`, `excludeRectsChanged`, `onTagsParametersChanged`, `onChronoParametersChanged`, `onMouseDown_predict`'s chronogram refresh), `ChronoControlInteraction.js` 3 (next / prev id, `onAutoEventButtonClick`) | stay explicit (D6) |
+| C. Tags (4, `refreshChronogram`) | `setTags`, `loadTagsCSVFromServer`, `deleteFalsealarmTags`, `undoAllTagFixes` (they edit `Tags`, not `events`) | `AnnotationIO.js` 2, `ZoomView.js` 2 | stay explicit (D5) |
+| D. Frame / video (14 `onFrameChanged`) | after a seek, a load, `changeStartTime`, `changeFPS` | `AnnotationIO.js` 10 (the loaders), `VideoControl.js` 4 | stay |
+| E. Display only (17, all `videoControl.refresh`) | overlay redraw with no data change: pan, zoom, show tags, track window, deselect, re-select, `ctrl+r`, `onMouseDown_predict` (the write comes later, in `submitDraft`) | `OverlayControl.js` 14, `SelectionControl.js` 1, `ZoomView.js` 1, `labelBee.js` 1 | stay |
+| V. View chain (71 calls of `updateForm`, `hardRefresh`, `refreshOverlay`, `refreshZoom`, `updateChrono*`, `renderObsTable`, ...) | one view asks another | `OverlayControl.js` 25, `ZoomView.js` 16, `SelectionControl.js` 8, `VideoControl.js` 5, `VideoList.js` 5, `labelBee.js` 5, `ChronoControl.js` 4, other 3 | step 6 for the selection part; the rest stays |
 
-Whether each A site writes the store before calling is verified at step 1; a site that does not write (a pure view change) moves to B.
+Corrections to the draft classification: `onMouseDown_predict` and `onAutoEventButtonClick` do not write the store (E and B); `onMouseUp_interactiveRect`, `bakeAllTagFixes` (via `events.update`) and `labelToggle` (via `storeUnit`) do write (A); `deleteFalsealarmTags` and `undoAllTagFixes` only edit `Tags` (C); the draft's "D" sites in `AnnotationIO` were missing. Three A sites refresh again right after a call that already refreshes (`storeUnit`): `ZoomView.js:1732`, `ZoomView.js:1769`, `labelBee.js:896`; they are the "twice" of the baseline and go at step 4 with no replacement.
 
 ## 3. Design
 
@@ -98,7 +99,24 @@ What the baseline says:
 
 ## 5. Entanglement: before and after
 
-Step 1 produces the file-to-file table (who calls into whom for refresh) from the inventory, committed in this ADR. Expectation, `[inferred]`, to confirm: today the six writer files (`AnnotationIO`, `SelectionControl`, `OverlayControl`, `ZoomView`, `VisitControl`, `labelBee`) all call `ChronoControl` (`refreshChronogram`) and `VideoControl` (`refresh`); after the slice they call neither for a data change, and the remaining edges into `ChronoControl` are classes B-C (its own UI, `OverlayControl` parameter handlers) and `VideoControl` -> overlay (frame change). A result with more edges than before stops the migration of that file.
+**Before (step 1, `[read]`, `eb473985`).** Who calls into whom for a refresh: 169 calls of the 13 entry points, 102 across files, in 24 distinct (file, entry point) pairs. Rows: the calling file; columns: the module that defines the entry point (`design/0009-refresh-coupling.js`). Graph: [`0009-refresh-coupling.svg`](0009-refresh-coupling.svg) (panel 1: data and configuration changes, which only ask for the two global refreshes; panel 2: the view chain and the frame change).
+
+| caller file | ChronoControl | VideoControl | OverlayControl | SelectionControl | same file | cross-file |
+|---|---|---|---|---|---|---|
+| OverlayControl | 10 | 17 | | 4 | 20 | 31 |
+| AnnotationIO | 10 | 10 | | | 1 | 20 |
+| SelectionControl | 8 | 7 | | | 7 | 15 |
+| ZoomView | 7 | 1 | | 2 | 14 | 10 |
+| labelBee | 2 | 2 | 1 | 4 | | 9 |
+| VideoControl | 1 | | 4 | | 4 | 5 |
+| VideoList | 5 | | | | | 5 |
+| ChronoControlInteraction | 4 | | | | | 4 |
+| VisitControl | 2 | | 1 | | | 3 |
+| ChronoControl | | | | | 21 | 0 |
+
+The expectation of the draft held: `AnnotationIO`, `SelectionControl`, `OverlayControl`, `labelBee` call both `ChronoControl` and `VideoControl`; `ZoomView` calls `VideoControl` once (display only) and `VisitControl` only `ChronoControl`. All 14 `refreshZoom` calls and the single `updateEventsNotes` call are within their own file (no column for `ZoomView` and `AnnotationIO`).
+
+**After (target).** The 39 class A sites go (steps 4-5); remaining edges into `ChronoControl` are the B and C classes (`ChronoControl` own UI 16, `OverlayControl` 5, `ChronoControlInteraction` 3, tags 4), into `VideoControl` the E sites (display only, 17) and the frame change (D). `AnnotationIO`, `VisitControl` and `ZoomView` keep no edge for a data change (`ZoomView` and `AnnotationIO` keep the tag ones, class C). The writers get one new edge each: `events.batch` / the notification (they already import `events`). Rule: a file that ends with more refresh edges than above stops its migration.
 
 ## 6. Steps (one commit series each; the page works after each)
 
