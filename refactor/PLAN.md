@@ -99,6 +99,9 @@ and is its own commit series and review. The next slice is chosen after the prev
     - (6i) `axes.selectId`, `selectedID` become `highlightId`, `highlightedID` [x] (rename only, baseline unchanged)
   - (7) record [x] (diagram redone, DEBT-829 to DEBT-837, SEAM-701, modules, ADR section 8)
   - (8) follow-ups [ ] (DEBT-830, 832, 836 to 839; run C13 with `RUN_C13=1`, skipped by default; shorten the entries of steps 0 to 3 above)
+  
+- [ ] **Slice 7: GUI layout** (maintainer, 2026-11-17: improve the appearance of the page; interactive, no ADR; branch `slice7-gui-layout`, parallel to slice 6; touches the HTML layout, CSS and GUI-only JS, not the core code). GUI-only JS goes under `labelbee/static/labelbee/js/layout/`, apart from the core features.
+  - Step 1: splitter between the video+chronogram pane (`#pane-main`) and the sidebar (`#pane-side`), replacing the two-cell `main-table` by a flex `#main-split` (`labelbee_page.html`, `custom.css`; `layout/SplitLayout.js`). Sidebar default 360px, min 220px; the main pane keeps 400px and scrolls beyond (content min-width 400px); drag, double-click for the default, arrow keys on the focused splitter, collapse button; width and collapsed state kept in `localStorage`; fires `resize` so the canvases and chronogram refit. A `<div>` of the left cell that the old `</td>` closed implicitly is now closed explicitly.
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 

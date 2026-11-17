@@ -22,10 +22,66 @@ canvas {
 }
 
 
-.main-table > tbody > tr > td {
-/*     padding-right: 10px; */
-    vertical-align: top;
+/* Main layout: video+chronogram pane | splitter | sidebar (see js/SplitLayout.js) */
+#main-split {
+    --sidebar-width: 360px;   /* default width, overridden by SplitLayout.js */
+    --splitter-width: 8px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    height: calc(100vh - 53px - 20px);   /* navbar + .main padding */
+    width: 100%;
 }
+#pane-main {
+    flex: 1 1 0;
+    min-width: 0;          /* the minimum is enforced by SplitLayout.js */
+    overflow: auto;        /* scrollbars when the window is too narrow */
+}
+#pane-side {
+    flex: 0 0 var(--sidebar-width);
+    min-width: 0;
+    overflow: auto;
+}
+#main-split.collapsed #pane-side {
+    display: none;
+}
+#splitter {
+    flex: 0 0 var(--splitter-width);
+    position: relative;
+    cursor: col-resize;
+    background: #e4e4e4;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    touch-action: none;
+    user-select: none;
+}
+#splitter:hover, #splitter:focus, #main-split.dragging #splitter {
+    background: #ffe070;
+    outline: none;
+}
+#main-split.collapsed #splitter {
+    cursor: default;
+}
+#main-split.dragging {
+    cursor: col-resize;
+    user-select: none;
+}
+#sidebar-toggle {
+    position: absolute;
+    top: 6px;
+    left: -1px;
+    width: calc(var(--splitter-width) + 2px);
+    height: 40px;
+    padding: 0;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    background: #f8f8f8;
+    font-size: 9px;
+    line-height: 38px;
+    cursor: pointer;
+}
+#sidebar-toggle::before { content: "\25B6"; }                        /* collapse */
+#main-split.collapsed #sidebar-toggle::before { content: "\25C0"; }  /* expand */
 
 .main {
   position: absolute;

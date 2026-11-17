@@ -59,6 +59,7 @@
   <script type="text/javascript" src="js/ChronoControlInteraction.js"></script>
   <script type="text/javascript" src="js/ZoomView.js"></script>
   <script type="text/javascript" src="js/labelBee.js"></script>
+  <script type="text/javascript" src="js/layout/SplitLayout.js"></script>
   <!-- ES module bridges (deferred, run in order after the classic scripts, before window.onload):
        global `logging` from core/Notifier.js; `AnnotationStore` and `events` (the stored events) from
        annotation/AnnotationStore.js (no data globals: Tracks, Tags, ... are console-only debug views, see
@@ -161,9 +162,8 @@
 
     <!-- MAIN LAYOUT-->
 
-    <table class="main-table">
-      <tr>
-        <td>
+    <div id="main-split">
+      <div id="pane-main">
           <div id="left-side">
 
             <!-- BEE INFO CONTROL -->
@@ -565,10 +565,15 @@
               </div>
             </div>
 
-        </td>
-        <td>
-          <div style="min-width:220px;">
+      </div> <!-- left-side: was closed implicitly by the old </td> -->
+      </div> <!-- pane-main -->
 
+      <div id="splitter" role="separator" aria-orientation="vertical" tabindex="0"
+        title="Drag to resize the sidebar (double-click: default width)">
+        <button type="button" id="sidebar-toggle" title="Collapse/expand the sidebar"></button>
+      </div>
+
+      <div id="pane-side">
             <div id='right-side' class='sortable'>
 
               <!-- ## VIDEO INFO -->
@@ -1530,10 +1535,8 @@
               </div> -->
 
             </div> <!-- right-side -->
-          </div>
-        </td>
-      </tr>
-    </table>
+      </div> <!-- pane-side -->
+    </div> <!-- main-split -->
 
     <br />
     <div id="tagDetails">-</div>
