@@ -23,14 +23,18 @@ def test_a10_zoom_view_shows_the_video_and_follows_the_selection(ui, sample_dir)
 
 def test_a10_a_tags_file_attaches_its_tags_to_the_observations_with_the_same_id(ui, sample_dir):
     """The separate tag file is obsolescent (DEC-006) but still works in the default 'Tracks' mode: at every refresh
-    `augmentTrackWithTag` (ChronoControl.js:1015) copies each tag of the file onto the observation with the same id and
-    frame, and the chronogram counts it. A tag whose id matches no observation is stored and attaches to nothing."""
+    `augmentTrackWithTag` (ChronoControl.js) copies each tag of the file onto the observation with the same id and
+    frame, and the chronogram counts it. Since ADR 0009 (Q34) the refresh no longer calls it: loading the file attaches
+    nothing by itself, the function is a console one-shot. A tag whose id matches no observation attaches to nothing."""
     ui.open()
     ui.load_events(sample_dir / "events_v2.json")                       # observation ids 1 and 2, id 1 at frame 0
     ui.wait_tracks()
     tag = {"id": 1, "dm": 60, "c": [84, 104], "hamming": 0, "goodness": 45.5, "p": [[70, 90], [98, 90], [98, 118], [70, 118]]}
     ui.load_tags(ui.write("tags_same_id.json", {"0": {"tags": [tag]}}))
-    ui.page.wait_for_function("(events.toObject()[0] || {})[1] && !!events.toObject()[0][1].tag")
+    ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
+    ui.page.wait_for_timeout(300)
+    assert "tag" not in ui.tracks()["0"]["1"]                          # the refresh does not write the store
+    ui.js("augmentTrackWithTag(); refreshChronogram()")
     assert ui.tracks()["0"]["1"]["tag"]["dm"] == 60
     assert ui.js("tagMode") == "Tracks"
     ui.page.wait_for_function("/\\b1 tags/.test(document.body.innerText)")

@@ -973,9 +973,8 @@ function updateChronoData() {
   $('#chronoStatusBar').html('Preparing chrono data...')
 
   // PREPARE TRACKS DATA
-  
-  augmentTrackWithTag()
-  
+  // (no augmentTrackWithTag() here: a refresh must not write the store, ADR 0009 Q34)
+
   chronogramData.length = 0;
   if (showObsChrono) {
     // Tracks => chronogramData
@@ -1023,7 +1022,8 @@ function updateChronoData() {
   //$('chronoStatusBar').html(`Chrono updateChronoData took ${chrono.perf.chronoUpdate} ms`)
 }
 
-/* Augment Tracks with tag id if same (frame,id) exist for both */
+/* Augment Tracks with tag id if same (frame,id) exist for both.
+   Legacy one-shot, console only: no longer called by the refresh (ADR 0009 Q34); the tags are expected in the events at load time. */
 function augmentTrackWithTag() {
   for (let F of events.frames()) {
     if (AnnotationStore.getTags()[F] != undefined) {

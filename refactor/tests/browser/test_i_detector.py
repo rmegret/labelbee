@@ -57,7 +57,8 @@ def test_i3_a_nested_value_written_through_the_rectangle_that_holds_the_stored_o
 def test_i4_a_tag_object_shared_with_the_tags_structure(ui, sample_dir):
     loaded(ui, sample_dir)
     ui.load_tags(ui.write("t.json", {"0": {"tags": [NEW_TAG]}}))
-    ui.page.wait_for_function("!!(events.get(0, 1) || {}).tag")
+    ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
+    ui.js("augmentTrackWithTag()")                                       # the legacy one-shot (no longer part of the refresh, ADR 0009 Q34)
     ui.js(CLEAR)
     ui.js("AnnotationStore.getTags()[0].tags[0].dm = 5")                 # a write through the TAGS structure
     assert ui.js("events.get(0, 1).tag.dm") == 5                         # ... that changed obs.tag

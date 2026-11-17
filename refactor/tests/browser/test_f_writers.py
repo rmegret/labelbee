@@ -101,13 +101,15 @@ def test_f3_apply_all_tag_fixes_stores_a_span_and_a_fix(ui):
 
 
 # ---- tag fix on a tag object shared with obs.tag: a tags file whose tag matches an observation shares the tag object between the Tags
-# structure and the observation (augmentTrackWithTag); bakeTagFix then writes `fix` and `id` on that shared object, an indirect
+# structure and the observation (the legacy `augmentTrackWithTag` one-shot); bakeTagFix then writes `fix` and `id` on that shared object, an indirect
 # mutation of the stored events (found by the detector's tracking of shared references).
 def test_f12_apply_tag_fixes_writes_on_the_tag_shared_with_the_observation(ui):
     path = write_events(ui, "fa_tag.json", [event(0, 1, "falsealarm"), event(0, 2)])
     load(ui, path)
     tag = {"id": 1, "dm": 60, "c": [84, 104], "hamming": 0, "goodness": 45.5, "p": [[70, 90], [98, 90], [98, 118], [70, 118]]}
     ui.load_tags(ui.write("t.json", {"0": {"tags": [tag]}}))
+    ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
+    ui.js("augmentTrackWithTag()")                                      # the legacy one-shot (no longer part of the refresh, ADR 0009 Q34)
     ui.page.wait_for_function("!!(events.get(0, 1) || {}).tag")
     ui.open_panel("Zoom")
     ui.open_subpanel("Alternate Tags")
