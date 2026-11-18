@@ -59,6 +59,18 @@ Option 1 of the step 6 choice, shaped by the maintainer's answer to [Q37](../QUE
 - 6a. This amendment, [Q37](../QUESTIONS.md#q37) answered, PLAN.
 - 6b. `SelectionModel.js` + bridge + golden tests of its logic, and its users: `defaultSelectedBee` becomes `selection.getId()`, `selectedKey()` becomes `selection.getKey()`, `selectBee*`, `deselectBee`, fabric's mouse events and the frame change call `selection.*`; the agreement test. No refresh change (the model alone has no effect).
 - 6c. `refresh.selection()`, called once by the selection writers, the four jQuery triggers deleted, `hardRefresh` and the store writers running the chain once per rebuild; the `select`, `frame`, `label`, `drag`, `delete` baselines checked (decreases listed in the commit).
+- 6d-6i. Vocabulary (maintainer, 2026-11-18): *selected* is the model's (`selection`), *active* is fabric's internal state, owned by the overlay. A name says which side it is on, a view function never sounds like a control (`select`, `deselect`). The rename steps are mechanical (refresh baseline unchanged), one per function, functions with fewer than 5 calls grouped; the globals that read or write fabric's active rectangle move into `OverlayControl` and are deleted:
+
+| step | function (calls, `[read]` ~) | becomes |
+|---|---|---|
+| 6d | `overlay.getActiveObject` (~30), global `getSelectedRect` (8), `getSelectedID` (3), `overlay.setActiveObject` (2, plus 3 direct `overlay.canvas1.setActiveObject`) | `overlay.getActiveRect`, `overlay.getActiveRectID`, `overlay.setActiveRect`; the two globals deleted; the direct calls go through `setActiveRect` except the fabric-bug workaround |
+| 6e | `selectBeeByID` (17), `showSelection` (5) | `overlay.setActiveRectID(id)` (view, skips when that rectangle is already active); `showSelection` becomes `updateSelectionPanels()` (panels and zoom); new `activateSelection()` = `setActiveRectID(selection.getId())` + `updateSelectionPanels()` is the step of `refresh.selection()`; `hardRefresh` activates per mode (`opts.id` in pick-frame) then updates the panels; the writers drop their own `selectBeeByID` line |
+| 6f | `ZoomOverlay.selectionChanged` (16) | `refreshFromSelection` (also bound to `object:moving/modified`, hence not `refreshSelection`) |
+| 6g | `overlay.lastSelected`, `previouslySelected` (13) | `lastActiveRect`, `previousActiveRect` |
+| 6h | `getCurrentID` (9, plus 3 in the browser tests) | `selection.getId()`, global deleted |
+| 6i | `axes.selectId`, `axes.selectedID` (14) | `axes.highlightId`, `axes.highlightedID` |
+
+Kept as they are: `deselectBee` (GUI callback: it needs `deactivateAllWithDispatch`, so that `onObjectDeselected` removes a draft, then `selection.clear()`; its caller runs the refresh, two of three already rebuild), `selectBeeByIDandFrame`, `onSelectIDChanged`, `onObjectSelected` / `onObjectDeselected` (fabric event names). `onObjectSelected` keeps its `selection.is` guard: the echo of `setActiveRect` now fires while `refresh.selection()` runs. `ZoomView.js`'s own `canvas1.setActiveObject` (zoom canvas) is dealt with later.
 
 **Not in this step**: `selection:changed` as a channel (comes back with the notification); `getActiveObject()` readers that need the rectangle (geometry), which stay on fabric; the selection in undo (undo is off).
 

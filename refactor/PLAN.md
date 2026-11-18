@@ -91,6 +91,12 @@ and is its own commit series and review. The next slice is chosen after the prev
     - (6a) ADR amendment 0b, [Q37](QUESTIONS.md#q37) answered [x] (selection model owns `defaultSelectedBee`)
     - (6b) `SelectionModel` + bridge + tests; `getId`/`getKey`/`changeFrame` replace `defaultSelectedBee`, `selectedKey()` [x] (same refreshes)
     - (6c) `refresh.selection()` once per writer and rebuild; four jQuery triggers deleted [x] (select chain 2x to 1x)
+    - (6d) active rect accessors: `getActiveRect`, `getActiveRectID`, `setActiveRect` in `OverlayControl`, two globals deleted [ ]
+    - (6e) `selectBeeByID` becomes `setActiveRectID`; `refresh.selection()` = `activateSelection` [ ]
+    - (6f) `selectionChanged` becomes `refreshFromSelection` [ ]
+    - (6g) `lastSelected`, `previouslySelected` become `lastActiveRect`, `previousActiveRect` [ ]
+    - (6h) `getCurrentID` replaced by `selection.getId()` [ ]
+    - (6i) `axes.selectId`, `selectedID` become `highlightId`, `highlightedID` [ ]
   - (7) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
