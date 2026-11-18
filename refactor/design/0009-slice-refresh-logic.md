@@ -30,6 +30,38 @@ Supersedes D1-D3 and D7 for the migration; D4-D6 and D8 stand. Reason: a hidden 
 - Retired with this step, not migrated: `newRectForCurrentTag`, `undoAction` (undo is off).
 - [DEBT-825](../intent/debt.md): `hardRefresh` writes `span` in pick-frame mode; fixed in its own commit by moving the default span to the entry of the mode.
 
+## 0b. Amendment (maintainer, 2026-11-18): step 6, the selection owner without a channel
+
+Option 1 of the step 6 choice, shaped by the maintainer's answer to [Q37](../QUESTIONS.md#q37). Amends [Q35](../QUESTIONS.md#q35) the same way section 0 amended D1-D3: the model owns the state and the selection logic, the writers call `refresh.*`, nothing subscribes.
+
+**Today** (`[read]`): fabric's active object is the selection. `overlay.getActiveObject()` / `setActiveObject()` are used ~40 times in `OverlayControl.js` (12), `ZoomView.js` (13), `SelectionControl.js` (10), `labelBee.js` (4), `VisitControl.js` (1). `selectedKey()` (`labelbee/static/labelbee/js/SelectionControl.js:493`) is the one reader that turns it into `{frame, id}`; the store editors go through it (ADR 0008 R4). The writers are `selectBee`, `selectBeeByID`, `deselectBee` (`SelectionControl.js:566-631`) and fabric's own mouse events (`onObjectSelected`, `selection:cleared`, `OverlayControl.js:143`). `selectBee` / `deselectBee` also fire four jQuery events on `selectionControl` (`tagselection:*`, `selection:*`) whose only subscriber is `zoomOverlay.selectionChanged` (`labelbee/static/labelbee/js/labelBee.js:142-145`). `tagSelection` (`SelectionControl.js:565`) is written and never read; `defaultSelectedBee` (24 references, 5 files) is the id to select again after a frame change: each writer sets it and each frame change re-selects by id with its own ad-hoc logic, so "what is selected" is decided in many places.
+
+**Cost** (`[ran]`, `refactor/tests/browser/refresh_baseline.json`, scenario `select`, a click with no store write): `updateDeleteButton` x2, `updateFormButtons` x2, `refreshZoom` x4, plus `updateForm`, `updateChronoSelection`, `updateSelectID` once. The `refreshZoom` and `updateFormButtons` pairs come from the four events above `[inferred]`: `selectionChanged` runs once per event; step 6c verifies it before deleting.
+
+**Design.** The selection is the M and the C of its own MVC triple: the logic of what is selected lives in one place, has no view and calls no `refresh.*`; the views only ask it.
+- `annotation/SelectionModel.js` (a module with a bridge, like `Events`) and its one instance `window.selection`. The class is not called `Selection`: that is a DOM interface of the browser (`window.Selection`) and a global definition would shadow it.
+- State: the frame and the id to follow. Nothing else is stored.
+
+| call | does | replaces |
+|---|---|---|
+| `selection.getId()` | the id to follow, `undefined` when none | `defaultSelectedBee` (24 references) |
+| `selection.getKey()` | `{frame, id}` when that id has an observation in `events` on that frame, else `null`; derived from the state and the store at each call, so idempotent and never stale after a delete or a rename; a draft rectangle is not in the store, so `null` | `selectedKey()` |
+| `selection.select(frame, id)` | a user choice (click, chronogram, ID field, `selectBeeByID`); the id is kept even when no observation matches (the `defaultSelectedBee = id` branch of `selectBeeByID`) | `selectBee`, `selectBeeByID` and the assignments of `defaultSelectedBee` |
+| `selection.changeFrame(frame)` | the video moved: keeps the id, so `getKey()` is the observation of that id on the new frame, or `null` with the id still kept as the default | the ad-hoc re-selection of each frame change |
+| `selection.clear()` | explicit deselect: forgets the id | `deselectBee` |
+
+- It reads `events` (`has`), never writes it, emits nothing. A rename (`changeObservationID`) and a delete end with the calls that fit (`select(frame, new_id)`, `clear()` or nothing, since `getKey()` re-derives).
+- `refresh.selection()` changes no model: it reads `selection.getKey()` / `getId()` and runs the view chain, `updateForm`, `updateChronoSelection`, `updateSelectID`, `updateFormButtons`, `updateDeleteButton`, `zoom()`. The overlay's `hardRefresh` selects the rectangle of `getKey()` when it rebuilds. The `refresh.*` call of a writer follows its `selection.*` call, never the other way.
+- Fabric stays the source of the rectangle (geometry during a drag, the working copy, ADR 0008 P3); its mouse events call `selection.select` / `clear`. The four jQuery triggers and `tagSelection` (`[read]`, no reader) are deleted.
+- The model and fabric must agree after every user action: a browser test compares `selection.getKey()` with the key of fabric's active object after each scenario of `test_l_refresh.py` and the selection tests, so a writer that forgets the model fails. Risk: an observation in the store that the overlay does not display (a filter) would make `getKey()` non-null with no active rectangle; the agreement test is what finds it.
+
+**Steps** (a commit is a review unit: steps that only make sense together are one commit):
+- 6a. This amendment, [Q37](../QUESTIONS.md#q37) answered, PLAN.
+- 6b. `SelectionModel.js` + bridge + golden tests of its logic, and its users: `defaultSelectedBee` becomes `selection.getId()`, `selectedKey()` becomes `selection.getKey()`, `selectBee*`, `deselectBee`, fabric's mouse events and the frame change call `selection.*`; the agreement test. No refresh change (the model alone has no effect).
+- 6c. `refresh.selection()`, called once by the selection writers, the four jQuery triggers deleted, `hardRefresh` and the store writers running the chain once per rebuild; the `select`, `frame`, `label`, `drag`, `delete` baselines checked (decreases listed in the commit).
+
+**Not in this step**: `selection:changed` as a channel (comes back with the notification); `getActiveObject()` readers that need the rectangle (geometry), which stay on fabric; the selection in undo (undo is off).
+
 ## 1. Decisions (maintainer, 2026-11-16)
 
 - **D1 Sync.** A subscriber runs inside the command that changed the store. No second layer (no `derived:changed`): the order is fixed in one place.

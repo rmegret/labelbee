@@ -728,3 +728,9 @@ _Answer_: Ok as proposed (maintainer, 2026-11-16).
 _Significance_: The removal is a visible timing change, not a mechanical move: a loader may set something between the two refreshes (the lineage `basedOn`, the info, the delayed seek) that the second refresh displays.
 _Proposed_: `replace` notifies once; the loaders' calls are deleted one loader per commit; for each, step 1 lists what runs between the two refreshes, and anything that the second refresh was the only one to show is moved before the single refresh or into a subscriber. The removal is recorded in the commit and in the load test as an intended change (one refresh instead of two), the log showing it. Used only once the maintainer confirms.
 _Answer_: Ok as proposed (maintainer, 2026-11-16).
+
+**<a id='q37'>Q37</a>: Does the selection model own `defaultSelectedBee`?**
+`defaultSelectedBee` is a global of `SelectionControl.js` (24 references in `ChronoControlInteraction.js`, `OverlayControl.js`, `SelectionControl.js`, `ChronoControl.js`, `labelBee.js`): the id to select again when the frame changes, set by a click, by the ID field and by the chronogram, cleared by `deselectBee`. It is not the selected rectangle: with no box of that id on the frame, it stays set (`selectBeeByID`, `labelbee/static/labelbee/js/SelectionControl.js:566`).
+_Significance_: if the model owns it, the selection logic lives in one place; if not, each writer and frame change decides ad hoc, as today.
+_Proposed_: it stays a global in slice 6; it joins the model later.
+_Answer_: No, the opposite (maintainer, 2026-11-18). `SelectionModel` (instance `selection`) owns it: `selection.getId()` replaces `defaultSelectedBee`, `selection.getKey()` replaces `selectedKey()`, and `selection.changeFrame(frame)` decides the new key (same id if the frame has it, else none, id kept). `refresh.selection()` only reads the model. Specified in [ADR 0009 section 0b](design/0009-slice-refresh-logic.md). Steps 6b and 6c merged.
