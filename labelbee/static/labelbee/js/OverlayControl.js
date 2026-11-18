@@ -176,7 +176,8 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
     if (mode!=this.interaction.mode) {
         // Close previous mode
     }
-    
+    let wroteSpan = false
+
     if (mode=='main') {
         this.interaction.mode = 'main'
         this.interaction.opts = opts
@@ -206,6 +207,7 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
         let handle = getObsHandle(frame, obs.ID)
         if (handle && !('span' in handle)) {
             events.update(frame, obs.ID, { span: { 'f1': frame, 'f2': frame } })
+            wroteSpan = true
         }
     } else if (mode=='edit-visit') {
         console.log('overlay.setInteractionMode', 'changing to edit-visit')
@@ -218,6 +220,7 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
     }
     this.refreshInteraction()
     this.hardRefresh()
+    if (wroteSpan) refresh.chrono() // the chronogram can show the span ("Show spans")
 }
 OverlayControl.prototype.refreshInteraction = function() {
     console.log('overlay.refreshInteration',this.interaction)
@@ -982,16 +985,14 @@ OverlayControl.prototype.hardRefresh = function () {
     }
     function doSwap2(interval, old_id, new_id) {
       obs_swapID(interval, old_id, new_id)
-      videoControl.refresh() // Just refresh
-      refreshChronogram();
+      refresh.rebuild()
     }
     function doSetSpanStart() {
       let f = videoControl.getCurrentFrame()
       events.update(frame, id, { span: { f1: f, f2: obs.span.f2 } })
       //$('#alerttext').html('Set Start DONE')
       //overlay.setInteractionMode('main')
-      overlay.hardRefresh()
-      refreshChronogram();
+      refresh.rebuild()
     }
     function gotoStart() {
       gotoEvent(obs.span.f1, id)
@@ -1007,8 +1008,7 @@ OverlayControl.prototype.hardRefresh = function () {
       events.update(frame, id, { span: { f1: obs.span.f1, f2: f } })
       //$('#alerttext').html('Set Start DONE')
       //overlay.setInteractionMode('main')
-      overlay.hardRefresh()
-      refreshChronogram();
+      refresh.rebuild()
     }
     function cancelSetSpan() {
       $('#pickframediv').html('Pick frame CLOSED')
@@ -3318,8 +3318,7 @@ function newRectForCurrentTag() {
   overlay.canvas1.setActiveObject(rect);
   overlay.canvas1.renderAll();
 
-  videoControl.refresh();
-  refreshChronogram();
+  refresh.rebuild();
 }
 
 /* Create new rect from prediction */
@@ -3440,8 +3439,7 @@ function onMouseDown_predict(option) {
   overlay.canvas1.setActiveObject(rect);
   overlay.canvas1.renderAll();
 
-  videoControl.refresh();
-  refreshChronogram();
+  refresh.rebuild(); // the new box is in the store
   // Fire mouse:down again, this time with the created target
   // overlay.canvas1.fire("mouse:down", {
   //     target: rect,
@@ -3562,8 +3560,8 @@ function onMouseDown_interactiveRect(option) {
 
       // printMessage("Press enter to validate ID", "green")
 
-      updateForm(activeObject)
-      submitDraft(activeObject)
+      // submitDraft rebuilds (and refreshes the chronogram and the form) when it stores the box
+      if (!submitDraft(activeObject)) refresh.overlayRebuild() // refused (id conflict): the rebuild drops the draft
     } else {
       // Not enough drag to define a new rectangle
       overlay.canvas1.deactivateAll();
@@ -3576,8 +3574,8 @@ function onMouseDown_interactiveRect(option) {
           activeObject
         );
       deselectBee();
+      refresh.overlayRebuild(); // nothing was stored
     }
-    videoControl.refresh();
   };
 
   overlay.canvas1.on("mouse:up", onMouseUp_interactiveRect);

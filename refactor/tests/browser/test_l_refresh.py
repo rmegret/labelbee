@@ -117,7 +117,7 @@ def test_l5_rotate_tag(ui, sample_dir):
 
 def test_l6_create_by_shift_click(ui, sample_dir):
     loaded(ui, sample_dir)
-    check("create", run(ui, "create", lambda: ui.shift_click_background()))
+    check("create", run(ui, "create", lambda: ui.shift_click_background(), audited=True))
 
 
 def test_l7_delete_one(ui, sample_dir):
@@ -241,3 +241,39 @@ def test_l15_refresh_calls_and_audit(ui, sample_dir):
     got = ui.js("refreshLog.tree()")
     print("[refresh] refresh.rebuild:", got)
     assert got.startswith("refresh.rebuild(") and "VideoControl.refresh" in got
+
+
+def test_l16_overlay_writers_leave_no_store_write_unrefreshed(ui, sample_dir):
+    """ADR 0009 step 4e, OverlayControl.js writers: ctrl-drag that stores a box, ctrl-drag too small (nothing stored), refused id
+    conflict, pick-frame entry (default span) and its Set End / Set Start buttons. The audit lists no store write without a `refresh.*` call."""
+    loaded(ui, sample_dir)
+    header = ui.page.locator("#features > .ui-accordion-header")
+    if header.get_attribute("aria-expanded") != "true":
+        header.click()
+    ui.page.check("#showSelected")
+    ui.page.check("#showPickFrame")
+    ui.click_box("1")
+    # not the button: its handler `modifyCurrentObsSpan` (SelectionControl.js) writes a span first, migrated in its own step
+    run(ui, "pick_frame_enter", lambda: ui.js("overlay.setInteractionMode('pick-frame', {type: 'setspan'})"), audited=True)
+    assert ui.tracks()["0"]["1"]["span"] == {"f1": 0, "f2": 0}
+    assert "refreshChronogram" in ui.js("refreshLog.tree()")                                  # the default span is shown by the chronogram
+    ui.goto_frame(7)
+    run(ui, "set_end", lambda: ui.page.click("#pickframediv button:has-text('Set End')"), audited=True)
+    run(ui, "set_start", lambda: ui.page.click("#pickframediv button:has-text('Set Start')"), audited=True)
+    ui.page.click("#pickframediv button:has-text('CLOSE')")
+    ui.goto_frame(9)
+    a, b = ui.video_to_client(300, 60), ui.video_to_client(360, 110)
+
+    def ctrl(action):
+        ui.page.keyboard.down("Control")
+        action()
+        ui.page.keyboard.up("Control")
+
+    run(ui, "ctrl_drag", lambda: ctrl(lambda: ui.drag(a, b)), audited=True)
+    ui.page.wait_for_function("Object.keys(events.getFrame(9)).length === 1")
+    assert ui.js("refreshLog.tree()").count("refresh.rebuild(") == 1                           # one rebuild, not the old two
+    ui.goto_frame(11)
+    run(ui, "ctrl_click_too_small", lambda: ctrl(lambda: ui.page.mouse.click(a["x"], a["y"])), audited=True)
+    assert ui.js("Object.keys(events.getFrame(11) || {}).length") == 0
+    for name in ("pick_frame_enter", "set_end", "set_start", "ctrl_drag", "ctrl_click_too_small"):
+        RESULTS.pop(name)                                                                      # audited only, not pinned in the baseline
