@@ -1584,3 +1584,13 @@ The ROI text checks only the number of comma-separated parts and stores `Number(
 - **Code:**
   - `OverlayControl.js`: `hardRefresh`, `setInteractionMode`
 - **Links:** ADR 0009, DEBT-712
+
+## DEBT-826: Tag editing works on the tag store, not on the events (legacy)
+
+[read] Since the tags are expected inside the events at load time (ADR 0009 [Q34](QUESTIONS.md#q34)), a tag fix is a field of the event (`obs.fix`), and nothing else needs to change. The tag-fix helpers still treat `AnnotationStore.getTags()` as a second model and mutate it directly: `spreadTagFix` copies `obs.fix` onto every covered tag (`tag.fix`, `tag.p` rotated from `tag.fix.oldp`), `bakeTagFix` / `bakeAllTagFixes` rewrite `tag.id` and `tag.p` of the tags (and `obs.fix` for `falsealarm`), `undoTagFix` / `undoAllTagFixes` revert them, `deleteFalsealarmTags` rewrites the container. These writes bypass `events`, so the refresh audit ([ADR 0009](../design/0009-slice-refresh-logic.md) section 0) cannot see them; they are correct today only because a `refresh.*` call follows them by convention. `getCoveredTags` is a read helper that writes `span` in the store and throws for a draft (`events.get` returns `undefined`). `rotatep` is an implicit global. [read]
+Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fix`; the helpers and `tag.fix` go away; `bakeAllTagFixes` becomes one `events.batch`; the callers `rotateTag` and `onClickAlternateTag` only write the unit and call `refresh.update()`. Needs the tag-in-event decision first (Q34), then a view that reads `obs.fix`. Until then the helpers are marked LEGACY in the code and left as they are.
+
+- **Code:**
+  - `ZoomView.js`: `ZoomOverlay.spreadTagFix`, `ZoomOverlay.bakeTagFix`, `ZoomOverlay.bakeAllTagFixes`, `ZoomOverlay.undoTagFix`, `ZoomOverlay.undoAllTagFixes`, `ZoomOverlay.deleteFalsealarmTags`, `getCoveredTags`, `rotatep`
+  - `ChronoControl.js`: `augmentTrackWithTag` (already a console one-shot)
+- **Links:** ADR 0009, Q34, DEBT-515, DEBT-517, DEBT-518, DEBT-519, DEBT-520

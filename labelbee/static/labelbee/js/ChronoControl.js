@@ -1023,7 +1023,7 @@ function updateChronoData() {
 }
 
 /* Augment Tracks with tag id if same (frame,id) exist for both.
-   Legacy one-shot, console only: no longer called by the refresh (ADR 0009 Q34); the tags are expected in the events at load time. */
+   LEGACY (DEBT-826), one-shot, console only: no longer called by the refresh (ADR 0009 Q34); the tags are expected in the events at load time. */
 function augmentTrackWithTag() {
   for (let F of events.frames()) {
     if (AnnotationStore.getTags()[F] != undefined) {

@@ -490,6 +490,8 @@ OverlayControl.prototype.onClickResetAngle = function () {
     return;
   }
   storeUnit(activeObject, { angle: 0 });
+  refresh.overlayUpdate(); // the chronogram does not read the angle
+  refresh.form();
 };
 OverlayControl.prototype.onClickAngleFromTag = function () {
   console.log("overlay.onClickAngleFromTag");
@@ -510,6 +512,8 @@ OverlayControl.prototype.onClickAngleFromTag = function () {
   }
 
   storeUnit(activeObject, { angle: tagAngle(tag) });
+  refresh.overlayUpdate();
+  refresh.form();
 
   //    this.refreshOverlay()
 };
@@ -3962,9 +3966,9 @@ function onObjectModified(option) {
   activeObject.dragging = false;
   storeUnit(activeObject, rectToGeometry(activeObject));
 
-  //canvas1.renderAll(); // Refresh rectangles drawing
-  overlay.refreshOverlay();
-  updateForm(activeObject);
+  refresh.overlayUpdate(); // the rectangle already shows the geometry
+  refresh.form();
+  if (flag_useROI) refresh.chrono(); // the chronogram reads cx, cy only for the ROI filter
   //showZoom(activeObject)
 
   $(overlay).trigger("object:modified");

@@ -414,6 +414,8 @@ ZoomOverlay.prototype.syncToTracks = function () {
     parts.push(part);
   }
   storeUnit(activeObject, { parts: parts }); // `parts` is a unit owned by this module (ADR 0008 R3): written alone, whole
+  refresh.form(); // only the form and the zoom show the parts
+  refresh.zoom();
 };
 // See also ZoomOverlay.prototype.onToggleButtonShowOnVideo
 
@@ -1728,11 +1730,11 @@ ZoomOverlay.prototype.onClickAlternateTag = function (id) {
 
     this.spreadTagFix();
 
-    updateForm(activeObject);
-    refreshChronogram();
+    refresh.update();
   }
 };
 
+// LEGACY (DEBT-826): tag fixes are mutated on the tag store, not on the events
 rotatep = (function () {
   var unshift = Array.prototype.unshift,
     splice = Array.prototype.splice;
@@ -1762,11 +1764,9 @@ ZoomOverlay.prototype.rotateTag = function (angle) {
 
   storeUnit(activeObject, WrongId.tagRotated(obs, angle));
 
-  updateForm(activeObject);
-
   this.spreadTagFix();
 
-  refreshChronogram();
+  refresh.update(); // includes the zoom
 
   //     let tag = getCurrentTag()
   //
@@ -1783,10 +1783,9 @@ ZoomOverlay.prototype.rotateTag = function (angle) {
   //
   //     tag.fix.tagangle=obs.fix.tagangle;
   //     tag.p = rotatep(tag.fix.oldp, tag.fix.tagangle/90)
-
-  this.refreshZoom();
 };
 
+// LEGACY (DEBT-826): reads the tag store; also writes span into the events
 function getCoveredTags(obs) {
   obs = events.get(obs.frame, obs.ID);
 
@@ -1826,6 +1825,8 @@ function getCoveredTags(obs) {
   return coveredTags;
 }
 
+// LEGACY (DEBT-826): copies obs.fix onto the tags of the tag store, outside the events (the audit does not see it);
+// must run before the refresh that shows the tags
 ZoomOverlay.prototype.spreadTagFix = function () {
   var activeObject = overlay.getActiveObject();
   if (activeObject == null) {
@@ -1861,6 +1862,7 @@ ZoomOverlay.prototype.spreadTagFix = function () {
     }
   }
 };
+// LEGACY (DEBT-826): rewrites tag.id and tag.p in the tag store, outside the events
 ZoomOverlay.prototype.bakeTagFix = function (obs) {
   if (!obs) {
     var activeObject = overlay.getActiveObject();
@@ -1904,12 +1906,14 @@ ZoomOverlay.prototype.bakeTagFix = function (obs) {
     }
   }
 };
+// LEGACY (DEBT-826): see bakeTagFix
 ZoomOverlay.prototype.bakeAllTagFixes = function () {
   events.forEach((obs) => {
     this.bakeTagFix(obs);
   });
   refreshChronogram();
 };
+// LEGACY (DEBT-826): edits the tag store, outside the events
 ZoomOverlay.prototype.deleteFalsealarmTags = function () {
   var filter = (obj, predicate) =>
     Object.keys(obj)
@@ -1946,6 +1950,7 @@ ZoomOverlay.prototype.deleteWrongIdEvents = function () {
   refreshChronogram();
 };
 
+// LEGACY (DEBT-826): reverts a tag of the tag store, outside the events
 ZoomOverlay.prototype.undoTagFix = function (tag) {
   if (!tag.fix) {
     return;
@@ -1960,6 +1965,7 @@ ZoomOverlay.prototype.undoTagFix = function (tag) {
     tag.p = deepcopy(tag.fix.oldp);
   }
 };
+// LEGACY (DEBT-826): see undoTagFix
 ZoomOverlay.prototype.undoAllTagFixes = function () {
   for (let F in AnnotationStore.getTags()) {
     let tags = AnnotationStore.getTags()[F].tags;

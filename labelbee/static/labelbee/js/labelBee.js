@@ -891,10 +891,8 @@ function onKeyDown_NewIDEdit(event) {
 
     if (!activeObject) return;
 
-    storeUnit(activeObject, WrongId.newidTyped(activeObject.obs, new_id), true);
-    overlay.hardRefresh();
-    refreshChronogram();
-    updateForm(activeObject);
+    // a draft is submitted (and rebuilt) by submitDraft inside storeUnit
+    if (storeUnit(activeObject, WrongId.newidTyped(activeObject.obs, new_id), true)) refresh.rebuild();
   }
 }
 

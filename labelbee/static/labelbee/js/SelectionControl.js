@@ -481,8 +481,7 @@ function submitDraft(rect) {
   rect.obs = events.commit(rect.obs);
   rect.draft = false;
 
-  videoControl.refresh();
-  refreshChronogram();
+  refresh.rebuild();
   return true;
 }
 
@@ -499,9 +498,10 @@ function selectedKey() {
 
 /**
  * Stores the fields of one unit edited on the selected rectangle (ADR 0008 R3): the store gets only these fields,
- * with `events.update` (the rectangle holds the stored object), then the manual refreshes. A draft rectangle (the
- * ctrl-drag in progress) is not in the store: the fields go to its own observation, and `submitNew` submits it
- * (the newid box did). Returns whether the store was written.
+ * with `events.update` (the rectangle holds the stored object). It does not refresh: the caller calls the `refresh.*`
+ * that fits its field (ADR 0009 section 0). A draft rectangle (the ctrl-drag in progress) is not in the store: the fields
+ * go to its own observation, and `submitNew` submits it (the newid box did; `submitDraft` refreshes). Returns whether
+ * the store was written.
  */
 function storeUnit(rect, fields, submitNew) {
   let key = selectedKey();
@@ -510,16 +510,9 @@ function storeUnit(rect, fields, submitNew) {
     let stored = Object.assign({}, fields);
     if (stored.fix) stored.fix = deepcopy(stored.fix); // the store never shares `fix` with the working copy
     events.update(key.frame, key.id, stored);
-    videoControl.refresh();
-    refreshChronogram();
     return true;
   }
-  if (submitNew && rect.draft) {
-    submitDraft(rect);
-  } else {
-    videoControl.refresh(); // a draft is not submitted, just refresh
-    refreshChronogram();
-  }
+  if (submitNew && rect.draft) submitDraft(rect);
   return false;
 }
 
@@ -870,8 +863,7 @@ function labelToggle(thelabel, isOn) {
     obs.labels
   );
 
-  updateForm(activeObject);
-  refreshChronogram();
+  refresh.update();
 }
 
 // If labels changed from pressing return ?
@@ -881,6 +873,7 @@ function onActivityChanged(event) {
   if (activeObject !== null) {
     // the notes unit has its own editor (ADR 0008 step 5)
     storeUnit(activeObject, { notes: $("#notes").val() });
+    refresh.form(); // the chronogram and the overlay do not show the notes
   }
 }
 // If labels textarea changed
@@ -890,7 +883,7 @@ function onLabelsChanged() {
   var activeObject = overlay.getActiveObject();
   if (activeObject !== null) {
     storeUnit(activeObject, { labels: Labels.clean(labels) });
-    updateForm(activeObject);
+    refresh.update();
   }
 }
 

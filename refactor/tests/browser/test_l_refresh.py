@@ -18,10 +18,11 @@ BASELINE = pathlib.Path(__file__).with_name("refresh_baseline.json")
 RESULTS = {}
 
 
-def run(ui, name, action):
-    """Clears the log, runs `action()`, waits for the page to be quiet, returns the compact sequence of phases."""
+def run(ui, name, action, audited=False):
+    """Clears the log, runs `action()`, waits for the page to be quiet, returns the compact sequence of phases. `audited`: the action goes
+    through migrated writers (ADR 0009 step 4), so no store write may be left without a `refresh.*` call (`refresh.unrefreshed`)."""
     ui.settle(300)
-    ui.js("refreshLog.clear()")
+    ui.js("refreshLog.clear(); refresh.unrefreshed.length = 0")
     action()
     last = None
     for _ in range(50):                                    # quiet = the log did not grow during a 300 ms wait (late events on a loaded machine)
@@ -30,6 +31,8 @@ def run(ui, name, action):
         if seq == last:
             break
         last = seq
+    if audited:
+        assert ui.js("refresh.unrefreshed") == []
     assert ui.js("refreshInstrumented.missing") == []      # every entry point of RefreshInstrumentBridge.js exists
     compact = ui.js("refreshLog.tree()")                   # nested: parent(children), consecutive identical siblings as xN
     log = ui.js("refreshLog.filter(e => e.depth === 0).map(e => ({phase: e.phase, ms: e.ms}))")
@@ -92,7 +95,7 @@ def test_l2_select_a_box(ui, sample_dir):
 def test_l3_label_button(ui, sample_dir):
     loaded(ui, sample_dir)
     ui.click_box("1")
-    check("label", run(ui, "label", lambda: ui.page.click("button.labeltoggle[thelabel=pollen]:visible")))
+    check("label", run(ui, "label", lambda: ui.page.click("button.labeltoggle[thelabel=pollen]:visible"), audited=True))
 
 
 def test_l4_notes_enter(ui, sample_dir):
@@ -103,13 +106,13 @@ def test_l4_notes_enter(ui, sample_dir):
     def act():
         ui.page.press("#notes", "Enter")
 
-    check("notes", run(ui, "notes", act))
+    check("notes", run(ui, "notes", act, audited=True))
 
 
 def test_l5_rotate_tag(ui, sample_dir):
     loaded(ui, sample_dir)
     ui.click_box("1")
-    check("rotate_tag", run(ui, "rotate_tag", lambda: ui.js("zoomOverlay.rotateTag(90)")))
+    check("rotate_tag", run(ui, "rotate_tag", lambda: ui.js("zoomOverlay.rotateTag(90)"), audited=True))
 
 
 def test_l6_create_by_shift_click(ui, sample_dir):
@@ -150,7 +153,7 @@ def test_l10_drag_a_box(ui, sample_dir):
     def act():
         ui.drag(c, {"x": c["x"] + 20, "y": c["y"] + 10})
 
-    check("drag", run(ui, "drag", act))
+    check("drag", run(ui, "drag", act, audited=True))
 
 
 def test_l11_bulk_delete_of_false_alarms(ui, sample_dir):
@@ -195,7 +198,7 @@ def test_l13_edit_with_18000_observations(ui):
     ui.wait_tracks("n >= 18000")
     ui.settle(1500)
     ui.click_box("1")
-    got = run(ui, "label_18000", lambda: ui.page.click("button.labeltoggle[thelabel=pollen]:visible"))
+    got = run(ui, "label_18000", lambda: ui.page.click("button.labeltoggle[thelabel=pollen]:visible"), audited=True)
     check("label_18000", got)
     print("[refresh] ms label_18000:", RESULTS["label_18000"]["ms"])
 
@@ -205,17 +208,17 @@ def test_l14_show_tree_format(ui, sample_dir):
     loaded(ui, sample_dir)
     ui.click_box("1")
     ui.js("refreshLog.clear(); logging.refresh = true")
-    ui.page.fill("#notes", "x")
-    ui.page.press("#notes", "Enter")
+    ui.js("events.update(0, '1', {notes: 'x'}); refresh.rebuild()")
     ui.settle(500)
     out = ui.js("(() => { let s; const l = console.log; console.log = (x) => { s = x; }; refreshLog.showTree(); console.log = l; return s; })()")
     ui.js("logging.refresh = false")
     lines = out.split("\n")
     print("\n" + out)
     assert re.match(r"^\d+ store update \d+/\S+ 0 \[.+\] 0$", lines[0])                                  # top level: no indent, instant, with its trigger
-    assert any(re.match(r"^\d+ overlay VideoControl\.refresh [\d.]+ \[.+\] [\d.]+$", l) for l in lines)
-    assert any(re.match(r"^  \d+ overlay OverlayControl\.hardRefresh [\d.]+ \[.+\] [\d.]+$", l) for l in lines)   # child: 2 spaces
-    assert any(l.startswith("    ") for l in lines)                                              # grandchildren: 4 spaces
+    assert any(re.match(r"^\d+ refresh refresh\.rebuild [\d.]+ \[.+\] [\d.]+$", l) for l in lines)           # a refresh call is top level
+    assert any(re.match(r"^  \d+ overlay VideoControl\.refresh [\d.]+ \[.+\] [\d.]+$", l) for l in lines)   # its step: 2 spaces
+    assert any(re.match(r"^    \d+ overlay OverlayControl\.hardRefresh [\d.]+ \[.+\] [\d.]+$", l) for l in lines)   # child: 4 spaces
+    assert any(l.startswith("      ") for l in lines)                                            # grandchildren: 6 spaces
 
 
 def test_l15_refresh_calls_and_audit(ui, sample_dir):
