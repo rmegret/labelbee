@@ -868,8 +868,7 @@ function onKeyDown_IDEdit(event) {
       }
 
       //console.log(defaultSelectedBee)
-      videoControl.refresh();
-      refreshChronogram();
+      refresh.rebuild();
     }
   }
 }
@@ -944,7 +943,7 @@ function onKeyDown(e) {
     return false;
   }
   if (e.key == "r" && e.ctrlKey) {
-    videoControl.refresh();
+    refresh.overlayRebuild();
     return false;
   }
   // Prev Frame: <, arrow

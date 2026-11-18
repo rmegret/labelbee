@@ -342,3 +342,23 @@ def test_l19_zoom_bulk_deletes_and_parts_toggle_leave_no_store_write_unrefreshed
     assert tree.count("refresh.overlayRebuild(") == 1 and "refresh.rebuild(" not in tree
     for name in ("bulk_delete_wrongid", "show_parts_toggle"):
         RESULTS.pop(name)                                                                      # audited only, not pinned in the baseline
+
+
+def test_l20_id_field_and_ctrl_r_leave_no_store_write_unrefreshed(ui, sample_dir):
+    """ADR 0009 step 4e, labelBee.js: changing the id in the ID field ends with one rebuild (also when refused, as before); Ctrl+R rebuilds
+    the overlay only."""
+    loaded(ui, sample_dir)
+    ui.open_panel("Annotations")
+    ui.open_subpanel("BeeID")
+    ui.goto_frame(10)
+    ui.click_box("1")
+    ui.page.fill("#I", "9")
+    run(ui, "id_change", lambda: ui.page.press("#I", "Enter"), audited=True)
+    assert ui.js("refreshLog.tree()").count("refresh.rebuild(") == 1
+    assert sorted(ui.tracks()["10"]) == ["2", "9"]
+    ui.js("document.getElementById('left-side').focus()")                                     # a text field would stop the key event
+    run(ui, "ctrl_r", lambda: ui.page.keyboard.press("Control+r"), audited=True)
+    tree = ui.js("refreshLog.tree()")
+    assert tree.count("refresh.overlayRebuild(") == 1 and "refresh.rebuild(" not in tree
+    for name in ("id_change", "ctrl_r"):
+        RESULTS.pop(name)                                                                      # audited only, not pinned in the baseline
