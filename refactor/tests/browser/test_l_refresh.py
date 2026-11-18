@@ -160,7 +160,7 @@ def test_l11_bulk_delete_of_false_alarms(ui, sample_dir):
     """The loop case of ADR 0009 D4: many store commands, which must not become many refreshes."""
     loaded(ui, sample_dir)
     ui.js("events.forEach((obs, F, id) => events.update(F, id, {labels: 'falsealarm'}))")
-    check("bulk_delete", run(ui, "bulk_delete", lambda: ui.js("zoomOverlay.deleteFalsealarmEvents()")))
+    check("bulk_delete", run(ui, "bulk_delete", lambda: ui.js("zoomOverlay.deleteFalsealarmEvents()"), audited=True))
 
 
 def test_l12_tracks_csv_from_a_uri(ui):
@@ -325,4 +325,20 @@ def test_l18_visit_widget_leaves_no_store_write_unrefreshed(ui):
     assert ui.tracks()["0"]["V-P1-F1"]["span"] == {"f1": 0, "f2": 3}
     assert ui.js("refreshLog.tree()").count("refresh.rebuild(") == 1
     for name in ("visit_new", "visit_set_end"):
+        RESULTS.pop(name)                                                                      # audited only, not pinned in the baseline
+
+
+def test_l19_zoom_bulk_deletes_and_parts_toggle_leave_no_store_write_unrefreshed(ui, sample_dir):
+    """ADR 0009 step 4e, ZoomView.js: 'Delete wrong-id events' (a loop of `events.delete`) ends with one rebuild, and the 'show parts on
+    video' toggle (no store write) rebuilds the overlay only."""
+    loaded(ui, sample_dir)
+    ui.js("events.forEach((obs, F, id) => events.update(F, id, {labels: 'wrongid'}))")
+    run(ui, "bulk_delete_wrongid", lambda: ui.js("zoomOverlay.deleteWrongIdEvents()"), audited=True)
+    assert ui.js("refreshLog.tree()").count("refresh.rebuild(") == 1
+    assert ui.js("Object.keys(events.toObject()).length") == 0
+    loaded(ui, sample_dir)
+    run(ui, "show_parts_toggle", lambda: ui.js("zoomOverlay.onToggleButtonShowOnVideo()"), audited=True)
+    tree = ui.js("refreshLog.tree()")                                                          # a late event of the reload may come first
+    assert tree.count("refresh.overlayRebuild(") == 1 and "refresh.rebuild(" not in tree
+    for name in ("bulk_delete_wrongid", "show_parts_toggle"):
         RESULTS.pop(name)                                                                      # audited only, not pinned in the baseline

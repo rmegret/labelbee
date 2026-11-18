@@ -575,7 +575,7 @@ ZoomOverlay.prototype.onToggleButtonShowOnVideo = function (event) {
 
   $("#buttonShowParts").toggleClass("active", this.flagShowParts);
 
-  videoControl.refresh();
+  refresh.overlayRebuild();
 };
 ZoomOverlay.prototype.clickShowOverlay = function () {
   this.flagShowOverlay = $("#checkboxZoomShowOverlay").is(":checked");
@@ -1938,7 +1938,7 @@ ZoomOverlay.prototype.deleteFalsealarmEvents = function () {
     }
   });
 
-  refreshChronogram();
+  refresh.rebuild();
 };
 ZoomOverlay.prototype.deleteWrongIdEvents = function () {
   events.forEach(function (obs, F, id) {
@@ -1947,7 +1947,7 @@ ZoomOverlay.prototype.deleteWrongIdEvents = function () {
     }
   });
 
-  refreshChronogram();
+  refresh.rebuild();
 };
 
 // LEGACY (DEBT-826): reverts a tag of the tag store, outside the events
