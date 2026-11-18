@@ -744,7 +744,7 @@ function updatePreviewTimeMark() {
 
 function updateChronoSelection() {
   let id = selection.getId();
-  axes.selectId(id);
+  axes.highlightId(id);
 }
 
 

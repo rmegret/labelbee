@@ -131,7 +131,7 @@ function OverlayControl(canvasTagId) {
   canvas1.uniScaleTransform = true; // REMI: allow free rescaling of observations without constrained aspect ratio
   //canvas1.centeredScaling = true; // REMI: rescale around center
 
-  overlay.lastSelected = null; // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
+  overlay.lastActiveRect = null; // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
 
   canvas1.on("mouse:down", onMouseDown);
   canvas1.on("mouse:up", onMouseUp);
@@ -3327,7 +3327,7 @@ function newRectForCurrentTag() {
   if ($("#newRectForCurrentTag").hasClass("disabled")) {
     return;
   }
-  let id = getCurrentID();
+  let id = selection.getId();
   if (id == null) {
     printMessage("No current tag selected", "red");
     return;
@@ -3363,7 +3363,7 @@ function onMouseDown_predict(option) {
 
   if (logging.mouseEvents) {
     console.log("onMouseDown_predict: no object selected", option);
-    console.log("onMouseDown_predict: currentID=", getCurrentID());
+    console.log("onMouseDown_predict: currentID=", selection.getId());
   }
 
   // predictId takes video/obs coordinates units
@@ -3442,7 +3442,7 @@ function onMouseDown_predict(option) {
     if (logging.mouseEvents)
       console.log("onMouseDown_predict: copied rect from ", obs);
   } else {
-    let id = getCurrentID();
+    let id = selection.getId();
     if (
       id == null ||
       getObsHandle(getCurrentFrame(), id, false) !== undefined
@@ -3770,10 +3770,10 @@ function onMouseDown(option) {
 
   if (overlay.opts.clickModeNewAnnotation) {
     if ((typeof option.target != "undefined")
-      //&& (overlay.previouslySelected.id == option.target.id)
+      //&& (overlay.previousActiveRect.id == option.target.id)
     ) {
       // Allow to move currentlu selected annotation
-      // Workaround: previouslySelected used because lastSelected is updated during mouseDown
+      // Workaround: previousActiveRect used because lastActiveRect is updated during mouseDown
       return false
     }
     if (logging.mouseEvents)
@@ -3921,13 +3921,13 @@ function onObjectSelected(option) {
         overlay.getActiveRect().id
       );
     }
-    overlay.previouslySelected = overlay.lastSelected
+    overlay.previousActiveRect = overlay.lastActiveRect
     let frame = option.target.obs ? option.target.obs.frame : getCurrentFrame()
     let draft = !!option.target.draft
     // A selection already there is the echo of a view activating the rectangle (setActiveRectID): the caller shows it
     let echo = selection.is(frame, option.target.id, draft)
     selection.select(frame, option.target.id, draft)
-    overlay.lastSelected = option.target
+    overlay.lastActiveRect = option.target
     if (!echo) {
       refresh.selection()
     }
@@ -3953,17 +3953,17 @@ function autoCentering(obs) {
 function onObjectDeselected(option) {
   if (logging.selectionEvents) console.log("onObjectDeselected: ", option);
 
-  if (overlay.lastSelected !== null) {
-    if (overlay.lastSelected.draft) {
+  if (overlay.lastActiveRect !== null) {
+    if (overlay.lastActiveRect.draft) {
       if (logging.mouseEvents)
         console.log(
-          "onObjectDeselected: removing non submitted lastSelected=",
-          overlay.lastSelected
+          "onObjectDeselected: removing non submitted lastActiveRect=",
+          overlay.lastActiveRect
         );
 
       // Remove tmp rect as soon as it becomes inactive
-      overlay.canvas1.remove(overlay.lastSelected);
-      overlay.lastSelected = null;
+      overlay.canvas1.remove(overlay.lastActiveRect);
+      overlay.lastActiveRect = null;
       videoControl.refresh();
     }
     updateDeleteButton();
@@ -3989,7 +3989,7 @@ function onObjectMoving(option) {
   //automatic_sub();
 
   $(overlay).trigger("object:moving");
-  //zoomOverlay.selectionChanged()
+  //zoomOverlay.refreshFromSelection()
 }
 
 function onObjectModified(option) {
@@ -4009,7 +4009,7 @@ function onObjectModified(option) {
   //showZoom(activeObject)
 
   $(overlay).trigger("object:modified");
-  //zoomOverlay.selectionChanged()
+  //zoomOverlay.refreshFromSelection()
 }
 
 

@@ -323,7 +323,7 @@ function onSelectIDChanged() {
 }
 
 function updateFormButtons() {
-  if (getCurrentID() == null) {
+  if (selection.getId() == null) {
     $("#newRectForCurrentTag").addClass("disabled");
     $("#newRectForCurrentTag").removeClass("active");
   } else if (overlay.getActiveRectID() == null) {
@@ -561,7 +561,7 @@ function updateSelectionPanels() {
   updateChronoSelection();
   if (selection.getId() != null) updateSelectID(); // the field keeps its text after an explicit deselect
   updateFormButtons();
-  if (typeof zoomOverlay !== "undefined") zoomOverlay.selectionChanged(); // not created before initZoomView
+  if (typeof zoomOverlay !== "undefined") zoomOverlay.refreshFromSelection(); // not created before initZoomView
 }
 
 // deselectBee: called when clicking out of a rectangle. The caller then calls refresh.selection() (or a rebuild)
@@ -572,9 +572,6 @@ function deselectBee() {
 }
 function getCurrentTag() {
   return getTag(getCurrentFrame(), selection.getId());
-}
-function getCurrentID() {
-  return selection.getId();
 }
 
 function getIdsInFocus() {

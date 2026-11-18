@@ -438,7 +438,7 @@ function onClickNextID() {
   let N = domain.length;
   if (N == 0) return;
 
-  let id = String(getCurrentID());
+  let id = String(selection.getId());
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
   selection.select(getCurrentFrame(), newID);
@@ -459,7 +459,7 @@ function onClickPrevID(gotoLast) {
   let N = domain.length;
   if (N == 0) return;
 
-  let id = String(getCurrentID());
+  let id = String(selection.getId());
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[N - 1] : domain[(pos + N - 1) % N];
   selection.select(getCurrentFrame(), newID);
@@ -484,7 +484,7 @@ function onClickNextIDStart() {
   let N = domain.length;
   if (N == 0) return;
 
-  let id = String(getCurrentID());
+  let id = String(selection.getId());
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
   selection.select(getCurrentFrame(), newID);

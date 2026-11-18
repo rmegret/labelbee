@@ -16,7 +16,7 @@ def test_b2_edits_made_with_the_mouse_reach_the_store(ui, sample_dir):
     ui.load_events(sample_dir / "events_v2.json")
     ui.wait_tracks()
     ui.shift_click_background()
-    new_id = ui.js("getCurrentID()")
+    new_id = ui.js("selection.getId()")
     ui.page.wait_for_function("(id) => !!events.toObject()[0][id]", arg=new_id)
     assert ui.js("(id) => events.get(0, id) === events.toObject()[0][id]", new_id)
     assert ui.js("events.frameIds(0).length") == 2

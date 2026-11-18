@@ -197,7 +197,7 @@ class App:
         self.settle()
         p = self.box_center(obs_id)
         self.page.mouse.click(p["x"], p["y"])
-        self.page.wait_for_function("(id) => String(getCurrentID()) === String(id)", arg=str(obs_id))
+        self.page.wait_for_function("(id) => String(selection.getId()) === String(id)", arg=str(obs_id))
 
     def video_to_client(self, x, y):
         """Client coordinates of the point (x, y) of the video (the overlay maps video units to canvas pixels)."""
@@ -234,7 +234,7 @@ class App:
         self.page.keyboard.up("Shift")
 
     def selected_id(self):
-        return self.js("getCurrentID()")
+        return self.js("selection.getId()")
 
     def goto_frame(self, n):
         """Type the frame number in the frame box, as a user does, and wait for the video to be there."""

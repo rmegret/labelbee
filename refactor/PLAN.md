@@ -93,10 +93,10 @@ and is its own commit series and review. The next slice is chosen after the prev
     - (6c) `refresh.selection()` once per writer and rebuild; four jQuery triggers deleted [x] (select chain 2x to 1x)
     - (6d) active rect accessors: `getActiveRect`, `getActiveRectID`, `setActiveRect` in `OverlayControl`, two globals deleted [x] (rename only, baseline unchanged)
     - (6e) `selectBeeByID` becomes `setActiveRectID`; `refresh.selection()` = `activateSelection` [x] (baseline unchanged)
-    - (6f) `selectionChanged` becomes `refreshFromSelection` [ ]
-    - (6g) `lastSelected`, `previouslySelected` become `lastActiveRect`, `previousActiveRect` [ ]
-    - (6h) `getCurrentID` replaced by `selection.getId()` [ ]
-    - (6i) `axes.selectId`, `selectedID` become `highlightId`, `highlightedID` [ ]
+    - (6f) `selectionChanged` becomes `refreshFromSelection` [x] (rename only, baseline unchanged)
+    - (6g) `lastSelected`, `previouslySelected` become `lastActiveRect`, `previousActiveRect` [x] (rename only, baseline unchanged)
+    - (6h) `getCurrentID` replaced by `selection.getId()` [x] (rename only, baseline unchanged)
+    - (6i) `axes.selectId`, `selectedID` become `highlightId`, `highlightedID` [x] (rename only, baseline unchanged)
   - (7) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):

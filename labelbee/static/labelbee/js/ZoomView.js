@@ -33,7 +33,7 @@ function ZoomOverlay(canvas, canvasOverlay) {
   // Manually bind all methods used as callbacks
   // https://www.smashingmagazine.com/2014/01/understanding-javascript-function-prototype-bind/
   this.refreshZoomSize = this.refreshZoomSize.bind(this);
-  this.selectionChanged = this.selectionChanged.bind(this);
+  this.refreshFromSelection = this.refreshFromSelection.bind(this);
   this.onPartLabelTextChanged = this.onPartLabelTextChanged.bind(this);
   this.onKeyDown = this.onKeyDown.bind(this);
 
@@ -324,21 +324,21 @@ ZoomOverlay.prototype.keypointLabelsFromServer = function (url) {
 /**
  * @memberof ZoomOverlay
  */
-ZoomOverlay.prototype.selectionChanged = function () {
-  if (logging.zoomOverlay) console.log("ZoomOverlay.selectionChanged");
+ZoomOverlay.prototype.refreshFromSelection = function () {
+  if (logging.zoomOverlay) console.log("ZoomOverlay.refreshFromSelection");
 
   if (!this.flagShowZoom) {
     if (logging.zoomOverlay)
       console.log(
-        "ZoomOverlay.selectionChanged: flagShowZoom==false. Candeled"
+        "ZoomOverlay.refreshFromSelection: flagShowZoom==false. Candeled"
       );
     return;
   }
 
-  let id = getCurrentID();
+  let id = selection.getId();
   if (typeof id === "undefined") {
     if (logging.zoomOverlay)
-      console.log("ZoomOverlay.selectionChanged: no current ID. Canceled.");
+      console.log("ZoomOverlay.refreshFromSelection: no current ID. Canceled.");
     this.canvas1.clear();
     return;
   }

@@ -5,7 +5,7 @@ function ChronoAxes(parent, videoinfo, options) {
 
   var axes = this;
   axes.parent = parent;
-  axes.selectedID = null;
+  axes.highlightedID = null;
 
   /* ### MODEL/VIEW: Layout sizes ### */
 
@@ -588,8 +588,8 @@ function ChronoAxes(parent, videoinfo, options) {
   axes.onAxesChanged = undefined;
 
   // ### ID selection API ###
-  function selectId(id) {
-    axes.selectedID = id;
+  function highlightId(id) {
+    axes.highlightedID = id;
     refreshIdSelection();
   }
   function refreshIdSelection() {
@@ -604,21 +604,21 @@ function ChronoAxes(parent, videoinfo, options) {
       .select(".y.axis")
       .selectAll(".tick")
       .filter(function (d) {
-        return d == axes.selectedID;
+        return d == axes.highlightedID;
       })
       //.style('fill','blue')
       //.style('font-weight','bold')
       .classed("selectedid", true);
 
     axes.chronoGroup.selectAll(".plotBackground > .selection").remove();
-    if (axes.selectedID != null) {
+    if (axes.highlightedID != null) {
       axes.chronoGroup
         .select(".plotBackground")
         .append("rect")
         .attr("class", "selection")
         .attr("x", 0)
         .attr("width", axes.width())
-        .attr("y", axes.yScale(axes.selectedID))
+        .attr("y", axes.yScale(axes.highlightedID))
         .attr("height", axes.yScale.bandwidth())
         .style("fill", "#ffffff")
         .style("stroke", "#008000")
@@ -626,7 +626,7 @@ function ChronoAxes(parent, videoinfo, options) {
     }
   }
   axes.refreshIdSelection = refreshIdSelection;
-  axes.selectId = selectId;
+  axes.highlightId = highlightId;
 
   // ### timeMark API ###
 
@@ -864,7 +864,7 @@ function ChronoAxes(parent, videoinfo, options) {
     }
     if (coords[1] < 0) {
       // Clicked on the top or botton of frame: in the frame ticks
-      id = axes.selectedID;
+      id = axes.highlightedID;
     } else {
       id = invertYScale(coords[1]);
     }
