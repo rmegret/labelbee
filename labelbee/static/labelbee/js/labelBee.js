@@ -170,7 +170,7 @@ function init(videoID, tagID) {
   // Do not trigger first refresh: onloadeddata will call it
   // refresh();
   updateForm(null);
-  defaultSelectedBee = undefined;
+  selection.clear();
   change_id_force = 'swap'  // What to do if conflict when changing id
 
   $('#alerttextblock').resizable()
@@ -846,7 +846,7 @@ function onKeyDown_IDEdit(event) {
     if (activeObject.draft) {
       activeObject.id = new_id
       submitDraft(activeObject)
-      defaultSelectedBee = new_id
+      selection.select(frame, new_id)
       printMessage("ID changed + submitted", "green")
     } else { /* status=="db"*/
       let old_id = activeObject.id
@@ -856,7 +856,7 @@ function onKeyDown_IDEdit(event) {
       if (changeObservationID(frame, old_id, new_id, change_id_force)) {
         // Successfull
         activeObject.id = new_id
-        defaultSelectedBee = new_id
+        selection.select(frame, new_id)
         printMessage("ID changed succesfully!", "green")
       } else {
         console.log("onKeyDown_IDEdit: unsuccessfull ID change", {
@@ -867,7 +867,7 @@ function onKeyDown_IDEdit(event) {
         printMessage("ID not changed", "orange");
       }
 
-      //console.log(defaultSelectedBee)
+      //console.log(selection.getId())
       refresh.rebuild();
     }
   }

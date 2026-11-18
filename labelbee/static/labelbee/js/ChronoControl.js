@@ -385,7 +385,7 @@ function restrictIDFromSelection() {
   console.log("restrictIDFromSelection");
 
   flag_restrictID = true;
-  setRestrictID(defaultSelectedBee);
+  setRestrictID(selection.getId());
 }
 function restrictIDFromWindow() {
   console.log("restrictIDFromWindow");
@@ -747,7 +747,7 @@ function updatePreviewTimeMark() {
 }
 
 function updateChronoSelection() {
-  let id = defaultSelectedBee;
+  let id = selection.getId();
   axes.selectId(id);
 }
 
@@ -1651,7 +1651,7 @@ class ChronoIntervals {
   }
   renderSelection() {
     const intervalRects = svgInterval.selectAll(".interval")
-       .classed("selected", d => d.id == defaultSelectedBee)
+       .classed("selected", d => d.id == selection.getId())
   }
   renderEnterLeavePollen() {
     const intervalRects = svgInterval.selectAll(".interval")

@@ -16,6 +16,8 @@ import pytest
 SCRATCH = pathlib.Path(__file__).resolve().parents[2] / "scratch"
 BASELINE = pathlib.Path(__file__).with_name("refresh_baseline.json")
 RESULTS = {}
+# key of fabric's active object, as the editors read it before slice 6 step 6b (`selectedKey()`)
+AGREE = ("(() => { const a = overlay.getActiveObject(); return (!a || a.draft || !a.obs) ? null : {frame: a.obs.frame, id: a.obs.ID}; })()")
 
 
 def run(ui, name, action, audited=False):
@@ -33,6 +35,7 @@ def run(ui, name, action, audited=False):
         last = seq
     if audited:
         assert ui.js("refresh.unrefreshed") == []
+    assert ui.js(AGREE) == ui.js("selection.getKey()")     # ADR 0009 section 0b: the model and fabric's active object select the same key
     assert ui.js("refreshInstrumented.missing") == []      # every entry point of RefreshInstrumentBridge.js exists
     compact = ui.js("refreshLog.tree()")                   # nested: parent(children), consecutive identical siblings as xN
     log = ui.js("refreshLog.filter(e => e.depth === 0).map(e => ({phase: e.phase, ms: e.ms}))")
@@ -396,3 +399,29 @@ def test_l22_loaders_refresh_once(ui, name):
     ui.settle(1000)
     tree = ui.js("refreshLog.tree()")
     assert tree.count("refreshChronogram(") == 1 and tree.count("VideoControl.onFrameChanged(") == 1, tree
+
+
+def test_l23_selection_model_follows_fabric(ui, sample_dir):
+    """ADR 0009 section 0b (step 6b): `selection` and fabric's active object say the same after a click, a frame change, a select by
+    id with no box of it on the frame and a deselect; the id is kept from frame to frame, forgotten by a deselect."""
+    loaded(ui, sample_dir)
+
+    def same():
+        ui.settle(300)
+        assert ui.js(AGREE) == ui.js("selection.getKey()")
+
+    same()
+    ui.click_box("1")
+    same()
+    assert ui.js("selection.getKey()") == {"frame": ui.frame(), "id": "1"} and ui.js("selection.getId()") == "1"
+    ui.goto_frame(10)
+    same()
+    assert ui.js("selection.getId()") == "1"                        # the id follows the frame
+    ui.js("selection.select(getCurrentFrame(), 'no-such-id'); selectBeeByID('no-such-id')")
+    same()
+    assert ui.js("selection.getKey()") is None and ui.js("selection.getId()") == "no-such-id"
+    ui.js("selection.select(getCurrentFrame(), '1'); selectBeeByID('1')")
+    same()
+    ui.js("deselectBee()")
+    same()
+    assert ui.js("selection.getId()") is None                       # explicit deselect forgets the id

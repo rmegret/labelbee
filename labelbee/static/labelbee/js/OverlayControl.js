@@ -976,7 +976,7 @@ OverlayControl.prototype.hardRefresh = function () {
     if (!obs) {
       console.log('overlay.hardRefresh: ERROR, in pick-frame without valid obs')
       overlay.setInteractionMode('main')
-      selectBeeByID(defaultSelectedBee);
+      selectBeeByID(selection.getId());
       this.refreshOverlay()
 
       updateDeleteButton()
@@ -1068,11 +1068,11 @@ OverlayControl.prototype.hardRefresh = function () {
     if (overlay.interaction.opts.showTimeline)
       overlay.drawTimelinePickFrameMode()
   } else if (this.interaction.mode == 'edit-visit') {
-    selectBeeByID(defaultSelectedBee);
+    selectBeeByID(selection.getId());
   } else {
     // Default behavior
-    console.log(`using defaultSelectedBee=${defaultSelectedBee}`)
-    selectBeeByID(defaultSelectedBee);
+    console.log(`using selection id=${selection.getId()}`)
+    selectBeeByID(selection.getId());
   }
   // zoomOverlay supposed to be updated by event triggered by selectBeeByID
 
@@ -1316,7 +1316,7 @@ OverlayControl.prototype.redrawVideoFrame = function() {
 
     //         overlay.canvas1.clear();
     //         createRectsFromTracks(this.previewFrame)
-    //         selectBeeByID(defaultSelectedBee);
+    //         selectBeeByID(selection.getId());
     //         overlay.refreshOverlay()
   } else if ((videoControl.currentMode == "cache")||(videoControl.currentMode == "cache-preview")) {
     let img = videoControl.currentImage
@@ -2111,7 +2111,7 @@ function getTag(f, id) {
   return undefined;
 }
 function isCurrentSelection(id) {
-  return typeof defaultSelectedBee !== "undefined" && id == defaultSelectedBee;
+  return typeof selection.getId() !== "undefined" && id == selection.getId();
 }
 function tagCorners(tag) {
   if (typeof tag.p === "undefined") return undefined;
@@ -2413,7 +2413,7 @@ function plotTagsTracks(ctx) {
 
   if (showSelectedTagsTracks) {
     // Plot track of selected bee
-    if (typeof defaultSelectedBee !== "undefined") {
+    if (typeof selection.getId() !== "undefined") {
       let setColor2 = function (f, alpha) {
         if (alpha == null) alpha = 1.0;
         var color;
@@ -2435,7 +2435,7 @@ function plotTagsTracks(ctx) {
         return color;
       };
 
-      //console.log('defaultSelectedBee=',defaultSelectedBee)
+      //console.log('selection.getId()=',selection.getId())
       let p0 = [];
       for (let f = fmin; f <= fmax; f++) {
         let tagsFrame = AnnotationStore.getTags()[f];
@@ -2444,7 +2444,7 @@ function plotTagsTracks(ctx) {
 
         let ii = -1;
         for (let i in tags) {
-          if (tags[i].id == defaultSelectedBee) {
+          if (tags[i].id == selection.getId()) {
             ii = i;
             break;
           }
@@ -3598,6 +3598,7 @@ function onMouseDown_selectMultiframe(option) {
 
     if (tmp.id != null) {
       console.log("onMouseDown_selectMultiframe: found id=", tmp.id);
+      selection.select(getCurrentFrame(), tmp.id);
       selectBeeByID(tmp.id);
       videoControl.refresh();
     } else {
@@ -3889,6 +3890,7 @@ function onObjectSelected(option) {
       );
     }
     overlay.previouslySelected = overlay.lastSelected
+    selection.select(option.target.obs ? option.target.obs.frame : getCurrentFrame(), option.target.id, !!option.target.draft)
     selectBee(option.target)
     overlay.lastSelected = option.target
     updateDeleteButton()

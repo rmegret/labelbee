@@ -2,7 +2,6 @@
 
 // import * from "Model.js";
 
-var defaultSelectedBee;
 var undo = new Observation(0);
 
 /* Form and current bee control */
@@ -338,10 +337,11 @@ function LabelListDialog() {
 }
 
 function updateSelectID() {
-  $("#selectID").val(defaultSelectedBee);
+  $("#selectID").val(selection.getId());
 }
 function onSelectIDChanged() {
   let id = $("#selectID").val().trim();
+  selection.select(getCurrentFrame(), id);
   selectBeeByID(id);
 }
 
@@ -480,20 +480,10 @@ function submitDraft(rect) {
   rect.obs.ID = id;
   rect.obs = events.commit(rect.obs);
   rect.draft = false;
+  selection.select(frame, id); // no longer a draft: it has a key
 
   refresh.rebuild();
   return true;
-}
-
-/**
- * The key {frame, id} of the selected observation in the store, or null when nothing is selected or the
- * selected rectangle is not in the store yet (ADR 0008 R4). Today it reads the fabric active object;
- * the selection slice will read the selection store, and no editor changes.
- */
-function selectedKey() {
-  let activeObject = overlay.getActiveObject();
-  if (!activeObject || activeObject.draft || !activeObject.obs) return null;
-  return { frame: activeObject.obs.frame, id: activeObject.obs.ID };
 }
 
 /**
@@ -504,7 +494,7 @@ function selectedKey() {
  * the store was written.
  */
 function storeUnit(rect, fields, submitNew) {
-  let key = selectedKey();
+  let key = selection.getKey();
   if (!key) Object.assign(rect.obs, fields); // not in the store yet: the working copy is the only holder
   if (key) {
     let stored = Object.assign({}, fields);
@@ -562,9 +552,16 @@ function swapID_callback() {
 
 /* Selection */
 
-tagSelection = undefined;
+/**
+ * VIEW: shows the selection of `id` on the rectangles of the current frame: makes the fabric rectangle of `id` the active
+ * one and updates the form, or deactivates the rectangles when this frame has none of `id`. It never changes the
+ * selection state (`selection`, ADR 0009 section 0b): the caller decides what is selected first (`selection.select`,
+ * `selection.changeFrame`) and passes it, usually `selection.getId()`. The one write that can happen during the call
+ * is fabric's own `object:selected` echo of `setActiveObject`, handled by `onObjectSelected`, which writes the same
+ * id and frame again.
+ * Returns whether a rectangle was found.
+ */
 function selectBeeByID(id) {
-  tagSelection = id;
   let rect = findRect(id);
   if (rect) {
     if (logging.selectionEvents)
@@ -578,8 +575,7 @@ function selectBeeByID(id) {
   } else {
     overlay.canvas1.deactivateAll().renderAll(); // Deselect rect if any
     updateForm(null);
-    // defaultSelectedBee = undefined // Do not cancel default if not found
-    defaultSelectedBee = id; // Set default
+    // The selection keeps the id when this frame has none (selection.getKey() is then null)
     if (id == null) $(selectionControl).trigger("tagselection:cleared");
     else $(selectionControl).trigger("tagselection:created");
     axes.selectId(id);
@@ -591,23 +587,21 @@ function selectBeeByID(id) {
 function selectBeeByIDandFrame(id, frame) {
   if (frame != getCurrentFrame()) {
     deselectBee();
-    defaultSelectedBee = id;
+    selection.select(frame, id);
     videoControl.seekFrame(frame);
   } else {
     deselectBee();
+    selection.select(frame, id);
     selectBeeByID(id);
     videoControl.refresh();
   }
 }
 
-// selectBee: called when clicking on a rectangle
+// selectBee: VIEW, shows `rect` as selected (the form, the buttons). The caller has written the selection (onObjectSelected)
 function selectBee(rect) {
   if (logging.selectionEvents) console.log("selectBee: rect=", rect);
 
   updateDeleteButton();
-
-  let beeId = rect.id;
-  defaultSelectedBee = beeId;
 
   // Update form from rect
   updateForm(rect);
@@ -623,7 +617,7 @@ function deselectBee() {
   //canvas1.deactivateAll().renderAll(); // Deselect rect
   overlay.canvas1.deactivateAllWithDispatch();
   updateForm(null);
-  defaultSelectedBee = undefined; // Do not keep default when explicit deselect
+  selection.clear(); // Do not keep default when explicit deselect
   updateDeleteButton();
 
   $(selectionControl).trigger("tagselection:cleared");
@@ -645,10 +639,10 @@ function getSelectedRect() {
   return overlay.getActiveObject();
 }
 function getCurrentTag() {
-  return getTag(getCurrentFrame(), defaultSelectedBee);
+  return getTag(getCurrentFrame(), selection.getId());
 }
 function getCurrentID() {
-  return defaultSelectedBee;
+  return selection.getId();
 }
 
 function getIdsInFocus() {

@@ -875,6 +875,8 @@ VideoControl.prototype.onFrameChanged = function (event) {
     }
   }
 
+  // The frame is the controller's to change, not a view's: the selection keeps its id and takes the observation of that id here
+  selection.changeFrame(this.currentFrame);
   this.hardRefresh();
 
   // Trigger public event
