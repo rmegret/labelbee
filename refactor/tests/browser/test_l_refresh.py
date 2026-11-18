@@ -362,3 +362,13 @@ def test_l20_id_field_and_ctrl_r_leave_no_store_write_unrefreshed(ui, sample_dir
     assert tree.count("refresh.overlayRebuild(") == 1 and "refresh.rebuild(" not in tree
     for name in ("id_change", "ctrl_r"):
         RESULTS.pop(name)                                                                      # audited only, not pinned in the baseline
+
+
+def test_l21_clean_obsolete_events_leaves_no_store_write_unrefreshed(ui, sample_dir):
+    """ADR 0009 step 4e, ChronoControl.js: 'Clean obsolete events' (a loop of `events.delete`) ends with one rebuild."""
+    loaded(ui, sample_dir)
+    ui.js("events.forEach((obs, F, id) => events.update(F, id, {labels: 'falsealarm'}))")
+    run(ui, "clean_obsolete", lambda: ui.js("cleanObsoleteEvents()"), audited=True)
+    assert ui.js("refreshLog.tree()").count("refresh.rebuild(") == 1
+    assert ui.js("Object.keys(events.toObject()).length") == 0                                 # sample events carry no tag: all deleted
+    RESULTS.pop("clean_obsolete")                                                              # audited only, not pinned in the baseline

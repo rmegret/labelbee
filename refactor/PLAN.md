@@ -84,7 +84,8 @@ and is its own commit series and review. The next slice is chosen after the prev
     - `VisitControl.js` [x] (new visit, span start/end)
     - `ZoomView.js` [x] (delete FA / wrong-id events, show-parts toggle; tag-store helpers left, DEBT-826)
     - `labelBee.js` [x] (ID field change, Ctrl+R)
-    - `AnnotationIO.js`, `ChronoControl.js` [ ]
+    - `ChronoControl.js` [x] (clean obsolete events; the other calls follow chrono view settings, not store writes)
+    - `AnnotationIO.js` [ ] (step 5)
   - (5) load: one refresh [ ]
   - (6) selection [ ]
   - (7) record [ ]

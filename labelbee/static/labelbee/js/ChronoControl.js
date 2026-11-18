@@ -2050,5 +2050,5 @@ function cleanObsoleteEvents() {
       }
     }
   });
-  refreshChronogram();
+  refresh.rebuild();
 }
