@@ -5,7 +5,8 @@
  * derived data, overlay, form, zoom.
  *   update()   soft: a field of an observation changed           = chrono, overlayUpdate, form, zoom
  *   rebuild()  hard: an observation appeared, went or changed id = chrono, overlayRebuild (includes the form), zoom
- * and the primitives chrono, overlayRebuild, overlayUpdate, form, zoom, frame.
+ * and the primitives chrono, overlayRebuild, overlayUpdate, form, zoom, frame, selection (the panels and the zoom that show
+ * `selection`, ADR 0009 section 0b: it reads the model, it never writes it).
  * A call made while a refresh runs is an error and is dropped (no loop). `audit(events)` is a development check: it records
  * the store writes that no refresh call followed (`unrefreshed`), it never refreshes.
  */
@@ -18,7 +19,7 @@ export class Refresh {
   #detach = null;
   unrefreshed = []; // the events heard by the audit with no refresh call before the end of the task
 
-  /** @param {{chrono, overlayRebuild, overlayUpdate, form, zoom, frame}} steps functions of the page */
+  /** @param {{chrono, overlayRebuild, overlayUpdate, form, zoom, frame, selection}} steps functions of the page */
   constructor(steps) {
     this.#steps = steps;
   }
@@ -43,6 +44,8 @@ export class Refresh {
   form() { this.#run('form', () => this.#steps.form()); }
   zoom() { this.#run('zoom', () => this.#steps.zoom()); }
   frame() { this.#run('frame', () => this.#steps.frame()); }
+  /** The selection changed (`selection` model already written): shows it in the panels and the zoom. Changes no model. */
+  selection() { this.#run('selection', () => this.#steps.selection()); }
 
   update() {
     this.#run('update', () => {

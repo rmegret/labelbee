@@ -138,20 +138,16 @@ function init(videoID, tagID) {
   initZoomView();
 
   // Note: zoomOverlay.selectionChanged is already bound
-  $(selectionControl).on({
-    "tagselection:created": zoomOverlay.selectionChanged,
-    "selection:created": zoomOverlay.selectionChanged,
-    "tagselection:cleared": zoomOverlay.selectionChanged,
-    "selection:cleared": zoomOverlay.selectionChanged,
-  });
+  // $(selectionControl).on({
+  //   "tagselection:created": zoomOverlay.selectionChanged,
+  //   "selection:created": zoomOverlay.selectionChanged,
+  //   "tagselection:cleared": zoomOverlay.selectionChanged,
+  //   "selection:cleared": zoomOverlay.selectionChanged,
+  // });
   $(overlay).on({
     "object:moving": zoomOverlay.selectionChanged,
     "object:modified": zoomOverlay.selectionChanged,
   });
-  //$(selectionControl).on({
-  //    'selection:created':    ()=>{videoControl.refresh()},
-  //    'selection:cleared':    ()=>{videoControl.refresh()}
-  //  })
 
   // ## Keyboard control
 

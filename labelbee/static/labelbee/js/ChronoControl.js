@@ -221,10 +221,6 @@ function initChrono() {
   $(axes).on("axes:dblclick", onAxesDblClick);
   $(axes).on("axes:changed", onAxesChanged);
 
-  // Events declared in selectionControl
-  //$( selectionControl ).on('tagselection:created', updateChronoSelection)
-  //$( selectionControl ).on('tagselection:cleared', updateChronoSelection)
-
   function endPreview() {
     //updateTimeMark();
     //updateTrackWindowSpan()

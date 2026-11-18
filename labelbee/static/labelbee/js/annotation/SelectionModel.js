@@ -29,6 +29,11 @@ export class SelectionModel {
     return { frame: this.#frame, id: this.#id };
   }
 
+  /** Whether `select(frame, id, draft)` would change nothing (ids compared as strings, the field and fabric differ in type). */
+  is(frame, id, draft = false) {
+    return this.#frame === frame && String(this.#id) === String(id) && this.#draft === draft;
+  }
+
   /** A choice: the id is kept even when the frame has no observation of it (the key is then null). */
   select(frame, id, draft = false) {
     this.#frame = frame;

@@ -82,3 +82,16 @@ test('getKey is idempotent', async () => {
   assert.deepEqual(sel.getKey(), sel.getKey());
   assert.equal(sel.getId(), sel.getId());
 });
+
+test('is: true when select would change nothing (ids as strings), false on another frame, id or draft flag', async () => {
+  const { sel } = await make([[3, '7']]);
+  assert.equal(sel.is(3, '7'), false); // nothing selected yet
+  sel.select(3, '7');
+  assert.equal(sel.is(3, '7'), true);
+  assert.equal(sel.is(3, 7), true);
+  assert.equal(sel.is(4, '7'), false);
+  assert.equal(sel.is(3, '8'), false);
+  assert.equal(sel.is(3, '7', true), false);
+  sel.clear();
+  assert.equal(sel.is(3, '7'), false);
+});

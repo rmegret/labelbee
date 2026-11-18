@@ -7,18 +7,6 @@ var undo = new Observation(0);
 /* Form and current bee control */
 
 function initSelectionControl() {
-  selectionControl = {};
-
-  $(selectionControl).on("tagselection:created", updateChronoSelection);
-  $(selectionControl).on("tagselection:cleared", updateChronoSelection);
-
-  $(selectionControl).on("tagselection:created", updateSelectID);
-
-  $(selectionControl).on("tagselection:created", updateFormButtons);
-  $(selectionControl).on("tagselection:cleared", updateFormButtons);
-  $(selectionControl).on("selection:created", updateFormButtons);
-  $(selectionControl).on("selection:cleared", updateFormButtons);
-
   function aux(label, description, iconHtml) {
     return {
       label: label,
@@ -80,17 +68,6 @@ function initSelectionControl() {
   });
 
   labelListDialog = new LabelListDialog();
-
-  // dummy object to define events (inspired by Fabric.js)
-  // - selection:created
-  // - selection:cleared
-  // - before:selection:cleared
-  //$( selectionControl ).trigger('selection:created')
-
-  //     $( selectionControl ).on('selection:created', updateChronoSelection)
-  //     $( selectionControl ).on('selection:cleared', updateChronoSelection)
-  //     $( selectionControl ).on('tagselection:created', updateChronoSelection)
-  //     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
 }
 
 function hardRefreshLabelTogglePanel() {
@@ -343,6 +320,7 @@ function onSelectIDChanged() {
   let id = $("#selectID").val().trim();
   selection.select(getCurrentFrame(), id);
   selectBeeByID(id);
+  refresh.selection();
 }
 
 function updateFormButtons() {
@@ -554,11 +532,11 @@ function swapID_callback() {
 
 /**
  * VIEW: shows the selection of `id` on the rectangles of the current frame: makes the fabric rectangle of `id` the active
- * one and updates the form, or deactivates the rectangles when this frame has none of `id`. It never changes the
- * selection state (`selection`, ADR 0009 section 0b): the caller decides what is selected first (`selection.select`,
- * `selection.changeFrame`) and passes it, usually `selection.getId()`. The one write that can happen during the call
- * is fabric's own `object:selected` echo of `setActiveObject`, handled by `onObjectSelected`, which writes the same
- * id and frame again.
+ * one, or deactivates the rectangles when this frame has none of `id`. It never changes the selection state (`selection`,
+ * ADR 0009 section 0b) and does not update the panels: the caller decides what is selected first (`selection.select`,
+ * `selection.changeFrame`), passes it, usually `selection.getId()`, then calls `refresh.selection()` (hardRefresh calls
+ * `showSelection`). The one write that can happen during the call is fabric's own `object:selected` echo of
+ * `setActiveObject`, handled by `onObjectSelected`, which finds the selection already there and refreshes nothing.
  * Returns whether a rectangle was found.
  */
 function selectBeeByID(id) {
@@ -568,17 +546,10 @@ function selectBeeByID(id) {
       console.log("selectBeeByID: trying to select id=", id);
     //canvas1.setActiveObject(canvas1.item(id));
     overlay.setActiveObject(rect);
-    // TESTME: selectBee was commented
-    selectBee(rect);
-    // Events triggered in selectBee
     return true;
   } else {
-    overlay.canvas1.deactivateAll().renderAll(); // Deselect rect if any
-    updateForm(null);
     // The selection keeps the id when this frame has none (selection.getKey() is then null)
-    if (id == null) $(selectionControl).trigger("tagselection:cleared");
-    else $(selectionControl).trigger("tagselection:created");
-    axes.selectId(id);
+    overlay.canvas1.deactivateAll().renderAll(); // Deselect rect if any
     if (logging.selectionEvents)
       console.log("selectBeeByID: No rect found for id=", id);
     return false;
@@ -597,31 +568,24 @@ function selectBeeByIDandFrame(id, frame) {
   }
 }
 
-// selectBee: VIEW, shows `rect` as selected (the form, the buttons). The caller has written the selection (onObjectSelected)
-function selectBee(rect) {
-  if (logging.selectionEvents) console.log("selectBee: rect=", rect);
-
+/**
+ * VIEW: the panels that show the selection (delete button, form, chronogram, ID field, new-rect button, zoom). It reads
+ * `selection` and fabric's active rectangle and changes neither. `refresh.selection()` and `hardRefresh` run it.
+ */
+function showSelection() {
   updateDeleteButton();
-
-  // Update form from rect
-  updateForm(rect);
-
-  $(selectionControl).trigger("tagselection:created");
-  $(selectionControl).trigger("selection:created");
+  updateForm(overlay.getActiveObject());
+  updateChronoSelection();
+  if (selection.getId() != null) updateSelectID(); // the field keeps its text after an explicit deselect
+  updateFormButtons();
+  if (typeof zoomOverlay !== "undefined") zoomOverlay.selectionChanged(); // not created before initZoomView
 }
 
-// deselectBee: called when clicking out of a rectangle
+// deselectBee: called when clicking out of a rectangle. The caller then calls refresh.selection() (or a rebuild)
 function deselectBee() {
-  $(selectionControl).trigger("before:selection:cleared");
-
   //canvas1.deactivateAll().renderAll(); // Deselect rect
   overlay.canvas1.deactivateAllWithDispatch();
-  updateForm(null);
   selection.clear(); // Do not keep default when explicit deselect
-  updateDeleteButton();
-
-  $(selectionControl).trigger("tagselection:cleared");
-  $(selectionControl).trigger("selection:cleared");
 }
 // getSelectedID: return undefined or an id
 function getSelectedID() {
@@ -712,7 +676,6 @@ function undoAction() {
       console.log("rect=", rect);
       overlay.setActiveObject(rect);
       //submit_bee()
-      selectBee(rect);
     }
 
     videoControl.refresh();

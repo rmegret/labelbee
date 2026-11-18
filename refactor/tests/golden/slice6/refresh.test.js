@@ -12,7 +12,7 @@ const load = (rel) => import(pathToFileURL(path.join(JS_DIR, rel)).href);
 
 async function make(calls, extra = {}) {
   const { Refresh } = await load('annotation/Refresh.js');
-  const names = ['chrono', 'overlayRebuild', 'overlayUpdate', 'form', 'zoom', 'frame'];
+  const names = ['chrono', 'overlayRebuild', 'overlayUpdate', 'form', 'zoom', 'frame', 'selection'];
   const steps = Object.fromEntries(names.map((n) => [n, () => calls.push(n)]));
   return new Refresh({ ...steps, ...extra });
 }
@@ -30,7 +30,7 @@ test('update is chrono, overlayUpdate, form, zoom; rebuild is chrono, overlayReb
 test('each primitive runs its own step only', async () => {
   const calls = [];
   const r = await make(calls);
-  for (const n of ['chrono', 'overlayRebuild', 'overlayUpdate', 'form', 'zoom', 'frame']) {
+  for (const n of ['chrono', 'overlayRebuild', 'overlayUpdate', 'form', 'zoom', 'frame', 'selection']) {
     calls.length = 0;
     r[n]();
     assert.deepEqual(calls, [n]);

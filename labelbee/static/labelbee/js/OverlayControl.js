@@ -977,9 +977,9 @@ OverlayControl.prototype.hardRefresh = function () {
       console.log('overlay.hardRefresh: ERROR, in pick-frame without valid obs')
       overlay.setInteractionMode('main')
       selectBeeByID(selection.getId());
+      showSelection();
       this.refreshOverlay()
 
-      updateDeleteButton()
       updateUndoButton()
       return
     }
@@ -1074,11 +1074,10 @@ OverlayControl.prototype.hardRefresh = function () {
     console.log(`using selection id=${selection.getId()}`)
     selectBeeByID(selection.getId());
   }
-  // zoomOverlay supposed to be updated by event triggered by selectBeeByID
+  showSelection();
 
   this.refreshOverlay();
 
-  updateDeleteButton();
   updateUndoButton();
 
   //zoomOverlay.refreshZoom()
@@ -3603,6 +3602,7 @@ function onMouseDown_selectMultiframe(option) {
       videoControl.refresh();
     } else {
       deselectBee();
+      refresh.selection();
     }
   } else {
     let done = false;
@@ -3890,10 +3890,15 @@ function onObjectSelected(option) {
       );
     }
     overlay.previouslySelected = overlay.lastSelected
-    selection.select(option.target.obs ? option.target.obs.frame : getCurrentFrame(), option.target.id, !!option.target.draft)
-    selectBee(option.target)
+    let frame = option.target.obs ? option.target.obs.frame : getCurrentFrame()
+    let draft = !!option.target.draft
+    // A selection already there is the echo of a view activating the rectangle (selectBeeByID): the caller shows it
+    let echo = selection.is(frame, option.target.id, draft)
+    selection.select(frame, option.target.id, draft)
     overlay.lastSelected = option.target
-    updateDeleteButton()
+    if (!echo) {
+      refresh.selection()
+    }
 
     // If selected a "visit" event, slect it also in the visitWidget
     let obs = getObsHandle(option.target.obs.frame, option.target.id)

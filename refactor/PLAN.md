@@ -90,7 +90,7 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (6) selection: `selection` owns id and key, `refresh.selection()` only reads it (ADR 0009 section 0b) [ ]
     - (6a) ADR amendment 0b, [Q37](QUESTIONS.md#q37) answered [x] (selection model owns `defaultSelectedBee`)
     - (6b) `SelectionModel` + bridge + tests; `getId`/`getKey`/`changeFrame` replace `defaultSelectedBee`, `selectedKey()` [x] (same refreshes)
-    - (6c) `refresh.selection()` once per writer and rebuild; four jQuery triggers deleted [ ]
+    - (6c) `refresh.selection()` once per writer and rebuild; four jQuery triggers deleted [x] (select chain 2x to 1x)
   - (7) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
