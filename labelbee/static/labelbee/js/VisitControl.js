@@ -91,8 +91,7 @@ VisitWidget.prototype.newVisit = function() {
     this.visit = getObsHandle(frame, id)
     default_id = id
 
-    overlay.hardRefresh()
-    refreshChronogram()
+    refresh.rebuild()
 
     //submit_bee();
     //rect.obs.visit = {pollinator: pollinator_id, flower: flower_id}
@@ -224,8 +223,8 @@ VisitWidget.prototype.setSpanFrame = function(mode) {
         span.f2 = frame
     }
     events.update(visit.frame, visit.ID, {span: span})
+    refresh.rebuild() // a span decides which boxes the overlay shows
     this.update()
-    refreshChronogram()
 }
 VisitWidget.prototype.gotoSpanFrame = function(mode) {
     console.log('VisitWidget.gotoSpanFrame'); 

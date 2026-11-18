@@ -293,3 +293,36 @@ def test_l17_span_buttons_leave_no_store_write_unrefreshed(ui, sample_dir):
     assert ui.tracks()["0"]["1"]["span"] == {"f1": start["f1"], "f2": start["f2"] + 10}
     assert ui.js("refreshLog.tree()").count("refreshChronogram(") == 1
     RESULTS.pop("span_extend")                                                                 # audited only, not pinned in the baseline
+
+
+def test_l18_visit_widget_leaves_no_store_write_unrefreshed(ui):
+    """ADR 0009 step 4e, VisitControl.js: the Create button of the Visits panel (`newVisit`) and its Set End button (`setSpanFrame`)
+    each end with one rebuild; the audit lists no store write without a `refresh.*` call."""
+    def event(id, x):
+        return {"id": id, "time": 0, "frame": 0, "x": x, "y": 80, "cx": x + 24, "cy": 104, "width": 48, "height": 48,
+                "angle": 0, "notes": "", "labels": ""}
+    path = ui.write("visit.json", {"info": {"type": "events-multiframe", "source": "browser test"},
+                                   "data": {"0": [event("P1", 100), event("F1", 300)]}})
+    ui.open()
+    ui.load_events(path)
+    ui.wait_tracks()
+    ui.open_panel("Annotations")
+    ui.open_subpanel("Visits")
+    ui.click_box("P1")
+    ui.page.click("#visitblockdiv .pick-pollinator")
+    p = ui.box_center("P1")
+    ui.page.mouse.click(p["x"], p["y"])
+    ui.page.wait_for_function("document.querySelector('#visitblockdiv #pollinator_id').textContent === 'P1'")
+    ui.page.click("#visitblockdiv .pick-flower")
+    p = ui.box_center("F1")
+    ui.page.mouse.click(p["x"], p["y"])
+    ui.page.wait_for_function("document.querySelector('#visitblockdiv #flower_id').textContent === 'F1'")
+    run(ui, "visit_new", lambda: ui.page.click("#visitblockdiv .new-visit"), audited=True)
+    assert ui.js("!!events.get(0, 'V-P1-F1')")
+    assert ui.js("refreshLog.tree()").count("refresh.rebuild(") == 1
+    ui.goto_frame(3)
+    run(ui, "visit_set_end", lambda: ui.page.click("#visitblockdiv .set-end-frame"), audited=True)
+    assert ui.tracks()["0"]["V-P1-F1"]["span"] == {"f1": 0, "f2": 3}
+    assert ui.js("refreshLog.tree()").count("refresh.rebuild(") == 1
+    for name in ("visit_new", "visit_set_end"):
+        RESULTS.pop(name)                                                                      # audited only, not pinned in the baseline
