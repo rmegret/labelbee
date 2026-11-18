@@ -184,7 +184,7 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
     } else if (mode=='pick-frame') {
         // For the moment, does not check opts.type, since we have only setspan
 
-        let activeObj = this.getActiveObject()
+        let activeObj = this.getActiveRect()
         if (!activeObj) {
             console.log('overlay.setInteractionMode: CANCELED, no active object')
             return;
@@ -460,10 +460,21 @@ OverlayControl.prototype.selectboxTagMarkerChanged = function () {
   this.hardRefresh();
 };
 
-OverlayControl.prototype.getActiveObject = function () {
+// "Active" is fabric's own state (the rectangle being edited); "selected" is the model's (`selection`)
+// getActiveRect: return null or a Fabric.js rect (truth on the active rectangle comes from the Fabric.js canvas)
+OverlayControl.prototype.getActiveRect = function () {
   return this.canvas1.getActiveObject();
 };
-OverlayControl.prototype.setActiveObject = function (rect) {
+// getActiveRectID: return undefined or an id
+OverlayControl.prototype.getActiveRectID = function () {
+  var activeObject = this.canvas1.getActiveObject();
+  if (activeObject === null) {
+    return undefined;
+  } else {
+    return activeObject.id;
+  }
+};
+OverlayControl.prototype.setActiveRect = function (rect) {
   return this.canvas1.setActiveObject(rect);
 };
 
@@ -487,7 +498,7 @@ OverlayControl.prototype.updateDisableAngleButton = function () {
 OverlayControl.prototype.onClickResetAngle = function () {
   console.log("overlay.onClickResetAngle");
 
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject == null) {
     console.log("onClickResetAngle: aborted, could not get an activeObject");
     return;
@@ -499,7 +510,7 @@ OverlayControl.prototype.onClickResetAngle = function () {
 OverlayControl.prototype.onClickAngleFromTag = function () {
   console.log("overlay.onClickAngleFromTag");
 
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject == null) {
     console.log("onClickAngleFromTag: could not get an activeObject. abort.");
     return;
@@ -824,7 +835,7 @@ OverlayControl.prototype.getFrameCropImg = async function(frame, crop) {
     return img
 }
 OverlayControl.prototype.getFrameCropCurrentObject = async function(framedelta, size, displaySize) {
-    let rect = this.getActiveObject()
+    let rect = this.getActiveRect()
     if (!rect) {
         printMessage("Timeline: please select an annotation")
         return
@@ -2767,7 +2778,7 @@ function excludeRectsChanged() {
 }
 // Direct edition
 function onClickExcludeRectAdd() {
-  let R = getSelectedRect();
+  let R = overlay.getActiveRect();
   if (!R) return;
 
   let obs = R.obs;
@@ -3307,14 +3318,14 @@ function newRectForCurrentTag() {
     );
     return;
   }
-  let r = getSelectedRect();
+  let r = overlay.getActiveRect();
   if (r != null) {
     printMessage("Current tag already annotated", "red");
     return;
   }
   var rect = newRectForTag(tag);
 
-  overlay.canvas1.setActiveObject(rect);
+  overlay.setActiveRect(rect);
   overlay.canvas1.renderAll();
 
   refresh.rebuild();
@@ -3435,7 +3446,7 @@ function onMouseDown_predict(option) {
       );
   }
   rect.setCoords();
-  overlay.canvas1.setActiveObject(rect);
+  overlay.setActiveRect(rect);
   overlay.canvas1.renderAll();
 
   refresh.rebuild(); // the new box is in the store
@@ -3487,7 +3498,7 @@ function onMouseDown_interactiveRect(option) {
 
   var center = rect.getCenterPoint();
   rect.hasControls = false; // Do not show controls when creating
-  overlay.canvas1.setActiveObject(rect);
+  overlay.setActiveRect(rect);
   //canvas1.renderAll();
 
   var onMouseMove_interactiveRect = function (option) {
@@ -3882,11 +3893,11 @@ function onObjectSelected(option) {
   if (logging.selectionEvents) console.log("onObjectSelected:", option);
   //var activeObject = canvas1.getActiveObject();
   if (typeof option.target.id != "undefined") {
-    if (option.target.id != overlay.getActiveObject().id) {
+    if (option.target.id != overlay.getActiveRect().id) {
       console.log(
         "ERROR in onObjectSelected: option.target.id != canvas1.getActiveObject().id",
         option.target.id,
-        overlay.getActiveObject().id
+        overlay.getActiveRect().id
       );
     }
     overlay.previouslySelected = overlay.lastSelected

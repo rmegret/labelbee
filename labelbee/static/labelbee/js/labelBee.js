@@ -835,7 +835,7 @@ function onKeyDown_IDEdit(event) {
     let fieldID = document.getElementById("I");
     let new_id = fieldID.value;
 
-    let activeObject = overlay.getActiveObject();
+    let activeObject = overlay.getActiveRect();
 
     if (!activeObject) return;
 
@@ -882,7 +882,7 @@ function onKeyDown_NewIDEdit(event) {
       new_id = undefined;
     }
 
-    let activeObject = overlay.getActiveObject();
+    let activeObject = overlay.getActiveRect();
 
     if (!activeObject) return;
 
@@ -899,7 +899,7 @@ function onKeyDown(e) {
       if (logging.keyEvents)
         console.log("onKeyDown: Escape in text field. focus back to canvas/left-side")
       $('#left-side')[0].focus({ preventScroll: true }) // Use HTML5 API to prevent scroll
-      updateForm(overlay.getActiveObject())
+      updateForm(overlay.getActiveRect())
       e.stopPropagation();
       return;
     }
@@ -915,7 +915,7 @@ function onKeyDown(e) {
       console.log("onKeyDown: detected keydown ESC happened in textfield #I. Canceling edit.")
       id_field.blur();
       $('#left-side')[0].focus({ preventScroll: true })
-      updateForm(overlay.getActiveObject())
+      updateForm(overlay.getActiveRect())
       return false
     }
     //if (e.keyCode==32 || e.keyCode==188 || e.keyCode==190) {

@@ -296,7 +296,7 @@ VisitWidget.prototype.open = function() {
     }
 
 
-    let activeObj = this.getActiveObject()
+    let activeObj = this.getActiveRect()
     if (!activeObj) {
         console.log('overlay.setInteractionMode: CANCELED, no active object')
         return;

@@ -1603,3 +1603,13 @@ Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fi
   - `SelectionControl.js`: `modifyCurrentObsSpan`
   - `ChronoControl.js`: `updateTagsLabels`, `updateChronoData`
 - **Links:** ADR 0009, DEBT-826
+
+## DEBT-828: `refresh.form` reads the overlay's active rect instead of the store
+
+[read] The `form` step of `refresh` is `updateForm(overlay.getActiveRect())` (`labelbee/static/labelbee/js/annotation/RefreshBridge.js:12`), so the form is filled from fabric's state (the rectangle being edited), and so are the other callers of `updateForm` (`labelbee/static/labelbee/js/labelBee.js`, `showSelection` in `SelectionControl.js`). The form shows the observation, which is the model's: it should read the observation of the current selection in the store (`events.get(selection.getKey())`, with the draft case aside) and not go through the overlay. Fabric's active rect and the selection can disagree during a drag or on a draft, which this hides. To do later (maintainer, 2026-11-18), after the active/selected vocabulary steps (ADR 0009 section 0b, 6d-6i).
+
+- **Code:**
+  - `annotation/RefreshBridge.js`: `form`
+  - `SelectionControl.js`: `updateForm`, `showSelection`
+  - `labelBee.js`: `updateForm` callers
+- **Links:** ADR 0009, DEBT-712

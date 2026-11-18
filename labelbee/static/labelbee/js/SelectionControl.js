@@ -327,7 +327,7 @@ function updateFormButtons() {
   if (getCurrentID() == null) {
     $("#newRectForCurrentTag").addClass("disabled");
     $("#newRectForCurrentTag").removeClass("active");
-  } else if (getSelectedID() == null) {
+  } else if (overlay.getActiveRectID() == null) {
     $("#newRectForCurrentTag").removeClass("disabled");
     $("#newRectForCurrentTag").removeClass("active");
   } else {
@@ -489,7 +489,7 @@ function swapID_findAll(ID) {
 
 }
 function swapID_callback() {
-    var activeObject = overlay.getActiveObject();
+    var activeObject = overlay.getActiveRect();
     if (activeObject === null) {
         printMessage("No bee selected", "red")
         return false;
@@ -536,7 +536,7 @@ function swapID_callback() {
  * ADR 0009 section 0b) and does not update the panels: the caller decides what is selected first (`selection.select`,
  * `selection.changeFrame`), passes it, usually `selection.getId()`, then calls `refresh.selection()` (hardRefresh calls
  * `showSelection`). The one write that can happen during the call is fabric's own `object:selected` echo of
- * `setActiveObject`, handled by `onObjectSelected`, which finds the selection already there and refreshes nothing.
+ * `setActiveRect`, handled by `onObjectSelected`, which finds the selection already there and refreshes nothing.
  * Returns whether a rectangle was found.
  */
 function selectBeeByID(id) {
@@ -545,7 +545,7 @@ function selectBeeByID(id) {
     if (logging.selectionEvents)
       console.log("selectBeeByID: trying to select id=", id);
     //canvas1.setActiveObject(canvas1.item(id));
-    overlay.setActiveObject(rect);
+    overlay.setActiveRect(rect);
     return true;
   } else {
     // The selection keeps the id when this frame has none (selection.getKey() is then null)
@@ -574,7 +574,7 @@ function selectBeeByIDandFrame(id, frame) {
  */
 function showSelection() {
   updateDeleteButton();
-  updateForm(overlay.getActiveObject());
+  updateForm(overlay.getActiveRect());
   updateChronoSelection();
   if (selection.getId() != null) updateSelectID(); // the field keeps its text after an explicit deselect
   updateFormButtons();
@@ -586,21 +586,6 @@ function deselectBee() {
   //canvas1.deactivateAll().renderAll(); // Deselect rect
   overlay.canvas1.deactivateAllWithDispatch();
   selection.clear(); // Do not keep default when explicit deselect
-}
-// getSelectedID: return undefined or an id
-function getSelectedID() {
-  // Truth on selected bee ID comes from Fabric.js canvas
-  var activeObject = overlay.getActiveObject();
-  if (activeObject === null) {
-    return undefined;
-  } else {
-    return activeObject.id;
-  }
-}
-// getSelectedRect: return null or a Fabric.js rect
-function getSelectedRect() {
-  // Truth on selected bee ID comes from Fabric.js canvas
-  return overlay.getActiveObject();
 }
 function getCurrentTag() {
   return getTag(getCurrentFrame(), selection.getId());
@@ -634,7 +619,7 @@ function getIdsInFocus() {
 
 function deleteSelected() {
   //Deletes selected rectangle(s)/observation when remove bee is pressed
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   var activeGroup = overlay.canvas1.getActiveGroup();
 
   if (activeObject) {
@@ -674,7 +659,7 @@ function undoAction() {
       events.commit(obs);
       rect = addRectFromObs(obs);
       console.log("rect=", rect);
-      overlay.setActiveObject(rect);
+      overlay.setActiveRect(rect);
       //submit_bee()
     }
 
@@ -683,7 +668,7 @@ function undoAction() {
   }
 }
 function updateDeleteButton() {
-  if (overlay.getActiveObject() === null) {
+  if (overlay.getActiveRect() === null) {
     $("#deleteButton").addClass("disabled");
   } else {
     $("#deleteButton").removeClass("disabled");
@@ -785,10 +770,10 @@ function labelToggle(thelabel, isOn) {
   // Toggle if isOn undefined
 
   if (logging.guiEvents) console.log("onLabelToggled: event=", event);
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject == null) {
     newRectForCurrentTag();
-    activeObject = overlay.getActiveObject();
+    activeObject = overlay.getActiveRect();
   }
   if (activeObject == null) {
     console.log("onLabelToggled: aborted, could not get an activeObject");
@@ -824,7 +809,7 @@ function labelToggle(thelabel, isOn) {
 // If labels changed from pressing return ?
 function onActivityChanged(event) {
   if (logging.guiEvents) console.log("onActivityChanged: event=", event);
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject !== null) {
     // the notes unit has its own editor (ADR 0008 step 5)
     storeUnit(activeObject, { notes: $("#notes").val() });
@@ -835,7 +820,7 @@ function onActivityChanged(event) {
 function onLabelsChanged() {
   let labels = $("#labels").val();
   if (logging.guiEvents) console.log("onLabelsChanged: labels=", labels);
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject !== null) {
     storeUnit(activeObject, { labels: Labels.clean(labels) });
     refresh.update();
@@ -845,7 +830,7 @@ function onLabelsChanged() {
 
 
 function modifyCurrentObsSpan(mode) {
-  let r = getSelectedRect()
+  let r = overlay.getActiveRect()
   if (!r) {
       console.log('modifyCurrentObsSpan: CANCELED, no event selected')
       return;

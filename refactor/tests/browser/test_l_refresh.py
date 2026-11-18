@@ -17,7 +17,7 @@ SCRATCH = pathlib.Path(__file__).resolve().parents[2] / "scratch"
 BASELINE = pathlib.Path(__file__).with_name("refresh_baseline.json")
 RESULTS = {}
 # key of fabric's active object, as the editors read it before slice 6 step 6b (`selectedKey()`)
-AGREE = ("(() => { const a = overlay.getActiveObject(); return (!a || a.draft || !a.obs) ? null : {frame: a.obs.frame, id: a.obs.ID}; })()")
+AGREE = ("(() => { const a = overlay.getActiveRect(); return (!a || a.draft || !a.obs) ? null : {frame: a.obs.frame, id: a.obs.ID}; })()")
 
 
 def run(ui, name, action, audited=False):

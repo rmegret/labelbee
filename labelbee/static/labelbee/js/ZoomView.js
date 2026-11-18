@@ -356,7 +356,7 @@ ZoomOverlay.prototype.selectionChanged = function () {
  */
 ZoomOverlay.prototype.syncFromTracks = function () {
   if (logging.zoomOverlay) console.log("ZoomOverlay.syncFromTracks");
-  var activeObject = overlay.getActiveObject(); // Object of video frame
+  var activeObject = overlay.getActiveRect(); // Object of video frame
 
   if (!activeObject) {
     if (logging.zoomOverlay)
@@ -389,7 +389,7 @@ ZoomOverlay.prototype.syncFromTracks = function () {
  */
 ZoomOverlay.prototype.syncToTracks = function () {
   if (logging.zoomOverlay) console.log("ZoomOverlay.syncToTracks");
-  var activeObject = overlay.getActiveObject(); // Object of video frame
+  var activeObject = overlay.getActiveRect(); // Object of video frame
 
   if (!activeObject) {
     if (logging.zoomOverlay)
@@ -1716,10 +1716,10 @@ ZoomOverlay.prototype.onClickAlternateTag = function (id) {
   if (logging.guiEvents)
     console.log("ZoomOverlay.onClickAlternateTag(id): id=", event);
 
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject == null) {
     newRectForCurrentTag();
-    activeObject = overlay.getActiveObject();
+    activeObject = overlay.getActiveRect();
   }
 
   if (activeObject !== null) {
@@ -1751,10 +1751,10 @@ rotatep = (function () {
 ZoomOverlay.prototype.rotateTag = function (angle) {
   console.log("ZoomOverlay.rotateTag(" + angle + ")");
 
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject == null) {
     newRectForCurrentTag();
-    activeObject = overlay.getActiveObject();
+    activeObject = overlay.getActiveRect();
   }
 
   if (activeObject == null) {
@@ -1828,7 +1828,7 @@ function getCoveredTags(obs) {
 // LEGACY (DEBT-826): copies obs.fix onto the tags of the tag store, outside the events (the audit does not see it);
 // must run before the refresh that shows the tags
 ZoomOverlay.prototype.spreadTagFix = function () {
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject == null) {
     return;
   }
@@ -1865,7 +1865,7 @@ ZoomOverlay.prototype.spreadTagFix = function () {
 // LEGACY (DEBT-826): rewrites tag.id and tag.p in the tag store, outside the events
 ZoomOverlay.prototype.bakeTagFix = function (obs) {
   if (!obs) {
-    var activeObject = overlay.getActiveObject();
+    var activeObject = overlay.getActiveRect();
     if (activeObject == null) {
       return;
     }
@@ -1997,7 +1997,7 @@ ZoomOverlay.prototype.refreshZoom = function () {
   let cy = 0;
   let tag = getCurrentTag();
   if (typeof tag === "undefined") {
-    let rect = getSelectedRect();
+    let rect = overlay.getActiveRect();
     if (rect != null) {
       let geom = rotatedRectGeometry(rect);
       let pt = overlay.canvasToVideoPoint(geom.center);
@@ -2134,7 +2134,7 @@ ZoomOverlay.prototype.refreshZoom = function () {
   }
 
   if (this.flagShowBB) {
-    let rect = getSelectedRect();
+    let rect = overlay.getActiveRect();
     if (rect != null) {
       let geom = rotatedRectGeometry(rect);
       let pt = overlay.canvasToVideoPoint(geom.center);
@@ -2178,7 +2178,7 @@ ZoomOverlay.prototype.refreshZoom = function () {
 };
 ZoomOverlay.prototype.exportZoomImage = function () {
   let dataurl = this.canvas.toDataURL("image/png")
-  let rect = getSelectedRect()
+  let rect = overlay.getActiveRect()
   let obs = rect?.obs
   let json = JSON.stringify(obs, undefined, 2)
   let labels = obs?.labels
