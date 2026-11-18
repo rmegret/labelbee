@@ -319,7 +319,6 @@ function updateSelectID() {
 function onSelectIDChanged() {
   let id = $("#selectID").val().trim();
   selection.select(getCurrentFrame(), id);
-  selectBeeByID(id);
   refresh.selection();
 }
 
@@ -530,31 +529,6 @@ function swapID_callback() {
 
 /* Selection */
 
-/**
- * VIEW: shows the selection of `id` on the rectangles of the current frame: makes the fabric rectangle of `id` the active
- * one, or deactivates the rectangles when this frame has none of `id`. It never changes the selection state (`selection`,
- * ADR 0009 section 0b) and does not update the panels: the caller decides what is selected first (`selection.select`,
- * `selection.changeFrame`), passes it, usually `selection.getId()`, then calls `refresh.selection()` (hardRefresh calls
- * `showSelection`). The one write that can happen during the call is fabric's own `object:selected` echo of
- * `setActiveRect`, handled by `onObjectSelected`, which finds the selection already there and refreshes nothing.
- * Returns whether a rectangle was found.
- */
-function selectBeeByID(id) {
-  let rect = findRect(id);
-  if (rect) {
-    if (logging.selectionEvents)
-      console.log("selectBeeByID: trying to select id=", id);
-    //canvas1.setActiveObject(canvas1.item(id));
-    overlay.setActiveRect(rect);
-    return true;
-  } else {
-    // The selection keeps the id when this frame has none (selection.getKey() is then null)
-    overlay.canvas1.deactivateAll().renderAll(); // Deselect rect if any
-    if (logging.selectionEvents)
-      console.log("selectBeeByID: No rect found for id=", id);
-    return false;
-  }
-}
 function selectBeeByIDandFrame(id, frame) {
   if (frame != getCurrentFrame()) {
     deselectBee();
@@ -563,16 +537,25 @@ function selectBeeByIDandFrame(id, frame) {
   } else {
     deselectBee();
     selection.select(frame, id);
-    selectBeeByID(id);
     videoControl.refresh();
   }
 }
 
 /**
- * VIEW: the panels that show the selection (delete button, form, chronogram, ID field, new-rect button, zoom). It reads
- * `selection` and fabric's active rectangle and changes neither. `refresh.selection()` and `hardRefresh` run it.
+ * VIEW: shows the selection (`selection`, ADR 0009 section 0b) on the rectangles, then in the panels. It reads the model and
+ * changes it nowhere. The step of `refresh.selection()`: the caller decides what is selected first (`selection.select`,
+ * `selection.changeFrame`), then calls `refresh.selection()`.
  */
-function showSelection() {
+function activateSelection() {
+  overlay.setActiveRectID(selection.getId());
+  updateSelectionPanels();
+}
+
+/**
+ * VIEW: the panels that show the selection (delete button, form, chronogram, ID field, new-rect button, zoom). It reads
+ * `selection` and fabric's active rectangle and changes neither. `activateSelection` and `hardRefresh` run it.
+ */
+function updateSelectionPanels() {
   updateDeleteButton();
   updateForm(overlay.getActiveRect());
   updateChronoSelection();

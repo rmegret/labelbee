@@ -417,10 +417,10 @@ def test_l23_selection_model_follows_fabric(ui, sample_dir):
     ui.goto_frame(10)
     same()
     assert ui.js("selection.getId()") == "1"                        # the id follows the frame
-    ui.js("selection.select(getCurrentFrame(), 'no-such-id'); selectBeeByID('no-such-id'); refresh.selection()")
+    ui.js("selection.select(getCurrentFrame(), 'no-such-id'); refresh.selection()")
     same()
     assert ui.js("selection.getKey()") is None and ui.js("selection.getId()") == "no-such-id"
-    ui.js("selection.select(getCurrentFrame(), '1'); selectBeeByID('1'); refresh.selection()")
+    ui.js("selection.select(getCurrentFrame(), '1'); refresh.selection()")
     same()
     ui.js("deselectBee()")
     same()

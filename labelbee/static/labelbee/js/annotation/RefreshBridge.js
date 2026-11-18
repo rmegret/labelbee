@@ -12,7 +12,7 @@ window.refresh = new Refresh({
   form: () => updateForm(overlay.getActiveRect()),
   zoom: () => zoomOverlay.refreshZoom(),
   frame: () => videoControl.onFrameChanged(),
-  selection: () => showSelection(),
+  selection: () => activateSelection(),
 });
 // AnnotationStoreBridge.js runs before this one and defines `window.events`
 window.refresh.audit(window.events);

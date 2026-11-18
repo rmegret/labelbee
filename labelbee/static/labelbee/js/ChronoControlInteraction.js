@@ -9,7 +9,6 @@ function gotoEvent(frame, id) {
   selection.select(frame, id)
   if (frame==getCurrentFrame()) {
     // Try to select the bee in current frame
-    selectBeeByID(id);
     refresh.selection();
   } else {
     videoControl.seekFrame(frame);
@@ -443,7 +442,6 @@ function onClickNextID() {
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
   selection.select(getCurrentFrame(), newID);
-  selectBeeByID(newID);
   refresh.selection();
 
   setRestrictID(newID);
@@ -465,7 +463,6 @@ function onClickPrevID(gotoLast) {
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[N - 1] : domain[(pos + N - 1) % N];
   selection.select(getCurrentFrame(), newID);
-  selectBeeByID(newID);
   refresh.selection();
 
   setRestrictID(newID);
@@ -491,7 +488,6 @@ function onClickNextIDStart() {
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
   selection.select(getCurrentFrame(), newID);
-  selectBeeByID(newID);
   refresh.selection();
 
   setRestrictID(newID);

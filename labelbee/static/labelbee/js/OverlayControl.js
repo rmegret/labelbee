@@ -477,6 +477,28 @@ OverlayControl.prototype.getActiveRectID = function () {
 OverlayControl.prototype.setActiveRect = function (rect) {
   return this.canvas1.setActiveObject(rect);
 };
+/**
+ * VIEW: makes the fabric rectangle of `id` the active one (nothing to do when it already is), or deactivates the rectangles
+ * when this frame has none of `id`. It never changes `selection` (ADR 0009 section 0b) and does not update the panels
+ * (`activateSelection` does). The one write that can happen during the call is fabric's own `object:selected` echo of
+ * `setActiveRect`, handled by `onObjectSelected`, which finds the selection already there and refreshes nothing.
+ * Returns whether a rectangle was found.
+ */
+OverlayControl.prototype.setActiveRectID = function (id) {
+  let rect = findRect(id);
+  if (rect) {
+    if (logging.selectionEvents)
+      console.log("setActiveRectID: trying to activate id=", id);
+    if (this.getActiveRect() !== rect) this.setActiveRect(rect);
+    return true;
+  } else {
+    // The selection keeps the id when this frame has none (selection.getKey() is then null)
+    this.canvas1.deactivateAll().renderAll(); // Deactivate rect if any
+    if (logging.selectionEvents)
+      console.log("setActiveRectID: No rect found for id=", id);
+    return false;
+  }
+};
 
 // GUI for enabling/disabling angle in BB
 OverlayControl.prototype.onClickDisableAngle = function () {
@@ -977,7 +999,7 @@ OverlayControl.prototype.hardRefresh = function () {
 
   if (this.interaction.mode == 'pick-frame') {
     let overlay = this
-    selectBeeByID(this.interaction.opts.id)
+    overlay.setActiveRectID(this.interaction.opts.id)
     let id = overlay.interaction.opts.id
     let frame = overlay.interaction.opts.frame
 
@@ -987,8 +1009,8 @@ OverlayControl.prototype.hardRefresh = function () {
     if (!obs) {
       console.log('overlay.hardRefresh: ERROR, in pick-frame without valid obs')
       overlay.setInteractionMode('main')
-      selectBeeByID(selection.getId());
-      showSelection();
+      overlay.setActiveRectID(selection.getId());
+      updateSelectionPanels();
       this.refreshOverlay()
 
       updateUndoButton()
@@ -1079,13 +1101,13 @@ OverlayControl.prototype.hardRefresh = function () {
     if (overlay.interaction.opts.showTimeline)
       overlay.drawTimelinePickFrameMode()
   } else if (this.interaction.mode == 'edit-visit') {
-    selectBeeByID(selection.getId());
+    overlay.setActiveRectID(selection.getId());
   } else {
     // Default behavior
     console.log(`using selection id=${selection.getId()}`)
-    selectBeeByID(selection.getId());
+    overlay.setActiveRectID(selection.getId());
   }
-  showSelection();
+  updateSelectionPanels();
 
   this.refreshOverlay();
 
@@ -3609,7 +3631,6 @@ function onMouseDown_selectMultiframe(option) {
     if (tmp.id != null) {
       console.log("onMouseDown_selectMultiframe: found id=", tmp.id);
       selection.select(getCurrentFrame(), tmp.id);
-      selectBeeByID(tmp.id);
       videoControl.refresh();
     } else {
       deselectBee();
@@ -3903,7 +3924,7 @@ function onObjectSelected(option) {
     overlay.previouslySelected = overlay.lastSelected
     let frame = option.target.obs ? option.target.obs.frame : getCurrentFrame()
     let draft = !!option.target.draft
-    // A selection already there is the echo of a view activating the rectangle (selectBeeByID): the caller shows it
+    // A selection already there is the echo of a view activating the rectangle (setActiveRectID): the caller shows it
     let echo = selection.is(frame, option.target.id, draft)
     selection.select(frame, option.target.id, draft)
     overlay.lastSelected = option.target
