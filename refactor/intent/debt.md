@@ -1594,3 +1594,12 @@ Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fi
   - `ZoomView.js`: `ZoomOverlay.spreadTagFix`, `ZoomOverlay.bakeTagFix`, `ZoomOverlay.bakeAllTagFixes`, `ZoomOverlay.undoTagFix`, `ZoomOverlay.undoAllTagFixes`, `ZoomOverlay.deleteFalsealarmTags`, `getCoveredTags`, `rotatep`
   - `ChronoControl.js`: `augmentTrackWithTag` (already a console one-shot)
 - **Links:** ADR 0009, Q34, DEBT-515, DEBT-517, DEBT-518, DEBT-519, DEBT-520
+
+## DEBT-827: `modifyCurrentObsSpan` no longer calls `updateTagsLabels` / `drawChrono`: check nothing was lost
+
+[read] Slice 6 step 4e-2 replaced the tail of `modifyCurrentObsSpan` (`updateTagsLabels(); drawChrono()`) by `refresh.chrono()` (`labelbee/static/labelbee/js/SelectionControl.js:944`); the old call is dropped on purpose (maintainer, 2026-11-17: cleaner in the derived-data pipeline). `refresh.chrono()` is the full `refreshChronogram`: `updateChronoData` calls `updateTagsLabels` itself (`labelbee/static/labelbee/js/ChronoControl.js:1009`), then `drawChrono`, then `renderObsTable`, so the span display should be the same or fresher, and `test_f1` / `test_l17` pass. Not verified: whether `updateTagsLabels` (it sets `ann.span` and `b1/b2` on `flatTracksAll` from `obs.span`) has other consumers that relied on running without the rest of `updateChronoData`, and whether the `flatTracksAll` rebuild changes the selection or the time marks. To check later (maintainer, 2026-11-17).
+
+- **Code:**
+  - `SelectionControl.js`: `modifyCurrentObsSpan`
+  - `ChronoControl.js`: `updateTagsLabels`, `updateChronoData`
+- **Links:** ADR 0009, DEBT-826

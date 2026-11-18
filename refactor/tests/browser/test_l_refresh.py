@@ -123,7 +123,7 @@ def test_l6_create_by_shift_click(ui, sample_dir):
 def test_l7_delete_one(ui, sample_dir):
     loaded(ui, sample_dir)
     ui.click_box("1")
-    check("delete", run(ui, "delete", lambda: ui.page.click("#deleteButton")))
+    check("delete", run(ui, "delete", lambda: ui.page.click("#deleteButton"), audited=True))
 
 
 def test_l8_swap_id(ui, sample_dir):
@@ -137,7 +137,7 @@ def test_l8_swap_id(ui, sample_dir):
         ui.page.click("#alerttext button:has-text('SWAP')")
         ui.page.click("#alerttext button:has-text('CONFIRM')")
 
-    check("swap", run(ui, "swap", act))
+    check("swap", run(ui, "swap", act, audited=True))
 
 
 def test_l9_frame_step(ui, sample_dir):
@@ -277,3 +277,19 @@ def test_l16_overlay_writers_leave_no_store_write_unrefreshed(ui, sample_dir):
     assert ui.js("Object.keys(events.getFrame(11) || {}).length") == 0
     for name in ("pick_frame_enter", "set_end", "set_start", "ctrl_drag", "ctrl_click_too_small"):
         RESULTS.pop(name)                                                                      # audited only, not pinned in the baseline
+
+
+def test_l17_span_buttons_leave_no_store_write_unrefreshed(ui, sample_dir):
+    """ADR 0009 step 4e, SelectionControl.js: the 'extend annotation' buttons of the Selected tab (modifyCurrentObsSpan) store a span
+    and end with one chronogram refresh. The first click also stores the default span; the audit lists no write without a `refresh.*` call."""
+    loaded(ui, sample_dir)
+    header = ui.page.locator("#features > .ui-accordion-header")
+    if header.get_attribute("aria-expanded") != "true":
+        header.click()
+    ui.page.check("#showSelected")
+    ui.click_box("1")
+    start = ui.js("flatTracksAll.find(t => t.obs.frame === 0 && String(t.obs.ID) === '1').span")
+    run(ui, "span_extend", lambda: ui.page.click("button[onclick=\"modifyCurrentObsSpan('extendright')\"]"), audited=True)
+    assert ui.tracks()["0"]["1"]["span"] == {"f1": start["f1"], "f2": start["f2"] + 10}
+    assert ui.js("refreshLog.tree()").count("refreshChronogram(") == 1
+    RESULTS.pop("span_extend")                                                                 # audited only, not pinned in the baseline

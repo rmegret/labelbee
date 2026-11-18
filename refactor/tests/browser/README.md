@@ -14,7 +14,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_a_features.py` | A10-A12: zoom view, tags (tags file merged by id, standalone Tags mode), parts, notes |
 | `test_b_store.py` | B1-B4: store and legacy globals, erase with confirmation, DM controls |
 | `test_c_loading.py` | C1-C7: local events and tags files, bad files |
-| `test_c_server.py` | C8-C13: "Load Events from DB", `#video_data=` hash, tracks CSV, bad URL, gurabo4 |
+| `test_c_server.py` | C8-C13: "Load Events from DB", `#video_data=` hash, tracks CSV, bad URL, gurabo4 (C13 skipped by default, needs the dataset: `RUN_C13=1 pytest ...`) |
 | `test_d_saving.py` | D1-D6: save v2 and reload, history, CSV and BBox export, tags, save to the server and its lineage |
 | `test_e_console.py` | E1: the console watcher itself. Every test also runs it at teardown |
 | `test_f_writers.py` | The writers of the stored events that no other test reaches (span, the zoom deletes, clean obsolete events), for the dirty-write detector: [ADR 0007](../../design/0007-slice-events-api.md) step 0 |

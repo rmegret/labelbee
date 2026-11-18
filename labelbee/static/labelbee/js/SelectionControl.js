@@ -533,8 +533,7 @@ function swapID_callback() {
 
     function doSwap2(interval, old_id, new_id) {
         obs_swapID(interval, old_id, new_id)
-        videoControl.refresh() // Just refresh
-        refreshChronogram();
+        refresh.rebuild()
     }
     function doSwap() {
         let interval = [getCurrentFrame(),-1]
@@ -697,8 +696,7 @@ function deleteEvent(frame, id) {
   // Undo is deactivated until its own slice (ADR 0008 step 1): a delete is final, nothing is cloned or pushed.
   events.delete(frame, id); // also removes the frame when it ends up empty
 
-  videoControl.refresh();
-  refreshChronogram();
+  refresh.rebuild();
   return true
 }
 
@@ -943,8 +941,7 @@ function modifyCurrentObsSpan(mode) {
       return
   }
 
-  updateTagsLabels()
-  drawChrono()
+  refresh.chrono()
 }
 
 
