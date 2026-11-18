@@ -1072,9 +1072,6 @@ function FromServerDialog() {
           //   setEventsProp("basedon", basedon);
           // }
 
-          videoControl.onFrameChanged();
-
-          refreshChronogram();
           if(success){
             console.log("Loaded event. ID:", tag_event_ID)
             theDialog.basedOn = tag_event_ID;
@@ -1222,9 +1219,6 @@ async function loadEventsFromServerByID(video_data_id) {
         let obj = JSON.parse(json["data"]["data"]);
         success = setTracks(obj);
 
-        videoControl.onFrameChanged();
-
-        refreshChronogram();
         if(success){
           console.log("Loaded event. ID:", video_data_id)
           fromServerDialog.basedOn = video_data_id;
@@ -1251,10 +1245,6 @@ function eventsFromServer(url) {
 
       if (!setTracks(obj)) throw new Error("Invalid events format (details in the console)");
 
-      videoControl.onFrameChanged();
-
-      refreshChronogram();
-
       $("#loadTracksFromServerDialog").modal("hide");
     },
     function (err) {
@@ -1277,11 +1267,7 @@ function loadTracksCSVFromDB(limit = 100) {
   console.log('DB query + convert to JSON',b-a)
   setTracks(obj, false, { centerPolicy: "cxcy" })
   const c=performance.now(); 
-  console.log('setTracks',c-b)
-  videoControl.onFrameChanged();
-  refreshChronogram();
-  const d=performance.now(); 
-  console.log('refreshChronogram',d-c)
+  console.log('setTracks (with its refresh)',c-b)
 }
 function loadTracksCSVFromServer(url) {
   console.log("loadTracksDataFrameFromServer: importing Tracks in CSV format from URL '" + url + "'...");
@@ -1301,10 +1287,6 @@ function loadTracksCSVFromServer(url) {
       let obj = tracks_csv_to_json(data, info)
 
       if (!setTracks(obj, false, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)")
-
-      videoControl.onFrameChanged();
-
-      refreshChronogram();
     })
   .catch(reportLoadError("loading tracks CSV from " + url))
 
@@ -1324,19 +1306,17 @@ function loadTagsCSVFromServer(url) {
         history: `Loaded in Labelbee on ${new Date().toISOString()}`,
       }
       let obj = tags_csv_to_json(data, info)
-      if (!setTracks(obj, false, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)")
 
       info = {
         type: "tags-multiframe",
         source: `Converted from CSV "${url}"`,
         history: `Loaded in Labelbee on ${new Date().toISOString()}`,
       }
-      obj = tags_csv_to_tagjson(data, info)
-      if (!setTags(obj)) throw new Error("Invalid tags in the CSV (details in the console)")
+      let objtag = tags_csv_to_tagjson(data, info)
 
-      videoControl.onFrameChanged();
-
-      refreshChronogram();
+      // no skipRefresh in setTracks: setTags below refreshes once for the events and the tags
+      if (!setTracks(obj, true, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)")
+      if (!setTags(objtag)) throw new Error("Invalid tags in the CSV (details in the console)")
     })
   .catch(reportLoadError("loading tags CSV from " + url))
 
@@ -1357,10 +1337,6 @@ function loadTrackTaggedCSVFromServer(url) {
       }
       let obj = tracks_tagged_csv_to_json(data, info)
       if (!setTracks(obj, false, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)")
-
-      videoControl.onFrameChanged();
-
-      refreshChronogram();
     })
   .catch(reportLoadError("loading tracks_tagged CSV from " + url))
 
@@ -1377,10 +1353,6 @@ function loadConvertedCSVFromServer(url, converter, centerPolicy, what) {
       }
       let obj = converter(data, info)
       if (!setTracks(obj, false, { centerPolicy: centerPolicy })) throw new Error("Invalid events in the CSV (details in the console)")
-
-      videoControl.onFrameChanged();
-
-      refreshChronogram();
     })
   .catch(reportLoadError("loading " + what + " CSV from " + url))
 }

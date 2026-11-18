@@ -85,8 +85,8 @@ and is its own commit series and review. The next slice is chosen after the prev
     - `ZoomView.js` [x] (delete FA / wrong-id events, show-parts toggle; tag-store helpers left, DEBT-826)
     - `labelBee.js` [x] (ID field change, Ctrl+R)
     - `ChronoControl.js` [x] (clean obsolete events; the other calls follow chrono view settings, not store writes)
-    - `AnnotationIO.js` [ ] (step 5)
-  - (5) load: one refresh [ ]
+    - `AnnotationIO.js`: no writer of its own, its loaders are step 5
+  - (5) load: one refresh [x] (the 7 loaders no longer refresh after `setTracks`/`setTags`; Q36)
   - (6) selection [ ]
   - (7) record [ ]
 

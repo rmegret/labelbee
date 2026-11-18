@@ -164,7 +164,8 @@ def test_l11_bulk_delete_of_false_alarms(ui, sample_dir):
 
 
 def test_l12_tracks_csv_from_a_uri(ui):
-    """The server and CSV loaders call `setTracks` (which refreshes) and then refresh again themselves (ADR 0009 Q36)."""
+    """The server and CSV loaders called `setTracks` (which refreshes) and then refreshed again themselves (ADR 0009 Q36); step 5 deletes
+    their own refresh one loader at a time: this one (tracks CSV from a URI) refreshes once, like the file "Load"."""
     ui.open()
     ui.settle()
     ui.open_subpanel("Server storage")
@@ -372,3 +373,26 @@ def test_l21_clean_obsolete_events_leaves_no_store_write_unrefreshed(ui, sample_
     assert ui.js("refreshLog.tree()").count("refresh.rebuild(") == 1
     assert ui.js("Object.keys(events.toObject()).length") == 0                                 # sample events carry no tag: all deleted
     RESULTS.pop("clean_obsolete")                                                              # audited only, not pinned in the baseline
+
+
+LOADERS = {   # each used to refresh again after `setTracks` / `setTags` (ADR 0009 Q36). Not covered: the loaders that need a database record
+              # (server dialog `loadEvents`, `loadEventsFromServerByID`) or the DB (`loadTracksCSVFromDB`)
+    "tracks_csv": "loadTracksCSVFromServer('/data/sample/tracks.csv')",
+    "tracks_tagged_csv": "loadTrackTaggedCSVFromServer('/data/sample/tracks_tagged.csv')",
+    "tags_csv": "loadTagsCSVFromServer('/data/sample/tracks_tagged.csv')",
+    "converted_csv": "loadConvertedCSVFromServer('/data/sample_gurabo/sample_gurabo.cfr.mp4.events.csv', events_csv_to_json, 'cxcy', 'events')",
+    "events_json_url": "eventsFromServer('/data/sample/events_v2.json')",
+}
+
+
+@pytest.mark.parametrize("name", list(LOADERS))
+def test_l22_loaders_refresh_once(ui, name):
+    """ADR 0009 step 5 (Q36): every loader refreshes once (`setTracks` or `setTags` does it), not a second time on its own."""
+    ui.open()
+    ui.settle()
+    ui.js("refreshLog.clear()")
+    ui.js(LOADERS[name])
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
+    ui.settle(1000)
+    tree = ui.js("refreshLog.tree()")
+    assert tree.count("refreshChronogram(") == 1 and tree.count("VideoControl.onFrameChanged(") == 1, tree
