@@ -251,9 +251,10 @@ def test_l16_overlay_writers_leave_no_store_write_unrefreshed(ui, sample_dir):
     """ADR 0009 step 4e, OverlayControl.js writers: ctrl-drag that stores a box, ctrl-drag too small (nothing stored), refused id
     conflict, pick-frame entry (default span) and its Set End / Set Start buttons. The audit lists no store write without a `refresh.*` call."""
     loaded(ui, sample_dir)
-    header = ui.page.locator("#features > .ui-accordion-header")
-    if header.get_attribute("aria-expanded") != "true":
-        header.click()
+    for sel in ("#parameters > .ui-accordion-header", "#features > .ui-accordion-header"):  # "Features" is a subpanel of "Options"
+        header = ui.page.locator(sel)
+        if header.get_attribute("aria-expanded") != "true":
+            header.click()
     ui.page.check("#showSelected")
     ui.page.check("#showPickFrame")
     ui.click_box("1")
@@ -287,9 +288,10 @@ def test_l17_span_buttons_leave_no_store_write_unrefreshed(ui, sample_dir):
     """ADR 0009 step 4e, SelectionControl.js: the 'extend annotation' buttons of the Selected tab (modifyCurrentObsSpan) store a span
     and end with one chronogram refresh. The first click also stores the default span; the audit lists no write without a `refresh.*` call."""
     loaded(ui, sample_dir)
-    header = ui.page.locator("#features > .ui-accordion-header")
-    if header.get_attribute("aria-expanded") != "true":
-        header.click()
+    for sel in ("#parameters > .ui-accordion-header", "#features > .ui-accordion-header"):  # "Features" is a subpanel of "Options"
+        header = ui.page.locator(sel)
+        if header.get_attribute("aria-expanded") != "true":
+            header.click()
     ui.page.check("#showSelected")
     ui.click_box("1")
     start = ui.js("flatTracksAll.find(t => t.obs.frame === 0 && String(t.obs.ID) === '1').span")
