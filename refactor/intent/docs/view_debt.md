@@ -207,7 +207,7 @@ group of the drafter (ID block `DEBT-G01..`).
 | DEBT-833 | [Store writes with no refresh after them](#debt-833-store-writes-with-no-refresh-after-them) |
 | DEBT-834 | [Background click and select-by-frame still rebuild by hand](#debt-834-background-click-and-select-by-frame-still-rebuild-by-hand) |
 | DEBT-835 | [`#selectID` keeps its text after an explicit deselect](#debt-835-selectid-keeps-its-text-after-an-explicit-deselect) |
-| DEBT-836 | [Pan and zoom rebuild every rectangle on every mouse event](#debt-836-pan-and-zoom-rebuild-every-rectangle-on-every-mouse-event) |
+| DEBT-836 | [Pan and zoom rebuild every rectangle on every mouse event (fixed: drag, wheel; `canvasTransformReset` and `Center` still rebuild)](#debt-836-pan-and-zoom-rebuild-every-rectangle-on-every-mouse-event-fixed-drag-wheel-canvastransformreset-and-center-still-rebuild) |
 | DEBT-837 | [Direct refresh calls left in custom code (census after slice 6 step 6i)](#debt-837-direct-refresh-calls-left-in-custom-code-census-after-slice-6-step-6i) |
 
 ## DEBT-101: Annotation lineage `created_from_id` is never stored
@@ -1880,9 +1880,9 @@ Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fi
   - [labelbee/static/labelbee/js/SelectionControl.js](../../../labelbee/static/labelbee/js/SelectionControl.js): `updateSelectionPanels`, `updateSelectID`, `onSelectIDChanged`
 - **Links:** ADR 0009
 
-## DEBT-836: Pan and zoom rebuild every rectangle on every mouse event
+## DEBT-836: Pan and zoom rebuild every rectangle on every mouse event (fixed: drag, wheel; `canvasTransformReset` and `Center` still rebuild)
 
-[read] `onMouseDown_panning` and `onMouseWheel_Zooming` call `videoControl.refresh()` (`labelbee/static/labelbee/js/OverlayControl.js:3716`, `:3723`, `:3850`, `:3862`) per mouse move and wheel tick: `hardRefresh` recreates all rectangles and shows the selection, for a change of the canvas transform only. An update (`refresh.overlayUpdate()`) or a plain re-render would do. Left as it was (not a data change, section 2 of `design/0009-refresh-triggers.md`).
+[read] `onMouseDown_panning` and `onMouseWheel_Zooming` call `videoControl.refresh()` (`labelbee/static/labelbee/js/OverlayControl.js:3716`, `:3723`, `:3850`, `:3862`) per mouse move and wheel tick: `hardRefresh` recreates all rectangles and shows the selection, for a change of the canvas transform only. An update (`refresh.overlayUpdate()`) or a plain re-render would do. Fixed after step 7: `canvasTransformSet`, `Scale` and `Pan` call `refreshOverlay()` (the rects follow their obs), the four `videoControl.refresh()` of the mouse handlers were a second rebuild after the setters' own `hardRefresh()` and are gone; `onTrackWindowChanged` calls `refresh.overlayUpdate()`. A draft rect (no obs) no longer disappears on a pan.
 
 - **Code:**
   - [labelbee/static/labelbee/js/OverlayControl.js](../../../labelbee/static/labelbee/js/OverlayControl.js): `onMouseDown_panning`, `onMouseWheel_Zooming`

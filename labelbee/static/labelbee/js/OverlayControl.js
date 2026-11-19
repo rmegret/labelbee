@@ -665,7 +665,7 @@ OverlayControl.prototype.refreshCanvasSize = function (event, ui) {
   //var ctx=canvas.getContext("2d");
   //ctx.transform(...canvasTransform);
 
-  //overlay.hardRefresh() // Already done in canvasTransformScale()
+  //overlay.refreshOverlay() // Already done in canvasTransformScale()
 };
 
 /* Canvas Transform */
@@ -700,7 +700,7 @@ OverlayControl.prototype.canvasTransformSet = function (array) {
     canvasTransform[i] = array[i];
   }
   overlay.canvasTransform_Fix();
-  overlay.hardRefresh();
+  overlay.refreshOverlay(); // only the transform changed: the rects follow their obs
 };
 OverlayControl.prototype.canvasTransform_Fix = function () {
   let overlay = this;
@@ -762,7 +762,7 @@ OverlayControl.prototype.canvasTransformScale = function (
 
   overlay.canvasTransform_Fix();
 
-  overlay.hardRefresh();
+  overlay.refreshOverlay(); // only the transform changed: the rects follow their obs
 };
 OverlayControl.prototype.canvasTransformPan = function (dx, dy) {
   let overlay = this;
@@ -772,7 +772,7 @@ OverlayControl.prototype.canvasTransformPan = function (dx, dy) {
 
   overlay.canvasTransform_Fix();
 
-  overlay.hardRefresh();
+  overlay.refreshOverlay(); // only the transform changed: the rects follow their obs
 };
 OverlayControl.prototype.canvasTransformCenter = function (cx, cy) {
   // cx,cy: new center in video coordinates
@@ -1011,7 +1011,7 @@ OverlayControl.prototype.hardRefresh = function () {
       overlay.setInteractionMode('main')
       overlay.setActiveRectID(selection.getId());
       updateSelectionPanels();
-      this.refreshOverlay()
+      overlay.refreshOverlay(true)
 
       updateUndoButton()
       return
@@ -1109,7 +1109,7 @@ OverlayControl.prototype.hardRefresh = function () {
   }
   updateSelectionPanels();
 
-  this.refreshOverlay();
+  this.refreshOverlay(true);
 
   updateUndoButton();
 
@@ -1374,9 +1374,13 @@ OverlayControl.prototype.redrawVideoFrame = function() {
       0, 0, w, h);
   }
 };
-OverlayControl.prototype.refreshOverlay = function () {
+OverlayControl.prototype.refreshOverlay = function (skipVideoFrame) {
   // Refresh overlay from already existing overlay data
+  // The tracks, tags, ROI are plotted on overlay.ctx: redrawing the video frame is what erases the previous plot.
+  // hardRefresh has just done it (skipVideoFrame)
   let overlay = this;
+
+  if (!skipVideoFrame) overlay.redrawVideoFrame();
 
   if (overlay.canvas1) {
     if (showTagsTracks || showSelectedTagsTracks) plotTagsTracks(overlay.ctx);
@@ -2600,10 +2604,10 @@ function onTrackWindowChanged(event, skipRefresh) {
     console.log("onTrackWindowChanged:", overlay.trackWindow);
   }
 
-  $(overlay).trigger("trackWindow:change");
+  $(overlay).trigger("trackWindow:change"); // the chronogram updates its span
 
   if (!skipRefresh)
-    videoControl.refresh();
+    refresh.overlayUpdate();
 }
 function setTrackWindow(L) {
   $("#trackWindow").val(L);
@@ -3712,15 +3716,11 @@ function onMouseDown_panning(option) {
     overlay.canvasTransformSet(panning.canvasTransform);
 
     //canvasTransform_Fix()
-
-    videoControl.refresh();
   };
   var onMouseUp_panning = function (e) {
     if (logging.mouseEvents) console.log("onMouseUp_panning: e=", e);
     overlay.canvas1.off("mouse:move", onMouseMove_panning);
     overlay.canvas1.off("mouse:up", onMouseUp_panning);
-
-    videoControl.refresh();
   };
 
   overlay.canvas1.on("mouse:up", onMouseUp_panning);
@@ -3847,7 +3847,6 @@ function onMouseWheel_Zooming(option) {
     console.log("onMouseWheel: canvasTransform=", canvasTransform);
   }
 
-  videoControl.refresh();
   option.preventDefault();
 }
 function onMouseWheel_Panning(option) {
@@ -3859,7 +3858,6 @@ function onMouseWheel_Panning(option) {
 
   overlay.canvasTransformPan(deltaX, deltaY);
 
-  videoControl.refresh();
   option.preventDefault();
 }
 

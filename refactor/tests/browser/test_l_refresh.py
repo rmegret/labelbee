@@ -425,3 +425,29 @@ def test_l23_selection_model_follows_fabric(ui, sample_dir):
     ui.js("deselectBee()")
     same()
     assert ui.js("selection.getId()") is None                       # explicit deselect forgets the id
+
+
+def test_l24_overlay_update_redraws_over_a_clean_frame(ui, sample_dir):
+    """An overlay update (a label, a drag, the track window, a pan or a zoom) plots the tracks on `overlay.ctx` over a freshly drawn video
+    frame: the pixels after N updates are those after one, and the control (plot without the frame redraw) shows that the test sees a pile-up.
+    Pan, wheel zoom and the track window are updates: no `hardRefresh`."""
+    loaded(ui, sample_dir)
+    ui.goto_frame(10)
+    ui.settle(500)
+    pixels = "(() => { const c = overlay.canvas; const d = overlay.ctx.getImageData(0, 0, c.width, c.height).data; let h = 0; for (let i = 0; i < d.length; i++) h = (h * 31 + d[i]) | 0; return h; })()"
+    ui.js("showObsTracks = true; overlay.trackWindow.backward = 20; overlay.trackWindow.forward = 20; overlay.hardRefresh()")
+    one = ui.js(pixels)
+    ui.js("overlay.refreshOverlay(); overlay.refreshOverlay(); overlay.refreshOverlay()")
+    assert ui.js(pixels) == one                                     # the update erases the previous plot
+    ui.js("overlay.refreshOverlay(true); overlay.refreshOverlay(true); overlay.refreshOverlay(true)")
+    assert ui.js(pixels) != one                                     # control: without the frame redraw the plots pile up
+    ui.js("overlay.hardRefresh()")
+
+    ui.js("refreshLog.clear()")
+    ui.js("overlay.canvasTransformPan(5, 5)")
+    ui.js("onTrackWindowChanged()")
+    ui.js("overlay.canvasTransformScale(1.1, [100, 100])")
+    ui.settle(300)
+    assert ui.js("refreshInstrumented.missing") == []
+    calls = ui.js("refreshLog.tree()")
+    assert "hardRefresh" not in calls and "videoControl.refresh" not in calls, calls

@@ -1679,9 +1679,9 @@ Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fi
   - `SelectionControl.js`: `updateSelectionPanels`, `updateSelectID`, `onSelectIDChanged`
 - **Links:** ADR 0009
 
-## DEBT-836: Pan and zoom rebuild every rectangle on every mouse event
+## DEBT-836: Pan and zoom rebuild every rectangle on every mouse event (fixed: drag, wheel; `canvasTransformReset` and `Center` still rebuild)
 
-[read] `onMouseDown_panning` and `onMouseWheel_Zooming` call `videoControl.refresh()` (`labelbee/static/labelbee/js/OverlayControl.js:3716`, `:3723`, `:3850`, `:3862`) per mouse move and wheel tick: `hardRefresh` recreates all rectangles and shows the selection, for a change of the canvas transform only. An update (`refresh.overlayUpdate()`) or a plain re-render would do. Left as it was (not a data change, section 2 of `design/0009-refresh-triggers.md`).
+[read] `onMouseDown_panning` and `onMouseWheel_Zooming` call `videoControl.refresh()` (`labelbee/static/labelbee/js/OverlayControl.js:3716`, `:3723`, `:3850`, `:3862`) per mouse move and wheel tick: `hardRefresh` recreates all rectangles and shows the selection, for a change of the canvas transform only. An update (`refresh.overlayUpdate()`) or a plain re-render would do. Fixed after step 7: `canvasTransformSet`, `Scale` and `Pan` call `refreshOverlay()` (the rects follow their obs), the four `videoControl.refresh()` of the mouse handlers were a second rebuild after the setters' own `hardRefresh()` and are gone; `onTrackWindowChanged` calls `refresh.overlayUpdate()`. A draft rect (no obs) no longer disappears on a pan.
 
 - **Code:**
   - `OverlayControl.js`: `onMouseDown_panning`, `onMouseWheel_Zooming`
