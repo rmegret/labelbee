@@ -632,9 +632,7 @@ When RestrictID is active, the visible rows are only the restricted IDs, so Next
 
 ## BEH-340: No keyboard shortcut for chronogram navigation
 
-No key binding in `labelBee.js` calls the chronogram navigation functions (first/previous/next/last event, next/previous ID, zoom). The chronogram is mouse/button only. Ctrl+hover "track frame" preview in the chronogram
-(`axes.setTrackFrame(enabled)`: Ctrl + mouse move triggers `previewframe:trackmove` -> `onAxesMoved` -> `videoControl.seekFrame(frame, "preview")`, release returns to the original frame via `endPreview`) is off by default;
-the "Ctrl+hover preview" checkbox of Options/Chronogram (`#chronoPreviewHover`) binds it, unchecking removes every `.trackFrame` handler (chronogram and `body`) and ends a preview in progress.
+No key binding in `labelBee.js` calls the chronogram navigation functions (first/previous/next/last event, next/previous ID, zoom). The chronogram is mouse/button only. What a drag on the chronogram does is chosen with the Drag button right of Fit (`#chrono-drag-button`, ADR 0011): Pan View (default, d3.zoom pan), Preview Frame (click-drag, touch-drag or Ctrl+hover triggers `previewframe:trackmove` -> `onAxesMoved` -> `videoControl.seekFrame(frame, "preview")`, release returns to the original frame via `endPreview`), or Ignore. The choice is not saved. Wheel, dblclick and two-finger pinch zoom work in every mode.
 
 - **Group:** CAP-305
 - **Origin:** debt
