@@ -126,15 +126,17 @@ function pushRefresh(phase, what) {
   const e = { seq: ++refreshSeq, t: Math.round(performance.now() * 10) / 10, depth: refreshDepth, phase, what: what == null ? "" : String(what), ms: 0, trigger: refreshTrigger() };
   refreshLog.push(e);
   if (refreshLog.length > REFRESH_LOG_MAX) refreshLog.shift();
+  echoRefresh(e);
   return e;
 }
+/* Printed when the entry starts, so the lines come in `seq` order (a parent before its children); the durations are in `refreshLog` and `refreshLog.showTree()` */
 function echoRefresh(e) {
-  if (logging.refresh) console.log(`refresh#${e.seq} ${"  ".repeat(e.depth)}${e.phase}${e.what ? " " + e.what : ""}${e.ms ? ` ${e.ms} ms` : ""}${e.trigger ? ` <- ${e.trigger}` : ""}`);
+  if (logging.refresh) console.log(`refresh#${e.seq} ${"  ".repeat(e.depth)}${e.phase}${e.what ? " " + e.what : ""}${e.trigger ? ` <- ${e.trigger}` : ""}`);
 }
 
 /* An instant entry (no duration) */
 export function logRefresh(phase, what) {
-  echoRefresh(pushRefresh(phase, what));
+  pushRefresh(phase, what);
 }
 
 /* Runs `fn` and logs it as `phase` with its duration; entries logged while it runs are nested one level deeper. Returns its result */
@@ -147,6 +149,5 @@ export function timedRefresh(phase, what, fn) {
   } finally {
     refreshDepth--;
     e.ms = Math.round((performance.now() - t0) * 100) / 100;
-    echoRefresh(e);
   }
 }
