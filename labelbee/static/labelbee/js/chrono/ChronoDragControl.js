@@ -103,10 +103,23 @@ export class PreviewMode extends Mode {
       if (e.key === "Control" && !this.drag) this._end();
     });
     if (doc.defaultView) bag.add(doc.defaultView, "blur", () => this._end());
+    // Touch (Android): without touch-action none the browser takes the touch for a scroll or a long press
+    // and sends pointercancel; touch-action only applies to the root <svg>, not to a <g>
+    const box = el.ownerSVGElement || el;
+    if (box.style) {
+      this._touchBox = box;
+      this._touchAction = box.style.touchAction;
+      box.style.touchAction = "none";
+    }
+    bag.add(el, "contextmenu", (e) => {
+      if (this.drag || e.pointerType === "touch") e.preventDefault(); // long press
+    });
   }
 
   _detach() {
     this._end();
+    if (this._touchBox) this._touchBox.style.touchAction = this._touchAction;
+    this._touchBox = null;
     this._reset();
   }
 

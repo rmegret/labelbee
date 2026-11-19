@@ -197,3 +197,14 @@ def test_o11_drag_button_menu_switches_mode(ui, sample_dir):
     ui.page.mouse.click(5, 5)                                       # outside: closes
     assert ui.page.is_hidden("#chrono-drag-menu")
     assert ui.js("chronoDragControl.mode") == "preview"
+
+
+def test_o14_preview_mode_takes_the_touch_from_the_browser_and_gives_it_back(ui, sample_dir):
+    """Android: without touch-action none a still or slow touch becomes a scroll / long press (pointercancel)."""
+    _start(ui, sample_dir)
+    get = "() => axes.chronoGroup.node().ownerSVGElement.style.touchAction"
+    before = ui.js(get)
+    ui.js("chronoDragControl.setMode('preview')")
+    assert ui.js(get) == "none"
+    ui.js("chronoDragControl.setMode('pan')")
+    assert ui.js(get) == before
