@@ -1,6 +1,6 @@
 // VideoCacheStatus (module): shows on the chronogram which video frames are in the VideoCache.
 //
-//   cachedFrames      [{frame, status}] sorted by frame, status "loaded" or "pending" (any other state is left out)
+//   cachedFrames      [{frame, status}] sorted by frame, status "loaded", "pending" or "processing" (any other state is left out)
 //   cachedFramesRuns  [{startFrame, endFrame, status}] consecutive frames of the same status (a run can be 1 frame long)
 //
 // The strip is drawn with d3 in the x axis group, just below the frame axis (it does not overlap it).
@@ -9,8 +9,9 @@
 
 export const LOADED = "loaded";
 export const PENDING = "pending";
-const STATUS_OF_STATE = { incache: LOADED, inqueue: PENDING }; // VideoCache item.state -> status
-const COLOR = { [LOADED]: "#2ca02c", [PENDING]: "#ffd400" };
+export const PROCESSING = "processing";
+const STATUS_OF_STATE = { incache: LOADED, inqueue: PENDING, inprocess: PROCESSING }; // VideoCache item.state -> status
+const COLOR = { [LOADED]: "#2ca02c", [PENDING]: "#ffd400", [PROCESSING]: "#ff8c00" };
 
 // Frames of `url` held by the VideoCache LRU, with status loaded/pending, sorted by frame.
 // Reads the LRU without touching its recency order.

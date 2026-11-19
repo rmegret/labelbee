@@ -127,6 +127,7 @@ Backlog, unordered, not commitments (module names from `intent/modules.md`):
 - [x] **Off plan: HoverControl** ([ADR 0010](design/0010-hover-control.md); maintainer, 2026-11-18): hover preview of an uncached frame now refreshes when it arrives, only if still hovered.
 - [x] **Off plan: ChronoDragControl** ([ADR 0011](design/0011-chrono-drag-control.md); maintainer, 2026-11-18): Drag button with Ignore / Pan View / Preview Frame modes. Drag button picks Pan View (default) / Preview Frame / Ignore; replaces the Ctrl+hover checkbox.
 - [x] **Off plan: VideoCacheStatus** ([ADR 0012](design/0012-video-cache-status.md); maintainer, 2026-11-19): Options/Chronogram option draws loaded/pending cache runs under the frame axis.
+- [x] **Off plan: VideoCache priority queue** ([ADR 0013](design/0013-video-cache-priority-queue.md); maintainer, 2026-11-19): hover and display requests jump the queue; cancel and failed decodes settle their promises.
 
 ## Not planned for now
 Specs per feature, behavior-level characterization of everything, traceability matrix, a
@@ -145,3 +146,4 @@ budget. They can be revisited when a slice needs them.
 - [ADR 0010](design/0010-hover-control.md): `HoverControl`, one owner of the hover preview queries (proposed)
 - [ADR 0011](design/0011-chrono-drag-control.md): `ChronoDragControl`, drag behaviors of the chronogram as pluggable modes (proposed)
 - [ADR 0012](design/0012-video-cache-status.md): `VideoCacheStatus`, video cache content shown on the chronogram (proposed)
+- [ADR 0013](design/0013-video-cache-priority-queue.md): `VideoCache` dynamic queue (priority requests), cancel signal, failed decodes (proposed)

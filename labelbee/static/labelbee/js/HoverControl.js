@@ -44,7 +44,7 @@ HoverControl.prototype.query = function (frame) {
   this.active = true;
   this.latest = { key: key, frame: frame, shown: false };
 
-  let promise = vc.videoCache.enqueueFrame(url, cacheFrame, videoinfo.videofps);
+  let promise = vc.videoCache.enqueueFramePriority(url, cacheFrame, videoinfo.videofps);
   vc.videoCache.processQueue();
   let img = vc.videoCache.getFrameImageSync(url, cacheFrame);
   if (img) {
@@ -55,7 +55,7 @@ HoverControl.prototype.query = function (frame) {
     console.log("HoverControl.query: not in cache, waiting for", key);
   Promise.resolve(promise).then(
     (img) => this._apply(key, frame, img),
-    (err) => console.error("HoverControl.query: frame query failed", key, err)
+    (err) => { if (!VideoCache.isCanceled(err)) console.error("HoverControl.query: frame query failed", key, err); }
   );
 };
 

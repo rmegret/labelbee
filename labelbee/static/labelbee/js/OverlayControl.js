@@ -1169,6 +1169,16 @@ OverlayControl.prototype.diffImage = function(canvas2, canvas1, gain) {
     //console.log('diffImage DONE')
 } 
 
+// Redraw once the frames requested by a redraw have arrived, if `frame` is still the current one.
+// Only when they are all in the cache: a frame that failed would otherwise request itself again forever.
+OverlayControl.prototype.refreshIfLoaded = function(videoUrl, frame, frames) {
+    if (videoControl.currentFrame !== frame || videoControl.video.src !== videoUrl) return
+    for (let f of frames) {
+        if (f >= 0 && videoCache.getFrameState(videoUrl, f) !== 'incache') return
+    }
+    this.hardRefresh()
+}
+
 OverlayControl.prototype.redrawVideoFrameDiff = function() {
     var overlay = this;
     
@@ -1197,7 +1207,7 @@ OverlayControl.prototype.redrawVideoFrameDiff = function() {
         videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), videoinfo.videofps)
         .then(function() {
             printMessage("Preload done")
-            //overlay.hardRefresh()
+            overlay.refreshIfLoaded(videoUrl, frame, [frame, frame-1])
         })
         //videoControl.pause() // pause after to avoid infinite loop?
         //printMessage("Paused, need to preload video frames")
@@ -1242,7 +1252,7 @@ OverlayControl.prototype.redrawVideoFromCache = function() {
       videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), videoinfo.videofps)
       .then(function() {
           printMessage("Preload done")
-          //overlay.hardRefresh()
+          overlay.refreshIfLoaded(videoUrl, frame, [frame])
       })
       //videoControl.pause() // pause after to avoid infinite loop?
       //printMessage("Paused, need to preload video frames")
