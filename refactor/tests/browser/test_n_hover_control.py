@@ -96,3 +96,31 @@ def test_n5_a_cached_frame_is_shown_at_once(ui, sample_dir):
     ui.js("videoControl.seekFrame(5, 'preview')")                                       # now in the cache: synchronous
     s = ui.js(STATE)
     assert s["frame"] == 5 and s["changed"] == [5]
+
+
+BAR = "() => ({cls: axes.timeMark.attr('class'), frame: axes.timeMark.frame})"
+
+
+def _trackmove(ui, frame):
+    ui.js("(f) => $(axes).trigger($.extend({type: 'previewframe:trackmove'}, {frame: f, id: 0}))", frame)
+
+
+def test_n5_time_bar_is_orange_dashed_until_a_frame_is_shown_then_green_then_normal(ui, sample_dir):
+    """Preview in the chronogram: the bar sits at the pointer, orange dashed, while no frame is available; once a
+    frame shows it is green and stays on the shown frames; the end of the preview gives the normal bar back."""
+    _start(ui, sample_dir)
+    _trackmove(ui, 5)
+    b = ui.js(BAR)
+    assert b["cls"] == "timeMark pending" and b["frame"] == 5
+    _trackmove(ui, 7)                                                                   # still nothing loaded: follows
+    b = ui.js(BAR)
+    assert b["cls"] == "timeMark pending" and b["frame"] == 7
+    _release(ui)                                                                        # frame 7 arrives
+    b = ui.js(BAR)
+    assert b["cls"] == "timeMark preview" and b["frame"] == 7
+    ui.js("() => { videoControl.videoCache.getImageForce = () => new Promise(() => {}); }")      # nothing decodes any more
+    _trackmove(ui, 12)                                                                  # pointer moves, frame not loaded
+    b = ui.js(BAR)
+    assert b["cls"] == "timeMark preview" and b["frame"] == 7                           # stays green on the shown frame
+    ui.js("() => $(axes).trigger('previewframe:trackend')")
+    ui.page.wait_for_function("axes.timeMark.attr('class') === 'timeMark'")

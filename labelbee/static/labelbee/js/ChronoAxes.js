@@ -635,11 +635,13 @@ function ChronoAxes(parent, videoinfo, options) {
     var timeMark = parent.append("rect").attr("class", "timeMark");
     // For timeMark style, look at custom.css
     timeMark.frame = 0; // Store current frame inside timeMark object
+    timeMark.state = null; // null, "preview" (green: a loaded frame is shown) or "pending" (orange dashed: none yet)
     axes.timeMark = timeMark;
     refreshTimeMark();
   }
   function refreshTimeMark() {
     let frame = axes.timeMark.frame;
+    let stateClass = axes.timeMark.state ? " " + axes.timeMark.state : "";
     let isOut = false;
     if (frame <= axes.xScale.domain()[0] - 1) {
       frame = axes.xScale.domain()[0];
@@ -654,7 +656,7 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("y", 0)
         .attr("width", 2)
         .attr("height", axes.height())
-        .attr("class", "timeMark out");
+        .attr("class", "timeMark out" + stateClass);
     } else {
       let w = axes.xScale(1) - axes.xScale(0.0);
       let minW = 1;
@@ -664,7 +666,7 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("y", 0) // In plotArea translated coordinates
         .attr("width", isThin ? minW + 2 : w + 2)
         .attr("height", axes.height())
-        .attr("class", isThin ? "timeMark thin" : "timeMark");
+        .attr("class", (isThin ? "timeMark thin" : "timeMark") + stateClass);
     }
   }
   function setTimeMark(frame) {
@@ -677,7 +679,12 @@ function ChronoAxes(parent, videoinfo, options) {
     axes.timeMark.frame = frame;
     refreshTimeMark();
   }
+  function setTimeMarkState(state) {
+    axes.timeMark.state = state;
+    refreshTimeMark();
+  }
   // timeMark Exports
+  axes.setTimeMarkState = setTimeMarkState;
   // axes.timeMark = timeMark // Private
   axes.setTimeMark = setTimeMark;
 

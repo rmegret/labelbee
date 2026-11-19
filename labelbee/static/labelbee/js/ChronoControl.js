@@ -243,8 +243,21 @@ function initChrono() {
       //videoControl.hardRefresh();
     }
   }
-  $(axes).on("previewframe:trackmove", (evt)=>onAxesMoved(evt));
-  $(axes).on("previewframe:trackend", ()=>endPreview());
+  // Time bar during a preview: orange dashed at the pointer until a frame is shown, then green on the shown frames
+  $(axes).on("previewframe:trackmove", function (evt) {
+    previewBar.active = true;
+    if (!previewBar.shown) {
+      axes.setTimeMark(evt.frame);
+      axes.setTimeMarkState("pending");
+    }
+    onAxesMoved(evt); // a frame already available shows (and turns the bar green) from in here
+  });
+  $(axes).on("previewframe:trackend", function () {
+    previewBar.active = previewBar.shown = false;
+    axes.setTimeMarkState(null);
+    endPreview();
+    updateTimeMark();
+  });
 
   // Drag modes of the chronogram (ADR 0011). One import, the namespace is global for now:
   // when this file becomes a module, replace by `import * as ChronoDragControl from "./chrono/ChronoDragControl.js"`.
@@ -823,8 +836,13 @@ var __section__chronogram_main_view
 // ### CHRONO DYNAMIC ELEMENTS (TIMEMARK, SELECTION)
 var __section__chronogram_dynamic_elements
 
+var previewBar = { active: false, shown: false }; // a preview is going on / has shown a frame since it began
 function updateTimeMark() {
   var frame = getCurrentFrame();
+  if (previewBar.active) {
+    previewBar.shown = true;
+    axes.setTimeMarkState("preview");
+  }
   if (logging.frameEvents) console.log("updateTimeMark: frame=", frame);
   if (typeof frame == "undefined") {
     frame = 0;

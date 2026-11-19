@@ -523,6 +523,17 @@ svg {
 .timeMark.thin {
   stroke-width: 1;
 }
+.timeMark.preview { /* preview showing a loaded frame */
+  fill: #0A0;
+  fill-opacity: 0.15;
+  stroke: #0A0;
+}
+.timeMark.pending { /* preview started, no frame shown yet */
+  fill: none;
+  stroke: #F80;
+  stroke-dasharray: 4px,3px;
+  stroke-width: 2;
+}
 .timeMark.out {
   fill: none;
   stroke: #F00;
