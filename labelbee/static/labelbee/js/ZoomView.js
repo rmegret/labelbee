@@ -345,7 +345,7 @@ ZoomOverlay.prototype.refreshFromSelection = function () {
 
   this.id = id;
 
-  this.syncFromTracks();
+  this.syncFromTracks(true); // the refreshZoom below follows loadTagImage
 
   this.loadTagImage();
   this.refreshZoom();
@@ -354,7 +354,7 @@ ZoomOverlay.prototype.refreshFromSelection = function () {
 /**
  * @memberof ZoomOverlay
  */
-ZoomOverlay.prototype.syncFromTracks = function () {
+ZoomOverlay.prototype.syncFromTracks = function (skipRefresh) {
   if (logging.zoomOverlay) console.log("ZoomOverlay.syncFromTracks");
   var activeObject = overlay.getActiveRect(); // Object of video frame
 
@@ -382,7 +382,7 @@ ZoomOverlay.prototype.syncFromTracks = function () {
     this.startAutoLabel();
   }
 
-  this.refreshZoom();
+  if (!skipRefresh) this.refreshZoom();
 };
 /**
  * @memberof ZoomOverlay

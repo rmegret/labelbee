@@ -900,10 +900,8 @@ function drawChrono() {
 
   if (logging.chrono) console.log("drawChrono");
 
-  updateChronoYDomain();
+  updateChronoYDomain(); // axes.ydomain() triggers axes:changed, which runs updateChrono()
   //axes.ydomain([0,20]) // Uncomment for testing
-
-  updateChrono();
 }
 
 /* Render chrono */

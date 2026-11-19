@@ -69,7 +69,7 @@ def loaded(ui, sample_dir):
 
 
 # The mouse moves of a drag each refresh the overlay and the form: their number follows the moves, not the code
-DRAG_MOVE = r"^(?:OverlayControl\.refreshOverlay,updateForm\(updateEventTree\),ZoomOverlay\.refreshZoomx2,?)+"
+DRAG_MOVE = r"^(?:OverlayControl\.refreshOverlay,updateForm\(updateEventTree\),ZoomOverlay\.refreshZoom,?)+"
 
 
 def normalize(name, got):
