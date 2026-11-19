@@ -32,9 +32,11 @@ def load(ui, path):
 def show_tabs(ui, *checkboxes):
     """The "Selected" and "Pick-Frame Mode" blocks are hidden until "Features > Show menu tabs" ticks them."""
     # not ui.open_panel("Features"): its text match finds "Clean up features" first
-    header = ui.page.locator("#features > .ui-accordion-header")
-    if header.get_attribute("aria-expanded") != "true":
-        header.click()
+    # "Features" is a subpanel of "Options"
+    for sel in ("#parameters > .ui-accordion-header", "#features > .ui-accordion-header"):
+        header = ui.page.locator(sel)
+        if header.get_attribute("aria-expanded") != "true":
+            header.click()
     for c in checkboxes:
         ui.page.check(c)
 
