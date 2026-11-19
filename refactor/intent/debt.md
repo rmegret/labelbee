@@ -518,10 +518,10 @@ Dangling marks use the global `ROI = {left:175, top:250, right:2305, bottom:1240
 
 ## DEBT-312: Dead interaction code
 
-Dead or inactive: Ctrl-hover preview (`injectTrackFrame` not installed, its call is commented out at `labelbee/static/labelbee/js/ChronoAxes.js:915`, so `previewframe:trackmove`/`onAxesMoved`/`endPreview` never fire and its `keydown.trackFrame` handler on `body` is never bound), `axes.onClick`/`onAxesChanged` callbacks (replaced by jQuery events, commented out in `initChrono`), `onZoom0`, `triggerEvent`, `domainy*` (commented), `nextSeekFocusWindow` (no caller found), `eventSeekMode`-related `gotoEvent_seekCB`; the custom `onAxesDblClick` is possibly shadowed by d3's `dblclick.zoom` (unverified, see BEH-334). [read] `labelbee/static/labelbee/js/ChronoAxes.js:913-960`, `labelbee/static/labelbee/js/ChronoControl.js:194-195`.
+Dead or inactive: `axes.onClick`/`onAxesChanged` callbacks (replaced by jQuery events, commented out in `initChrono`), `onZoom0`, `triggerEvent`, `domainy*` (commented), `nextSeekFocusWindow` (no caller found), `eventSeekMode`-related `gotoEvent_seekCB`; the custom `onAxesDblClick` is possibly shadowed by d3's `dblclick.zoom` (unverified, see BEH-334). [read] `labelbee/static/labelbee/js/ChronoAxes.js:913-960`, `labelbee/static/labelbee/js/ChronoControl.js:194-195`.
 - **Code:**
-  - `ChronoAxes.js`: `injectTrackFrame`, `onZoom0`, `triggerEvent`
-  - `ChronoControlInteraction.js`: `onAxesMoved`, `nextSeekFocusWindow`, `onAxesDblClick`
+  - `ChronoAxes.js`: `onZoom0`, `triggerEvent`
+  - `ChronoControlInteraction.js`: `nextSeekFocusWindow`, `onAxesDblClick`
 - **Links:** BEH-334, BEH-340
 
 ## DEBT-313: Navigation sorts shared arrays in place and mixes id types

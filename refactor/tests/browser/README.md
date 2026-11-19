@@ -4,7 +4,7 @@ Automated version of [../CHECKLIST.md](../CHECKLIST.md): the real page in headle
 the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design/0006-browser-tests.md).
 
     conda activate labelbeedev                  # see ../devenv/README.md
-    pytest refactor/tests/browser               # ~3 minutes, 91 tests, all passing
+    pytest refactor/tests/browser               # ~3 minutes, 139 tests, all passing
     pytest refactor/tests/browser -k c9 -x      # one item, stop at the first failure
     pytest refactor/tests/browser --headed      # watch the browser (pytest-playwright option)
 
@@ -23,6 +23,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_i_detector.py` | The dirty-write detector itself: direct and indirect mutations are seen (`dirty_writes_expected` tests) |
 | `test_j_editors.py` | The edit paths of the editor, pinned before the working copy goes (slice 5 step 0, [ADR 0008](../../design/0008-field-ownership.md)): creation by shift-click and ctrl-drag, label text, notes, the wrong-id edits, move, resize, rotate, dot mode, parts in the zoom view |
 | `test_l_refresh.py` | The refresh log (`refreshLog`, `core/Notifier.js`; entry points wrapped by `core/RefreshInstrumentBridge.js`) of 13 user actions: which refresh functions run, nested, and in which order, pinned in `refresh_baseline.json` as the baseline of slice 6 ([ADR 0009](../../design/0009-slice-refresh-logic.md) section 4; `UPDATE_REFRESH_BASELINE=1` records the current code); also writes the durations to `refactor/scratch/refresh-baseline.json` |
+| `test_m_chrono_preview.py` | The Options/Chronogram "Ctrl+hover preview" checkbox: off by default with no listener bound, enabling and disabling bind and remove every `.trackFrame` handler, Ctrl+move previews and release ends it, disabling during a preview ends it |
 | `test_alerts.py` | The main alert modal: alerts in quick succession (F3) |
 
 ## How it works

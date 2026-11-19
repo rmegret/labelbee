@@ -122,6 +122,8 @@ Backlog, unordered, not commitments (module names from `intent/modules.md`):
 | Cycle | `VideoControl` emitting events instead of calling the overlay |
 | Backend hygiene | independent small steps: dead `database/*/model.py`, one auth decorator, truthful `tox.ini`/README |
 
+- [x] **Off plan: Ctrl+hover preview toggle** (maintainer, 2026-11-18; branch `chrono-preview-toggle`): Options/Chronogram checkbox binds or unbinds the dormant preview, off by default.
+
 ## Not planned for now
 Specs per feature, behavior-level characterization of everything, traceability matrix, a
 reworked smell/risk register, full Playwright coverage, splitting analysis files to a size

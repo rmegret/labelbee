@@ -243,6 +243,12 @@ function initChrono() {
   $(axes).on("previewframe:trackmove", (evt)=>onAxesMoved(evt));
   $(axes).on("previewframe:trackend", ()=>endPreview());
 
+  // Ctrl+hover preview: bound only while the option is checked
+  $("#chronoPreviewHover").off("change.chronoPreview").on("change.chronoPreview", function () {
+    axes.setTrackFrame(this.checked);
+  });
+  axes.setTrackFrame($("#chronoPreviewHover").prop("checked"));
+
   /* Resize events */
 
   $("#chronoTab").on("collapsibleexpand", refreshChronoLayout); // TODO: make it more modular, no global selectors

@@ -633,13 +633,13 @@ When RestrictID is active, the visible rows are only the restricted IDs, so Next
 ## BEH-340: No keyboard shortcut for chronogram navigation
 
 No key binding in `labelBee.js` calls the chronogram navigation functions (first/previous/next/last event, next/previous ID, zoom). The chronogram is mouse/button only. Ctrl+hover "track frame" preview in the chronogram
-(`injectTrackFrame`: Ctrl + mouse move triggers `previewframe:trackmove` -> `onAxesMoved` -> `videoControl.seekFrame(frame, "preview")`, release returns to the original frame via `endPreview`) is implemented but its
-installation call (`injectTrackFrame(chronoGroup)`) is commented out, so it is inactive, together with its `keydown.trackFrame`/`keyup.trackFrame` handlers on `body`.
+(`axes.setTrackFrame(enabled)`: Ctrl + mouse move triggers `previewframe:trackmove` -> `onAxesMoved` -> `videoControl.seekFrame(frame, "preview")`, release returns to the original frame via `endPreview`) is off by default;
+the "Ctrl+hover preview" checkbox of Options/Chronogram (`#chronoPreviewHover`) binds it, unchecking removes every `.trackFrame` handler (chronogram and `body`) and ends a preview in progress.
 
 - **Group:** CAP-305
 - **Origin:** debt
 - **Code:**
-  - `ChronoAxes.js`: `injectTrackFrame`
+  - `ChronoAxes.js`: `setTrackFrame`
   - `ChronoControlInteraction.js`: `onAxesMoved`
   - `ChronoControl.js`: `initChrono`
 - **Links:** DEC-005, OQ-309, DEBT-312
