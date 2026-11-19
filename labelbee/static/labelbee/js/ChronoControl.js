@@ -244,19 +244,41 @@ function initChrono() {
   $(axes).on("previewframe:trackmove", (evt)=>onAxesMoved(evt));
   $(axes).on("previewframe:trackend", ()=>endPreview());
 
-  // Ctrl+hover preview: bound only while the option is checked
-  $("#chronoPreviewHover").off("change.chronoPreview").on("change.chronoPreview", function () {
-    axes.setTrackFrame(this.checked);
-  });
-  axes.setTrackFrame($("#chronoPreviewHover").prop("checked"));
-
   // Drag modes of the chronogram (ADR 0011). One import, the namespace is global for now:
   // when this file becomes a module, replace by `import * as ChronoDragControl from "./chrono/ChronoDragControl.js"`.
   import("./chrono/ChronoDragControl.js").then(function (ns) {
     window.ChronoDragControl = ns;
     if (chronoDragControl) chronoDragControl.destroy();
-    chronoDragControl = new ChronoDragControl.DragControl(axes.dragTarget, [new ChronoDragControl.IgnoreMode()]);
+    chronoDragControl = new ChronoDragControl.DragControl(
+      axes.dragTarget,
+      [new ns.PanMode(), new ns.IgnoreMode(), new ns.PreviewMode()],
+      { initial: "pan" }
+    );
+    initDragMenu();
   });
+
+  // Drag button (right of Fit): popup to choose what a drag on the chronogram does. Not saved: Pan on every load.
+  function initDragMenu() {
+    var $menu = $("#chrono-drag-menu");
+    var $button = $("#chrono-drag-button");
+    function sync() {
+      $menu.find("input[value=" + chronoDragControl.mode + "]").prop("checked", true);
+      $button.attr("title", "Drag on the chronogram: " + chronoDragControl.current.label);
+    }
+    chronoDragControl.onChange(sync);
+    sync();
+    $menu.off("change.drag").on("change.drag", "input", function () {
+      chronoDragControl.setMode(this.value);
+      $menu.hide();
+    });
+    $button.off("click.drag").on("click.drag", function (e) {
+      e.stopPropagation();
+      $menu.toggle();
+    });
+    $(document).off("click.dragMenu").on("click.dragMenu", function (e) {
+      if (!$(e.target).closest("#chrono-drag-menu").length) $menu.hide();
+    });
+  }
 
   /* Resize events */
 

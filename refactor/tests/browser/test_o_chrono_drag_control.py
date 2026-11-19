@@ -1,5 +1,11 @@
-"""ChronoDragControl (ADR 0011, step 2): the chronogram builds `chronoDragControl` from the dynamically imported module,
-with Ignore as the only mode, and exposes the narrow target `axes.dragTarget` the modes work through."""
+"""ChronoDragControl (ADR 0011): the Drag button chooses what a drag on the chronogram does.
+Pan View (default): d3.zoom pan. Preview Frame: click-drag, touch-drag or Ctrl+hover previews the frame, no pan.
+Ignore: a drag does nothing, a click still seeks. `axes.dragTarget` is the narrow interface the modes use."""
+
+COUNT = """() => { window.__pv = {move: 0, end: 0, click: 0};
+  $(axes).on('previewframe:trackmove', () => window.__pv.move++); $(axes).on('previewframe:trackend', () => window.__pv.end++);
+  $(axes).on('axes:clicked', () => window.__pv.click++); }"""
+DOMAIN = "() => axes.xScale.domain().map(Math.round)"
 
 
 def _start(ui, sample_dir):
@@ -7,13 +13,37 @@ def _start(ui, sample_dir):
     ui.load_events(sample_dir / "events_v2.json")
     ui.wait_tracks()
     ui.page.wait_for_function("typeof chronoDragControl !== 'undefined' && chronoDragControl !== null")
+    ui.js(COUNT)
+
+
+def _pt(ui, dx=0):
+    """Page coordinates of a point inside the plot (middle of the frame range, first rows), shifted by dx px."""
+    x, y = ui.js("""() => { const m = axes.chronoGroup.node().getScreenCTM();
+      const r = axes.xScale.range(); const p = new DOMPoint((r[0] + r[1]) / 2, axes.yScale.range()[1] / 2).matrixTransform(m);
+      return [p.x, p.y]; }""")
+    return x + dx, y
+
+
+def _drag(ui, dx=60):
+    x, y = _pt(ui)
+    ui.page.mouse.move(x, y)
+    ui.page.mouse.down()
+    ui.page.mouse.move(x + dx / 2, y, steps=3)
+    ui.page.mouse.move(x + dx, y, steps=3)
+    ui.page.mouse.up()
+
+
+def _ptr(ui, type_, pid, x, y, kind="touch"):
+    ui.js("""([t, id, x, y, k]) => axes.chronoGroup.node().dispatchEvent(new PointerEvent(t,
+      {pointerId: id, pointerType: k, clientX: x, clientY: y, button: 0, bubbles: true, isPrimary: id === 1}))""",
+          [type_, pid, x, y, kind])
 
 
 def test_o1_instance_is_created_from_the_imported_namespace(ui, sample_dir):
     _start(ui, sample_dir)
     assert ui.js("typeof ChronoDragControl.DragControl") == "function"
-    assert ui.js("chronoDragControl.mode") == "ignore"
-    assert ui.js("Object.keys(chronoDragControl.modes)") == ["ignore"]
+    assert ui.js("chronoDragControl.mode") == "pan"
+    assert ui.js("Object.keys(chronoDragControl.modes).sort()") == ["ignore", "pan", "preview"]
     assert ui.js("chronoDragControl.target === axes.dragTarget") is True
 
 
@@ -37,3 +67,108 @@ def test_o3_target_emit_triggers_the_previewframe_events(ui, sample_dir):
       axes.dragTarget.emit('trackmove', {frame: 7, id: 3}); axes.dragTarget.emit('trackend');
       return got; }""")
     assert r == [["move", 7, 3], ["end"]]
+
+
+def test_o4_pan_mode_drag_pans_and_does_not_preview(ui, sample_dir):
+    _start(ui, sample_dir)
+    ui.js("axes.zoom.scaleBy(axes.chronoGroup, 4)")                 # zoomed in, so there is room to pan
+    before = ui.js(DOMAIN)
+    _drag(ui)
+    assert ui.js(DOMAIN) != before
+    assert ui.js("window.__pv") == {"move": 0, "end": 0, "click": 0}
+
+
+def test_o5_preview_mode_drag_previews_and_does_not_pan_nor_click(ui, sample_dir):
+    _start(ui, sample_dir)
+    ui.js("chronoDragControl.setMode('preview')")
+    ui.js("axes.zoom.scaleBy(axes.chronoGroup, 4)")
+    before = ui.js(DOMAIN)
+    _drag(ui)
+    pv = ui.js("window.__pv")
+    assert pv["move"] >= 1 and pv["end"] == 1
+    assert pv["click"] == 0                                         # the click ending the drag is swallowed
+    assert ui.js(DOMAIN) == before                                  # no pan
+
+
+def test_o6_preview_mode_plain_click_seeks_without_preview(ui, sample_dir):
+    _start(ui, sample_dir)
+    ui.js("chronoDragControl.setMode('preview')")
+    x, y = _pt(ui)
+    ui.page.mouse.click(x, y)
+    assert ui.js("window.__pv") == {"move": 0, "end": 0, "click": 1}
+
+
+def test_o7_preview_mode_ctrl_hover_previews_and_release_ends_it(ui, sample_dir):
+    _start(ui, sample_dir)
+    ui.js("chronoDragControl.setMode('preview')")
+    x, y = _pt(ui)
+    ui.page.mouse.move(x, y)
+    ui.page.mouse.move(x + 10, y)                                   # no Ctrl: nothing
+    assert ui.js("window.__pv") == {"move": 0, "end": 0, "click": 0}
+    ui.page.keyboard.down("Control")
+    ui.page.mouse.move(x + 20, y)
+    assert ui.js("window.__pv.move") >= 1
+    ui.page.keyboard.up("Control")
+    assert ui.js("window.__pv.end") == 1
+
+
+def test_o8_touch_drag_previews_and_a_second_finger_ends_it(ui, sample_dir):
+    _start(ui, sample_dir)
+    ui.js("chronoDragControl.setMode('preview')")
+    x, y = _pt(ui)
+    _ptr(ui, "pointerdown", 1, x, y)
+    _ptr(ui, "pointermove", 1, x + 20, y)
+    assert ui.js("window.__pv.move") >= 1 and ui.js("window.__pv.end") == 0
+    _ptr(ui, "pointerdown", 2, x + 50, y)                           # pinch: preview over
+    assert ui.js("window.__pv.end") == 1
+    moves = ui.js("window.__pv.move")
+    _ptr(ui, "pointermove", 1, x + 40, y)
+    assert ui.js("window.__pv.move") == moves                       # nothing more while two fingers are down
+    _ptr(ui, "pointerup", 2, x + 50, y)
+    _ptr(ui, "pointerup", 1, x + 40, y)
+    assert ui.js("window.__pv.end") == 1
+
+
+def test_o9_ignore_mode_drag_does_nothing_but_click_still_seeks(ui, sample_dir):
+    _start(ui, sample_dir)
+    ui.js("chronoDragControl.setMode('ignore')")
+    ui.js("axes.zoom.scaleBy(axes.chronoGroup, 4)")
+    before = ui.js(DOMAIN)
+    _drag(ui)
+    assert ui.js(DOMAIN) == before
+    assert ui.js("window.__pv.move") == 0
+    x, y = _pt(ui)
+    ui.page.mouse.click(x, y)
+    assert ui.js("window.__pv.click") >= 1
+
+
+def test_o10_switching_mode_during_a_preview_ends_it_and_leaves_no_listener(ui, sample_dir):
+    _start(ui, sample_dir)
+    ui.js("chronoDragControl.setMode('preview')")
+    x, y = _pt(ui)
+    ui.page.mouse.move(x, y)
+    ui.page.mouse.down()
+    ui.page.mouse.move(x + 30, y, steps=3)
+    assert ui.js("window.__pv.move") >= 1
+    ui.js("chronoDragControl.setMode('pan')")                       # mid-drag
+    assert ui.js("window.__pv.end") == 1
+    assert ui.js("chronoDragControl.modes.preview.bag.size") == 0
+    moves = ui.js("window.__pv.move")
+    ui.page.mouse.move(x + 60, y)
+    ui.page.mouse.up()
+    assert ui.js("window.__pv") == {"move": moves, "end": 1, "click": ui.js("window.__pv.click")}
+
+
+def test_o11_drag_button_menu_switches_mode(ui, sample_dir):
+    _start(ui, sample_dir)
+    assert ui.page.is_hidden("#chrono-drag-menu")
+    ui.page.click("#chrono-drag-button")
+    assert ui.page.is_visible("#chrono-drag-menu")
+    assert ui.page.is_checked("#chrono-drag-menu input[value=pan]")
+    ui.page.click("#chrono-drag-menu input[value=preview]")
+    assert ui.js("chronoDragControl.mode") == "preview"
+    assert ui.page.is_hidden("#chrono-drag-menu")
+    ui.page.click("#chrono-drag-button")
+    ui.page.mouse.click(5, 5)                                       # outside: closes
+    assert ui.page.is_hidden("#chrono-drag-menu")
+    assert ui.js("chronoDragControl.mode") == "preview"

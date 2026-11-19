@@ -849,6 +849,16 @@ function ChronoAxes(parent, videoinfo, options) {
   }
   axes.getFrameFromEvent = getFrameFromEvent
 
+  // d3.zoom filter: d3's default, except that mouse/one-finger drags only pan while panDrag is on
+  var panDrag = true;
+  zoom.filter(function (event) {
+    var ok = (!event.ctrlKey || event.type === "wheel") && !event.button; // d3 default
+    if (panDrag) return ok;
+    if (event.type === "mousedown") return false;
+    if (event.type === "touchstart") return ok && event.touches.length >= 2; // pinch only
+    return ok;
+  });
+
   // Narrow interface for the drag modes (ChronoDragControl, ADR 0011): they see the chronogram only through it
   axes.dragTarget = {
     element: chronoGroup.node(), // where modes add their listeners
@@ -860,6 +870,10 @@ function ChronoAxes(parent, videoinfo, options) {
       var frame = Math.round(xScale.invert(coords[0]));
       if (frame < domain[0] || frame > domain[1]) return null;
       return { frame: frame, id: invertYScale(coords[1]) };
+    },
+    // Does a one-pointer drag pan the view (d3.zoom)? Wheel, dblclick and two-finger pinch always work.
+    setPan: function (enabled) {
+      panDrag = !!enabled;
     },
     // Same jQuery events on `axes` as before: previewframe:trackmove / previewframe:trackend
     emit: function (name, props) {
@@ -930,142 +944,6 @@ function ChronoAxes(parent, videoinfo, options) {
   }
   chronoGroup.on("dblclick", onAxesDblClick);
 
-  // Ctrl+mousemove preview (off by default). While disabled, no handler is
-  // bound anywhere; setTrackFrame(true/false) is idempotent.
-  var trackFrameOn = false;
-  var trackFramePreviewing = false; // a previewframe:trackmove was sent, no trackend yet
-  var mouseCache = [undefined, undefined];
-  function setTrackFrame(enabled) {
-    enabled = !!enabled;
-    if (enabled === trackFrameOn) return;
-    trackFrameOn = enabled;
-    if (enabled) {
-      chronoGroup.on("mouseenter.trackFrame", trackFrame_mouseEnter);
-      chronoGroup.on("mouseleave.trackFrame", trackFrame_mouseLeave);
-    } else {
-      chronoGroup.on("mouseenter.trackFrame", null);
-      chronoGroup.on("mouseleave.trackFrame", null);
-      trackFrame_stop(); // also restores the frame if a preview is in progress
-    }
-  }
-  axes.setTrackFrame = setTrackFrame;
-  axes.isTrackFrameOn = function () {
-    return trackFrameOn;
-  };
-  function trackFrame_stop() {
-    // Unbind everything except mouseenter/mouseleave, end the preview if any
-    d3.select("body").on("keydown.trackFrame", null);
-    d3.select("body").on("keyup.trackFrame", null);
-    chronoGroup.on("mousemove.trackFrame", null);
-    trackFrame_end();
-  }
-  function trackFrame_end() {
-    if (!trackFramePreviewing) return;
-    trackFramePreviewing = false;
-    $(axes).trigger("previewframe:trackend"); // jQuery callback
-  }
-  function trackFrame_mouseEnter(event) {
-    if (logging.mouseMoveEvents) console.log("trackFrame_mouseEnter");
-    d3.select("body").on("keydown.trackFrame", trackFrame_keyDown);
-    chronoGroup.on("mousemove.trackFrame", trackFrame_mouseMove);
-    var coords = d3.pointer(event, axes.chronoGroup.node());
-    mouseCache[0] = coords[0];
-    mouseCache[1] = coords[1];
-  }
-  function trackFrame_mouseLeave(event) {
-    if (logging.mouseMoveEvents) console.log("trackFrame_mouseLeave");
-    trackFrame_stop();
-  }
-  function trackFrame_keyDown(event) {
-    if (logging.mouseMoveEvents)
-      console.log("trackFrame_keyDown", event);
-    if (event.ctrlKey) {
-      // Register mousemove is not already done
-
-      d3.select("body").on("keydown.trackFrame", null); // Callback off
-      d3.select("body").on("keyup.trackFrame", trackFrame_keyUp);
-
-      if (logging.mouseMoveEvents)
-        console.log("Started mousemove tracking in chronogram");
-
-      trackFrame_change();
-    }
-  }
-  function trackFrame_keyUp(event) {
-    if (logging.mouseMoveEvents)
-      console.log("trackFrame_keyDown", event);
-    if (!event.ctrlKey) {
-      //axes.trackFrame_on = false;
-
-      d3.select("body").on("keydown.trackFrame", trackFrame_keyDown);
-      d3.select("body").on("keyup.trackFrame", null);
-
-      if (logging.mouseMoveEvents)
-        console.log("Stopped mousemove tracking in chronogram");
-
-      trackFrame_end();
-    }
-  }
-  function trackFrame_mouseMove(event) {
-    var coords = d3.pointer(event, chronoGroup.node());
-    mouseCache[0] = coords[0];
-    mouseCache[1] = coords[1];
-
-    if (!event.ctrlKey) {
-      //console.log('trackFrame_mouseMove: runaway call')
-      //chronoGroup.on("mousemove", null);
-      //axes.trackFrame_on = false;
-      trackFrame_end(); // Ctrl released while moving: come back to the frame
-      return;
-    }
-    //if (typeof axes.onClick == 'undefined') return;
-    if (event.defaultPrevented) return;
-
-    trackFrame_change();
-  }
-  function trackFrame_change(event) {
-    var coords = mouseCache;
-    if (
-      coords[0] < axes.xScale.range()[0] ||
-      coords[0] > axes.xScale.range()[1] ||
-      coords[1] < axes.yScale.range()[0] ||
-      coords[1] > axes.yScale.range()[1]
-    ) {
-      if (logging.mouseMoveEvents)
-        console.log(
-          "trackFrame_change: outside of axes range, ignoring. coords=",
-          coords
-        );
-      return;
-    }
-
-    var frame = Math.round(xScale.invert(coords[0]));
-
-    let domain = axes.xScale.domain();
-    if (frame < domain[0] || frame > domain[1]) {
-      if (logging.mouseMoveEvents)
-        console.log(
-          "trackFrame_change: f=" + frame + " out of bound. Ignoring."
-        );
-      return;
-    }
-
-    if (typeof glob_offset === "undefined") glob_offset = 0;
-    //frame = Math.round(frame/40)*40+glob_offset
-
-    var id = invertYScale(coords[1]);
-
-    if (logging.mouseMoveEvents)
-      console.log("trackFrame_change: frame=", frame, " id=", id);
-
-    trackFramePreviewing = true;
-    $(axes).trigger({
-      type: "previewframe:trackmove",
-      frame: frame,
-      id: id,
-      mouseevent: event,
-    }); // jQuery callback
-  }
 
   return axes;
 

@@ -38,6 +38,9 @@ HoverControl.prototype.query = function (frame) {
   let cacheFrame = frame + videoinfo.frameoffset;
   let key = this._key(url, cacheFrame);
 
+  // Same frame as the latest query (pointer still over it): already shown or pending, nothing to redo
+  if (this.active && this.latest !== null && this.latest.key === key) return;
+
   this.active = true;
   this.latest = { key: key, frame: frame, shown: false };
 

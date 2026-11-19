@@ -76,6 +76,16 @@ def test_n4_no_refresh_after_the_hover_ended(ui, sample_dir):
     assert ui.js("videoControl.hover.active") is False
 
 
+def test_n6_the_same_frame_queried_again_is_not_applied_again(ui, sample_dir):
+    _start(ui, sample_dir)
+    for _ in range(3):                                                                  # pointer moving over one frame
+        ui.js("videoControl.seekFrame(5, 'preview')")
+    _release(ui)
+    ui.js("videoControl.seekFrame(5, 'preview')")                                       # shown already
+    s = ui.js(STATE)
+    assert s["changed"] == [5] and s["stats"] == {"applied": 1, "stale": 0}
+
+
 def test_n5_a_cached_frame_is_shown_at_once(ui, sample_dir):
     _start(ui, sample_dir)
     ui.js("videoControl.seekFrame(5, 'preview')")

@@ -594,6 +594,16 @@
                           &nbsp;
                           <button id="chrono-fit-button" value="Fit" type="button" class="btn btn-default btn-xs"
                             title="Use all the available width, without horizontal scrollbar">Fit</button>
+                          <span style="position: relative; display: inline-block;">
+                            <button id="chrono-drag-button" type="button" class="btn btn-default btn-xs"
+                              title="What a drag on the chronogram does">Drag</button>
+                            <div id="chrono-drag-menu" class="ui-widget-content"
+                              style="display: none; position: absolute; z-index: 1000; left: 0; top: 100%; white-space: nowrap; padding: 4px 8px; background: white; border: 1px solid #ccc;">
+                              <label style="display: block; font-weight: normal;"><input type="radio" name="chronoDrag" value="pan" /> Pan View</label>
+                              <label style="display: block; font-weight: normal;"><input type="radio" name="chronoDrag" value="preview" /> Preview Frame</label>
+                              <label style="display: block; font-weight: normal;"><input type="radio" name="chronoDrag" value="ignore" /> Ignore</label>
+                            </div>
+                          </span>
                         </span>
                       </div>
                     </span>
@@ -1340,9 +1350,6 @@
                       <div class="checkbox">
                         <label><input type="checkbox" checked="true" id="showTagsChrono"
                             onclick="onChronoParametersChanged()" />Show Tags</label>
-                      </div>
-                      <div class="checkbox">
-                        <label title="Hold Ctrl and move the mouse over the chronogram to preview the video at that frame"><input type="checkbox" id="chronoPreviewHover" />Ctrl+hover preview</label>
                       </div>
                     </div>
                   </div>

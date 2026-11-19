@@ -13,6 +13,8 @@ function fakeTarget() {
   return {
     addEventListener(t, f) { (l.get(t) || l.set(t, new Set()).get(t)).add(f); },
     removeEventListener(t, f) { l.get(t)?.delete(f); },
+    pan: true,
+    setPan(v) { this.pan = v; },
     count() { let n = 0; for (const s of l.values()) n += s.size; return n; },
   };
 }
@@ -102,6 +104,18 @@ test('DragControl: initial mode, switching detaches the old before attaching the
   c.destroy();
   assert.equal(t.count(), 0);
   assert.equal(c.mode, null);
+});
+
+test('PanMode turns the pan on, Ignore turns it off', async () => {
+  const { IgnoreMode, PanMode, DragControl } = await load();
+  const t = fakeTarget();
+  const c = new DragControl(t, [new PanMode(), new IgnoreMode()], { initial: 'pan' });
+  assert.equal(t.pan, true);
+  c.setMode('ignore');
+  assert.equal(t.pan, false);
+  c.setMode('pan');
+  assert.equal(t.pan, true);
+  assert.deepEqual(Object.keys(c.modes), ['pan', 'ignore']);
 });
 
 test('DragControl: default is the first mode, unknown mode throws and changes nothing', async () => {
