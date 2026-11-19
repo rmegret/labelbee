@@ -98,6 +98,7 @@ and is its own commit series and review. The next slice is chosen after the prev
     - (6h) `getCurrentID` replaced by `selection.getId()` [x] (rename only, baseline unchanged)
     - (6i) `axes.selectId`, `selectedID` become `highlightId`, `highlightedID` [x] (rename only, baseline unchanged)
   - (7) record [x] (diagram redone, DEBT-829 to DEBT-837, SEAM-701, modules, ADR section 8)
+  - (8) follow-ups [ ] (DEBT-830, 832, 836 to 839; run C13 with `RUN_C13=1`, skipped by default; shorten the entries of steps 0 to 3 above)
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 

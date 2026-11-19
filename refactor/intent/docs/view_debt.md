@@ -209,6 +209,8 @@ group of the drafter (ID block `DEBT-G01..`).
 | DEBT-835 | [`#selectID` keeps its text after an explicit deselect](#debt-835-selectid-keeps-its-text-after-an-explicit-deselect) |
 | DEBT-836 | [Pan and zoom rebuild every rectangle on every mouse event (fixed: drag, wheel; `canvasTransformReset` and `Center` still rebuild)](#debt-836-pan-and-zoom-rebuild-every-rectangle-on-every-mouse-event-fixed-drag-wheel-canvastransformreset-and-center-still-rebuild) |
 | DEBT-837 | [Direct refresh calls left in custom code (census after slice 6 step 6i)](#debt-837-direct-refresh-calls-left-in-custom-code-census-after-slice-6-step-6i) |
+| DEBT-838 | [10 loader golden tests fail when all `golden/` directories run together](#debt-838-10-loader-golden-tests-fail-when-all-golden-directories-run-together) |
+| DEBT-839 | [Documents describing the state before slice 6 (diagram, views, behaviors)](#debt-839-documents-describing-the-state-before-slice-6-diagram-views-behaviors) |
 
 ## DEBT-101: Annotation lineage `created_from_id` is never stored
 
@@ -1882,7 +1884,7 @@ Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fi
 
 ## DEBT-836: Pan and zoom rebuild every rectangle on every mouse event (fixed: drag, wheel; `canvasTransformReset` and `Center` still rebuild)
 
-[read] `onMouseDown_panning` and `onMouseWheel_Zooming` call `videoControl.refresh()` (`labelbee/static/labelbee/js/OverlayControl.js:3716`, `:3723`, `:3850`, `:3862`) per mouse move and wheel tick: `hardRefresh` recreates all rectangles and shows the selection, for a change of the canvas transform only. An update (`refresh.overlayUpdate()`) or a plain re-render would do. Fixed after step 7: `canvasTransformSet`, `Scale` and `Pan` call `refreshOverlay()` (the rects follow their obs), the four `videoControl.refresh()` of the mouse handlers were a second rebuild after the setters' own `hardRefresh()` and are gone; `onTrackWindowChanged` calls `refresh.overlayUpdate()`. A draft rect (no obs) no longer disappears on a pan.
+[read] `onMouseDown_panning` and `onMouseWheel_Zooming` call `videoControl.refresh()` (`labelbee/static/labelbee/js/OverlayControl.js:3716`, `:3723`, `:3850`, `:3862`) per mouse move and wheel tick: `hardRefresh` recreates all rectangles and shows the selection, for a change of the canvas transform only. An update (`refresh.overlayUpdate()`) or a plain re-render would do. Fixed after step 7: `canvasTransformSet`, `Scale` and `Pan` call `refreshOverlay()` (the rects follow their obs), the four `videoControl.refresh()` of the mouse handlers were a second rebuild after the setters' own `hardRefresh()` and are gone; `onTrackWindowChanged` calls `refresh.overlayUpdate()`. A draft rect (no obs) no longer disappears on a pan: it stays at its old canvas position until the next rebuild. `refreshOverlay()` now redraws the video frame itself (`refreshOverlay(true)` skips it, used by `hardRefresh`), which also fixed the tracks piling up after every label edit and drag tick (commit 784cfb2d, test l24); with no valid video an update clears the rects until the next rebuild.
 
 - **Code:**
   - [labelbee/static/labelbee/js/OverlayControl.js](../../../labelbee/static/labelbee/js/OverlayControl.js): `onMouseDown_panning`, `onMouseWheel_Zooming`
@@ -1895,3 +1897,19 @@ Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fi
 - **Code:**
   - [labelbee/static/labelbee/js/OverlayControl.js](../../../labelbee/static/labelbee/js/OverlayControl.js): `ChronoControl.js`, `ChronoControlInteraction.js`, `ZoomView.js`, `AnnotationIO.js`, `VideoControl.js`
 - **Links:** ADR 0009, [DEBT-712](#debt-712-implicit-globals-and-double-refresh-in-the-io-code "Implicit globals and double refresh in the IO code"), [DEBT-826](#debt-826-tag-editing-works-on-the-tag-store-not-on-the-events-legacy "Tag editing works on the tag store, not on the events (legacy)")
+
+## DEBT-838: 10 loader golden tests fail when all `golden/` directories run together
+
+[ran] `node --test refactor/tests/golden/` after slice 6 (301 pass, 10 fail): `eventsFromServer`, `loadEventsFromServerByID` (2), `loadTracksCSVFromServer` (2), `loadTrackTaggedCSVFromServer`, `loadTagsCSVFromServer`, `loadTracksCSVFromDB`, `clickLoadTracksCSVFromServer`, `clickLoadTracksTaggedCSVFromServer`. The same tests pass run alone (`refactor/tests/golden/csvloaders/`: 9 pass) and the failures are identical with the committed `core/Notifier.js` of before the log-order change, so they do not come from it; most likely state shared between the test directories in one process (not investigated). Slice 6 steps were checked per directory (`slice6/`, `csvloaders/`).
+
+- **Code:**
+  - [refactor/tests/golden/csvloaders/csv-loaders.test.js](../../tests/golden/csvloaders/csv-loaders.test.js): `refactor/tests/golden/harness/io-env.js`
+- **Links:** ADR 0009
+
+## DEBT-839: Documents describing the state before slice 6 (diagram, views, behaviors)
+
+[read] (1) `refactor/design/0009-refresh-mvc.pdf` (source `refactor/tools/refresh_mvc_pdf.py`) was drawn at step 7 and not regenerated after the fixes since: it shows `refreshZoom` x3 and `updateChrono` x2 per rebuild ([DEBT-832](#debt-832-selection-shown-twice-when-a-box-is-created-refreshzoom-runs-up-to-three-times "Selection shown twice when a box is created; `refreshZoom` runs up to three times") now x2 and x1) and pan and zoom as rebuilds ([DEBT-836](#debt-836-pan-and-zoom-rebuild-every-rectangle-on-every-mouse-event-fixed-drag-wheel-canvastransformreset-and-center-still-rebuild "Pan and zoom rebuild every rectangle on every mouse event (fixed: drag, wheel; `canvasTransformReset` and `Center` still rebuild)")); regenerate it when the remaining duplicates are done. (2) `refactor/intent/docs/view_debt.md`, `view_modules.md`, `view_seams.md` were already out of date before slice 6 (`spec_view.py` prints symbol warnings for names that no longer exist: `selectBeeByID`, `selectId`, `storeObs`...); the sources `debt.md`, `modules.md`, `seams.md` were updated, the views only regenerated. (3) `intent/behaviors/` and `capabilities.md` keep the pre-refactor names on purpose (ADR 0009 section 8).
+
+- **Code:**
+  - [refactor/tools/refresh_mvc_pdf.py](../../tools/refresh_mvc_pdf.py): `refactor/intent/tools/spec_view.py`
+- **Links:** ADR 0009, [DEBT-832](#debt-832-selection-shown-twice-when-a-box-is-created-refreshzoom-runs-up-to-three-times "Selection shown twice when a box is created; `refreshZoom` runs up to three times"), [DEBT-836](#debt-836-pan-and-zoom-rebuild-every-rectangle-on-every-mouse-event-fixed-drag-wheel-canvastransformreset-and-center-still-rebuild "Pan and zoom rebuild every rectangle on every mouse event (fixed: drag, wheel; `canvasTransformReset` and `Center` still rebuild)")
