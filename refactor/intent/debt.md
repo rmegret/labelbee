@@ -704,11 +704,11 @@ Replacement: one source of truth for defaults (state object, UI rendered from it
 
 ## DEBT-502: Selection change refreshes the zoom twice and re-syncs on every drag event
 
-`selectionChanged` calls `syncFromTracks` (which ends with `refreshZoom` when an overlay rect is active) and then `refreshZoom` again; it is also bound to `object:moving`, so dragging a bee box rebuilds all part markers and redraws the zoom (including tag warp and Hamming search) per mouse move, and with Auto-label on restarts the label sequence at each move (BEH-526, OQ-510). `syncFromTracks` places markers with the geometry of the previous refresh (stale), fixed only by the later `redraw`. [read]
+`refreshFromSelection` (was `selectionChanged`, step 6f) calls `syncFromTracks` (which ends with `refreshZoom` when an overlay rect is active) and then `refreshZoom` again; it is also bound to `object:moving`, so dragging a bee box rebuilds all part markers and redraws the zoom (including tag warp and Hamming search) per mouse move, and with Auto-label on restarts the label sequence at each move (BEH-526, OQ-510). `syncFromTracks` places markers with the geometry of the previous refresh (stale), fixed only by the later `redraw`. [read]
 Replacement: single refresh per change, debounced; markers positioned after geometry update.
 
 - **Code:**
-  - `ZoomView.js`: `ZoomOverlay.selectionChanged`, `ZoomOverlay.syncFromTracks`
+  - `ZoomView.js`: `ZoomOverlay.refreshFromSelection`, `ZoomOverlay.syncFromTracks`
 - **Links:** BEH-503
 
 ## DEBT-503: Dead branch in overlay drawing and unbalanced canvas state
@@ -1129,6 +1129,8 @@ _Slice 4 step 4c removed the implicit globals `obs` (`ChronoControl.js` `updateF
 
 [read] undeclared assignments in `labelbee/static/labelbee/js/AnnotationIO.js`: `data0`, `hasDuplicateEntries` (sanitizeEvents), `evts`, `src` (tracks_csv_to_json), `dataToSend`, `alertMSG` (eventsToServer), `fileData` (openRecentLoadingDialog), `html`, `idx`, `buttonHTML` (showAdvancedLoadingDialog), `success` (loadEvents, loadEventsFromServerByID), `tags` (tagsFromServer), `obj` (saveTagsToFile), `user_data` (whoami), and `ttags` implicit (`TracksInfo`, `TagsInfo` and `tagsHaveDM` are, since slice 3, accessors of `annotation/AnnotationStoreBridge.js` over `AnnotationStore`); [inferred, not re-read] `result`, `data` (db_to_json), `tagCache` (`Model.js`). setTracks already refreshes, then callers refresh again (loadEvents, loadEventsFromServerByID, loadTracksCSVFromDB). Proposed: declared module state, one refresh.
 
+_Slice 6 status (step 7): the loaders are still the custom `videoControl.onFrameChanged()` + `refreshChronogram()` pair (`labelbee/static/labelbee/js/AnnotationIO.js:362-363`, `:522-524`; baseline scenarios `load`, `load_csv`), not on `refresh.*` ([Q36](../QUESTIONS.md#q36)). The double refresh after `setTracks` was removed in step 5; the repeated selection and zoom steps inside one rebuild are DEBT-832._
+
 - **Code:**
   - `AnnotationIO.js`: `setTracks`, `eventsToServer`, `showAdvancedLoadingDialog`
   - `annotation/AnnotationCodec.js`: `sanitizeEvents`, `db_to_json`
@@ -1358,6 +1360,8 @@ _PARTLY FIXED in slice 5 step 4: the exports derive the flags from `labels`, so 
 _Maintainer decision 2026-11-14 ([Q31](../QUESTIONS.md#q31), [ADR 0008](../design/0008-field-ownership.md)): the geometry editor writes `cx`, `cy` with the box and the chronogram stops writing them; `sanitizeEvents` takes a policy (which of `x`, `y` or `cx`, `cy` is the truth; `cx`, `cy` for the CSV formats, `x`, `y` for v1 and v2), warns when they disagree and fixes the other set; the long-term vision is that only `cx`, `cy`, `width`, `height`, `angle` are used inside LabelBee and `x`, `y` are computed for saving (the angle is around the center, which the top-left corner represents badly), each codec converting with its own conventions._
 
 _Slice 5 status: `sanitizeEvents` takes a `centerPolicy` (step 3); the geometry editor stores the box and the center together on release through `rectToGeometry` (`OverlayControl.js`, step 5), and a new observation gets `cx`, `cy` at creation (step 6). `updateChronogramData` no longer recomputes `cx`, `cy` at each refresh (it only checks them, `events.checkValid`, see DEBT-804). Not done: both pairs are still stored (the reorganization around `cx`, `cy` is a later slice)._ [read] `Observation` stores both the box (`x`, `y`, `width`, `height`, `angle`) and its center (`cx`, `cy`): redundant. Writers: `OverlayControl.js:2043-2044` (rect update: `x`, `y` and size from the rectangle, then `cx = left + width/2`, so `x`, `y` are primary); `OverlayControl.js:2053-2056` (virtual rectangle: `cx`, `cy` from the rectangle, then `x = cx - width/2`, so the center is primary); `ChronoControl.js:1112-1113` (recomputes `cx`, `cy` of every kept observation at each refresh from `x + width/2`, DEBT-804); the CSV importers (`annotation/AnnotationCodec.js` `tracks_csv_to_json`: `x = cx - 150`, `y = cy - 300` for a fixed 300x600 box, BEH-735). Nothing states which pair is canonical, nor whether `x`, `y` are the unrotated corner when `angle != 0` (comment at `OverlayControl.js:2047`). Decision (maintainer 2026-11-13): to be resolved on its own later; until then the automatic recompute stays where it is, and the future `Events` API must not fix it silently: a clone, a put or a patch keeps both pairs as given (DEC-007).
+
+_Slice 6 status (step 7): the refresh pipeline does not write `cx`, `cy`: the baseline scenarios `label` and `rotate_tag` show one store event each and no write from `refresh.update()` (`refactor/tests/browser/refresh_baseline.json`); `refresh.chrono()` only checks the pair. Nothing else changed for this entry._
 
 - **Code:**
   - `OverlayControl.js`: `updateRectObsGeometry` (lines 2038-2056)
@@ -1606,10 +1610,87 @@ Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fi
 
 ## DEBT-828: `refresh.form` reads the overlay's active rect instead of the store
 
-[read] The `form` step of `refresh` is `updateForm(overlay.getActiveRect())` (`labelbee/static/labelbee/js/annotation/RefreshBridge.js:12`), so the form is filled from fabric's state (the rectangle being edited), and so are the other callers of `updateForm` (`labelbee/static/labelbee/js/labelBee.js`, `showSelection` in `SelectionControl.js`). The form shows the observation, which is the model's: it should read the observation of the current selection in the store (`events.get(selection.getKey())`, with the draft case aside) and not go through the overlay. Fabric's active rect and the selection can disagree during a drag or on a draft, which this hides. To do later (maintainer, 2026-11-18), after the active/selected vocabulary steps (ADR 0009 section 0b, 6d-6i).
+[read] The `form` step of `refresh` is `updateForm(overlay.getActiveRect())` (`labelbee/static/labelbee/js/annotation/RefreshBridge.js:12`), so the form is filled from fabric's state (the rectangle being edited), and so are the other callers of `updateForm` (`labelbee/static/labelbee/js/labelBee.js`, `updateSelectionPanels` in `SelectionControl.js`). The form shows the observation, which is the model's: it should read the observation of the current selection in the store (`events.get(selection.getKey())`, with the draft case aside) and not go through the overlay. Fabric's active rect and the selection can disagree during a drag or on a draft, which this hides. To do later (maintainer, 2026-11-18), after the active/selected vocabulary steps (ADR 0009 section 0b, 6d-6i).
 
 - **Code:**
   - `annotation/RefreshBridge.js`: `form`
-  - `SelectionControl.js`: `updateForm`, `showSelection`
+  - `SelectionControl.js`: `updateForm`, `updateSelectionPanels`
   - `labelBee.js`: `updateForm` callers
 - **Links:** ADR 0009, DEBT-712
+
+## DEBT-829: `VisitWidget.open` is dead and broken
+
+[read] `VisitWidget.prototype.open` (`labelbee/static/labelbee/js/VisitControl.js:289-299`) calls `this.getActiveRect()` and `this.interaction`, neither of which a `VisitWidget` has (it was `this.getActiveObject()` before step 6d, so already broken), and nothing calls `open`. Found while renaming the accessors (step 6d), left as it was.
+
+- **Code:**
+  - `VisitControl.js`: `VisitWidget.prototype.open`
+- **Links:** ADR 0009, DEBT-828
+
+## DEBT-830: `onObjectDeselected` re-enters a running rebuild and leaves `lastActiveRect` stale
+
+[read] `onObjectDeselected` (`labelbee/static/labelbee/js/OverlayControl.js:3953-3970`) is the fabric handler of `object:deselected`. For a draft rectangle it removes the rect and calls `videoControl.refresh()` itself; for any other rectangle it only calls `updateDeleteButton()` and leaves `overlay.lastActiveRect` pointing at the deselected rect. `hardRefresh` calls `canvas1.clear()`, and fabric's `clear()` discards the active object, so [inferred, from the fabric source, not run] the handler can run inside a rebuild: with a draft active, a rebuild starts a second one, which the nesting guard of `refresh.*` cannot see (it only knows its own calls). `updateDeleteButton()` also runs outside any refresh. Not changed in slice 6 (behavior-preserving). To do: the draft rect is retired with `newRectForCurrentTag` (ADR 0009, 1e); until then, decide whether a deselect of a draft is a controller action (the click that causes it) and remove the call from the handler.
+
+- **Code:**
+  - `OverlayControl.js`: `onObjectDeselected`, `OverlayControl.prototype.hardRefresh`
+- **Links:** ADR 0009, DEBT-502
+
+## DEBT-831: A write to `selection` nobody refreshes is silent
+
+[read] `refresh.audit(events)` (`labelbee/static/labelbee/js/annotation/Refresh.js:67`) subscribes to the events store only. `SelectionModel` (`select`, `changeFrame`, `clear`) calls no `refresh.*` (ADR 0009 section 0b) and is not audited, so a writer that changes the selection and forgets `refresh.selection()` shows nothing and is reported nowhere. The same blindness as the tag store (DEBT-826). Proposed: `SelectionModel` takes an observer like `events.subscribe`, and the audit lists a selection change with no `refresh.selection()` / `refresh.rebuild()` after it.
+
+- **Code:**
+  - `annotation/Refresh.js`: `audit`
+  - `annotation/SelectionModel.js`
+- **Links:** ADR 0009, DEBT-826
+
+## DEBT-832: Selection shown twice when a box is created; `refreshZoom` runs up to three times
+
+[ran] Baseline scenario `create` (`refactor/tests/browser/refresh_baseline.json`): the new rectangle is activated by fabric (`onObjectSelected` finds no echo and calls `refresh.selection()`), then `submitDraft` calls `refresh.rebuild()`, and `hardRefresh` shows the selection again: two selection chains (`updateForm`, `updateChronoSelection`, `refreshZoom` x2 each). [ran] `refreshFromSelection` calls `refreshZoom` twice itself (DEBT-502), so a rebuild with a selection runs it three times (two in the panels, one for the rebuild's zoom step); the `delete` and `swap` scenarios show `updateDeleteButton` x3 inside `hardRefresh`. Harmless today (the steps are idempotent), pinned by the baseline so that a change shows. To do: make `onObjectSelected` of a draft not refresh (the rebuild follows), drop the extra `refreshZoom` calls.
+
+- **Code:**
+  - `OverlayControl.js`: `onObjectSelected`, `OverlayControl.prototype.hardRefresh`
+  - `SelectionControl.js`: `submitDraft`, `updateSelectionPanels`
+  - `ZoomView.js`: `ZoomOverlay.refreshFromSelection`
+- **Links:** ADR 0009, DEBT-502, DEBT-712
+
+## DEBT-833: Store writes with no refresh after them
+
+[read] Two writers change the store and refresh nothing: `storeVisitedFlower` (`labelbee/static/labelbee/js/VisitControl.js:409-411`) does `events.update(frame0, id, {visit: ...})`, so the visit widget and the form show the old flower until something else refreshes; `modifyCurrentObsSpan` in mode `copy` (`labelbee/static/labelbee/js/SelectionControl.js:835-838`) writes a derived span (`events.update`) and returns before its `refresh.chrono()` at the end. `refresh.audit` lists both (they are store writes with no `refresh.*` after them). Left as it was (step 4e kept the behavior); the fix is one call each (`refresh.form()` for the flower, `refresh.chrono()` for the span).
+
+- **Code:**
+  - `VisitControl.js`: `storeVisitedFlower`
+  - `SelectionControl.js`: `modifyCurrentObsSpan`
+- **Links:** ADR 0009, DEBT-827
+
+## DEBT-834: Background click and select-by-frame still rebuild by hand
+
+[read] The live path of `onMouseDown_selectMultiframe` (`labelbee/static/labelbee/js/OverlayControl.js:3684`) ends with `deselectBee(); videoControl.refresh();` and `selectBeeByIDandFrame` (`labelbee/static/labelbee/js/SelectionControl.js:540`) with `selection.select(...); videoControl.refresh();` when the frame does not change. The `refresh.selection()` version of the background click is in the branch `!clickMultiframe` (`OverlayControl.js:3637`), dead since `clickMultiframe` is a constant `true`. A full overlay rebuild for a selection change; `refresh.selection()` is enough, as for a click on a rectangle. Behavior kept in step 6c to keep the golden/baseline stable.
+
+- **Code:**
+  - `OverlayControl.js`: `onMouseDown_selectMultiframe`
+  - `SelectionControl.js`: `selectBeeByIDandFrame`, `deselectBee`
+- **Links:** ADR 0009, DEBT-832
+
+## DEBT-835: `#selectID` keeps its text after an explicit deselect
+
+[read] `updateSelectionPanels` skips `updateSelectID` when the selection id is null (`labelbee/static/labelbee/js/SelectionControl.js:562`, comment "the field keeps its text after an explicit deselect"), so after a click on the background the ID field still shows the old id, and Enter in it selects it again. It was so before slice 6 (`selectBee`/`deselectBee` events) and was kept by step 6c; whether it is wanted (a quick re-select) or an oversight is the maintainer's call.
+
+- **Code:**
+  - `SelectionControl.js`: `updateSelectionPanels`, `updateSelectID`, `onSelectIDChanged`
+- **Links:** ADR 0009
+
+## DEBT-836: Pan and zoom rebuild every rectangle on every mouse event
+
+[read] `onMouseDown_panning` and `onMouseWheel_Zooming` call `videoControl.refresh()` (`labelbee/static/labelbee/js/OverlayControl.js:3716`, `:3723`, `:3850`, `:3862`) per mouse move and wheel tick: `hardRefresh` recreates all rectangles and shows the selection, for a change of the canvas transform only. An update (`refresh.overlayUpdate()`) or a plain re-render would do. Left as it was (not a data change, section 2 of `design/0009-refresh-triggers.md`).
+
+- **Code:**
+  - `OverlayControl.js`: `onMouseDown_panning`, `onMouseWheel_Zooming`
+- **Links:** ADR 0009
+
+## DEBT-837: Direct refresh calls left in custom code (census after slice 6 step 6i)
+
+[read] Counted by grep, comments excluded: `refresh.*` 42 call sites; still direct: `videoControl.refresh()` ~16 (show tags and track window `OverlayControl.js:2567`, `:2572`, `:2606`; ROI, exclusion and tag parameters `:2703`, `:2799`, `:3027`; background click `:3684`; pan and zoom; `SelectionControl.js:540`; undo `:646`), `refreshChronogram()` ~30 (chronogram toggles in `ChronoControl.js` ~16, `ChronoControlInteraction.js:453`, `:478`, `:504`; tag fixes `ZoomView.js:1914`, `:1932`, `:1978`; loaders `AnnotationIO.js:363`, `:522`; `OverlayControl.js:2702`, `:2798`, `:3026`, `:3068`), `.hardRefresh(` ~19 (mode switches and the frame change in `VideoControl.js:880`). Each can drift from the sequence of `refresh.rebuild()` / `refresh.update()`. The picture is `design/0009-refresh-mvc.pdf` (pages 5 to 7).
+
+- **Code:**
+  - `OverlayControl.js`, `ChronoControl.js`, `ChronoControlInteraction.js`, `ZoomView.js`, `AnnotationIO.js`, `VideoControl.js`
+- **Links:** ADR 0009, DEBT-712, DEBT-826

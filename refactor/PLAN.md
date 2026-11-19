@@ -87,7 +87,7 @@ and is its own commit series and review. The next slice is chosen after the prev
     - `ChronoControl.js` [x] (clean obsolete events; the other calls follow chrono view settings, not store writes)
     - `AnnotationIO.js`: no writer of its own, its loaders are step 5
   - (5) load: one refresh [x] (the 7 loaders no longer refresh after `setTracks`/`setTags`; Q36)
-  - (6) selection: `selection` owns id and key, `refresh.selection()` only reads it (ADR 0009 section 0b) [ ]
+  - (6) selection: `selection` owns id and key, `refresh.selection()` only reads it (ADR 0009 section 0b) [x] (6a-6i)
     - (6a) ADR amendment 0b, [Q37](QUESTIONS.md#q37) answered [x] (selection model owns `defaultSelectedBee`)
     - (6b) `SelectionModel` + bridge + tests; `getId`/`getKey`/`changeFrame` replace `defaultSelectedBee`, `selectedKey()` [x] (same refreshes)
     - (6c) `refresh.selection()` once per writer and rebuild; four jQuery triggers deleted [x] (select chain 2x to 1x)
@@ -97,7 +97,7 @@ and is its own commit series and review. The next slice is chosen after the prev
     - (6g) `lastSelected`, `previouslySelected` become `lastActiveRect`, `previousActiveRect` [x] (rename only, baseline unchanged)
     - (6h) `getCurrentID` replaced by `selection.getId()` [x] (rename only, baseline unchanged)
     - (6i) `axes.selectId`, `selectedID` become `highlightId`, `highlightedID` [x] (rename only, baseline unchanged)
-  - (7) record [ ]
+  - (7) record [x] (diagram redone, DEBT-829 to DEBT-837, SEAM-701, modules, ADR section 8)
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 

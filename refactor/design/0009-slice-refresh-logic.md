@@ -1,6 +1,6 @@
 # ADR 0009: Refresh by notification, one ordered `Refresher` (slice 6; explicit `refresh.*` first, see section 0)
 
-Status: **proposed**. Direction from the maintainer, 2026-11-16 ([Q34](../QUESTIONS.md#q34)-[Q36](../QUESTIONS.md#q36), all answered the same day; Q34 differs from the first proposal: no automatic injection at load, a manual one-shot only). Numbers are those of `refactor` at `eb473985`.
+Status: **proposed**, implemented on `slice6-refresh-logic` up to step 7 (section 8), not yet accepted. Direction from the maintainer, 2026-11-16 ([Q34](../QUESTIONS.md#q34)-[Q36](../QUESTIONS.md#q36), all answered the same day; Q34 differs from the first proposal: no automatic injection at load, a manual one-shot only). Numbers are those of `refactor` at `eb473985`.
 Evidence tags as in `CLAUDE.md`: `[read]` seen in code, `[inferred]` from names or call shape, to be verified at step 1.
 Follows slice 4 ([ADR 0007](0007-slice-events-api.md): `Events` is the only door) and slice 5 ([ADR 0008](0008-field-ownership.md): every editor writes the store).
 What was missing: the other direction, store to views. SEAM-701 ([seams](../intent/seams.md)) and the end of PLAN slice 5 list it as the next slice.
@@ -201,3 +201,21 @@ The expectation of the draft held: `AnnotationIO`, `SelectionControl`, `OverlayC
 ## 7. Not in this slice
 
 Fine-grained or incremental recompute of the derived data (`flatTracks`, `ttags`), the `Derived` module (DEBT-736), tags on the channel, frame and filter refresh, undo (a change log is easier on top of the notification), the tag merge.
+
+## 8. Result of slice 6 (recorded in step 7)
+
+**Done.** `window.refresh` and `window.selection` (sections 0 and 0b): 42 `refresh.*` call sites; the writers of `events` call the `refresh.*` that fits what they changed, except the loaders, the tag store, the UI parameters and two writes that call none (DEBT-833); the selection is its own model (`annotation/SelectionModel.js`), its writers call `refresh.selection()`, which activates the rectangle and shows the panels once. The four jQuery selection triggers, `selectBee`, `tagSelection` and the `selectedKey()` reader are gone. The refresh baseline (`refactor/tests/browser/refresh_baseline.json`, 13 scenarios) pins the sequences. Not done (deliberately, section 7 and DEBT-837): the notification (`events.subscribe` consumers), `events.batch` consumers, frame and filter refresh, tags on the channel.
+
+**Where it is drawn.** `refactor/design/0009-refresh-mvc.pdf` (source `refactor/tools/refresh_mvc_pdf.py`): the user action to model to view table, per family of actions, and the issues page. The issues are DEBT-829 to DEBT-837 and DEBT-828.
+
+**Names, old to new** (the behavior documents of `intent/behaviors/` keep the pre-refactor names on purpose: they describe what the page did):
+
+| before | after (step) |
+|---|---|
+| `defaultSelectedBee`, `selectedKey()`, `getCurrentID()` | `selection.getId()`, `selection.getKey()` (6b), `selection.getId()` (6h) |
+| `selectBee`, `selectBeeByID`, `deselectBee` internals, `tagSelection`, the `selection:*` / `tagselection:*` triggers | `selection.select`, `selection.clear`; `overlay.setActiveRectID(id)` for the view part (6c, 6e); triggers deleted (6c) |
+| `showSelection` | `activateSelection()` (the step of `refresh.selection()`) and `updateSelectionPanels()` (6e) |
+| `getSelectedRect`, `getSelectedID`, `overlay.getActiveObject`, `overlay.setActiveObject` | `overlay.getActiveRect()`, `overlay.getActiveRectID()`, `overlay.setActiveRect(rect)` (6d) |
+| `ZoomOverlay.selectionChanged` | `ZoomOverlay.refreshFromSelection` (6f) |
+| `overlay.lastSelected`, `previouslySelected` | `overlay.lastActiveRect`, `previousActiveRect` (6g) |
+| `axes.selectId`, `axes.selectedID` | `axes.highlightId`, `axes.highlightedID` (6i) |
