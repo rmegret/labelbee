@@ -19,6 +19,7 @@ var partsIntervals = []
 
 var chrono
 var chronoDragControl // instance of ChronoDragControl.DragControl (ADR 0011)
+var videoKeyframes // instance of VideoKeyframes.VideoKeyframes, keyframes of the video from its packets sidecar (ADR 0014)
 var videoCacheStatus // instance of VideoCacheStatus.VideoCacheStatus (ADR 0012)
 class Chronogram {
   constructor() {
@@ -268,6 +269,36 @@ function initChrono() {
     videoCacheStatus.setEnabled($("#showVideoCacheStatus").prop("checked"));
   });
 
+  // Keyframes of the video, from <video>.packets.csv when it exists (ADR 0014); "Preview Keyframes Only" in the Drag menu
+  import("./chrono/VideoKeyframes.js").then(function (ns) {
+    window.VideoKeyframes = ns;
+    videoKeyframes = new ns.VideoKeyframes();
+    function loadKeyframes() {
+      var url = videoControl.video.src;
+      if (!url) return;
+      videoKeyframes.load(url).then(syncKeyframesOption);
+      syncKeyframesOption(); // keyframes of the previous video are gone
+    }
+    $(videoControl).off("video:loaded.keyframes").on("video:loaded.keyframes", loadKeyframes);
+    loadKeyframes();
+  });
+  // Checkbox enabled only when the video has keyframes; the hover snaps to them while it is checked
+  function syncKeyframesOption() {
+    var $box = $("#chrono-drag-keyframes");
+    var available = !!videoKeyframes && videoKeyframes.available;
+    $box.prop("disabled", !available);
+    if (!available) $box.prop("checked", false);
+    $("#chrono-drag-keyframes-label").attr("title", available
+      ? "Preview shows the keyframe nearest to the pointer (decodes faster)"
+      : "No <video>.packets.csv next to the video: keyframes unknown");
+    videoControl.hover.snap = available && $box.prop("checked")
+      ? function (frame) {
+          return videoKeyframes.nearest(frame + videoinfo.frameoffset) - videoinfo.frameoffset;
+        }
+      : null;
+  }
+  $("#chrono-drag-keyframes").on("change", syncKeyframesOption);
+
   // Drag button (right of Fit): popup to choose what a drag on the chronogram does. Not saved: Pan on every load.
   function initDragMenu() {
     // Moved to <body> (fixed position): not cropped nor scrolled with the pane that contains the button
@@ -287,7 +318,7 @@ function initChrono() {
     }
     chronoDragControl.onChange(sync);
     sync();
-    $menu.off("change.drag").on("change.drag", "input", function () {
+    $menu.off("change.drag").on("change.drag", "input[name=chronoDrag]", function () {
       chronoDragControl.setMode(this.value);
       $menu.hide();
     });

@@ -7,6 +7,7 @@ from pathlib import Path
 # Requests the dev webapp cannot answer and the page makes at every start (not findings)
 KNOWN_404 = (
     "/data/tags/tag25h5inv/",  # tag family files: not part of the dev webapp data
+    ".packets.csv",  # optional video sidecar (ADR 0014): most videos have none
 )
 
 

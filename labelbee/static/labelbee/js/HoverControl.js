@@ -19,6 +19,7 @@ function HoverControl(videoControl) {
   this.active = false;
   this.latest = null;
   this.stats = { applied: 0, stale: 0 };
+  this.snap = null; // optional (frame) -> frame, applied to every hovered frame (e.g. nearest keyframe, ADR 0014)
 }
 HoverControl.prototype = {};
 
@@ -33,6 +34,7 @@ HoverControl.prototype.isRelevant = function (key) {
 
 // Hover over `frame`: show it now if cached, otherwise as soon as it is available and still wanted
 HoverControl.prototype.query = function (frame) {
+  if (this.snap) frame = this.snap(frame);
   let vc = this.videoControl;
   let url = vc.video.src;
   let cacheFrame = frame + videoinfo.frameoffset;
