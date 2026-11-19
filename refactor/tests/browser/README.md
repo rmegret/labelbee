@@ -24,6 +24,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_j_editors.py` | The edit paths of the editor, pinned before the working copy goes (slice 5 step 0, [ADR 0008](../../design/0008-field-ownership.md)): creation by shift-click and ctrl-drag, label text, notes, the wrong-id edits, move, resize, rotate, dot mode, parts in the zoom view |
 | `test_l_refresh.py` | The refresh log (`refreshLog`, `core/Notifier.js`; entry points wrapped by `core/RefreshInstrumentBridge.js`) of 13 user actions: which refresh functions run, nested, and in which order, pinned in `refresh_baseline.json` as the baseline of slice 6 ([ADR 0009](../../design/0009-slice-refresh-logic.md) section 4; `UPDATE_REFRESH_BASELINE=1` records the current code); also writes the durations to `refactor/scratch/refresh-baseline.json` |
 | `test_m_chrono_preview.py` | The Options/Chronogram "Ctrl+hover preview" checkbox: off by default with no listener bound, enabling and disabling bind and remove every `.trackFrame` handler, Ctrl+move previews and release ends it, disabling during a preview ends it |
+| `test_n_hover_control.py` | `HoverControl` ([ADR 0010](../../design/0010-hover-control.md)), with the decode of `VideoCache` replaced by a gated stub: an uncached hovered frame is shown when it arrives, an answer for a frame left or after the hover ended is dropped, a frame hovered again while pending is shown once, a cached frame at once |
 | `test_alerts.py` | The main alert modal: alerts in quick succession (F3) |
 
 ## How it works

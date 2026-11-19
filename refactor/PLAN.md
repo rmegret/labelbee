@@ -124,6 +124,8 @@ Backlog, unordered, not commitments (module names from `intent/modules.md`):
 
 - [x] **Off plan: Ctrl+hover preview toggle** (maintainer, 2026-11-18; branch `chrono-preview-toggle`): Options/Chronogram checkbox binds or unbinds the dormant preview, off by default.
 
+- [x] **Off plan: HoverControl** ([ADR 0010](design/0010-hover-control.md); maintainer, 2026-11-18): hover preview of an uncached frame now refreshes when it arrives, only if still hovered.
+
 ## Not planned for now
 Specs per feature, behavior-level characterization of everything, traceability matrix, a
 reworked smell/risk register, full Playwright coverage, splitting analysis files to a size
@@ -138,3 +140,4 @@ budget. They can be revisited when a slice needs them.
 - [ADR 0007](design/0007-slice-events-api.md): slice 4, the Events API, encapsulating the stored events (proposed)
 - [ADR 0008](design/0008-field-ownership.md): slice 5, store-first editing and field ownership ([Q30](QUESTIONS.md#q30)-[Q33](QUESTIONS.md#q33) answered 2026-11-14; accepted and implemented)
 - [ADR 0009](design/0009-slice-refresh-logic.md): slice 6, refresh by notification, one ordered `Refresher` (proposed)
+- [ADR 0010](design/0010-hover-control.md): `HoverControl`, one owner of the hover preview queries (proposed)

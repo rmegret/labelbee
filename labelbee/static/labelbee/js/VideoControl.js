@@ -69,6 +69,8 @@ function VideoControl(videoTagId) {
   // FIXME: define videoCache as global
   videoCache = new VideoCache(this);
   this.videoCache = videoCache; // make it available from videoControl also
+
+  this.hover = new HoverControl(this); // hover preview queries (cache-preview mode)
 }
 
 
@@ -576,6 +578,7 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
     }
   } else if (useFastSeek == "end-preview") {
     if (this.currentMode == "cache-preview") {
+      this.hover.end();
       this.currentMode = this.savedMode;
       if (frame==-1) frame = this.savedFrame;
       console.log("videoControl.seekFrame: end-preview, come back to mode", this.savedMode, 
@@ -608,20 +611,9 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
       );
   } else if (this.currentMode == "cache-preview") {
     this.cacheRequestedFrame = frame;
-    //this.currentMode = "cache";
     if (logging.frameEvents)
       console.log("videoControl.seekFrame: CACHE PREVIEW, f=", frame);
-    this.videoCache.enqueueFrame(this.video.src, frame + videoinfo.frameoffset, videoinfo.videofps)
-    this.videoCache.processQueue()
-    let img = this.videoCache.getFrameImageSync(this.video.src, frame + videoinfo.frameoffset)
-    if (img) {
-      this.cacheImage = img
-      this.cacheFrame = frame
-      this.onFrameChangedCachePreview()
-    } else {
-      if (logging.frameEvents)
-        console.log("videoControl.seekFrame: CACHE PREVIEW, invalid image", img);
-    }
+    this.hover.query(frame); // shows the frame when available, if still hovered then
   } else if (this.currentMode == "preview") {
     this.previewFrame = frame;
     //this.currentMode = "preview";
