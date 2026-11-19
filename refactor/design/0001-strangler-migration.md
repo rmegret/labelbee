@@ -1,6 +1,6 @@
 # ADR 0001: Strangler-style incremental migration
 
-Status: proposed (maintainer to confirm)
+Status: **accepted** (maintainer, 2026-11-18; applied since slice 1)
 
 ## Context
 
