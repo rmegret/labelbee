@@ -85,6 +85,7 @@ function VideoCache(videoControl, videoCacheTagId) {
     videoCacheSize: 1000
   }
   this.queryQueue = []
+  this.onStatusChanged = null // optional callback, called whenever the cache content or queue changed
   this.abortFlag = false
   this.preloading = false
   this.video = document.createElement('video');
@@ -183,6 +184,7 @@ VideoCache.prototype.updateStatus = function () {
   let cacheUsed = this.lrucache.size
   let cacheSize = this.opts.videoCacheSize
   let status = $('#cache-status').html(`${cacheUsed}/${cacheSize},Q${queueSize}`)
+  if (this.onStatusChanged) this.onStatusChanged() // set only while the chronogram cache status is shown
 }
 
 // Only two functions supposed to interact with lrucache

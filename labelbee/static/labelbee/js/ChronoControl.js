@@ -19,6 +19,7 @@ var partsIntervals = []
 
 var chrono
 var chronoDragControl // instance of ChronoDragControl.DragControl (ADR 0011)
+var videoCacheStatus // instance of VideoCacheStatus.VideoCacheStatus (ADR 0012)
 class Chronogram {
   constructor() {
     //const chrono = this
@@ -255,6 +256,16 @@ function initChrono() {
       { initial: "pan" }
     );
     initDragMenu();
+  });
+
+  // Video cache status strip under the frame axis (ADR 0012), toggled by Options/Chronogram. Off by default.
+  import("./chrono/VideoCacheStatus.js").then(function (ns) {
+    window.VideoCacheStatus = ns;
+    if (videoCacheStatus) videoCacheStatus.destroy();
+    videoCacheStatus = new ns.VideoCacheStatus(axes, videoCache, function () {
+      return { url: videoControl.video.src, frameOffset: videoinfo.frameoffset };
+    });
+    videoCacheStatus.setEnabled($("#showVideoCacheStatus").prop("checked"));
   });
 
   // Drag button (right of Fit): popup to choose what a drag on the chronogram does. Not saved: Pan on every load.
