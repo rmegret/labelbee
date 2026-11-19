@@ -259,8 +259,17 @@ function initChrono() {
 
   // Drag button (right of Fit): popup to choose what a drag on the chronogram does. Not saved: Pan on every load.
   function initDragMenu() {
-    var $menu = $("#chrono-drag-menu");
+    // Moved to <body> (fixed position): not cropped nor scrolled with the pane that contains the button
+    var $menu = $("#chrono-drag-menu").appendTo("body");
     var $button = $("#chrono-drag-button");
+    function placeMenu() {
+      var r = $button[0].getBoundingClientRect();
+      var w = $menu.outerWidth(), h = $menu.outerHeight(), m = 4;
+      var left = Math.max(m, Math.min(r.left, window.innerWidth - w - m));
+      var top = r.bottom + 2;
+      if (top + h > window.innerHeight - m) top = Math.max(m, r.top - h - 2); // not enough room below: above
+      $menu.css({ left: left, top: top });
+    }
     function sync() {
       $menu.find("input[value=" + chronoDragControl.mode + "]").prop("checked", true);
       $button.attr("title", "Drag on the chronogram: " + chronoDragControl.current.label);
@@ -274,7 +283,14 @@ function initChrono() {
     $button.off("click.drag").on("click.drag", function (e) {
       e.stopPropagation();
       $menu.toggle();
+      if ($menu.is(":visible")) placeMenu();
     });
+    // The menu is not inside the scrolled pane any more: close it rather than leave it detached from the button
+    $(window).off("resize.dragMenu").on("resize.dragMenu", function () { $menu.hide(); });
+    // (scroll does not bubble: capture phase; the previous handler is removed, initDragMenu can run again)
+    if (initDragMenu.closeOnScroll) document.removeEventListener("scroll", initDragMenu.closeOnScroll, true);
+    initDragMenu.closeOnScroll = function (e) { if (!$menu[0].contains(e.target)) $menu.hide(); };
+    document.addEventListener("scroll", initDragMenu.closeOnScroll, true);
     $(document).off("click.dragMenu").on("click.dragMenu", function (e) {
       if (!$(e.target).closest("#chrono-drag-menu").length) $menu.hide();
     });

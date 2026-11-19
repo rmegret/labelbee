@@ -159,6 +159,31 @@ def test_o10_switching_mode_during_a_preview_ends_it_and_leaves_no_listener(ui, 
     assert ui.js("window.__pv") == {"move": moves, "end": 1, "click": ui.js("window.__pv.click")}
 
 
+def test_o12_menu_is_a_fixed_layer_in_front_attached_to_the_button_and_inside_the_viewport(ui, sample_dir):
+    _start(ui, sample_dir)
+    assert ui.js("$('#chrono-drag-menu').parent()[0] === document.body")           # not inside the pane: not cropped
+    assert ui.js("getComputedStyle(document.getElementById('chrono-drag-menu')).position") == "fixed"
+    ui.page.click("#chrono-drag-button")
+    b = ui.page.locator("#chrono-drag-button").bounding_box()
+    m = ui.page.locator("#chrono-drag-menu").bounding_box()
+    vw, vh = ui.js("[window.innerWidth, window.innerHeight]")
+    assert m["x"] >= 0 and m["y"] >= 0 and m["x"] + m["width"] <= vw and m["y"] + m["height"] <= vh
+    assert abs(m["x"] - b["x"]) < 2 and 0 <= m["y"] - (b["y"] + b["height"]) < 6    # right under the button
+    top = ui.js("""() => { const r = document.getElementById('chrono-drag-menu').getBoundingClientRect();
+      return document.elementFromPoint(r.left + 5, r.top + 5).closest('#chrono-drag-menu') !== null; }""")
+    assert top is True                                                              # nothing in front of it
+
+
+def test_o13_menu_stays_inside_the_viewport_when_the_button_is_near_the_bottom_edge(ui, sample_dir):
+    _start(ui, sample_dir)
+    ui.js("""() => { const b = document.getElementById('chrono-drag-button'); b.style.position = 'fixed';
+      b.style.left = (window.innerWidth - 30) + 'px'; b.style.top = (window.innerHeight - 25) + 'px'; }""")
+    ui.page.click("#chrono-drag-button")
+    m = ui.page.locator("#chrono-drag-menu").bounding_box()
+    vw, vh = ui.js("[window.innerWidth, window.innerHeight]")
+    assert m["x"] >= 0 and m["y"] >= 0 and m["x"] + m["width"] <= vw and m["y"] + m["height"] <= vh
+
+
 def test_o11_drag_button_menu_switches_mode(ui, sample_dir):
     _start(ui, sample_dir)
     assert ui.page.is_hidden("#chrono-drag-menu")
