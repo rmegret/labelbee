@@ -2,6 +2,9 @@
 the tracks CSV entries of "Server storage". The dev webapp seeds five annotations (tests/webapp/serve.py SEEDS):
 id 4 is events_v2.json, the most recent event file."""
 import json
+import os
+
+import pytest
 
 
 def test_c8_load_events_from_db_dialog(ui):
@@ -104,6 +107,7 @@ def test_c12_a_bad_csv_url_alerts(ui):
     ui.close_main_alert()
 
 
+@pytest.mark.skipif(not os.environ.get("RUN_C13"), reason="needs the gurabo4 dataset: off by default, run with RUN_C13=1")
 def test_c13_gurabo4_video_and_tracks_tagged(ui):
     ui.open()
     ui.open_subpanel("Server storage")

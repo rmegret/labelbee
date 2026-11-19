@@ -14,7 +14,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_a_features.py` | A10-A12: zoom view, tags (tags file merged by id, standalone Tags mode), parts, notes |
 | `test_b_store.py` | B1-B4: store and legacy globals, erase with confirmation, DM controls |
 | `test_c_loading.py` | C1-C7: local events and tags files, bad files |
-| `test_c_server.py` | C8-C13: "Load Events from DB", `#video_data=` hash, tracks CSV, bad URL, gurabo4 |
+| `test_c_server.py` | C8-C13: "Load Events from DB", `#video_data=` hash, tracks CSV, bad URL, gurabo4 (C13 skipped by default, needs the dataset: `RUN_C13=1 pytest ...`) |
 | `test_d_saving.py` | D1-D6: save v2 and reload, history, CSV and BBox export, tags, save to the server and its lineage |
 | `test_e_console.py` | E1: the console watcher itself. Every test also runs it at teardown |
 | `test_f_writers.py` | The writers of the stored events that no other test reaches (span, the zoom deletes, clean obsolete events), for the dirty-write detector: [ADR 0007](../../design/0007-slice-events-api.md) step 0 |
@@ -22,6 +22,7 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 | `test_h_debug_globals.py` | The console-only debug globals `Tracks`, `TracksInfo` (and the `Tags` ones): off by default, `?debug_globals` or `installDebugGlobals()`, the console reads them, a script served from a URL gets an error |
 | `test_i_detector.py` | The dirty-write detector itself: direct and indirect mutations are seen (`dirty_writes_expected` tests) |
 | `test_j_editors.py` | The edit paths of the editor, pinned before the working copy goes (slice 5 step 0, [ADR 0008](../../design/0008-field-ownership.md)): creation by shift-click and ctrl-drag, label text, notes, the wrong-id edits, move, resize, rotate, dot mode, parts in the zoom view |
+| `test_l_refresh.py` | The refresh log (`refreshLog`, `core/Notifier.js`; entry points wrapped by `core/RefreshInstrumentBridge.js`) of 13 user actions: which refresh functions run, nested, and in which order, pinned in `refresh_baseline.json` as the baseline of slice 6 ([ADR 0009](../../design/0009-slice-refresh-logic.md) section 4; `UPDATE_REFRESH_BASELINE=1` records the current code); also writes the durations to `refactor/scratch/refresh-baseline.json` |
 | `test_alerts.py` | The main alert modal: alerts in quick succession (F3) |
 
 ## How it works

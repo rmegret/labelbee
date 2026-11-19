@@ -131,7 +131,7 @@ function OverlayControl(canvasTagId) {
   canvas1.uniScaleTransform = true; // REMI: allow free rescaling of observations without constrained aspect ratio
   //canvas1.centeredScaling = true; // REMI: rescale around center
 
-  overlay.lastSelected = null; // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
+  overlay.lastActiveRect = null; // Last selected rect (workaround for event selection:cleared not providing the last selection to onObjectDeselected)
 
   canvas1.on("mouse:down", onMouseDown);
   canvas1.on("mouse:up", onMouseUp);
@@ -176,14 +176,15 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
     if (mode!=this.interaction.mode) {
         // Close previous mode
     }
-    
+    let wroteSpan = false
+
     if (mode=='main') {
         this.interaction.mode = 'main'
         this.interaction.opts = opts
     } else if (mode=='pick-frame') {
         // For the moment, does not check opts.type, since we have only setspan
 
-        let activeObj = this.getActiveObject()
+        let activeObj = this.getActiveRect()
         if (!activeObj) {
             console.log('overlay.setInteractionMode: CANCELED, no active object')
             return;
@@ -201,6 +202,13 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
         this.interaction.opts.id = obs.ID
         this.interaction.opts.frame = frame
         this.interaction.opts.showTimeline = false // Hide timeline by default
+
+        // Default span, written here and not in hardRefresh: a refresh never writes the store (DEBT-825)
+        let handle = getObsHandle(frame, obs.ID)
+        if (handle && !('span' in handle)) {
+            events.update(frame, obs.ID, { span: { 'f1': frame, 'f2': frame } })
+            wroteSpan = true
+        }
     } else if (mode=='edit-visit') {
         console.log('overlay.setInteractionMode', 'changing to edit-visit')
         if (!opts) opts = {}
@@ -212,6 +220,7 @@ OverlayControl.prototype.setInteractionMode = function(mode, opts) {
     }
     this.refreshInteraction()
     this.hardRefresh()
+    if (wroteSpan) refresh.chrono() // the chronogram can show the span ("Show spans")
 }
 OverlayControl.prototype.refreshInteraction = function() {
     console.log('overlay.refreshInteration',this.interaction)
@@ -451,11 +460,44 @@ OverlayControl.prototype.selectboxTagMarkerChanged = function () {
   this.hardRefresh();
 };
 
-OverlayControl.prototype.getActiveObject = function () {
+// "Active" is fabric's own state (the rectangle being edited); "selected" is the model's (`selection`)
+// getActiveRect: return null or a Fabric.js rect (truth on the active rectangle comes from the Fabric.js canvas)
+OverlayControl.prototype.getActiveRect = function () {
   return this.canvas1.getActiveObject();
 };
-OverlayControl.prototype.setActiveObject = function (rect) {
+// getActiveRectID: return undefined or an id
+OverlayControl.prototype.getActiveRectID = function () {
+  var activeObject = this.canvas1.getActiveObject();
+  if (activeObject === null) {
+    return undefined;
+  } else {
+    return activeObject.id;
+  }
+};
+OverlayControl.prototype.setActiveRect = function (rect) {
   return this.canvas1.setActiveObject(rect);
+};
+/**
+ * VIEW: makes the fabric rectangle of `id` the active one (nothing to do when it already is), or deactivates the rectangles
+ * when this frame has none of `id`. It never changes `selection` (ADR 0009 section 0b) and does not update the panels
+ * (`activateSelection` does). The one write that can happen during the call is fabric's own `object:selected` echo of
+ * `setActiveRect`, handled by `onObjectSelected`, which finds the selection already there and refreshes nothing.
+ * Returns whether a rectangle was found.
+ */
+OverlayControl.prototype.setActiveRectID = function (id) {
+  let rect = findRect(id);
+  if (rect) {
+    if (logging.selectionEvents)
+      console.log("setActiveRectID: trying to activate id=", id);
+    if (this.getActiveRect() !== rect) this.setActiveRect(rect);
+    return true;
+  } else {
+    // The selection keeps the id when this frame has none (selection.getKey() is then null)
+    this.canvas1.deactivateAll().renderAll(); // Deactivate rect if any
+    if (logging.selectionEvents)
+      console.log("setActiveRectID: No rect found for id=", id);
+    return false;
+  }
 };
 
 // GUI for enabling/disabling angle in BB
@@ -478,17 +520,19 @@ OverlayControl.prototype.updateDisableAngleButton = function () {
 OverlayControl.prototype.onClickResetAngle = function () {
   console.log("overlay.onClickResetAngle");
 
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject == null) {
     console.log("onClickResetAngle: aborted, could not get an activeObject");
     return;
   }
   storeUnit(activeObject, { angle: 0 });
+  refresh.overlayUpdate(); // the chronogram does not read the angle
+  refresh.form();
 };
 OverlayControl.prototype.onClickAngleFromTag = function () {
   console.log("overlay.onClickAngleFromTag");
 
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject == null) {
     console.log("onClickAngleFromTag: could not get an activeObject. abort.");
     return;
@@ -504,6 +548,8 @@ OverlayControl.prototype.onClickAngleFromTag = function () {
   }
 
   storeUnit(activeObject, { angle: tagAngle(tag) });
+  refresh.overlayUpdate();
+  refresh.form();
 
   //    this.refreshOverlay()
 };
@@ -619,7 +665,7 @@ OverlayControl.prototype.refreshCanvasSize = function (event, ui) {
   //var ctx=canvas.getContext("2d");
   //ctx.transform(...canvasTransform);
 
-  //overlay.hardRefresh() // Already done in canvasTransformScale()
+  //overlay.refreshOverlay() // Already done in canvasTransformScale()
 };
 
 /* Canvas Transform */
@@ -654,7 +700,7 @@ OverlayControl.prototype.canvasTransformSet = function (array) {
     canvasTransform[i] = array[i];
   }
   overlay.canvasTransform_Fix();
-  overlay.hardRefresh();
+  overlay.refreshOverlay(); // only the transform changed: the rects follow their obs
 };
 OverlayControl.prototype.canvasTransform_Fix = function () {
   let overlay = this;
@@ -716,7 +762,7 @@ OverlayControl.prototype.canvasTransformScale = function (
 
   overlay.canvasTransform_Fix();
 
-  overlay.hardRefresh();
+  overlay.refreshOverlay(); // only the transform changed: the rects follow their obs
 };
 OverlayControl.prototype.canvasTransformPan = function (dx, dy) {
   let overlay = this;
@@ -726,7 +772,7 @@ OverlayControl.prototype.canvasTransformPan = function (dx, dy) {
 
   overlay.canvasTransform_Fix();
 
-  overlay.hardRefresh();
+  overlay.refreshOverlay(); // only the transform changed: the rects follow their obs
 };
 OverlayControl.prototype.canvasTransformCenter = function (cx, cy) {
   // cx,cy: new center in video coordinates
@@ -811,7 +857,7 @@ OverlayControl.prototype.getFrameCropImg = async function(frame, crop) {
     return img
 }
 OverlayControl.prototype.getFrameCropCurrentObject = async function(framedelta, size, displaySize) {
-    let rect = this.getActiveObject()
+    let rect = this.getActiveRect()
     if (!rect) {
         printMessage("Timeline: please select an annotation")
         return
@@ -953,7 +999,7 @@ OverlayControl.prototype.hardRefresh = function () {
 
   if (this.interaction.mode == 'pick-frame') {
     let overlay = this
-    selectBeeByID(this.interaction.opts.id)
+    overlay.setActiveRectID(this.interaction.opts.id)
     let id = overlay.interaction.opts.id
     let frame = overlay.interaction.opts.frame
 
@@ -963,29 +1009,23 @@ OverlayControl.prototype.hardRefresh = function () {
     if (!obs) {
       console.log('overlay.hardRefresh: ERROR, in pick-frame without valid obs')
       overlay.setInteractionMode('main')
-      selectBeeByID(defaultSelectedBee);
-      this.refreshOverlay()
+      overlay.setActiveRectID(selection.getId());
+      updateSelectionPanels();
+      overlay.refreshOverlay(true)
 
-      updateDeleteButton()
       updateUndoButton()
       return
     }
-    if (!('span' in obs)) {
-      events.update(frame, id, { span: { 'f1': frame, 'f2': frame } })
-    }
-
     function doSwap2(interval, old_id, new_id) {
       obs_swapID(interval, old_id, new_id)
-      videoControl.refresh() // Just refresh
-      refreshChronogram();
+      refresh.rebuild()
     }
     function doSetSpanStart() {
       let f = videoControl.getCurrentFrame()
       events.update(frame, id, { span: { f1: f, f2: obs.span.f2 } })
       //$('#alerttext').html('Set Start DONE')
       //overlay.setInteractionMode('main')
-      overlay.hardRefresh()
-      refreshChronogram();
+      refresh.rebuild()
     }
     function gotoStart() {
       gotoEvent(obs.span.f1, id)
@@ -1001,8 +1041,7 @@ OverlayControl.prototype.hardRefresh = function () {
       events.update(frame, id, { span: { f1: obs.span.f1, f2: f } })
       //$('#alerttext').html('Set Start DONE')
       //overlay.setInteractionMode('main')
-      overlay.hardRefresh()
-      refreshChronogram();
+      refresh.rebuild()
     }
     function cancelSetSpan() {
       $('#pickframediv').html('Pick frame CLOSED')
@@ -1062,17 +1101,16 @@ OverlayControl.prototype.hardRefresh = function () {
     if (overlay.interaction.opts.showTimeline)
       overlay.drawTimelinePickFrameMode()
   } else if (this.interaction.mode == 'edit-visit') {
-    selectBeeByID(defaultSelectedBee);
+    overlay.setActiveRectID(selection.getId());
   } else {
     // Default behavior
-    console.log(`using defaultSelectedBee=${defaultSelectedBee}`)
-    selectBeeByID(defaultSelectedBee);
+    console.log(`using selection id=${selection.getId()}`)
+    overlay.setActiveRectID(selection.getId());
   }
-  // zoomOverlay supposed to be updated by event triggered by selectBeeByID
+  updateSelectionPanels();
 
-  this.refreshOverlay();
+  this.refreshOverlay(true);
 
-  updateDeleteButton();
   updateUndoButton();
 
   //zoomOverlay.refreshZoom()
@@ -1310,7 +1348,7 @@ OverlayControl.prototype.redrawVideoFrame = function() {
 
     //         overlay.canvas1.clear();
     //         createRectsFromTracks(this.previewFrame)
-    //         selectBeeByID(defaultSelectedBee);
+    //         selectBeeByID(selection.getId());
     //         overlay.refreshOverlay()
   } else if ((videoControl.currentMode == "cache")||(videoControl.currentMode == "cache-preview")) {
     let img = videoControl.currentImage
@@ -1336,9 +1374,13 @@ OverlayControl.prototype.redrawVideoFrame = function() {
       0, 0, w, h);
   }
 };
-OverlayControl.prototype.refreshOverlay = function () {
+OverlayControl.prototype.refreshOverlay = function (skipVideoFrame) {
   // Refresh overlay from already existing overlay data
+  // The tracks, tags, ROI are plotted on overlay.ctx: redrawing the video frame is what erases the previous plot.
+  // hardRefresh has just done it (skipVideoFrame)
   let overlay = this;
+
+  if (!skipVideoFrame) overlay.redrawVideoFrame();
 
   if (overlay.canvas1) {
     if (showTagsTracks || showSelectedTagsTracks) plotTagsTracks(overlay.ctx);
@@ -1704,6 +1746,7 @@ function createRect(id, startX, startY, width, height, angle, source) {
   return addRectFromObs(obs);
 }
 // The rectangle drawn while ctrl-dragging: not in the store until the drag is validated (submitDraft)
+// LEGACY candidate (ADR 0009, refresh-triggers 1e): the draft rect only serves the ctrl-drag creation gesture.
 function addDraftRect(id, startX, startY) {
   let canvasRect = { left: startX, top: startY, width: 1, height: 1 };
   let videoRect = overlay.canvasToVideoRect(canvasRect);
@@ -2104,7 +2147,7 @@ function getTag(f, id) {
   return undefined;
 }
 function isCurrentSelection(id) {
-  return typeof defaultSelectedBee !== "undefined" && id == defaultSelectedBee;
+  return typeof selection.getId() !== "undefined" && id == selection.getId();
 }
 function tagCorners(tag) {
   if (typeof tag.p === "undefined") return undefined;
@@ -2406,7 +2449,7 @@ function plotTagsTracks(ctx) {
 
   if (showSelectedTagsTracks) {
     // Plot track of selected bee
-    if (typeof defaultSelectedBee !== "undefined") {
+    if (typeof selection.getId() !== "undefined") {
       let setColor2 = function (f, alpha) {
         if (alpha == null) alpha = 1.0;
         var color;
@@ -2428,7 +2471,7 @@ function plotTagsTracks(ctx) {
         return color;
       };
 
-      //console.log('defaultSelectedBee=',defaultSelectedBee)
+      //console.log('selection.getId()=',selection.getId())
       let p0 = [];
       for (let f = fmin; f <= fmax; f++) {
         let tagsFrame = AnnotationStore.getTags()[f];
@@ -2437,7 +2480,7 @@ function plotTagsTracks(ctx) {
 
         let ii = -1;
         for (let i in tags) {
-          if (tags[i].id == defaultSelectedBee) {
+          if (tags[i].id == selection.getId()) {
             ii = i;
             break;
           }
@@ -2561,10 +2604,10 @@ function onTrackWindowChanged(event, skipRefresh) {
     console.log("onTrackWindowChanged:", overlay.trackWindow);
   }
 
-  $(overlay).trigger("trackWindow:change");
+  $(overlay).trigger("trackWindow:change"); // the chronogram updates its span
 
   if (!skipRefresh)
-    videoControl.refresh();
+    refresh.overlayUpdate();
 }
 function setTrackWindow(L) {
   $("#trackWindow").val(L);
@@ -2761,7 +2804,7 @@ function excludeRectsChanged() {
 }
 // Direct edition
 function onClickExcludeRectAdd() {
-  let R = getSelectedRect();
+  let R = overlay.getActiveRect();
   if (!R) return;
 
   let obs = R.obs;
@@ -3282,11 +3325,13 @@ function newRectForTag(tag) {
   }
   return rect;
 }
+// LEGACY, obsolete (ADR 0009, refactor/design/0009-refresh-triggers.md 1e): creates a rect by hand and refreshes
+// on its own. To be replaced by a plain events.create with default values.
 function newRectForCurrentTag() {
   if ($("#newRectForCurrentTag").hasClass("disabled")) {
     return;
   }
-  let id = getCurrentID();
+  let id = selection.getId();
   if (id == null) {
     printMessage("No current tag selected", "red");
     return;
@@ -3299,18 +3344,17 @@ function newRectForCurrentTag() {
     );
     return;
   }
-  let r = getSelectedRect();
+  let r = overlay.getActiveRect();
   if (r != null) {
     printMessage("Current tag already annotated", "red");
     return;
   }
   var rect = newRectForTag(tag);
 
-  overlay.canvas1.setActiveObject(rect);
+  overlay.setActiveRect(rect);
   overlay.canvas1.renderAll();
 
-  videoControl.refresh();
-  refreshChronogram();
+  refresh.rebuild();
 }
 
 /* Create new rect from prediction */
@@ -3323,7 +3367,7 @@ function onMouseDown_predict(option) {
 
   if (logging.mouseEvents) {
     console.log("onMouseDown_predict: no object selected", option);
-    console.log("onMouseDown_predict: currentID=", getCurrentID());
+    console.log("onMouseDown_predict: currentID=", selection.getId());
   }
 
   // predictId takes video/obs coordinates units
@@ -3402,7 +3446,7 @@ function onMouseDown_predict(option) {
     if (logging.mouseEvents)
       console.log("onMouseDown_predict: copied rect from ", obs);
   } else {
-    let id = getCurrentID();
+    let id = selection.getId();
     if (
       id == null ||
       getObsHandle(getCurrentFrame(), id, false) !== undefined
@@ -3428,11 +3472,10 @@ function onMouseDown_predict(option) {
       );
   }
   rect.setCoords();
-  overlay.canvas1.setActiveObject(rect);
+  overlay.setActiveRect(rect);
   overlay.canvas1.renderAll();
 
-  videoControl.refresh();
-  refreshChronogram();
+  refresh.rebuild(); // the new box is in the store
   // Fire mouse:down again, this time with the created target
   // overlay.canvas1.fire("mouse:down", {
   //     target: rect,
@@ -3481,7 +3524,7 @@ function onMouseDown_interactiveRect(option) {
 
   var center = rect.getCenterPoint();
   rect.hasControls = false; // Do not show controls when creating
-  overlay.canvas1.setActiveObject(rect);
+  overlay.setActiveRect(rect);
   //canvas1.renderAll();
 
   var onMouseMove_interactiveRect = function (option) {
@@ -3553,8 +3596,8 @@ function onMouseDown_interactiveRect(option) {
 
       // printMessage("Press enter to validate ID", "green")
 
-      updateForm(activeObject)
-      submitDraft(activeObject)
+      // submitDraft rebuilds (and refreshes the chronogram and the form) when it stores the box
+      if (!submitDraft(activeObject)) refresh.overlayRebuild() // refused (id conflict): the rebuild drops the draft
     } else {
       // Not enough drag to define a new rectangle
       overlay.canvas1.deactivateAll();
@@ -3567,8 +3610,8 @@ function onMouseDown_interactiveRect(option) {
           activeObject
         );
       deselectBee();
+      refresh.overlayRebuild(); // nothing was stored
     }
-    videoControl.refresh();
   };
 
   overlay.canvas1.on("mouse:up", onMouseUp_interactiveRect);
@@ -3591,10 +3634,11 @@ function onMouseDown_selectMultiframe(option) {
 
     if (tmp.id != null) {
       console.log("onMouseDown_selectMultiframe: found id=", tmp.id);
-      selectBeeByID(tmp.id);
+      selection.select(getCurrentFrame(), tmp.id);
       videoControl.refresh();
     } else {
       deselectBee();
+      refresh.selection();
     }
   } else {
     let done = false;
@@ -3672,15 +3716,11 @@ function onMouseDown_panning(option) {
     overlay.canvasTransformSet(panning.canvasTransform);
 
     //canvasTransform_Fix()
-
-    videoControl.refresh();
   };
   var onMouseUp_panning = function (e) {
     if (logging.mouseEvents) console.log("onMouseUp_panning: e=", e);
     overlay.canvas1.off("mouse:move", onMouseMove_panning);
     overlay.canvas1.off("mouse:up", onMouseUp_panning);
-
-    videoControl.refresh();
   };
 
   overlay.canvas1.on("mouse:up", onMouseUp_panning);
@@ -3730,10 +3770,10 @@ function onMouseDown(option) {
 
   if (overlay.opts.clickModeNewAnnotation) {
     if ((typeof option.target != "undefined")
-      //&& (overlay.previouslySelected.id == option.target.id)
+      //&& (overlay.previousActiveRect.id == option.target.id)
     ) {
       // Allow to move currentlu selected annotation
-      // Workaround: previouslySelected used because lastSelected is updated during mouseDown
+      // Workaround: previousActiveRect used because lastActiveRect is updated during mouseDown
       return false
     }
     if (logging.mouseEvents)
@@ -3807,7 +3847,6 @@ function onMouseWheel_Zooming(option) {
     console.log("onMouseWheel: canvasTransform=", canvasTransform);
   }
 
-  videoControl.refresh();
   option.preventDefault();
 }
 function onMouseWheel_Panning(option) {
@@ -3819,7 +3858,6 @@ function onMouseWheel_Panning(option) {
 
   overlay.canvasTransformPan(deltaX, deltaY);
 
-  videoControl.refresh();
   option.preventDefault();
 }
 
@@ -3874,17 +3912,23 @@ function onObjectSelected(option) {
   if (logging.selectionEvents) console.log("onObjectSelected:", option);
   //var activeObject = canvas1.getActiveObject();
   if (typeof option.target.id != "undefined") {
-    if (option.target.id != overlay.getActiveObject().id) {
+    if (option.target.id != overlay.getActiveRect().id) {
       console.log(
         "ERROR in onObjectSelected: option.target.id != canvas1.getActiveObject().id",
         option.target.id,
-        overlay.getActiveObject().id
+        overlay.getActiveRect().id
       );
     }
-    overlay.previouslySelected = overlay.lastSelected
-    selectBee(option.target)
-    overlay.lastSelected = option.target
-    updateDeleteButton()
+    overlay.previousActiveRect = overlay.lastActiveRect
+    let frame = option.target.obs ? option.target.obs.frame : getCurrentFrame()
+    let draft = !!option.target.draft
+    // A selection already there is the echo of a view activating the rectangle (setActiveRectID): the caller shows it
+    let echo = selection.is(frame, option.target.id, draft)
+    selection.select(frame, option.target.id, draft)
+    overlay.lastActiveRect = option.target
+    if (!echo) {
+      refresh.selection()
+    }
 
     // If selected a "visit" event, slect it also in the visitWidget
     let obs = getObsHandle(option.target.obs.frame, option.target.id)
@@ -3907,17 +3951,17 @@ function autoCentering(obs) {
 function onObjectDeselected(option) {
   if (logging.selectionEvents) console.log("onObjectDeselected: ", option);
 
-  if (overlay.lastSelected !== null) {
-    if (overlay.lastSelected.draft) {
+  if (overlay.lastActiveRect !== null) {
+    if (overlay.lastActiveRect.draft) {
       if (logging.mouseEvents)
         console.log(
-          "onObjectDeselected: removing non submitted lastSelected=",
-          overlay.lastSelected
+          "onObjectDeselected: removing non submitted lastActiveRect=",
+          overlay.lastActiveRect
         );
 
       // Remove tmp rect as soon as it becomes inactive
-      overlay.canvas1.remove(overlay.lastSelected);
-      overlay.lastSelected = null;
+      overlay.canvas1.remove(overlay.lastActiveRect);
+      overlay.lastActiveRect = null;
       videoControl.refresh();
     }
     updateDeleteButton();
@@ -3943,7 +3987,7 @@ function onObjectMoving(option) {
   //automatic_sub();
 
   $(overlay).trigger("object:moving");
-  //zoomOverlay.selectionChanged()
+  //zoomOverlay.refreshFromSelection()
 }
 
 function onObjectModified(option) {
@@ -3957,13 +4001,13 @@ function onObjectModified(option) {
   activeObject.dragging = false;
   storeUnit(activeObject, rectToGeometry(activeObject));
 
-  //canvas1.renderAll(); // Refresh rectangles drawing
-  overlay.refreshOverlay();
-  updateForm(activeObject);
+  refresh.overlayUpdate(); // the rectangle already shows the geometry
+  refresh.form();
+  if (flag_useROI) refresh.chrono(); // the chronogram reads cx, cy only for the ROI filter
   //showZoom(activeObject)
 
   $(overlay).trigger("object:modified");
-  //zoomOverlay.selectionChanged()
+  //zoomOverlay.refreshFromSelection()
 }
 
 

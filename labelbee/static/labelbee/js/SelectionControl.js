@@ -2,24 +2,11 @@
 
 // import * from "Model.js";
 
-var defaultSelectedBee;
 var undo = new Observation(0);
 
 /* Form and current bee control */
 
 function initSelectionControl() {
-  selectionControl = {};
-
-  $(selectionControl).on("tagselection:created", updateChronoSelection);
-  $(selectionControl).on("tagselection:cleared", updateChronoSelection);
-
-  $(selectionControl).on("tagselection:created", updateSelectID);
-
-  $(selectionControl).on("tagselection:created", updateFormButtons);
-  $(selectionControl).on("tagselection:cleared", updateFormButtons);
-  $(selectionControl).on("selection:created", updateFormButtons);
-  $(selectionControl).on("selection:cleared", updateFormButtons);
-
   function aux(label, description, iconHtml) {
     return {
       label: label,
@@ -81,17 +68,6 @@ function initSelectionControl() {
   });
 
   labelListDialog = new LabelListDialog();
-
-  // dummy object to define events (inspired by Fabric.js)
-  // - selection:created
-  // - selection:cleared
-  // - before:selection:cleared
-  //$( selectionControl ).trigger('selection:created')
-
-  //     $( selectionControl ).on('selection:created', updateChronoSelection)
-  //     $( selectionControl ).on('selection:cleared', updateChronoSelection)
-  //     $( selectionControl ).on('tagselection:created', updateChronoSelection)
-  //     $( selectionControl ).on('tagselection:cleared', updateChronoSelection)
 }
 
 function hardRefreshLabelTogglePanel() {
@@ -338,18 +314,19 @@ function LabelListDialog() {
 }
 
 function updateSelectID() {
-  $("#selectID").val(defaultSelectedBee);
+  $("#selectID").val(selection.getId());
 }
 function onSelectIDChanged() {
   let id = $("#selectID").val().trim();
-  selectBeeByID(id);
+  selection.select(getCurrentFrame(), id);
+  refresh.selection();
 }
 
 function updateFormButtons() {
-  if (getCurrentID() == null) {
+  if (selection.getId() == null) {
     $("#newRectForCurrentTag").addClass("disabled");
     $("#newRectForCurrentTag").removeClass("active");
-  } else if (getSelectedID() == null) {
+  } else if (overlay.getActiveRectID() == null) {
     $("#newRectForCurrentTag").removeClass("disabled");
     $("#newRectForCurrentTag").removeClass("active");
   } else {
@@ -480,46 +457,29 @@ function submitDraft(rect) {
   rect.obs.ID = id;
   rect.obs = events.commit(rect.obs);
   rect.draft = false;
+  selection.select(frame, id); // no longer a draft: it has a key
 
-  videoControl.refresh();
-  refreshChronogram();
+  refresh.rebuild();
   return true;
 }
 
 /**
- * The key {frame, id} of the selected observation in the store, or null when nothing is selected or the
- * selected rectangle is not in the store yet (ADR 0008 R4). Today it reads the fabric active object;
- * the selection slice will read the selection store, and no editor changes.
- */
-function selectedKey() {
-  let activeObject = overlay.getActiveObject();
-  if (!activeObject || activeObject.draft || !activeObject.obs) return null;
-  return { frame: activeObject.obs.frame, id: activeObject.obs.ID };
-}
-
-/**
  * Stores the fields of one unit edited on the selected rectangle (ADR 0008 R3): the store gets only these fields,
- * with `events.update` (the rectangle holds the stored object), then the manual refreshes. A draft rectangle (the
- * ctrl-drag in progress) is not in the store: the fields go to its own observation, and `submitNew` submits it
- * (the newid box did). Returns whether the store was written.
+ * with `events.update` (the rectangle holds the stored object). It does not refresh: the caller calls the `refresh.*`
+ * that fits its field (ADR 0009 section 0). A draft rectangle (the ctrl-drag in progress) is not in the store: the fields
+ * go to its own observation, and `submitNew` submits it (the newid box did; `submitDraft` refreshes). Returns whether
+ * the store was written.
  */
 function storeUnit(rect, fields, submitNew) {
-  let key = selectedKey();
+  let key = selection.getKey();
   if (!key) Object.assign(rect.obs, fields); // not in the store yet: the working copy is the only holder
   if (key) {
     let stored = Object.assign({}, fields);
     if (stored.fix) stored.fix = deepcopy(stored.fix); // the store never shares `fix` with the working copy
     events.update(key.frame, key.id, stored);
-    videoControl.refresh();
-    refreshChronogram();
     return true;
   }
-  if (submitNew && rect.draft) {
-    submitDraft(rect);
-  } else {
-    videoControl.refresh(); // a draft is not submitted, just refresh
-    refreshChronogram();
-  }
+  if (submitNew && rect.draft) submitDraft(rect);
   return false;
 }
 
@@ -528,7 +488,7 @@ function swapID_findAll(ID) {
 
 }
 function swapID_callback() {
-    var activeObject = overlay.getActiveObject();
+    var activeObject = overlay.getActiveRect();
     if (activeObject === null) {
         printMessage("No bee selected", "red")
         return false;
@@ -540,8 +500,7 @@ function swapID_callback() {
 
     function doSwap2(interval, old_id, new_id) {
         obs_swapID(interval, old_id, new_id)
-        videoControl.refresh() // Just refresh
-        refreshChronogram();
+        refresh.rebuild()
     }
     function doSwap() {
         let interval = [getCurrentFrame(),-1]
@@ -570,93 +529,49 @@ function swapID_callback() {
 
 /* Selection */
 
-tagSelection = undefined;
-function selectBeeByID(id) {
-  tagSelection = id;
-  let rect = findRect(id);
-  if (rect) {
-    if (logging.selectionEvents)
-      console.log("selectBeeByID: trying to select id=", id);
-    //canvas1.setActiveObject(canvas1.item(id));
-    overlay.setActiveObject(rect);
-    // TESTME: selectBee was commented
-    selectBee(rect);
-    // Events triggered in selectBee
-    return true;
-  } else {
-    overlay.canvas1.deactivateAll().renderAll(); // Deselect rect if any
-    updateForm(null);
-    // defaultSelectedBee = undefined // Do not cancel default if not found
-    defaultSelectedBee = id; // Set default
-    if (id == null) $(selectionControl).trigger("tagselection:cleared");
-    else $(selectionControl).trigger("tagselection:created");
-    axes.selectId(id);
-    if (logging.selectionEvents)
-      console.log("selectBeeByID: No rect found for id=", id);
-    return false;
-  }
-}
 function selectBeeByIDandFrame(id, frame) {
   if (frame != getCurrentFrame()) {
     deselectBee();
-    defaultSelectedBee = id;
+    selection.select(frame, id);
     videoControl.seekFrame(frame);
   } else {
     deselectBee();
-    selectBeeByID(id);
+    selection.select(frame, id);
     videoControl.refresh();
   }
 }
 
-// selectBee: called when clicking on a rectangle
-function selectBee(rect) {
-  if (logging.selectionEvents) console.log("selectBee: rect=", rect);
-
-  updateDeleteButton();
-
-  let beeId = rect.id;
-  defaultSelectedBee = beeId;
-
-  // Update form from rect
-  updateForm(rect);
-
-  $(selectionControl).trigger("tagselection:created");
-  $(selectionControl).trigger("selection:created");
+/**
+ * VIEW: shows the selection (`selection`, ADR 0009 section 0b) on the rectangles, then in the panels. It reads the model and
+ * changes it nowhere. The step of `refresh.selection()`: the caller decides what is selected first (`selection.select`,
+ * `selection.changeFrame`), then calls `refresh.selection()`.
+ */
+function activateSelection() {
+  overlay.setActiveRectID(selection.getId());
+  updateSelectionPanels();
 }
 
-// deselectBee: called when clicking out of a rectangle
-function deselectBee() {
-  $(selectionControl).trigger("before:selection:cleared");
+/**
+ * VIEW: the panels that show the selection (delete button, form, chronogram, ID field, new-rect button, zoom). It reads
+ * `selection` and fabric's active rectangle and changes neither. `activateSelection` and `hardRefresh` run it.
+ */
+function updateSelectionPanels() {
+  updateDeleteButton();
+  updateForm(overlay.getActiveRect());
+  updateChronoSelection();
+  if (selection.getId() != null) updateSelectID(); // the field keeps its text after an explicit deselect
+  updateFormButtons();
+  if (typeof zoomOverlay !== "undefined") zoomOverlay.refreshFromSelection(); // not created before initZoomView
+}
 
+// deselectBee: called when clicking out of a rectangle. The caller then calls refresh.selection() (or a rebuild)
+function deselectBee() {
   //canvas1.deactivateAll().renderAll(); // Deselect rect
   overlay.canvas1.deactivateAllWithDispatch();
-  updateForm(null);
-  defaultSelectedBee = undefined; // Do not keep default when explicit deselect
-  updateDeleteButton();
-
-  $(selectionControl).trigger("tagselection:cleared");
-  $(selectionControl).trigger("selection:cleared");
-}
-// getSelectedID: return undefined or an id
-function getSelectedID() {
-  // Truth on selected bee ID comes from Fabric.js canvas
-  var activeObject = overlay.getActiveObject();
-  if (activeObject === null) {
-    return undefined;
-  } else {
-    return activeObject.id;
-  }
-}
-// getSelectedRect: return null or a Fabric.js rect
-function getSelectedRect() {
-  // Truth on selected bee ID comes from Fabric.js canvas
-  return overlay.getActiveObject();
+  selection.clear(); // Do not keep default when explicit deselect
 }
 function getCurrentTag() {
-  return getTag(getCurrentFrame(), defaultSelectedBee);
-}
-function getCurrentID() {
-  return defaultSelectedBee;
+  return getTag(getCurrentFrame(), selection.getId());
 }
 
 function getIdsInFocus() {
@@ -684,7 +599,7 @@ function getIdsInFocus() {
 
 function deleteSelected() {
   //Deletes selected rectangle(s)/observation when remove bee is pressed
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   var activeGroup = overlay.canvas1.getActiveGroup();
 
   if (activeObject) {
@@ -704,8 +619,7 @@ function deleteEvent(frame, id) {
   // Undo is deactivated until its own slice (ADR 0008 step 1): a delete is final, nothing is cloned or pushed.
   events.delete(frame, id); // also removes the frame when it ends up empty
 
-  videoControl.refresh();
-  refreshChronogram();
+  refresh.rebuild();
   return true
 }
 
@@ -725,9 +639,8 @@ function undoAction() {
       events.commit(obs);
       rect = addRectFromObs(obs);
       console.log("rect=", rect);
-      overlay.setActiveObject(rect);
+      overlay.setActiveRect(rect);
       //submit_bee()
-      selectBee(rect);
     }
 
     videoControl.refresh();
@@ -735,7 +648,7 @@ function undoAction() {
   }
 }
 function updateDeleteButton() {
-  if (overlay.getActiveObject() === null) {
+  if (overlay.getActiveRect() === null) {
     $("#deleteButton").addClass("disabled");
   } else {
     $("#deleteButton").removeClass("disabled");
@@ -837,10 +750,10 @@ function labelToggle(thelabel, isOn) {
   // Toggle if isOn undefined
 
   if (logging.guiEvents) console.log("onLabelToggled: event=", event);
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject == null) {
     newRectForCurrentTag();
-    activeObject = overlay.getActiveObject();
+    activeObject = overlay.getActiveRect();
   }
   if (activeObject == null) {
     console.log("onLabelToggled: aborted, could not get an activeObject");
@@ -870,34 +783,34 @@ function labelToggle(thelabel, isOn) {
     obs.labels
   );
 
-  updateForm(activeObject);
-  refreshChronogram();
+  refresh.update();
 }
 
 // If labels changed from pressing return ?
 function onActivityChanged(event) {
   if (logging.guiEvents) console.log("onActivityChanged: event=", event);
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject !== null) {
     // the notes unit has its own editor (ADR 0008 step 5)
     storeUnit(activeObject, { notes: $("#notes").val() });
+    refresh.form(); // the chronogram and the overlay do not show the notes
   }
 }
 // If labels textarea changed
 function onLabelsChanged() {
   let labels = $("#labels").val();
   if (logging.guiEvents) console.log("onLabelsChanged: labels=", labels);
-  var activeObject = overlay.getActiveObject();
+  var activeObject = overlay.getActiveRect();
   if (activeObject !== null) {
     storeUnit(activeObject, { labels: Labels.clean(labels) });
-    updateForm(activeObject);
+    refresh.update();
   }
 }
 
 
 
 function modifyCurrentObsSpan(mode) {
-  let r = getSelectedRect()
+  let r = overlay.getActiveRect()
   if (!r) {
       console.log('modifyCurrentObsSpan: CANCELED, no event selected')
       return;
@@ -950,8 +863,7 @@ function modifyCurrentObsSpan(mode) {
       return
   }
 
-  updateTagsLabels()
-  drawChrono()
+  refresh.chrono()
 }
 
 

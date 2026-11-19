@@ -21,7 +21,7 @@
  * something (the detector uses it for "through the API"; change events are built on it later).
  */
 
-import { logging } from "../core/Notifier.js";
+import { logging, logRefresh } from "../core/Notifier.js";
 
 // Same test as jQuery.isEmptyObject (no enumerable property, inherited ones included; true for undefined).
 function isEmptyObject(obj) {
@@ -66,6 +66,9 @@ export class Events {
   #frames = [];
   #info;
   #observer = null;
+  #subscribers = [];
+  #batchDepth = 0;
+  #batched = [];
   #createObservation;
 
   /** @param {{createObservation?: (id) => object}} [opts] builds a new observation (the page passes `Observation`) */
@@ -80,8 +83,37 @@ export class Events {
   setObservationFactory(fn) {
     this.#createObservation = fn;
   }
+  /** Adds a subscriber `fn(event)`, called synchronously after each command (ADR 0009 D1). Returns the function that removes it. */
+  subscribe(fn) {
+    this.#subscribers.push(fn);
+    return () => {
+      const i = this.#subscribers.indexOf(fn);
+      if (i >= 0) this.#subscribers.splice(i, 1);
+    };
+  }
+  /** Runs `fn`; the subscribers hear one `{op: 'batch', events}` when the outermost batch ends, instead of one event per command.
+   * The observer still hears each command at once. Returns the result of `fn`; a batch that throws still flushes what it did. */
+  batch(fn) {
+    this.#batchDepth++;
+    try {
+      return fn();
+    } finally {
+      if (--this.#batchDepth === 0 && this.#batched.length) {
+        const events = this.#batched;
+        this.#batched = [];
+        logRefresh('store', `batch ${events.length}`);
+        this.#notify({ op: 'batch', events });
+      }
+    }
+  }
+  #notify(event) {
+    for (const fn of [...this.#subscribers]) fn(event);
+  }
   #emit(event) {
+    logRefresh('store', event.frame == null ? event.op : `${event.op} ${event.frame}/${event.id}`);
     if (this.#observer) this.#observer(event);
+    if (this.#batchDepth > 0) this.#batched.push(event);
+    else this.#notify(event);
   }
 
   // ---- queries

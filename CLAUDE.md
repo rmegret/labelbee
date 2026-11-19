@@ -9,6 +9,9 @@ Flask backend (`labelbee/`) + vanilla-JS frontend (`labelbee/static/labelbee/js/
 Before any work:
 - read `refactor/README.md` (reference information about the refactoring).
 - read `refactor/PLAN.md` (roadmap + status). Update it after each step.
+  A step's PLAN entry is `[x]` plus one short clause (<= ~15 words) naming the outcome.
+  Details (what changed, tests adapted, counts, caveats) go in the ADR, the commit message
+  or the report, never in PLAN. Do not repeat there what the commit message says.
 All refactor knowledge lives in `refactor/` (see `refactor/README.md`); nothing
 Claude-specific goes under `labelbee/`, `tests/` or `docs/`.
 

@@ -72,7 +72,7 @@ Browser globals produced or consumed by the server-rendered pages / API client (
 | `videojsoninfo` | `VideoControl.js` (implicit global) | `VideoControl.js` | `loadVideoInfo`, `loadPreviewVideoInfo` |
 | `statusWidget`, `fromServerDialog`, `loginDialog`, `overlay`, `chrono` | `labelBee.js` / `AnnotationIO.js` (`fromServerDialog` is one modal shared by the video-list loader and the annotation loaders) | `VideoControl.js` (`statusWidget`, `fromServerDialog`, `overlay`), `VideoList.js` (`fromServerDialog`: `videoListFromDB`, `receiveVideoSelection`, `makeVideoListTable`, `videoSelected`) | `labelBee.js`; `fromServerDialog` content written by `VideoList.js`, `VideoControl.js` and `AnnotationIO.js` |
 | `overlay.videoSize` ({w, h}) and `videoControl.videoSize()` | `OverlayControl.js` (`canvasSetVideoSize`); `VideoControl.js` (`videoSize`) | `OverlayControl.js` (`optsClick('fixedAspect')`, `updateROIFromVideo` which calls `videoControl.videoSize()` for the ROI "Reinit" button) | `VideoControl.onVideoSizeChanged` -> `overlay.canvasSetVideoSize` |
-| `defaultSelectedBee`, `change_id_force` | `labelBee.js` | `ChronoControlInteraction.js`, `SelectionControl.js`, `onKeyDown_IDEdit` | `labelBee.js`, `ChronoControlInteraction.js`, `SelectionControl.js` |
+| `defaultSelectedBee` (slice 6: now `selection.getId()`, `annotation/SelectionModel.js`), `change_id_force` | `labelBee.js` | `ChronoControlInteraction.js`, `SelectionControl.js`, `onKeyDown_IDEdit` | `labelBee.js`, `ChronoControlInteraction.js`, `SelectionControl.js` |
 | `http_script_name`, `url_for(path)` | `labelBee.js` / page template (`http_script_name_0`) | every module that issues ajax | `labelBee.js` |
 | `lasthash`, `onhashchange` | `labelBee.js` | `VideoControl.js` `onFrameChanged` | `labelBee.js`, `VideoControl.js` |
 | `labelButtonsArray` | `SelectionControl.js` | `labelBee.js` via `labelsProcessKey` | `SelectionControl.js` |
@@ -113,7 +113,7 @@ Browser globals produced or consumed by the server-rendered pages / API client (
 | `flag_showPartsOnChrono`, `flag_showIndividualEvents` | `initChrono` | legacy renderer | toggle handlers (`onToggleButton_showPartsOnChrono`, `onToggleButton_showIndividualEvents`) |
 | `showObsChrono`, `showTagsChrono` | `OverlayControl.js` (init) | `updateChronoData` | `onChronoParametersChanged` |
 | `chronoItemHeight` | `initChrono` | `adjustChronogramHeight`, `chronoAdjust` | `adjustChronogramHeight` (also from `chronoAdjust`, `updateChronoYDomain`), resizable stop |
-| `defaultSelectedBee`, `tagSelection` | `SelectionControl.js` / `OverlayControl.js` | chronogram (`gotoEvent`, `renderSelection`, `updateChronoSelection`, next/prev ID) | `gotoEvent`, `gotoFrameId`, `selectBeeByID` |
+| `defaultSelectedBee` (slice 6: now `selection.getId()`, `annotation/SelectionModel.js`), `tagSelection` | `SelectionControl.js` / `OverlayControl.js` | chronogram (`gotoEvent`, `renderSelection`, `updateChronoSelection`, next/prev ID) | `gotoEvent`, `gotoFrameId`, `selectBeeByID` |
 | `axes.selectedID` | `ChronoAxes.js` | `refreshIdSelection`, `onAxesClick` (ID for clicks above the plot) | `selectId` (from `updateChronoSelection`, `SelectionControl.js`) |
 | `lockFocusTrackWindow` | `OverlayControl.js` | `onClickFocusTrackWindow` | `setFocusTrackWindow` |
 | `overlay.trackWindow {backward, forward}` | `OverlayControl.js` | `updateTrackWindowSpan`, `getWindow`, `onAxesDblClick`, `focusTrackWindow` | `onTrackWindowChanged` |
@@ -165,7 +165,7 @@ Defined in `OverlayControl.js` unless stated. "R" = reads, "W" = writes.
 | `lockFocusTrackWindow` | implicit global | `focusTrackWindow` UI | `setFocusTrackWindow` |
 | `Tracks`, `Tags` | data (Model.js) | `createRectsFromTracks`, `plot*`, prediction | `submit_bee`/`storeObs` (also `onKeyDown_NewIDEdit`), `deleteEvent`, `hardRefresh` (writes `obs.span` in pick-frame), pick-frame Set Start/End (`span.f1/f2`), `modifyCurrentObsSpan` |
 | `ttags` | global (ChronoControl.js) | `plotTagsTracks` | chronogram refresh |
-| `defaultSelectedBee`, `tagSelection` | globals (SelectionControl.js) | `hardRefresh`, `plotTag`, `plotTagsTracks`, `isCurrentSelection`, `getCurrentTag` | `selectBee`, `deselectBee`, `selectBeeByID`, `selectBeeByIDandFrame`, `onKeyDown_IDEdit` (`labelBee.js`), `gotoEvent` (`ChronoControlInteraction.js`) |
+| `defaultSelectedBee` (slice 6: now `selection.getId()`, `annotation/SelectionModel.js`), `tagSelection` | globals (SelectionControl.js) | `hardRefresh`, `plotTag`, `plotTagsTracks`, `isCurrentSelection`, `getCurrentTag` | `selectBee`, `deselectBee`, `selectBeeByID`, `selectBeeByIDandFrame`, `onKeyDown_IDEdit` (`labelBee.js`), `gotoEvent` (`ChronoControlInteraction.js`) |
 | `change_id_force` | global, `'swap'` | `onKeyDown_IDEdit` (`labelBee.js`) | `labelBee.js` `init` |
 | `flatTracksAll` | global (ChronoControl.js) | `modifyCurrentObsSpan` (`SelectionControl.js`, to enter pick-frame) | chronogram refresh |
 | `videoControl` (consumed) | `currentMode`, `currentImage`, `currentFrame`, `video`, `previewVideo`, `flagCopyVideoToCanvas`, `isValidVideo`, `videoCache`, `refresh`, `seekFrame`, `pause` | `OverlayControl.js` | `optsClick` writes `videoControl.currentMode` |
@@ -235,9 +235,9 @@ The file mixes ~10 responsibilities. Proposed split (names by responsibility, ap
 
 | Name | Defined in | Read by | Written by |
 |---|---|---|---|
-| `defaultSelectedBee` (current ID) | `SelectionControl.js` (declared), `labelBee.js` init sets undefined | `SelectionControl.js` (`getCurrentID`, `getCurrentTag`, `updateSelectID`), `ChronoControl.js` (`updateChronoSelection`, `setRestrictID`, d3 `selected` class, line ~738), `ChronoControlInteraction.js` (next/prev event, first/last), `OverlayControl.js` (`hardRefresh`, `isCurrentSelection`, tag drawing) | `SelectionControl.js` (`selectBee`, `deselectBee`, `selectBeeByID`, `selectBeeByIDandFrame`), `ChronoControlInteraction.js` (`gotoEvent`, `gotoFrameId`), `labelBee.js` (`onKeyDown_IDEdit`) |
-| `tagSelection` | `SelectionControl.js` | nobody | `selectBeeByID` |
-| `selectionControl` (event bus: `tagselection:*`, `selection:*`, `before:selection:cleared`) | `initSelectionControl` | listeners registered in `initSelectionControl` | `selectBee`, `deselectBee`, `selectBeeByID` |
+| `selection` (`SelectionModel`: frame and id to follow; was `defaultSelectedBee`, slice 6) | `annotation/SelectionModel.js` (`window.selection`, `SelectionModelBridge.js`) | `selection.getId()` / `getKey()`: `SelectionControl.js` (`getCurrentTag`, `updateSelectID`), `ChronoControl.js` (`updateChronoSelection`, `setRestrictID`), `ChronoControlInteraction.js` (next/prev ID), `OverlayControl.js` (`hardRefresh`, `isCurrentSelection`) | `select`: `onObjectSelected`, `onSelectIDChanged`, `gotoEvent`, `selectBeeByIDandFrame`, `submitDraft`, `onKeyDown_IDEdit`; `changeFrame`: `VideoControl.onFrameChanged`; `clear`: `deselectBee` |
+| `tagSelection` (deleted in step 6c) | | | |
+| `selectionControl` event bus (`tagselection:*`, `selection:*`; deleted in step 6c, replaced by `refresh.selection()`) | | | |
 | `undo` (`new Observation(0)`) | `SelectionControl.js` | nobody | nobody |
 | `undoStack` | `SelectionControl.js` | `updateUndoButton`, `undoPop` | `undoPush` (only from `deleteEvent`) |
 | `labelButtonsArray` | `SelectionControl.js` (`initSelectionControl`) | `hardRefreshLabelTogglePanel`, `updateForm`, `labelsProcessKey`, `LabelListDialog` | `LabelListDialog` Ok (from key `labelListArray` of its grid), `AnnotationIO.js` (`LabelListFromServerDialog`, from key `labelButtonsArray`) |
@@ -259,7 +259,7 @@ The file mixes ~10 responsibilities. Proposed split (names by responsibility, ap
 
 | Module | Responsibility | Takes from current code |
 |---|---|---|
-| SelectionModel | Current ID, active observation, events `selection:created/cleared`, `selectByID`, `selectByIDAndFrame`, `getCurrentID/Tag` | `SelectionControl.js` selection part, `defaultSelectedBee` |
+| SelectionModel | Current ID, active observation, events `selection:created/cleared`, `selectByID`, `selectByIDAndFrame`, `getCurrentID/Tag` | `SelectionControl.js` selection part, `defaultSelectedBee` | _(implemented in slice 6 as `annotation/SelectionModel.js`, without events: its writers call `refresh.selection()`)_
 | UndoStack | Command stack with `push(command)`, `undo()`, `canUndo`, caption | `undoStack`, `undoPush/Pop`, `undoAction`, `updateUndoButton` |
 | LabelModel | Label vocabulary (list, aliases), string/array conversion, has/toggle on an observation, one JSON format for the list | `labelButtonsArray`, `labelMap`, `toLabelArray`, `updateObsLabel`, `hasLabel` (and the `bool_acts` shim) |
 | LabelPanel (view) | Button panel, `#labels`, `#notes`, label list dialogs (Edit, Preset), accesskeys | `hardRefreshLabelTogglePanel`, `labelToggle`, `LabelListDialog`, `LabelListFromServerDialog`, `labelsProcessKey` |
@@ -344,7 +344,7 @@ Files: CC = `ChronoControl.js`, CCI = `ChronoControlInteraction.js`, CCL = `Chro
 | `excludeRects`, `flag_useExcludeRects` | OC | OC filters; CC via `tagsSampleFilterExcludeRects` | OC dialog, `onClickExcludeRectAdd`, `onClickExcludeRectDelete`, `onClickExcludeRects` |
 | `tagsHammingSampleFilter`, `tagsDMSampleFilter`, `tagsRGBSampleFilter`, `tagsSampleFilterROI`, `tagsSampleFilterExcludeRects`, `tagsSampleFilterCustom`, `tagsSampleFilter`, `tagsIntervalFilter`, `tagsIDFilter` | OC (end of file) | CC (`updateTagIntervals`, `interpolateTags`, `cleanObsoleteEvents`), OC (tag tracks drawing) | OC `refreshTagsParameters`, `chronoFilter`, `ROIChanged`, `excludeRectsChanged` |
 | `tagsHaveDM` | `AnnotationStore` (set by `updateTagsHaveDM`, called from AIO `setTags`) | OC `refreshTagsParameters` | AIO |
-| `defaultSelectedBee` | CCI (definition site not verified) | CC `restrictIDFromSelection`, `renderSelection` | CCI, SC, `labelBee.js` (init to `undefined`; set after an ID edit in `onKeyDown_IDEdit`) |
+| `defaultSelectedBee` (slice 6: now `selection.getId()`, `annotation/SelectionModel.js`) | CCI (definition site not verified) | CC `restrictIDFromSelection`, `renderSelection` | CCI, SC, `labelBee.js` (init to `undefined`; set after an ID edit in `onKeyDown_IDEdit`) |
 | `flag_autoEventMode` | CC `initChrono` | CC, CCI | CCI |
 | `obs`, `obs_for_id`, `acts` | CC (implicit leaks) | CC | CC (`obs` also assigned in `SelectionControl.js` `deleteEvent`) |
 | `chrono.perf.chronoUpdate` | CC | CC `updateChrono` status line | CC `updateChronoData` |

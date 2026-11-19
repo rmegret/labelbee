@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 993" width="1000" font-family="sans-serif" font-size="12"><rect width="1000" height="993" fill="#fff"/>
+<text x="40" y="28" font-size="16" font-weight="bold">Who asks whom to refresh (cross-file calls, eb473985 + step 0)</text>
+<text x="40" y="46" fill="#555">left: the file that calls; right: the refresh entry point it calls. Width = number of call sites; colour = class of the site.</text>
+<text x="40" y="78" font-size="14" font-weight="bold">1. Who asks for a global refresh: data and configuration changes</text>
+<path d="M230,101 C430,101 450,101 650,101" fill="none" stroke="#d62728" stroke-width="4.3" opacity="0.7"><title>AnnotationIO -> refreshChronogram: 8 (store write)</title></path>
+<path d="M230,108 C430,108 450,108 650,108" fill="none" stroke="#9467bd" stroke-width="2.9" opacity="0.7"><title>AnnotationIO -> refreshChronogram: 2 (tags)</title></path>
+<path d="M230,147 C430,147 450,115 650,115" fill="none" stroke="#1f77b4" stroke-width="3.2" opacity="0.7"><title>ChronoControlInteraction -> refreshChronogram: 3 (derived config)</title></path>
+<path d="M230,394 C430,394 450,232 650,232" fill="none" stroke="#d62728" stroke-width="3.2" opacity="0.7"><title>OverlayControl -> videoControl.refresh: 3 (store write)</title></path>
+<path d="M230,380 C430,380 450,157 650,157" fill="none" stroke="#d62728" stroke-width="3.5" opacity="0.7"><title>OverlayControl -> refreshChronogram: 4 (store write)</title></path>
+<path d="M230,401 C430,401 450,239 650,239" fill="none" stroke="#7f7f7f" stroke-width="5.2" opacity="0.7"><title>OverlayControl -> videoControl.refresh: 14 (display only)</title></path>
+<path d="M230,387 C430,387 450,164 650,164" fill="none" stroke="#1f77b4" stroke-width="3.7" opacity="0.7"><title>OverlayControl -> refreshChronogram: 5 (derived config)</title></path>
+<path d="M230,293 C430,293 450,204 650,204" fill="none" stroke="#d62728" stroke-width="3.9" opacity="0.7"><title>SelectionControl -> videoControl.refresh: 6 (store write)</title></path>
+<path d="M230,286 C430,286 450,143 650,143" fill="none" stroke="#d62728" stroke-width="4.1" opacity="0.7"><title>SelectionControl -> refreshChronogram: 7 (store write)</title></path>
+<path d="M230,300 C430,300 450,211 650,211" fill="none" stroke="#7f7f7f" stroke-width="2.5" opacity="0.7"><title>SelectionControl -> videoControl.refresh: 1 (display only)</title></path>
+<path d="M230,193 C430,193 450,122 650,122" fill="none" stroke="#d62728" stroke-width="2.9" opacity="0.7"><title>VisitControl -> refreshChronogram: 2 (store write)</title></path>
+<path d="M230,253 C430,253 450,197 650,197" fill="none" stroke="#7f7f7f" stroke-width="2.5" opacity="0.7"><title>ZoomView -> videoControl.refresh: 1 (display only)</title></path>
+<path d="M230,239 C430,239 450,129 650,129" fill="none" stroke="#d62728" stroke-width="3.7" opacity="0.7"><title>ZoomView -> refreshChronogram: 5 (store write)</title></path>
+<path d="M230,246 C430,246 450,136 650,136" fill="none" stroke="#9467bd" stroke-width="2.9" opacity="0.7"><title>ZoomView -> refreshChronogram: 2 (tags)</title></path>
+<path d="M230,340 C430,340 450,218 650,218" fill="none" stroke="#d62728" stroke-width="2.5" opacity="0.7"><title>labelBee -> videoControl.refresh: 1 (store write)</title></path>
+<path d="M230,333 C430,333 450,150 650,150" fill="none" stroke="#d62728" stroke-width="2.9" opacity="0.7"><title>labelBee -> refreshChronogram: 2 (store write)</title></path>
+<path d="M230,347 C430,347 450,225 650,225" fill="none" stroke="#7f7f7f" stroke-width="2.5" opacity="0.7"><title>labelBee -> videoControl.refresh: 1 (display only)</title></path>
+<rect x="40" y="94" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="109" font-weight="bold">AnnotationIO</text><text x="222" y="109" text-anchor="end" fill="#555">10</text>
+<rect x="40" y="140" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="155" font-weight="bold">ChronoControlInteraction</text><text x="222" y="155" text-anchor="end" fill="#555">3</text>
+<rect x="40" y="186" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="201" font-weight="bold">VisitControl</text><text x="222" y="201" text-anchor="end" fill="#555">2</text>
+<rect x="40" y="232" width="190" height="35" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="247" font-weight="bold">ZoomView</text><text x="222" y="247" text-anchor="end" fill="#555">8</text>
+<rect x="40" y="279" width="190" height="35" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="294" font-weight="bold">SelectionControl</text><text x="222" y="294" text-anchor="end" fill="#555">14</text>
+<rect x="40" y="326" width="190" height="35" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="341" font-weight="bold">labelBee</text><text x="222" y="341" text-anchor="end" fill="#555">4</text>
+<rect x="40" y="373" width="190" height="42" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="388" font-weight="bold">OverlayControl</text><text x="222" y="388" text-anchor="end" fill="#555">26</text>
+<rect x="650" y="94" width="270" height="84" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="658" y="109" font-weight="bold">refreshChronogram</text><text x="912" y="109" text-anchor="end" fill="#555">40</text><text x="658" y="122" fill="#777" font-size="10">ChronoControl</text>
+<rect x="650" y="190" width="270" height="63" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="658" y="205" font-weight="bold">videoControl.refresh</text><text x="912" y="205" text-anchor="end" fill="#555">27</text><text x="658" y="218" fill="#777" font-size="10">VideoControl</text>
+<text x="40" y="459" font-size="14" font-weight="bold">2. The view chain and the frame change (selection, overlay, zoom, chronogram axes)</text>
+<path d="M230,712 C430,712 450,576 650,576" fill="none" stroke="#2ca02c" stroke-width="4.7" opacity="0.7"><title>AnnotationIO -> onFrameChanged: 10 (frame / video)</title></path>
+<path d="M230,804 C430,804 450,668 650,668" fill="none" stroke="#bcbd22" stroke-width="2.5" opacity="0.7"><title>ChronoControlInteraction -> updateChrono: 1 (view chain)</title></path>
+<path d="M230,581 C430,581 450,714 650,714" fill="none" stroke="#bcbd22" stroke-width="2.5" opacity="0.7"><title>OverlayControl -> updateChronoXDomainFromVideo: 1 (view chain)</title></path>
+<path d="M230,574 C430,574 450,496 650,496" fill="none" stroke="#bcbd22" stroke-width="3.5" opacity="0.7"><title>OverlayControl -> updateForm: 4 (view chain)</title></path>
+<path d="M230,758 C430,758 450,622 650,622" fill="none" stroke="#bcbd22" stroke-width="2.5" opacity="0.7"><title>SelectionControl -> drawChrono: 1 (view chain)</title></path>
+<path d="M230,666 C430,666 450,543 650,543" fill="none" stroke="#bcbd22" stroke-width="3.5" opacity="0.7"><title>VideoControl -> overlay.hardRefresh: 4 (view chain)</title></path>
+<path d="M230,673 C430,673 450,721 650,721" fill="none" stroke="#bcbd22" stroke-width="2.5" opacity="0.7"><title>VideoControl -> updateChronoXDomainFromVideo: 1 (view chain)</title></path>
+<path d="M230,857 C430,857 450,728 650,728" fill="none" stroke="#bcbd22" stroke-width="3.2" opacity="0.7"><title>VideoList -> updateChronoXDomainFromVideo: 3 (view chain)</title></path>
+<path d="M230,850 C430,850 450,629 650,629" fill="none" stroke="#bcbd22" stroke-width="2.9" opacity="0.7"><title>VideoList -> drawChrono: 2 (view chain)</title></path>
+<path d="M230,620 C430,620 450,536 650,536" fill="none" stroke="#bcbd22" stroke-width="2.5" opacity="0.7"><title>VisitControl -> overlay.hardRefresh: 1 (view chain)</title></path>
+<path d="M230,482 C430,482 450,482 650,482" fill="none" stroke="#bcbd22" stroke-width="2.9" opacity="0.7"><title>ZoomView -> updateForm: 2 (view chain)</title></path>
+<path d="M230,528 C430,528 450,489 650,489" fill="none" stroke="#bcbd22" stroke-width="3.5" opacity="0.7"><title>labelBee -> updateForm: 4 (view chain)</title></path>
+<path d="M230,535 C430,535 450,529 650,529" fill="none" stroke="#bcbd22" stroke-width="2.5" opacity="0.7"><title>labelBee -> overlay.hardRefresh: 1 (view chain)</title></path>
+<rect x="40" y="475" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="490" font-weight="bold">ZoomView</text><text x="222" y="490" text-anchor="end" fill="#555">2</text>
+<rect x="40" y="521" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="536" font-weight="bold">labelBee</text><text x="222" y="536" text-anchor="end" fill="#555">5</text>
+<rect x="40" y="567" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="582" font-weight="bold">OverlayControl</text><text x="222" y="582" text-anchor="end" fill="#555">5</text>
+<rect x="40" y="613" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="628" font-weight="bold">VisitControl</text><text x="222" y="628" text-anchor="end" fill="#555">1</text>
+<rect x="40" y="659" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="674" font-weight="bold">VideoControl</text><text x="222" y="674" text-anchor="end" fill="#555">5</text>
+<rect x="40" y="705" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="720" font-weight="bold">AnnotationIO</text><text x="222" y="720" text-anchor="end" fill="#555">10</text>
+<rect x="40" y="751" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="766" font-weight="bold">SelectionControl</text><text x="222" y="766" text-anchor="end" fill="#555">1</text>
+<rect x="40" y="797" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="812" font-weight="bold">ChronoControlInteraction</text><text x="222" y="812" text-anchor="end" fill="#555">1</text>
+<rect x="40" y="843" width="190" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="48" y="858" font-weight="bold">VideoList</text><text x="222" y="858" text-anchor="end" fill="#555">5</text>
+<rect x="650" y="475" width="270" height="35" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="658" y="490" font-weight="bold">updateForm</text><text x="912" y="490" text-anchor="end" fill="#555">10</text><text x="658" y="503" fill="#777" font-size="10">SelectionControl</text>
+<rect x="650" y="522" width="270" height="35" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="658" y="537" font-weight="bold">overlay.hardRefresh</text><text x="912" y="537" text-anchor="end" fill="#555">6</text><text x="658" y="550" fill="#777" font-size="10">OverlayControl</text>
+<rect x="650" y="569" width="270" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="658" y="584" font-weight="bold">onFrameChanged</text><text x="912" y="584" text-anchor="end" fill="#555">10</text><text x="658" y="597" fill="#777" font-size="10">VideoControl</text>
+<rect x="650" y="615" width="270" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="658" y="630" font-weight="bold">drawChrono</text><text x="912" y="630" text-anchor="end" fill="#555">3</text><text x="658" y="643" fill="#777" font-size="10">ChronoControl</text>
+<rect x="650" y="661" width="270" height="34" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="658" y="676" font-weight="bold">updateChrono</text><text x="912" y="676" text-anchor="end" fill="#555">1</text><text x="658" y="689" fill="#777" font-size="10">ChronoControl</text>
+<rect x="650" y="707" width="270" height="35" rx="5" fill="#fff" fill-opacity="0.85" stroke="#555"/><text x="658" y="722" font-weight="bold">updateChronoXDomainFromVideo</text><text x="912" y="722" text-anchor="end" fill="#555">5</text><text x="658" y="735" fill="#777" font-size="10">ChronoControl</text>
+<text x="40" y="921" font-weight="bold">Class of the site</text>
+<rect x="40" y="935" width="24" height="6" fill="#d62728"/><text x="72" y="942">A store write</text>
+<rect x="260" y="935" width="24" height="6" fill="#1f77b4"/><text x="292" y="942">B derived config</text>
+<rect x="480" y="935" width="24" height="6" fill="#9467bd"/><text x="512" y="942">C tags</text>
+<rect x="40" y="957" width="24" height="6" fill="#2ca02c"/><text x="72" y="964">D frame / video</text>
+<rect x="260" y="957" width="24" height="6" fill="#7f7f7f"/><text x="292" y="964">E display only</text>
+<rect x="480" y="957" width="24" height="6" fill="#bcbd22"/><text x="512" y="964">V view chain</text>
+</svg>

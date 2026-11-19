@@ -6,18 +6,14 @@ function gotoEvent(frame, id) {
 
   let obs = getObsHandle(frame, id)
 
-  defaultSelectedBee = id
+  selection.select(frame, id)
   if (frame==getCurrentFrame()) {
     // Try to select the bee in current frame
-    selectBeeByID(id);
+    refresh.selection();
   } else {
-    if (obsDoesExist(frame, id)) {
-      // Set the id as default selection before seeking the frame
-      defaultSelectedBee = id;
-    }
     videoControl.seekFrame(frame);
     // external controller logic is supposed to call back updateTimeMark
-    // to update the view
+    // to update the view, and select the rect
   }
     
   if (overlay.opts.clickModeAutoCentering) {
@@ -62,7 +58,7 @@ function onAxesMoved(event) {
   if (logging.axesEvents)
     console.log("onAxesMove: seeking to frame=", frame, "...");
 
-  //defaultSelectedBee = id // Do not change, keep same ID
+  //selection.select(frame, id) // Do not change, keep same ID
   // if (videoControl.currentMode != "preview") {
   //   videoControl.savedNonPreviewFrame = videoControl.currentFrame
   // }
@@ -183,12 +179,12 @@ function funEqualId(id) {
 
 function gotoFrameId(frame, id) {
   console.log("gotoFrameId frame=", frame, "id=", id);
-  defaultSelectedBee = id;
+  selection.select(Number(frame), id);
   videoControl.seekFrame(Number(frame));
 }
 
 function gotoFirstEvent() {
-  let from = { frame: -1, id: defaultSelectedBee };
+  let from = { frame: -1, id: selection.getId() };
   if (flag_autoEventMode) {
     let ids = axes.yScale.domain();
     if (!ids) return;
@@ -197,7 +193,7 @@ function gotoFirstEvent() {
   gotoNextEvent(from);
 }
 function gotoLastEvent() {
-  let from = { frame: videoControl.maxframe() + 1, id: defaultSelectedBee };
+  let from = { frame: videoControl.maxframe() + 1, id: selection.getId() };
   if (flag_autoEventMode) {
     let ids = axes.yScale.domain();
     if (!ids) return;
@@ -207,7 +203,7 @@ function gotoLastEvent() {
 }
 function gotoNextEvent(from) {
   let frame = Number(videoControl.getCurrentFrame());
-  let id = defaultSelectedBee;
+  let id = selection.getId();
   if (from) {
     frame = from.frame;
     id = from.id;
@@ -250,7 +246,7 @@ function gotoNextEvent(from) {
 }
 function gotoPreviousEvent(from) {
   let frame = Number(videoControl.getCurrentFrame());
-  let id = defaultSelectedBee;
+  let id = selection.getId();
   if (from) {
     frame = from.frame;
     id = from.id;
@@ -442,10 +438,11 @@ function onClickNextID() {
   let N = domain.length;
   if (N == 0) return;
 
-  let id = String(getCurrentID());
+  let id = String(selection.getId());
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
-  selectBeeByID(newID);
+  selection.select(getCurrentFrame(), newID);
+  refresh.selection();
 
   setRestrictID(newID);
 
@@ -462,10 +459,11 @@ function onClickPrevID(gotoLast) {
   let N = domain.length;
   if (N == 0) return;
 
-  let id = String(getCurrentID());
+  let id = String(selection.getId());
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[N - 1] : domain[(pos + N - 1) % N];
-  selectBeeByID(newID);
+  selection.select(getCurrentFrame(), newID);
+  refresh.selection();
 
   setRestrictID(newID);
 
@@ -486,10 +484,11 @@ function onClickNextIDStart() {
   let N = domain.length;
   if (N == 0) return;
 
-  let id = String(getCurrentID());
+  let id = String(selection.getId());
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
-  selectBeeByID(newID);
+  selection.select(getCurrentFrame(), newID);
+  refresh.selection();
 
   setRestrictID(newID);
 

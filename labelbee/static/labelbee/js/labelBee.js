@@ -137,21 +137,17 @@ function init(videoID, tagID) {
   // import * from "ZoomView.js";
   initZoomView();
 
-  // Note: zoomOverlay.selectionChanged is already bound
-  $(selectionControl).on({
-    "tagselection:created": zoomOverlay.selectionChanged,
-    "selection:created": zoomOverlay.selectionChanged,
-    "tagselection:cleared": zoomOverlay.selectionChanged,
-    "selection:cleared": zoomOverlay.selectionChanged,
-  });
+  // Note: zoomOverlay.refreshFromSelection is already bound
+  // $(selectionControl).on({
+  //   "tagselection:created": zoomOverlay.refreshFromSelection,
+  //   "selection:created": zoomOverlay.refreshFromSelection,
+  //   "tagselection:cleared": zoomOverlay.refreshFromSelection,
+  //   "selection:cleared": zoomOverlay.refreshFromSelection,
+  // });
   $(overlay).on({
-    "object:moving": zoomOverlay.selectionChanged,
-    "object:modified": zoomOverlay.selectionChanged,
+    "object:moving": zoomOverlay.refreshFromSelection,
+    "object:modified": zoomOverlay.refreshFromSelection,
   });
-  //$(selectionControl).on({
-  //    'selection:created':    ()=>{videoControl.refresh()},
-  //    'selection:cleared':    ()=>{videoControl.refresh()}
-  //  })
 
   // ## Keyboard control
 
@@ -170,7 +166,7 @@ function init(videoID, tagID) {
   // Do not trigger first refresh: onloadeddata will call it
   // refresh();
   updateForm(null);
-  defaultSelectedBee = undefined;
+  selection.clear();
   change_id_force = 'swap'  // What to do if conflict when changing id
 
   $('#alerttextblock').resizable()
@@ -839,14 +835,14 @@ function onKeyDown_IDEdit(event) {
     let fieldID = document.getElementById("I");
     let new_id = fieldID.value;
 
-    let activeObject = overlay.getActiveObject();
+    let activeObject = overlay.getActiveRect();
 
     if (!activeObject) return;
 
     if (activeObject.draft) {
       activeObject.id = new_id
       submitDraft(activeObject)
-      defaultSelectedBee = new_id
+      selection.select(frame, new_id)
       printMessage("ID changed + submitted", "green")
     } else { /* status=="db"*/
       let old_id = activeObject.id
@@ -856,7 +852,7 @@ function onKeyDown_IDEdit(event) {
       if (changeObservationID(frame, old_id, new_id, change_id_force)) {
         // Successfull
         activeObject.id = new_id
-        defaultSelectedBee = new_id
+        selection.select(frame, new_id)
         printMessage("ID changed succesfully!", "green")
       } else {
         console.log("onKeyDown_IDEdit: unsuccessfull ID change", {
@@ -867,9 +863,8 @@ function onKeyDown_IDEdit(event) {
         printMessage("ID not changed", "orange");
       }
 
-      //console.log(defaultSelectedBee)
-      videoControl.refresh();
-      refreshChronogram();
+      //console.log(selection.getId())
+      refresh.rebuild();
     }
   }
 }
@@ -887,14 +882,12 @@ function onKeyDown_NewIDEdit(event) {
       new_id = undefined;
     }
 
-    let activeObject = overlay.getActiveObject();
+    let activeObject = overlay.getActiveRect();
 
     if (!activeObject) return;
 
-    storeUnit(activeObject, WrongId.newidTyped(activeObject.obs, new_id), true);
-    overlay.hardRefresh();
-    refreshChronogram();
-    updateForm(activeObject);
+    // a draft is submitted (and rebuilt) by submitDraft inside storeUnit
+    if (storeUnit(activeObject, WrongId.newidTyped(activeObject.obs, new_id), true)) refresh.rebuild();
   }
 }
 
@@ -906,7 +899,7 @@ function onKeyDown(e) {
       if (logging.keyEvents)
         console.log("onKeyDown: Escape in text field. focus back to canvas/left-side")
       $('#left-side')[0].focus({ preventScroll: true }) // Use HTML5 API to prevent scroll
-      updateForm(overlay.getActiveObject())
+      updateForm(overlay.getActiveRect())
       e.stopPropagation();
       return;
     }
@@ -922,7 +915,7 @@ function onKeyDown(e) {
       console.log("onKeyDown: detected keydown ESC happened in textfield #I. Canceling edit.")
       id_field.blur();
       $('#left-side')[0].focus({ preventScroll: true })
-      updateForm(overlay.getActiveObject())
+      updateForm(overlay.getActiveRect())
       return false
     }
     //if (e.keyCode==32 || e.keyCode==188 || e.keyCode==190) {
@@ -946,7 +939,7 @@ function onKeyDown(e) {
     return false;
   }
   if (e.key == "r" && e.ctrlKey) {
-    videoControl.refresh();
+    refresh.overlayRebuild();
     return false;
   }
   // Prev Frame: <, arrow
