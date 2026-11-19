@@ -849,6 +849,24 @@ function ChronoAxes(parent, videoinfo, options) {
   }
   axes.getFrameFromEvent = getFrameFromEvent
 
+  // Narrow interface for the drag modes (ChronoDragControl, ADR 0011): they see the chronogram only through it
+  axes.dragTarget = {
+    element: chronoGroup.node(), // where modes add their listeners
+    // {frame, id} under a pointer event, or null outside the plot area or the frame domain
+    hit: function (event) {
+      var coords = d3.pointer(event, chronoGroup.node());
+      var xr = xScale.range(), yr = yScale.range(), domain = xScale.domain();
+      if (coords[0] < xr[0] || coords[0] > xr[1] || coords[1] < yr[0] || coords[1] > yr[1]) return null;
+      var frame = Math.round(xScale.invert(coords[0]));
+      if (frame < domain[0] || frame > domain[1]) return null;
+      return { frame: frame, id: invertYScale(coords[1]) };
+    },
+    // Same jQuery events on `axes` as before: previewframe:trackmove / previewframe:trackend
+    emit: function (name, props) {
+      $(axes).trigger($.extend({ type: "previewframe:" + name }, props));
+    },
+  };
+
   function onAxesClick(event) {
     //if (typeof axes.onClick == 'undefined') return;
     if (event.defaultPrevented) return;

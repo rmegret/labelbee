@@ -18,6 +18,7 @@ var crosses = []
 var partsIntervals = []
 
 var chrono
+var chronoDragControl // instance of ChronoDragControl.DragControl (ADR 0011)
 class Chronogram {
   constructor() {
     //const chrono = this
@@ -248,6 +249,14 @@ function initChrono() {
     axes.setTrackFrame(this.checked);
   });
   axes.setTrackFrame($("#chronoPreviewHover").prop("checked"));
+
+  // Drag modes of the chronogram (ADR 0011). One import, the namespace is global for now:
+  // when this file becomes a module, replace by `import * as ChronoDragControl from "./chrono/ChronoDragControl.js"`.
+  import("./chrono/ChronoDragControl.js").then(function (ns) {
+    window.ChronoDragControl = ns;
+    if (chronoDragControl) chronoDragControl.destroy();
+    chronoDragControl = new ChronoDragControl.DragControl(axes.dragTarget, [new ChronoDragControl.IgnoreMode()]);
+  });
 
   /* Resize events */
 
