@@ -170,6 +170,9 @@ VideoCache.prototype.preloadFrames = async function (videoUrl, frames, fps) {
 // Value the promise of a cancelled query is rejected with: `VideoCache.isCanceled(err)`
 VideoCache.CANCELED = Object.freeze({ canceled: true })
 VideoCache.isCanceled = function (err) { return err === VideoCache.CANCELED }
+// Value a regular request is rejected with when the queue is full (ADR 0013)
+VideoCache.QUEUE_FULL = Object.freeze({ queueFull: true })
+VideoCache.isQueueFull = function (err) { return err === VideoCache.QUEUE_FULL }
 
 VideoCache.prototype.cancelQueue = function () {
   for (let query of this.queryQueue) {
@@ -250,6 +253,17 @@ VideoCache.prototype._enqueue = function (videoUrl, frame, fps, priority) {
     }
     console.log('videoCache.enqueue: already ' + item.state, key)
     return item.promise
+  }
+  // The queue never holds more frames than the cache: a priority request makes room, a regular one fails
+  if (this.queryQueue.length >= this.opts.videoCacheSize) {
+    if (!priority || this.queryQueue.length === 0) {
+      console.log('videoCache.enqueue: queue full, rejected', key)
+      return Promise.reject(VideoCache.QUEUE_FULL)
+    }
+    let dropped = this.queryQueue.pop()
+    this.removeFrame(dropped.videoUrl, dropped.frame)
+    dropped.deferred.reject(VideoCache.CANCELED)
+    console.log('videoCache.enqueue: queue full, dropped', dropped.key)
   }
   console.log('videoCache.enqueue: Pushing ', key, priority ? '(priority)' : '')
   let D = $.Deferred()

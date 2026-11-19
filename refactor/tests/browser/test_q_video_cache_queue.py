@@ -208,3 +208,25 @@ def test_q12_overlay_redraws_once_the_missing_frames_arrive_only_if_still_curren
     before = ui.js("window.__refresh")
     ui.js("() => overlay.refreshIfLoaded(videoControl.video.src, videoControl.currentFrame - 5, [videoControl.currentFrame - 5])")
     assert ui.js("window.__refresh") == before
+
+
+def test_q13_full_queue_drops_its_last_frame_for_a_priority_request_and_refuses_a_regular_one(ui, sample_dir):
+    """ADR 0013 addendum: the queue holds at most `videoCacheSize` frames."""
+    _start(ui, sample_dir)
+    ui.js("() => { videoControl.videoCache.setCacheSize(3); window.__req = (f, prio) => { const vc = videoControl.videoCache;"
+          " const p = prio ? vc.enqueueFramePriority(__url, f, 25) : vc.enqueueFrame(__url, f, 25); window.__st[f] = 'waiting';"
+          " p.then(() => window.__st[f] = 'ok', (e) => window.__st[f] = VideoCache.isCanceled(e) ? 'canceled'"
+          " : VideoCache.isQueueFull(e) ? 'full' : 'error'); }; }")
+    _regular(ui, 100, 101, 102)
+    _regular(ui, 103)                                               # no room: refused, nothing queued
+    assert ui.js(QUEUE) == [100, 101, 102]
+    ui.page.wait_for_function("window.__st[103] === 'full'")
+    assert ui.js(STATE, 103) is None
+    ui.js("__req(200, true)")                                       # priority: the last one (102) leaves
+    assert ui.js(QUEUE) == [200, 100, 101]
+    ui.page.wait_for_function("window.__st[102] === 'canceled'")
+    assert ui.js(STATE, 102) is None
+    _regular(ui, 100)                                               # known frame: needs no room
+    ui.js("__req(101, true)")                                       # known frame, priority: moves, drops nothing
+    assert ui.js(QUEUE) == [101, 200, 100]
+    assert [ui.js("() => window.__st[%d]" % f) for f in (100, 101, 200)] == ["waiting"] * 3

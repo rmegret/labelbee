@@ -47,3 +47,17 @@ a loop is already running).
 `seekFrame` (cache mode) ignores an answer unless its frame is still `cacheRequestedFrame` (priority ordering makes
 stale answers arrive after newer ones). `OverlayControl.refreshIfLoaded` redraws after a preload only if the frame
 is still current and all requested frames are in cache (a failed frame cannot loop). `cancelQueue` also stops leaking a global `query`.
+
+## Addendum: the queue is bounded by the cache size (maintainer, 2026-11-19)
+
+More queued frames than `opts.videoCacheSize` would only be decoded to be evicted by the LRU in turn: wasted work.
+`queryQueue.length` is therefore capped at the cache size (the frame in process does not count).
+
+| Call, queue full | Effect |
+|---|---|
+| `enqueueFramePriority` | the last query of the queue is dropped (entry removed, promise rejected with `CANCELED`) and the new one goes to the front |
+| `enqueueFrame` (regular) | rejected with `VideoCache.QUEUE_FULL` (test with `VideoCache.isQueueFull(err)`), nothing is queued |
+
+A frame already known (`incache`, `inprocess`, `inqueue`) is never affected: it needs no space. With a size of 0 a
+priority request has nothing to drop and is rejected like a regular one. `preloadFrames` already settles on
+rejections, so a preload that does not fit simply loads fewer frames.
