@@ -1,9 +1,5 @@
 /*jshint esversion: 6, asi: true */
 
-// import * from "Model.js";
-
-var undo = new Observation(0);
-
 /* Form and current bee control */
 
 function initSelectionControl() {

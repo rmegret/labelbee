@@ -1,13 +1,25 @@
-/*jshint esversion: 6, asi: true */
+/*
+ * Model: the `Observation` class and the legacy accessors over the stored events (refactor slice 8 step 3, ADR 0015).
+ * Moved as is from Model.js, a classic script until then; no behavior change. The names are installed as globals by
+ * labelbeeBridge.js for the classic scripts that still call them, and disappear with their last caller.
+ *
+ * The functions of the first block are wrappers over `events` (annotation/Events.js, refactor slice 4, ADR 0007): the
+ * stored events are read and written only through its operations. They keep their names and behavior until their
+ * callers move to `events` directly.
+ *
+ * DEBT: `getFramesWithID`, `obs_swapID` read the page's global `videoinfo` (VideoList.js) and `cacheTags` reads the
+ * global `ttags` (ChronoControl.js), at call time; they become imports when those owners move.
+ */
+import { AnnotationStore } from './AnnotationStore.js';
+import { logging } from '../core/Notifier.js';
 
-// Tracks, Tags (and TracksInfo, TagsInfo, tagsHaveDM) are owned by AnnotationStore; the globals
-// are accessors installed by annotation/AnnotationStoreBridge.js (refactor ADR 0005).
+const events = AnnotationStore.events;
 
 // ######################################################################
 // MODEL: Tracks data structure
 
 /** Basic Annotation class */
-function Observation(ID) {
+export function Observation(ID) {
   this.ID = ID;
   this.time = 0;
   this.frame = 0;
@@ -25,23 +37,19 @@ function Observation(ID) {
   this.labels = "";
 }
 
-function deepcopy(obj) {
+export function deepcopy(obj) {
   if (!obj) return obj;
   return JSON.parse(JSON.stringify(obj));
 }
 
-function hasParts(obs) {
+export function hasParts(obs) {
   return !!obs.parts && obs.parts.length > 0;
 }
 
-// The functions below are wrappers over `events` (annotation/Events.js, refactor slice 4, ADR 0007): the stored
-// events are read and written only through its operations. They keep their names and behavior until their callers
-// move to `events` directly, then disappear.
-
-function getValidIDsForFrame(frame) {
+export function getValidIDsForFrame(frame) {
   return events.frameIds(frame);
 }
-function getValidIDsForFrames(interval) {
+export function getValidIDsForFrames(interval) {
   let fmin = interval[0];
   let fmax = interval[1];
 
@@ -55,11 +63,11 @@ function getValidIDsForFrames(interval) {
   return [...ids.values()];
 }
 
-function obsDoesExist(frame, id) {
+export function obsDoesExist(frame, id) {
   return events.has(frame, id);
 }
 
-function getObsHandle(frame, id, createIfEmpty) {
+export function getObsHandle(frame, id, createIfEmpty) {
   if (createIfEmpty == null) createIfEmpty = false;
 
   if (createIfEmpty) {
@@ -69,14 +77,14 @@ function getObsHandle(frame, id, createIfEmpty) {
 }
 
 /**
- * 
- * @param {*} frame 
- * @param {*} old_id 
- * @param {*} new_id 
- * @param {(false|true|'swap')} force 
+ *
+ * @param {*} frame
+ * @param {*} old_id
+ * @param {*} new_id
+ * @param {(false|true|'swap')} force
  * @returns true if change was performed
  */
-function changeObservationID(frame, old_id, new_id, force) {
+export function changeObservationID(frame, old_id, new_id, force) {
   // REMI: modified to be be independent of View
   if (events.rename(frame, old_id, new_id, force)) {
     if (logging.submitEvents)
@@ -95,30 +103,30 @@ function changeObservationID(frame, old_id, new_id, force) {
   }
   return false;
 }
-function getFramesWithID(interval, id) {
+export function getFramesWithID(interval, id) {
     return events.framesWithId(interval, id, interval[1]==-1 ? videoinfo.nframes : undefined)
 }
-function getFramesWithSwapID(interval, id, new_id) {
+export function getFramesWithSwapID(interval, id, new_id) {
     let fmin = interval[0];
     let fmax = interval[1];
     if (fmax==-1) {
         fmax = videoinfo.nframes-1
     }
-    
+
     var frames = []
     for (let f=fmin; f<=fmax; f++) {
         if (obsDoesExist(f, id) && obsDoesExist(f, new_id)) {
             frames.push(f)
         }
-    }    
+    }
     return frames;
 }
-function obs_swapID(interval, old_id, new_id) {
+export function obs_swapID(interval, old_id, new_id) {
     events.swap(interval, old_id, new_id, interval[1]==-1 ? videoinfo.nframes : undefined)
 }
 
 
-function printTracks() {
+export function printTracks() {
   //Just for debugging
   console.log("This is Tracks:");
   events.forEach((obs, F, iid) => {
@@ -135,7 +143,10 @@ function printTracks() {
 
 // Model of Tags
 
-function cacheTags() {
+// Was an implicit global (`tagCache = []` without declaration); only these two functions read it.
+let tagCache = [];
+
+export function cacheTags() {
   tagCache = [];
   for (let F in AnnotationStore.getTags()) {
     let tags = AnnotationStore.getTags()[F].tags;
@@ -149,9 +160,9 @@ function cacheTags() {
   }
 }
 
-/** Returns a list of tags matching frame and id. 
+/** Returns a list of tags matching frame and id.
     Can be empty, have one element, or several */
-function getTags(frame, id) {
+export function getTags(frame, id) {
   let key = frame.toString() + "," + id.toString();
   let value = tagCache[key];
   return value;

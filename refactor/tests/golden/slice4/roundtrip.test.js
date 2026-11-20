@@ -30,18 +30,16 @@ function cloneObs(obs) {
   return c;
 }
 
-// Model.js is a classic script: run it in a vm, as the page does (for `Observation`)
-function loadModel() {
-  const ctx = vm.createContext({ console: { log() {} }, logging: {}, videoinfo: { nframes: 40 } });
-  vm.runInContext(fs.readFileSync(path.join(JS_DIR, 'Model.js'), 'utf8'), ctx, { filename: 'Model.js' });
-  return ctx;
+// annotation/Model.js is an ES module (slice 8 step 3; a classic script run in a vm before): for `Observation`
+async function loadModel() {
+  return import(pathToFileURL(path.join(JS_DIR, 'annotation/Model.js')).href);
 }
 
 async function setup() {
   const { Events } = await import(pathToFileURL(path.join(JS_DIR, 'annotation/Events.js')).href);
   const { sanitizeEvents } = (await loadNewImpl())().fns;
   const { convertTracksToV2 } = (await loadNewSaveImpl())().fns;
-  const model = loadModel();
+  const model = await loadModel();
   const load = (name) => sanitizeEvents(read(name));
   const save = (data, info) => convertTracksToV2(data, info, { name: 'v' });
   const newEvents = (loaded) => {
