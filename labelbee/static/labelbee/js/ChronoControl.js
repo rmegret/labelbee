@@ -754,7 +754,7 @@ function shiftTimeDomain(factor) {
   let domain = axes.xdomain();
   let f = getCurrentFrame();
   let shift = Math.round(factor * (domain[1] - domain[0]));
-  axes.xdomainFocus([domain[0] + shift, domain[1] + shift]);
+  axes.xdomainShift(shift);
   //     if (f>=domain[0] && f<=domain[1]) { // If timemark visible
   //         videoControl.seekFrame(f+shift);
   //     }

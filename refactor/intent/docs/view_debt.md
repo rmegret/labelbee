@@ -660,6 +660,8 @@ The `VideoManager` constructor calls `this.updateVideoInfoForm()` (line 60 of `V
 
 ## DEBT-304: xdomainFocus uses a zoom API that D3 no longer has (TypeError)
 
+**Fixed** (branch `chrono-preview-toggle`): `xdomainFocus` is ported to the D3 v6 transform, Z+/Z- (`xdomainScale`) go through `zoom.scaleTo` and the shift buttons (`xdomainShift`) through `zoom.translateBy`, so `onZoom` clamps them like a pinch or a pan (`refactor/tests/browser/test_s_chrono_view_window.py`). The description below is the state before the fix.
+
 `xdomainFocus` calls `zoom.translate()`, `zoom.scale()` and `zoom.translate([..])`/`zoom.scale(..)` (the D3 v3 zoom API, removed in D3 v4). The page code uses the D3 v6 API (`d3.zoom().on`, `d3.pointer(event)`, `zoom.translateBy`, `zoom.scaleTo` in `labelbee/static/labelbee/js/ChronoAxes.js:687-705`), and the zoom behaviour only exposes `transform`, `scaleBy`, `scaleTo`, `translateBy`, `translateTo`, `extent`, `scaleExtent`... The first statements of `xdomainFocus` (`let oldT = zoom.translate()`, `labelbee/static/labelbee/js/ChronoAxes.js:125`) are expected to throw an uncaught `TypeError` ("zoom.translate is not a function"); no try/catch appears around it in the code seen and nothing reports the failure in the UI. Everything that goes through it is affected: Z+/Z- (`scaleTimeDomain`), shift buttons (`shiftTimeDomain`), `xdomainScale`, the Follow button and per-frame follow (`focusTrackWindow`), `onAxesDblClick`. `xdomainCenter` also reads an undeclared `center`. The loaded build (v6.2.0 per the page script tag) was not part of the re-check; not run: needs verification in a browser (Phase 1d). Proposed replacement (pending [OQ-302](../../QUESTIONS.md#oq-302 "What should the view-window controls do?")): `zoom.transform` with a computed `d3.zoomIdentity`.
 - **Code:**
   - [labelbee/static/labelbee/js/ChronoAxes.js](../../../labelbee/static/labelbee/js/ChronoAxes.js): `xdomainFocus`, `xdomainScale`, `xdomainCenter`
@@ -721,10 +723,10 @@ Dangling marks use the global `ROI = {left:175, top:250, right:2305, bottom:1240
 
 ## DEBT-312: Dead interaction code
 
-Dead or inactive: Ctrl-hover preview (`injectTrackFrame` not installed, its call is commented out at `labelbee/static/labelbee/js/ChronoAxes.js:915`, so `previewframe:trackmove`/`onAxesMoved`/`endPreview` never fire and its `keydown.trackFrame` handler on `body` is never bound), `axes.onClick`/`onAxesChanged` callbacks (replaced by jQuery events, commented out in `initChrono`), `onZoom0`, `triggerEvent`, `domainy*` (commented), `nextSeekFocusWindow` (no caller found), `eventSeekMode`-related `gotoEvent_seekCB`; the custom `onAxesDblClick` is possibly shadowed by d3's `dblclick.zoom` (unverified, see [BEH-334](view_cap-300-temporal-display-navigation.md#beh-334-double-click-on-the-chronogram "Double click on the chronogram")). [read] `labelbee/static/labelbee/js/ChronoAxes.js:913-960`, `labelbee/static/labelbee/js/ChronoControl.js:194-195`.
+Dead or inactive: `axes.onClick`/`onAxesChanged` callbacks (replaced by jQuery events, commented out in `initChrono`), `onZoom0`, `triggerEvent`, `domainy*` (commented), `nextSeekFocusWindow` (no caller found), `eventSeekMode`-related `gotoEvent_seekCB`; the custom `onAxesDblClick` is possibly shadowed by d3's `dblclick.zoom` (unverified, see [BEH-334](view_cap-300-temporal-display-navigation.md#beh-334-double-click-on-the-chronogram "Double click on the chronogram")). [read] `labelbee/static/labelbee/js/ChronoAxes.js:913-960`, `labelbee/static/labelbee/js/ChronoControl.js:194-195`.
 - **Code:**
-  - [labelbee/static/labelbee/js/ChronoAxes.js](../../../labelbee/static/labelbee/js/ChronoAxes.js): `injectTrackFrame`, `onZoom0`, `triggerEvent`
-  - [labelbee/static/labelbee/js/ChronoControlInteraction.js](../../../labelbee/static/labelbee/js/ChronoControlInteraction.js): `onAxesMoved`, `nextSeekFocusWindow`, `onAxesDblClick`
+  - [labelbee/static/labelbee/js/ChronoAxes.js](../../../labelbee/static/labelbee/js/ChronoAxes.js): `onZoom0`, `triggerEvent`
+  - [labelbee/static/labelbee/js/ChronoControlInteraction.js](../../../labelbee/static/labelbee/js/ChronoControlInteraction.js): `nextSeekFocusWindow`, `onAxesDblClick`
 - **Links:** [BEH-334](view_cap-300-temporal-display-navigation.md#beh-334-double-click-on-the-chronogram "Double click on the chronogram"), [BEH-340](view_cap-300-temporal-display-navigation.md#beh-340-no-keyboard-shortcut-for-chronogram-navigation "No keyboard shortcut for chronogram navigation")
 
 ## DEBT-313: Navigation sorts shared arrays in place and mixes id types

@@ -129,6 +129,7 @@ Backlog, unordered, not commitments (module names from `intent/modules.md`):
 - [x] **Off plan: VideoCacheStatus** ([ADR 0012](design/0012-video-cache-status.md); maintainer, 2026-11-19): Options/Chronogram option draws loaded/pending cache runs under the frame axis.
 - [x] **Off plan: VideoCache priority queue** ([ADR 0013](design/0013-video-cache-priority-queue.md); maintainer, 2026-11-19): hover and display requests jump the queue; cancel and failed decodes settle their promises.
 - [x] **Off plan: VideoKeyframes** ([ADR 0014](design/0014-video-keyframes-preview.md); maintainer, 2026-11-19): packets sidecar gives keyframes, Drag option previews keyframes only, perf script.
+- [x] **Off plan: chrono view window and touch** (maintainer, 2026-11-19): Z+/Z-/shift work again (DEBT-304); Android pan/pinch no longer lost (touch-action, selected-id rect).
 
 ## Not planned for now
 Specs per feature, behavior-level characterization of everything, traceability matrix, a

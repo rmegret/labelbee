@@ -122,14 +122,10 @@ function ChronoAxes(parent, videoinfo, options) {
 
   function xdomainFocus(domain, marginFactor) {
     if (!arguments.length) return xScale.domain();
-    let oldT = zoom.translate();
-    let oldS = zoom.scale();
-
-    // Get to basic zoom first to get original domain
-    zoom.translate([0, 0]); // [DX,DY]
-    zoom.scale(1);
-    let xdomain = xScale.domain();
-    let xrange = xScale.range();
+    // d3 v6 zoom: the view is the transform of chronoGroup (xScale = transform.rescaleX(xScaleOrig))
+    const orig = axes.xScaleOrig;
+    const origDomain = orig.domain();
+    const origRange = orig.range();
 
     let x0 = domain[0],
       x1 = domain[1];
@@ -141,41 +137,31 @@ function ChronoAxes(parent, videoinfo, options) {
     x0 = (x0 - c) * marginFactor + c;
     x1 = (x1 - c) * marginFactor + c;
 
-    let S = (xdomain[1] - xdomain[0]) / (x1 - x0);
-    if (S > zoom.scaleExtent()[1]) {
-      S = zoom.scaleExtent()[1];
-      x0 = c - (0.5 * (xdomain[1] - xdomain[0])) / S;
-      x1 = c + (0.5 * (xdomain[1] - xdomain[0])) / S;
-    }
+    // Same limits as the wheel zoom: keep the center, limit the scale
+    let k = (origDomain[1] - origDomain[0]) / (x1 - x0);
+    const extent = zoom.scaleExtent();
+    k = Math.max(extent[0], Math.min(extent[1], k));
+    x0 = c - (0.5 * (origDomain[1] - origDomain[0])) / k;
 
-    let S0 = (xdomain[1] - xdomain[0]) / (xrange[1] - xrange[0]);
-    let T = (-S * x0) / S0;
-
-    zoom.translate([T, 0]); // [DX,DY]
-    zoom.scale(S);
-
-    if (isNaN(xScale.domain()[0])) {
-      console.log("xdomainFocus: ERROR, failed to zoom X axis scale");
-      zoom.translate(oldT);
-      zoom.scale(oldS);
-      //xScale.domain(xdomain); // Reset
-    }
-    refreshAxes({ type: "xDomainChanged", domain: domain });
+    // Pixel of x0 must be the left of the range: k * orig(x0) + tx = range[0]
+    const tx = origRange[0] - k * orig(x0);
+    // Fires onZoom (x clamped, xScale updated, axes redrawn, "axes:changed")
+    chronoGroup.call(zoom.transform, d3.zoomIdentity.translate(tx, 0).scale(k));
     return axes; // return itself to be able to chain commands
   }
   function xdomainScale(scale, center) {
-    let xdomain = xScale.domain(); // Current domain
-    let x0 = xdomain[0],
-      x1 = xdomain[1];
-
-    if (typeof center == "undefined") center = (x1 + x0) / 2;
-
-    x0 = (x0 - center) / scale + center;
-    x1 = (x1 - center) / scale + center;
-
-    xdomainFocus([x0, x1]);
-
+    // Like a pinch: zoom.scaleTo around the pixel of `center` (default: view center); onZoom clamps as for any gesture
+    const domain = xScale.domain();
+    if (typeof center == "undefined") center = (domain[0] + domain[1]) / 2;
+    const k = d3.zoomTransform(chronoGroup.node()).k * scale;
+    chronoGroup.call(zoom.scaleTo, k, [xScale(center), 0]);
     return axes; // return itself to be able to chain commands
+  }
+  function xdomainShift(frames) {
+    // Like a pan with a fixed value (zoom.translateBy is in unzoomed pixels)
+    const d = axes.xScaleOrig.domain(), r = axes.xScaleOrig.range();
+    chronoGroup.call(zoom.translateBy, (-frames * (r[1] - r[0])) / (d[1] - d[0]), 0);
+    return axes;
   }
   function xdomainCenter(frame) {
     let xdomain = xScale.domain(); // Current domain
@@ -200,6 +186,7 @@ function ChronoAxes(parent, videoinfo, options) {
   axes.ydomain = ydomain;
   axes.xdomainFocus = xdomainFocus;
   axes.xdomainScale = xdomainScale;
+  axes.xdomainShift = xdomainShift;
   axes.xdomainCenter = xdomainCenter;
   axes.starttime = starttime;
   axes.fps = fps;
@@ -622,7 +609,8 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("height", axes.yScale.bandwidth())
         .style("fill", "#ffffff")
         .style("stroke", "#008000")
-        .style("stroke-width", "2px");
+        .style("stroke-width", "2px")
+        .style("pointer-events", "none"); // purely visual: the plot background keeps the gestures (empty chrono: it covers all)
     }
   }
   axes.refreshIdSelection = refreshIdSelection;
@@ -711,6 +699,15 @@ function ChronoAxes(parent, videoinfo, options) {
       const nextZoom = currentZoom * Math.pow(2, -event.deltaY * axes.mousewheelSpeed);
       zoom.scaleTo(chronoGroup, nextZoom, d3.pointer(event));
     });
+  // Touch (Android): d3.zoom sets touch-action on chronoGroup, but it only applies to the root <svg>. Without it the
+  // browser takes the touch for a scroll or a page pinch-zoom (pan stops after one step, pinch scales the page)
+  (function () {
+    const box = chronoGroup.node().ownerSVGElement;
+    if (box && box.style) box.style.touchAction = "none";
+    chronoGroup.node().addEventListener("contextmenu", function (e) {
+      if (e.pointerType === "touch") e.preventDefault(); // long press on a still finger
+    });
+  })();
   reinitZoom();
   function onZoom(event) {
     if (logging.axesEvents) console.log("zoomed", event);

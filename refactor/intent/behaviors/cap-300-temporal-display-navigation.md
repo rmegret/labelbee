@@ -199,7 +199,7 @@ Button `#focusTrackWindow` ("Follow", in the Focus Interval tab; `onClickFocusTr
 `trackWindow:change` event (frame change, window change) repeats the recentring; the button has class `active`.
 The same recentring is available once through `nextSeekFocusWindow()` (arms a one-shot `frame:changed`
 handler, no caller found). The track-window buttons (`shiftTrackWindow`, `scaleTrackWindow`)
-belong to the overlay (CAP-401) but result in this view change. `xdomainFocus` currently throws (DEBT-304).
+belong to the overlay (CAP-401) but result in this view change. `xdomainFocus` threw before the D3 v6 port (DEBT-304, fixed).
 
 - **Group:** CAP-301
 - **Code:**
@@ -232,8 +232,8 @@ Chronogram tab "View:" buttons: step-backward/step-forward (`shiftTimeDomain(-0.
 visible domain by `round(f * span)` frames; `scaleTimeDomain(s)` scales the visible span by `1/s` around the current frame
 if it is visible, else around the center of the view. Both go through `axes.xdomainFocus`, which adds a 10% margin
 (`marginFactor` 1.1 around the new center), limits the scale to the zoom extent and re-applies the transform.
-In the shipped D3 6.2 the zoom object has no `translate()`/`scale()`, so `xdomainFocus` throws a TypeError on
-its first line and these buttons currently have no effect (DEBT-304).
+In the shipped D3 6.2 the zoom object has no `translate()`/`scale()`: `xdomainFocus` threw a TypeError on
+its first line and these buttons had no effect (DEBT-304). Now `xdomainFocus` sets the transform from `xScaleOrig`, Z+/Z- call `zoom.scaleTo` around the current frame (view center if the time bar is outside the view) and shift calls `zoom.translateBy` (`axes.xdomainShift`), all clamped by `onZoom`.
 
 - **Group:** CAP-301
 - **Code:**
@@ -553,7 +553,7 @@ the selection is applied when the new frame loads. If `overlay.opts.clickModeAut
 ## BEH-334: Double click on the chronogram
 
 Handlers: `onAxesDblClick` (event `axes:dblclick` from `chronoGroup` `dblclick`, unless `defaultPrevented`) is meant to zoom on `[frame - backward*1.05, frame + forward*1.05]` (the track window around the clicked frame)
-through `axes.xdomainFocus`. In practice (a) `xdomainFocus` throws (DEBT-304); (b) `d3.zoom` is attached to the same element (`chronoGroup.call(zoom)`) and only its `wheel.zoom` listener is replaced, so
+through `axes.xdomainFocus`. In practice (a) `xdomainFocus` threw before the D3 v6 port (DEBT-304, fixed); (b) `d3.zoom` is attached to the same element (`chronoGroup.call(zoom)`) and only its `wheel.zoom` listener is replaced, so
 d3's own `dblclick.zoom` (zoom in by 2, 0.5 with Shift, with a transition) is still installed next to the custom `dblclick` listener (different namespace; no other `dblclick.zoom` removal exists in `ChronoAxes.js`). Whether the custom handler also runs, and which of the two wins, depends on d3 runtime behavior and was not verified (needs a browser, Phase 1d). Each double click also fires
 two single clicks first (two `gotoEvent` calls).
 
