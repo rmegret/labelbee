@@ -361,6 +361,12 @@ div.float-right {
 .ui-resizable-helper {
   border: 2px dotted #F00;
 }
+/* Touch screens: the 12px resize handles are too small for a finger (js/layout/TouchResize.js) */
+@media (pointer: coarse) {
+  .ui-resizable-se { width: 28px; height: 28px; }
+  .ui-resizable-n, .ui-resizable-s { height: 20px; }
+  .ui-resizable-e, .ui-resizable-w { width: 20px; }
+}
 
 
 .canvaswrapper > canvas {
