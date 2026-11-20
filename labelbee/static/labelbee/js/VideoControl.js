@@ -427,53 +427,41 @@ VideoCache.prototype.seekToFrame = async function (videoUrl, frame, fps) {
   });
 }
 VideoCache.prototype.seekWithCallback = async function (videoUrl, frame, fps, frameCallback) {
-  return new Promise(async (resolve, reject) => {
+  let video = this.video
 
-    // fully download it first (no buffering):
-    //let videoBlob = await fetch(videoUrl).then(r => r.blob());
-    //let videoObjectUrl = URL.createObjectURL(videoBlob);
-    let video = this.video
+  if (video.currentSrc != videoUrl)
+    video.src = videoUrl;
 
-    let seekResolve;
-    let seeked = async function (now, metadata) {
-      //console.log('seeked mediaTime*fps=',metadata.mediaTime*fps)
+  // Wait for the first frame of a newly loaded video (readyState >= 2) rather than a blind sleep and a random seek
+  if (video.readyState < 2) {
+    await new Promise((resolve, reject) => {
+      let cleanup = () => {
+        video.removeEventListener('loadeddata', onLoaded)
+        video.removeEventListener('error', onError)
+      }
+      let onLoaded = () => { cleanup(); resolve() }
+      let onError = () => { cleanup(); reject(new Error('VideoCache: video failed to load ' + videoUrl)) }
+      video.addEventListener('loadeddata', onLoaded)
+      video.addEventListener('error', onError)
+    })
+  }
+
+  let currentTime = frame / fps + 0.00001;
+
+  if (Math.abs(video.currentTime - currentTime) < 0.00005) {
+    console.log('videoCache.seekWithCallback: already at currentTime. RESOLVE', currentTime)
+    return video
+  }
+  // The one-shot callback is registered right before the seek: nothing else can use it up (e.g. the first frame
+  // presented after the load), which left the seek of the first query waiting for ever
+  await new Promise((resolve) => {
+    video.requestVideoFrameCallback((now, metadata) => {
       frameCallback(now, metadata)
-      if (seekResolve) seekResolve();
-    }
-    let cbHandle = video.requestVideoFrameCallback(seeked);
-
-    if (video.currentSrc != videoUrl)
-      video.src = videoUrl;
-
-    // workaround chromium metadata bug (https://stackoverflow.com/q/38062864/993683)
-    //while 
-    if ((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
-      console.log('videoCache.seekWithCallback: duration workaround')
-      await new Promise(r => setTimeout(r, 1000));
-      video.currentTime = 10000000 * Math.random();
-    }
-    // Just reject instead of trying too hard
-    if ((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
-      console.log('videoCache.seekWithCallback: duration workaround ABORTED')
-      video.cancelVideoFrameCallback(cbHandle)
-      reject()
-      return
-    }
-    let duration = video.duration;
-
-    let frames = [];
-    let interval = 1 / fps;
-    let currentTime = frame / fps + 0.00001;
-
-    if (Math.abs(video.currentTime-currentTime)<0.00005) {
-      console.log('videoCache.seekToFrame: already at currentTime. RESOLVE',currentTime)
-      resolve(video);
-    } else {
-      video.currentTime = currentTime;
-      await new Promise(r => seekResolve = r);
-      resolve(video);
-    }
-  });
+      resolve()
+    })
+    video.currentTime = currentTime
+  })
+  return video
 }
 VideoCache.prototype.getFrameCropDataURL = async function (videoUrl, frame, fps, crop) {
   if (this.abortFlag) {
