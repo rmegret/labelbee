@@ -3,7 +3,8 @@
 //   Mode         base class: attach(target)/detach(), listeners go through this.bag
 //   IgnoreMode   a drag does nothing (a click still seeks, handled elsewhere)
 //   PanMode      a drag pans the view (d3.zoom)
-//   PreviewMode  a drag (or Ctrl+hover) previews the frame under the pointer
+//   PreviewMode  a drag previews the frame under the pointer
+//   CtrlHover    Ctrl+hover previews the frame under the pointer, in every mode (owned by DragControl)
 // Used as ChronoDragControl.DragControl, ChronoDragControl.IgnoreMode...; instances of the modes are
 // reached as drag.modes.ignore, drag.modes.pan, drag.modes.preview.
 export { ListenerBag } from "./ListenerBag.js";
@@ -66,7 +67,7 @@ export class PanMode extends Mode {
   }
 }
 
-// Click-drag, touch-drag, or Ctrl+hover previews the frame under the pointer; releasing ends the preview.
+// Click-drag or touch-drag previews the frame under the pointer; releasing ends the preview.
 // A second finger (pinch) ends the preview and is left to the zoom.
 export class PreviewMode extends Mode {
   constructor() {
@@ -79,7 +80,6 @@ export class PreviewMode extends Mode {
     this.pointers = new Set();
     this.drag = null; // {id, x, y, moved}
     this.previewing = false; // a trackmove was sent without trackend yet
-    this.last = null; // last pointermove inside the element (Ctrl+hover)
   }
 
   _attach(target) {
@@ -93,14 +93,7 @@ export class PreviewMode extends Mode {
     bag.add(el, "pointerup", (e) => this._up(e));
     bag.add(el, "pointercancel", (e) => this._up(e));
     bag.add(el, "pointerleave", () => {
-      this.last = null;
       if (!this.drag) this._end();
-    });
-    bag.add(doc, "keydown", (e) => {
-      if (e.key === "Control" && !this.drag && this.last) this._preview(this.last);
-    });
-    bag.add(doc, "keyup", (e) => {
-      if (e.key === "Control" && !this.drag) this._end();
     });
     if (doc.defaultView) bag.add(doc.defaultView, "blur", () => this._end());
     // Touch (Android): without touch-action none the browser takes the touch for a scroll or a long press
@@ -156,12 +149,7 @@ export class PreviewMode extends Mode {
       if (e.pointerId !== d.id) return;
       if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) >= this.dragThreshold) d.moved = true;
       if (d.moved) this._preview(e);
-      return;
     }
-    if (this.pointers.size > 0) return; // rest of a pinch
-    this.last = e;
-    if (e.ctrlKey) this._preview(e); // Ctrl+hover
-    else this._end();
   }
 
   _up(e) {
@@ -185,6 +173,64 @@ export class PreviewMode extends Mode {
   }
 }
 
+// Ctrl+hover previews the frame under the pointer, whatever the drag mode (ADR 0011 addendum). Not a Mode: DragControl
+// attaches it once. A pointer with a button pressed (a drag) or a touch is left to the mode; Ctrl released, the pointer
+// leaving the element or the window losing focus ends the preview.
+export class CtrlHover {
+  constructor() {
+    this.target = null;
+    this.bag = new ListenerBag();
+    this.previewing = false; // a trackmove was sent without trackend yet
+    this.last = null; // last pointermove inside the element
+  }
+
+  attach(target) {
+    if (this.target) return; // idempotent
+    this.target = target;
+    const el = target.element;
+    const doc = el.ownerDocument;
+    const bag = this.bag;
+    bag.add(el, "pointermove", (e) => {
+      if (e.pointerType === "touch" || e.buttons) return;
+      this.last = e;
+      if (e.ctrlKey) this._preview(e);
+      else this._end();
+    });
+    bag.add(el, "pointerleave", () => {
+      this.last = null;
+      this._end();
+    });
+    bag.add(doc, "keydown", (e) => {
+      if (e.key === "Control" && this.last) this._preview(this.last);
+    });
+    bag.add(doc, "keyup", (e) => {
+      if (e.key === "Control") this._end();
+    });
+    if (doc.defaultView) bag.add(doc.defaultView, "blur", () => this._end());
+  }
+
+  detach() {
+    if (!this.target) return;
+    this._end();
+    this.bag.clear();
+    this.target = null;
+    this.last = null;
+  }
+
+  _preview(event) {
+    const hit = this.target.hit(event);
+    if (!hit) return; // outside the plot: keep the last previewed frame
+    this.previewing = true;
+    this.target.emit("trackmove", { frame: hit.frame, id: hit.id, mouseevent: event });
+  }
+
+  _end() {
+    if (!this.previewing) return;
+    this.previewing = false;
+    this.target.emit("trackend");
+  }
+}
+
 export class DragControl {
   // modes: array of Mode, exposed by name in this.modes; initial: name, default the first
   constructor(target, modes, { initial } = {}) {
@@ -193,6 +239,8 @@ export class DragControl {
     for (const m of modes) this.modes[m.name] = m;
     this.current = null;
     this._listeners = [];
+    this.ctrlHover = new CtrlHover();
+    this.ctrlHover.attach(target);
     this.setMode(initial !== undefined ? initial : modes[0].name);
   }
 
@@ -221,6 +269,7 @@ export class DragControl {
   }
 
   destroy() {
+    this.ctrlHover.detach();
     if (this.current) this.current.detach();
     this.current = null;
     this._listeners = [];

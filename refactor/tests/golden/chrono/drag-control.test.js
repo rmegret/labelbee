@@ -8,6 +8,19 @@ const { pathToFileURL } = require('url');
 const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js');
 const load = () => import(pathToFileURL(path.join(JS_DIR, 'chrono/ChronoDragControl.js')).href);
 
+function fakeElement() {
+  const l = new Map();
+  const doc = { defaultView: null, addEventListener(t, f) { l.set('doc:' + t, f); }, removeEventListener(t, f) { if (l.get('doc:' + t) === f) l.delete('doc:' + t); } };
+  return {
+    ownerDocument: doc,
+    addEventListener(t, f) { l.set(t, f); },
+    removeEventListener(t, f) { if (l.get(t) === f) l.delete(t); },
+    fire(t, e) { const f = l.get(t); if (f) f(e); },
+    fireDoc(t, e) { const f = l.get('doc:' + t); if (f) f(e); },
+    size: () => l.size,
+  };
+}
+
 function fakeTarget() {
   const l = new Map();
   return {
@@ -15,6 +28,7 @@ function fakeTarget() {
     removeEventListener(t, f) { l.get(t)?.delete(f); },
     pan: true,
     setPan(v) { this.pan = v; },
+    element: fakeElement(),                 // CtrlHover listens here; not counted in count()
     count() { let n = 0; for (const s of l.values()) n += s.size; return n; },
   };
 }
@@ -124,4 +138,30 @@ test('DragControl: default is the first mode, unknown mode throws and changes no
   assert.equal(c.mode, 'ignore');
   assert.throws(() => c.setMode('nope'), /unknown mode/);
   assert.equal(c.mode, 'ignore');
+});
+
+test('CtrlHover previews on Ctrl+hover in every mode, ignores buttons and touch, ends on Ctrl release', async () => {
+  const { IgnoreMode, PanMode, DragControl } = await load();
+  for (const initial of ['pan', 'ignore']) {
+    const t = fakeTarget();
+    const sent = [];
+    t.hit = () => ({ frame: 5, id: 2 });
+    t.emit = (name) => sent.push(name);
+    const c = new DragControl(t, [new PanMode(), new IgnoreMode()], { initial });
+    const el = t.element;
+    el.fire('pointermove', { ctrlKey: false, buttons: 0, pointerType: 'mouse' });
+    assert.deepEqual(sent, [], initial + ': no Ctrl, nothing');
+    el.fire('pointermove', { ctrlKey: true, buttons: 0, pointerType: 'mouse' });
+    assert.deepEqual(sent, ['trackmove'], initial + ': Ctrl+hover previews');
+    el.fire('pointermove', { ctrlKey: true, buttons: 1, pointerType: 'mouse' });
+    el.fire('pointermove', { ctrlKey: true, buttons: 0, pointerType: 'touch' });
+    assert.deepEqual(sent, ['trackmove'], initial + ': a drag or a touch is not a hover');
+    el.fireDoc('keyup', { key: 'Control' });
+    assert.deepEqual(sent, ['trackmove', 'trackend'], initial + ': releasing Ctrl ends it');
+    el.fireDoc('keydown', { key: 'Control' });
+    assert.deepEqual(sent, ['trackmove', 'trackend', 'trackmove'], initial + ': pressing Ctrl over the plot previews at once');
+    c.destroy();
+    assert.deepEqual(sent.slice(-1), ['trackend'], initial + ': destroy ends a running preview');
+    assert.equal(el.size(), 0, initial + ': nothing left attached');
+  }
 });

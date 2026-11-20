@@ -1,6 +1,8 @@
 """ChronoDragControl (ADR 0011): the Drag button chooses what a drag on the chronogram does.
-Pan View (default): d3.zoom pan. Preview Frame: click-drag, touch-drag or Ctrl+hover previews the frame, no pan.
-Ignore: a drag does nothing, a click still seeks. `axes.dragTarget` is the narrow interface the modes use."""
+Pan View (default): d3.zoom pan. Preview Frame: click-drag or touch-drag previews the frame, no pan.
+Ignore: a drag does nothing, a click still seeks. Ctrl+hover previews the frame in every mode. `axes.dragTarget` is the narrow interface the modes use."""
+
+import pytest
 
 COUNT = """() => { window.__pv = {move: 0, end: 0, click: 0};
   $(axes).on('previewframe:trackmove', () => window.__pv.move++); $(axes).on('previewframe:trackend', () => window.__pv.end++);
@@ -98,9 +100,10 @@ def test_o6_preview_mode_plain_click_seeks_without_preview(ui, sample_dir):
     assert ui.js("window.__pv") == {"move": 0, "end": 0, "click": 1}
 
 
-def test_o7_preview_mode_ctrl_hover_previews_and_release_ends_it(ui, sample_dir):
+@pytest.mark.parametrize("mode", ["pan", "ignore", "preview"])
+def test_o7_ctrl_hover_previews_in_every_mode_and_release_ends_it(ui, sample_dir, mode):
     _start(ui, sample_dir)
-    ui.js("chronoDragControl.setMode('preview')")
+    ui.js(f"chronoDragControl.setMode('{mode}')")
     x, y = _pt(ui)
     ui.page.mouse.move(x, y)
     ui.page.mouse.move(x + 10, y)                                   # no Ctrl: nothing

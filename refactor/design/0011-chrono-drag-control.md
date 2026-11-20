@@ -49,3 +49,14 @@ When `ChronoControl.js` becomes a module, that one call becomes `import * as Chr
    and its Options checkbox removed; browser tests (mouse, touch, cancel, mode switch mid-drag).
 5. The Drag button and pop-up, `#chrono-drag-button`.
 6. Record: PLAN, tests README, BEH-340.
+
+## Addendum (2026-11-19): Ctrl+hover is independent of the mode
+
+Maintainer decision, reverting "Ctrl+hover folds into Preview mode": Ctrl+hover previews the frame under the pointer in every
+mode (Pan, Ignore, Preview), so that touchpad two-finger lateral scroll (pan), pinch / Ctrl+wheel (zoom) and Ctrl+hover (preview)
+work together as one browsing gesture set.
+- `CtrlHover` (same file, not a `Mode`): attached by `DragControl` for its whole life, `destroy()` detaches it. It owns the
+  `pointermove` / Control `keydown`/`keyup` / `pointerleave` / `blur` handling that `PreviewMode` had.
+- It ignores moves with a button pressed (a drag belongs to the mode) and touch pointers; it ends the preview when Ctrl is released,
+  the pointer leaves or the window blurs. `PreviewMode` keeps click-drag and touch-drag only.
+- Events out are unchanged (`previewframe:trackmove` / `trackend`). d3.zoom already ignores Ctrl+drag; Ctrl+wheel still zooms.
