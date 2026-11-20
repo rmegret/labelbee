@@ -18,6 +18,9 @@ var crosses = []
 var partsIntervals = []
 
 var chrono
+var chronoDragControl // instance of ChronoDragControl.DragControl (ADR 0011)
+var videoKeyframes // instance of VideoKeyframes.VideoKeyframes, keyframes of the video from its packets sidecar (ADR 0014)
+var videoCacheStatus // instance of VideoCacheStatus.VideoCacheStatus (ADR 0012)
 class Chronogram {
   constructor() {
     //const chrono = this
@@ -240,8 +243,113 @@ function initChrono() {
       //videoControl.hardRefresh();
     }
   }
-  $(axes).on("previewframe:trackmove", (evt)=>onAxesMoved(evt));
-  $(axes).on("previewframe:trackend", ()=>endPreview());
+  // Time bar during a preview: orange dashed at the pointer until a frame is shown, then green on the shown frames
+  $(axes).on("previewframe:trackmove", function (evt) {
+    previewBar.active = true;
+    if (!previewBar.shown) {
+      axes.setTimeMark(evt.frame);
+      axes.setTimeMarkState("pending");
+    }
+    onAxesMoved(evt); // a frame already available shows (and turns the bar green) from in here
+  });
+  $(axes).on("previewframe:trackend", function () {
+    previewBar.active = previewBar.shown = false;
+    axes.setTimeMarkState(null);
+    endPreview();
+    updateTimeMark();
+  });
+
+  // Drag modes of the chronogram (ADR 0011). One import, the namespace is global for now:
+  // when this file becomes a module, replace by `import * as ChronoDragControl from "./chrono/ChronoDragControl.js"`.
+  import("./chrono/ChronoDragControl.js").then(function (ns) {
+    window.ChronoDragControl = ns;
+    if (chronoDragControl) chronoDragControl.destroy();
+    chronoDragControl = new ChronoDragControl.DragControl(
+      axes.dragTarget,
+      [new ns.PanMode(), new ns.IgnoreMode(), new ns.PreviewMode()],
+      { initial: "pan" }
+    );
+    initDragMenu();
+  });
+
+  // Video cache status strip under the frame axis (ADR 0012), toggled by Options/Chronogram. Off by default.
+  import("./chrono/VideoCacheStatus.js").then(function (ns) {
+    window.VideoCacheStatus = ns;
+    if (videoCacheStatus) videoCacheStatus.destroy();
+    videoCacheStatus = new ns.VideoCacheStatus(axes, videoCache, function () {
+      return { url: videoControl.video.src, frameOffset: videoinfo.frameoffset };
+    });
+    videoCacheStatus.setEnabled($("#showVideoCacheStatus").prop("checked"));
+  });
+
+  // Keyframes of the video, from <video>.packets.csv when it exists (ADR 0014); "Preview Keyframes Only" in the Drag menu
+  import("./chrono/VideoKeyframes.js").then(function (ns) {
+    window.VideoKeyframes = ns;
+    videoKeyframes = new ns.VideoKeyframes();
+    function loadKeyframes() {
+      var url = videoControl.video.src;
+      if (!url) return;
+      videoKeyframes.load(url).then(syncKeyframesOption);
+      syncKeyframesOption(); // keyframes of the previous video are gone
+    }
+    $(videoControl).off("video:loaded.keyframes").on("video:loaded.keyframes", loadKeyframes);
+    loadKeyframes();
+  });
+  // Checkbox enabled only when the video has keyframes; the hover snaps to them while it is checked
+  function syncKeyframesOption() {
+    var $box = $("#chrono-drag-keyframes");
+    var available = !!videoKeyframes && videoKeyframes.available;
+    $box.prop("disabled", !available);
+    if (!available) $box.prop("checked", false);
+    $("#chrono-drag-keyframes-label").attr("title", available
+      ? "Preview shows the keyframe nearest to the pointer (decodes faster)"
+      : "No <video>.packets.csv next to the video: keyframes unknown");
+    videoControl.hover.snap = available && $box.prop("checked")
+      ? function (frame) {
+          return videoKeyframes.nearest(frame + videoinfo.frameoffset) - videoinfo.frameoffset;
+        }
+      : null;
+  }
+  $("#chrono-drag-keyframes").on("change", syncKeyframesOption);
+
+  // Drag button (right of Fit): popup to choose what a drag on the chronogram does. Not saved: Pan on every load.
+  function initDragMenu() {
+    // Moved to <body> (fixed position): not cropped nor scrolled with the pane that contains the button
+    var $menu = $("#chrono-drag-menu").appendTo("body");
+    var $button = $("#chrono-drag-button");
+    function placeMenu() {
+      var r = $button[0].getBoundingClientRect();
+      var w = $menu.outerWidth(), h = $menu.outerHeight(), m = 4;
+      var left = Math.max(m, Math.min(r.left, window.innerWidth - w - m));
+      var top = r.bottom + 2;
+      if (top + h > window.innerHeight - m) top = Math.max(m, r.top - h - 2); // not enough room below: above
+      $menu.css({ left: left, top: top });
+    }
+    function sync() {
+      $menu.find("input[value=" + chronoDragControl.mode + "]").prop("checked", true);
+      $button.attr("title", "Drag on the chronogram: " + chronoDragControl.current.label);
+    }
+    chronoDragControl.onChange(sync);
+    sync();
+    $menu.off("change.drag").on("change.drag", "input[name=chronoDrag]", function () {
+      chronoDragControl.setMode(this.value);
+      $menu.hide();
+    });
+    $button.off("click.drag").on("click.drag", function (e) {
+      e.stopPropagation();
+      $menu.toggle();
+      if ($menu.is(":visible")) placeMenu();
+    });
+    // The menu is not inside the scrolled pane any more: close it rather than leave it detached from the button
+    $(window).off("resize.dragMenu").on("resize.dragMenu", function () { $menu.hide(); });
+    // (scroll does not bubble: capture phase; the previous handler is removed, initDragMenu can run again)
+    if (initDragMenu.closeOnScroll) document.removeEventListener("scroll", initDragMenu.closeOnScroll, true);
+    initDragMenu.closeOnScroll = function (e) { if (!$menu[0].contains(e.target)) $menu.hide(); };
+    document.addEventListener("scroll", initDragMenu.closeOnScroll, true);
+    $(document).off("click.dragMenu").on("click.dragMenu", function (e) {
+      if (!$(e.target).closest("#chrono-drag-menu").length) $menu.hide();
+    });
+  }
 
   /* Resize events */
 
@@ -646,7 +754,7 @@ function shiftTimeDomain(factor) {
   let domain = axes.xdomain();
   let f = getCurrentFrame();
   let shift = Math.round(factor * (domain[1] - domain[0]));
-  axes.xdomainFocus([domain[0] + shift, domain[1] + shift]);
+  axes.xdomainShift(shift);
   //     if (f>=domain[0] && f<=domain[1]) { // If timemark visible
   //         videoControl.seekFrame(f+shift);
   //     }
@@ -728,8 +836,13 @@ var __section__chronogram_main_view
 // ### CHRONO DYNAMIC ELEMENTS (TIMEMARK, SELECTION)
 var __section__chronogram_dynamic_elements
 
+var previewBar = { active: false, shown: false }; // a preview is going on / has shown a frame since it began
 function updateTimeMark() {
   var frame = getCurrentFrame();
+  if (previewBar.active) {
+    previewBar.shown = true;
+    axes.setTimeMarkState("preview");
+  }
   if (logging.frameEvents) console.log("updateTimeMark: frame=", frame);
   if (typeof frame == "undefined") {
     frame = 0;
@@ -808,7 +921,7 @@ function updateVideoSpan() {
     .selectAll(".interval")
     .attr("x", axes.xScale(0))
     .attr("y", -13)
-    .attr("width", axes.xScale(videoinfo.nframes + 1) - axes.xScale(0))
+    .attr("width", axes.xScale(videoinfo.nframes) - axes.xScale(0)) // frames 0..nframes-1, frame f is [f, f+1)
     .attr("height", 11);
   videoSpan
     .selectAll(".label")
@@ -861,7 +974,7 @@ function updateTrackWindowSpan() {
     .selectAll(".interval")
     .attr("x", axes.xScale(fmin))
     .attr("y", -13)
-    .attr("width", axes.xScale(fmax) - axes.xScale(fmin))
+    .attr("width", axes.xScale(fmax + 1) - axes.xScale(fmin)) // frame fmax is the interval [fmax, fmax+1)
     .attr("height", 11);
 }
 function getWindow() {

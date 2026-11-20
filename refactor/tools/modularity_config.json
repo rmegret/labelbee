@@ -1,0 +1,158 @@
+{
+  "_doc": "Config of refactor/tools/modularity_build.js. splits: per file, the concern of each line range (a unit goes to the range of its first line; ranges follow the #MARK / __section__ markers of the files, the other files were read). fold: bridge files whose globals belong to the module box. topics: page of the diagram for a box (first match of file or box id).",
+  "splits": {
+    "OverlayControl.js": [
+      [1, 243, "core: options, interaction mode"],
+      [359, 556, "options UI, active rect, angle"],
+      [557, 843, "canvas size, transform, coordinates"],
+      [844, 1414, "refresh: video frame drawing, pick-frame timeline"],
+      [1415, 1779, "fabric rects <-> observations"],
+      [1780, 2137, "draw: bee ID and event tracks, identify"],
+      [2138, 2573, "draw: tags and tag tracks"],
+      [2574, 3084, "parameters: track window, ROI, exclude rects, tag filters"],
+      [3085, 3302, "ID prediction"],
+      [3303, 3918, "low-level mouse events: create, select, pan, wheel"],
+      [3919, 4100, "fabric object events"]
+    ],
+    "VideoControl.js": [
+      [1, 81, "core: ctor, state"],
+      [494, 619, "play / pause"],
+      [620, 790, "change current frame: seek, rewind, forward"],
+      [791, 1001, "view: navigation form, refresh, frame-changed funnel"],
+      [1002, 1500, "loading: video, preview video, video info"]
+    ],
+    "ZoomView.js": [
+      [1, 421, "core: ctor, keypoint labels, sync with tracks"],
+      [422, 503, "fabric.js events"],
+      [504, 641, "GUI callbacks"],
+      [642, 724, "geometry"],
+      [725, 840, "part selection"],
+      [841, 954, "part insertion, deletion, modification"],
+      [955, 1094, "label list and buttons"],
+      [1095, 1559, "drawing: zoom view, tag bits, hamming"],
+      [1560, 1980, "distractors and tag fixes"],
+      [1981, 2300, "refresh, export"]
+    ],
+    "ChronoControl.js": [
+      [1, 163, "state and the Chronogram class"],
+      [164, 396, "initChrono, layout"],
+      [397, 588, "controls: buttons, restrict / exclude id"],
+      [589, 833, "axes: size, domains, scale and shift"],
+      [834, 994, "time marks and spans (video, track window)"],
+      [995, 1060, "update entry points"],
+      [1061, 1699, "data preparation: flat tracks, intervals, tags"],
+      [1700, 1888, "d3 render: activities, ChronoIntervals"],
+      [1889, 1960, "observation table"],
+      [1961, 2300, "utils: formatting, interpolation, cleanup"]
+    ],
+    "ChronoControlActivitiesLegacy.js": [
+      [1, 123, "legacy interval list"],
+      [124, 670, "legacy activities drawing"],
+      [671, 900, "legacy tags drawing"]
+    ],
+    "ChronoControlInteraction.js": [
+      [1, 75, "axes mouse events"],
+      [76, 185, "event seek mode, comparators"],
+      [186, 423, "goto / find next and previous event"],
+      [424, 600, "next / previous ID buttons, auto-event"]
+    ],
+    "AnnotationIO.js": [
+      [1, 173, "login and user"],
+      [174, 579, "local files: load, save, store setters"],
+      [580, 791, "label list from server"],
+      [792, 1104, "FromServerDialog"],
+      [1105, 1385, "load tracks and tags from server"],
+      [1386, 1700, "save to server, ajax errors, notes"]
+    ],
+    "SelectionControl.js": [
+      [1, 72, "init, undo state"],
+      [73, 346, "label panel, LabelListDialog"],
+      [347, 485, "form, event tree, submit"],
+      [486, 649, "selection: select, deselect, delete, swap ID"],
+      [650, 730, "undo stack"],
+      [731, 1000, "labels toggle, span edit, statistics"]
+    ],
+    "labelBee.js": [
+      [1, 23, "page globals (canvas, ctx, user)"],
+      [24, 222, "init"],
+      [223, 321, "hash router, status messages"],
+      [322, 409, "StatusWidget, fullscreen, URL helpers"],
+      [410, 830, "FilePickerFromServerDialog"],
+      [831, 1100, "keyboard"]
+    ],
+    "VideoList.js": [
+      [1, 96, "ctor, videoinfo"],
+      [97, 271, "video list: load, save, set"],
+      [272, 459, "video list form and selection"],
+      [460, 521, "custom metadata: start time, fps, offset"],
+      [522, 616, "database list, table"],
+      [617, 900, "select and load a video"]
+    ],
+    "VisitControl.js": [
+      [1, 383, "VisitWidget"],
+      [384, 600, "OverlayControl.drawImagePickFlowerMode (class split across files)"]
+    ]
+  },
+  "fold": {
+    "core/NotifierBridge.js": "core/Notifier.js",
+    "core/RefreshInstrumentBridge.js": "core/Notifier.js",
+    "annotation/AnnotationStoreBridge.js": "annotation/AnnotationStore.js",
+    "annotation/RefreshBridge.js": "annotation/Refresh.js",
+    "annotation/SelectionModelBridge.js": "annotation/SelectionModel.js",
+    "annotation/LabelsBridge.js": "annotation/Labels.js",
+    "annotation/WrongIdBridge.js": "annotation/WrongId.js",
+    "annotation/AnnotationCodecBridge.js": "annotation/AnnotationCodec.js",
+    "annotation/CsvSchemasBridge.js": "annotation/CsvSchemas.js",
+    "annotation/EventTreeBridge.js": "annotation/EventTree.js"
+  },
+  "singletons": {
+    "_doc": "Global name -> class or module box, when the code does not say it with `x = new C` (bridges, factories).",
+    "events": "Events",
+    "AnnotationStore": "annotation/AnnotationStore.js",
+    "selection": "SelectionModel",
+    "refresh": "Refresh",
+    "axes": "ChronoAxes",
+    "Labels": "annotation/Labels.js",
+    "WrongId": "annotation/WrongId.js",
+    "EventTree": "annotation/EventTree.js",
+    "CsvSchemas": "annotation/CsvSchemas.js",
+    "logging": "core/Notifier.js",
+    "refreshLog": "core/Notifier.js",
+    "refreshInstrumented": "core/Notifier.js",
+    "overlay": "OverlayControl",
+    "videoControl": "VideoControl",
+    "videoCache": "VideoCache",
+    "videoManager": "VideoManager",
+    "chrono": "Chronogram",
+    "zoomOverlay": "ZoomOverlay",
+    "statusWidget": "StatusWidget",
+    "fromServerDialog": "FromServerDialog",
+    "loginDialog": "LoginDialog",
+    "labelListDialog": "LabelListDialog"
+  },
+  "topics": {
+    "_pages": [
+      ["video", "Video: list, playback, frame cache"],
+      ["overlay", "Overlay canvas: drawing, rects, visits"],
+      ["chrono", "Chronogram: d3 timeline"],
+      ["select", "Selection and zoom view"],
+      ["data", "Annotation data and IO"],
+      ["shell", "Page shell: init, router, keyboard, layout"]
+    ],
+    "byFile": {
+      "VideoList.js": "video", "VideoControl.js": "video", "HoverControl.js": "video",
+      "OverlayControl.js": "overlay", "VisitControl.js": "overlay",
+      "ChronoAxes.js": "chrono", "ChronoControl.js": "chrono", "ChronoControlActivitiesLegacy.js": "chrono", "ChronoControlInteraction.js": "chrono",
+      "chrono/": "chrono",
+      "SelectionControl.js": "select", "ZoomView.js": "select",
+      "Model.js": "data", "AnnotationIO.js": "data", "annotation/": "data", "core/": "data",
+      "labelBee.js": "shell", "layout/": "shell"
+    },
+    "byBox": {
+      "StatusWidget": "shell", "FilePickerFromServerDialog": "shell",
+      "LoginDialog": "data", "LabelListFromServerDialog": "data", "FromServerDialog": "data", "EventsCSVManualFilePicker": "data",
+      "VideoCache": "video", "HoverControl": "video", "VideoManager": "video",
+      "KeypointLabelsFromServerDialog": "select", "LabelListDialog": "select"
+    }
+  }
+}

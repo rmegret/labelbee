@@ -9,6 +9,8 @@ keep the checklist for what a script cannot judge (see its first lines). Environ
 
 ## Golden tests: CSV loading (off plan, no slice)
 - `golden/csvschemas/csv-schemas.test.js`: schema detection of `annotation/CsvSchemas.js` on the real sample files.
+- `golden/chrono/video-keyframes.test.js`: `parsePackets` and `nearestKeyframe` of `chrono/VideoKeyframes.js` ([ADR 0014](../design/0014-video-keyframes-preview.md)), `node --test refactor/tests/golden/chrono/`.
+- `perf/keyframe_hover_perf.py`: not a test, a script: decode time of hover previews on keyframes vs non-keyframes (random, sequential, reverse) on the gurabo sample, writes `refactor/scratch/keyframe-hover-perf.md`.
 - `golden/csvloaders/csv-loaders.test.js`: `events_csv_to_json` and `detections_csv_to_json`. Expected values are written by
   hand (new code, nothing to pin from). `node --test refactor/tests/golden/csvloaders/`
 

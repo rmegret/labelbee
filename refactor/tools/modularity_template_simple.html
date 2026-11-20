@@ -1,0 +1,90 @@
+<title>LabelBee Block Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: Overview = one node per box, grouped in topic columns; topic tabs = boxes with their sub-blocks; weighted edges only. */
+:root{--bg:#f6f7f8;--panel:#fff;--fg:#1d2328;--mute:#5d6872;--line:#d3d9de;--cls:#e3f1f6;--file:#fbeedb;--mod:#eee6f8;--red:#c62828;--edge:#2b3a46;--hl:#fff3b0;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181c;--panel:#1c2227;--fg:#e4e9ed;--mute:#97a3ad;--line:#35404a;--cls:#183440;--file:#3a2b12;--mod:#2d2140;--red:#ff6b6b;--edge:#aebdc9;--hl:#5a4d00;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14181c;--panel:#1c2227;--fg:#e4e9ed;--mute:#97a3ad;--line:#35404a;--cls:#183440;--file:#3a2b12;--mod:#2d2140;--red:#ff6b6b;--edge:#aebdc9;--hl:#5a4d00;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:13px/1.4 var(--sans);padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+h1{font-size:18px;margin:0 0 2px}
+.sub,.note{color:var(--mute);margin:0 0 8px;max-width:110ch}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+nav button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:5px 10px;border-radius:4px;cursor:pointer}
+nav button[aria-selected=true]{background:var(--fg);color:var(--bg)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;color:var(--mute);margin:6px 0 10px}
+.legend label{display:flex;gap:6px;align-items:center}
+.sw{display:inline-block;width:11px;height:11px;border:1px solid var(--line);vertical-align:-1px;margin-right:4px}
+.wrap{position:relative;overflow-x:auto;padding-bottom:8px}
+.board{position:relative;display:flex;gap:90px;align-items:flex-start;min-width:min-content}
+.col{display:flex;flex-direction:column;gap:12px;width:230px;flex:none}
+.col>h2{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.box>h3{margin:0;padding:5px 9px;font-size:13px;display:flex;justify-content:space-between;gap:8px}
+.box.class>h3{background:var(--cls)}.box.file>h3,.box.html>h3{background:var(--file)}.box.module>h3{background:var(--mod)}
+.kind{font:10.5px var(--mono);color:var(--mute);text-transform:uppercase}
+.nd{padding:4px 9px;border-top:1px solid var(--line)}
+.nd.hl,.box.nd.hl{background:var(--hl)}
+.box.nd{padding:0}.box.nd>.stat{padding:3px 9px 5px}
+.nd .t{display:flex;justify-content:space-between;gap:8px;font-size:12px}
+.stat{font:10.5px var(--mono);color:var(--mute)}
+.stat .r{color:var(--red)}
+svg.edges{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+svg.edges path{fill:none;stroke:var(--edge);opacity:.4}
+svg.edges path.on{opacity:1;stroke:var(--red)}
+</style>
+<h1>LabelBee block map</h1>
+<p class="sub">Which blocks use which. Overview: one node per class, classic script or ES module. Topic tabs: the same boxes with their sub-blocks. An edge is drawn when the source block calls, reads or writes anything of the target; its thickness is the number of such uses (hover for the count).</p>
+<nav id="tabs" role="tablist"></nav>
+<div class="legend">
+ <span><span class="sw" style="background:var(--cls)"></span>class</span>
+ <span><span class="sw" style="background:var(--file)"></span>classic script (its globals)</span>
+ <span><span class="sw" style="background:var(--mod)"></span>ES module</span>
+ <span>RO / IN / RW = members used from outside that are read-only, write or input, read and write</span>
+ <span style="color:var(--red)">red = number of plain globals of other boxes it touches</span>
+ <label>min edge weight <input id="minw" type="range" min="1" max="60" value="12"><span id="minwv">12</span></label>
+ <label><input id="hide" type="checkbox" checked> hide blocks with no drawn edge (overview)</label>
+</div>
+<div class="wrap" id="wrap"><div class="board" id="board"></div><svg class="edges" id="edges"></svg></div>
+<p class="note" id="note"></p>
+<script>
+const D=__DATA__;
+const $=(s,r=document)=>r.querySelector(s);const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const subBox={},subInfo={};D.boxes.forEach(b=>b.subs.forEach(s=>{subBox[s.key]=b;subInfo[s.key]=s}));
+const stats=o=>{const n=a=>a.reduce((x,s)=>x+s.length,0);const subs=o.subs||[o];const ro=n(subs.map(s=>s.ro)),inn=n(subs.map(s=>s.in)),rw=n(subs.map(s=>s.rw)),g=n(subs.map(s=>s.redGlobals));return `RO ${ro} · IN ${inn} · RW ${rw}`+(g?` · <span class="r">${g} globals</span>`:'')};
+let cur=(location.hash||'#overview').slice(1);const ids=['overview',...D.pages.map(p=>p[0])];if(!ids.includes(cur))cur='overview';
+const tabs=$('#tabs');[['overview','Overview'],...D.pages].forEach(([id,t])=>{const b=document.createElement('button');b.textContent=t;b.setAttribute('role','tab');b.dataset.id=id;b.onclick=()=>{cur=id;location.hash=id;render()};tabs.append(b)});
+function edgesFor(keyOf,present,minw){const m=new Map();D.edges.forEach(e=>{const a=keyOf(e.s),b=keyOf(e.d);if(!a||!b||a===b||!present(a)||!present(b))return;const k=a+'>'+b;const o=m.get(k)||{s:a,d:b,w:0,call:0};o.w+=e.call+e.data+e.ref;o.call+=e.call;m.set(k,o)});return[...m.values()].filter(e=>e.w>=minw)}
+function render(){
+ [...tabs.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.id===cur));
+ const minw=+$('#minw').value;$('#minwv').textContent=minw;let html='',edges;
+ if(cur==='overview'){
+  edges=edgesFor(k=>subBox[k]&&subBox[k].id,()=>true,minw);const used=new Set(edges.flatMap(e=>[e.s,e.d]));const hide=$('#hide').checked;
+  html=D.pages.map(([id,t])=>{const bs=D.boxes.filter(b=>b.topic===id&&(!hide||used.has(b.id)));return `<div class="col"><h2>${esc(t)}</h2>${bs.map(b=>`<div class="box nd ${b.kind}" id="n-${esc(b.id)}" data-k="${esc(b.id)}"><h3><span>${esc(b.name)}</span><span class="kind">${b.kind}</span></h3><div class="stat">${stats(b)}</div></div>`).join('')}</div>`}).join('');
+  $('#note').textContent='Edges are summed over all sub-blocks of the two boxes. Raise the slider to keep only the strongest couplings.';
+ }else{
+  const boxes=D.boxes.filter(b=>b.topic===cur);const shown=new Set(boxes.flatMap(b=>b.subs.map(s=>s.key)));
+  edges=edgesFor(k=>k,k=>shown.has(k),Math.max(1,Math.round(minw/3)));
+  const ncol=Math.min(3,Math.max(1,Math.ceil(boxes.length/3)));const cols=Array.from({length:ncol},()=>({h:0,html:''}));
+  boxes.slice().sort((a,b)=>b.subs.length-a.subs.length).forEach(b=>{const c=cols.reduce((m,x)=>x.h<m.h?x:m);c.h+=b.subs.length+1;
+   c.html+=`<section class="box ${b.kind}"><h3><span>${esc(b.name)}</span><span class="kind">${b.kind}</span></h3>${b.subs.map(s=>`<div class="nd" id="n-${esc(s.key)}" data-k="${esc(s.key)}"><div class="t"><span>${esc(s.name||'(whole box)')}</span></div><div class="stat">${stats(s)}</div></div>`).join('')}</section>`});
+  html=cols.map(c=>`<div class="col" style="width:290px">${c.html}</div>`).join('');
+  $('#note').textContent='Edges here are between sub-blocks of this tab only, with a lower threshold than the overview; links to other tabs are in the Overview.';
+ }
+ $('#board').innerHTML=html;requestAnimationFrame(()=>draw(edges));
+}
+function draw(edges){
+ const svg=$('#edges'),board=$('#board'),o=board.getBoundingClientRect();svg.setAttribute('width',board.scrollWidth);svg.setAttribute('height',board.scrollHeight);
+ const R=k=>{const el=document.getElementById('n-'+k);if(!el)return null;const r=el.getBoundingClientRect();return{x:r.left-o.left,y:r.top-o.top,w:r.width,h:r.height}};
+ const nm=k=>{const s=subInfo[k];return s?subBox[k].name+(s.name?' · '+s.name:''):(D.boxes.find(b=>b.id===k)||{name:k}).name};
+ let out='<defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8z" fill="currentColor" style="stroke:none"/></marker></defs><g color="var(--edge)">';
+ const cnt={};
+ edges.forEach((e,i)=>{const a=R(e.s),b=R(e.d);if(!a||!b)return;cnt[e.s]=(cnt[e.s]||0)+1;cnt[e.d]=(cnt[e.d]||0)+1;
+  const right=b.x>a.x+a.w-4,left=b.x+b.w<a.x+4;const y1=a.y+8+((cnt[e.s]*5)%Math.max(10,a.h-14)),y2=b.y+8+((cnt[e.d]*5)%Math.max(10,b.h-14));let x1,x2,c1,c2;
+  if(right){x1=a.x+a.w;x2=b.x;c1=x1+45;c2=x2-45}else if(left){x1=a.x;x2=b.x+b.w;c1=x1-45;c2=x2+45}else{x1=a.x+a.w;x2=b.x+b.w;c1=x1+30+(i%4)*8;c2=x2+30+(i%4)*8}
+  out+=`<path data-s="${esc(e.s)}" data-d="${esc(e.d)}" d="M${x1} ${y1}C${c1} ${y1} ${c2} ${y2} ${x2} ${y2}" stroke-width="${Math.min(6,.6+Math.log2(e.w)*.7)}" marker-end="url(#ah)"><title>${esc(nm(e.s))} → ${esc(nm(e.d))}: ${e.w} uses (${e.call} calls)</title></path>`});
+ svg.innerHTML=out+'</g>';
+}
+$('#board').addEventListener('mouseover',ev=>{const n=ev.target.closest('[data-k]');document.querySelectorAll('.hl').forEach(x=>x.classList.remove('hl'));document.querySelectorAll('svg.edges path.on').forEach(x=>x.classList.remove('on'));if(!n)return;n.classList.add('hl');const k=n.dataset.k;document.querySelectorAll('svg.edges path').forEach(p=>{if(p.dataset.s===k||p.dataset.d===k)p.classList.add('on')})});
+$('#minw').oninput=render;$('#hide').onchange=render;addEventListener('resize',render);addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(ids.includes(h)){cur=h;render()}});
+render();
+</script>

@@ -208,6 +208,7 @@ _Proposed_: Treat tag display as required (CAP-304 intent), parts/individual eve
 
 **<a id='oq-302'>OQ-302</a>: What should the view-window controls do?**
 Z+, Z-, the shift buttons, Follow and the custom double click all go through `xdomainFocus`, which cannot run with the D3 v6 zoom API (BEH-312, BEH-310, BEH-334, DEBT-304). What is the intended behavior to restore: shift by half the visible span, zoom by a factor of 2 around the current frame, Follow recentres on the track window after every frame change, and a double click zooms to the track window around the clicked frame (the current code intent), or should the double click keep d3's default zoom-in (x2 around the pointer)?
+_Status_: Z+, Z- and shift are restored as described (maintainer request, 2026-11-19, DEBT-304); Follow and the double click are not re-verified.
 _Significance_: Determines the target behavior of the view-window API (BEH-312) and what characterization tests can assert.
 _Proposed_: The intended behavior is as the code describes it (shift by half span, zoom by factor around current frame, Follow recentres on the track window); a double click zooms to the track window.
 

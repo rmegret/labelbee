@@ -166,7 +166,7 @@ edge, width 2, class `timeMark out` (dashed, no fill).
 
 A bar above the plot area (y from -15 to 0, group `#videoSpan`, clipped) shows the extent of the loaded
 video: a pale green background (`#f0fff0`) over the plot width, a sky-blue rect with blue stroke from
-`xScale(0)` to `xScale(nframes+1)`, and the video file name (last segment of `videoinfo.name`) as text at
+`xScale(0)` to `xScale(nframes)` (frame f is the interval [f, f+1)), and the video file name (last segment of `videoinfo.name`) as text at
 `xScale(0)+2`. `updateVideoSpan()` is called at each `updateChrono`. The bar and its label have pointer events
 and a crosshair cursor; a click on it is handled as a click above the plot (BEH-331: seek to that
 frame, keep the selected ID).
@@ -179,7 +179,7 @@ frame, keep the selected ID).
 ## BEH-309: Track-window span bar and focus window
 
 A translucent pink bar (`#trackWindowSpan`, opacity 0.4, above the plot area) shows
-`[currentFrame - overlay.trackWindow.backward, currentFrame + overlay.trackWindow.forward]`, i.e. the
+`[currentFrame - overlay.trackWindow.backward, currentFrame + overlay.trackWindow.forward]` (both frames included: the bar ends at `xScale(last + 1)`, so in backward mode it ends at the end of the current frame), i.e. the
 window of the track trail shown in the overlay. It is not clamped to the video bounds. It is updated on
 `videoControl` `frame:changed` and `previewframe:changed`, on axes event `previewframe:trackend`, on overlay event
 `trackWindow:change`, and at each `updateChrono`. Each `frame:changed`/`previewframe:changed` also triggers
@@ -199,7 +199,7 @@ Button `#focusTrackWindow` ("Follow", in the Focus Interval tab; `onClickFocusTr
 `trackWindow:change` event (frame change, window change) repeats the recentring; the button has class `active`.
 The same recentring is available once through `nextSeekFocusWindow()` (arms a one-shot `frame:changed`
 handler, no caller found). The track-window buttons (`shiftTrackWindow`, `scaleTrackWindow`)
-belong to the overlay (CAP-401) but result in this view change. `xdomainFocus` currently throws (DEBT-304).
+belong to the overlay (CAP-401) but result in this view change. `xdomainFocus` threw before the D3 v6 port (DEBT-304, fixed).
 
 - **Group:** CAP-301
 - **Code:**
@@ -232,8 +232,8 @@ Chronogram tab "View:" buttons: step-backward/step-forward (`shiftTimeDomain(-0.
 visible domain by `round(f * span)` frames; `scaleTimeDomain(s)` scales the visible span by `1/s` around the current frame
 if it is visible, else around the center of the view. Both go through `axes.xdomainFocus`, which adds a 10% margin
 (`marginFactor` 1.1 around the new center), limits the scale to the zoom extent and re-applies the transform.
-In the shipped D3 6.2 the zoom object has no `translate()`/`scale()`, so `xdomainFocus` throws a TypeError on
-its first line and these buttons currently have no effect (DEBT-304).
+In the shipped D3 6.2 the zoom object has no `translate()`/`scale()`: `xdomainFocus` threw a TypeError on
+its first line and these buttons had no effect (DEBT-304). Now `xdomainFocus` sets the transform from `xScaleOrig`, Z+/Z- call `zoom.scaleTo` around the current frame (view center if the time bar is outside the view) and shift calls `zoom.translateBy` (`axes.xdomainShift`), all clamped by `onZoom`.
 
 - **Group:** CAP-301
 - **Code:**
@@ -553,7 +553,7 @@ the selection is applied when the new frame loads. If `overlay.opts.clickModeAut
 ## BEH-334: Double click on the chronogram
 
 Handlers: `onAxesDblClick` (event `axes:dblclick` from `chronoGroup` `dblclick`, unless `defaultPrevented`) is meant to zoom on `[frame - backward*1.05, frame + forward*1.05]` (the track window around the clicked frame)
-through `axes.xdomainFocus`. In practice (a) `xdomainFocus` throws (DEBT-304); (b) `d3.zoom` is attached to the same element (`chronoGroup.call(zoom)`) and only its `wheel.zoom` listener is replaced, so
+through `axes.xdomainFocus`. In practice (a) `xdomainFocus` threw before the D3 v6 port (DEBT-304, fixed); (b) `d3.zoom` is attached to the same element (`chronoGroup.call(zoom)`) and only its `wheel.zoom` listener is replaced, so
 d3's own `dblclick.zoom` (zoom in by 2, 0.5 with Shift, with a transition) is still installed next to the custom `dblclick` listener (different namespace; no other `dblclick.zoom` removal exists in `ChronoAxes.js`). Whether the custom handler also runs, and which of the two wins, depends on d3 runtime behavior and was not verified (needs a browser, Phase 1d). Each double click also fires
 two single clicks first (two `gotoEvent` calls).
 
@@ -632,14 +632,12 @@ When RestrictID is active, the visible rows are only the restricted IDs, so Next
 
 ## BEH-340: No keyboard shortcut for chronogram navigation
 
-No key binding in `labelBee.js` calls the chronogram navigation functions (first/previous/next/last event, next/previous ID, zoom). The chronogram is mouse/button only. Ctrl+hover "track frame" preview in the chronogram
-(`injectTrackFrame`: Ctrl + mouse move triggers `previewframe:trackmove` -> `onAxesMoved` -> `videoControl.seekFrame(frame, "preview")`, release returns to the original frame via `endPreview`) is implemented but its
-installation call (`injectTrackFrame(chronoGroup)`) is commented out, so it is inactive, together with its `keydown.trackFrame`/`keyup.trackFrame` handlers on `body`.
+No key binding in `labelBee.js` calls the chronogram navigation functions (first/previous/next/last event, next/previous ID, zoom). The chronogram is mouse/button only. What a drag on the chronogram does is chosen with the Drag button right of Fit (`#chrono-drag-button`, ADR 0011): Pan View (default, d3.zoom pan), Preview Frame (click-drag, touch-drag or Ctrl+hover triggers `previewframe:trackmove` -> `onAxesMoved` -> `videoControl.seekFrame(frame, "preview")`, release returns to the original frame via `endPreview`), or Ignore. The choice is not saved. Wheel, dblclick and two-finger pinch zoom work in every mode.
 
 - **Group:** CAP-305
 - **Origin:** debt
 - **Code:**
-  - `ChronoAxes.js`: `injectTrackFrame`
+  - `ChronoAxes.js`: `setTrackFrame`
   - `ChronoControlInteraction.js`: `onAxesMoved`
   - `ChronoControl.js`: `initChrono`
 - **Links:** DEC-005, OQ-309, DEBT-312

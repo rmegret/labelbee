@@ -69,6 +69,8 @@ function VideoControl(videoTagId) {
   // FIXME: define videoCache as global
   videoCache = new VideoCache(this);
   this.videoCache = videoCache; // make it available from videoControl also
+
+  this.hover = new HoverControl(this); // hover preview queries (cache-preview mode)
 }
 
 
@@ -80,9 +82,13 @@ function VideoControl(videoTagId) {
 function VideoCache(videoControl, videoCacheTagId) {
   let videoCache = this;
   videoCache.opts = {
-    videoCacheSize: 1000
+    videoCacheSize: 1000,
+    decodeTimeoutMs: 15000 // a decode that takes longer is abandoned (failed), the queue goes on
   }
   this.queryQueue = []
+  this.onStatusChanged = null // optional callback, called whenever the cache content or queue changed
+  this.currentQuery = null // query being decoded (state 'inprocess'), not in queryQueue
+  this.failedDecodeFrames = new Set() // keys url:frame whose last decode failed (ADR 0013)
   this.abortFlag = false
   this.preloading = false
   this.video = document.createElement('video');
@@ -147,27 +153,41 @@ VideoCache.prototype.preloadFrames = async function (videoUrl, frames, fps) {
     return
   }
   //this.preloading = true
+  let promises = []
   for (let frame of frames) {
     if (frame < 0) continue
     //let img = await this.getFrameImage(videoUrl, frame, fps)
     console.log('Queueing frame ', frame)
-    this.enqueueFrame(videoUrl, frame, fps)
+    promises.push(this.enqueueFrame(videoUrl, frame, fps))
   }
-  await this.processQueue()
+  this.processQueue()
+  // Done when every requested frame has settled (loaded, failed or cancelled), not when this call returns:
+  // processQueue returns at once if another call is already running the queue
+  await Promise.allSettled(promises)
   console.log('Preload DONE')
   //this.preloading = false
 }
+// Value the promise of a cancelled query is rejected with: `VideoCache.isCanceled(err)`
+VideoCache.CANCELED = Object.freeze({ canceled: true })
+VideoCache.isCanceled = function (err) { return err === VideoCache.CANCELED }
+// Value a regular request is rejected with when the queue is full (ADR 0013)
+VideoCache.QUEUE_FULL = Object.freeze({ queueFull: true })
+VideoCache.isQueueFull = function (err) { return err === VideoCache.QUEUE_FULL }
+
 VideoCache.prototype.cancelQueue = function () {
-  for (query of this.queryQueue) {
-    let videoUrl = query.videoUrl
-    let frame = query.frame
-    let state = this.getFrameState(videoUrl, frame)
-    if (state != "inqueue") continue;
-    this.removeFrame(videoUrl, frame)
-    //query.deferred.reject()
+  for (let query of this.queryQueue) {
+    if (this.getFrameState(query.videoUrl, query.frame) == "inqueue")
+      this.removeFrame(query.videoUrl, query.frame)
+    query.deferred.reject(VideoCache.CANCELED)
   }
   this.queryQueue = []
-  this.processingQueue = false
+  // The decode in flight cannot be killed: flag it and stop waiting for it, its result is thrown away if it ends
+  let current = this.currentQuery
+  if (current) {
+    current.cancelled = true
+    this.removeFrame(current.videoUrl, current.frame)
+    current.abandon(VideoCache.CANCELED) // the queue does not wait for it: a decode that hangs cannot block it
+  }
   this.updateStatus()
 }
 VideoCache.prototype.resetCache = function () {
@@ -181,6 +201,7 @@ VideoCache.prototype.updateStatus = function () {
   let cacheUsed = this.lrucache.size
   let cacheSize = this.opts.videoCacheSize
   let status = $('#cache-status').html(`${cacheUsed}/${cacheSize},Q${queueSize}`)
+  if (this.onStatusChanged) this.onStatusChanged() // set only while the chronogram cache status is shown
 }
 
 // Only two functions supposed to interact with lrucache
@@ -212,29 +233,50 @@ VideoCache.prototype.removeFrame = function (videoUrl, frame) {
   let key = videoUrl + ':' + frame
   this.lrucache.remove(key)
 }
+// Regular request (preload): a new frame goes at the back, a known frame is left as it is
 VideoCache.prototype.enqueueFrame = async function (videoUrl, frame, fps) {
+  return this._enqueue(videoUrl, frame, fps, false)
+}
+// Priority request (hover, display of the current frame): a new frame goes at the front,
+// a frame waiting in the queue moves to the front; a frame in process or in cache is left as it is
+VideoCache.prototype.enqueueFramePriority = async function (videoUrl, frame, fps) {
+  return this._enqueue(videoUrl, frame, fps, true)
+}
+VideoCache.prototype._enqueue = function (videoUrl, frame, fps, priority) {
   let key = videoUrl + ':' + frame
 
-  let state = this.getFrameState(videoUrl, frame)
   let item = this.lrucache.get(key)
-  if (state == 'incache') {
-    console.log('videoCache.enqueueFrame: incache ', key)
+  if (item) {
+    if (priority && item.state == 'inqueue') {
+      let i = this.queryQueue.findIndex((q) => q.key === key)
+      if (i > 0) this.queryQueue.unshift(this.queryQueue.splice(i, 1)[0])
+    }
+    console.log('videoCache.enqueue: already ' + item.state, key)
     return item.promise
   }
-  if (state == 'inqueue') {
-    console.log('videoCache.enqueueFrame: inqueue ', key)
-    return item.promise
+  // The queue never holds more frames than the cache: a priority request makes room, a regular one fails
+  if (this.queryQueue.length >= this.opts.videoCacheSize) {
+    if (!priority || this.queryQueue.length === 0) {
+      console.log('videoCache.enqueue: queue full, rejected', key)
+      return Promise.reject(VideoCache.QUEUE_FULL)
+    }
+    let dropped = this.queryQueue.pop()
+    this.removeFrame(dropped.videoUrl, dropped.frame)
+    dropped.deferred.reject(VideoCache.CANCELED)
+    console.log('videoCache.enqueue: queue full, dropped', dropped.key)
   }
-  console.log('videoCache.enqueueFrame: Pushing ', key)
+  console.log('videoCache.enqueue: Pushing ', key, priority ? '(priority)' : '')
   let D = $.Deferred()
   this.setFrameState(videoUrl, frame, 'inqueue', undefined, D.promise())
 
-  this.queryQueue.push({ videoUrl: videoUrl, frame: frame, fps: fps, key:key, deferred: D })
+  let query = { videoUrl: videoUrl, frame: frame, fps: fps, key: key, deferred: D, cancelled: false, abandon: null }
+  if (priority) this.queryQueue.unshift(query)
+  else this.queryQueue.push(query)
   this.updateStatus()
   return D.promise()
 }
 VideoCache.prototype.getFrameImageAsync = async function (videoUrl, frame, fps) {
-  let promise = this.enqueueFrame(videoUrl, frame, fps)
+  let promise = this.enqueueFramePriority(videoUrl, frame, fps)
   this.processQueue()
   return promise
 }
@@ -261,15 +303,43 @@ VideoCache.prototype.processQueue = async function (force) {
         console.log('VideoCache.processQueue: abortFlag==true. ABORTED')
         return
       }
-      let query = this.queryQueue[0]
+      let query = this.queryQueue.shift()
       let key = query.key
+      this.currentQuery = query
+      this.setFrameState(query.videoUrl, query.frame, 'inprocess', undefined, query.deferred.promise())
+      this.updateStatus()
       console.log('VideoCache.processQueue: processing',key,query)
-      let image = await this.getImageForce(query.videoUrl, query.frame, query.fps)
-      let item = { 'state': 'incache', 'image': image, 'promise': query.deferred.promise() }
-      this.lrucache.set(key, item)
-      console.log('videoCache.processQueue: resolve ', key)
-      query.deferred.resolve(image)
-      this.queryQueue.shift()
+      // The decode cannot be killed, but the queue stops waiting for it when it is cancelled or too slow
+      let timer
+      let abandoned = new Promise((resolve, reject) => {
+        query.abandon = reject
+        timer = setTimeout(() => reject(new Error('decode timeout')), this.opts.decodeTimeoutMs)
+      })
+      let decoding = this.getImageForce(query.videoUrl, query.frame, query.fps)
+      decoding.catch(() => {}) // if abandoned, a later failure is not an error
+      try {
+        let image = await Promise.race([decoding, abandoned])
+        if (query.cancelled) {
+          query.deferred.reject(VideoCache.CANCELED) // result thrown away (entry already removed by cancelQueue)
+        } else {
+          this.lrucache.set(key, { 'state': 'incache', 'image': image, 'promise': query.deferred.promise() })
+          this.failedDecodeFrames.delete(key)
+          console.log('videoCache.processQueue: resolve ', key)
+          query.deferred.resolve(image)
+        }
+      } catch (err) {
+        if (query.cancelled) {
+          query.deferred.reject(VideoCache.CANCELED)
+        } else {
+          console.error('VideoCache.processQueue: decode failed', key, err)
+          this.removeFrame(query.videoUrl, query.frame)
+          this.failedDecodeFrames.add(key)
+          query.deferred.reject(err)
+        }
+      } finally {
+        clearTimeout(timer)
+        this.currentQuery = null
+      }
 
       this.updateStatus()
       console.log('Sleeping...')
@@ -357,53 +427,41 @@ VideoCache.prototype.seekToFrame = async function (videoUrl, frame, fps) {
   });
 }
 VideoCache.prototype.seekWithCallback = async function (videoUrl, frame, fps, frameCallback) {
-  return new Promise(async (resolve, reject) => {
+  let video = this.video
 
-    // fully download it first (no buffering):
-    //let videoBlob = await fetch(videoUrl).then(r => r.blob());
-    //let videoObjectUrl = URL.createObjectURL(videoBlob);
-    let video = this.video
+  if (video.currentSrc != videoUrl)
+    video.src = videoUrl;
 
-    let seekResolve;
-    let seeked = async function (now, metadata) {
-      //console.log('seeked mediaTime*fps=',metadata.mediaTime*fps)
+  // Wait for the first frame of a newly loaded video (readyState >= 2) rather than a blind sleep and a random seek
+  if (video.readyState < 2) {
+    await new Promise((resolve, reject) => {
+      let cleanup = () => {
+        video.removeEventListener('loadeddata', onLoaded)
+        video.removeEventListener('error', onError)
+      }
+      let onLoaded = () => { cleanup(); resolve() }
+      let onError = () => { cleanup(); reject(new Error('VideoCache: video failed to load ' + videoUrl)) }
+      video.addEventListener('loadeddata', onLoaded)
+      video.addEventListener('error', onError)
+    })
+  }
+
+  let currentTime = frame / fps + 0.00001;
+
+  if (Math.abs(video.currentTime - currentTime) < 0.00005) {
+    console.log('videoCache.seekWithCallback: already at currentTime. RESOLVE', currentTime)
+    return video
+  }
+  // The one-shot callback is registered right before the seek: nothing else can use it up (e.g. the first frame
+  // presented after the load), which left the seek of the first query waiting for ever
+  await new Promise((resolve) => {
+    video.requestVideoFrameCallback((now, metadata) => {
       frameCallback(now, metadata)
-      if (seekResolve) seekResolve();
-    }
-    let cbHandle = video.requestVideoFrameCallback(seeked);
-
-    if (video.currentSrc != videoUrl)
-      video.src = videoUrl;
-
-    // workaround chromium metadata bug (https://stackoverflow.com/q/38062864/993683)
-    //while 
-    if ((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
-      console.log('videoCache.seekWithCallback: duration workaround')
-      await new Promise(r => setTimeout(r, 1000));
-      video.currentTime = 10000000 * Math.random();
-    }
-    // Just reject instead of trying too hard
-    if ((video.duration === Infinity || isNaN(video.duration)) && video.readyState < 2) {
-      console.log('videoCache.seekWithCallback: duration workaround ABORTED')
-      video.cancelVideoFrameCallback(cbHandle)
-      reject()
-      return
-    }
-    let duration = video.duration;
-
-    let frames = [];
-    let interval = 1 / fps;
-    let currentTime = frame / fps + 0.00001;
-
-    if (Math.abs(video.currentTime-currentTime)<0.00005) {
-      console.log('videoCache.seekToFrame: already at currentTime. RESOLVE',currentTime)
-      resolve(video);
-    } else {
-      video.currentTime = currentTime;
-      await new Promise(r => seekResolve = r);
-      resolve(video);
-    }
-  });
+      resolve()
+    })
+    video.currentTime = currentTime
+  })
+  return video
 }
 VideoCache.prototype.getFrameCropDataURL = async function (videoUrl, frame, fps, crop) {
   if (this.abortFlag) {
@@ -576,6 +634,7 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
     }
   } else if (useFastSeek == "end-preview") {
     if (this.currentMode == "cache-preview") {
+      this.hover.end();
       this.currentMode = this.savedMode;
       if (frame==-1) frame = this.savedFrame;
       console.log("videoControl.seekFrame: end-preview, come back to mode", this.savedMode, 
@@ -599,29 +658,20 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
     if (logging.frameEvents)
       console.log("videoControl.seekFrame: CACHE, f=", frame);
     this.videoCache.getFrameImageAsync(this.video.src, frame + videoinfo.frameoffset, videoinfo.videofps)
-      .catch((err) => { console.error('videoControl.seekFrame getFrameImageAsync ERROR',err); })
       .then((img) => {
+        if (this.cacheRequestedFrame !== frame) return // stale answer: a newer frame was requested since
         this.cacheImage = img
         this.cacheFrame = frame
         this.onFrameChangedCache()
-      }
-      );
+      }, (err) => {
+        // cancelled: nobody waits for this frame any more
+        if (!VideoCache.isCanceled(err)) console.error('videoControl.seekFrame getFrameImageAsync ERROR',err)
+      });
   } else if (this.currentMode == "cache-preview") {
     this.cacheRequestedFrame = frame;
-    //this.currentMode = "cache";
     if (logging.frameEvents)
       console.log("videoControl.seekFrame: CACHE PREVIEW, f=", frame);
-    this.videoCache.enqueueFrame(this.video.src, frame + videoinfo.frameoffset, videoinfo.videofps)
-    this.videoCache.processQueue()
-    let img = this.videoCache.getFrameImageSync(this.video.src, frame + videoinfo.frameoffset)
-    if (img) {
-      this.cacheImage = img
-      this.cacheFrame = frame
-      this.onFrameChangedCachePreview()
-    } else {
-      if (logging.frameEvents)
-        console.log("videoControl.seekFrame: CACHE PREVIEW, invalid image", img);
-    }
+    this.hover.query(frame); // shows the frame when available, if still hovered then
   } else if (this.currentMode == "preview") {
     this.previewFrame = frame;
     //this.currentMode = "preview";

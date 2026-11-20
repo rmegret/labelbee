@@ -122,14 +122,10 @@ function ChronoAxes(parent, videoinfo, options) {
 
   function xdomainFocus(domain, marginFactor) {
     if (!arguments.length) return xScale.domain();
-    let oldT = zoom.translate();
-    let oldS = zoom.scale();
-
-    // Get to basic zoom first to get original domain
-    zoom.translate([0, 0]); // [DX,DY]
-    zoom.scale(1);
-    let xdomain = xScale.domain();
-    let xrange = xScale.range();
+    // d3 v6 zoom: the view is the transform of chronoGroup (xScale = transform.rescaleX(xScaleOrig))
+    const orig = axes.xScaleOrig;
+    const origDomain = orig.domain();
+    const origRange = orig.range();
 
     let x0 = domain[0],
       x1 = domain[1];
@@ -141,41 +137,31 @@ function ChronoAxes(parent, videoinfo, options) {
     x0 = (x0 - c) * marginFactor + c;
     x1 = (x1 - c) * marginFactor + c;
 
-    let S = (xdomain[1] - xdomain[0]) / (x1 - x0);
-    if (S > zoom.scaleExtent()[1]) {
-      S = zoom.scaleExtent()[1];
-      x0 = c - (0.5 * (xdomain[1] - xdomain[0])) / S;
-      x1 = c + (0.5 * (xdomain[1] - xdomain[0])) / S;
-    }
+    // Same limits as the wheel zoom: keep the center, limit the scale
+    let k = (origDomain[1] - origDomain[0]) / (x1 - x0);
+    const extent = zoom.scaleExtent();
+    k = Math.max(extent[0], Math.min(extent[1], k));
+    x0 = c - (0.5 * (origDomain[1] - origDomain[0])) / k;
 
-    let S0 = (xdomain[1] - xdomain[0]) / (xrange[1] - xrange[0]);
-    let T = (-S * x0) / S0;
-
-    zoom.translate([T, 0]); // [DX,DY]
-    zoom.scale(S);
-
-    if (isNaN(xScale.domain()[0])) {
-      console.log("xdomainFocus: ERROR, failed to zoom X axis scale");
-      zoom.translate(oldT);
-      zoom.scale(oldS);
-      //xScale.domain(xdomain); // Reset
-    }
-    refreshAxes({ type: "xDomainChanged", domain: domain });
+    // Pixel of x0 must be the left of the range: k * orig(x0) + tx = range[0]
+    const tx = origRange[0] - k * orig(x0);
+    // Fires onZoom (x clamped, xScale updated, axes redrawn, "axes:changed")
+    chronoGroup.call(zoom.transform, d3.zoomIdentity.translate(tx, 0).scale(k));
     return axes; // return itself to be able to chain commands
   }
   function xdomainScale(scale, center) {
-    let xdomain = xScale.domain(); // Current domain
-    let x0 = xdomain[0],
-      x1 = xdomain[1];
-
-    if (typeof center == "undefined") center = (x1 + x0) / 2;
-
-    x0 = (x0 - center) / scale + center;
-    x1 = (x1 - center) / scale + center;
-
-    xdomainFocus([x0, x1]);
-
+    // Like a pinch: zoom.scaleTo around the pixel of `center` (default: view center); onZoom clamps as for any gesture
+    const domain = xScale.domain();
+    if (typeof center == "undefined") center = (domain[0] + domain[1]) / 2;
+    const k = d3.zoomTransform(chronoGroup.node()).k * scale;
+    chronoGroup.call(zoom.scaleTo, k, [xScale(center), 0]);
     return axes; // return itself to be able to chain commands
+  }
+  function xdomainShift(frames) {
+    // Like a pan with a fixed value (zoom.translateBy is in unzoomed pixels)
+    const d = axes.xScaleOrig.domain(), r = axes.xScaleOrig.range();
+    chronoGroup.call(zoom.translateBy, (-frames * (r[1] - r[0])) / (d[1] - d[0]), 0);
+    return axes;
   }
   function xdomainCenter(frame) {
     let xdomain = xScale.domain(); // Current domain
@@ -200,6 +186,7 @@ function ChronoAxes(parent, videoinfo, options) {
   axes.ydomain = ydomain;
   axes.xdomainFocus = xdomainFocus;
   axes.xdomainScale = xdomainScale;
+  axes.xdomainShift = xdomainShift;
   axes.xdomainCenter = xdomainCenter;
   axes.starttime = starttime;
   axes.fps = fps;
@@ -622,7 +609,8 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("height", axes.yScale.bandwidth())
         .style("fill", "#ffffff")
         .style("stroke", "#008000")
-        .style("stroke-width", "2px");
+        .style("stroke-width", "2px")
+        .style("pointer-events", "none"); // purely visual: the plot background keeps the gestures (empty chrono: it covers all)
     }
   }
   axes.refreshIdSelection = refreshIdSelection;
@@ -635,11 +623,13 @@ function ChronoAxes(parent, videoinfo, options) {
     var timeMark = parent.append("rect").attr("class", "timeMark");
     // For timeMark style, look at custom.css
     timeMark.frame = 0; // Store current frame inside timeMark object
+    timeMark.state = null; // null, "preview" (green: a loaded frame is shown) or "pending" (orange dashed: none yet)
     axes.timeMark = timeMark;
     refreshTimeMark();
   }
   function refreshTimeMark() {
     let frame = axes.timeMark.frame;
+    let stateClass = axes.timeMark.state ? " " + axes.timeMark.state : "";
     let isOut = false;
     if (frame <= axes.xScale.domain()[0] - 1) {
       frame = axes.xScale.domain()[0];
@@ -654,7 +644,7 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("y", 0)
         .attr("width", 2)
         .attr("height", axes.height())
-        .attr("class", "timeMark out");
+        .attr("class", "timeMark out" + stateClass);
     } else {
       let w = axes.xScale(1) - axes.xScale(0.0);
       let minW = 1;
@@ -664,7 +654,7 @@ function ChronoAxes(parent, videoinfo, options) {
         .attr("y", 0) // In plotArea translated coordinates
         .attr("width", isThin ? minW + 2 : w + 2)
         .attr("height", axes.height())
-        .attr("class", isThin ? "timeMark thin" : "timeMark");
+        .attr("class", (isThin ? "timeMark thin" : "timeMark") + stateClass);
     }
   }
   function setTimeMark(frame) {
@@ -677,7 +667,12 @@ function ChronoAxes(parent, videoinfo, options) {
     axes.timeMark.frame = frame;
     refreshTimeMark();
   }
+  function setTimeMarkState(state) {
+    axes.timeMark.state = state;
+    refreshTimeMark();
+  }
   // timeMark Exports
+  axes.setTimeMarkState = setTimeMarkState;
   // axes.timeMark = timeMark // Private
   axes.setTimeMark = setTimeMark;
 
@@ -704,6 +699,15 @@ function ChronoAxes(parent, videoinfo, options) {
       const nextZoom = currentZoom * Math.pow(2, -event.deltaY * axes.mousewheelSpeed);
       zoom.scaleTo(chronoGroup, nextZoom, d3.pointer(event));
     });
+  // Touch (Android): d3.zoom sets touch-action on chronoGroup, but it only applies to the root <svg>. Without it the
+  // browser takes the touch for a scroll or a page pinch-zoom (pan stops after one step, pinch scales the page)
+  (function () {
+    const box = chronoGroup.node().ownerSVGElement;
+    if (box && box.style) box.style.touchAction = "none";
+    chronoGroup.node().addEventListener("contextmenu", function (e) {
+      if (e.pointerType === "touch") e.preventDefault(); // long press on a still finger
+    });
+  })();
   reinitZoom();
   function onZoom(event) {
     if (logging.axesEvents) console.log("zoomed", event);
@@ -849,6 +853,38 @@ function ChronoAxes(parent, videoinfo, options) {
   }
   axes.getFrameFromEvent = getFrameFromEvent
 
+  // d3.zoom filter: d3's default, except that mouse/one-finger drags only pan while panDrag is on
+  var panDrag = true;
+  zoom.filter(function (event) {
+    var ok = (!event.ctrlKey || event.type === "wheel") && !event.button; // d3 default
+    if (panDrag) return ok;
+    if (event.type === "mousedown") return false;
+    if (event.type === "touchstart") return ok && event.touches.length >= 2; // pinch only
+    return ok;
+  });
+
+  // Narrow interface for the drag modes (ChronoDragControl, ADR 0011): they see the chronogram only through it
+  axes.dragTarget = {
+    element: chronoGroup.node(), // where modes add their listeners
+    // {frame, id} under a pointer event, or null outside the plot area or the frame domain
+    hit: function (event) {
+      var coords = d3.pointer(event, chronoGroup.node());
+      var xr = xScale.range(), yr = yScale.range(), domain = xScale.domain();
+      if (coords[0] < xr[0] || coords[0] > xr[1] || coords[1] < yr[0] || coords[1] > yr[1]) return null;
+      var frame = Math.round(xScale.invert(coords[0]));
+      if (frame < domain[0] || frame > domain[1]) return null;
+      return { frame: frame, id: invertYScale(coords[1]) };
+    },
+    // Does a one-pointer drag pan the view (d3.zoom)? Wheel, dblclick and two-finger pinch always work.
+    setPan: function (enabled) {
+      panDrag = !!enabled;
+    },
+    // Same jQuery events on `axes` as before: previewframe:trackmove / previewframe:trackend
+    emit: function (name, props) {
+      $(axes).trigger($.extend({ type: "previewframe:" + name }, props));
+    },
+  };
+
   function onAxesClick(event) {
     //if (typeof axes.onClick == 'undefined') return;
     if (event.defaultPrevented) return;
@@ -912,115 +948,6 @@ function ChronoAxes(parent, videoinfo, options) {
   }
   chronoGroup.on("dblclick", onAxesDblClick);
 
-  //injectTrackFrame(chronoGroup);
-  function injectTrackFrame(target) {
-    chronoGroup.on("mouseenter.trackFrame", trackFrame_mouseEnter);
-    chronoGroup.on("mouseleave.trackFrame", trackFrame_mouseLeave);
-    var mouseCache = [undefined, undefined];
-    function trackFrame_mouseEnter(event) {
-      if (logging.mouseMoveEvents) console.log("trackFrame_mouseEnter");
-      d3.select("body").on("keydown.trackFrame", trackFrame_keyDown);
-      chronoGroup.on("mousemove", trackFrame_mouseMove);
-      var coords = d3.pointer(event, axes.chronoGroup.node());
-      mouseCache[0] = coords[0];
-      mouseCache[1] = coords[1];
-    }
-    function trackFrame_mouseLeave(event) {
-      if (logging.mouseMoveEvents) console.log("trackFrame_mouseLeave");
-      d3.select("body").on("keydown.trackFrame", null); // callback off
-      //d3.select("body").on('keyup.trackFrame',null) // callback off
-      chronoGroup.on("mousemove", null);
-      $(axes).trigger("previewframe:trackend"); // jQuery callback
-    }
-    function trackFrame_keyDown(event) {
-      if (logging.mouseMoveEvents)
-        console.log("trackFrame_keyDown", event);
-      if (event.ctrlKey) {
-        // Register mousemove is not already done
-
-        d3.select("body").on("keydown.trackFrame", null); // Callback off
-        d3.select("body").on("keyup.trackFrame", trackFrame_keyUp);
-
-        if (logging.mouseMoveEvents)
-          console.log("Started mousemove tracking in chronogram");
-
-        trackFrame_change();
-      }
-    }
-    function trackFrame_keyUp(event) {
-      if (logging.mouseMoveEvents)
-        console.log("trackFrame_keyDown", event);
-      if (!event.ctrlKey) {
-        //axes.trackFrame_on = false;
-
-        d3.select("body").on("keydown.trackFrame", trackFrame_keyDown);
-        d3.select("body").on("keyup.trackFrame", null);
-
-        if (logging.mouseMoveEvents)
-          console.log("Stopped mousemove tracking in chronogram");
-
-        $(axes).trigger("previewframe:trackend"); // jQuery callback
-      }
-    }
-    function trackFrame_mouseMove(event) {
-      var coords = d3.pointer(event, chronoGroup.node());
-      mouseCache[0] = coords[0];
-      mouseCache[1] = coords[1];
-
-      if (!event.ctrlKey) {
-        //console.log('trackFrame_mouseMove: runaway call')
-        //chronoGroup.on("mousemove", null);
-        //axes.trackFrame_on = false;
-        return;
-      }
-      //if (typeof axes.onClick == 'undefined') return;
-      if (event.defaultPrevented) return;
-
-      trackFrame_change();
-    }
-    function trackFrame_change(event) {
-      var coords = mouseCache;
-      if (
-        coords[0] < axes.xScale.range()[0] ||
-        coords[0] > axes.xScale.range()[1] ||
-        coords[1] < axes.yScale.range()[0] ||
-        coords[1] > axes.yScale.range()[1]
-      ) {
-        if (logging.mouseMoveEvents)
-          console.log(
-            "trackFrame_change: outside of axes range, ignoring. coords=",
-            coords
-          );
-        return;
-      }
-
-      var frame = Math.round(xScale.invert(coords[0]));
-
-      let domain = axes.xScale.domain();
-      if (frame < domain[0] || frame > domain[1]) {
-        if (logging.mouseMoveEvents)
-          console.log(
-            "trackFrame_change: f=" + frame + " out of bound. Ignoring."
-          );
-        return;
-      }
-
-      if (typeof glob_offset === "undefined") glob_offset = 0;
-      //frame = Math.round(frame/40)*40+glob_offset
-
-      var id = invertYScale(coords[1]);
-
-      if (logging.mouseMoveEvents)
-        console.log("trackFrame_change: frame=", frame, " id=", id);
-
-      $(axes).trigger({
-        type: "previewframe:trackmove",
-        frame: frame,
-        id: id,
-        mouseevent: event,
-      }); // jQuery callback
-    }
-  }
 
   return axes;
 
