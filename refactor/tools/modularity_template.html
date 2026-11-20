@@ -1,0 +1,104 @@
+<title>LabelBee Modularity Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: topic tabs; per tab a row of box columns; each box = sub-blocks with 3 interface groups; edge overlay on top. */
+:root{--bg:#f6f7f8;--panel:#fff;--fg:#1d2328;--mute:#5d6872;--line:#d3d9de;--ro:#1f6f8b;--ro-bg:#e3f1f6;--in:#a15c07;--in-bg:#fbeedb;--rw:#6a3fa0;--rw-bg:#eee6f8;--red:#c62828;--edge:#2b3a46;--hl:#fff3b0;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14181c;--panel:#1c2227;--fg:#e4e9ed;--mute:#97a3ad;--line:#35404a;--ro:#7cc4dd;--ro-bg:#183440;--in:#f0b45f;--in-bg:#3a2b12;--rw:#c4a1ef;--rw-bg:#2d2140;--red:#ff6b6b;--edge:#aebdc9;--hl:#5a4d00;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14181c;--panel:#1c2227;--fg:#e4e9ed;--mute:#97a3ad;--line:#35404a;--ro:#7cc4dd;--ro-bg:#183440;--in:#f0b45f;--in-bg:#3a2b12;--rw:#c4a1ef;--rw-bg:#2d2140;--red:#ff6b6b;--edge:#aebdc9;--hl:#5a4d00;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:13px/1.4 var(--sans);padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:12px}
+h1{font-size:18px;margin:0 0 2px}
+.sub{color:var(--mute);margin:0 0 8px;max-width:110ch}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+nav button{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--fg);padding:5px 10px;border-radius:4px;cursor:pointer}
+nav button[aria-selected=true]{background:var(--fg);color:var(--bg)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;color:var(--mute);margin:6px 0 10px}
+.legend label{display:flex;gap:6px;align-items:center}
+.chip{display:inline-block;font:11.5px var(--mono);padding:1px 5px;margin:1px 2px 1px 0;border-radius:3px;white-space:nowrap}
+.ro{background:var(--ro-bg);color:var(--ro)}.in{background:var(--in-bg);color:var(--in)}.rw{background:var(--rw-bg);color:var(--rw)}
+.chip sup{font-size:9px;opacity:.8}
+.wrap{position:relative;overflow-x:auto;padding-bottom:8px}
+.board{position:relative;display:flex;gap:70px;align-items:flex-start;min-width:min-content}
+.col{display:flex;flex-direction:column;gap:14px;width:292px;flex:none}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.box>h3{margin:0;padding:6px 9px;font-size:13px;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line)}
+.box.class>h3{background:var(--ro-bg)}.box.file>h3,.box.html>h3{background:var(--in-bg)}.box.module>h3{background:var(--rw-bg)}
+.kind{font:10.5px var(--mono);color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+.sb{padding:6px 9px;border-top:1px dashed var(--line)}
+.sb:first-of-type{border-top:0}
+.sb.hl{background:var(--hl)}
+.sb h4{margin:0 0 3px;font-size:11.5px;color:var(--mute);font-weight:600}
+.g{margin:2px 0}.g b{font:10px var(--mono);margin-right:4px;color:var(--mute)}
+.int{color:var(--mute);font:11px var(--mono)}
+.red{color:var(--red);font:11px/1.35 var(--mono);margin-top:3px}
+.red div{margin:1px 0}
+svg.edges{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+svg.edges path{fill:none;stroke:var(--edge);opacity:.45}
+svg.edges path.d{stroke-dasharray:4 3}
+svg.edges path.on{opacity:1;stroke:var(--red)}
+svg.edges text{font:10px var(--mono);fill:var(--edge);paint-order:stroke;stroke:var(--bg);stroke-width:3px}
+.note{color:var(--mute);margin-top:10px;max-width:110ch}
+</style>
+<h1>LabelBee modularity map</h1>
+<p class="sub">One box per class, one per classic script (all its globals and global functions) or ES module. Big files are split into sub-blocks by concern. Facts come from a static scan of __NUNITS__ functions and variables (refactor/tools/modularity_scan.js, modularity_build.js).</p>
+<nav id="tabs" role="tablist"></nav>
+<div class="legend">
+ <span><span class="chip ro">read-only</span> read, or a getter that writes nothing</span>
+ <span><span class="chip in">write / input</span> command, setter, signal slot ⚡</span>
+ <span><span class="chip rw">read / write</span> written from outside</span>
+ <span class="red">red: global variables of another box, and calls / calledBy not drawn</span>
+ <span>name<sup>n</sup>: n boxes use it from outside</span>
+ <label>min edge weight <input id="minw" type="range" min="1" max="30" value="6"><span id="minwv">6</span></label>
+ <label><input id="showint" type="checkbox"> internal members</label>
+</div>
+<div class="wrap" id="wrap"><div class="board" id="board"></div><svg class="edges" id="edges"></svg></div>
+<p class="note">Members used by no other box are internal. A chip is classified from how other boxes use it: fields and variables written elsewhere are read / write, functions that write state or fill signals are write / input, getters and value-returning functions are read-only. Edges: solid = calls, dashed = reads or writes of data; hover a block to light its edges red. Calls to other tabs are listed in red inside each block.</p>
+<script>
+const D=__DATA__;
+const $=(s,r=document)=>r.querySelector(s);const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const subInfo={};
+D.boxes.forEach(b=>b.subs.forEach(s=>{subInfo[s.key]={box:b,sub:s}}));
+const label=k=>{const i=subInfo[k];return i?(i.box.name+(i.sub.name?' · '+i.sub.name:'')):k};
+let cur=(location.hash||'#'+D.pages[0][0]).slice(1);if(!D.pages.some(p=>p[0]===cur))cur=D.pages[0][0];
+const tabs=$('#tabs');D.pages.forEach(([id,t])=>{const n=D.boxes.filter(b=>b.topic===id).length;const b=document.createElement('button');b.textContent=t+' ('+n+')';b.setAttribute('role','tab');b.dataset.id=id;b.onclick=()=>{cur=id;location.hash=id;render()};tabs.append(b)});
+function chips(a,c){return a.map(m=>`<span class="chip ${c}" title="${esc(m.k)}${m.l?' line '+m.l:''} · ${m.c} box(es), ${m.u} unit(s) use it${m.imp?' · implicit global':''}">${esc(m.n)}${m.sig?'⚡':''}${m.c>1?'<sup>'+m.c+'</sup>':''}</span>`).join('')}
+function render(){
+ [...tabs.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.id===cur));
+ const minw=+$('#minw').value;$('#minwv').textContent=minw;const showint=$('#showint').checked;
+ const boxes=D.boxes.filter(b=>b.topic===cur);
+ const shown=new Set(boxes.flatMap(b=>b.subs.map(s=>s.key)));
+ const drawn=D.edges.filter(e=>shown.has(e.s)&&shown.has(e.d)&&e.call+e.data+e.ref>=minw);
+ const drawnKey=new Set(drawn.map(e=>e.s+'>'+e.d));
+ const ncol=Math.min(4,Math.max(1,Math.ceil(boxes.length/2)));const cols=Array.from({length:ncol},()=>({h:0,html:''}));
+ const weight=b=>b.subs.reduce((x,s)=>x+s.units+s.ro.length+s.in.length+s.rw.length,0);
+ boxes.slice().sort((a,b)=>weight(b)-weight(a)).forEach(b=>{
+  const c=cols.reduce((m,x)=>x.h<m.h?x:m);let h=30;
+  const body=b.subs.map(s=>{
+   const nm=s.name?`<h4>${esc(s.name)}<span class="int"> · ${s.units} fn, ${s.lines} ln</span></h4>`:'';
+   const g=(k,l,cl)=>s[k].length?`<div class="g"><b>${l}</b>${chips(s[k],cl)}</div>`:'';
+   const out=s.calls.filter(([k])=>!drawnKey.has(s.key+'>'+k)).sort((a,b)=>b[1]-a[1]);
+   const inn=s.calledBy.filter(([k])=>!drawnKey.has(k+'>'+s.key)).sort((a,b)=>b[1]-a[1]);
+   const rl=(a,sym)=>a.length?`<div>${sym} ${a.slice(0,6).map(([k,w])=>esc(label(k))+' ('+w+')').join('; ')}${a.length>6?'; +'+(a.length-6)+' more':''}</div>`:'';
+   const gl=s.redGlobals.length?`<div>globals: ${s.redGlobals.map(g=>esc(g.n)+(g.r?' r'+g.r:'')+(g.w?' w'+g.w:'')).join(', ')}</div>`:'';
+   h+=30+(s.ro.length+s.in.length+s.rw.length)*6+(s.redGlobals.length+Math.min(6,out.length)+Math.min(6,inn.length))*9;
+   const it=s.internal.length?(showint?`<div class="int">internal: ${esc(s.internal.join(', '))}</div>`:`<div class="int">+${s.internal.length} internal</div>`):'';
+   return `<div class="sb" id="sb-${esc(s.key)}" data-k="${esc(s.key)}">${nm}${g('ro','RO','ro')}${g('in','IN','in')}${g('rw','RW','rw')}${it}<div class="red">${gl}${rl(out,'calls →')}${rl(inn,'← calledBy')}</div></div>`}).join('');
+  c.h+=h;c.html+=`<section class="box ${b.kind}"><h3><span>${esc(b.name)}</span><span class="kind">${b.kind}</span></h3>${body}</section>`});
+ $('#board').innerHTML=cols.map(c=>`<div class="col">${c.html}</div>`).join('');
+ requestAnimationFrame(()=>drawEdges(drawn));
+}
+function drawEdges(drawn){
+ const wrap=$('#wrap'),svg=$('#edges'),board=$('#board'),W=board.scrollWidth,H=board.scrollHeight;const o=board.getBoundingClientRect();
+ svg.setAttribute('width',W);svg.setAttribute('height',H);
+ const R=k=>{const el=document.getElementById('sb-'+k);if(!el)return null;const r=el.getBoundingClientRect();return{x:r.left-o.left,y:r.top-o.top,w:r.width,h:r.height}};
+ let out='<defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="currentColor" style="stroke:none"/></marker></defs><g color="var(--edge)">';
+ drawn.forEach((e,i)=>{const a=R(e.s),b=R(e.d);if(!a||!b)return;const w=e.call+e.data+e.ref;
+  const right=b.x>a.x+a.w-4,left=b.x+b.w<a.x+4;let x1,x2,c1,c2;const y1=a.y+Math.min(a.h/2,16+(i%6)*5),y2=b.y+Math.min(b.h/2,16+(i%6)*5);
+  if(right){x1=a.x+a.w;x2=b.x;c1=x1+40;c2=x2-40}else if(left){x1=a.x;x2=b.x+b.w;c1=x1-40;c2=x2+40}else{x1=a.x+a.w;x2=b.x+b.w;c1=x1+30+(i%4)*8;c2=x2+30+(i%4)*8}
+  const lab='';
+  out+=`<path class="${e.call>=e.data?'':'d'}" data-s="${esc(e.s)}" data-d="${esc(e.d)}" d="M${x1} ${y1}C${c1} ${y1} ${c2} ${y2} ${x2} ${y2}" stroke-width="${Math.min(4,.6+Math.log2(w)*.5)}" marker-end="url(#ah)"><title>${esc(label(e.s))} → ${esc(label(e.d))}\n${e.call} calls, ${e.data} data, ${e.ref} refs\n${esc(e.top.map(t=>t[0]+'×'+t[1]).join(', '))}</title></path>${lab}`});
+ svg.innerHTML=out+'</g>';
+}
+$('#board').addEventListener('mouseover',ev=>{const sb=ev.target.closest('.sb');document.querySelectorAll('.sb.hl').forEach(x=>x.classList.remove('hl'));document.querySelectorAll('svg.edges path.on').forEach(x=>x.classList.remove('on'));if(!sb)return;sb.classList.add('hl');const k=sb.dataset.k;document.querySelectorAll('svg.edges path').forEach(p=>{if(p.dataset.s===k||p.dataset.d===k)p.classList.add('on')})});
+$('#minw').oninput=render;$('#showint').onchange=render;addEventListener('resize',render);addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(D.pages.some(p=>p[0]===h)){cur=h;render()}});
+render();
+</script>
