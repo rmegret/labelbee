@@ -94,16 +94,11 @@
     ]
   },
   "fold": {
-    "core/NotifierBridge.js": "core/Notifier.js",
     "core/RefreshInstrumentBridge.js": "core/Notifier.js",
     "annotation/AnnotationStoreBridge.js": "annotation/AnnotationStore.js",
     "annotation/RefreshBridge.js": "annotation/Refresh.js",
     "annotation/SelectionModelBridge.js": "annotation/SelectionModel.js",
-    "annotation/LabelsBridge.js": "annotation/Labels.js",
-    "annotation/WrongIdBridge.js": "annotation/WrongId.js",
-    "annotation/AnnotationCodecBridge.js": "annotation/AnnotationCodec.js",
-    "annotation/CsvSchemasBridge.js": "annotation/CsvSchemas.js",
-    "annotation/EventTreeBridge.js": "annotation/EventTree.js"
+    "annotation/AnnotationCodecBridge.js": "annotation/AnnotationCodec.js"
   },
   "singletons": {
     "_doc": "Global name -> class or module box, when the code does not say it with `x = new C` (bridges, factories).",

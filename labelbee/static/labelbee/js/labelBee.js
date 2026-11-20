@@ -15,7 +15,7 @@ var user_id;
 
 //var vis;
 
-// Debugging levels: `logging` now lives in core/Notifier.js (exposed on window by core/NotifierBridge.js)
+// Debugging levels: `logging` now lives in core/Notifier.js (exposed on window by labelbeeBridge.js)
 
 // ######################################################################
 // INITIALIZATION

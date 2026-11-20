@@ -32,16 +32,18 @@ Inline `onclick=` handlers in the template (~180) also call globals.
 3. **One bridge, `labelbeeBridge.js`**, replaces the per-module bridges: the only place importing the modules and the
    only `<script type="module">` of the page (besides layout scripts until they move). Two kinds of name:
    - **Singleton controllers** (`overlay`, `zoomOverlay`, `videoControl`, `events`, `selection`, `refresh`, the form, ...)
-     stay available as globals *and* as `labelbee.overlay`, ... (same object). Inline handlers and the console keep
-     calling `overlay.foo()`: no template rewrite. This is a practicality only: inside a module the name is an
-     import (`import { overlay } from './Overlay.js'`), a different, strictly scoped binding to the same object,
-     so module code never reads the global and the global can be dropped later without touching module code.
+     stay available as globals. Inline handlers and the console keep calling `overlay.foo()`: no template rewrite.
+     This is a practicality only: inside a module the name is an import (`import { overlay } from './Overlay.js'`),
+     a different, strictly scoped binding to the same object, so module code never reads the global and the global
+     can be dropped later without touching module code. A `labelbee.overlay` view of them is deferred to the final
+     cleanup of the globals (maintainer, 2026-11-20).
    - **Everything else** that is global today (loose functions, constants, state variables) does not stay global:
-     it moves to the owning module, and when a classic script or a handler still needs it, it is exposed as
-     `labelbee.<name>` (temporary, listed in the commit, removed with its last reader).
+     it moves to the owning module, and when a classic script or a handler still needs it, it stays a
+     global (temporary, listed in the commit, removed with its last reader); the `labelbee.<name>` form is decided
+     at the final cleanup.
    Modules need not hide all their members: public by use, not forcibly private.
-4. **End state**: `labelbeeBridge.js` shrinks to what the page really needs: the `labelbee` namespace and the
-   entry points that inline handlers or the console use. Existing bridges (`NotifierBridge`, `AnnotationStoreBridge`,
+4. **End state**: `labelbeeBridge.js` shrinks to what the page really needs: the entry points that inline
+   handlers or the console use (in a `labelbee` namespace or not, decided at the cleanup). Existing bridges (`NotifierBridge`, `AnnotationStoreBridge`,
    `RefreshBridge`, ...) are folded into it, one per step, at the point where their last classic reader moves.
 
 ## Rules for a step (one file or one coherent family, one commit series)
@@ -50,8 +52,8 @@ Inline `onclick=` handlers in the template (~180) also call globals.
    of step 1; the list is kept in the commit message.
 2. **Encapsulate**: state moves behind the owner's accessors; free functions become exports or methods.
 3. **Convert** the file to a module. Singletons are exported, imported by name where used, and registered in
-   `labelbeeBridge.js` as global and `labelbee.X`; any other name still read by a classic script or handler is
-   exposed as `labelbee.<name>`, listed in the commit and removed with its last reader.
+   `labelbeeBridge.js` as globals; any other name still read by a classic script or handler stays global,
+   listed in the commit and removed with its last reader.
 4. **Reduce coupling**: a cross-file call becomes an import, a `refresh.*` call or an `events`/`selection`
    subscription; a cycle that stays is recorded as `DEBT`, with the edge named.
 5. **Check**: the feature's browser tests plus at-risk ones (targeted, full suite only at the end), golden tests
@@ -62,8 +64,12 @@ Inline `onclick=` handlers in the template (~180) also call globals.
 
 - (0) ADR and question [x] (this document, [Q38](../QUESTIONS.md#q38) answered 2026-11-20)
 - (1) Inventory generator [x] (`refactor/tools/globals_inventory.js`, built on the facts of `modularity_scan.js`; summary in section Inventory)
-- (2) Load order made explicit: `labelbeeBridge.js` skeleton with `window.labelbee`, the existing bridges folded in,
-  the ten module tags replaced by one; page and refresh baseline unchanged.
+- (2) Load order made explicit [x]: `labelbeeBridge.js` skeleton, the ten module tags replaced
+  by one. Five trivial bridges (`NotifierBridge`, `LabelsBridge`, `WrongIdBridge`, `CsvSchemasBridge`, `EventTreeBridge`)
+  are folded into it. Five stay as imported files until their last classic reader moves: `AnnotationStoreBridge`
+  (imported by the golden tests and the harness), `RefreshInstrumentBridge` (named by the stack filter of
+  `core/Notifier.js`), `RefreshBridge`, `SelectionModelBridge`, `AnnotationCodecBridge`. No `window.labelbee`
+  namespace for now (maintainer, 2026-11-20): the singletons stay plain globals; page and refresh baseline unchanged.
 - (3)-(13) one step per row below, lowest level first. Reference counts are from a regex pass, `~`, step 1 replaces
   them: `in` = uses of the file's top-level names by other classic files, `out` = the reverse.
 

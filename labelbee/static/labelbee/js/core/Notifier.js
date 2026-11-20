@@ -1,7 +1,7 @@
 /*
  * Notifier: where alerts and logs of extracted modules go, and the debug-level flags that
  * switch them (refactor ADR 0003). Modules import the bare functions; the page replaces
- * the handlers once with setNotifier() and reaches `logging` through core/NotifierBridge.js.
+ * the handlers once with setNotifier() and reaches `logging` through labelbeeBridge.js.
  */
 
 /** Debugging levels (moved from labelBee.js) */

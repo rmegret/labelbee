@@ -67,20 +67,11 @@
   <script type="text/javascript" src="js/layout/FitControls.js"></script>
   <script type="text/javascript" src="js/layout/VideoSettings.js"></script>
   <script type="text/javascript" src="js/layout/PanelRows.js"></script>
-  <!-- ES module bridges (deferred, run in order after the classic scripts, before window.onload):
-       global `logging` from core/Notifier.js; `AnnotationStore` and `events` (the stored events) from
-       annotation/AnnotationStore.js (no data globals: Tracks, Tags, ... are console-only debug views, see
-       annotation/DebugGlobals.js); converters of AnnotationIO.js -->
-  <script type="module" src="js/core/NotifierBridge.js"></script>
-  <script type="module" src="js/core/RefreshInstrumentBridge.js"></script>
-  <script type="module" src="js/annotation/AnnotationStoreBridge.js"></script>
-  <script type="module" src="js/annotation/RefreshBridge.js"></script>
-  <script type="module" src="js/annotation/SelectionModelBridge.js"></script>
-  <script type="module" src="js/annotation/LabelsBridge.js"></script>
-  <script type="module" src="js/annotation/WrongIdBridge.js"></script>
-  <script type="module" src="js/annotation/AnnotationCodecBridge.js"></script>
-  <script type="module" src="js/annotation/CsvSchemasBridge.js"></script>
-  <script type="module" src="js/annotation/EventTreeBridge.js"></script>
+  <!-- The one ES module entry (deferred, runs after the classic scripts, before window.onload): imports the modules and
+       installs the globals: `logging` (core/Notifier.js), `AnnotationStore` and `events` (the
+       stored events; no data globals: Tracks, Tags, ... are console-only debug views, see annotation/DebugGlobals.js),
+       `refresh`, `selection`, the converters of AnnotationIO.js. ADR 0015. -->
+  <script type="module" src="js/labelbeeBridge.js"></script>
 
   <!-- <script type="text/javascript" src='https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js'></script>
   <script type="module" src="js/SQLiteDB.js"></script> -->

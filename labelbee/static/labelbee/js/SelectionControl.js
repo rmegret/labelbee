@@ -724,7 +724,7 @@ function updateUndoButton() {
 /* Labels Control */
 
 // The label helpers (labelMap, toLabelArray, hasLabel, ...) are in annotation/Labels.js,
-// exposed by annotation/LabelsBridge.js (ADR 0008 step 2).
+// exposed by labelbeeBridge.js (ADR 0008 step 2).
 
 /* Labels GUI */
 
