@@ -921,7 +921,7 @@ function updateVideoSpan() {
     .selectAll(".interval")
     .attr("x", axes.xScale(0))
     .attr("y", -13)
-    .attr("width", axes.xScale(videoinfo.nframes + 1) - axes.xScale(0))
+    .attr("width", axes.xScale(videoinfo.nframes) - axes.xScale(0)) // frames 0..nframes-1, frame f is [f, f+1)
     .attr("height", 11);
   videoSpan
     .selectAll(".label")
@@ -974,7 +974,7 @@ function updateTrackWindowSpan() {
     .selectAll(".interval")
     .attr("x", axes.xScale(fmin))
     .attr("y", -13)
-    .attr("width", axes.xScale(fmax) - axes.xScale(fmin))
+    .attr("width", axes.xScale(fmax + 1) - axes.xScale(fmin)) // frame fmax is the interval [fmax, fmax+1)
     .attr("height", 11);
 }
 function getWindow() {

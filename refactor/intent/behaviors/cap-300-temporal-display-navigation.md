@@ -166,7 +166,7 @@ edge, width 2, class `timeMark out` (dashed, no fill).
 
 A bar above the plot area (y from -15 to 0, group `#videoSpan`, clipped) shows the extent of the loaded
 video: a pale green background (`#f0fff0`) over the plot width, a sky-blue rect with blue stroke from
-`xScale(0)` to `xScale(nframes+1)`, and the video file name (last segment of `videoinfo.name`) as text at
+`xScale(0)` to `xScale(nframes)` (frame f is the interval [f, f+1)), and the video file name (last segment of `videoinfo.name`) as text at
 `xScale(0)+2`. `updateVideoSpan()` is called at each `updateChrono`. The bar and its label have pointer events
 and a crosshair cursor; a click on it is handled as a click above the plot (BEH-331: seek to that
 frame, keep the selected ID).
@@ -179,7 +179,7 @@ frame, keep the selected ID).
 ## BEH-309: Track-window span bar and focus window
 
 A translucent pink bar (`#trackWindowSpan`, opacity 0.4, above the plot area) shows
-`[currentFrame - overlay.trackWindow.backward, currentFrame + overlay.trackWindow.forward]`, i.e. the
+`[currentFrame - overlay.trackWindow.backward, currentFrame + overlay.trackWindow.forward]` (both frames included: the bar ends at `xScale(last + 1)`, so in backward mode it ends at the end of the current frame), i.e. the
 window of the track trail shown in the overlay. It is not clamped to the video bounds. It is updated on
 `videoControl` `frame:changed` and `previewframe:changed`, on axes event `previewframe:trackend`, on overlay event
 `trackWindow:change`, and at each `updateChrono`. Each `frame:changed`/`previewframe:changed` also triggers

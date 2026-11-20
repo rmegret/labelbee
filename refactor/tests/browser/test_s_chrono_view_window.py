@@ -99,3 +99,15 @@ def test_s7_selected_id_row_does_not_capture_pointer_events(ui, sample_dir):
     ui.page.wait_for_function("document.querySelector('.plotBackground > .selection') !== null")
     assert ui.js("() => getComputedStyle(document.querySelector('.plotBackground > .selection')).pointerEvents") == "none"
     assert ui.js("() => document.elementFromPoint(%s, %s).getAttribute('class')" % (r[0], r[1])) != "selection"
+
+
+def test_s8_video_span_and_track_window_bars_cover_whole_frames(ui, sample_dir):
+    """Frame f is drawn as [f, f+1): the video bar ends at nframes, the track window bar at last frame + 1."""
+    _start(ui, sample_dir)
+    r = ui.js("""() => { const n = videoinfo.nframes, xs = axes.xScale;
+      const v = document.querySelector('#videoSpan .interval');
+      const f = videoControl.currentFrame, w = overlay.trackWindow, t = document.querySelector('#trackWindowSpan .interval');
+      return {vx: +v.getAttribute('x'), vw: +v.getAttribute('width'), x0: xs(0), xn: xs(n),
+              tx: +t.getAttribute('x'), tw: +t.getAttribute('width'), t0: xs(f - w.backward), t1: xs(f + w.forward + 1)}; }""")
+    assert abs(r["vx"] + r["vw"] - r["xn"]) < 0.01 and abs(r["vx"] - r["x0"]) < 0.01
+    assert abs(r["tx"] - r["t0"]) < 0.01 and abs(r["tx"] + r["tw"] - r["t1"]) < 0.01
