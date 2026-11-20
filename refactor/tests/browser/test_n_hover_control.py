@@ -124,3 +124,22 @@ def test_n5_time_bar_is_orange_dashed_until_a_frame_is_shown_then_green_then_nor
     assert b["cls"] == "timeMark preview" and b["frame"] == 7                           # stays green on the shown frame
     ui.js("() => $(axes).trigger('previewframe:trackend')")
     ui.page.wait_for_function("axes.timeMark.attr('class') === 'timeMark'")
+
+
+def test_n8_zoom_draws_the_hovered_frame_not_the_live_video(ui, sample_dir):
+    _start(ui, sample_dir)
+    ui.open_panel("Zoom")                                                               # refreshZoom is cancelled while #zoom is hidden
+    ui.page.wait_for_function("$('#zoom').is(':visible')")
+    ui.js("selection.select(getCurrentFrame(), '1'); refresh.selection()")              # the zoom follows the selected tag
+    ui.js("""() => {
+      window.__zoomSrc = [];
+      const d = CanvasRenderingContext2D.prototype.drawImage;
+      CanvasRenderingContext2D.prototype.drawImage = function (src, ...a) {
+        if (this.canvas.id === 'zoom') window.__zoomSrc.push(src === videoControl.currentImage ? 'image' : src.tagName);
+        return d.call(this, src, ...a);
+      };
+    }""")
+    ui.js("videoControl.seekFrame(5, 'preview')")
+    _release(ui)
+    ui.page.wait_for_function("videoControl.currentFrame === 5 && window.__zoomSrc.length > 0")
+    assert ui.js("window.__zoomSrc[window.__zoomSrc.length - 1]") == "image"            # not 'VIDEO' (pre-hover frame)
