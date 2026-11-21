@@ -116,7 +116,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (1) globals inventory generator [x] (438 globals, 335 file-private; 105 implicit globals; 12 cross-file state writes)
   - (2) `labelbeeBridge.js` skeleton, bridges folded in [x] one module tag; five trivial bridges folded, five wiring bridges imported
   - (3) pure helpers [x] `Model.js` to `annotation/Model.js`; `url_for`, `htmlCheckmark`, `pathJoin` to `core/Utils.js`
-  - (4)-(12) undo and selection logic, video data, IO, chrono, forms, player and zoom, overlay, entry [ ]
+  - (4) store writes of the selection [x] `deleteEvent`, `storeUnit`, `submitDraft` to `annotation/EditActions.js`; `getIdsInFocus` to `Model.js`
+  - (5)-(12) video data, IO, chrono, forms, player and zoom, overlay, entry [ ]
   - (13) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):

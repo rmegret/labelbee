@@ -25,6 +25,7 @@ import * as CsvSchemas from './annotation/CsvSchemas.js';
 import * as EventTree from './annotation/EventTree.js';
 import * as Model from './annotation/Model.js';
 import { htmlCheckmark, url_for } from './core/Utils.js';
+import * as EditActions from './annotation/EditActions.js';
 
 // ---- legacy globals still read by classic scripts ------------------------------------------------------------------
 window.logging = logging; // debug-level flags (`logging.io = true` from the console), same object the modules use
@@ -47,5 +48,6 @@ window.EventTree = EventTree; // used by updateEventTree (SelectionControl.js)
 // Observation class and legacy accessors of the stored events (annotation/Model.js, moved from the classic Model.js);
 // read by the classic scripts at call time, never while the page parses.
 Object.assign(window, Model);
+Object.assign(window, EditActions); // deleteEvent, storeUnit, submitDraft (annotation/EditActions.js)
 window.htmlCheckmark = htmlCheckmark; // core/Utils.js
 window.url_for = url_for;

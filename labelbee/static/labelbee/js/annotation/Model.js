@@ -7,8 +7,9 @@
  * stored events are read and written only through its operations. They keep their names and behavior until their
  * callers move to `events` directly.
  *
- * DEBT: `getFramesWithID`, `obs_swapID` read the page's global `videoinfo` (VideoList.js) and `cacheTags` reads the
- * global `ttags` (ChronoControl.js), at call time; they become imports when those owners move.
+ * DEBT: `getFramesWithID`, `obs_swapID` read the page's global `videoinfo` (VideoList.js), `cacheTags` the global `ttags`
+ * (ChronoControl.js), `getIdsInFocus` the globals `getCurrentFrame` (set by `init()`) and `getWindow` (ChronoControl.js),
+ * at call time; they become imports when those owners move.
  */
 import { AnnotationStore } from './AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
@@ -168,4 +169,26 @@ export function getTags(frame, id) {
   return value;
   //if (typeof value === "undefined") return undefined;
   //return value
+}
+
+/** The ids of the tags in the frames of the tracking window around the current frame (strings). */
+export function getIdsInFocus() {
+  let F = getCurrentFrame();
+
+  let win = getWindow();
+  let fmin = win[0],
+    fmax = win[1];
+  let frange = F - fmin > fmax - F ? F - fmin : fmax - F;
+
+  const ids = new Set();
+  for (let f = fmin; f <= fmax; f++) {
+    let tagsFrame = AnnotationStore.getTags()[f];
+    if (typeof tagsFrame === "undefined") continue;
+    let tags = tagsFrame.tags;
+
+    for (let i in tags) {
+      ids.add(String(tags[i].id));
+    }
+  }
+  return [...ids];
 }

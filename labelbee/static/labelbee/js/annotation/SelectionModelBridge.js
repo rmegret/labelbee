@@ -4,4 +4,5 @@
  */
 import { SelectionModel } from './SelectionModel.js';
 
-window.selection = new SelectionModel(window.events);
+export const selection = new SelectionModel(window.events);
+window.selection = selection; // the modules import `selection` from here; the classic scripts read the global
