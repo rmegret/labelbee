@@ -382,10 +382,10 @@ def test_l21_clean_obsolete_events_leaves_no_store_write_unrefreshed(ui, sample_
 
 LOADERS = {   # each used to refresh again after `setTracks` / `setTags` (ADR 0009 Q36). Not covered: the loaders that need a database record
               # (server dialog `loadEvents`, `loadEventsFromServerByID`) or the DB (`loadTracksCSVFromDB`)
-    "tracks_csv": "loadTracksCSVFromServer('/data/sample/tracks.csv')",
-    "tracks_tagged_csv": "loadTrackTaggedCSVFromServer('/data/sample/tracks_tagged.csv')",
-    "tags_csv": "loadTagsCSVFromServer('/data/sample/tracks_tagged.csv')",
-    "converted_csv": "loadConvertedCSVFromServer('/data/sample_gurabo/sample_gurabo.cfr.mp4.events.csv', events_csv_to_json, 'cxcy', 'events')",
+    "tracks_csv": "loadCSVFromServer('/data/sample/tracks.csv', 'tracks')",
+    "tracks_tagged_csv": "loadCSVFromServer('/data/sample/tracks_tagged.csv', 'tracks_tagged')",
+    "tags_csv": "loadCSVFromServer('/data/sample/tracks_tagged.csv', 'tags')",
+    "converted_csv": "loadCSVFromServer('/data/sample_gurabo/sample_gurabo.cfr.mp4.events.csv', 'events')",
     "events_json_url": "eventsFromServer('/data/sample/events_v2.json')",
 }
 

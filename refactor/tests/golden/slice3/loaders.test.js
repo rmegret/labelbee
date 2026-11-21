@@ -100,7 +100,7 @@ test('a rejected format is an error: nothing is refreshed, the model is kept, th
 
 test('CSV loaders return their Promise', async () => {
   const { ctx } = (await loadIoEnv())({ net: { csv: { ok: [csvRow] } } });
-  const p = ctx.loadTracksCSVFromServer('/t.csv');
+  const p = ctx.loadCSVFromServer('/t.csv');
   assert.ok(isThenable(p));
   await p;
   assert.equal(JSON.stringify(Object.keys(ctx.AnnotationStore.events.toObject())), '["0"]');
@@ -108,5 +108,5 @@ test('CSV loaders return their Promise', async () => {
 
 test('a failed request still rejects the CSV loader Promise (no catch, DEBT-725)', async () => {
   const { ctx } = (await loadIoEnv())({ net: { csv: { err: true } } });
-  await assert.rejects(ctx.loadTracksCSVFromServer('/t.csv'), (e) => e.name === 'Error');
+  await assert.rejects(ctx.loadCSVFromServer('/t.csv'), (e) => e.name === 'Error');
 });

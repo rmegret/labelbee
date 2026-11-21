@@ -90,5 +90,5 @@ In JS console:
 ```
 videoname='7_02_R_190809100000.cfr.mp4'; 
 videoManager.loadVideoManual(`/webapp-test/data/datasets/gurabo4/mp4/col10/${videoname}`);
-loadTrackTaggedCSVFromServer(`/webapp-test/data/datasets/gurabo4/tracks/col10/${videoname}.tracks_tagged.csv`);
+loadCSVFromServer(`/webapp-test/data/datasets/gurabo4/tracks/col10/${videoname}.tracks_tagged.csv`, 'tracks_tagged');
 ```

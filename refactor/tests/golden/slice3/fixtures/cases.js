@@ -49,10 +49,6 @@ const cases = [
   { name: 'eraseEvents canceled', fn: 'eraseEvents', args: () => [], confirm: false, init: OLD() },
 
   // ---- local events file ----
-  { name: 'onReaderLoad v2', fn: 'onReaderLoad', args: () => [read(v2())] },
-  { name: 'onReaderLoad v1', fn: 'onReaderLoad', args: () => [read(v1())] },
-  { name: 'onReaderLoad invalid JSON throws, model kept', fn: 'onReaderLoad', args: () => [read('{not json')], init: OLD() },
-  { name: 'onReaderLoad wrong format keeps the model', fn: 'onReaderLoad', args: () => [read({ a: 1 })], init: OLD() },
   { name: 'loadEventsFromFile v2', fn: 'loadEventsFromFile', args: () => [file(v2())] },
   { name: 'loadEventsFromFile invalid JSON', fn: 'loadEventsFromFile', args: () => [file('{not json')], init: OLD() },
   { name: 'loadEventsFromFile wrong format is an error shown to the user (Q23)', fn: 'loadEventsFromFile', args: () => [file({ a: 1 })], init: OLD() },
@@ -84,8 +80,6 @@ const cases = [
   { name: 'eraseTags canceled', fn: 'eraseTags', args: () => [], confirm: false, init: { Tags: tagsV1() } },
 
   // ---- local tags file ----
-  { name: 'onTagsReaderLoad v1', fn: 'onTagsReaderLoad', args: () => [read(tagsV1())], init: { Tags: {} } },
-  { name: 'onTagsReaderLoad invalid JSON throws', fn: 'onTagsReaderLoad', args: () => [read('{no')], init: { Tags: tagsV1() } },
   { name: 'loadTagsFromFile v2', fn: 'loadTagsFromFile', args: () => [file(tagsV2())], init: { Tags: {} } },
   { name: 'loadTagsFromFile rejected format is an error shown to the user (Q23)', fn: 'loadTagsFromFile', args: () => [file({ info: INFO_EVENTS, data: {} })], init: { Tags: tagsV1() } },
   { name: 'loadTagsFromFile canceled', fn: 'loadTagsFromFile', args: () => [{ target: { files: [], value: 'x' } }] },
@@ -105,11 +99,11 @@ const cases = [
   { name: 'tagsFromServer failure empties Tags (DEBT-719)', fn: 'tagsFromServer', args: () => ['T1', 'div'], net: { getJSON: { err: true } }, init: { Tags: tagsV1() } },
 
   // ---- CSV, DB ----
-  { name: 'loadTracksCSVFromServer ok', fn: 'loadTracksCSVFromServer', args: () => ['/t.csv'], net: { csv: { ok: [csvTrack(0, 1), csvTrack(3, 1)] } } },
-  { name: 'loadTracksCSVFromServer request failure (unhandled)', fn: 'loadTracksCSVFromServer', args: () => ['/t.csv'], net: { csv: { err: true } }, init: OLD() },
-  { name: 'loadTracksCSVFromServer empty csv', fn: 'loadTracksCSVFromServer', args: () => ['/t.csv'], net: { csv: { ok: [] } } },
-  { name: 'loadTrackTaggedCSVFromServer ok', fn: 'loadTrackTaggedCSVFromServer', args: () => ['/tt.csv'], net: { csv: { ok: [csvTrack(0, 1, { track_tagid: '42', tag_id: '42', ...csvTag('tag_') }), csvTrack(1, 2)] } } },
-  { name: 'loadTagsCSVFromServer ok (Tracks then Tags)', fn: 'loadTagsCSVFromServer', args: () => ['/g.csv'], net: { csv: { ok: [{ ...csvTrack(0, 1), id: '12', dm: '60', ...csvTag('') }] } }, init: { Tags: {} } },
+  { name: 'loadTracksCSVFromServer ok', fn: 'loadCSVFromServer', args: () => ['/t.csv'], net: { csv: { ok: [csvTrack(0, 1), csvTrack(3, 1)] } } },
+  { name: 'loadTracksCSVFromServer request failure (unhandled)', fn: 'loadCSVFromServer', args: () => ['/t.csv'], net: { csv: { err: true } }, init: OLD() },
+  { name: 'loadTracksCSVFromServer empty csv', fn: 'loadCSVFromServer', args: () => ['/t.csv'], net: { csv: { ok: [] } } },
+  { name: 'loadTrackTaggedCSVFromServer ok', fn: 'loadCSVFromServer', args: () => ['/tt.csv', 'tracks_tagged'], net: { csv: { ok: [csvTrack(0, 1, { track_tagid: '42', tag_id: '42', ...csvTag('tag_') }), csvTrack(1, 2)] } } },
+  { name: 'loadTagsCSVFromServer ok (Tracks then Tags)', fn: 'loadCSVFromServer', args: () => ['/g.csv', 'tags'], net: { csv: { ok: [{ ...csvTrack(0, 1), id: '12', dm: '60', ...csvTag('') }] } }, init: { Tags: {} } },
   { name: 'loadTracksCSVFromDB', fn: 'loadTracksCSVFromDB', args: () => [], init: { Tracks: OLD_TRACKS() } },
   { name: 'clickLoadTracksCSVFromServer with URL', fn: 'clickLoadTracksCSVFromServer', args: () => [], prompt: '/u.csv', net: { csv: { ok: [csvTrack(0, 1)] } } },
   { name: 'clickLoadTracksCSVFromServer canceled', fn: 'clickLoadTracksCSVFromServer', args: () => [], prompt: null },

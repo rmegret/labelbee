@@ -1,6 +1,6 @@
 // Environment for the slice 3 golden tests (ADR 0005): the REAL setTracks/setTags/loaders of
-// Load.js and ServerIO.js (AnnotationIO.js until slice 8 step 6b) evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
-// The functions stay the same code before and after each step of slice 8 (they moved to modules in step 6b), so the same golden checks
+// Load.js, FileImport.js, ServerIO.js and core/Alerts.js (AnnotationIO.js until slice 8 step 6b) evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
+// The functions stay the same code before and after each step of slice 8 (they moved to modules in steps 6b and 6c), so the same golden checks
 // them; since step 2 the data lives in a fresh
 // AnnotationStore per case (the bridge installs `AnnotationStore` and `events`; there are no data globals any more).
 // Every effect on the outside is recorded in order in `rec.fx`.
@@ -16,21 +16,22 @@ const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js'
 const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;
 const FIXED_DATE = '2000-01-02T03:04:05.000Z';
 
-const IO_SOURCES = ['annotation/Load.js', 'annotation/ServerIO.js', 'AnnotationIO.js']; // AnnotationIO.js: updateEventsNotes // were AnnotationIO.js until slice 8 step 6b
+// AnnotationIO.js: updateEventsNotes, the erase and prompt handlers. The others were in AnnotationIO.js until slice 8 step 6b
+const IO_SOURCES = ['annotation/Load.js', 'annotation/FileImport.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'AnnotationIO.js'];
 const IO_FUNCTIONS = [
-  'setTracks', 'eraseEvents', 'onReaderLoad', 'loadEventsFromFile0', 'loadEventsFromFile',
-  'eraseTags', 'setTags', 'onTagsReaderLoad', 'loadTagsFromFile', 'loadEventsFromServerByID',
-  'eventsFromServer', 'loadTracksCSVFromDB', 'loadTracksCSVFromServer', 'loadTagsCSVFromServer',
-  'loadTrackTaggedCSVFromServer', 'clickLoadTracksCSVFromServer', 'clickLoadTracksTaggedCSVFromServer',
+  'setTracks', 'eraseEvents', 'loadEventsFromFile0', 'loadEventsFromFile',
+  'eraseTags', 'setTags', 'loadTagsFromFile', 'loadEventsFromServerByID',
+  'eventsFromServer', 'loadTracksCSVFromDB', 'loadCSVFromRows', 'loadCSVFromServer',
+  'clickLoadTracksCSVFromServer', 'clickLoadTracksTaggedCSVFromServer',
   'tagsFromServer', 'mainAlert', 'showAjaxError', 'updateEventsNotes',
   // loader helpers (slice 3 step 4)
-  'readFileAsText', 'ajaxGetJSON', 'getJSONPromise', 'eventsFromText', 'tagsFromText',
+  'readFileAsText', 'ajaxGetJSON', 'getJSONPromise', 'loadTracksFromText', 'loadTagsFromText',
   // load errors (slice 3 step 5, Q23)
   'escapeHTML', 'showLoadError', 'reportLoadError',
 ];
 const CODEC_FUNCTIONS = [
   'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'tracks_csv_to_json', 'tags_csv_to_json',
-  'tags_csv_to_tagjson', 'tracks_tagged_csv_to_json',
+  'tags_csv_to_tagjson', 'tracks_tagged_csv_to_json', 'events_csv_to_json', 'detections_csv_to_json',
 ];
 
 // Top-level function: from its `function` line to the first line that is exactly `}`.
@@ -99,10 +100,11 @@ function makeD3(rec, net) {
 // Async: loads the ES modules once; returns a sync factory (case) -> env.
 async function loadIoEnv() {
   const codec = await import(urlOf('annotation/AnnotationCodec.js'));
+  const { classifyFilename } = await import(urlOf('annotation/CsvSchemas.js'));
   const { setNotifier, logging } = await import(urlOf('core/Notifier.js'));
   const { createAnnotationStore } = await import(urlOf('annotation/AnnotationStore.js'));
   const { installLegacyGlobals } = await import(urlOf('annotation/AnnotationStoreBridge.js'));
-  // Since slice 8 step 6b the functions are in two ES modules; they are evaluated here as strict scripts (what a module is),
+  // Since slice 8 steps 6b and 6c the functions are in ES modules; they are evaluated here as strict scripts (what a module is),
   // without their import and export keywords, over the stubs below.
   const src = IO_SOURCES.map((f) => fs.readFileSync(path.join(JS_DIR, f), 'utf8')).join('\n');
   const code = '"use strict";\n' + IO_FUNCTIONS.map((n) => extractTopLevel(src, n)).join('\n');
@@ -161,11 +163,12 @@ async function loadIoEnv() {
       getTTags: () => { fx('getTTags', Object.keys(ctx.AnnotationStore.getTags() || {})); return { stub: 'ttags' }; },
     };
     CODEC_FUNCTIONS.forEach((n) => { sandbox[n] = codec[n]; });
+    sandbox.classifyFilename = classifyFilename;
     const ctx = vm.createContext(sandbox);
     installLegacyGlobals(ctx, createAnnotationStore());
     vm.runInContext('var ttags;', ctx); // declared in the page by ChronoControl.js (`var ttags = {}`)
     ctx.$ = makeJQuery(rec, net, ctx);
-    vm.runInContext(code, ctx, { filename: 'Load.js+ServerIO.js(extracted)' });
+    vm.runInContext(code, ctx, { filename: 'Load.js+FileImport.js+ServerIO.js+Alerts.js(extracted)' });
     writeState(ctx, c.init || {});
     return { ctx, rec, fns: ctx };
   };

@@ -19,6 +19,54 @@ function initAnnotationIO() {
   $("#events-notes").on("input", onChanged_events_notes);
 }
 
+// ## Annotations control (confirm and prompt dialogs, called by the template buttons; they wait for step 9 of slice 8)
+
+function eraseEvents() {
+  var r = confirm(
+    "Are you sure you want to ERASE all manual annotations (Tracks)?"
+  );
+  if (r == true) {
+    console.log("ERASING all Tracks...");
+    setTracks([]);
+  } else {
+    console.log("User CANCELED Erase Tracks ...");
+  }
+}
+function eraseTags() {
+  var r = confirm("Are you sure you want to ERASE all Tags?");
+  if (r == true) {
+    console.log("ERASING all Tags...");
+    setTags({}, "");
+  } else {
+    console.log("User CANCELED Erase Tags ...");
+  }
+}
+
+async function clickLoadTracksCSVFromServer() {
+  console.log("clickLoadTracksCSVFromServer: loading .tracks.csv from URL");
+  const url = prompt("Enter tracks URL", url_for("/data")+"/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv");
+  if (url == null || url == "") {
+    console.log("clickLoadTracksCSVFromServer: no URL entered");
+    return;
+  }
+  return loadCSVFromServer(url, "tracks");
+}
+async function clickLoadTracksTaggedCSVFromServer() {
+  console.log("clickLoadTracksTaggedCSVFromServer: loading video and .tracks_tagged.csv from URL");
+  const col_videoname = prompt("Enter gurabo4 col_videoname", "col10/9_02_R_190809120000.cfr.mp4");
+  if (col_videoname == null || col_videoname == "") {
+    console.log("clickLoadTracksCSVFromServer: no video entered");
+    return;
+  }
+  const videoURL = url_for("/data")+`/datasets/gurabo4/mp4/${col_videoname}`
+  console.log(`Trying to load video from ${videoURL}`)
+  videoManager.loadVideoManual(videoURL);
+  
+  const tracksURL = url_for("/data")+`/datasets/gurabo4/tracks/${col_videoname}.tracks_tagged.csv`
+  console.log(`Trying to load tracks_tagged from ${tracksURL}`)
+  return loadCSVFromServer(tracksURL, "tracks_tagged")
+}
+
 function ajaxlogin(email, password) {
   var url = url_for("/api/v1/auth/login");
 
@@ -214,7 +262,7 @@ class EventsCSVManualFilePicker {
     }
     console.log("EventsCSVManualFilePicker: loading", uri, "as", res.chosen.key);
     try {
-      await csvLoaderFor(res.chosen.loader)(uri);
+      await loadCSVFromServer(uri, res.chosen.loader);
     } catch (e) {
       return; // reportLoadError already showed it
     }

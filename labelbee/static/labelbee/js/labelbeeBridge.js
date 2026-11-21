@@ -27,8 +27,10 @@ import * as Model from './annotation/Model.js';
 import { htmlCheckmark, url_for } from './core/Utils.js';
 import * as EditActions from './annotation/EditActions.js';
 import * as FileExport from './annotation/FileExport.js';
+import * as FileImport from './annotation/FileImport.js';
 import * as Load from './annotation/Load.js';
 import * as ServerIO from './annotation/ServerIO.js';
+import * as Alerts from './core/Alerts.js';
 import { VideoCache } from './video/VideoCache.js';
 import { HoverControl } from './video/HoverControl.js';
 import * as VideoInfo from './video/VideoInfo.js';
@@ -67,17 +69,18 @@ install(FileExport, [
   "saveObjToJsonFile", "saveCSVToFile", "getTimestampNow", // VideoList.js
 ]);
 install(Load, [
-  "setTracks", "setTags", // labelBee.js, tests
-  "eraseEvents", "eraseTags", "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
-  "loadEventsFromFile", "loadTagsFromFile", "csvLoaderFor", "eventsFromServer", "tagsFromServer", // AnnotationIO.js, VideoControl.js
-  "loadEventsFromServerByID", // labelBee.js
-  "loadTracksCSVFromServer", "loadTagsCSVFromServer", "loadTrackTaggedCSVFromServer", "loadConvertedCSVFromServer", // tests
+  "setTracks", "setTags", // labelBee.js, AnnotationIO.js (eraseEvents, eraseTags), tests
+]);
+install(FileImport, [
+  "loadEventsFromFile", "loadTagsFromFile", // AnnotationIO.js: the file inputs
 ]);
 install(ServerIO, [
+  "loadCSVFromServer", "eventsFromServer", "tagsFromServer", // AnnotationIO.js, VideoControl.js, tests
+  "loadEventsFromServerByID", // labelBee.js
   "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, AnnotationIO.js
   "eventsToServer", // template button
-  "mainAlert", // test_alerts.py
 ]);
+install(Alerts, ["mainAlert"]); // test_alerts.py
 Object.assign(window, EditActions); // deleteEvent, storeUnit, submitDraft (annotation/EditActions.js)
 window.htmlCheckmark = htmlCheckmark; // core/Utils.js
 window.url_for = url_for;
