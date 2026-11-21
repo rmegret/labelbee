@@ -1789,7 +1789,7 @@ ZoomOverlay.prototype.rotateTag = function (angle) {
 function getCoveredTags(obs) {
   obs = events.get(obs.frame, obs.ID);
 
-  let tracks = flatTracksAll.filter(function (element) {
+  let tracks = chronoState.flatTracksAll.filter(function (element) {
     return element.obs == obs;
   });
   if (tracks.length > 0) {

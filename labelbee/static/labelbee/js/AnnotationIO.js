@@ -11,7 +11,7 @@ function initAnnotationIO() {
     .getElementById("loadtags")
     .addEventListener("change", loadTagsFromFile);
 
-  ttags = [];
+  chronoState.ttags = [];
   labelListFromServerDialog = new LabelListFromServerDialog();
   fromServerDialog = new FromServerDialog();
   pickEventsCSVDialog = new EventsCSVManualFilePicker();

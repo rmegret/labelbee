@@ -91,6 +91,25 @@ Step 2 (bridge skeleton) comes before 3. Steps 8 to 11 may each be cut into seve
 (for example `ChronoControl` <-> `ChronoControlInteraction`, `VideoControl` <-> `VideoList`, `VisitControl` <->
 `OverlayControl`) are broken by moving the shared state down a layer, not by a late import.
 
+## Step 7c: chrono state, options and view handles (maintainer, 2026-11-21)
+
+`ChronoControl.js` and `ChronoControlInteraction.js` share about 35 names that are mostly implicit globals (assigned in `initChrono` and the refresh functions, never declared). They cannot become modules while they share bare globals. A first design put all of them in one `chronoState` object; the maintainer rejected it: only the derived data is state. The rest goes to where it belongs, as a mechanical, traceable move (names kept, including the `flag_` prefix; renaming is a later cleanup).
+
+| Kind | Where | Names |
+|---|---|---|
+| derived data | `chronoState` (`chrono/ChronoState.js`, installed as `window.chronoState`) | `chronogramData`, `tagsChronogramData`, `allIntervals`, `flatTracks`, `flatTracksAll`, `flatTracksValid`, `flatTracksAllGroupById`, `flatTracksValidGroupById`, `tagIntervals`, `allTagsID`, `flatTags`, `ttags` |
+| filter options | `chrono.config.filter` | `restrictID`, `restrictIDArray`, `flag_restrictID`, `excludeID`, `excludeIDArray`, `flag_excludeID`, `flag_hideInvalid`, `flag_hideFlowers`, `frameFilter` (was `config.frameFilter`) |
+| navigation options | `chrono.config.seek` | `flag_autoEventMode`, `eventSeekMode` |
+| display options | `chrono.config.chronoDisplay` | `chronoItemHeight`, `flag_showSpans`, `flag_showPartsOnChrono`, `flag_showIndividualEvents`, `showObsChrono`, `showTagsChrono` (both moved from `OverlayControl.js`), `showDanglingTracks`, `hide_non_dangling` |
+| id to row mapping | `chrono.config.idMap` | `idAxisMapMode`, `idAxisMapString`, `idAxisMap` |
+| d3 view handles | the `Chronogram` instance | `chrono.axes`, `chrono.layers.svgSpanRects`, `.svgInterval`, `.svgTop`, `chrono.chronoIntervals` |
+
+- `chrono.config` stays the one holder; its sub-objects are plain objects created by the `Chronogram` constructor with the defaults `initChrono` gives (which still resets the same ones). `excludeID` and `excludeIDArray` start as `null` and `[]` instead of undefined, and `chronoIntervals` is now created by the constructor instead of at script load. The names `filter`, `seek`, `chronoDisplay`, `idMap` were chosen by the maintainer: `ChronoConfig` was rejected as misleading, because the options also cover navigation.
+- `showObsChrono`, `showTagsChrono`, `onChronoParametersChanged` (and the checkbox sync, `updateChronoCheckboxes`) moved from `OverlayControl.js` to `ChronoControl.js`; the HTML `onclick` keeps calling the same global.
+- The rename is done by a scope-aware script with a name-to-target map (only free references to the global are rewritten; locals of the same name, property names and DOM ids are not touched). Outside the two chrono files it touches `ZoomView.js`, `SelectionControl.js`, `OverlayControl.js`, `AnnotationIO.js` and the browser tests that read these names through `ui.js(...)`.
+- Not moved: the singletons `chrono`, `chronoDragControl`, `videoKeyframes`, `videoCacheStatus` (declared, many readers outside), and the leaked locals (`options`, `videoSpan`, `trackWindowSpan`, `obs_for_id`, `showObsTable`), left for the module conversion of the file.
+- Later, separate commits: drop the `flag_` prefixes, rename `layers.svgX` to `layers.X`, flatten or re-home the config groups.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

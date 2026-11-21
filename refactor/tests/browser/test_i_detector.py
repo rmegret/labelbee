@@ -32,7 +32,7 @@ def test_i2_a_field_of_a_stored_observation_through_any_handle(ui, sample_dir):
     loaded(ui, sample_dir)
     ui.js("events.get(0, 1).x = 5")                                      # a handle from events.get
     assert seen(ui) == [("set", 2, "x")]
-    ui.js("flatTracksAll[0].obs.cx = 7")                                 # a handle that the chronogram keeps
+    ui.js("chronoState.flatTracksAll[0].obs.cx = 7")                                 # a handle that the chronogram keeps
     assert seen(ui) == [("set", 2, "cx")]
     ui.js("events.getFrame(0)[1].y = 1")                                 # an observation of a frame copy
     assert seen(ui) == [("set", 2, "y")]

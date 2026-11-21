@@ -120,7 +120,7 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (5) video data [x] `VideoCache`, `HoverControl`, `videoinfo` state to `video/`; the `VideoManager` data half waits for step 9
   - (5b) `videoinfo` global removed [x] classic scripts call `getVideoInfo()`/`setVideoInfoObject()` through the bridge
   - (6a) saves and exports [x] `annotation/FileExport.js` over `annotation/Export.js`; (6b) loaders, server IO [x] `annotation/Load.js`, `annotation/ServerIO.js`; goldens extract from them; (6c) loaders split by role [x] Load, FileImport, ServerIO, `core/Alerts.js`; (6d) `loadTags`/`loadTracks` cleanup [x] `decodeTags` rejects malformed, no rollback, `refresh.chrono()` then `refresh.frame()`
-  - (7a) `ChronoAxes` as a module [x] `chrono/ChronoAxes.js`, four implicit globals declared; (7b) legacy activities deleted [x] `ChronoControlActivitiesLegacy.js` and `legacyActivities` toggle gone; (7c)-(12) chrono state and interaction, forms, player and zoom, overlay, entry [ ]
+  - (7a) `ChronoAxes` as a module [x] `chrono/ChronoAxes.js`, four implicit globals declared; (7b) legacy activities deleted [x] `ChronoControlActivitiesLegacy.js` and `legacyActivities` toggle gone; (7c) chrono state, options and view handles regrouped [x] `chronoState`, `chrono.config.*`, `chrono.axes`; (7d)-(12) chrono interaction, forms, player and zoom, overlay, entry [ ]
   - (13) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):

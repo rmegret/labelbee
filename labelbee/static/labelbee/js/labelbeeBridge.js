@@ -35,6 +35,7 @@ import { VideoCache } from './video/VideoCache.js';
 import { HoverControl } from './video/HoverControl.js';
 import * as VideoInfo from './video/VideoInfo.js';
 import { ChronoAxes } from './chrono/ChronoAxes.js';
+import { chronoState } from './chrono/ChronoState.js';
 
 // ---- legacy globals still read by classic scripts ------------------------------------------------------------------
 window.logging = logging; // debug-level flags (`logging.io = true` from the console), same object the modules use
@@ -95,3 +96,6 @@ Object.assign(window, VideoInfo);
 
 // The chronogram axes (chrono/ChronoAxes.js); `initChrono` (ChronoControl.js) creates them with `new ChronoAxes(...)`.
 window.ChronoAxes = ChronoAxes;
+
+// The state shared by the chronogram files (chrono/ChronoState.js), read by the classic scripts as `chronoState.X`.
+window.chronoState = chronoState;

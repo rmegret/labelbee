@@ -33,7 +33,7 @@ function onAxesClick(event) {
   if (logging.axesEvents)
     console.log("onAxesClick: seeking to frame=", frame, "...");
 
-  if (chrono.config.idAxisMapMode == 'id') {
+  if (chrono.config.idMap.idAxisMapMode == 'id') {
     gotoEvent(frame, id);
   } else {
     videoControl.seekFrame(Number(frame)); // Avoid loosing current selection
@@ -46,7 +46,7 @@ function onAxesDblClick(event) {
   if (logging.axesEvents)
     console.log("onAxesDblClick: zooming chrono around frame=", frame, "...");
 
-  axes.xdomainFocus([
+  chrono.axes.xdomainFocus([
     frame - overlay.trackWindow.backward * 1.05,
     frame + overlay.trackWindow.forward * 1.05,
   ]);
@@ -74,30 +74,30 @@ function onAxesChanged(event) {
 // ### SEEK MODE
 
 function updateEventSeekMode() {
-  if (eventSeekMode == "tag") {
+  if (chrono.config.seek.eventSeekMode == "tag") {
     $(".eventSeekMode").removeClass("active");
     $(".eventSeekMode-tag").addClass("active");
   }
-  if (eventSeekMode == "freetag") {
+  if (chrono.config.seek.eventSeekMode == "freetag") {
     $(".eventSeekMode").removeClass("active");
     $(".eventSeekMode-freetag").addClass("active");
   }
-  if (eventSeekMode == "event") {
+  if (chrono.config.seek.eventSeekMode == "event") {
     $(".eventSeekMode").removeClass("active");
     $(".eventSeekMode-event").addClass("active");
   }
-  if (eventSeekMode == "eventframe") {
+  if (chrono.config.seek.eventSeekMode == "eventframe") {
     $(".eventSeekMode").removeClass("active");
     $(".eventSeekMode-eventframe").addClass("active");
   }
 }
 function eventSeekModeClicked(mode) {
-  eventSeekMode = mode;
+  chrono.config.seek.eventSeekMode = mode;
   updateEventSeekMode();
 }
 
 function getIdCoord(id) {
-  return axes.yScale(id);
+  return chrono.axes.yScale(id);
 }
 
 // Sort/compare Tag intervals
@@ -185,8 +185,8 @@ function gotoFrameId(frame, id) {
 
 function gotoFirstEvent() {
   let from = { frame: -1, id: selection.getId() };
-  if (flag_autoEventMode) {
-    let ids = axes.yScale.domain();
+  if (chrono.config.seek.flag_autoEventMode) {
+    let ids = chrono.axes.yScale.domain();
     if (!ids) return;
     from.id = ids[0];
   }
@@ -194,8 +194,8 @@ function gotoFirstEvent() {
 }
 function gotoLastEvent() {
   let from = { frame: videoControl.maxframe() + 1, id: selection.getId() };
-  if (flag_autoEventMode) {
-    let ids = axes.yScale.domain();
+  if (chrono.config.seek.flag_autoEventMode) {
+    let ids = chrono.axes.yScale.domain();
     if (!ids) return;
     from.id = ids[ids.length - 1];
   }
@@ -210,7 +210,7 @@ function gotoNextEvent(from) {
   }
   console.log("gotoNextEvent from frame=", frame, "id=", id);
 
-  if (eventSeekMode == "tag") {
+  if (chrono.config.seek.eventSeekMode == "tag") {
     let interval = findNextTagEvent(frame, id);
 
     if (!interval) {
@@ -218,7 +218,7 @@ function gotoNextEvent(from) {
       return;
     }
     gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "freetag") {
+  } else if (chrono.config.seek.eventSeekMode == "freetag") {
     let interval = findNextFreeTagEvent(frame, id);
 
     if (!interval) {
@@ -226,7 +226,7 @@ function gotoNextEvent(from) {
       return;
     }
     gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "event") {
+  } else if (chrono.config.seek.eventSeekMode == "event") {
     let obs = findNextObsEvent(frame, id);
 
     if (!obs) {
@@ -234,7 +234,7 @@ function gotoNextEvent(from) {
       return;
     }
     gotoFrameId(obs.frame, obs.id);
-  } else if (eventSeekMode == "eventframe") {
+  } else if (chrono.config.seek.eventSeekMode == "eventframe") {
     let newframe = findNextEventFrame(frame);
 
     if (newframe == undefined) {
@@ -253,7 +253,7 @@ function gotoPreviousEvent(from) {
   }
   console.log("gotoPreviousEvent from frame=", frame, "id=", id);
 
-  if (eventSeekMode == "tag") {
+  if (chrono.config.seek.eventSeekMode == "tag") {
     let interval = findPreviousTagEvent(frame, id);
 
     if (!interval) {
@@ -261,7 +261,7 @@ function gotoPreviousEvent(from) {
       return;
     }
     gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "freetag") {
+  } else if (chrono.config.seek.eventSeekMode == "freetag") {
     let interval = findPreviousFreeTagEvent(frame, id);
 
     if (!interval) {
@@ -269,7 +269,7 @@ function gotoPreviousEvent(from) {
       return;
     }
     gotoFrameId(interval.begin, interval.id);
-  } else if (eventSeekMode == "event") {
+  } else if (chrono.config.seek.eventSeekMode == "event") {
     let obs = findPreviousObsEvent(frame, id);
 
     if (!obs) {
@@ -277,7 +277,7 @@ function gotoPreviousEvent(from) {
       return;
     }
     gotoFrameId(obs.frame, obs.id);
-  } else if (eventSeekMode == "eventframe") {
+  } else if (chrono.config.seek.eventSeekMode == "eventframe") {
     let newframe = findPreviousEventFrame(frame);
 
     if (newframe == undefined) {
@@ -290,10 +290,10 @@ function gotoPreviousEvent(from) {
 
 function findNextTagEvent(frame, id) {
   let tagList = [];
-  if (flag_autoEventMode) {
-    tagList = tagIntervals;
+  if (chrono.config.seek.flag_autoEventMode) {
+    tagList = chronoState.tagIntervals;
   } else {
-    tagList = tagIntervals.filter(funEqualId(id));
+    tagList = chronoState.tagIntervals.filter(funEqualId(id));
   }
   if (!tagList) return undefined;
 
@@ -305,10 +305,10 @@ function findNextTagEvent(frame, id) {
 }
 function findNextFreeTagEvent(frame, id) {
   let tagList = [];
-  if (flag_autoEventMode) {
-    tagList = tagIntervals.filter(isNotLabeled);
+  if (chrono.config.seek.flag_autoEventMode) {
+    tagList = chronoState.tagIntervals.filter(isNotLabeled);
   } else {
-    tagList = tagIntervals.filter(funEqualId(id)).filter(isNotLabeled);
+    tagList = chronoState.tagIntervals.filter(funEqualId(id)).filter(isNotLabeled);
   }
   if (!tagList) return undefined;
 
@@ -320,17 +320,17 @@ function findNextFreeTagEvent(frame, id) {
 }
 function findNextObsEvent(frame, id) {
   let obsList = [];
-  if (flag_autoEventMode) {
-    if (flag_hideInvalid) {
-      obsList = flatTracksValid;
+  if (chrono.config.seek.flag_autoEventMode) {
+    if (chrono.config.filter.flag_hideInvalid) {
+      obsList = chronoState.flatTracksValid;
     } else {
-      obsList = flatTracksAll;
+      obsList = chronoState.flatTracksAll;
     }
   } else {
-    if (flag_hideInvalid) {
-      obsList = flatTracksValidGroupById[id];
+    if (chrono.config.filter.flag_hideInvalid) {
+      obsList = chronoState.flatTracksValidGroupById[id];
     } else {
-      obsList = flatTracksAllGroupById[id];
+      obsList = chronoState.flatTracksAllGroupById[id];
     }
   }
   if (!obsList) return undefined;
@@ -342,10 +342,10 @@ function findNextObsEvent(frame, id) {
 }
 function findNextEventFrame(frame) {
   let obsList = [];
-  if (flag_hideInvalid) {
-    obsList = flatTracksValid;
+  if (chrono.config.filter.flag_hideInvalid) {
+    obsList = chronoState.flatTracksValid;
   } else {
-    obsList = flatTracksAll;
+    obsList = chronoState.flatTracksAll;
   }
   if (!obsList) return undefined;
   let obs = obsList
@@ -356,10 +356,10 @@ function findNextEventFrame(frame) {
 }
 function findPreviousTagEvent(frame, id) {
   let tagList = [];
-  if (flag_autoEventMode) {
-    tagList = tagIntervals;
+  if (chrono.config.seek.flag_autoEventMode) {
+    tagList = chronoState.tagIntervals;
   } else {
-    tagList = tagIntervals.filter(funEqualId(id));
+    tagList = chronoState.tagIntervals.filter(funEqualId(id));
   }
   if (!tagList) return undefined;
 
@@ -371,10 +371,10 @@ function findPreviousTagEvent(frame, id) {
 }
 function findPreviousFreeTagEvent(frame, id) {
   let tagList = [];
-  if (flag_autoEventMode) {
-    tagList = tagIntervals.filter(isNotLabeled);
+  if (chrono.config.seek.flag_autoEventMode) {
+    tagList = chronoState.tagIntervals.filter(isNotLabeled);
   } else {
-    tagList = tagIntervals.filter(funEqualId(id)).filter(isNotLabeled);
+    tagList = chronoState.tagIntervals.filter(funEqualId(id)).filter(isNotLabeled);
   }
   if (!tagList) return undefined;
 
@@ -386,17 +386,17 @@ function findPreviousFreeTagEvent(frame, id) {
 }
 function findPreviousObsEvent(frame, id) {
   let obsList = [];
-  if (flag_autoEventMode) {
-    if (flag_hideInvalid) {
-      obsList = flatTracksValid;
+  if (chrono.config.seek.flag_autoEventMode) {
+    if (chrono.config.filter.flag_hideInvalid) {
+      obsList = chronoState.flatTracksValid;
     } else {
-      obsList = flatTracksAll;
+      obsList = chronoState.flatTracksAll;
     }
   } else {
-    if (flag_hideInvalid) {
-      obsList = flatTracksValidGroupById[id];
+    if (chrono.config.filter.flag_hideInvalid) {
+      obsList = chronoState.flatTracksValidGroupById[id];
     } else {
-      obsList = flatTracksAllGroupById[id];
+      obsList = chronoState.flatTracksAllGroupById[id];
     }
   }
   if (!obsList) return undefined;
@@ -408,10 +408,10 @@ function findPreviousObsEvent(frame, id) {
 }
 function findPreviousEventFrame(frame) {
   let obsList = [];
-  if (flag_hideInvalid) {
-    obsList = flatTracksValid;
+  if (chrono.config.filter.flag_hideInvalid) {
+    obsList = chronoState.flatTracksValid;
   } else {
-    obsList = flatTracksAll;
+    obsList = chronoState.flatTracksAll;
   }
   if (!obsList) return undefined;
   let obs = obsList
@@ -446,7 +446,7 @@ function onClickNextID() {
 
   setRestrictID(newID);
 
-  if (flag_autoEventMode) {
+  if (chrono.config.seek.flag_autoEventMode) {
     gotoFirstEvent();
   }
 
@@ -467,7 +467,7 @@ function onClickPrevID(gotoLast) {
 
   setRestrictID(newID);
 
-  if (flag_autoEventMode) {
+  if (chrono.config.seek.flag_autoEventMode) {
     if (gotoLast) {
       gotoLastEvent();
     } else {
@@ -497,14 +497,14 @@ function onClickNextIDStart() {
   //refreshChronogram()
 }
 function onAutoEventButtonClick() {
-  flag_autoEventMode = !flag_autoEventMode;
+  chrono.config.seek.flag_autoEventMode = !chrono.config.seek.flag_autoEventMode;
 
   update_autoEventMode();
 
   refreshChronogram();
 }
 function update_autoEventMode() {
-  if (flag_autoEventMode) {
+  if (chrono.config.seek.flag_autoEventMode) {
     $("#autoEventButton").addClass("active");
   } else {
     $("#autoEventButton").removeClass("active");

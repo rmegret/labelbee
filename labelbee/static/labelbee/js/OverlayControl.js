@@ -62,20 +62,16 @@ function OverlayControl(canvasTagId) {
 
   showObs = true;
   showObsTracks = true;
-  showObsChrono = true;
   showTags = true;
   showTagsTracks = true
   showSelectedTagsTracks = true
   showTagsOrientation = false
-  showTagsChrono = true
   $('#showObs').prop('checked',showObs)
   $('#showObsTracks').prop('checked',showObsTracks)
   $('#showTags').prop('checked',showTags)
   $('#showTagsTracks').prop('checked',showTagsTracks)
   $('#showSelectedTagsTracks').prop('checked',showTagsTracks)
   $('#showTagsOrientation').prop('checked',showTagsOrientation)
-  $('#showTagsChrono').prop('checked',showTagsChrono)
-  $('#showObsChrono').prop('checked',showObsChrono)
 
   overlay.opts = {
       showRect: true,
@@ -2404,8 +2400,8 @@ function plotTagsTracks(ctx) {
   if (showTagsTracks) {
     // Plot past and future tag positions
 
-    for (var id in ttags) {
-      let tagline = ttags[id];
+    for (var id in chronoState.ttags) {
+      let tagline = chronoState.ttags[id];
       if (typeof tagline === "undefined") continue;
 
       let p0 = null;
@@ -2675,7 +2671,7 @@ function updateFocusTrackWindowButton() {
 function focusTrackWindow() {
   // Actually a Chronogram method
   let f = getCurrentFrame();
-  axes.xdomainFocus([
+  chrono.axes.xdomainFocus([
     f - overlay.trackWindow.backward,
     f + overlay.trackWindow.forward,
   ]);
@@ -3073,13 +3069,6 @@ function chronoFilter(mode) {
     $("#tagsUseRgbFilter").toggleClass("active");
     onTagsParametersChanged();
   }
-}
-function onChronoParametersChanged() {
-  // Callback when chronogram computation parameters have changed
-  showTagsChrono = $("#showTagsChrono")[0].checked;
-  showObsChrono = $("#showObsChrono")[0].checked;
-  console.log("onChronoParametersChanged:showTagsChrono\n=", showTagsChrono);
-  refreshChronogram();
 }
 
 // #MARK # ID PREDICTION

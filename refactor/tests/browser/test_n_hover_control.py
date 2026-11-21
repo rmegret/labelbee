@@ -98,11 +98,11 @@ def test_n5_a_cached_frame_is_shown_at_once(ui, sample_dir):
     assert s["frame"] == 5 and s["changed"] == [5]
 
 
-BAR = "() => ({cls: axes.timeMark.attr('class'), frame: axes.timeMark.frame})"
+BAR = "() => ({cls: chrono.axes.timeMark.attr('class'), frame: chrono.axes.timeMark.frame})"
 
 
 def _trackmove(ui, frame):
-    ui.js("(f) => $(axes).trigger($.extend({type: 'previewframe:trackmove'}, {frame: f, id: 0}))", frame)
+    ui.js("(f) => $(chrono.axes).trigger($.extend({type: 'previewframe:trackmove'}, {frame: f, id: 0}))", frame)
 
 
 def test_n5_time_bar_is_orange_dashed_until_a_frame_is_shown_then_green_then_normal(ui, sample_dir):
@@ -122,8 +122,8 @@ def test_n5_time_bar_is_orange_dashed_until_a_frame_is_shown_then_green_then_nor
     _trackmove(ui, 12)                                                                  # pointer moves, frame not loaded
     b = ui.js(BAR)
     assert b["cls"] == "timeMark preview" and b["frame"] == 7                           # stays green on the shown frame
-    ui.js("() => $(axes).trigger('previewframe:trackend')")
-    ui.page.wait_for_function("axes.timeMark.attr('class') === 'timeMark'")
+    ui.js("() => $(chrono.axes).trigger('previewframe:trackend')")
+    ui.page.wait_for_function("chrono.axes.timeMark.attr('class') === 'timeMark'")
 
 
 def test_n8_zoom_draws_the_hovered_frame_not_the_live_video(ui, sample_dir):

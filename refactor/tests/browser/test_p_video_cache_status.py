@@ -38,7 +38,7 @@ def test_p2_on_builds_frames_runs_and_colored_rects(ui, sample_dir):
         {"startFrame": 10, "endFrame": 12, "status": "loaded"},
         {"startFrame": 13, "endFrame": 13, "status": "pending"},
         {"startFrame": 15, "endFrame": 15, "status": "pending"}]
-    ui.js("axes.xScale.domain([0, 40]); axes.refreshAxes({type: 'xDomainChanged'})")
+    ui.js("chrono.axes.xScale.domain([0, 40]); chrono.axes.refreshAxes({type: 'xDomainChanged'})")
     r = ui.js("""() => [...document.querySelectorAll('rect.cacheRun')].map(e => [e.style.fill, e.style.stroke])""")
     assert len(r) == 3
     assert r[0][0] == r[0][1] and r[1][0] == r[1][1]                          # border and fill of the same color
@@ -49,11 +49,11 @@ def test_p3_strip_is_below_the_frame_axis_without_overlap(ui, sample_dir):
     _start(ui, sample_dir)
     ui.js(FILL)
     _on(ui)
-    ui.js("axes.xScale.domain([0, 40]); axes.refreshAxes({type: 'xDomainChanged'})")
+    ui.js("chrono.axes.xScale.domain([0, 40]); chrono.axes.refreshAxes({type: 'xDomainChanged'})")
     r = ui.js("""() => { const a = document.querySelector('.x.axis .bgRect').getBoundingClientRect();
       const s = document.querySelector('rect.cacheRun').getBoundingClientRect();
       const p = document.querySelector('.plotAreaBackground').getBoundingClientRect();
-      return {gap: s.top - a.bottom, inside: s.bottom - p.bottom <= axes.margin.bottom, h: s.height}; }""")
+      return {gap: s.top - a.bottom, inside: s.bottom - p.bottom <= chrono.axes.margin.bottom, h: s.height}; }""")
     assert r["gap"] >= -0.5 and r["inside"] and 4 <= r["h"] <= 16
 
 

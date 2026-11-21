@@ -38,7 +38,7 @@ def test_a10_a_tags_file_attaches_its_tags_to_the_observations_with_the_same_id(
     assert ui.tracks()["0"]["1"]["tag"]["dm"] == 60
     assert ui.js("tagMode") == "Tracks"
     ui.page.wait_for_function("/\\b1 tags/.test(document.body.innerText)")
-    assert ui.js("Object.keys(ttags)") == ["1"]
+    assert ui.js("Object.keys(chronoState.ttags)") == ["1"]
 
 
 def test_a10_a_tag_with_no_matching_observation_is_stored_but_attaches_to_nothing(ui, sample_dir):
@@ -50,7 +50,7 @@ def test_a10_a_tag_with_no_matching_observation_is_stored_but_attaches_to_nothin
     ui.page.wait_for_timeout(300)
     assert list(ui.tags()) == ["0", "4"]
     assert all("tag" not in o for frame in ui.tracks().values() for o in frame.values())
-    assert ui.js("Object.keys(ttags).length") == 0
+    assert ui.js("Object.keys(chronoState.ttags).length") == 0
 
 
 def test_a10_the_standalone_tags_display_is_only_reachable_from_the_console(ui, sample_dir):
@@ -61,7 +61,7 @@ def test_a10_the_standalone_tags_display_is_only_reachable_from_the_console(ui, 
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
     assert ui.js("tagMode") == "Tracks"
     ui.js("tagMode = 'Tags'; refreshChronogram()")
-    ui.page.wait_for_function("Object.keys(ttags).sort().join() === '5,6'")
+    ui.page.wait_for_function("Object.keys(chronoState.ttags).sort().join() === '5,6'")
     ui.page.wait_for_function("/\\b3 tags/.test(document.body.innerText)")   # the 3 tag detections of the file
 
 

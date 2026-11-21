@@ -1,13 +1,13 @@
 """ChronoDragControl (ADR 0011): the Drag button chooses what a drag on the chronogram does.
 Pan View (default): d3.zoom pan. Preview Frame: click-drag or touch-drag previews the frame, no pan.
-Ignore: a drag does nothing, a click still seeks. Ctrl+hover previews the frame in every mode. `axes.dragTarget` is the narrow interface the modes use."""
+Ignore: a drag does nothing, a click still seeks. Ctrl+hover previews the frame in every mode. `chrono.axes.dragTarget` is the narrow interface the modes use."""
 
 import pytest
 
 COUNT = """() => { window.__pv = {move: 0, end: 0, click: 0};
-  $(axes).on('previewframe:trackmove', () => window.__pv.move++); $(axes).on('previewframe:trackend', () => window.__pv.end++);
-  $(axes).on('axes:clicked', () => window.__pv.click++); }"""
-DOMAIN = "() => axes.xScale.domain().map(Math.round)"
+  $(chrono.axes).on('previewframe:trackmove', () => window.__pv.move++); $(chrono.axes).on('previewframe:trackend', () => window.__pv.end++);
+  $(chrono.axes).on('axes:clicked', () => window.__pv.click++); }"""
+DOMAIN = "() => chrono.axes.xScale.domain().map(Math.round)"
 
 
 def _start(ui, sample_dir):
@@ -20,8 +20,8 @@ def _start(ui, sample_dir):
 
 def _pt(ui, dx=0):
     """Page coordinates of a point inside the plot (middle of the frame range, first rows), shifted by dx px."""
-    x, y = ui.js("""() => { const m = axes.chronoGroup.node().getScreenCTM();
-      const r = axes.xScale.range(); const p = new DOMPoint((r[0] + r[1]) / 2, axes.yScale.range()[1] / 2).matrixTransform(m);
+    x, y = ui.js("""() => { const m = chrono.axes.chronoGroup.node().getScreenCTM();
+      const r = chrono.axes.xScale.range(); const p = new DOMPoint((r[0] + r[1]) / 2, chrono.axes.yScale.range()[1] / 2).matrixTransform(m);
       return [p.x, p.y]; }""")
     return x + dx, y
 
@@ -36,7 +36,7 @@ def _drag(ui, dx=60):
 
 
 def _ptr(ui, type_, pid, x, y, kind="touch"):
-    ui.js("""([t, id, x, y, k]) => axes.chronoGroup.node().dispatchEvent(new PointerEvent(t,
+    ui.js("""([t, id, x, y, k]) => chrono.axes.chronoGroup.node().dispatchEvent(new PointerEvent(t,
       {pointerId: id, pointerType: k, clientX: x, clientY: y, button: 0, bubbles: true, isPrimary: id === 1}))""",
           [type_, pid, x, y, kind])
 
@@ -46,17 +46,17 @@ def test_o1_instance_is_created_from_the_imported_namespace(ui, sample_dir):
     assert ui.js("typeof ChronoDragControl.DragControl") == "function"
     assert ui.js("chronoDragControl.mode") == "pan"
     assert ui.js("Object.keys(chronoDragControl.modes).sort()") == ["ignore", "pan", "preview"]
-    assert ui.js("chronoDragControl.target === axes.dragTarget") is True
+    assert ui.js("chronoDragControl.target === chrono.axes.dragTarget") is True
 
 
 def test_o2_target_hit_inside_and_outside_the_plot(ui, sample_dir):
     _start(ui, sample_dir)
-    r = ui.js("""() => { const g = axes.chronoGroup.node(); const m = g.getScreenCTM();
-      const xr = axes.xScale.range(), yr = axes.yScale.range();
+    r = ui.js("""() => { const g = chrono.axes.chronoGroup.node(); const m = g.getScreenCTM();
+      const xr = chrono.axes.xScale.range(), yr = chrono.axes.yScale.range();
       const at = (x, y) => { const p = new DOMPoint(x, y).matrixTransform(m); return {clientX: p.x, clientY: p.y}; };
-      const t = axes.dragTarget;
+      const t = chrono.axes.dragTarget;
       return {inside: t.hit(at((xr[0] + xr[1]) / 2, yr[1] / 2)), outside: t.hit(at(xr[0] - 5, yr[1] / 2)),
-              expected: Math.round(axes.xScale.invert((xr[0] + xr[1]) / 2))}; }""")
+              expected: Math.round(chrono.axes.xScale.invert((xr[0] + xr[1]) / 2))}; }""")
     assert r["outside"] is None
     assert r["inside"]["frame"] == r["expected"]
 
@@ -64,16 +64,16 @@ def test_o2_target_hit_inside_and_outside_the_plot(ui, sample_dir):
 def test_o3_target_emit_triggers_the_previewframe_events(ui, sample_dir):
     _start(ui, sample_dir)
     r = ui.js("""() => { const got = [];
-      $(axes).on('previewframe:trackmove', (e) => got.push(['move', e.frame, e.id]));
-      $(axes).on('previewframe:trackend', () => got.push(['end']));
-      axes.dragTarget.emit('trackmove', {frame: 7, id: 3}); axes.dragTarget.emit('trackend');
+      $(chrono.axes).on('previewframe:trackmove', (e) => got.push(['move', e.frame, e.id]));
+      $(chrono.axes).on('previewframe:trackend', () => got.push(['end']));
+      chrono.axes.dragTarget.emit('trackmove', {frame: 7, id: 3}); chrono.axes.dragTarget.emit('trackend');
       return got; }""")
     assert r == [["move", 7, 3], ["end"]]
 
 
 def test_o4_pan_mode_drag_pans_and_does_not_preview(ui, sample_dir):
     _start(ui, sample_dir)
-    ui.js("axes.zoom.scaleBy(axes.chronoGroup, 4)")                 # zoomed in, so there is room to pan
+    ui.js("chrono.axes.zoom.scaleBy(chrono.axes.chronoGroup, 4)")                 # zoomed in, so there is room to pan
     before = ui.js(DOMAIN)
     _drag(ui)
     assert ui.js(DOMAIN) != before
@@ -83,7 +83,7 @@ def test_o4_pan_mode_drag_pans_and_does_not_preview(ui, sample_dir):
 def test_o5_preview_mode_drag_previews_and_does_not_pan_nor_click(ui, sample_dir):
     _start(ui, sample_dir)
     ui.js("chronoDragControl.setMode('preview')")
-    ui.js("axes.zoom.scaleBy(axes.chronoGroup, 4)")
+    ui.js("chrono.axes.zoom.scaleBy(chrono.axes.chronoGroup, 4)")
     before = ui.js(DOMAIN)
     _drag(ui)
     pv = ui.js("window.__pv")
@@ -135,7 +135,7 @@ def test_o8_touch_drag_previews_and_a_second_finger_ends_it(ui, sample_dir):
 def test_o9_ignore_mode_drag_does_nothing_but_click_still_seeks(ui, sample_dir):
     _start(ui, sample_dir)
     ui.js("chronoDragControl.setMode('ignore')")
-    ui.js("axes.zoom.scaleBy(axes.chronoGroup, 4)")
+    ui.js("chrono.axes.zoom.scaleBy(chrono.axes.chronoGroup, 4)")
     before = ui.js(DOMAIN)
     _drag(ui)
     assert ui.js(DOMAIN) == before
@@ -205,7 +205,7 @@ def test_o11_drag_button_menu_switches_mode(ui, sample_dir):
 def test_o14_preview_mode_takes_the_touch_from_the_browser_and_gives_it_back(ui, sample_dir):
     """Android: without touch-action none a still or slow touch becomes a scroll / long press (pointercancel)."""
     _start(ui, sample_dir)
-    get = "() => axes.chronoGroup.node().ownerSVGElement.style.touchAction"
+    get = "() => chrono.axes.chronoGroup.node().ownerSVGElement.style.touchAction"
     before = ui.js(get)
     ui.js("chronoDragControl.setMode('preview')")
     assert ui.js(get) == "none"

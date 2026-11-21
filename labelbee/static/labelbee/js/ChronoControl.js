@@ -5,14 +5,9 @@
 // ###########################################################
 // CHRONOGRAM
 
-// TODO: move global vars inside Chrono or some shared data store
-var allIntervals = [];
-var flatTracks = [];
+// The derived data shared by the chrono files is `chronoState` (chrono/ChronoState.js), the options are `chrono.config`,
+// the d3 elements `chrono.axes` and `chrono.layers`. TODO: move the remaining singletons inside Chrono
 
-var tagIntervals = [];
-var allTagsID = []
-var flatTags = []
-var ttags = {}
 
 
 var chrono
@@ -25,15 +20,42 @@ class Chronogram {
     chrono = this // TODO: fix back to normal local variable once all encapsulation is done properly
     const config = {}
     chrono.config = config
-    config.frameFilter = { active: false,
-                           frameMin: 0,
-                           frameMax: -1
-                          }
-    config.idAxisMapMode = 'id'
-    config.idAxisMapString = 'return id'
-    config.idAxisMap = Function("id",config.idAxisMapString)
+    // Options, grouped by role (ADR 0015 step 7c); the names inside the groups are the former globals
+    config.filter = {                // which observations the chronogram, its table and the navigation consider
+      frameFilter: { active: false,
+                     frameMin: 0,
+                     frameMax: -1
+                   },
+      restrictID: null,
+      restrictIDArray: [],
+      flag_restrictID: false,
+      excludeID: null,
+      excludeIDArray: [],
+      flag_excludeID: false,
+      flag_hideInvalid: false,
+      flag_hideFlowers: false,
+    }
+    config.seek = {                  // navigation between events
+      flag_autoEventMode: false,
+      eventSeekMode: "eventframe",
+    }
+    config.chronoDisplay = {         // what the chronogram draws
+      chronoItemHeight: 12,
+      flag_showPartsOnChrono: false,
+      flag_showIndividualEvents: false,
+      flag_showSpans: false,
+      showObsChrono: true,
+      showTagsChrono: true,
+      showDanglingTracks: true,
+    }
+    config.idMap = {                 // mapping of the track ids to the rows of the chronogram
+      idAxisMapMode: 'id',
+      idAxisMapString: 'return id',
+    }
+    config.idMap.idAxisMap = Function("id",config.idMap.idAxisMapString)
 
-    config.showDanglingTracks = true
+    chrono.layers = {}               // d3 layers, created by initChrono
+    chrono.chronoIntervals = new ChronoIntervals()
 
     chrono.perf = {}
 
@@ -47,47 +69,47 @@ class Chronogram {
 
   idAxisMap_inputChanged(event) {
     const config = this.config
-    config.idAxisMapString = $('#').val
+    config.idMap.idAxisMapString = $('#').val
     this.update_idAxisMap()
   }
   click_setIdAxisMap(mode) {
     const config = this.config
     if (mode == 'id') {
-      //config.idAxisMapString = 'id'
-      config.idAxisMapMode = 'id'
-      config.idAxisMap = (id)=>id
+      //config.idMap.idAxisMapString = 'id'
+      config.idMap.idAxisMapMode = 'id'
+      config.idMap.idAxisMap = (id)=>id
       this.update_idAxisMap()
     }
     if (mode == 'modulo') {
       const mod = prompt("Set ID axis remap with modulo:", 20)
       if (mod == null) return
-      //config.idAxisMapString = `String( Number(id) % mod )`
-      config.idAxisMapMode = 'modulo'
-      config.idAxisMap = (id) => String( Number(id) % Number(mod) )
+      //config.idMap.idAxisMapString = `String( Number(id) % mod )`
+      config.idMap.idAxisMapMode = 'modulo'
+      config.idMap.idAxisMap = (id) => String( Number(id) % Number(mod) )
       this.update_idAxisMap()
     }
   }
   update_idAxisMap() {
     const config = this.config
-    //config.idAxisMap = Function("id",config.idAxisMapString)
+    //config.idMap.idAxisMap = Function("id",config.idMap.idAxisMapString)
     //this.update_idAxisMap_input()
     refreshChronogram()
   }
   update_idAxisMap_input() {
     const config = this.config
-    $('#').val = config.idAxisMapString
+    $('#').val = config.idMap.idAxisMapString
   }
 
   // ### FRAMEFILTER
 
   setFrameFilter(how, event) {
     const chrono = this
-    const frameFilter = chrono.config.frameFilter
+    const frameFilter = chrono.config.filter.frameFilter
 
     console.log('chrono.setFrameFilter',how,event)
 
     if (how == 'toggle_active') {
-      chrono.config.frameFilter.active = !chrono.config.frameFilter.active
+      chrono.config.filter.frameFilter.active = !chrono.config.filter.frameFilter.active
       chrono.refreshFrameFilterGUI()
       refreshChronogram()
     }
@@ -132,9 +154,9 @@ class Chronogram {
   };
 
   refreshFrameFilterGUI() {
-      $('#filterFrameButton').toggleClass("active", chrono.config.frameFilter.active );
-      $('#chronoFrameFilterFrameMin').val( chrono.config.frameFilter.frameMin )
-      $('#chronoFrameFilterFrameMax').val( chrono.config.frameFilter.frameMax )
+      $('#filterFrameButton').toggleClass("active", chrono.config.filter.frameFilter.active );
+      $('#chronoFrameFilterFrameMin').val( chrono.config.filter.frameFilter.frameMin )
+      $('#chronoFrameFilterFrameMax').val( chrono.config.filter.frameFilter.frameMax )
   };
 
   // TOOLTIP
@@ -158,29 +180,30 @@ class Chronogram {
 
 function initChrono() {
   // global variables
-  axes = undefined;
-  chronogramData = [];
-  tagsChronogramData = [];
+  chrono.axes = undefined;
+  chronoState.chronogramData = [];
+  chronoState.tagsChronogramData = [];
 
-  restrictID = null;
-  restrictIDArray = [];
-  flag_restrictID = false;
-  flag_excludeID = false;
-  flag_autoEventMode = false;
-  flag_hideInvalid = false;
-  flag_hideFlowers = false
+  chrono.config.filter.restrictID = null;
+  chrono.config.filter.restrictIDArray = [];
+  chrono.config.filter.flag_restrictID = false;
+  chrono.config.filter.flag_excludeID = false;
+  chrono.config.seek.flag_autoEventMode = false;
+  chrono.config.filter.flag_hideInvalid = false;
+  chrono.config.filter.flag_hideFlowers = false
 
-  flag_showPartsOnChrono = false;
-  flag_showIndividualEvents = false; // false by default as it is way to expensive for full video tracks
-  flag_showSpans = false; // draw obs.span (e.g. whole track of a *.events.csv) behind the intervals
+  chrono.config.chronoDisplay.flag_showPartsOnChrono = false;
+  chrono.config.chronoDisplay.flag_showIndividualEvents = false; // false by default as it is way to expensive for full video tracks
+  chrono.config.chronoDisplay.flag_showSpans = false; // draw obs.span (e.g. whole track of a *.events.csv) behind the intervals
   updateButtons_showPartsOnChrono();
   updateButtons_showIndividualEvents();
   updateButtons_showSpans();
+  updateChronoCheckboxes();
 
-  eventSeekMode = "eventframe";
+  chrono.config.seek.eventSeekMode = "eventframe";
   updateEventSeekMode();
 
-  chronoItemHeight = 12;
+  chrono.config.chronoDisplay.chronoItemHeight = 12;
 
   // SVG adjust to its parent #chronoDiv
   var svg = d3.select("#svgVisualize");
@@ -190,19 +213,19 @@ function initChrono() {
   /* ## Build the axes (resizable) ## */
 
   options = { useOrdinalScale: true };
-  axes = new ChronoAxes(svg, getVideoInfo(), options);
+  chrono.axes = new ChronoAxes(svg, getVideoInfo(), options);
   //axes.onClick = onAxesClick         // Callback when the user clicks in axes
   //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
   
-  axes.mousewheelMode = false;
+  chrono.axes.mousewheelMode = false;
   updateMousewheelModeButton();
 
   //     svgInterval = axes.chronoGroup.append("g").attr('class', 'intervalLayer');
   //     svgMiddle = axes.chronoGroup.append("g").attr('class', 'middleLayer');
   //     svgTop = axes.chronoGroup.append("g").attr('class', 'topLayer');
-  svgSpanRects = axes.plotArea.append("g").attr("class", "spanRectLayer");
-  svgInterval = axes.plotArea.append("g").attr("class", "intervalLayer");
-  svgTop = axes.plotArea.append("g").attr("class", "topLayer");
+  chrono.layers.svgSpanRects = chrono.axes.plotArea.append("g").attr("class", "spanRectLayer");
+  chrono.layers.svgInterval = chrono.axes.plotArea.append("g").attr("class", "intervalLayer");
+  chrono.layers.svgTop = chrono.axes.plotArea.append("g").attr("class", "topLayer");
 
   $(videoControl).on("frame:changed", updateTimeMark);
   $(videoControl).on("previewframe:changed", updatePreviewTimeMark);
@@ -214,9 +237,9 @@ function initChrono() {
     $(overlay).trigger("trackWindow:change");
   });
 
-  $(axes).on("axes:clicked", onAxesClick);
-  $(axes).on("axes:dblclick", onAxesDblClick);
-  $(axes).on("axes:changed", onAxesChanged);
+  $(chrono.axes).on("axes:clicked", onAxesClick);
+  $(chrono.axes).on("axes:dblclick", onAxesDblClick);
+  $(chrono.axes).on("axes:changed", onAxesChanged);
 
   function endPreview() {
     //updateTimeMark();
@@ -238,17 +261,17 @@ function initChrono() {
     }
   }
   // Time bar during a preview: orange dashed at the pointer until a frame is shown, then green on the shown frames
-  $(axes).on("previewframe:trackmove", function (evt) {
+  $(chrono.axes).on("previewframe:trackmove", function (evt) {
     previewBar.active = true;
     if (!previewBar.shown) {
-      axes.setTimeMark(evt.frame);
-      axes.setTimeMarkState("pending");
+      chrono.axes.setTimeMark(evt.frame);
+      chrono.axes.setTimeMarkState("pending");
     }
     onAxesMoved(evt); // a frame already available shows (and turns the bar green) from in here
   });
-  $(axes).on("previewframe:trackend", function () {
+  $(chrono.axes).on("previewframe:trackend", function () {
     previewBar.active = previewBar.shown = false;
-    axes.setTimeMarkState(null);
+    chrono.axes.setTimeMarkState(null);
     endPreview();
     updateTimeMark();
   });
@@ -259,7 +282,7 @@ function initChrono() {
     window.ChronoDragControl = ns;
     if (chronoDragControl) chronoDragControl.destroy();
     chronoDragControl = new ChronoDragControl.DragControl(
-      axes.dragTarget,
+      chrono.axes.dragTarget,
       [new ns.PanMode(), new ns.IgnoreMode(), new ns.PreviewMode()],
       { initial: "pan" }
     );
@@ -270,7 +293,7 @@ function initChrono() {
   import("./chrono/VideoCacheStatus.js").then(function (ns) {
     window.VideoCacheStatus = ns;
     if (videoCacheStatus) videoCacheStatus.destroy();
-    videoCacheStatus = new ns.VideoCacheStatus(axes, videoCache, function () {
+    videoCacheStatus = new ns.VideoCacheStatus(chrono.axes, videoCache, function () {
       return { url: videoControl.video.src, frameOffset: getVideoInfo().frameoffset };
     });
     videoCacheStatus.setEnabled($("#showVideoCacheStatus").prop("checked"));
@@ -354,7 +377,7 @@ function initChrono() {
     handles: "n, s, e, w",
     helper: "ui-resizable-helper",
     stop: function () {
-      chronoItemHeight = getChronoItemHeight();
+      chrono.config.chronoDisplay.chronoItemHeight = getChronoItemHeight();
       refreshChronoLayout();
     },
   });
@@ -377,7 +400,7 @@ function refreshChronoLayout() {
     // from top/left handles
     $("#chronoDiv").css({ top: 0, left: 0 });
     if (!$("#chronoTab").hasClass("collapsed")) {
-      axes.refreshLayout();
+      chrono.axes.refreshLayout();
     }
   };
   debouncer(doRefresh)();
@@ -414,47 +437,59 @@ function updateButtons(classname, flag) {
 
 // Need simpler binding framework over here !
 function onToggleButton_showPartsOnChrono(event) {
-  flag_showPartsOnChrono = toggledNewState(event);
+  chrono.config.chronoDisplay.flag_showPartsOnChrono = toggledNewState(event);
   updateButtons_showPartsOnChrono();
 
   refreshChronogram();
 }
 function updateButtons_showPartsOnChrono(event) {
-  updateButtons("button_showPartsOnChrono", flag_showPartsOnChrono);
+  updateButtons("button_showPartsOnChrono", chrono.config.chronoDisplay.flag_showPartsOnChrono);
 }
 
 function onToggleButton_showIndividualEvents(event) {
-  flag_showIndividualEvents = toggledNewState(event);
+  chrono.config.chronoDisplay.flag_showIndividualEvents = toggledNewState(event);
   updateButtons_showIndividualEvents();
 
   refreshChronogram();
 }
 function updateButtons_showIndividualEvents(event) {
-  updateButtons("button_showIndividualEvents", flag_showIndividualEvents);
+  updateButtons("button_showIndividualEvents", chrono.config.chronoDisplay.flag_showIndividualEvents);
 }
 
 function onToggleButton_showSpans(event) {
-  flag_showSpans = toggledNewState(event);
+  chrono.config.chronoDisplay.flag_showSpans = toggledNewState(event);
   updateButtons_showSpans();
 
   refreshChronogram();
 }
 function updateButtons_showSpans(event) {
-  updateButtons("button_showSpans", flag_showSpans);
+  updateButtons("button_showSpans", chrono.config.chronoDisplay.flag_showSpans);
+}
+
+function updateChronoCheckboxes() {
+  $('#showTagsChrono').prop('checked', chrono.config.chronoDisplay.showTagsChrono)
+  $('#showObsChrono').prop('checked', chrono.config.chronoDisplay.showObsChrono)
+}
+function onChronoParametersChanged() {
+  // Callback when chronogram computation parameters have changed
+  chrono.config.chronoDisplay.showTagsChrono = $("#showTagsChrono")[0].checked;
+  chrono.config.chronoDisplay.showObsChrono = $("#showObsChrono")[0].checked;
+  console.log("onChronoParametersChanged:showTagsChrono\n=", chrono.config.chronoDisplay.showTagsChrono);
+  refreshChronogram();
 }
 
 // TODO unify all buttons and checkmarks click handling
 function onMousewheelModeToggled() {
-  axes.mousewheelMode = $("#mousewheelMode").prop("checked"); 
+  chrono.axes.mousewheelMode = $("#mousewheelMode").prop("checked"); 
   if (logging.mouseMouseEvents) {
     console.log(
       "onMousewheelModeToggled: toggled mousewheelMode=",
-      axes.mousewheelMode
+      chrono.axes.mousewheelMode
     );
   }
 }
 function updateMousewheelModeButton() {
-  $("#mousewheelMode").prop("checked", axes.mousewheelMode); 
+  $("#mousewheelMode").prop("checked", chrono.axes.mousewheelMode); 
 }
 
 
@@ -463,8 +498,8 @@ var __subsection__chronogram_restrict_id
 
 function setRestrictID(ids) {
   console.log("setRestrictID");
-  restrictID = String(ids);
-  restrictIDArray = restrictID
+  chrono.config.filter.restrictID = String(ids);
+  chrono.config.filter.restrictIDArray = chrono.config.filter.restrictID
     .split(",")
     .map(function (d) {
       return d.trim();
@@ -475,17 +510,17 @@ function setRestrictID(ids) {
 
   update_restrictID_GUI();
 
-  if (flag_restrictID) refreshChronogram();
+  if (chrono.config.filter.flag_restrictID) refreshChronogram();
 }
 function restrictIDFromSelection() {
   console.log("restrictIDFromSelection");
 
-  flag_restrictID = true;
+  chrono.config.filter.flag_restrictID = true;
   setRestrictID(selection.getId());
 }
 function restrictIDFromWindow() {
   console.log("restrictIDFromWindow");
-  restrictID = [];
+  chrono.config.filter.restrictID = [];
   let win = getWindow();
   let f1 = win[0],
     f2 = win[1];
@@ -496,42 +531,42 @@ function restrictIDFromWindow() {
   //   .map(function (tag) {
   //     return String(tag.id);
   //   });
-  restrictIDArray = chronogramData
+  chrono.config.filter.restrictIDArray = chronoState.chronogramData
     .filter(function (item) {
       return item.x >= f1 && item.x <= f2;
     })
     .map(function (item) {
       return String(item.id);
     });
-  restrictIDArray = sortIds([...new Set(restrictIDArray)]);
-  restrictID = restrictIDArray.join(",");
+  chrono.config.filter.restrictIDArray = sortIds([...new Set(chrono.config.filter.restrictIDArray)]);
+  chrono.config.filter.restrictID = chrono.config.filter.restrictIDArray.join(",");
 
-  flag_restrictID = true;
+  chrono.config.filter.flag_restrictID = true;
   update_restrictID_GUI();
 
-  if (flag_restrictID) refreshChronogram();
+  if (chrono.config.filter.flag_restrictID) refreshChronogram();
 }
 function update_restrictID_GUI() {
-  if (flag_restrictID) {
+  if (chrono.config.filter.flag_restrictID) {
     $("#restrictIDButton").addClass("active");
   } else {
     $("#restrictIDButton").removeClass("active");
   }
-  $("#restrictID").val(restrictID);
+  $("#restrictID").val(chrono.config.filter.restrictID);
 }
 function click_restrictID() {
-  flag_restrictID = !flag_restrictID;
+  chrono.config.filter.flag_restrictID = !chrono.config.filter.flag_restrictID;
 
   update_restrictID_GUI();
 
   refreshChronogram();
 }
 function onRestrictIDChanged() {
-  restrictID = $("#restrictID").val();
-  restrictIDArray = restrictID.split(",");
+  chrono.config.filter.restrictID = $("#restrictID").val();
+  chrono.config.filter.restrictIDArray = chrono.config.filter.restrictID.split(",");
 
   //selectBeeByID(restrictID)
-  if (flag_restrictID) refreshChronogram();
+  if (chrono.config.filter.flag_restrictID) refreshChronogram();
 }
 
 // ### EXCLUDE ID, INVALID AND FLOWERS
@@ -542,18 +577,18 @@ function click_excludeID() {
     $("#excludeIDButton").removeClass("active");
     //$("#excludeIDButton").addClass("btn-default")
     //$("#excludeIDButton").removeClass("btn-warning")
-    flag_excludeID = false;
+    chrono.config.filter.flag_excludeID = false;
   } else {
     $("#excludeIDButton").addClass("active");
     //$("#excludeIDButton").removeClass("btn-default")
     //$("#excludeIDButton").addClass("btn-warning")
-    flag_excludeID = true;
+    chrono.config.filter.flag_excludeID = true;
   }
   refreshChronogram();
 }
 function onExcludeIDChanged() {
-  excludeID = $("#excludeID").val();
-  excludeIDArray = excludeID.split(",");
+  chrono.config.filter.excludeID = $("#excludeID").val();
+  chrono.config.filter.excludeIDArray = chrono.config.filter.excludeID.split(",");
 
   refreshChronogram();
 }
@@ -561,18 +596,18 @@ function onExcludeIDChanged() {
 function click_hideInvalid() {
   if ($("#hideInvalidButton").hasClass("active")) {
     $("#hideInvalidButton").removeClass("active");
-    flag_hideInvalid = false;
+    chrono.config.filter.flag_hideInvalid = false;
   } else {
     $("#hideInvalidButton").addClass("active");
-    flag_hideInvalid = true;
+    chrono.config.filter.flag_hideInvalid = true;
   }
   refreshChronogram();
 }
 
 function click_hideFlowers() {
     let button = $("#hideFlowersButton")
-    flag_hideFlowers = !button.hasClass("active");
-    button.toggleClass( "active", flag_hideFlowers )
+    chrono.config.filter.flag_hideFlowers = !button.hasClass("active");
+    button.toggleClass( "active", chrono.config.filter.flag_hideFlowers )
     refreshChronogram()
 }
 
@@ -589,8 +624,8 @@ function getChronoItemHeight() {
 
   let H = $("#chronoDiv").height();
 
-  let mh = axes.margin.top + axes.margin.bottom;
-  let N = axes.ydomain().length;
+  let mh = chrono.axes.margin.top + chrono.axes.margin.bottom;
+  let N = chrono.axes.ydomain().length;
   let itemHeight = (H - mh) / N;
 
   console.trace(itemHeight);
@@ -599,17 +634,17 @@ function getChronoItemHeight() {
 }
 function chronoAdjust(mode) {
   let debouncedRefresh = debouncer(function (event) {
-    axes.refreshLayout();
+    chrono.axes.refreshLayout();
   });
 
   let factor = 1.2;
-  let mh = axes.margin.top + axes.margin.bottom;
-  let mw = axes.margin.left + axes.margin.right;
+  let mh = chrono.axes.margin.top + chrono.axes.margin.bottom;
+  let mw = chrono.axes.margin.left + chrono.axes.margin.right;
   if (mode == "H-") {
     //         let h = ($('#chronoDiv').height()-mh)/factor+mh
     //         if (h<100) h=100;
     //         $('#chronoDiv').height(h)
-    adjustChronogramHeight(chronoItemHeight / factor);
+    adjustChronogramHeight(chrono.config.chronoDisplay.chronoItemHeight / factor);
     debouncedRefresh();
   }
   if (mode == "H=") {
@@ -619,7 +654,7 @@ function chronoAdjust(mode) {
   if (mode == "H+") {
     //         let h = ($('#chronoDiv').height()-mh)*factor+mh
     //         $('#chronoDiv').height(h)
-    adjustChronogramHeight(chronoItemHeight * factor);
+    adjustChronogramHeight(chrono.config.chronoDisplay.chronoItemHeight * factor);
     debouncedRefresh();
   }
 
@@ -645,10 +680,10 @@ function adjustChronogramHeight(itemHeight) {
   if (itemHeight == null) {
     itemHeight = 12;
   }
-  chronoItemHeight = itemHeight;
+  chrono.config.chronoDisplay.chronoItemHeight = itemHeight;
 
-  let mh = axes.margin.top + axes.margin.bottom;
-  let domain = axes.ydomain();
+  let mh = chrono.axes.margin.top + chrono.axes.margin.bottom;
+  let domain = chrono.axes.ydomain();
   //console.trace(domain)
   let minheight = domain.length * itemHeight + mh;
   $("#chronoDiv").height(minheight);
@@ -668,8 +703,8 @@ function domainxFromVideo() {
   return domain;
 }
 function domainxFromChronogramData() {
-  if (chronogramData.length === 0) return [0, 1];
-  var range = d3.extent(chronogramData, function (d) {
+  if (chronoState.chronogramData.length === 0) return [0, 1];
+  var range = d3.extent(chronoState.chronogramData, function (d) {
     return Number(d.x);
   });
   return [range[0] - 0.5, range[1] + 0.5]; // add some margin
@@ -687,26 +722,26 @@ function domainxFromChronogramData() {
 //     return [range[0], range[1]+1.0] // Add 1.0 for the height of the interval
 // }
 function validIdsDomain() {
-  if (chronogramData.length === 0) return [];
+  if (chronoState.chronogramData.length === 0) return [];
   let ids = new Set();
-  if (flag_hideInvalid) {
-    chronogramData.forEach(function (d) {
+  if (chrono.config.filter.flag_hideInvalid) {
+    chronoState.chronogramData.forEach(function (d) {
       let labs = d.labels.split(",");
       if (labs.indexOf("wrongid") == -1 && labs.indexOf("falsealarm") == -1)
         ids.add(d.id);
     });
   } else {
-    chronogramData.forEach(function (d) {
+    chronoState.chronogramData.forEach(function (d) {
       ids.add(d.id);
     });
   }
   return [...ids]; // Convert to array
 }
 function validTagIdsDomain() {
-  if (tagIntervals.length === 0) return [];
+  if (chronoState.tagIntervals.length === 0) return [];
   let ids = new Set();
-  if (flag_hideInvalid) {
-    tagIntervals.forEach(function (d) {
+  if (chrono.config.filter.flag_hideInvalid) {
+    chronoState.tagIntervals.forEach(function (d) {
       if (
         !containsLabel(d.labels, "wrongid") &&
         !containsLabel(d.labels, "falsealarm")
@@ -714,39 +749,39 @@ function validTagIdsDomain() {
         ids.add(d.id);
     });
   } else {
-    tagIntervals.forEach(function (d) {
+    chronoState.tagIntervals.forEach(function (d) {
       ids.add(d.id);
     });
   }
   return [...ids]; // Convert to array
 }
 function validAllTagIdsDomain() {
-  return sortIds(allTagsID);
+  return sortIds(chronoState.allTagsID);
 }
 function validVisibleTagIdsDomain() {
-  return sortIds(axes.ydomain());
+  return sortIds(chrono.axes.ydomain());
 }
 
 /* Update chronogram axes properties */
 function updateChronoXDomainFromVideo() {
-  axes.updateVideoinfo(getVideoInfo()) // Update starttime and realfps
-  axes.xdomain(domainxFromVideo());
+  chrono.axes.updateVideoinfo(getVideoInfo()) // Update starttime and realfps
+  chrono.axes.xdomain(domainxFromVideo());
 }
 function scaleTimeDomain(scale) {
-  let domain = axes.xdomain();
+  let domain = chrono.axes.xdomain();
   let f = getCurrentFrame();
   if (f >= domain[0] && f <= domain[1]) {
     // If timemark visible
-    axes.xdomainScale(scale, f); // Zoom in the timemark
+    chrono.axes.xdomainScale(scale, f); // Zoom in the timemark
   } else {
-    axes.xdomainScale(scale); // Zoom in center
+    chrono.axes.xdomainScale(scale); // Zoom in center
   }
 }
 function shiftTimeDomain(factor) {
-  let domain = axes.xdomain();
+  let domain = chrono.axes.xdomain();
   let f = getCurrentFrame();
   let shift = Math.round(factor * (domain[1] - domain[0]));
-  axes.xdomainShift(shift);
+  chrono.axes.xdomainShift(shift);
   //     if (f>=domain[0] && f<=domain[1]) { // If timemark visible
   //         videoControl.seekFrame(f+shift);
   //     }
@@ -785,8 +820,8 @@ function updateChronoYDomain() {
 
   var domain = [];
 
-  if (flag_restrictID) {
-    domain = restrictIDArray;
+  if (chrono.config.filter.flag_restrictID) {
+    domain = chrono.config.filter.restrictIDArray;
   } else {
     domain = validIdsChrono();
   }
@@ -797,7 +832,7 @@ function updateChronoYDomain() {
 
   //let itemHeight = getChronoItemHeight()
 
-  if (chrono.config.idAxisMap) {
+  if (chrono.config.idMap.idAxisMap) {
     // let trackLength={}
     // let yEnd={}; 
     // chrono.trackY={}; 
@@ -806,15 +841,15 @@ function updateChronoYDomain() {
     // allIntervals.forEach( (item) => { let L=trackLength[item.id]; let curY=(L>1)+(L>2)+(L>4)+(L>8)+(L>16)+(L>32)+(L>64)+(L>128)+(L>256); for (let y=curY; ; y++) {
     //     if (yEnd[y]==null || item.x1>yEnd[y]) { yEnd[y]=item.x2; chrono.trackY[item.id]=y; break; }
     // }  } )
-    //chrono.config.idAxisMap = (id) => chrono.trackY[id]
+    //chrono.config.idMap.idAxisMap = (id) => chrono.trackY[id]
     // Apply an id mapping if exists
-    const mappedDomain = [...new Set( domain.map(chrono.config.idAxisMap) )].sort( (a,b) => -Number(b)+Number(a))
-    axes.ydomain(mappedDomain);
+    const mappedDomain = [...new Set( domain.map(chrono.config.idMap.idAxisMap) )].sort( (a,b) => -Number(b)+Number(a))
+    chrono.axes.ydomain(mappedDomain);
   } else {
-    axes.ydomain(domain);
+    chrono.axes.ydomain(domain);
   }
 
-  adjustChronogramHeight(chronoItemHeight);
+  adjustChronogramHeight(chrono.config.chronoDisplay.chronoItemHeight);
 
   //axes.ydomain(['0','1','2','3','10','12']) // Testing
 }
@@ -833,13 +868,13 @@ function updateTimeMark() {
   var frame = getCurrentFrame();
   if (previewBar.active) {
     previewBar.shown = true;
-    axes.setTimeMarkState("preview");
+    chrono.axes.setTimeMarkState("preview");
   }
   if (logging.frameEvents) console.log("updateTimeMark: frame=", frame);
   if (typeof frame == "undefined") {
     frame = 0;
   }
-  axes.setTimeMark(frame);
+  chrono.axes.setTimeMark(frame);
 }
 function updatePreviewTimeMark() {
   updateTimeMark();
@@ -849,7 +884,7 @@ function updatePreviewTimeMark() {
 
 function updateChronoSelection() {
   let id = selection.getId();
-  axes.highlightId(id);
+  chrono.axes.highlightId(id);
 }
 
 
@@ -858,7 +893,7 @@ var __section__chronogram_timespans
 
 //put first and last frame in vid
 function initVideoSpan() {
-  var chronoGroup = axes.chronoGroup;
+  var chronoGroup = chrono.axes.chronoGroup;
   videoSpan = chronoGroup
     .append("g")
     .attr("id", "videoSpan")
@@ -869,14 +904,14 @@ function initVideoSpan() {
     .append("rect")
     .attr("x", 0)
     .attr("y", -15)
-    .attr("width", axes.width())
+    .attr("width", chrono.axes.width())
     .attr("height", 15);
   videoSpan
     .append("rect")
     .attr("class", "background")
     .attr("x", 0)
     .attr("y", -15)
-    .attr("width", axes.width())
+    .attr("width", chrono.axes.width())
     .attr("height", 15)
     .style("stroke-width", "1px")
     .style("fill", "#f0fff0");
@@ -896,34 +931,34 @@ function initVideoSpan() {
     .text("video name ?");
 }
 function updateVideoSpan() {
-  var videoSpan = axes.chronoGroup.select("#videoSpan");
+  var videoSpan = chrono.axes.chronoGroup.select("#videoSpan");
   //videoSpan.attr("transform",
   //               "translate("+(axes.margin.left)+","+(axes.margin.top)+")")
   videoSpan
     .selectAll("#videoSpanClipPath > rect")
-    .attr("width", axes.width())
+    .attr("width", chrono.axes.width())
     .attr("y", -15);
   videoSpan
     .selectAll(".background")
     .attr("x", 0)
     .attr("y", -15)
-    .attr("width", axes.width())
+    .attr("width", chrono.axes.width())
     .attr("height", 15);
   videoSpan
     .selectAll(".interval")
-    .attr("x", axes.xScale(0))
+    .attr("x", chrono.axes.xScale(0))
     .attr("y", -13)
-    .attr("width", axes.xScale(getVideoInfo().nframes) - axes.xScale(0)) // frames 0..nframes-1, frame f is [f, f+1)
+    .attr("width", chrono.axes.xScale(getVideoInfo().nframes) - chrono.axes.xScale(0)) // frames 0..nframes-1, frame f is [f, f+1)
     .attr("height", 11);
   videoSpan
     .selectAll(".label")
-    .attr("x", axes.xScale(0) + 2)
+    .attr("x", chrono.axes.xScale(0) + 2)
     .attr("y", -4)
     .text(getVideoInfo().name.split("/").pop());
 }
 
 function initTrackWindowSpan() {
-  var chronoGroup = axes.chronoGroup;
+  var chronoGroup = chrono.axes.chronoGroup;
   trackWindowSpan = chronoGroup
     .append("g")
     .attr("id", "trackWindowSpan")
@@ -934,7 +969,7 @@ function initTrackWindowSpan() {
     .append("rect")
     .attr("x", 0)
     .attr("y", -15)
-    .attr("width", axes.width())
+    .attr("width", chrono.axes.width())
     .attr("height", 15);
   trackWindowSpan
     .append("rect")
@@ -950,23 +985,23 @@ function initTrackWindowSpan() {
 
   $(videoControl).on("frame:changed", updateTrackWindowSpan);
   $(videoControl).on("previewframe:changed", updateTrackWindowSpan);
-  $(axes).on("previewframe:trackend", updateTrackWindowSpan);
+  $(chrono.axes).on("previewframe:trackend", updateTrackWindowSpan);
   $(overlay).on("trackWindow:change", updateTrackWindowSpan);
 }
 function updateTrackWindowSpan() {
-  var trackWindowSpan = axes.chronoGroup.select("#trackWindowSpan");
+  var trackWindowSpan = chrono.axes.chronoGroup.select("#trackWindowSpan");
   trackWindowSpan
     .selectAll("#trackWindowSpanClipPath > rect")
-    .attr("width", axes.width())
+    .attr("width", chrono.axes.width())
     .attr("y", -15);
   let f = getCurrentFrame();
   let fmin = f - overlay.trackWindow.backward;
   let fmax = f + overlay.trackWindow.forward;
   trackWindowSpan
     .selectAll(".interval")
-    .attr("x", axes.xScale(fmin))
+    .attr("x", chrono.axes.xScale(fmin))
     .attr("y", -13)
-    .attr("width", axes.xScale(fmax + 1) - axes.xScale(fmin)) // frame fmax is the interval [fmax, fmax+1)
+    .attr("width", chrono.axes.xScale(fmax + 1) - chrono.axes.xScale(fmin)) // frame fmax is the interval [fmax, fmax+1)
     .attr("height", 11);
 }
 function getWindow() {
@@ -1045,7 +1080,7 @@ function updateChrono() {
   chrono.perf.chronoRedraw = end-start
 
   let statusMsg = `Chrono update ${Math.round(chrono.perf.chronoUpdate)} ms, redraw ${Math.round(chrono.perf.chronoRedraw)} ms;
-data: ${chronogramData.length} items, ${allIntervals.length} intervals, ${flatTags.length} tags`
+data: ${chronoState.chronogramData.length} items, ${chronoState.allIntervals.length} intervals, ${chronoState.flatTags.length} tags`
 
   if ( chrono.perf.chronoUpdate > 50 || chrono.perf.chronoRedraw > 50 ) {
     statusMsg += '<br><b>Slow display, consider closing the chronogram or filtering the data</b>'
@@ -1082,8 +1117,8 @@ function updateChronoData() {
   // PREPARE TRACKS DATA
   // (no augmentTrackWithTag() here: a refresh must not write the store, ADR 0009 Q34)
 
-  chronogramData.length = 0;
-  if (showObsChrono) {
+  chronoState.chronogramData.length = 0;
+  if (chrono.config.chronoDisplay.showObsChrono) {
     // Tracks => chronogramData
     // chronogramData[flatk].x, .y, .Activity, .labels, .pollen, .tag, .obs
     updateChronogramData()
@@ -1097,17 +1132,17 @@ function updateChronoData() {
 
   // PREPARE TAGS DATA
 
-  flatTags = getFlatTags(false); // noFilter
+  chronoState.flatTags = getFlatTags(false); // noFilter
 
-  ttags = getTTags(); // reverse index ttags[id][frame]
+  chronoState.ttags = getTTags(); // reverse index ttags[id][frame]
 
-  allTagsID = [...allTagsID];
+  chronoState.allTagsID = [...chronoState.allTagsID];
 
   if (logging.chrono)
     console.log("updateChronoData: convert tags to intervals...");
   
-  tagIntervals = [];
-  if (showTagsChrono) {
+  chronoState.tagIntervals = [];
+  if (chrono.config.chronoDisplay.showTagsChrono) {
     updateTagIntervals()
   }
 
@@ -1116,8 +1151,8 @@ function updateChronoData() {
   updateTagsLabels();
 
   // Filter tagIntervals
-  if (flag_hideInvalid) {
-    tagIntervals = tagIntervals.filter(
+  if (chrono.config.filter.flag_hideInvalid) {
+    chronoState.tagIntervals = chronoState.tagIntervals.filter(
       (interval) => !(interval.labeling.falsealarm || interval.labeling.wrongid)
     );
   }
@@ -1147,28 +1182,28 @@ function augmentTrackWithTag() {
 /* Tracks => flatTracks, flatTracksAll, flatTracksValid, flatTracksAllGroupById, flatTracksValidGroupById */
 function updateFlatTracks() {
   // All obs sorted by frame,id
-  flatTracksAll = [];
+  chronoState.flatTracksAll = [];
   for (const [obs, F, id] of events.observations()) {
 
     // TODO: filter in only one place instead of both updateObsTable and refreshChronogram
-    if (chrono.config.frameFilter.active) {
-      if ((F < chrono.config.frameFilter.frameMin) || (F > chrono.config.frameFilter.frameMax)) continue // Just skip out of active zone
+    if (chrono.config.filter.frameFilter.active) {
+      if ((F < chrono.config.filter.frameFilter.frameMin) || (F > chrono.config.filter.frameFilter.frameMax)) continue // Just skip out of active zone
     }
 
-    if (flag_restrictID) {
-      if ($.inArray(String(id), restrictIDArray) < 0) continue;
+    if (chrono.config.filter.flag_restrictID) {
+      if ($.inArray(String(id), chrono.config.filter.restrictIDArray) < 0) continue;
     }
-    if (flag_excludeID) {
-      if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+    if (chrono.config.filter.flag_excludeID) {
+      if ($.inArray(String(id), chrono.config.filter.excludeIDArray) >= 0) continue;
     }
 
     // XX Define y
-    let y = chrono.config.idAxisMap(id)
+    let y = chrono.config.idMap.idAxisMap(id)
     let chronoObs = { frame: F, id: id, y: y, labels: obs.labels, obs: obs };
 
-    flatTracksAll.push(chronoObs);
+    chronoState.flatTracksAll.push(chronoObs);
   }
-  flatTracksValid = flatTracksAll.filter(function (d) {
+  chronoState.flatTracksValid = chronoState.flatTracksAll.filter(function (d) {
     return (
       !containsLabel(d.labels, "falsealarm") &&
       !containsLabel(d.labels, "wrongid")
@@ -1181,41 +1216,41 @@ function updateFlatTracks() {
       return groups;
     }, {});
   }; // Keep order of frames
-  flatTracksAllGroupById = groupBy(flatTracksAll, "id");
-  flatTracksValidGroupById = groupBy(flatTracksValid, "id");
+  chronoState.flatTracksAllGroupById = groupBy(chronoState.flatTracksAll, "id");
+  chronoState.flatTracksValidGroupById = groupBy(chronoState.flatTracksValid, "id");
 
-  if (flag_hideInvalid) {
-    flatTracks = flatTracksValid;
+  if (chrono.config.filter.flag_hideInvalid) {
+    chronoState.flatTracks = chronoState.flatTracksValid;
   } else {
-    flatTracks = flatTracksAll;
+    chronoState.flatTracks = chronoState.flatTracksAll;
   }
 }
 
 
 /* Tracks => chronogramData */
 function updateChronogramData() {
-  chronogramData.length = 0;
+  chronoState.chronogramData.length = 0;
 
   for (const [obs, F, id] of events.observations()) {   // a generator: the loop body uses continue
 
-      if (chrono.config.frameFilter.active) {
-        if ((F < chrono.config.frameFilter.frameMin) || (F > chrono.config.frameFilter.frameMax)) continue // Just skip out of active zone
+      if (chrono.config.filter.frameFilter.active) {
+        if ((F < chrono.config.filter.frameFilter.frameMin) || (F > chrono.config.filter.frameFilter.frameMax)) continue // Just skip out of active zone
       }
 
         const id_eff = String(Number(id)%50)
 
         let labelArray = (obs.labels || '').split(",")
 
-        if (flag_restrictID) {
-          if ($.inArray(String(id), restrictIDArray) < 0) continue;
+        if (chrono.config.filter.flag_restrictID) {
+          if ($.inArray(String(id), chrono.config.filter.restrictIDArray) < 0) continue;
         }
-        if (flag_excludeID) {
-          if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+        if (chrono.config.filter.flag_excludeID) {
+          if ($.inArray(String(id), chrono.config.filter.excludeIDArray) >= 0) continue;
         }
-        if (flag_hideInvalid) {
+        if (chrono.config.filter.flag_hideInvalid) {
           if (hasLabel(obs, "falsealarm") || hasLabel(obs, "wrongid")) continue;
         }
-        if (flag_hideFlowers) {
+        if (chrono.config.filter.flag_hideFlowers) {
             if (String(id).startsWith('F')) continue;
         }
         let inROI = true
@@ -1243,9 +1278,9 @@ function updateChronogramData() {
         //                 let b3 = hasLabel(obs,'leaving')
 
         // XXX Define y
-        let y = chrono.config.idAxisMap(id)
+        let y = chrono.config.idMap.idAxisMap(id)
         if (!b0 && !b2 && !b3) {
-          chronogramData.push({
+          chronoState.chronogramData.push({
             x: F,
             y: y, 
             id: id,
@@ -1258,7 +1293,7 @@ function updateChronogramData() {
           });
         }
         if (b2) {
-          chronogramData.push({
+          chronoState.chronogramData.push({
             x: F,
             y: y,
             id: id,
@@ -1271,7 +1306,7 @@ function updateChronogramData() {
           });
         }
         if (b3) {
-          chronogramData.push({
+          chronoState.chronogramData.push({
             x: F,
             y: y,
             id: id,
@@ -1284,7 +1319,7 @@ function updateChronogramData() {
           });
         }
         if (b0) {
-          chronogramData.push({
+          chronoState.chronogramData.push({
             x: F,
             y: y,
             id: id,
@@ -1305,18 +1340,18 @@ function createIntervalList() {
   //initiliaze allIntervals to update data
   let tempCoordinates = {};
 
-  for (var i = 0; i < chronogramData.length; i++) {
-    if (chronogramData[i].id in tempCoordinates) {
+  for (var i = 0; i < chronoState.chronogramData.length; i++) {
+    if (chronoState.chronogramData[i].id in tempCoordinates) {
       //Make sure y coordinate is not in tempCoordiantes
-      tempCoordinates[chronogramData[i].id].push(i);
+      tempCoordinates[chronoState.chronogramData[i].id].push(i);
     } else {
       //Create new beeId key with it's x coordiantes as value
-      tempCoordinates[chronogramData[i].id] = [];
-      tempCoordinates[chronogramData[i].id].push(i);
+      tempCoordinates[chronoState.chronogramData[i].id] = [];
+      tempCoordinates[chronoState.chronogramData[i].id].push(i);
     }
   }
   //initiliaze allIntervals to update data
-  allIntervals = [];
+  chronoState.allIntervals = [];
   for (var id in tempCoordinates) {
     let xValues = [];
 
@@ -1332,10 +1367,10 @@ function createIntervalList() {
 
     let passThroughROI=false
     for (let j = 0; j < iArray.length; j++) {
-      xValues[j] = Number(chronogramData[iArray[j]].x);
+      xValues[j] = Number(chronoState.chronogramData[iArray[j]].x);
     }
 
-    let iData = chronogramData[iArray[0]];
+    let iData = chronoState.chronogramData[iArray[0]];
     let tempInterval = {
       x1: xValues[0],
       x2: xValues[0],
@@ -1360,7 +1395,7 @@ function createIntervalList() {
     //     Activity: iData.Activity, pollen: iData.pollen, issue: "" };
 
     for (var i = 1; i < xValues.length; i++) {
-      let iData = chronogramData[iArray[i]];
+      let iData = chronoState.chronogramData[iArray[i]];
       // console.log("Act temp interval IN: ", tempInterval[i].Activity);
       if (xValues[i] - xValues[i - 1] == 1) {
         tempInterval.x2 = xValues[i]; //Extend the existing interval
@@ -1373,7 +1408,7 @@ function createIntervalList() {
             tempInterval.haslabel[label] = true
         }
       } else {
-        allIntervals.push(tempInterval);
+        chronoState.allIntervals.push(tempInterval);
         tempInterval = {
           x1: xValues[i],
           x2: xValues[i],
@@ -1397,15 +1432,15 @@ function createIntervalList() {
       }
     }
     tempInterval.labels = Object.keys(tempInterval.haslabel).join(',')
-    allIntervals.push(tempInterval);
+    chronoState.allIntervals.push(tempInterval);
   }
 
   // Filter out
   if (flag_useROI)
-    allIntervals = allIntervals.filter( interval => interval.passThroughROI )
+    chronoState.allIntervals = chronoState.allIntervals.filter( interval => interval.passThroughROI )
 
   // Pass extra data from chronogramData to allInterval
-  for (let interval of allIntervals) {
+  for (let interval of chronoState.allIntervals) {
     var tempArray = interval.labels.split(",");
     if (tempArray.includes("wrongid")) {
       interval.wrongid = true;
@@ -1425,7 +1460,7 @@ function getFlatTags(useFilter) {
 
   if (tagMode == 'Tracks') {
     // Asume we already have flatTracks
-    for (let chronoObs of flatTracksAll) {
+    for (let chronoObs of chronoState.flatTracksAll) {
       if (chronoObs.obs.tag) {
         flatTags.push(chronoObs.obs.tag);
       }
@@ -1437,11 +1472,11 @@ function getFlatTags(useFilter) {
         let id = tags[i].id;
 
         if (useFilter) {
-          if (flag_restrictID) {
-            if ($.inArray(String(id), restrictIDArray) < 0) continue;
+          if (chrono.config.filter.flag_restrictID) {
+            if ($.inArray(String(id), chrono.config.filter.restrictIDArray) < 0) continue;
           }
-          if (flag_excludeID) {
-            if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+          if (chrono.config.filter.flag_excludeID) {
+            if ($.inArray(String(id), chrono.config.filter.excludeIDArray) >= 0) continue;
           }
         }
 
@@ -1455,16 +1490,16 @@ function getFlatTags(useFilter) {
 /* Tags => allTagsID, ttags */
 /* ttags[id][frame] is tag */
 function getTTags() {
-  allTagsID = new Set();
+  chronoState.allTagsID = new Set();
 
   /* Transpose Tags data structure */
   let ttags = {};
   if (tagMode == 'Tracks') {
     // Asume we already have flatTags
-    for (let tag of flatTags) {
+    for (let tag of chronoState.flatTags) {
       let id = String(tag.id);
       let F = tag.frame;
-      allTagsID.add(id);
+      chronoState.allTagsID.add(id);
       // Assume restrictID and excludeId already applied before flatTags
       if (typeof ttags[id] === "undefined") ttags[id] = {};
       ttags[id][String(F)] = tag;
@@ -1475,13 +1510,13 @@ function getTTags() {
       for (let i in tags) {
         let id = String(tags[i].id);
 
-        allTagsID.add(id);
+        chronoState.allTagsID.add(id);
 
-        if (flag_restrictID) {
-          if ($.inArray(String(id), restrictIDArray) < 0) continue;
+        if (chrono.config.filter.flag_restrictID) {
+          if ($.inArray(String(id), chrono.config.filter.restrictIDArray) < 0) continue;
         }
-        if (flag_excludeID) {
-          if ($.inArray(String(id), excludeIDArray) >= 0) continue;
+        if (chrono.config.filter.flag_excludeID) {
+          if ($.inArray(String(id), chrono.config.filter.excludeIDArray) >= 0) continue;
         }
 
         if (typeof ttags[id] === "undefined") ttags[id] = {};
@@ -1497,11 +1532,11 @@ function getTTags() {
 /* ttags => tagIntervals */
 function updateTagIntervals() {
   // ttags => tagIntervals
-  tagIntervals = [];
+  chronoState.tagIntervals = [];
 
   /* Convert to intervals */
-  for (let id in ttags) {
-    let obsarray = ttags[id];
+  for (let id in chronoState.ttags) {
+    let obsarray = chronoState.ttags[id];
     let activeInterval = [];
     let isActive = false;
     for (let frame in obsarray) {
@@ -1536,10 +1571,10 @@ function updateTagIntervals() {
             let len = activeInterval["end"] - activeInterval["begin"] + 1;
             activeInterval.hammingavg = activeInterval.hammingavg / len;
             activeInterval.dmavg = activeInterval.dmavg / len;
-            tagIntervals.push(activeInterval);
+            chronoState.tagIntervals.push(activeInterval);
           }
           // XXX Define y
-          let y = chrono.config.idAxisMap(id)
+          let y = chrono.config.idMap.idAxisMap(id)
           // Open new one
           activeInterval = {
             id: id,
@@ -1553,7 +1588,7 @@ function updateTagIntervals() {
         }
       } else {
         // XXX Define y
-        let y = chrono.config.idAxisMap(id)
+        let y = chrono.config.idMap.idAxisMap(id)
         // Open new one
         activeInterval = {
           id: id,
@@ -1574,7 +1609,7 @@ function updateTagIntervals() {
         let len = activeInterval["end"] - activeInterval["begin"] + 1;
         activeInterval.hammingavg = activeInterval.hammingavg / len;
         activeInterval.dmavg = activeInterval.dmavg / len;
-        tagIntervals.push(activeInterval);
+        chronoState.tagIntervals.push(activeInterval);
       }
   }
 }
@@ -1583,7 +1618,7 @@ function updateTagIntervals() {
 /* flatTracksAll, tagIntervals => tagIntervals
    also mark track obs on overlapping span as redundant */
 function updateTagsLabels() {
-  for (let ann of flatTracksAll) {
+  for (let ann of chronoState.flatTracksAll) {
     if ("span" in ann.obs) {
       ann.span = { f1: Number(ann.obs.span.f1), f2: Number(ann.obs.span.f2) };
       ann.span.b1 = "manual";
@@ -1596,7 +1631,7 @@ function updateTagsLabels() {
     }
   }
   let tagIntervalsVirtual = [];
-  for (let interval of tagIntervals) {
+  for (let interval of chronoState.tagIntervals) {
     interval.labeling = {
       labeled: false,
       entering: false,
@@ -1604,7 +1639,7 @@ function updateTagsLabels() {
       wrongid: false,
     };
 
-    for (let ann of flatTracksAll) {
+    for (let ann of chronoState.flatTracksAll) {
       if (ann.id != interval.id) continue;
 
       let f = Number(ann.frame);
@@ -1656,11 +1691,11 @@ function updateTagsLabels() {
       tagIntervalsVirtual.push(intervalV);
     }
   }
-  tagIntervals = tagIntervals.concat(tagIntervalsVirtual);
+  chronoState.tagIntervals = chronoState.tagIntervals.concat(tagIntervalsVirtual);
 
   // Find redundant Tracks
-  for (let id in flatTracksValidGroupById) {
-    obs_for_id = flatTracksValidGroupById[id];
+  for (let id in chronoState.flatTracksValidGroupById) {
+    obs_for_id = chronoState.flatTracksValidGroupById[id];
     for (let j in obs_for_id) {
       if (j == 0) continue;
       let i = j - 1;
@@ -1683,16 +1718,16 @@ function updateTagsLabels() {
 var __section__chronogram_d3_render_activities
 
 function renderActivities(onlyScaling) {
-  chronoIntervals.updateAndRender()
-  chronoIntervals.render()
+  chrono.chronoIntervals.updateAndRender()
+  chrono.chronoIntervals.render()
 
-  chronoIntervals.renderEnterLeavePollen()
+  chrono.chronoIntervals.renderEnterLeavePollen()
 
   renderChrono_spans()
 
   renderChrono_danglingTracks(onlyScaling)
 
-  chronoIntervals.renderSelection()
+  chrono.chronoIntervals.renderSelection()
 }
 
 class ChronoIntervals {
@@ -1708,15 +1743,15 @@ class ChronoIntervals {
   update() {
     const that = this
 
-    const [ xmin, xmax ] = axes.xScale.domain()
+    const [ xmin, xmax ] = chrono.axes.xScale.domain()
 
     // Keep only intervals within axes domain (with extra 1 frame)
-    that.visibleIntervals = allIntervals.filter( d => (d.x2+2 >= xmin)&&(d.x1-1 <= xmax) )
+    that.visibleIntervals = chronoState.allIntervals.filter( d => (d.x2+2 >= xmin)&&(d.x1-1 <= xmax) )
   }
   render() {
     const that = this
 
-    const intervalRects = svgInterval.selectAll(".interval")
+    const intervalRects = chrono.layers.svgInterval.selectAll(".interval")
       .data(that.visibleIntervals)
       .join(
         (enter) => enter.append('rect')
@@ -1726,21 +1761,21 @@ class ChronoIntervals {
               .on('mouseout', that.intervalMouseOut)
               //.call( sel => sel.append('title') ) // Insert title child without breaking the chain
       )
-      .attr("x", d => axes.xScale(d.x1) )
-      .attr("y", d => axes.yScale(d.y) )
-      .attr("width", d => axes.xScale(d.x2 + 1) - axes.xScale(d.x1) )
-      .attr("height", d => axes.yScale.bandwidth()*0.5 )
+      .attr("x", d => chrono.axes.xScale(d.x1) )
+      .attr("y", d => chrono.axes.yScale(d.y) )
+      .attr("width", d => chrono.axes.xScale(d.x2 + 1) - chrono.axes.xScale(d.x1) )
+      .attr("height", d => chrono.axes.yScale.bandwidth()*0.5 )
       //.style("fill", "gray")  // Use CSS
       // .call( sel => sel.select('title')
       //     .text( d => `ID: ${d.id}, Frames: ${d.x1}-${d.x2}, Labels: ${d.labels}` )
       // ) // Update title child without breaking the chain
   }
   renderSelection() {
-    const intervalRects = svgInterval.selectAll(".interval")
+    const intervalRects = chrono.layers.svgInterval.selectAll(".interval")
        .classed("selected", d => d.id == selection.getId())
   }
   renderEnterLeavePollen() {
-    const intervalRects = svgInterval.selectAll(".interval")
+    const intervalRects = chrono.layers.svgInterval.selectAll(".interval")
        .classed("entering", d => d.haslabel['entering'])
        .classed("leaving", d => d.haslabel['leaving'])
        .classed("pollen", d => d.haslabel['pollen'])
@@ -1752,7 +1787,7 @@ class ChronoIntervals {
     event.stopPropagation();
 
     //gotoEvent(d.x1, d.id); // Legacy: jump to start of interval
-    let frame = axes.getFrameFromEvent(event)
+    let frame = chrono.axes.getFrameFromEvent(event)
     gotoEvent(frame, d.id)
 
     this.renderSelection() // function need to be bound correctly
@@ -1788,20 +1823,19 @@ class ChronoIntervals {
       chrono.tooltip.style("visibility", "hidden");
     }
 }
-chronoIntervals = new ChronoIntervals()
 
 
 /* obs.span {f1, f2} drawn as a thin bar on the row of the id, behind the intervals (option "Show spans").
    Observations sharing the same id and span (start and end event of a track) give one bar. */
 function renderChrono_spans() {
-  if (!flag_showSpans) {
-    svgSpanRects.selectAll(".spanbar").remove()
+  if (!chrono.config.chronoDisplay.flag_showSpans) {
+    chrono.layers.svgSpanRects.selectAll(".spanbar").remove()
     return;
   }
-  const [ xmin, xmax ] = axes.xScale.domain()
+  const [ xmin, xmax ] = chrono.axes.xScale.domain()
   const seen = new Set()
   const spans = []
-  for (const ann of flatTracksAll) {
+  for (const ann of chronoState.flatTracksAll) {
     const sp = ann.obs.span
     if (sp == null) continue
     const f1 = Number(sp.f1), f2 = Number(sp.f2)
@@ -1811,39 +1845,39 @@ function renderChrono_spans() {
     seen.add(key)
     spans.push({ id: ann.id, y: ann.y, f1: f1, f2: f2 })
   }
-  svgSpanRects.selectAll(".spanbar")
+  chrono.layers.svgSpanRects.selectAll(".spanbar")
     .data(spans)
     .join("rect")
       .attr("class", "spanbar")
-      .attr("x", d => axes.xScale(d.f1))
-      .attr("width", d => axes.xScale(d.f2 + 1) - axes.xScale(d.f1))
-      .attr("y", d => axes.yScale(d.y) + axes.yScale.bandwidth() * 0.15)
-      .attr("height", axes.yScale.bandwidth() * 0.2)
+      .attr("x", d => chrono.axes.xScale(d.f1))
+      .attr("width", d => chrono.axes.xScale(d.f2 + 1) - chrono.axes.xScale(d.f1))
+      .attr("y", d => chrono.axes.yScale(d.y) + chrono.axes.yScale.bandwidth() * 0.15)
+      .attr("height", chrono.axes.yScale.bandwidth() * 0.2)
       .append("title").text(d => `ID: ${d.id}, span: ${d.f1}-${d.f2}`)
 }
 
 function renderChrono_danglingTracks(onlyScaling) {
-  const chart = svgTop;
+  const chart = chrono.layers.svgTop;
 
-  if (!chrono.config.showDanglingTracks) { 
+  if (!chrono.config.chronoDisplay.showDanglingTracks) { 
     chart.selectAll(".dangling_start").remove()
     chart.selectAll(".dangling_end").remove()
     return;
   }
 
-  if (chrono.config.hide_non_dangling == null) chrono.config.hide_non_dangling = true
+  if (chrono.config.chronoDisplay.hide_non_dangling == null) chrono.config.chronoDisplay.hide_non_dangling = true
 
-  const danglingStartIntervals = chrono.config.hide_non_dangling? allIntervals.filter(d=>d.startInsideROI) : allIntervals
-  const danglingEndIntervals = chrono.config.hide_non_dangling? allIntervals.filter(d=>d.endInsideROI) : allIntervals
+  const danglingStartIntervals = chrono.config.chronoDisplay.hide_non_dangling? chronoState.allIntervals.filter(d=>d.startInsideROI) : chronoState.allIntervals
+  const danglingEndIntervals = chrono.config.chronoDisplay.hide_non_dangling? chronoState.allIntervals.filter(d=>d.endInsideROI) : chronoState.allIntervals
 
   const dangling_start = chart.selectAll(".dangling_start")
     .data(danglingStartIntervals)
     .join('rect')
       .attr("class", "dangling_start")
-      .attr("x", d => axes.xScale(Number(d.x1)-0.5) )
-      .attr("width", d => axes.xScale(Number(d.x1))-axes.xScale(Number(d.x1)-0.5) )
-      .attr("y", d => axes.yScale(d.y))
-      .attr('height', axes.yScale.bandwidth()*0.5)
+      .attr("x", d => chrono.axes.xScale(Number(d.x1)-0.5) )
+      .attr("width", d => chrono.axes.xScale(Number(d.x1))-chrono.axes.xScale(Number(d.x1)-0.5) )
+      .attr("y", d => chrono.axes.yScale(d.y))
+      .attr('height', chrono.axes.yScale.bandwidth()*0.5)
       //.attr("r", d=>d.startInsideROI?axes.yScale.bandwidth()/4:axes.yScale.bandwidth()/8)
       .style("fill", d=>d.startInsideROI?"red":"green")
       .style("stroke", d=>d.startInsideROI?"red":"green")
@@ -1853,10 +1887,10 @@ function renderChrono_danglingTracks(onlyScaling) {
     .data(danglingEndIntervals)
     .join('rect')
       .attr("class", "dangling_end")
-      .attr("x", d => axes.xScale(Number(d.x2)+1) )
-      .attr("width", d => axes.xScale(Number(d.x2)+1.5)-axes.xScale(Number(d.x2)+1) )
-      .attr("y", d => axes.yScale(d.y))
-      .attr('height', axes.yScale.bandwidth()*0.5)
+      .attr("x", d => chrono.axes.xScale(Number(d.x2)+1) )
+      .attr("width", d => chrono.axes.xScale(Number(d.x2)+1.5)-chrono.axes.xScale(Number(d.x2)+1) )
+      .attr("y", d => chrono.axes.yScale(d.y))
+      .attr('height', chrono.axes.yScale.bandwidth()*0.5)
       //.attr("r", d=>d.endInsideROI?axes.yScale.bandwidth()/4:axes.yScale.bandwidth()/8)
       .style("fill", d=>d.endInsideROI?"red":"green")
       .style("stroke", d=>d.endInsideROI?"red":"green")
@@ -1913,7 +1947,7 @@ function renderObsTable() {
     table
       .append("tbody")
       .selectAll("tr")
-      .data(flatTracks)
+      .data(chronoState.flatTracks)
       .enter()
       .append("tr")
       .classed("obsTableRow", true)
@@ -1984,7 +2018,7 @@ function debouncer(func, timeout) {
 
 
 function interpolateTags(maxgap) {
-  tagIntervals = [];
+  chronoState.tagIntervals = [];
 
   function getAllTTags() {
     /* Transpose Tags data structure */
@@ -2028,7 +2062,7 @@ function interpolateTags(maxgap) {
         AnnotationStore.getTags()[j] = { tags: [] };
       }
       // XXX Define y
-      let y = chrono.config.idAxisMap(id)
+      let y = chrono.config.idMap.idAxisMap(id)
       AnnotationStore.getTags()[j].tags.push({
         id: id,
         y: y,
@@ -2088,7 +2122,7 @@ function interpolateTags(maxgap) {
 
 function computeMotionDirection() {
   cacheTags();
-  for (var activeInterval of tagIntervals) {
+  for (var activeInterval of chronoState.tagIntervals) {
     let tags1 = getTags(activeInterval.begin, activeInterval.id);
     let tags2 = getTags(activeInterval.end, activeInterval.id);
     activeInterval.dir = undefined;

@@ -294,7 +294,7 @@ def test_l17_span_buttons_leave_no_store_write_unrefreshed(ui, sample_dir):
             header.click()
     ui.page.check("#showSelected")
     ui.click_box("1")
-    start = ui.js("flatTracksAll.find(t => t.obs.frame === 0 && String(t.obs.ID) === '1').span")
+    start = ui.js("chronoState.flatTracksAll.find(t => t.obs.frame === 0 && String(t.obs.ID) === '1').span")
     run(ui, "span_extend", lambda: ui.page.click("button[onclick=\"modifyCurrentObsSpan('extendright')\"]"), audited=True)
     assert ui.tracks()["0"]["1"]["span"] == {"f1": start["f1"], "f2": start["f2"] + 10}
     assert ui.js("refreshLog.tree()").count("refreshChronogram(") == 1

@@ -742,7 +742,7 @@ function modifyCurrentObsSpan(mode) {
 
   let obs = events.get(frame, id);
 
-  let tracks = flatTracksAll.filter(
+  let tracks = chronoState.flatTracksAll.filter(
     function (element) {
       return element.obs == obs;
     }

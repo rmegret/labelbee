@@ -50,7 +50,7 @@ def test_f1_extend_the_span_of_the_selected_observation(ui, sample_dir):
     load(ui, sample_dir / "events_v2.json")
     show_tabs(ui, "#showSelected")
     ui.click_box("1")
-    start = ui.js("flatTracksAll.find(t => t.obs.frame === 0 && String(t.obs.ID) === '1').span")
+    start = ui.js("chronoState.flatTracksAll.find(t => t.obs.frame === 0 && String(t.obs.ID) === '1').span")
     assert "span" not in ui.tracks()["0"]["1"]                       # nothing stored until the first edit
     ui.page.click("button[onclick=\"modifyCurrentObsSpan('extendright')\"]")
     assert ui.tracks()["0"]["1"]["span"] == {"f1": start["f1"], "f2": start["f2"] + 10}
@@ -102,7 +102,7 @@ def test_f3_apply_all_tag_fixes_stores_a_span_and_a_fix(ui):
     ui.page.fill("#excludeID", "7")
     ui.page.press("#excludeID", "Tab")                                 # fires the change event
     ui.page.click("#excludeIDButton")
-    assert ui.js("flag_excludeID") is True
+    assert ui.js("chrono.config.filter.flag_excludeID") is True
     ui.open_panel("Zoom")
     ui.open_subpanel("Alternate Tags")
     ui.page.click("input[value^='Apply All Tag Fixes']")

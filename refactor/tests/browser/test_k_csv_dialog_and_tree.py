@@ -114,9 +114,9 @@ def test_k8_show_spans_in_the_chronogram(ui):
     ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     bars = lambda: ui.page.locator("#svgVisualize .spanbar").count()
     assert bars() == 0                                                  # off by default
-    ui.page.evaluate("flag_showSpans = true; refreshChronogram()")
+    ui.page.evaluate("chrono.config.chronoDisplay.flag_showSpans = true; refreshChronogram()")
     assert bars() > 0
-    n_tracks = ui.page.evaluate("new Set(flatTracksAll.map(a => a.id)).size")
+    n_tracks = ui.page.evaluate("new Set(chronoState.flatTracksAll.map(a => a.id)).size")
     assert bars() <= n_tracks                                           # start and end event of a track give one bar
-    ui.page.evaluate("flag_showSpans = false; refreshChronogram()")
+    ui.page.evaluate("chrono.config.chronoDisplay.flag_showSpans = false; refreshChronogram()")
     assert bars() == 0
