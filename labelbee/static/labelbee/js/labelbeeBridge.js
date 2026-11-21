@@ -26,6 +26,9 @@ import * as EventTree from './annotation/EventTree.js';
 import * as Model from './annotation/Model.js';
 import { htmlCheckmark, url_for } from './core/Utils.js';
 import * as EditActions from './annotation/EditActions.js';
+import { VideoCache } from './video/VideoCache.js';
+import { HoverControl } from './video/HoverControl.js';
+import { getVideoInfo, setVideoInfoObject } from './video/VideoInfo.js';
 
 // ---- legacy globals still read by classic scripts ------------------------------------------------------------------
 window.logging = logging; // debug-level flags (`logging.io = true` from the console), same object the modules use
@@ -51,3 +54,9 @@ Object.assign(window, Model);
 Object.assign(window, EditActions); // deleteEvent, storeUnit, submitDraft (annotation/EditActions.js)
 window.htmlCheckmark = htmlCheckmark; // core/Utils.js
 window.url_for = url_for;
+
+// Video data (video/*.js, moved from VideoControl.js, HoverControl.js and VideoList.js). `VideoControl` builds the cache and
+// the hover control in its constructor (`init()` time); `videoinfo` is read and assigned by the classic scripts.
+window.VideoCache = VideoCache;
+window.HoverControl = HoverControl;
+Object.defineProperty(window, "videoinfo", { get: getVideoInfo, set: setVideoInfoObject, configurable: true });

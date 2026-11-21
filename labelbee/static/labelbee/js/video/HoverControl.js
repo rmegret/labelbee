@@ -1,3 +1,7 @@
+import { logging } from '../core/Notifier.js';
+import { VideoCache } from './VideoCache.js';
+import { getVideoInfo } from './VideoInfo.js';
+
 /**
  * HoverControl: owner of the hover preview queries (ADR 0010).
  *
@@ -11,10 +15,13 @@
  * the answer for a frame we moved away from, or after the session ended, is dropped.
  *
  * @constructor
+ * Moved as is from HoverControl.js, a classic script (refactor slice 8 step 5, ADR 0015); installed as a global by
+ * labelbeeBridge.js, read by `VideoControl` at `init()` time.
+ *
  * @param {VideoControl} videoControl  provides videoCache, video.src, cacheImage/cacheFrame
  *                                     and onFrameChangedCachePreview()
  */
-function HoverControl(videoControl) {
+export function HoverControl(videoControl) {
   this.videoControl = videoControl;
   this.active = false;
   this.latest = null;
@@ -37,7 +44,7 @@ HoverControl.prototype.query = function (frame) {
   if (this.snap) frame = this.snap(frame);
   let vc = this.videoControl;
   let url = vc.video.src;
-  let cacheFrame = frame + videoinfo.frameoffset;
+  let cacheFrame = frame + getVideoInfo().frameoffset;
   let key = this._key(url, cacheFrame);
 
   // Same frame as the latest query (pointer still over it): already shown or pending, nothing to redo
@@ -46,7 +53,7 @@ HoverControl.prototype.query = function (frame) {
   this.active = true;
   this.latest = { key: key, frame: frame, shown: false };
 
-  let promise = vc.videoCache.enqueueFramePriority(url, cacheFrame, videoinfo.videofps);
+  let promise = vc.videoCache.enqueueFramePriority(url, cacheFrame, getVideoInfo().videofps);
   vc.videoCache.processQueue();
   let img = vc.videoCache.getFrameImageSync(url, cacheFrame);
   if (img) {

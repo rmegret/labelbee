@@ -5,7 +5,7 @@
 
 // export ...
 
-var videoinfo;
+// `videoinfo` is owned by video/VideoInfo.js (the global is an accessor defined by labelbeeBridge.js).
 
 function VideoManager() {
   const videoManager = this;

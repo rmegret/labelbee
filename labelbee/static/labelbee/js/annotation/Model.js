@@ -7,12 +7,13 @@
  * stored events are read and written only through its operations. They keep their names and behavior until their
  * callers move to `events` directly.
  *
- * DEBT: `getFramesWithID`, `obs_swapID` read the page's global `videoinfo` (VideoList.js), `cacheTags` the global `ttags`
+ * DEBT: `getFramesWithID`, `getFramesWithSwapID`, `obs_swapID` read `getVideoInfo()` (video/VideoInfo.js), `cacheTags` the global `ttags`
  * (ChronoControl.js), `getIdsInFocus` the globals `getCurrentFrame` (set by `init()`) and `getWindow` (ChronoControl.js),
  * at call time; they become imports when those owners move.
  */
 import { AnnotationStore } from './AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
+import { getVideoInfo } from '../video/VideoInfo.js';
 
 const events = AnnotationStore.events;
 
@@ -105,13 +106,13 @@ export function changeObservationID(frame, old_id, new_id, force) {
   return false;
 }
 export function getFramesWithID(interval, id) {
-    return events.framesWithId(interval, id, interval[1]==-1 ? videoinfo.nframes : undefined)
+    return events.framesWithId(interval, id, interval[1]==-1 ? getVideoInfo().nframes : undefined)
 }
 export function getFramesWithSwapID(interval, id, new_id) {
     let fmin = interval[0];
     let fmax = interval[1];
     if (fmax==-1) {
-        fmax = videoinfo.nframes-1
+        fmax = getVideoInfo().nframes-1
     }
 
     var frames = []
@@ -123,7 +124,7 @@ export function getFramesWithSwapID(interval, id, new_id) {
     return frames;
 }
 export function obs_swapID(interval, old_id, new_id) {
-    events.swap(interval, old_id, new_id, interval[1]==-1 ? videoinfo.nframes : undefined)
+    events.swap(interval, old_id, new_id, interval[1]==-1 ? getVideoInfo().nframes : undefined)
 }
 
 
