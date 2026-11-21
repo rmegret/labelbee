@@ -998,11 +998,20 @@ var __section__chronogram_update
 function refreshChronogram() {
   if (logging.chrono) console.log('refreshChronogram')
 
+  updateTagsPanel()
+
   updateChronoData()
 
   drawChrono();
 
   renderObsTable();
+}
+
+/* Disable the fields that need the DM of the tags when the loaded Tags do not have it */
+function updateTagsPanel() {
+  const haveDM = AnnotationStore.getTagsHaveDM();
+  $(".requireDM").prop("disabled", !haveDM);
+  $(".requireDM").toggleClass("disabled", !haveDM);
 }
 
 /* Soft refresh: update ydomain and render */

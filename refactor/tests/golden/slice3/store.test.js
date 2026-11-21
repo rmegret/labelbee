@@ -42,12 +42,11 @@ test('getters return the stored object itself, never a copy', async () => {
   assert.equal(store.getTagsInfo(), tinfo);
 });
 
-test('replaceTracks / replaceTags are independent and keep tagsHaveDM', async () => {
+test('replaceTracks / replaceTags are independent and replaceTracks keeps tagsHaveDM', async () => {
   const { store } = await fresh();
-  store.setTagsHaveDM(true);
   const tracks = {};
+  store.replaceTags({ 1: { tags: [{ id: 1, dm: 60 }] } }, { b: 2 });
   store.replaceTracks(tracks, { a: 1 });
-  store.replaceTags({ 1: { tags: [] } }, { b: 2 });
   assert.equal(store.events.toObject(), tracks);
   assert.equal(store.getTagsHaveDM(), true);
   store.replaceTracks({}, undefined);
@@ -79,9 +78,9 @@ test('sloppy classic code gets a ReferenceError for the retired data globals (vm
     assert.equal(vm.runInContext('typeof ' + name, ctx), 'undefined', name);
     assert.throws(() => vm.runInContext(name, ctx), { name: 'ReferenceError' }, name);
   }
-  vm.runInContext('AnnotationStore.replaceTags({2: {tags: []}}, {k: 1}); AnnotationStore.setTagsHaveDM(true)', ctx);
+  vm.runInContext('AnnotationStore.replaceTags({2: {tags: [{dm: 1}]}}, {k: 1})', ctx);
   // objects built inside the vm come from another realm: compare as JSON
-  assert.equal(JSON.stringify(store.getTags()), '{"2":{"tags":[]}}');
+  assert.equal(JSON.stringify(store.getTags()), '{"2":{"tags":[{"dm":1}]}}');
   assert.equal(JSON.stringify(store.getTagsInfo()), '{"k":1}');
   assert.equal(store.getTagsHaveDM(), true);
   assert.equal(vm.runInContext('Object.keys(AnnotationStore.getTags()).join()', ctx), '2');
@@ -92,21 +91,15 @@ test('the bridge module does nothing without a window', async () => {
   await load('annotation/AnnotationStoreBridge.js'); // import must not throw
 });
 
-test('updateTagsHaveDM: the rule moved from setTags (first tag of the first frame, DEBT-715)', async () => {
+test('replaceTags derives tagsHaveDM: the rule moved from loadTags (first tag of the first frame, DEBT-715)', async () => {
   const { store } = await fresh();
-  const run = (tags) => { store.replaceTags(tags, undefined); store.updateTagsHaveDM(); return store.getTagsHaveDM(); };
+  const run = (tags) => { store.replaceTags(tags, undefined); return store.getTagsHaveDM(); };
   assert.equal(run({ 0: { tags: [{ id: 1, dm: 60 }] } }), true);
   assert.equal(run({ 0: { tags: [{ id: 1 }] } }), false);
   assert.equal(run({ 0: { tags: [] }, 1: { tags: [{ dm: 1 }] } }), false); // only the first frame is looked at
   assert.equal(run({}), false);
   assert.equal(run([]), false);
-  assert.equal(run(undefined), false);  // v2 file without data (DEBT-733): empty by the jQuery test
-});
-
-test('updateTagsHaveDM resets to false before a malformed Tags throws', async () => {
-  const { store } = await fresh();
-  store.setTagsHaveDM(true);
-  store.replaceTags({ 0: {} }, undefined);          // first frame without `tags`
-  assert.throws(() => store.updateTagsHaveDM(), TypeError);
-  assert.equal(store.getTagsHaveDM(), false);
+  assert.equal(run(undefined), false);
+  assert.equal(run({ 0: {} }), false);   // malformed Tags (the codec rejects them): no throw, no DM
+  assert.equal(run({ 0: { tags: [5] } }), false);
 });

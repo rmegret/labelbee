@@ -1,21 +1,21 @@
 /*
- * Load: what takes a payload (events, tags, CSV rows) into the store: `setTracks`, `setTags`, the loads from a text, from CSV
- * rows and from the database (refactor slice 8 steps 6b and 6c, ADR 0015). Mirror of Export.js: all the details of the formats
+ * Load: what takes a payload (events, tags, CSV rows) into the store: `loadTracks`, `loadTags`, the loads from a text, from CSV
+ * rows and from the database (refactor slice 8 steps 6b to 6d, ADR 0015). Mirror of Export.js: all the details of the formats
  * are here (converters, `centerPolicy`, info headers); the transports that fetch the payload, FileImport.js (a local file) and
- * ServerIO.js (AJAX), know the formats only by name, and show the errors (core/Alerts.js). A load that fails throws; `setTracks`
- * and `setTags` return a boolean for the callers that check it.
- * `setTracks` and `setTags` are installed as globals by labelbeeBridge.js (labelBee.js, AnnotationIO.js, tests).
+ * ServerIO.js (AJAX), know the formats only by name, and show the errors (core/Alerts.js). A load that fails throws;
+ * `loadTracks` and `loadTags` return a boolean for the callers that check it.
+ * `loadTracks` and `loadTags` are installed as globals by labelbeeBridge.js (labelBee.js, AnnotationIO.js, tests).
  *
- * Strict mode: the implicit global `tags` of the old `tagsFromServer` is now a declared constant in ServerIO.js.
+ * A load is: decode (the codec validates, nothing is written when it rejects), replace in the store, refresh.chrono(), refresh.frame().
  *
- * DEBT: globals read at call time, set by the page and not yet modules: `db`, `videoControl`, `refreshChronogram`,
- * `adjustChronogramHeight`, `getTTags`, `updateEventsNotes` (a form update that stays in AnnotationIO.js:
- * core/RefreshInstrumentBridge.js instruments it by its global name, so `setTracks` must call the global), and `ttags`, a
- * global `var` of ChronoControl.js that `setTags` reads and assigns.
+ * DEBT: globals read at call time, set by the page and not yet modules: `db`, `adjustChronogramHeight`, `updateEventsNotes`
+ * (a form update that stays in AnnotationIO.js: core/RefreshInstrumentBridge.js instruments it by its global name, so
+ * `loadTracks` must call the global).
  */
 import * as codec from './AnnotationCodec.js';
 import { AnnotationStore } from './AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
+import { refresh } from './RefreshBridge.js';
 
 const {
   sanitizeEvents, decodeTags, tagsAddFrames, db_to_json, tracks_csv_to_json, tags_csv_to_json, tags_csv_to_tagjson,
@@ -23,14 +23,16 @@ const {
 } = codec;
 
 /* options.centerPolicy: which fields are the truth for the center when x, y and cx, cy disagree, "xy" (default,
- * the JSON formats) or "cxcy" (the CSV and database sources): the loader knows its source (ADR 0008 R7). */
-export function setTracks(obj, skipRefresh, options) {
-  console.log("setTracks: changing events data structure and refreshing...");
+ * the JSON formats) or "cxcy" (the CSV and database sources): the loader knows its source (ADR 0008 R7).
+ * Takes ownership of `obj`: it is not copied, the store keeps it (and `sanitizeEvents` edits it), so pass freshly parsed data.
+ * Returns false, with the events kept, when the format is rejected. */
+export function loadTracks(obj, skipRefresh, options) {
+  console.log("loadTracks: changing events data structure and refreshing...");
 
   var evts = sanitizeEvents(obj, options);
 
   if (!evts) {
-    console.log("setTracks: ABORTED, wrong format.");
+    console.log("loadTracks: ABORTED, wrong format.");
     return false;
   }
 
@@ -39,55 +41,28 @@ export function setTracks(obj, skipRefresh, options) {
   updateEventsNotes();
 
   if (!skipRefresh) {
-    videoControl.onFrameChanged();
-    refreshChronogram();
+    refresh.chrono();
+    refresh.frame();
   }
   return true;
 }
 
-export function setTags(obj, div) {
-  console.log("setTags: changing Tags data structure and refreshing...");
+/* Takes ownership of `obj`: it is not copied, the store keeps it (and `tagsAddFrames` writes `frame` into each tag), so pass
+ * freshly parsed data.
+ * Returns false, with the Tags kept, when the format is rejected (decodeTags: what it accepts is well-formed). */
+export function loadTags(obj) {
+  console.log("loadTags: changing Tags data structure and refreshing...");
 
-  // Decode and validate (pure, in the codec)
   var decoded = decodeTags(obj);
-  if (!decoded) return 0;
+  if (!decoded) return false;
 
-  // Apply as a whole: if one step throws on a malformed file, the previous Tags are put back (DEBT-733)
-  var previous = {
-    data: AnnotationStore.getTags(),
-    info: AnnotationStore.getTagsInfo(),
-    haveDM: AnnotationStore.getTagsHaveDM(),
-    ttags: ttags,
-  };
-  try {
-    AnnotationStore.replaceTags(decoded.data, decoded.info);
+  tagsAddFrames(decoded.data);
+  AnnotationStore.replaceTags(decoded.data, decoded.info);
 
-    tagsAddFrames(AnnotationStore.getTags());
-
-    ttags = getTTags();
-
-    // Check if Tags data structure support the DM field
-    AnnotationStore.updateTagsHaveDM();
-  } catch (error) {
-    console.error(error);
-    AnnotationStore.replaceTags(previous.data, previous.info);
-    AnnotationStore.setTagsHaveDM(previous.haveDM);
-    ttags = previous.ttags;
-    console.log("setTags: ABORTED, malformed tag data. The previous Tags are kept.");
-    return 0;
-  }
-  // Disable DM field if not there
-  $(".requireDM").prop("disabled", !AnnotationStore.getTagsHaveDM());
-  $(".requireDM").toggleClass("disabled", !AnnotationStore.getTagsHaveDM());
-
-  console.log(
-    "setTags: done. Sending signals to refresh chronogram and video..."
-  );
-
-  refreshChronogram();
+  refresh.chrono();
   adjustChronogramHeight();
-  videoControl.onFrameChanged();
-  return 1;
+  refresh.frame();
+  return true;
 }
 
 // From the JSON text of the events or of the tags; throws if the text or the format is invalid
@@ -100,13 +75,13 @@ export function loadTracksFromText(text) {
     console.log(obj);
   }
 
-  if (!setTracks(obj)) throw new Error("Invalid events format (details in the console)");
+  if (!loadTracks(obj)) throw new Error("Invalid events format (details in the console)");
 }
 export function loadTagsFromText(text) {
   var obj = JSON.parse(text);
   //console.log(obj) // Caution: heavy
 
-  if (!setTags(obj)) throw new Error("Invalid tags format (details in the console)");
+  if (!loadTags(obj)) throw new Error("Invalid tags format (details in the console)");
 
   console.log("loadTagsFromFile: importing from JSON file. DONE");
 }
@@ -126,9 +101,9 @@ export function loadCSVFromRows(rows, schema, url) {
     let obj = tags_csv_to_json(rows, info("events-multiframe"));
     let objtag = tags_csv_to_tagjson(rows, info("tags-multiframe"));
 
-    // no skipRefresh in setTracks: setTags below refreshes once for the events and the tags
-    if (!setTracks(obj, true, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)");
-    if (!setTags(objtag)) throw new Error("Invalid tags in the CSV (details in the console)");
+    // skipRefresh in loadTracks: loadTags below refreshes once for the events and the tags
+    if (!loadTracks(obj, true, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)");
+    if (!loadTags(objtag)) throw new Error("Invalid tags in the CSV (details in the console)");
     return;
   }
 
@@ -142,7 +117,7 @@ export function loadCSVFromRows(rows, schema, url) {
   const [convert, centerPolicy] = converters[schema];
 
   let obj = convert(rows, info("events-multiframe"));
-  if (!setTracks(obj, false, { centerPolicy: centerPolicy })) throw new Error("Invalid events in the CSV (details in the console)");
+  if (!loadTracks(obj, false, { centerPolicy: centerPolicy })) throw new Error("Invalid events in the CSV (details in the console)");
 }
 
 export function loadTracksCSVFromDB(limit = 100) {
@@ -157,7 +132,7 @@ export function loadTracksCSVFromDB(limit = 100) {
   let obj = db_to_json(db, info, limit)
   const b=performance.now();
   console.log('DB query + convert to JSON',b-a)
-  setTracks(obj, false, { centerPolicy: "cxcy" })
+  loadTracks(obj, false, { centerPolicy: "cxcy" })
   const c=performance.now();
-  console.log('setTracks (with its refresh)',c-b)
+  console.log('loadTracks (with its refresh)',c-b)
 }

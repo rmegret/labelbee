@@ -7,9 +7,9 @@
  * stored events are read and written only through its operations. They keep their names and behavior until their
  * callers move to `events` directly.
  *
- * DEBT: `getFramesWithID`, `getFramesWithSwapID`, `obs_swapID` read `getVideoInfo()` (video/VideoInfo.js), `cacheTags` the global `ttags`
- * (ChronoControl.js), `getIdsInFocus` the globals `getCurrentFrame` (set by `init()`) and `getWindow` (ChronoControl.js),
- * at call time; they become imports when those owners move.
+ * DEBT: `getFramesWithID`, `getFramesWithSwapID`, `obs_swapID` read `getVideoInfo()` (video/VideoInfo.js), `getIdsInFocus` the globals `getCurrentFrame` (set by `init()`) and `getWindow` (ChronoControl.js),
+ * at call time; they become imports when those owners move. `cacheTags` and `getTags(frame, id)` are dead
+ * code: their only caller is `computeMotionDirection` (ChronoControl.js), which nobody calls.
  */
 import { AnnotationStore } from './AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
@@ -156,7 +156,7 @@ export function cacheTags() {
       let tag = tags[i];
       let id = String(tag.id);
       let key = F.toString() + "," + id;
-      if (typeof ttags[key] === "undefined") tagCache[key] = [tag];
+      if (typeof tagCache[key] === "undefined") tagCache[key] = [tag];
       else tagCache[key].push(tag);
     }
   }

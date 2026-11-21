@@ -1,4 +1,4 @@
-// Environment for the slice 3 golden tests (ADR 0005): the REAL setTracks/setTags/loaders of
+// Environment for the slice 3 golden tests (ADR 0005): the REAL loadTracks/loadTags/loaders of
 // Load.js, FileImport.js, ServerIO.js and core/Alerts.js (AnnotationIO.js until slice 8 step 6b) evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
 // The functions stay the same code before and after each step of slice 8 (they moved to modules in steps 6b and 6c), so the same golden checks
 // them; since step 2 the data lives in a fresh
@@ -19,8 +19,8 @@ const FIXED_DATE = '2000-01-02T03:04:05.000Z';
 // AnnotationIO.js: updateEventsNotes, the erase and prompt handlers. The others were in AnnotationIO.js until slice 8 step 6b
 const IO_SOURCES = ['annotation/Load.js', 'annotation/FileImport.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'AnnotationIO.js'];
 const IO_FUNCTIONS = [
-  'setTracks', 'eraseEvents', 'loadEventsFromFile0', 'loadEventsFromFile',
-  'eraseTags', 'setTags', 'loadTagsFromFile', 'loadEventsFromServerByID',
+  'loadTracks', 'eraseEvents', 'loadEventsFromFile0', 'loadEventsFromFile',
+  'eraseTags', 'loadTags', 'loadTagsFromFile', 'loadEventsFromServerByID',
   'eventsFromServer', 'loadTracksCSVFromDB', 'loadCSVFromRows', 'loadCSVFromServer',
   'clickLoadTracksCSVFromServer', 'clickLoadTracksTaggedCSVFromServer',
   'tagsFromServer', 'mainAlert', 'showAjaxError', 'updateEventsNotes',
@@ -146,7 +146,8 @@ async function loadIoEnv() {
             values: [[0, '1', 10, 20, 100, 300, 600, -140, -280], [3, '1', 12, 22, 102, 300, 600, -138, -278]] }];
         },
       },
-      videoControl: { onFrameChanged: () => fx('onFrameChanged') },
+      // the views are refreshed through the page's `refresh` (RefreshBridge.js); the steps are recorded under the names of the page
+      refresh: { chrono: () => fx('refreshChronogram'), frame: () => fx('onFrameChanged') },
       videoManager: { loadVideoManual: (u) => fx('loadVideoManual', u) },
       statusWidget: {
         statusRequest: (...a) => fx('statusRequest', ...a),
@@ -157,16 +158,12 @@ async function loadIoEnv() {
         get: () => undefined, set: (v) => fx('basedOn', v), enumerable: true,
       }),
       theDialog: {},
-      refreshChronogram: () => fx('refreshChronogram'),
       adjustChronogramHeight: () => fx('adjustChronogramHeight'),
-      // Called with the Tags at that moment: shows what setTags builds ttags from (DEBT-736).
-      getTTags: () => { fx('getTTags', Object.keys(ctx.AnnotationStore.getTags() || {})); return { stub: 'ttags' }; },
     };
     CODEC_FUNCTIONS.forEach((n) => { sandbox[n] = codec[n]; });
     sandbox.classifyFilename = classifyFilename;
     const ctx = vm.createContext(sandbox);
     installLegacyGlobals(ctx, createAnnotationStore());
-    vm.runInContext('var ttags;', ctx); // declared in the page by ChronoControl.js (`var ttags = {}`)
     ctx.$ = makeJQuery(rec, net, ctx);
     vm.runInContext(code, ctx, { filename: 'Load.js+FileImport.js+ServerIO.js+Alerts.js(extracted)' });
     writeState(ctx, c.init || {});
@@ -175,15 +172,13 @@ async function loadIoEnv() {
 }
 
 // State access: the globals of the context. What a case does not give is undefined (as before the store
-// existed), not the store's defaults; `ttags` is not store data and stays a plain global.
+// existed), not the store's defaults.
 // The stored events and the tags are no longer page globals (slice 4 step 5): they are read and set through the
-// store, under the same names, so the golden keys do not change. Only `ttags` is a plain global.
+// store, under the same names, so the golden keys do not change.
 function writeState(ctx, init) {
   const store = ctx.AnnotationStore;
   store.replaceTracks(init.Tracks, init.TracksInfo);
   store.replaceTags(init.Tags, init.TagsInfo);
-  store.setTagsHaveDM(init.tagsHaveDM);
-  if ('ttags' in init) ctx.ttags = init.ttags;
 }
 function readState(ctx) {
   const store = ctx.AnnotationStore;
@@ -193,7 +188,6 @@ function readState(ctx) {
     Tags: ser(store.getTags()),
     TagsInfo: ser(store.getTagsInfo()),
     tagsHaveDM: ser(store.getTagsHaveDM()),
-    ttags: ser(vm.runInContext("typeof ttags === 'undefined' ? undefined : ttags", ctx)),
   };
 }
 

@@ -197,7 +197,7 @@ export class Events {
 
   // ---- commands
 
-  /** Replaces the whole structure and its info together (`setTracks`): no validation, decoding is the codec's job. */
+  /** Replaces the whole structure and its info together (`loadTracks`): no validation, decoding is the codec's job. */
   replace(data, info) {
     if (logging.store)
       console.log(`Events.replace(data,info):`,data, info)
@@ -332,7 +332,7 @@ export class Events {
     this.#emit({ op: 'swap', interval: [fmin, fmax], id: oldId, newId });
   }
 
-  /** `info[key] = value`; the info object is created when missing (`setEventsProp`). */
+  /** `info[key] = value`; the info object is created when missing. */
   setInfo(key, value) {
     if (!this.#info) this.#info = {};
     this.#info[key] = value;

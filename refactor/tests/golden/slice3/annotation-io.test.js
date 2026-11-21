@@ -1,4 +1,4 @@
-// Golden tests for setTracks/setTags and the loaders of AnnotationIO.js (slice 3, ADR 0005).
+// Golden tests for loadTracks/loadTags and the loaders of AnnotationIO.js (slice 3, ADR 0005).
 // Run: node --test refactor/tests/golden/slice3/
 // Implementation under test: the functions of labelbee/static/labelbee/js/AnnotationIO.js, extracted into a vm.
 'use strict';

@@ -61,10 +61,10 @@ test('eventsFromServer returns a Promise that resolves after the apply stage', a
 });
 
 test('an exception of the apply stage is not handled as a request error', async () => {
-  // eventsFromServer: a failing setTracks is reported as a load error, not through showAjaxError
+  // eventsFromServer: a failing loadTracks is reported as a load error, not through showAjaxError
   // (which would read jqXHR.responseText of an undefined jqXHR), and the rejection goes on
   const { ctx, rec } = (await loadIoEnv())({ net: { ajax: { ok: JSON.parse(evts) } } });
-  ctx.setTracks = () => { throw new RangeError('apply failed'); };
+  ctx.loadTracks = () => { throw new RangeError('apply failed'); };
   await assert.rejects(ctx.eventsFromServer('/u'), (e) => e.name === 'RangeError');
   assert.match(alertHtml(rec), /loading events from \/u<br>apply failed/);
   assert.doesNotMatch(alertHtml(rec), /Status:/);

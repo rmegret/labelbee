@@ -119,7 +119,7 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (4) store writes of the selection [x] `deleteEvent`, `storeUnit`, `submitDraft` to `annotation/EditActions.js`; `getIdsInFocus` to `Model.js`
   - (5) video data [x] `VideoCache`, `HoverControl`, `videoinfo` state to `video/`; the `VideoManager` data half waits for step 9
   - (5b) `videoinfo` global removed [x] classic scripts call `getVideoInfo()`/`setVideoInfoObject()` through the bridge
-  - (6a) saves and exports [x] `annotation/FileExport.js` over `annotation/Export.js`; (6b) loaders, server IO [x] `annotation/Load.js`, `annotation/ServerIO.js`; goldens extract from them; (6c) loaders split by role [x] Load, FileImport, ServerIO, `core/Alerts.js`; (6d) `loadTags`/`loadTracks` cleanup [ ]
+  - (6a) saves and exports [x] `annotation/FileExport.js` over `annotation/Export.js`; (6b) loaders, server IO [x] `annotation/Load.js`, `annotation/ServerIO.js`; goldens extract from them; (6c) loaders split by role [x] Load, FileImport, ServerIO, `core/Alerts.js`; (6d) `loadTags`/`loadTracks` cleanup [x] `decodeTags` rejects malformed, no rollback, `refresh.chrono()` then `refresh.frame()`
   - (7)-(12) chrono, forms, player and zoom, overlay, entry [ ]
   - (13) record [ ]
 

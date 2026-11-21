@@ -72,8 +72,7 @@ test('installed: the globals are read-only, not enumerable, and installing twice
 
 test('installed: Tags, TagsInfo and tagsHaveDM are guarded like Tracks (slice 4 step 5b)', async () => {
   const { store, ctx } = await setup();
-  store.replaceTags({ 1: { tags: [] } }, { t: 1 });
-  store.setTagsHaveDM(true);
+  store.replaceTags({ 1: { tags: [{ dm: 1 }] } }, { t: 1 });
   assert.equal(vm.runInContext('typeof Tags', ctx), 'undefined');       // off until installed
   ctx.installDebugGlobals();
   assert.equal(vm.runInContext('Tags', ctx), store.getTags());

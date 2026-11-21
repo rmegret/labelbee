@@ -1,7 +1,7 @@
 /*
  * AnnotationStore: owner of the in-memory annotation data (refactor slice 3, ADR 0005, SEAM-701).
  * Holds only the data structures: the Tracks and their info, the Tags and their info, and the flag
- * telling whether the loaded Tags carry the DM field. No decoding, no I/O, no DOM, no refresh, no
+ * telling whether the loaded Tags carry the DM field (derived by `replaceTags`). No decoding, no I/O, no DOM, no refresh, no
  * derived data. The getters return the stored object itself, not a copy: the page code edits
  * `Tracks[frame][id]` in place and must keep seeing the same object.
  * The stored events and their info live in `events` (annotation/Events.js, refactor slice 4, ADR 0007) and are read
@@ -10,10 +10,11 @@
  */
 import { Events } from './Events.js';
 
-// Same test as jQuery.isEmptyObject (no enumerable property, inherited ones included; true for undefined).
-function isEmptyObject(obj) {
-  for (const key in obj) return false; // eslint-disable-line no-unused-vars
-  return true;
+/* Whether the Tags carry the DM field, looking at the first tag of the first frame (rule moved from setTags, DEBT-715 kept). */
+function detectDM(tags) {
+  const frame = tags ? tags[Object.keys(tags)[0]] : undefined;
+  const tag0 = frame && Array.isArray(frame.tags) ? frame.tags[0] : undefined;
+  return Object(tag0) === tag0 && "dm" in tag0;
 }
 
 export function createAnnotationStore() {
@@ -32,25 +33,11 @@ export function createAnnotationStore() {
     replaceTracks(data, info) {
       events.replace(data, info);
     },
-    /** Replaces the Tags and their info together. Does not touch tagsHaveDM. */
+    /** Replaces the Tags and their info together (no validation: decoding is the codec's job) and derives `tagsHaveDM`. */
     replaceTags(data, info) {
       tags = data;
       tagsInfo = info;
-    },
-    setTagsHaveDM(value) {
-      tagsHaveDM = value;
-    },
-    /** Decides whether the loaded Tags carry the DM field, looking at the first tag of the first frame
-     * (rule moved from setTags, DEBT-715 kept). Like the old code it resets the flag first, so a
-     * malformed Tags that throws below leaves it false. */
-    updateTagsHaveDM() {
-      tagsHaveDM = false;
-      if (!isEmptyObject(tags)) {
-        const tags0 = tags[Object.keys(tags)[0]].tags;
-        if (tags0.length > 0) {
-          tagsHaveDM = "dm" in tags0[0];
-        }
-      }
+      tagsHaveDM = detectDM(data);
     },
   };
 }

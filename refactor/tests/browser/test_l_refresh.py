@@ -167,7 +167,7 @@ def test_l11_bulk_delete_of_false_alarms(ui, sample_dir):
 
 
 def test_l12_tracks_csv_from_a_uri(ui):
-    """The server and CSV loaders called `setTracks` (which refreshes) and then refreshed again themselves (ADR 0009 Q36); step 5 deletes
+    """The server and CSV loaders called `loadTracks` (which refreshes) and then refreshed again themselves (ADR 0009 Q36); step 5 deletes
     their own refresh one loader at a time: this one (tracks CSV from a URI) refreshes once, like the file "Load"."""
     ui.open()
     ui.settle()
@@ -188,7 +188,7 @@ BIG = """(() => {
     for (let i = 0; i < 30; i++)
       data[f].push({id: String(i), frame: f, time: f / 20, x: 10 + 15 * i, y: 100, width: 12, height: 12, cx: 16 + 15 * i, cy: 106, angle: 0, notes: "", labels: ""});
   }
-  setTracks({info: {type: "events-multiframe", source: "refresh test"}, data});
+  loadTracks({info: {type: "events-multiframe", source: "refresh test"}, data});
 })()"""
 
 
@@ -380,7 +380,7 @@ def test_l21_clean_obsolete_events_leaves_no_store_write_unrefreshed(ui, sample_
     RESULTS.pop("clean_obsolete")                                                              # audited only, not pinned in the baseline
 
 
-LOADERS = {   # each used to refresh again after `setTracks` / `setTags` (ADR 0009 Q36). Not covered: the loaders that need a database record
+LOADERS = {   # each used to refresh again after `loadTracks` / `loadTags` (ADR 0009 Q36). Not covered: the loaders that need a database record
               # (server dialog `loadEvents`, `loadEventsFromServerByID`) or the DB (`loadTracksCSVFromDB`)
     "tracks_csv": "loadCSVFromServer('/data/sample/tracks.csv', 'tracks')",
     "tracks_tagged_csv": "loadCSVFromServer('/data/sample/tracks_tagged.csv', 'tracks_tagged')",
@@ -392,7 +392,7 @@ LOADERS = {   # each used to refresh again after `setTracks` / `setTags` (ADR 00
 
 @pytest.mark.parametrize("name", list(LOADERS))
 def test_l22_loaders_refresh_once(ui, name):
-    """ADR 0009 step 5 (Q36): every loader refreshes once (`setTracks` or `setTags` does it), not a second time on its own."""
+    """ADR 0009 step 5 (Q36): every loader refreshes once (`loadTracks` or `loadTags` does it), not a second time on its own."""
     ui.open()
     ui.settle()
     ui.js("refreshLog.clear()")

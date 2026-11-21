@@ -202,7 +202,7 @@ function init(videoID, tagID) {
   };
 
   // Done
-  setTracks([], true); // skipRefresh
+  loadTracks([], true); // skipRefresh
 
   loginDialog = new LoginDialog();
 

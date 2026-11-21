@@ -69,7 +69,7 @@ install(FileExport, [
   "saveObjToJsonFile", "saveCSVToFile", "getTimestampNow", // VideoList.js
 ]);
 install(Load, [
-  "setTracks", "setTags", // labelBee.js, AnnotationIO.js (eraseEvents, eraseTags), tests
+  "loadTracks", "loadTags", // labelBee.js, AnnotationIO.js (eraseEvents, eraseTags), tests
 ]);
 install(FileImport, [
   "loadEventsFromFile", "loadTagsFromFile", // AnnotationIO.js: the file inputs

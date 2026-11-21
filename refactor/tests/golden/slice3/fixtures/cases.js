@@ -1,4 +1,4 @@
-// Synthetic fixtures (Q8) for setTracks/setTags and the loaders of AnnotationIO.js (slice 3, ADR 0005).
+// Synthetic fixtures (Q8) for loadTracks/loadTags and the loaders of AnnotationIO.js (slice 3, ADR 0005).
 // Case: {name, fn, args(), init?, net?, confirm?, prompt?, pinReturn?}. `args` builds FRESH inputs per run.
 // net: {ajax|getJSON|get: {ok: payload} | {err: true}, csv: {ok: rows} | {err: true}, visible: {selector: true}
 // for the elements on screen (the from-server dialog)}; file text is given by the event (`files[0].text`,
@@ -33,18 +33,18 @@ const OLD_INFO = () => ({ ...INFO_EVENTS, source: 'old', notes: 'old notes' });
 const OLD = () => ({ Tracks: OLD_TRACKS(), TracksInfo: OLD_INFO() });
 
 const cases = [
-  // ---- setTracks (apply: store write, notes, refresh) ----
-  { name: 'setTracks v2', fn: 'setTracks', pinReturn: true, args: () => [v2({ notes: 'my notes' })], init: OLD() },
-  { name: 'setTracks v2 skipRefresh', fn: 'setTracks', pinReturn: true, args: () => [v2(), true] },
-  { name: 'setTracks v1 object', fn: 'setTracks', pinReturn: true, args: () => [v1()] },
-  { name: 'setTracks v1 array', fn: 'setTracks', pinReturn: true, args: () => [[{ 3: evt(3) }]] },
-  { name: 'setTracks empty array (erase)', fn: 'setTracks', pinReturn: true, args: () => [[]], init: OLD() },
-  { name: 'setTracks wrong format keeps the model', fn: 'setTracks', pinReturn: true, args: () => [{ a: 1 }], init: OLD() },
-  { name: 'setTracks wrong info.type keeps the model', fn: 'setTracks', pinReturn: true, args: () => [{ info: INFO_TAGS, data: {} }], init: OLD() },
-  { name: 'setTracks null is rejected with the unsupported-format message (DEBT-710)', fn: 'setTracks', pinReturn: true, args: () => [null], init: OLD() },
-  { name: 'setTracks number is rejected (DEBT-710)', fn: 'setTracks', pinReturn: true, args: () => [5], init: OLD() },
-  { name: 'setTracks v2 duplicate ids alerts', fn: 'setTracks', pinReturn: true, args: () => [{ info: INFO_EVENTS, data: { 0: [evt(1), evt(1)] } }] },
-  { name: 'setTracks v2 without data replaces by empty (DEBT-734)', fn: 'setTracks', pinReturn: true, args: () => [{ info: INFO_EVENTS }], init: OLD() },
+  // ---- loadTracks (apply: store write, notes, refresh) ----
+  { name: 'loadTracks v2', fn: 'loadTracks', pinReturn: true, args: () => [v2({ notes: 'my notes' })], init: OLD() },
+  { name: 'loadTracks v2 skipRefresh', fn: 'loadTracks', pinReturn: true, args: () => [v2(), true] },
+  { name: 'loadTracks v1 object', fn: 'loadTracks', pinReturn: true, args: () => [v1()] },
+  { name: 'loadTracks v1 array', fn: 'loadTracks', pinReturn: true, args: () => [[{ 3: evt(3) }]] },
+  { name: 'loadTracks empty array (erase)', fn: 'loadTracks', pinReturn: true, args: () => [[]], init: OLD() },
+  { name: 'loadTracks wrong format keeps the model', fn: 'loadTracks', pinReturn: true, args: () => [{ a: 1 }], init: OLD() },
+  { name: 'loadTracks wrong info.type keeps the model', fn: 'loadTracks', pinReturn: true, args: () => [{ info: INFO_TAGS, data: {} }], init: OLD() },
+  { name: 'loadTracks null is rejected with the unsupported-format message (DEBT-710)', fn: 'loadTracks', pinReturn: true, args: () => [null], init: OLD() },
+  { name: 'loadTracks number is rejected (DEBT-710)', fn: 'loadTracks', pinReturn: true, args: () => [5], init: OLD() },
+  { name: 'loadTracks v2 duplicate ids alerts', fn: 'loadTracks', pinReturn: true, args: () => [{ info: INFO_EVENTS, data: { 0: [evt(1), evt(1)] } }] },
+  { name: 'loadTracks v2 without data replaces by empty (DEBT-734)', fn: 'loadTracks', pinReturn: true, args: () => [{ info: INFO_EVENTS }], init: OLD() },
   { name: 'eraseEvents confirmed', fn: 'eraseEvents', args: () => [], confirm: true, init: OLD() },
   { name: 'eraseEvents canceled', fn: 'eraseEvents', args: () => [], confirm: false, init: OLD() },
 
@@ -56,26 +56,29 @@ const cases = [
   { name: 'loadEventsFromFile canceled', fn: 'loadEventsFromFile', args: () => [{ target: { files: [], value: 'x' } }] },
   { name: 'loadEventsFromFile0 from URL', fn: 'loadEventsFromFile0', args: () => ['data/Tracks.json'], net: { get: { ok: text(v2()) } } },
 
-  // ---- setTags (decode + apply) ----
-  { name: 'setTags v1 with dm', fn: 'setTags', pinReturn: true, args: () => [tagsV1(), ''], init: { Tags: {} } },
-  { name: 'setTags v1 without dm', fn: 'setTags', pinReturn: true, args: () => [tagsV1NoDM(), ''], init: { Tags: {} } },
-  { name: 'setTags v1 empty object', fn: 'setTags', pinReturn: true, args: () => [{}, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags v1 bad key is rejected whatever the previous Tags (DEBT-713)', fn: 'setTags', pinReturn: true, args: () => [{ a: { tags: [] } }, ''], init: { Tags: {} } },
-  { name: 'setTags v1 bad key among good ones is rejected', fn: 'setTags', pinReturn: true, args: () => [{ 0: { tags: [] }, b: { tags: [] } }, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags v1 good keys are accepted whatever the previous Tags (DEBT-713)', fn: 'setTags', pinReturn: true, args: () => [tagsV1(), ''], init: { Tags: { a: { tags: [] } } } },
-  { name: 'setTags v2', fn: 'setTags', pinReturn: true, args: () => [tagsV2(), ''], init: { Tags: {} } },
-  { name: 'setTags v2 wrong info.type', fn: 'setTags', pinReturn: true, args: () => [{ info: INFO_EVENTS, data: {} }, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags v2 without data is rejected, Tags kept (DEBT-733)', fn: 'setTags', pinReturn: true, args: () => [{ info: INFO_TAGS }, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags v2 data null is rejected', fn: 'setTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: null }, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags v2 data not an object is rejected', fn: 'setTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: 'abc' }, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags v2 frame without tags: rolled back, previous Tags, DM flag and ttags kept (DEBT-733, DEBT-715)', fn: 'setTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: { 0: {} } }, ''], init: { Tags: tagsV1(), TagsInfo: { type: 'tags-multiframe', source: 'old' }, tagsHaveDM: true, ttags: { old: 1 } } },
-  { name: 'setTags v2 null frame: rolled back before getTTags (DEBT-733)', fn: 'setTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: { 0: null } }, ''], init: { Tags: tagsV1(), tagsHaveDM: true, ttags: { old: 1 } } },
-  { name: 'setTags v2 info null caught', fn: 'setTags', pinReturn: true, args: () => [{ info: null, data: {} }, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags null is rejected (DEBT-710)', fn: 'setTags', pinReturn: true, args: () => [null, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags undefined is rejected (DEBT-710)', fn: 'setTags', pinReturn: true, args: () => [undefined, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags number is rejected (DEBT-710)', fn: 'setTags', pinReturn: true, args: () => [5, ''], init: { Tags: tagsV1() } },
-  { name: 'setTags string is rejected', fn: 'setTags', pinReturn: true, args: () => ['abc', ''], init: { Tags: tagsV1() } },
-  { name: 'setTags array', fn: 'setTags', pinReturn: true, args: () => [[], ''], init: { Tags: {} } },
+  // ---- loadTags (decode + apply) ----
+  { name: 'loadTags v1 with dm', fn: 'loadTags', pinReturn: true, args: () => [tagsV1()], init: { Tags: {} } },
+  { name: 'loadTags v1 without dm', fn: 'loadTags', pinReturn: true, args: () => [tagsV1NoDM()], init: { Tags: {} } },
+  { name: 'loadTags v1 empty object', fn: 'loadTags', pinReturn: true, args: () => [{}], init: { Tags: tagsV1() } },
+  { name: 'loadTags v1 bad key is rejected whatever the previous Tags (DEBT-713)', fn: 'loadTags', pinReturn: true, args: () => [{ a: { tags: [] } }], init: { Tags: {} } },
+  { name: 'loadTags v1 bad key among good ones is rejected', fn: 'loadTags', pinReturn: true, args: () => [{ 0: { tags: [] }, b: { tags: [] } }], init: { Tags: tagsV1() } },
+  { name: 'loadTags v1 good keys are accepted whatever the previous Tags (DEBT-713)', fn: 'loadTags', pinReturn: true, args: () => [tagsV1()], init: { Tags: { a: { tags: [] } } } },
+  { name: 'loadTags v2', fn: 'loadTags', pinReturn: true, args: () => [tagsV2()], init: { Tags: {} } },
+  { name: 'loadTags v2 wrong info.type', fn: 'loadTags', pinReturn: true, args: () => [{ info: INFO_EVENTS, data: {} }], init: { Tags: tagsV1() } },
+  { name: 'loadTags v2 without data is rejected, Tags kept (DEBT-733)', fn: 'loadTags', pinReturn: true, args: () => [{ info: INFO_TAGS }], init: { Tags: tagsV1() } },
+  { name: 'loadTags v2 data null is rejected', fn: 'loadTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: null }], init: { Tags: tagsV1() } },
+  { name: 'loadTags v2 data not an object is rejected', fn: 'loadTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: 'abc' }], init: { Tags: tagsV1() } },
+  { name: 'loadTags v2 frame without tags is rejected, Tags kept (DEBT-733)', fn: 'loadTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: { 0: {} } }], init: { Tags: tagsV1(), TagsInfo: { type: 'tags-multiframe', source: 'old' } } },
+  { name: 'loadTags v2 frame tags not an array is rejected', fn: 'loadTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: { 0: { tags: 5 } } }], init: { Tags: tagsV1() } },
+  { name: 'loadTags v2 later frame without tags is rejected', fn: 'loadTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: { 0: { tags: [] }, 1: { tags: null } } }], init: { Tags: tagsV1() } },
+  { name: 'loadTags v2 tag not an object is rejected', fn: 'loadTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: { 0: { tags: [{ id: 1 }, 7] } } }], init: { Tags: tagsV1() } },
+  { name: 'loadTags v2 null frame is rejected (DEBT-733)', fn: 'loadTags', pinReturn: true, args: () => [{ info: INFO_TAGS, data: { 0: null } }], init: { Tags: tagsV1() } },
+  { name: 'loadTags v2 info null is rejected', fn: 'loadTags', pinReturn: true, args: () => [{ info: null, data: {} }], init: { Tags: tagsV1() } },
+  { name: 'loadTags null is rejected (DEBT-710)', fn: 'loadTags', pinReturn: true, args: () => [null], init: { Tags: tagsV1() } },
+  { name: 'loadTags undefined is rejected (DEBT-710)', fn: 'loadTags', pinReturn: true, args: () => [undefined], init: { Tags: tagsV1() } },
+  { name: 'loadTags number is rejected (DEBT-710)', fn: 'loadTags', pinReturn: true, args: () => [5], init: { Tags: tagsV1() } },
+  { name: 'loadTags string is rejected', fn: 'loadTags', pinReturn: true, args: () => ['abc'], init: { Tags: tagsV1() } },
+  { name: 'loadTags array', fn: 'loadTags', pinReturn: true, args: () => [[]], init: { Tags: {} } },
   { name: 'eraseTags confirmed', fn: 'eraseTags', args: () => [], confirm: true, init: { Tags: tagsV1() } },
   { name: 'eraseTags canceled', fn: 'eraseTags', args: () => [], confirm: false, init: { Tags: tagsV1() } },
 

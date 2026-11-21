@@ -12,7 +12,7 @@
  * `basedOn`, its message and the dialog to hide) and `statusWidget`. `eventsToServer(format)` ignores `format` (always V2).
  */
 import { exportTracks } from './Export.js';
-import { setTracks, setTags, loadTracksFromText, loadCSVFromRows } from './Load.js';
+import { loadTracks, loadTags, loadTracksFromText, loadCSVFromRows } from './Load.js';
 import { classifyFilename } from './CsvSchemas.js';
 import { mainAlert, reportLoadError } from '../core/Alerts.js';
 import { logging } from '../core/Notifier.js';
@@ -106,7 +106,7 @@ export async function loadEventsFromServerByID(video_data_id) {
         console.log("loadEvents: Loaded events data:", json["data"]["data"]);
         // Case: event file
         let obj = JSON.parse(json["data"]["data"]);
-        const success = setTracks(obj);
+        const success = loadTracks(obj);
 
         if(success){
           console.log("Loaded event. ID:", video_data_id)
@@ -132,7 +132,7 @@ export function eventsFromServer(url) {
       console.log("eventsFromServer: SUCCESS\njson=", json);
       let obj = json; //JSON.parse(json);
 
-      if (!setTracks(obj)) throw new Error("Invalid events format (details in the console)");
+      if (!loadTracks(obj)) throw new Error("Invalid events format (details in the console)");
 
       $("#loadTracksFromServerDialog").modal("hide");
     },
@@ -157,7 +157,7 @@ export function loadCSVFromServer(url, schema) {
   .catch(reportLoadError("loading " + schema + " CSV from " + url))
 }
 
-export function tagsFromServer(tagFileID, div) {
+export function tagsFromServer(tagFileID) {
 
   // Files are not being loaded from a specific URL anymore,
   // Commented code block should no longer be necessary
@@ -198,12 +198,12 @@ export function tagsFromServer(tagFileID, div) {
         fromServerDialog.setMessage("red", "ERROR: Tag data stored in server is null.");
         return
       }
-      return setTags(tags, div);
+      return loadTags(tags);
     },
     function () {
       console.log('tagsFromServer: ERROR loading tag file with ID "' + tagFileID + '"');
       statusWidget.statusUpdate("tagsLoad", false, "");
-      return setTags([], div);
+      return loadTags([]);
     }
   );
 }

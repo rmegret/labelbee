@@ -50,12 +50,12 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
   with `golden/harness/old-save-impl.js` and `golden/slice2/generate.js`); step 3 deleted them, so it is now
   the only reference. A change in it is a behavior change: review the diff.
 
-## Golden tests: setTracks/setTags and the loaders (slice 3, [ADR 0005](../design/0005-slice-annotation-loaders.md))
+## Golden tests: loadTracks/loadTags and the loaders (slice 3, [ADR 0005](../design/0005-slice-annotation-loaders.md))
 
     node --test refactor/tests/golden/slice3/        # run
     node refactor/tests/golden/slice3/generate.js    # regenerate the golden (see below)
 
-- `golden/slice3/fixtures/cases.js`: synthetic cases (Q8): `setTracks`, `setTags`, erase, the
+- `golden/slice3/fixtures/cases.js`: synthetic cases (Q8): `loadTracks`, `loadTags`, erase, the
   local file loaders, `eventsFromServer`, `loadEventsFromServerByID`, `tagsFromServer`, the three CSV loaders,
   the DB loader and the two prompt handlers. Case fields: `init` (page state before), `net` (what the stubbed
   `$.ajax`/`$.getJSON`/`$.get`/`d3.csv` answer), `confirm`/`prompt`, `pinReturn`.

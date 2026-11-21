@@ -74,7 +74,7 @@ def test_c5_the_same_file_can_be_loaded_twice(ui, sample_dir):
     ui.open()
     ui.load_events(sample_dir / "events_v2.json")
     ui.wait_tracks()
-    ui.js("setTracks([])")                              # empty the model without the confirmation dialog
+    ui.js("loadTracks([])")                              # empty the model without the confirmation dialog
     assert ui.n_observations() == 0
     ui.load_events(sample_dir / "events_v2.json")       # same file, same input: the input value was reset
     ui.wait_tracks()
@@ -86,7 +86,7 @@ def test_c6_load_tags_v2_and_v1(ui, sample_dir):
     ui.load_tags(sample_dir / "tags_v2.json")
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
     assert list(ui.tags()) == ["0", "4"]
-    assert ui.tags()["0"]["tags"][0]["frame"] == 0     # setTags adds the frame to every tag
+    assert ui.tags()["0"]["tags"][0]["frame"] == 0     # loadTags adds the frame to every tag
     v1 = {"3": {"tags": [{"id": 9, "dm": 50, "c": [5, 5], "p": [[1, 1], [2, 1], [2, 2], [1, 2]]}]}}
     ui.load_tags(ui.write("tags_v1.json", v1))
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).join() === '3'")
@@ -94,8 +94,7 @@ def test_c6_load_tags_v2_and_v1(ui, sample_dir):
 
 
 def test_c7_bad_tags_files_are_reported_and_the_tags_are_kept(ui, sample_dir):
-    ui.allow(r"loading tags from file", r"unsupported|Invalid tags format|malformed",
-             r"Cannot read properties of null \(reading 'tags'\)")      # the error setTags logs before it rolls back
+    ui.allow(r"loading tags from file", r"unsupported|Invalid tags format")
     ui.open()
     ui.load_tags(sample_dir / "tags_v2.json")
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")

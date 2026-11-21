@@ -21,7 +21,7 @@ def test_d1_save_v2_then_reload_gives_the_same_tracks(ui, sample_dir):
     assert len(saved["info"]["history"]) == 1 and saved["info"]["history"][0].startswith("Saved using labelbee")
     assert saved["info"]["videoinfo"]["name"] == "sample.mp4"
     assert sum(len(v) for v in saved["data"].values()) == 13
-    ui.js("setTracks([])")
+    ui.js("loadTracks([])")
     ui.load_events(ui.write("saved.json", saved))
     ui.wait_tracks()
     assert _geometry(ui.tracks()) == _geometry(before)
@@ -103,7 +103,7 @@ def test_d5_save_tags_then_erase_and_reload(ui, sample_dir):
     ui.open_subpanel("Local storage")
     saved = json.loads(ui.download(click_selector="#savetags", name="tags").read_text())
     assert saved["info"]["type"] == "tags-multiframe"
-    ui.js("setTags({}, '')")
+    ui.js("loadTags({})")
     assert ui.tags() == {}
     ui.load_tags(ui.write("saved_tags.json", saved))
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
@@ -134,7 +134,7 @@ def test_d6_save_to_the_server_and_reload_it(ui, sample_dir, saved_dir):
     assert doc["info"]["type"] == "events-multiframe"
     assert sum(len(v) for v in doc["data"].values()) == n
     # the saved file is now the most recent event file of the video: the dialog proposes it, and it loads back
-    ui.js("setTracks([])")
+    ui.js("loadTracks([])")
     ui.page.click("input[value='Load Events from DB']")
     ui.page.wait_for_selector("#from-server-dialog", state="visible")
     assert row["file_name"] in ui.page.inner_text("#from-server-dialog")

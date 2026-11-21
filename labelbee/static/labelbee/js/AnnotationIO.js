@@ -27,7 +27,7 @@ function eraseEvents() {
   );
   if (r == true) {
     console.log("ERASING all Tracks...");
-    setTracks([]);
+    loadTracks([]);
   } else {
     console.log("User CANCELED Erase Tracks ...");
   }
@@ -36,7 +36,7 @@ function eraseTags() {
   var r = confirm("Are you sure you want to ERASE all Tags?");
   if (r == true) {
     console.log("ERASING all Tags...");
-    setTags({}, "");
+    loadTags({});
   } else {
     console.log("User CANCELED Erase Tags ...");
   }
@@ -734,7 +734,7 @@ function FromServerDialog() {
     div.find(".modal-message h4").html("Loading " + this.dataType + "s from database for file ID " + tag_event_ID + "...");
     // Load tag or event file
     if(this.data_type== "tag"){      // Case: tag file
-      success = tagsFromServer(tag_event_ID, this.div);
+      success = tagsFromServer(tag_event_ID);
       if(success){
         theDialog.basedOn = tag_event_ID;
         div.find(".modal-message h4").css("color","black");
@@ -742,7 +742,7 @@ function FromServerDialog() {
       }
       else{
         div.find(".modal-message h4").css("color","red");
-        div.find('.modal-message h4').html("ERROR <br> setTags: Invalid tag information obtained from server.")
+        div.find('.modal-message h4').html("ERROR <br> loadTags: Invalid tag information obtained from server.")
       }
     }
     else{                           // Case: event file
@@ -758,7 +758,7 @@ function FromServerDialog() {
           console.log("loadEvents: Loaded events data:", json["data"]["data"]);
           // Case: event file
           let obj = JSON.parse(json["data"]["data"]);
-          success = setTracks(obj);
+          success = loadTracks(obj);
           // Setting basedon information
           // {
           //   var basedon = {};
@@ -780,7 +780,7 @@ function FromServerDialog() {
           }
           else{
             div.find(".modal-message h4").css("color","red");
-            div.find('.modal-message h4').html("ERROR <br> setTracks: Invalid event information obtained from server.");
+            div.find('.modal-message h4').html("ERROR <br> loadTracks: Invalid event information obtained from server.");
           }
         },
         error:  function () {
@@ -920,5 +920,5 @@ function updateEventsNotes() {
   }
 }
 
-// The loaders, setTracks/setTags, mainAlert, the AJAX errors and eventsToServer are in annotation/Load.js and
+// The loaders, loadTracks/loadTags, mainAlert, the AJAX errors and eventsToServer are in annotation/Load.js and
 // annotation/ServerIO.js (slice 8 step 6b)

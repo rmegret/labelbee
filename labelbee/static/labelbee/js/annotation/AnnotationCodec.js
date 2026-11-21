@@ -224,74 +224,56 @@ export function tagsAddFrames(Tags) {
 }
 
 /* Decode a Tags JSON (v1: dictionary of frames, v2: {info, data}) into {data, info}.
- * Returns null when the format is rejected (setTags returns 0 then).
+ * Returns null when the format is rejected (`loadTags` returns false then). A result is well-formed: `data` is an object (or
+ * an array) of frames, each an object whose `tags` is an array of objects, so the store and the views need no guard.
  * Moved from setTags (refactor slice 3, ADR 0005). `info` is always the dummy one, the v2 info is
  * dropped (DEBT-715); a v2 file whose `data` is missing or not an object is rejected (DEBT-733).
  * The v1 key check validates `obj` (DEBT-713: it used to read the previously loaded Tags global). */
 export function decodeTags(obj) {
-  var info;
-  try{
-    // null and primitives would make `"info" in obj` throw (DEBT-710)
-    if (obj === null || typeof obj != "object") {
-      log(
-        'setTags: ABORTED, unsupported file format. typeof(obj) is "' +
-          (obj === null ? "null" : typeof obj) +
-          '", should be "object"'
-      );
-      return null;
-    }
-    if ("info" in obj) {
-      // New tag format v2 with metainfo
+  const isObject = (x) => x !== null && typeof x == "object";
+  const reject = (why) => { log("loadTags: ABORTED, unsupported file format. " + why); return null; };
 
-      // obj['info']
-      info = obj["info"];
-
-      if (info["type"] != "tags-multiframe") {
-        log(
-          'setTags: ABORTED, unsupported file format. info["type"]=' +
-            info["type"]
-        );
-        return null;
-      }
-
-      // obj['data'].tags[tag_id_in_frame]
-      obj = obj["data"];
-      if (obj === null || typeof obj != "object") {
-        log(
-          'setTags: ABORTED, unsupported file format. "data" should be an object, found ' +
-            (obj === null ? "null" : typeof obj)
-        );
-        return null;
-      }
-    }
-    else {
-      // Old format v1: Tags JSON directly stored in the json
-      // obj is an object
-      // obj[frame].tags[tag_id_in_frame]
-
-      log("setTags: Tags JSON v1, dictionary of frames");
-      if (
-        !Object.keys(obj).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
-        !Object.keys(obj).every((v) => Number.isInteger(v))
-      ) {
-        log(
-          "setTags: ABORTED, unsupported file format. All keys should be positive integers (frame ids)."
-        );
-        return null;
-      }
-    }
-    // Just use obj directly
-
-    // Create dummy info header
-    info = {
-      type: "tags-multiframe",
-      source: "Converted from Tags v1",
-    };
+  // null and primitives would make `"info" in obj` throw (DEBT-710)
+  if (!isObject(obj)) {
+    return reject('typeof(obj) is "' + (obj === null ? "null" : typeof obj) + '", should be "object"');
   }
-  catch(error){ // Case: loaded json from server does not match expected structure
-    logError(error);
-    return null;
+  if ("info" in obj) {
+    // New tag format v2 with metainfo
+    // obj['data'][frame].tags[tag_id_in_frame]
+    const info = obj["info"];
+    if (!isObject(info)) return reject("info should be an object, found " + (info === null ? "null" : typeof info));
+    if (info["type"] != "tags-multiframe") return reject('info["type"]=' + info["type"]);
+
+    obj = obj["data"];
+    if (!isObject(obj)) {
+      return reject('"data" should be an object, found ' + (obj === null ? "null" : typeof obj));
+    }
   }
+  else {
+    // Old format v1: Tags JSON directly stored in the json
+    // obj[frame].tags[tag_id_in_frame]
+    log("loadTags: Tags JSON v1, dictionary of frames");
+    if (
+      !Object.keys(obj).every((v) => /^(0|[1-9]\d*)$/.test(v)) &
+      !Object.keys(obj).every((v) => Number.isInteger(v))
+    ) {
+      return reject("All keys should be positive integers (frame ids).");
+    }
+  }
+  // Just use obj directly
+
+  for (const f of Object.keys(obj)) {
+    const frame = obj[f];
+    if (!isObject(frame)) return reject("frame " + f + " should be an object");
+    if (!Array.isArray(frame.tags)) return reject("frame " + f + ": `tags` should be an array");
+    if (!frame.tags.every(isObject)) return reject("frame " + f + ": every tag should be an object");
+  }
+
+  // Create dummy info header
+  const info = {
+    type: "tags-multiframe",
+    source: "Converted from Tags v1",
+  };
 
   return { data: obj, info: info };
 }
