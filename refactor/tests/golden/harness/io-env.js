@@ -1,7 +1,7 @@
 // Environment for the slice 3 golden tests (ADR 0005): the REAL setTracks/setTags/loaders of
-// AnnotationIO.js evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
-// The AnnotationIO.js functions stay in that file during the whole slice, so the same golden checks
-// the code before and after each step. Since step 2 the data lives in a fresh
+// Load.js and ServerIO.js (AnnotationIO.js until slice 8 step 6b) evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
+// The functions stay the same code before and after each step of slice 8 (they moved to modules in step 6b), so the same golden checks
+// them; since step 2 the data lives in a fresh
 // AnnotationStore per case (the bridge installs `AnnotationStore` and `events`; there are no data globals any more).
 // Every effect on the outside is recorded in order in `rec.fx`.
 'use strict';
@@ -16,8 +16,9 @@ const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js'
 const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;
 const FIXED_DATE = '2000-01-02T03:04:05.000Z';
 
+const IO_SOURCES = ['annotation/Load.js', 'annotation/ServerIO.js', 'AnnotationIO.js']; // AnnotationIO.js: updateEventsNotes // were AnnotationIO.js until slice 8 step 6b
 const IO_FUNCTIONS = [
-  'setTracks', 'setEventsProp', 'eraseEvents', 'onReaderLoad', 'loadEventsFromFile0', 'loadEventsFromFile',
+  'setTracks', 'eraseEvents', 'onReaderLoad', 'loadEventsFromFile0', 'loadEventsFromFile',
   'eraseTags', 'setTags', 'onTagsReaderLoad', 'loadTagsFromFile', 'loadEventsFromServerByID',
   'eventsFromServer', 'loadTracksCSVFromDB', 'loadTracksCSVFromServer', 'loadTagsCSVFromServer',
   'loadTrackTaggedCSVFromServer', 'clickLoadTracksCSVFromServer', 'clickLoadTracksTaggedCSVFromServer',
@@ -34,9 +35,9 @@ const CODEC_FUNCTIONS = [
 
 // Top-level function: from its `function` line to the first line that is exactly `}`.
 function extractTopLevel(src, name) {
-  const m = new RegExp('\\n((?:async )?function ' + name + '\\()').exec(src);
+  const m = new RegExp('\\n(?:export )?((?:async )?function ' + name + '\\()').exec(src);
   if (!m) throw new Error('function not found: ' + name);
-  const start = m.index + 1;
+  const start = m.index + m[0].length - m[1].length;
   const end = src.indexOf('\n}\n', start);
   return src.slice(start, end + 3);
 }
@@ -101,8 +102,10 @@ async function loadIoEnv() {
   const { setNotifier, logging } = await import(urlOf('core/Notifier.js'));
   const { createAnnotationStore } = await import(urlOf('annotation/AnnotationStore.js'));
   const { installLegacyGlobals } = await import(urlOf('annotation/AnnotationStoreBridge.js'));
-  const src = fs.readFileSync(path.join(JS_DIR, 'AnnotationIO.js'), 'utf8');
-  const code = IO_FUNCTIONS.map((n) => extractTopLevel(src, n)).join('\n');
+  // Since slice 8 step 6b the functions are in two ES modules; they are evaluated here as strict scripts (what a module is),
+  // without their import and export keywords, over the stubs below.
+  const src = IO_SOURCES.map((f) => fs.readFileSync(path.join(JS_DIR, f), 'utf8')).join('\n');
+  const code = '"use strict";\n' + IO_FUNCTIONS.map((n) => extractTopLevel(src, n)).join('\n');
 
   return function makeEnv(c) {
     const { rec, stubs } = makeRecorder();
@@ -162,7 +165,7 @@ async function loadIoEnv() {
     installLegacyGlobals(ctx, createAnnotationStore());
     vm.runInContext('var ttags;', ctx); // declared in the page by ChronoControl.js (`var ttags = {}`)
     ctx.$ = makeJQuery(rec, net, ctx);
-    vm.runInContext(code, ctx, { filename: 'AnnotationIO.js(extracted)' });
+    vm.runInContext(code, ctx, { filename: 'Load.js+ServerIO.js(extracted)' });
     writeState(ctx, c.init || {});
     return { ctx, rec, fns: ctx };
   };

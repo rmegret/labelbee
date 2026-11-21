@@ -169,8 +169,6 @@ def test_d6_the_lineage_of_a_hash_load_is_sent_with_the_next_save(ui, saved_dir)
 def test_d7_an_unknown_format_or_version_throws(ui):
     """The exports raise instead of saving a file with null (slice 8 step 6a)."""
     ui.open()
-    for call, name in (('exportTracks("v3")', "exportTracks"), ('exportTags("v3")', "exportTags"),
-                       ('saveEventsToFile("v3")', "exportTracks"), ('saveTagsToFile("v3")', "exportTags")):
+    for call, name in (('saveEventsToFile("v3")', "exportTracks"), ('saveTagsToFile("v3")', "exportTags")):
         err = ui.js("(() => { try { %s; return null; } catch (e) { return e.message; } })()" % call)
         assert err and name in err and "'v3'" in err, (call, err)
-    assert ui.js('exportTracks("v1") !== null && exportTags("v1") !== null')

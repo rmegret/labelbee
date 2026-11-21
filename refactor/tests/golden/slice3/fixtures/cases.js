@@ -45,8 +45,6 @@ const cases = [
   { name: 'setTracks number is rejected (DEBT-710)', fn: 'setTracks', pinReturn: true, args: () => [5], init: OLD() },
   { name: 'setTracks v2 duplicate ids alerts', fn: 'setTracks', pinReturn: true, args: () => [{ info: INFO_EVENTS, data: { 0: [evt(1), evt(1)] } }] },
   { name: 'setTracks v2 without data replaces by empty (DEBT-734)', fn: 'setTracks', pinReturn: true, args: () => [{ info: INFO_EVENTS }], init: OLD() },
-  { name: 'setEventsProp with TracksInfo', fn: 'setEventsProp', args: () => ['notes', 'x'], init: { TracksInfo: OLD_INFO() } },
-  { name: 'setEventsProp without TracksInfo creates it', fn: 'setEventsProp', args: () => ['notes', 'x'], init: { TracksInfo: undefined } },
   { name: 'eraseEvents confirmed', fn: 'eraseEvents', args: () => [], confirm: true, init: OLD() },
   { name: 'eraseEvents canceled', fn: 'eraseEvents', args: () => [], confirm: false, init: OLD() },
 

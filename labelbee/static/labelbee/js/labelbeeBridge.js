@@ -26,8 +26,9 @@ import * as EventTree from './annotation/EventTree.js';
 import * as Model from './annotation/Model.js';
 import { htmlCheckmark, url_for } from './core/Utils.js';
 import * as EditActions from './annotation/EditActions.js';
-import * as Export from './annotation/Export.js';
 import * as FileExport from './annotation/FileExport.js';
+import * as Load from './annotation/Load.js';
+import * as ServerIO from './annotation/ServerIO.js';
 import { VideoCache } from './video/VideoCache.js';
 import { HoverControl } from './video/HoverControl.js';
 import * as VideoInfo from './video/VideoInfo.js';
@@ -53,8 +54,30 @@ window.EventTree = EventTree; // used by updateEventTree (SelectionControl.js)
 // Observation class and legacy accessors of the stored events (annotation/Model.js, moved from the classic Model.js);
 // read by the classic scripts at call time, never while the page parses.
 Object.assign(window, Model);
-Object.assign(window, Export); // exportTracks, for eventsToServer until step 6b (annotation/Export.js)
-Object.assign(window, FileExport); // saves to file (annotation/FileExport.js)
+// The modules of the annotation IO export what they define; only the names a classic script, a template handler or a browser
+// test still calls are installed as globals (a misspelled name throws). The list shrinks as the callers move.
+function install(module, names) {
+  for (const name of names) {
+    if (!(name in module)) throw new Error("labelbeeBridge: '" + name + "' is not exported");
+    window[name] = module[name];
+  }
+}
+install(FileExport, [
+  "saveEventsToFile", "saveEventsToCSV", "saveEventsToBBoxes", "saveTagsToFile", // template buttons
+  "saveObjToJsonFile", "saveCSVToFile", "getTimestampNow", // VideoList.js
+]);
+install(Load, [
+  "setTracks", "setTags", // labelBee.js, tests
+  "eraseEvents", "eraseTags", "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
+  "loadEventsFromFile", "loadTagsFromFile", "csvLoaderFor", "eventsFromServer", "tagsFromServer", // AnnotationIO.js, VideoControl.js
+  "loadEventsFromServerByID", // labelBee.js
+  "loadTracksCSVFromServer", "loadTagsCSVFromServer", "loadTrackTaggedCSVFromServer", "loadConvertedCSVFromServer", // tests
+]);
+install(ServerIO, [
+  "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, AnnotationIO.js
+  "eventsToServer", // template button
+  "mainAlert", // test_alerts.py
+]);
 Object.assign(window, EditActions); // deleteEvent, storeUnit, submitDraft (annotation/EditActions.js)
 window.htmlCheckmark = htmlCheckmark; // core/Utils.js
 window.url_for = url_for;

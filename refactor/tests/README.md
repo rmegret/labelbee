@@ -55,7 +55,7 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
     node --test refactor/tests/golden/slice3/        # run
     node refactor/tests/golden/slice3/generate.js    # regenerate the golden (see below)
 
-- `golden/slice3/fixtures/cases.js`: synthetic cases (Q8): `setTracks`, `setTags`, `setEventsProp`, erase, the
+- `golden/slice3/fixtures/cases.js`: synthetic cases (Q8): `setTracks`, `setTags`, erase, the
   local file loaders, `eventsFromServer`, `loadEventsFromServerByID`, `tagsFromServer`, the three CSV loaders,
   the DB loader and the two prompt handlers. Case fields: `init` (page state before), `net` (what the stubbed
   `$.ajax`/`$.getJSON`/`$.get`/`d3.csv` answer), `confirm`/`prompt`, `pinReturn`.
