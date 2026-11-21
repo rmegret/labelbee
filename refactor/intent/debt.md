@@ -1719,11 +1719,11 @@ Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fi
 
 [read] The two page checkboxes set `flag_showIndividualEvents` and `flag_showPartsOnChrono` (`labelbee/static/labelbee/js/ChronoControl.js`, `onToggleButton_*`). Their only readers were in `ChronoControlActivitiesLegacy.js`, inside `updateActivities`, reached only with `chrono.config.legacyActivities = true` (default false since commit `b1226fcc`, which introduced `ChronoIntervals`). So both options have been no-ops in the default display since that commit. Slice 8 step 7b deleted the legacy file (last present at commit `14460c47`; recover with `git show 14460c47:labelbee/static/labelbee/js/ChronoControlActivitiesLegacy.js`), together with `legacyActivities`, `crosses`, `rectIntervals`, `circlesIntervals`, `partsIntervals`, `acts` and `svgTag`. The checkboxes and the flags stay; the unused CSS rule `.partsAvailable` (`labelbee/static/labelbee/css/custom.css:1102`) stays.
 
-What the lost code did (~80 lines, not reinjectable as is):
-  - individual events: `initObsSpan`/`updateObsSpan`, one red outline rect (`.obsspan`, click = `gotoEvent`) per observation over its span, from `flatTracks`; plus cyan circles (`.alertcircle`) on redundant obs (`isredundant`, set at `ChronoControl.js` in the "Find redundant Tracks" pass). It read `d.span` on `flatTracks` items, which are now `{frame, id, y, labels, obs}`: the span is `d.obs.span`. [read]
+What the lost code did (~80 lines):
+  - individual events: `initObsSpan`/`updateObsSpan`, one red outline rect (`.obsspan`, click = `gotoEvent`) per observation over its span, from `flatTracks`; plus cyan circles (`.alertcircle`) on redundant obs (`isredundant`, set at `ChronoControl.js` in the "Find redundant Tracks" pass). It read `d.span` (`{f1, f2, b1, b2}`) and `d.isredundant` on `flatTracks` items; `updateTagsLabels()` still sets both on every refresh (`ChronoControl.js`, "Find redundant Tracks"), so the data it needs is still computed. [read]
   - parts: `renderChrono_Parts`, one black outline rect (`.partsAvailable`) per observation with `hasParts(d.obs)`, at the interval start.
 
-_Proposed_: reimplement both on `ChronoIntervals` (or as two small layers like `renderChrono_spans`) in a dedicated step after the chrono view is a module (slice 8 step 8), each with a browser test; or remove the two checkboxes. Needs the maintainer's choice.
+_Proposed_: reimplement both (about 80 lines, the data is still there) on `ChronoIntervals` (or as two small layers like `renderChrono_spans`) in a dedicated step after the chrono view is a module (slice 8 step 8), each with a browser test; or remove the two checkboxes. Needs the maintainer's choice.
 
 - **Code:**
   - `labelbee/static/labelbee/js/ChronoControl.js`: `flag_showIndividualEvents`, `flag_showPartsOnChrono`, `renderActivities`
