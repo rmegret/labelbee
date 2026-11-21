@@ -505,6 +505,8 @@ Dangling marks use the global `ROI = {left:175, top:250, right:2305, bottom:1240
 
 ## DEBT-310: Legacy file contains live and dead code, and is always loaded
 
+_Resolved in slice 8 step 7b: the file was deleted, see DEBT-840._
+
 `ChronoControlActivitiesLegacy.js` (808 lines) is loaded by the page and mixes: dead code (`createIntervalList_legacy`, `initActivities`, `removeActivities` unused outside console hint, activity helper functions), legacy renderers reachable only via a console flag, and live functions (`initTagIntervals`/`renderTagIntervals` called at init with empty data). It creates/removes `.tooltip` elements (detaches `chrono.tooltip`) and uses globals set elsewhere. [read] `labelbee_page.html` script tags, `labelbee/static/labelbee/js/ChronoControl.js:36` (first reading for the legacy-file content). Proposed, pending OQ-301: remove after DEBT-301 is resolved.
 - **Code:**
   - `ChronoControlActivitiesLegacy.js`: `createIntervalList_legacy`, `initActivities`, `removeActivities`, `initTagIntervals`
@@ -1712,3 +1714,17 @@ Replacement: the displays (zoom, chronogram) derive the rotated tag from `obs.fi
 - **Code:**
   - `refactor/tools/refresh_mvc_pdf.py`, `refactor/intent/tools/spec_view.py`
 - **Links:** ADR 0009, DEBT-832, DEBT-836
+
+## DEBT-840: "Show Individual Events" and "Show Events with Parts" do nothing; their code went with the legacy file (slice 8, step 7b)
+
+[read] The two page checkboxes set `flag_showIndividualEvents` and `flag_showPartsOnChrono` (`labelbee/static/labelbee/js/ChronoControl.js`, `onToggleButton_*`). Their only readers were in `ChronoControlActivitiesLegacy.js`, inside `updateActivities`, reached only with `chrono.config.legacyActivities = true` (default false since commit `b1226fcc`, which introduced `ChronoIntervals`). So both options have been no-ops in the default display since that commit. Slice 8 step 7b deleted the legacy file (last present at commit `14460c47`; recover with `git show 14460c47:labelbee/static/labelbee/js/ChronoControlActivitiesLegacy.js`), together with `legacyActivities`, `crosses`, `rectIntervals`, `circlesIntervals`, `partsIntervals`, `acts` and `svgTag`. The checkboxes and the flags stay; the unused CSS rule `.partsAvailable` (`labelbee/static/labelbee/css/custom.css:1102`) stays.
+
+What the lost code did (~80 lines, not reinjectable as is):
+  - individual events: `initObsSpan`/`updateObsSpan`, one red outline rect (`.obsspan`, click = `gotoEvent`) per observation over its span, from `flatTracks`; plus cyan circles (`.alertcircle`) on redundant obs (`isredundant`, set at `ChronoControl.js` in the "Find redundant Tracks" pass). It read `d.span` on `flatTracks` items, which are now `{frame, id, y, labels, obs}`: the span is `d.obs.span`. [read]
+  - parts: `renderChrono_Parts`, one black outline rect (`.partsAvailable`) per observation with `hasParts(d.obs)`, at the interval start.
+
+_Proposed_: reimplement both on `ChronoIntervals` (or as two small layers like `renderChrono_spans`) in a dedicated step after the chrono view is a module (slice 8 step 8), each with a browser test; or remove the two checkboxes. Needs the maintainer's choice.
+
+- **Code:**
+  - `labelbee/static/labelbee/js/ChronoControl.js`: `flag_showIndividualEvents`, `flag_showPartsOnChrono`, `renderActivities`
+- **Links:** DEBT-310, ADR 0015

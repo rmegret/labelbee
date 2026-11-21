@@ -14,8 +14,6 @@ var allTagsID = []
 var flatTags = []
 var ttags = {}
 
-var crosses = []
-var partsIntervals = []
 
 var chrono
 var chronoDragControl // instance of ChronoDragControl.DragControl (ADR 0011)
@@ -34,9 +32,6 @@ class Chronogram {
     config.idAxisMapMode = 'id'
     config.idAxisMapString = 'return id'
     config.idAxisMap = Function("id",config.idAxisMapString)
-
-    chrono.config.legacyActivities = false
-    console.log('TO ACTIVATE LEGACY D3 CODE OF ACTIVITIES for wrongid, falsealarm, etc... run:\nchrono.config.legacyActivities = true; removeActivities(); renderActivities()')
 
     config.showDanglingTracks = true
 
@@ -206,7 +201,6 @@ function initChrono() {
   //     svgMiddle = axes.chronoGroup.append("g").attr('class', 'middleLayer');
   //     svgTop = axes.chronoGroup.append("g").attr('class', 'topLayer');
   svgSpanRects = axes.plotArea.append("g").attr("class", "spanRectLayer");
-  svgTag = axes.plotArea.append("g").attr("class", "tagLayer");
   svgInterval = axes.plotArea.append("g").attr("class", "intervalLayer");
   svgTop = axes.plotArea.append("g").attr("class", "topLayer");
 
@@ -367,8 +361,6 @@ function initChrono() {
 
   /* ## Init chronogram content ## */
 
-  //initActivities(); // wait for refresh
-  initTagIntervals();
 
   initVideoSpan();
   initTrackWindowSpan();
@@ -1041,7 +1033,6 @@ function updateChrono() {
   const start = performance.now()
 
   // Redraw activities
-  //updateActivities(); // Legacy
   renderActivities()
   updateTagIntervals();
 
@@ -1097,7 +1088,7 @@ function updateChronoData() {
     // chronogramData[flatk].x, .y, .Activity, .labels, .pollen, .tag, .obs
     updateChronogramData()
 
-    // chronogramData => allIntervals, crosses, rectIntervals, ...
+    // chronogramData => allIntervals, ...
     createIntervalList()
   }
 
@@ -1326,7 +1317,6 @@ function createIntervalList() {
   }
   //initiliaze allIntervals to update data
   allIntervals = [];
-  acts = ["", "pollen", "entering", "leaving", "fanning"];
   for (var id in tempCoordinates) {
     let xValues = [];
 
@@ -1423,22 +1413,6 @@ function createIntervalList() {
     }
   }
 
-  // Subsets of allIntervals
-  crosses = allIntervals.filter(function (d) {
-    var tempArray = d.labels.split(",");
-    if (tempArray.includes("falsealarm") || tempArray.includes("wrongid")) {
-      return true;
-    }
-  });
-  rectIntervals = allIntervals.filter(function (d) {
-    return d.x1 != d.x2;
-  });
-  circlesIntervals = allIntervals.filter(function (d) {
-    return d.x1 == d.x2;
-  });
-  partsIntervals = allIntervals.filter(function (d) {
-    return hasParts(d.obs);
-  });
 }
 
 
@@ -1709,20 +1683,16 @@ function updateTagsLabels() {
 var __section__chronogram_d3_render_activities
 
 function renderActivities(onlyScaling) {
-  if (chrono.config.legacyActivities) {
-    updateActivities(onlyScaling) // legacy
-  } else {
-    chronoIntervals.updateAndRender()
-    chronoIntervals.render()
+  chronoIntervals.updateAndRender()
+  chronoIntervals.render()
 
-    chronoIntervals.renderEnterLeavePollen()
+  chronoIntervals.renderEnterLeavePollen()
 
-    renderChrono_spans()
+  renderChrono_spans()
 
-    renderChrono_danglingTracks(onlyScaling)
+  renderChrono_danglingTracks(onlyScaling)
 
-    chronoIntervals.renderSelection()
-  }
+  chronoIntervals.renderSelection()
 }
 
 class ChronoIntervals {
