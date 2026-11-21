@@ -26,6 +26,8 @@ import * as EventTree from './annotation/EventTree.js';
 import * as Model from './annotation/Model.js';
 import { htmlCheckmark, url_for } from './core/Utils.js';
 import * as EditActions from './annotation/EditActions.js';
+import * as Export from './annotation/Export.js';
+import * as FileExport from './annotation/FileExport.js';
 import { VideoCache } from './video/VideoCache.js';
 import { HoverControl } from './video/HoverControl.js';
 import * as VideoInfo from './video/VideoInfo.js';
@@ -51,6 +53,8 @@ window.EventTree = EventTree; // used by updateEventTree (SelectionControl.js)
 // Observation class and legacy accessors of the stored events (annotation/Model.js, moved from the classic Model.js);
 // read by the classic scripts at call time, never while the page parses.
 Object.assign(window, Model);
+Object.assign(window, Export); // exportTracks, for eventsToServer until step 6b (annotation/Export.js)
+Object.assign(window, FileExport); // saves to file (annotation/FileExport.js)
 Object.assign(window, EditActions); // deleteEvent, storeUnit, submitDraft (annotation/EditActions.js)
 window.htmlCheckmark = htmlCheckmark; // core/Utils.js
 window.url_for = url_for;

@@ -241,96 +241,6 @@ class EventsCSVManualFilePicker {
 
 // ## Annotations control
 
-function saveBlobToFile(blob, filename) {
-  var url = window.URL.createObjectURL(blob);
-  var a = document.createElement("a");
-  a.hidden = true;
-  document.body.appendChild(a);
-  a.href = url;
-  a.download = filename;
-  a.click();
-  console.log("saveBlobToFile: waiting for user to save to file");
-  //window.URL.revokeObjectURL(url);
-  console.log("saveBlobToFile: done");
-
-  // New simplified API?
-  //saveAs(blob, filename)
-}
-function saveObjToJsonFile(obj, filename) {
-  var json = JSON.stringify(obj);
-
-  var blob = new Blob([json], {
-    type: "text/json",
-  });
-
-  saveBlobToFile(blob, filename);
-}
-function saveCSVToFile(txt, filename) {
-  var blob = new Blob([txt], {
-    type: "text/csv",
-  });
-  saveBlobToFile(blob, filename);
-}
-
-function getTimestampNow() {
-  function addZero(i) {
-    if (i < 10) {
-      i = "0" + i;
-    }
-    return String(i);
-  }
-
-  let D = new Date();
-  let timestamp =
-    D.getFullYear() +
-    addZero(D.getMonth() + 1) +
-    addZero(D.getDate()) +
-    "_" +
-    addZero(D.getHours()) +
-    addZero(D.getMinutes()) +
-    addZero(D.getSeconds());
-  return timestamp;
-}
-function getTimestampedVideoname() {
-  return getVideoInfo().name + "-" + getTimestampNow();
-}
-
-function saveEventsToFile(format) {
-  console.log("saveEventsToFile: exporting to JSON...");
-
-  if (!format) {
-    format = "v2";
-  }
-
-  let filename = getTimestampedVideoname() + "_Tracks.json";
-
-  let obj = null;
-  if (format == "v1") obj = convertTracksToV1();
-  else if (format == "v2") obj = convertTracksToV2();
-  if (obj == null) {
-    console.log("saveEventsToFile: error while preparing data, Aborted.");
-  }
-
-  saveObjToJsonFile(obj, filename);
-}
-
-function saveEventsToCSV() {
-  console.log("saveEventsToCSV: exporting to CSV...");
-
-  var txt = tracksToCSV(events.toObject());
-
-  saveCSVToFile(txt, "Tracks.csv");
-}
-
-function saveEventsToBBoxes() {
-  console.log("saveEventsToBBoxes: exporting bounding boxes to CSV...");
-  console.log("with simple format: frame, left, top, right, bottom, pollen");
-
-  var txt = tracksToBBoxes2(events.toObject());
-
-  saveCSVToFile(txt, "BBoxes.csv");
-}
-
 function eraseEvents() {
   var r = confirm(
     "Are you sure you want to ERASE all manual annotations (Tracks)?"
@@ -551,28 +461,6 @@ function loadTagsFromFile(event) {
 
   return readFileAsText(fileToRead).then(tagsFromText)
     .catch(reportLoadError("loading tags from file " + fileToRead.name));
-}
-
-function saveTagsToFile(version) {
-  console.log("saveTagsToFile: exporting to JSON... v=", version);
-
-  let filename = getTimestampedVideoname() + "_Tags.json";
-
-  if (version == "v1") {
-    saveObjToJsonFile(AnnotationStore.getTags(), filename);
-  } else if (version == "v2") {
-    obj = {
-      info: {
-        type: "tags-multiframe",
-        "data-format": "root.data[frame].tags[id_in_frame]",
-        //"source": "Exported from labelbee on "+Date()
-      },
-      data: AnnotationStore.getTags(),
-    };
-    saveObjToJsonFile(obj, filename);
-  } else {
-    console.log("ERROR in saveTagsToFile: unknown version=", version);
-  }
 }
 
 // Server I/O
@@ -1459,7 +1347,7 @@ function eventsToServer(format) {
     video_id: videoManager.currentVideoID,
     created_by_id: user_id,
     data_type: "event",
-    data: JSON.stringify(convertTracksToV2()),
+    data: JSON.stringify(exportTracks("v2")),
     created_from_id: fromServerDialog.basedOn
   }
 

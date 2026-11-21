@@ -119,7 +119,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (4) store writes of the selection [x] `deleteEvent`, `storeUnit`, `submitDraft` to `annotation/EditActions.js`; `getIdsInFocus` to `Model.js`
   - (5) video data [x] `VideoCache`, `HoverControl`, `videoinfo` state to `video/`; the `VideoManager` data half waits for step 9
   - (5b) `videoinfo` global removed [x] classic scripts call `getVideoInfo()`/`setVideoInfoObject()` through the bridge
-  - (6)-(12) IO, chrono, forms, player and zoom, overlay, entry [ ]
+  - (6a) saves and exports [x] `annotation/FileExport.js` over `annotation/Export.js`; (6b) loaders, server IO [ ]
+  - (7)-(12) chrono, forms, player and zoom, overlay, entry [ ]
   - (13) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):

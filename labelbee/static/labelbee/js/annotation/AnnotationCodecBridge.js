@@ -5,16 +5,12 @@
  * functions of AnnotationIO.js).
  */
 import * as codec from './AnnotationCodec.js';
-import { getVideoInfo } from '../video/VideoInfo.js';
 
 for (const name of [
   'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'flatjson_to_json', 'resultToObjects',
   'tracks_csv_to_json', 'tags_csv_to_json', 'tags_csv_to_tagjson', 'tracks_tagged_csv_to_json', 'events_csv_to_json', 'detections_csv_to_json',
-  'tracksToCSV', 'tracksToBBoxes', 'tracksToBBoxes2',
 ]) {
   window[name] = codec[name];
 }
 
-// Save side: the legacy functions took no argument and read the page globals (the stored events, `events`), and `getVideoInfo()` for the video.
-window.convertTracksToV1 = () => codec.convertTracksToV1(events.toObject());
-window.convertTracksToV2 = () => codec.convertTracksToV2(events.toObject(), events.info, getVideoInfo());
+// The functions over the page state (exportTracks, ...) are in Export.js (slice 8 step 6a).
