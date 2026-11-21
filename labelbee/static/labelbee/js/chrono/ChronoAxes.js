@@ -1,9 +1,20 @@
-function ChronoAxes(parent, videoinfo, options) {
+/*
+ * ChronoAxes: the axes, zoom and time mark of the chronogram (refactor slice 8 step 7a, ADR 0015). Moved as is from the
+ * classic script ChronoAxes.js; no behavior change. Installed as a global by labelbeeBridge.js for `initChrono`
+ * (ChronoControl.js), its only caller. It reads `d3` and `$` (classic scripts of the page) and `logging`.
+ *
+ * Four names were assigned without a declaration (implicit globals in the classic script, an error in a module): they are
+ * now local (`plotArea` is a variable of the constructor, as it is read by the later code of the constructor).
+ */
+import { logging } from '../core/Notifier.js';
+
+export function ChronoAxes(parent, videoinfo, options) {
   // Create by passing the SVG parent element as D3 selector
   // Axes adjust automatically to SVG size
   // videoinfo should have fields fps and starttime
 
   var axes = this;
+  var plotArea; // the group that holds the content, public as axes.plotArea
   axes.parent = parent;
   axes.highlightedID = null;
 
@@ -168,7 +179,7 @@ function ChronoAxes(parent, videoinfo, options) {
     let x0 = xdomain[0],
       x1 = xdomain[1];
 
-    center = (x1 + x0) / 2;
+    const center = (x1 + x0) / 2;
 
     x0 = x0 - center + frame;
     x1 = x1 - center + frame;
@@ -785,7 +796,7 @@ function ChronoAxes(parent, videoinfo, options) {
   /* Monkey patch events from D3 selection */
   function injectEventFilter(eventSource, eventType, filterFun) {
     // Get original D3 callback
-    originalCallback = eventSource.on(eventType);
+    const originalCallback = eventSource.on(eventType);
     if (typeof originalCallback !== "function") {
       console.log(
         "injectZoomEventFilter: no callback found for " +
@@ -823,7 +834,7 @@ function ChronoAxes(parent, videoinfo, options) {
   // Replaced by jQuery event "mouse:down"
 
   function invertYScale(y) {
-    var id;
+    var id, rank;
     if (options.useOrdinalScale) {
       let rangeBand = yScale.bandwidth();
       rank = Math.floor((y - yScale.range()[0]) / rangeBand);
