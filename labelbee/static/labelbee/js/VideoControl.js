@@ -47,7 +47,7 @@ function VideoControl(videoTagId) {
   this.video2 = new VideoFrame({
     id: videoTagId,
     /* We use the fps declared in the video here, even if not real */
-    frameRate: videoinfo.videofps,
+    frameRate: getVideoInfo().videofps,
     callback: this.onFrameChangedVideo2.bind(this), // VERY IMPORTANT: all frame changes (play,next,prev...) trigger this callback. No refresh should be done outside of this callback
   });
   this.video2.onListen = function () {
@@ -183,8 +183,8 @@ VideoControl.prototype.playTick = function (timestamp) {
     window.requestAnimationFrame((timestamp)=>this.playTick(timestamp));
     return
   }
-  //console.log("playTick:",timestamp,this.playLastTime, videoinfo.videofps)
-  if (timestamp - this.playLastTime < 1000/videoinfo.videofps/this.playbackRate) {
+  //console.log("playTick:",timestamp,this.playLastTime, getVideoInfo().videofps)
+  if (timestamp - this.playLastTime < 1000/getVideoInfo().videofps/this.playbackRate) {
     // Wait for frame period
     window.requestAnimationFrame((timestamp)=>this.playTick(timestamp));
     return
@@ -232,7 +232,7 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
   } else {
     this.savedFrame = this.currentFrame;
   } 
-  if ((frame<0)|(frame>=videoinfo.nframes)) {
+  if ((frame<0)|(frame>=getVideoInfo().nframes)) {
     console.log("VideoControl.seekFrame: ABORTED, frame out of bounds",frame)
     return;
   }
@@ -243,7 +243,7 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
     //this.currentMode = "cache";
     if (logging.frameEvents)
       console.log("videoControl.seekFrame: CACHE, f=", frame);
-    this.videoCache.getFrameImageAsync(this.video.src, frame + videoinfo.frameoffset, videoinfo.videofps)
+    this.videoCache.getFrameImageAsync(this.video.src, frame + getVideoInfo().frameoffset, getVideoInfo().videofps)
       .then((img) => {
         if (this.cacheRequestedFrame !== frame) return // stale answer: a newer frame was requested since
         this.cacheImage = img
@@ -264,16 +264,16 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
 
     // preview keeps 1 keyframe out of 40 frames
     // and is encoded at same speed as original (0.5fps=20fps/40)
-    //let t = Math.round((frame+videoinfo.frameoffset)/40)*40/20
+    //let t = Math.round((frame+getVideoInfo().frameoffset)/40)*40/20
 
     // preview keeps 1 keyframe out of 40 frames
     // and is encoded at 20 fps
-    //let t = Math.round((frame+videoinfo.frameoffset)/40)/20
+    //let t = Math.round((frame+getVideoInfo().frameoffset)/40)/20
 
     let t =
-    (frame + videoinfo.frameoffset) /
-    videoinfo.videofps /
-    videoinfo.preview.previewTimescale;
+    (frame + getVideoInfo().frameoffset) /
+    getVideoInfo().videofps /
+    getVideoInfo().preview.previewTimescale;
 
     if (logging.frameEvents)
       console.log("videoControl.seekFrame: PREVIEW, f=", frame, " t=", t);
@@ -283,7 +283,7 @@ VideoControl.prototype.seekFrame = function (frame, useFastSeek) {
     //this.currentMode = "video";
     if (logging.frameEvents)
       console.log("videoControl.seekFrame: VIDEO2, f=", frame);
-    this.video2.seekTo({ frame: frame + videoinfo.frameoffset });
+    this.video2.seekTo({ frame: frame + getVideoInfo().frameoffset });
     // will call onFrameChangedVideo2 when seeked
   }
 };
@@ -298,7 +298,7 @@ VideoControl.prototype.rewind = function (frames) {
 VideoControl.prototype.forward = function (frames) {
   if (!frames) frames = 1;
   let newframe=this.currentFrame+frames
-  if ((newframe<0)|(newframe>=videoinfo.nframes)) {
+  if ((newframe<0)|(newframe>=getVideoInfo().nframes)) {
     console.log("VideoControl.forward: ABORTED, frame out of bounds",newframe)
     return;
   }
@@ -309,22 +309,22 @@ VideoControl.prototype.forward = function (frames) {
     this.seekFrame(this.currentFrame+frames)
 };
 VideoControl.prototype.rewind2 = function () {
-  this.rewind(videoinfo.videofps); // 1s
+  this.rewind(getVideoInfo().videofps); // 1s
 };
 VideoControl.prototype.forward2 = function () {
-  this.forward(videoinfo.videofps);
+  this.forward(getVideoInfo().videofps);
 };
 VideoControl.prototype.rewind3 = function () {
-  this.rewind(videoinfo.videofps * 10); // 10s
+  this.rewind(getVideoInfo().videofps * 10); // 10s
 };
 VideoControl.prototype.forward3 = function () {
-  this.forward(videoinfo.videofps * 10);
+  this.forward(getVideoInfo().videofps * 10);
 };
 VideoControl.prototype.rewind4 = function () {
-  this.rewind(videoinfo.videofps * 60); // 1 min
+  this.rewind(getVideoInfo().videofps * 60); // 1 min
 };
 VideoControl.prototype.forward4 = function () {
-  this.forward(videoinfo.videofps * 60);
+  this.forward(getVideoInfo().videofps * 60);
 };
 
 VideoControl.prototype.preloadCache = function (centerFrame) {
@@ -335,21 +335,21 @@ VideoControl.prototype.preloadCache = function (centerFrame) {
   if (centerFrame == undefined) centerFrame = this.currentFrame
 
   let f1 = Math.max(0, centerFrame - this.preloadSpanBefore)
-  let f2 = Math.min(videoinfo.nframes-1, centerFrame + this.preloadSpanAfter)
+  let f2 = Math.min(getVideoInfo().nframes-1, centerFrame + this.preloadSpanAfter)
   console.log("preloadCache, centerFrame", centerFrame,", interval", f1,f2)
 
   let frames = interval( centerFrame, f2 )
-  this.videoCache.preloadFrames(videoControl.video.src, frames, videoinfo.videofps)
+  this.videoCache.preloadFrames(videoControl.video.src, frames, getVideoInfo().videofps)
   frames = interval( f1, centerFrame-1 )
-  this.videoCache.preloadFrames(videoControl.video.src, frames, videoinfo.videofps)
+  this.videoCache.preloadFrames(videoControl.video.src, frames, getVideoInfo().videofps)
 };
 
 // # Get current frame/time // FIXME: move logic to specific frameChanged callbacks
 VideoControl.prototype.getCurrentVideoFrame = function () {
   if (this.currentMode == "preview")
-    return this.previewFrame - videoinfo.frameoffset;
+    return this.previewFrame - getVideoInfo().frameoffset;
   // currentMode == 'video'
-  else return this.video2.get() - videoinfo.frameoffset;
+  else return this.video2.get() - getVideoInfo().frameoffset;
 };
 VideoControl.prototype.getCurrentFrame = function () {
   // Modified only by onFrameChanged or onPreviewFrameChanged
@@ -360,16 +360,16 @@ VideoControl.prototype.getCurrentVideoTime = function (format) {
   return this.video2.toMilliseconds() / 1000.0;
 };
 VideoControl.prototype.getCurrentRealDate = function (format) {
-  var D = new Date(videoinfo.starttime);
+  var D = new Date(getVideoInfo().starttime);
   D = new Date(
     D.getTime() +
-    (this.video2.toMilliseconds() * videoinfo.videofps) / videoinfo.realfps
+    (this.video2.toMilliseconds() * getVideoInfo().videofps) / getVideoInfo().realfps
   );
   return D;
 };
 VideoControl.prototype.frameToTime = function (frame) {
-  var D = new Date(videoinfo.starttime);
-  var sec = (frame - videoinfo.frameoffset) / videoinfo.realfps;
+  var D = new Date(getVideoInfo().starttime);
+  var sec = (frame - getVideoInfo().frameoffset) / getVideoInfo().realfps;
   D = new Date(D.getTime() + sec * 1000);
   return D;
 };
@@ -593,11 +593,11 @@ VideoControl.prototype.loadVideo = function (url, previewURL) {
 
   this.name = url;
   this.video.src = url;
-  videoinfo.videoURL = url;
+  getVideoInfo().videoURL = url;
   // Update of display handled in callback onVideoLoaded
 
   let tmp = url.split("/");
-  videoinfo.videoName = tmp[tmp.length - 1].split(".")[0];
+  getVideoInfo().videoName = tmp[tmp.length - 1].split(".")[0];
 
   //     if (previewURL) {
   //         this.previewURL = previewURL;
@@ -624,15 +624,15 @@ VideoControl.prototype.onVideoLoaded = function (event) {
 
   this.onVideoSizeChanged();
 
-  videoinfo.duration = this.video.duration;
-  videoinfo.name = this.video.src;
+  getVideoInfo().duration = this.video.duration;
+  getVideoInfo().name = this.video.src;
 
-  let name = videoinfo.name;
+  let name = getVideoInfo().name;
   $("#videoName").html(name);
 
-  $("a.videolink").attr("href", videoinfo.videoPath);
+  $("a.videolink").attr("href", getVideoInfo().videoPath);
 
-  let videourl = videoinfo.videoURL;
+  let videourl = getVideoInfo().videoURL;
 
   this.loadVideoInfo(videourl + ".info.json");
   this.loadPreviewVideo();
@@ -642,7 +642,7 @@ VideoControl.prototype.onVideoLoaded = function (event) {
   this.hardRefresh();
 
   statusWidget.statusRequest("tagsLoad", []);
-  tagsFromServer(videoinfo.tags.videoTagURL, true); // quiet
+  tagsFromServer(getVideoInfo().tags.videoTagURL, true); // quiet
 };
 VideoControl.prototype.onVideoError = function (event) {
   let rawsrc = this.video.getAttribute('src')
@@ -702,9 +702,9 @@ VideoControl.prototype.loadPreviewVideo = function (previewURL) {
   let videoControl = this;
 
   if (!previewURL) {
-    previewURL = videoinfo.videoURL + ".scale4.mp4";
+    previewURL = getVideoInfo().videoURL + ".scale4.mp4";
   }
-  videoinfo.preview.previewURL = previewURL;
+  getVideoInfo().preview.previewURL = previewURL;
   $("#previewVideoName").val(previewURL);
 
   statusWidget.statusRequest("videopreviewLoad", []);
@@ -722,7 +722,7 @@ VideoControl.prototype.loadPreviewVideo = function (previewURL) {
     videoControl.setPreviewVideoStatus("loaded");
     statusWidget.statusUpdate("videopreviewLoad", true, []);
 
-    let infourl = videoinfo.preview.previewURL + ".info.json";
+    let infourl = getVideoInfo().preview.previewURL + ".info.json";
     videoControl.loadPreviewVideoInfo(infourl);
   }
   function _onPreviewVideoError(e) {
@@ -749,7 +749,7 @@ VideoControl.prototype.changePreviewVideoName = function (event) {
 // update from form
 VideoControl.prototype.changePreviewVideoInfo = function (event) {
   //console.log(event)
-  videoinfo.preview.previewTimescale = Number(
+  getVideoInfo().preview.previewTimescale = Number(
     $("#previewVideoTimeScale").val()
   );
 };
@@ -758,9 +758,9 @@ VideoControl.prototype.loadPreviewVideoInfo = function (infoURL) {
   let videoControl = this;
 
   if (!infoURL) {
-    infoURL = videoinfo.preview.previewURL + ".info.json";
+    infoURL = getVideoInfo().preview.previewURL + ".info.json";
   }
-  videoinfo.preview.previewInfoURL = infoURL;
+  getVideoInfo().preview.previewInfoURL = infoURL;
 
   let _onVideoInfoLoaded = function (data) {
     if (logging.videoEvents) console.log("PREVIEW loadVideoInfo loaded");
@@ -768,8 +768,8 @@ VideoControl.prototype.loadPreviewVideoInfo = function (infoURL) {
     videojsoninfo = data;
 
     if ($.isNumeric(videojsoninfo.timescale)) {
-      videoinfo.preview.previewTimescale = Number(videojsoninfo.timescale);
-      $("#previewVideoTimeScale").val(videoinfo.preview.previewTimescale);
+      getVideoInfo().preview.previewTimescale = Number(videojsoninfo.timescale);
+      $("#previewVideoTimeScale").val(getVideoInfo().preview.previewTimescale);
     }
   };
   let _onVideoInfoError = function (jqXHR, textStatus, errorThrown) {
@@ -836,26 +836,26 @@ VideoControl.prototype.loadVideoInfo = function (infourl) {
     videojsoninfo = data;
 
     if ($.isNumeric(videojsoninfo.videofps)) {
-      videoinfo.videofps = Number(videojsoninfo.videofps);
-      videoControl.video2.frameRate = videoinfo.videofps;
+      getVideoInfo().videofps = Number(videojsoninfo.videofps);
+      videoControl.video2.frameRate = getVideoInfo().videofps;
     }
     if ($.isNumeric(videojsoninfo.realfps)) {
-      videoinfo.realfps = Number(videojsoninfo.realfps);
+      getVideoInfo().realfps = Number(videojsoninfo.realfps);
     }
     if (
       videojsoninfo.starttime instanceof Date &&
       !isNaN(videojsoninfo.starttime.valueOf())
     ) {
-      videoinfo.starttime = videojsoninfo.starttime;
+      getVideoInfo().starttime = videojsoninfo.starttime;
     }
     if (typeof videojsoninfo.tagsfamily !== "undefined") {
-      videoinfo.tagsfamily = videojsoninfo.tagsfamily;
+      getVideoInfo().tagsfamily = videojsoninfo.tagsfamily;
     }
     if (typeof videojsoninfo.place !== "undefined") {
-      videoinfo.place = videojsoninfo.place;
+      getVideoInfo().place = videojsoninfo.place;
     }
     if (typeof videojsoninfo.comments !== "undefined") {
-      videoinfo.comments = videojsoninfo.comments;
+      getVideoInfo().comments = videojsoninfo.comments;
     }
     statusWidget.statusUpdate("videoinfoLoad", true, []);
     //'starttime': '2016-07-15T09:59:59.360',
@@ -887,8 +887,8 @@ VideoControl.prototype.loadVideoInfo = function (infourl) {
 VideoControl.prototype.onVideoInfoChanged = function () {
   if (logging.videoEvents) console.log("onVideoInfoChanged");
 
-  videoinfo.nframes = Math.floor(videoinfo.duration * videoinfo.videofps);
-  this.video2.frameRate = videoinfo.videofps;
+  getVideoInfo().nframes = Math.floor(getVideoInfo().duration * getVideoInfo().videofps);
+  this.video2.frameRate = getVideoInfo().videofps;
 
   videoManager.updateVideoInfoForm();
 
@@ -897,7 +897,7 @@ VideoControl.prototype.onVideoInfoChanged = function () {
 };
 
 VideoControl.prototype.maxframe = function () {
-  return Math.floor(videoinfo.duration * videoinfo.videofps);
+  return Math.floor(getVideoInfo().duration * getVideoInfo().videofps);
 };
 
 const timeout = (promise, time, name) =>
@@ -925,13 +925,13 @@ VideoControl.prototype.onVideoLoaded2 = async function () {
   statusWidget.statusRequest("videoLoad", []);
   statusWidget.statusUpdate("videoLoad", true, []);
   
-  videoControl.video2.frameRate = videoinfo.videofps
+  videoControl.video2.frameRate = getVideoInfo().videofps
   this.isValidVideo = true;
   this.onVideoSizeChanged();
   
-  let name = videoinfo.name;
+  let name = getVideoInfo().name;
   $("#videoName").html(name);
-  $("a.videolink").attr("href", videoinfo.videoPath);
+  $("a.videolink").attr("href", getVideoInfo().videoPath);
   $("a.videoinfolink").attr("href", url_for("/videodata?videoid="+videoManager.currentVideoID) );
   // this.loadPreviewVideo();
   

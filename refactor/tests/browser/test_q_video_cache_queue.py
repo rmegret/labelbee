@@ -136,7 +136,7 @@ def test_q8_cache_status_shows_the_frame_in_process_as_processing(ui, sample_dir
     _start(ui, sample_dir)
     ui.page.wait_for_function("typeof videoCacheStatus !== 'undefined' && videoCacheStatus !== null")
     ui.js("document.getElementById('showVideoCacheStatus').click()")
-    off = ui.js("videoinfo.frameoffset")
+    off = ui.js("getVideoInfo().frameoffset")
     _regular(ui, 100 + off, 101 + off)
     _go_first(ui)
     ui.js("videoCacheStatus.update()")
@@ -179,7 +179,7 @@ def test_q11_seek_ignores_answers_for_frames_that_are_not_the_requested_one_any_
       videoControl.onFrameChangedCache = function () { window.__shown.push(this.cacheFrame); };
       videoControl.seekFrame(10); videoControl.seekFrame(11); videoControl.seekFrame(12); }""")
     ui.page.wait_for_function("window.__dec.length === 1")                  # 10 in process, queue [12, 11]
-    assert ui.js(QUEUE) == [12 + ui.js("videoinfo.frameoffset"), 11 + ui.js("videoinfo.frameoffset")]
+    assert ui.js(QUEUE) == [12 + ui.js("getVideoInfo().frameoffset"), 11 + ui.js("getVideoInfo().frameoffset")]
     _finish(ui, 0)                                                          # stale answer for 10
     ui.page.wait_for_function("window.__dec.length === 2")
     assert ui.js("window.__shown") == []

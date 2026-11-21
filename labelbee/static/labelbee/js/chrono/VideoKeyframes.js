@@ -2,7 +2,7 @@
 //
 //   keyframes  sorted array of the frames of the video file whose packet is a keyframe, or null if no sidecar
 //
-// Frames are those of the video file (VideoCache frames: chronogram frame plus `videoinfo.frameoffset`).
+// Frames are those of the video file (VideoCache frames: chronogram frame plus `getVideoInfo().frameoffset`).
 // A keyframe decodes alone, any other frame needs the decoder to run from the previous keyframe.
 
 // Sorted keyframe frames of a packets.csv text, or null if the header has no `frame` / `key_frame` column

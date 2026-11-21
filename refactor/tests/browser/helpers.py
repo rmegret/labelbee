@@ -70,7 +70,7 @@ class App:
         return self
 
     def wait_video(self, timeout=15000):
-        self.page.wait_for_function("videoControl.video && videoControl.video.readyState >= 2 && videoinfo && videoinfo.nframes", timeout=timeout)
+        self.page.wait_for_function("videoControl.video && videoControl.video.readyState >= 2 && typeof getVideoInfo === 'function' && getVideoInfo() && getVideoInfo().nframes", timeout=timeout)
 
     def js(self, expression, arg=None):
         return self.page.evaluate(expression, arg)

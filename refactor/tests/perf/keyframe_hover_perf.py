@@ -42,7 +42,7 @@ DECODE_JS = """async ([frame, timeoutMs]) => {
   const t0 = performance.now();
   let timer;
   const timeout = new Promise((_, rej) => { timer = setTimeout(() => rej(new Error('timeout')), timeoutMs); });
-  try { await Promise.race([vc.getImageForce(url, frame, videoinfo.videofps), timeout]); }
+  try { await Promise.race([vc.getImageForce(url, frame, getVideoInfo().videofps), timeout]); }
   catch (e) { return {ms: null, error: String((e && e.message) || e)}; }
   finally { clearTimeout(timer); }
   return {ms: performance.now() - t0};
@@ -230,7 +230,7 @@ def main():
             proc, base = start_server(root)
             page.goto(f"{base}/labelbee/gui#video_id=1", wait_until="load")
             page.wait_for_function("window.videoControl && videoControl.video && videoControl.video.readyState >= 2"
-                                   " && videoinfo && videoinfo.nframes", timeout=30000)
+                                   " && typeof getVideoInfo === 'function' && getVideoInfo() && getVideoInfo().nframes", timeout=30000)
             page.evaluate(DECODE_JS, [0, 30000])      # warm-up: loads the video of the cache, not measured
             rng = random.Random(args.seed)
             results = measure(page, sequences(meta["keyframes"], meta["nframes"], args.n, rng), args.reps)

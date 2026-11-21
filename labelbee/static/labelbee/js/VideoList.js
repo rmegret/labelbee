@@ -5,7 +5,7 @@
 
 // export ...
 
-// `videoinfo` is owned by video/VideoInfo.js (the global is an accessor defined by labelbeeBridge.js).
+// The video metadata is owned by video/VideoInfo.js: `getVideoInfo()` and `setVideoInfoObject()` are installed by labelbeeBridge.js.
 
 function VideoManager() {
   const videoManager = this;
@@ -42,7 +42,7 @@ function VideoManager() {
 
   this.updateVideoListForm();
 
-  videoinfo = {
+  setVideoInfoObject({
     name: "No video loaded",
     videoPath: "",
     videofps: 20, // Should be equal to realfps (unless broken encoder)
@@ -56,7 +56,7 @@ function VideoManager() {
       previewInfoURL: undefined,
       previewTimescale: 1.0,
     },
-  };
+  });
   this.updateVideoInfoForm();
 
   // this.videoListFromServer("/data/videolist.csv", 1);
@@ -417,7 +417,7 @@ VideoManager.prototype.prefillVideoFields = function () {
   } else {
     tagfile = undefined;
   }
-  videoinfo.tags = { videoTagURL: tagfile };
+  getVideoInfo().tags = { videoTagURL: tagfile };
 };
 VideoManager.prototype.videonameToURL = function (videoname) {
   return url_for("/data/" + videoname);
@@ -481,7 +481,7 @@ VideoManager.prototype.changeStartTime = function (event) {
   console.log("changeStartTime", event);
 
   var d = new Date(event.target.value);
-  videoinfo.starttime = d.toISOString();
+  getVideoInfo().starttime = d.toISOString();
 
   updateChronoXDomainFromVideo();
   drawChrono();
@@ -489,34 +489,34 @@ VideoManager.prototype.changeStartTime = function (event) {
 VideoManager.prototype.changeVideoFPS = function (event) {
   console.log("changeVideoFPS", event);
 
-  videoinfo.videofps = Number(event.target.value);
-  //video2.frameRate = videoinfo.videofps // Now handled by videoControl
+  getVideoInfo().videofps = Number(event.target.value);
+  //video2.frameRate = getVideoInfo().videofps // Now handled by videoControl
   videoControl.onVideoInfoChanged(); // Force recomputation of various parameters: nframes...
 };
 VideoManager.prototype.changeFPS = function (event) {
   console.log("changeFPS (real)", event);
 
-  videoinfo.realfps = Number(event.target.value);
+  getVideoInfo().realfps = Number(event.target.value);
   updateChronoXDomainFromVideo(); // Change the real timeline
   drawChrono();
 };
 VideoManager.prototype.changeFrameOffset = function (event) {
   console.log("changeFrameOffset (real)", event);
 
-  videoinfo.frameoffset = Number(event.target.value);
+  getVideoInfo().frameoffset = Number(event.target.value);
   videoControl.onVideoInfoChanged(); // Force recomputation of various parameters: nframes...
 };
 
 VideoManager.prototype.updateVideoInfoForm = function () {
   $('.video_id').html('<a class="small" href="#video_id='+encodeURIComponent(this.currentVideoID)+'">#video_id='+this.currentVideoID+'</a>')
-  $(".videoinfo_nframes").html("Num frames: "+videoinfo.nframes+" [0-"+(videoinfo.nframes-1)+"]");
+  $(".videoinfo_nframes").html("Num frames: "+getVideoInfo().nframes+" [0-"+(getVideoInfo().nframes-1)+"]");
 
-  $("#videofps").val(videoinfo.videofps);
-  $("#realfps").val(videoinfo.realfps);
-  $("#startTime").val(videoinfo.starttime);
-  $("#videoTagsFamily").val(videoinfo.tagsfamily);
-  $("#videoPlace").val(videoinfo.place);
-  $("#videoComments").text(videoinfo.comments);
+  $("#videofps").val(getVideoInfo().videofps);
+  $("#realfps").val(getVideoInfo().realfps);
+  $("#startTime").val(getVideoInfo().starttime);
+  $("#videoTagsFamily").val(getVideoInfo().tagsfamily);
+  $("#videoPlace").val(getVideoInfo().place);
+  $("#videoComments").text(getVideoInfo().comments);
 };
 
 VideoManager.prototype.videoListFromDB = function () {
@@ -711,7 +711,7 @@ VideoManager.prototype.videoSelected = async function(id) {
 }
 
 VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
-  videoinfo = {
+  setVideoInfoObject({
     name: videoInfoJSON["file_name"],
     videoPath: url_for("/data") + videoInfoJSON["path"] + '/' + videoInfoJSON["file_name"],//"/webapp/data/datasets/gurabo10avi/mp4/col10/1_02_R_190718050000.mp4",
     videofps: videoInfoJSON["videofps"],
@@ -728,11 +728,11 @@ VideoManager.prototype.setVideoInfo = function(videoInfoJSON){
     tagsfamily: "tag25h5",
     place: "",
     comments: ""
-  }
-  console.log("setVideoInfo: videoinfo=", videoinfo);
+  })
+  console.log("setVideoInfo: getVideoInfo()=", getVideoInfo());
   this.updateVideoInfoForm();
   updateChronoXDomainFromVideo();
-  return videoControl.loadVideo2(videoinfo.videoPath); //Promise
+  return videoControl.loadVideo2(getVideoInfo().videoPath); //Promise
 }
 
 
@@ -831,7 +831,7 @@ VideoManager.prototype.loadVideoManual = async function(url) {
   info.duration = Number(video_info.duration);
 
   // url = url_for("/data") + videoInfoJSON["path"] + '/' + videoInfoJSON["file_name"]
-  //videoinfo.videoPath = url;
+  //getVideoInfo().videoPath = url;
 
   console.log("loadVideoManual: currentVideoID=", info.file_path);
   this.currentVideoID = info.file_path  // Expected to work out with automatic reload

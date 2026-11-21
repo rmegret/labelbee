@@ -98,7 +98,7 @@ class Chronogram {
     }
     if (how == 'all') {
       frameFilter.frameMin = 0
-      frameFilter.frameMax = videoinfo.nframes-1
+      frameFilter.frameMax = getVideoInfo().nframes-1
       chrono.refreshFrameFilterGUI()
       refreshChronogram()
     }
@@ -125,7 +125,7 @@ class Chronogram {
     if (how == 'frameMax') {
       frameFilter.frameMax = Number( $('#chronoFrameFilterFrameMax').val() )
       if (frameFilter.frameMax < 0) 
-        frameFilter.frameMax = videoinfo.nframes + frameFilter.frameMax
+        frameFilter.frameMax = getVideoInfo().nframes + frameFilter.frameMax
       //if (frameFilter.frameMin<0) frameFilter.frameMax=frameFilter.frameMin
       chrono.refreshFrameFilterGUI()
       if (!frameFilter.active) // Show user they need to activate or refresh
@@ -195,7 +195,7 @@ function initChrono() {
   /* ## Build the axes (resizable) ## */
 
   options = { useOrdinalScale: true };
-  axes = new ChronoAxes(svg, videoinfo, options);
+  axes = new ChronoAxes(svg, getVideoInfo(), options);
   //axes.onClick = onAxesClick         // Callback when the user clicks in axes
   //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
   
@@ -277,7 +277,7 @@ function initChrono() {
     window.VideoCacheStatus = ns;
     if (videoCacheStatus) videoCacheStatus.destroy();
     videoCacheStatus = new ns.VideoCacheStatus(axes, videoCache, function () {
-      return { url: videoControl.video.src, frameOffset: videoinfo.frameoffset };
+      return { url: videoControl.video.src, frameOffset: getVideoInfo().frameoffset };
     });
     videoCacheStatus.setEnabled($("#showVideoCacheStatus").prop("checked"));
   });
@@ -306,7 +306,7 @@ function initChrono() {
       : "No <video>.packets.csv next to the video: keyframes unknown");
     videoControl.hover.snap = available && $box.prop("checked")
       ? function (frame) {
-          return videoKeyframes.nearest(frame + videoinfo.frameoffset) - videoinfo.frameoffset;
+          return videoKeyframes.nearest(frame + getVideoInfo().frameoffset) - getVideoInfo().frameoffset;
         }
       : null;
   }
@@ -670,8 +670,8 @@ var __subsection__chronogram_axes_domains
 /* Synchronization between chronogram, video and chronogramData */
 function domainxFromVideo() {
   var domain;
-  if (isNaN(videoinfo.duration)) domain = [0, 1];
-  else domain = [0, videoinfo.nframes-1];
+  if (isNaN(getVideoInfo().duration)) domain = [0, 1];
+  else domain = [0, getVideoInfo().nframes-1];
   if (logging.chrono) console.log("domainxFromVideo: domain=", domain);
   return domain;
 }
@@ -737,7 +737,7 @@ function validVisibleTagIdsDomain() {
 
 /* Update chronogram axes properties */
 function updateChronoXDomainFromVideo() {
-  axes.updateVideoinfo(videoinfo) // Update starttime and realfps
+  axes.updateVideoinfo(getVideoInfo()) // Update starttime and realfps
   axes.xdomain(domainxFromVideo());
 }
 function scaleTimeDomain(scale) {
@@ -921,13 +921,13 @@ function updateVideoSpan() {
     .selectAll(".interval")
     .attr("x", axes.xScale(0))
     .attr("y", -13)
-    .attr("width", axes.xScale(videoinfo.nframes) - axes.xScale(0)) // frames 0..nframes-1, frame f is [f, f+1)
+    .attr("width", axes.xScale(getVideoInfo().nframes) - axes.xScale(0)) // frames 0..nframes-1, frame f is [f, f+1)
     .attr("height", 11);
   videoSpan
     .selectAll(".label")
     .attr("x", axes.xScale(0) + 2)
     .attr("y", -4)
-    .text(videoinfo.name.split("/").pop());
+    .text(getVideoInfo().name.split("/").pop());
 }
 
 function initTrackWindowSpan() {

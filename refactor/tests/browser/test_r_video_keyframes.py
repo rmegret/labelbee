@@ -57,7 +57,7 @@ def test_r5_hover_on_a_non_keyframe_asks_for_the_keyframe_and_the_next_hover_in_
     ui.js("document.querySelector('#chrono-drag-keyframes').click()")
     ui.js("""() => { window.__asked = []; const vc = videoControl.videoCache;
       const orig = vc.enqueueFramePriority.bind(vc);
-      vc.enqueueFramePriority = (url, f, fps) => { window.__asked.push(f - videoinfo.frameoffset); return orig(url, f, fps); }; }""")
+      vc.enqueueFramePriority = (url, f, fps) => { window.__asked.push(f - getVideoInfo().frameoffset); return orig(url, f, fps); }; }""")
     ui.js("() => { videoControl.hover.query(12); videoControl.hover.query(13); videoControl.hover.query(14); videoControl.hover.query(17); }")
     assert ui.js("window.__asked") == [10, 20]   # 12,13,14 -> 10 (one query), 17 -> 20
 

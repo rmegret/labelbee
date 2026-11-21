@@ -845,7 +845,7 @@ OverlayControl.prototype.videoToCanvasRect = function (rect) {
 OverlayControl.prototype.getFrameCropImg = async function(frame, crop) {
     let data = undefined
     if (frame>=0) {
-        data = await videoCache.getFrameCropDataURL(videoControl.video.src, frame, videoinfo.videofps, crop)
+        data = await videoCache.getFrameCropDataURL(videoControl.video.src, frame, getVideoInfo().videofps, crop)
         //console.log(videoControl.video.src, frame)
         //console.log(crop)
         //console.log(data)
@@ -902,7 +902,7 @@ OverlayControl.prototype.drawTimelineCurrentObject = async function() {
     let frames =  [-16,-8,-4,-2,-1,0,1,2,4,8,16]
     videoControl.pause()
     printMessage("Paused, need to preload video frames")
-    await videoControl.videoCache.preloadFrames(videoControl.video.src, frames, videoinfo.videofps)
+    await videoControl.videoCache.preloadFrames(videoControl.video.src, frames, getVideoInfo().videofps)
         .then(function() {
             printMessage("Preload done")
             overlay.hardRefresh()
@@ -1137,7 +1137,7 @@ OverlayControl.prototype.exportFrame = async function() {
     let videoUrl = videoControl.video.src
     let frame = videoControl.currentFrame
     console.log('overlay.exportFrame: ', videoUrl, frame)
-    let img = await videoCache.getFrameImageAsync(videoUrl, frame, videoinfo.videofps)
+    let img = await videoCache.getFrameImageAsync(videoUrl, frame, getVideoInfo().videofps)
     var newTab = window.open();
     newTab.document.body.innerHTML = 'Extracted Frame '+frame+' from <a target="_blank" href="'+videoUrl+'">'+videoUrl+'</a><br><div><img src="'+img.src+'" style="max-width:100%; max-height:95%;"></div>';
     newTab.document.title = 'Frame '+frame+', video '+videoUrl
@@ -1203,8 +1203,8 @@ OverlayControl.prototype.redrawVideoFrameDiff = function() {
     let state2 = videoCache.getFrameState(videoUrl, frame-1)
     if ((!state1) || ((frame-1>=0)&&!state2)) {
         // CAUTION: risk of infinite async loop if test always fail!
-        //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), videoinfo.videofps)
-        videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), videoinfo.videofps)
+        //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), getVideoInfo().videofps)
+        videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), getVideoInfo().videofps)
         .then(function() {
             printMessage("Preload done")
             overlay.refreshIfLoaded(videoUrl, frame, [frame, frame-1])
@@ -1248,8 +1248,8 @@ OverlayControl.prototype.redrawVideoFromCache = function() {
   let state1 = videoCache.getFrameState(videoUrl, frame)
   if (!state1) {
       // CAUTION: risk of infinite async loop if test always fail!
-      //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), videoinfo.videofps)
-      videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), videoinfo.videofps)
+      //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), getVideoInfo().videofps)
+      videoControl.videoCache.preloadFrames(videoUrl, interval(frame-1,frame), getVideoInfo().videofps)
       .then(function() {
           printMessage("Preload done")
           overlay.refreshIfLoaded(videoUrl, frame, [frame])
@@ -3385,7 +3385,7 @@ function onMouseDown_predict(option) {
     let f = getCurrentFrame()
     let interval = [f-overlay.trackWindow.backward, f+overlay.trackWindow.forward]
     if (interval[0]<0) interval[0]=0
-    if (interval[1]>=videoinfo.nframes) interval[1]=videoinfo.nframes-1
+    if (interval[1]>=getVideoInfo().nframes) interval[1]=getVideoInfo().nframes-1
     let prediction = predictIdFromObsMultiframe(interval,videoXY, "distance")
     prediction = defaultIfIDExists(prediction)
   let predictionTag = predictIdFromTags(getCurrentFrame(), videoXY, "distance");
@@ -3519,7 +3519,7 @@ function onMouseDown_interactiveRect(option) {
   let f = getCurrentFrame()
   let interval = [f - overlay.trackWindow.backward, f + overlay.trackWindow.forward]
   if (interval[0] < 0) interval[0] = 0
-  if (interval[1] >= videoinfo.nframes) interval[1] = videoinfo.nframes - 1
+  if (interval[1] >= getVideoInfo().nframes) interval[1] = getVideoInfo().nframes - 1
   let prediction = predictIdFromObsMultiframe(interval, videoXY, "distance")
   prediction = defaultIfIDExists(prediction)
   if (logging.mouseEvents)

@@ -292,7 +292,7 @@ function getTimestampNow() {
   return timestamp;
 }
 function getTimestampedVideoname() {
-  return videoinfo.name + "-" + getTimestampNow();
+  return getVideoInfo().name + "-" + getTimestampNow();
 }
 
 function saveEventsToFile(format) {
@@ -835,7 +835,7 @@ function FromServerDialog() {
     // videoManager.currentVideoID = 9371; // ONLY FOR DEV PURPOSES! COMMENT WHEN DEPLOYING TO LIVE SERVICE
     this.data_type = data_type;
     this.resetAllHTML();
-    this.setTitle("Most recent " + data_type + " file for " + videoinfo.videoPath);
+    this.setTitle("Most recent " + data_type + " file for " + getVideoInfo().videoPath);
     let checkboxHTML = 
     '<label>'+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.showAdvancedLoadingDialog(false)">'+ 
@@ -920,7 +920,7 @@ function FromServerDialog() {
 
   this.showAdvancedLoadingDialog = function(allusers) {
     this.resetAllHTML();
-    this.setTitle("Advanced " + this.data_type + " loading menu for " + videoinfo.videoPath);
+    this.setTitle("Advanced " + this.data_type + " loading menu for " + getVideoInfo().videoPath);
     let checkboxHTML = 
     '<label> '+ 
     '<input type="checkbox" id="showAdvancedMenu" onclick="fromServerDialog.openRecentLoadingDialog(\''+ this.data_type +'\');"> '+ 
@@ -1119,7 +1119,7 @@ function tracksListFromServer() {
     type: "GET",
     contentType: "application/json",
     //data:{format:'json'}, // Without 'video', list all videos
-    data: { format: "json", video: videoinfo.videoName }, /* videoName deprecated */
+    data: { format: "json", video: getVideoInfo().videoName }, /* videoName deprecated */
     success: function (json) {
       // Get the file list in JSON format
 
@@ -1179,7 +1179,7 @@ function tracksListFromServer() {
             item["filename"] +
             "</button></td>" +
             "<td>" +
-            boldize(item["video"], item["video"] == videoinfo.videoName) + /* videoName deprecated */
+            boldize(item["video"], item["video"] == getVideoInfo().videoName) + /* videoName deprecated */
             "</td>" +
             "<td>" +
             item["user_name"] +
@@ -1466,7 +1466,7 @@ function eventsToServer(format) {
   $.ajax({
     url: url_for(route), //server url
     type: "POST", //passing data as post method
-    data: dataToSend, //form values OLD : JSON.stringify({ video: videoinfo.videoName, data: data })
+    data: dataToSend, //form values OLD : JSON.stringify({ video: getVideoInfo().videoName, data: data })
     dataType: 'json',
     success: function (json) {
       console.log(json)

@@ -118,6 +118,7 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (3) pure helpers [x] `Model.js` to `annotation/Model.js`; `url_for`, `htmlCheckmark`, `pathJoin` to `core/Utils.js`
   - (4) store writes of the selection [x] `deleteEvent`, `storeUnit`, `submitDraft` to `annotation/EditActions.js`; `getIdsInFocus` to `Model.js`
   - (5) video data [x] `VideoCache`, `HoverControl`, `videoinfo` state to `video/`; the `VideoManager` data half waits for step 9
+  - (5b) `videoinfo` global removed [x] classic scripts call `getVideoInfo()`/`setVideoInfoObject()` through the bridge
   - (6)-(12) IO, chrono, forms, player and zoom, overlay, entry [ ]
   - (13) record [ ]
 
