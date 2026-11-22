@@ -118,6 +118,24 @@ The file (512 lines, 42 functions, no top-level statement, no implicit global, n
 - `labelbeeBridge.js` imports it and installs the 14 names on `window` (`explicit `window.X = X` lines). The classic scripts call them at run time only (the load-time scan finds 0 hit), after the deferred bridge has run.
 - What the module still reads as page globals, resolved at call time: `chrono`, `chronoState`, `selection`, `videoControl`, `overlay`, `refresh`, `logging`, `getCurrentFrame`, `getObsHandle`, `autoCentering`, `focusTrackWindow`, and from `ChronoControl.js` `refreshChronogram`, `updateChrono`, `setRestrictID`, `validVisibleTagIdsDomain`. They become imports when their owners become modules (steps 8 to 12); the cycle `ChronoControl` <-> `ChronoControlInteraction` is broken at step 8 by importing in one direction only.
 
+## Step 8: `ChronoControl.js` as a module (2026-11-21)
+
+Split in three, each a review gate. Facts (static scan, `[read]`): 2174 lines, `Chronogram` class plus ~100 functions; it reads about 35 page globals (`videoControl`, `overlay`, `events`, `AnnotationStore`, `selection`, `getVideoInfo`, `hasLabel`, `containsLabel`, `Labels`, `ROI`, ...) which resolve at call time and stay globals; it assigns five names without declaring them; 44 of its top-level names are used by other files (the page's inline handlers, `ChronoControlInteraction.js`, `OverlayControl.js`, `VideoList.js`, `VideoControl.js`, `SelectionControl.js`, `Model.js`, `labelBee.js`, `ChronoLayout.js`, `FitControls.js`, the bridges and the tests).
+
+| Step | Content |
+|---|---|
+| 8a | While still a classic script: `options`, `videoSpan`, `trackWindowSpan`, `obs_for_id`, `showObsTable` declared where used (each is used only in the function that assigns it). |
+| 8b | The move to `chrono/ChronoControl.js` as a module, with the three decisions below. |
+| 8c | The three `import()` of `ChronoDragControl`, `VideoCacheStatus`, `VideoKeyframes` become static imports (a timing change, so alone). |
+
+Decisions for 8b:
+
+1. **Exports are explicit.** The 44 names used elsewhere are exported and installed one by one as `window.X = X` in `labelbeeBridge.js`, as in 7d; the rest becomes module-private. `Chronogram` is a class, so it is installed on `window` too (a classic `class` is not a window property, a module one is not visible at all).
+2. **The refresh instrumentation moves into the module.** `core/RefreshInstrumentBridge.js` replaces `window.X` by a timing wrapper for 11 chrono functions (`refreshChronogram`, `updateChronoData`, `drawChrono`, `updateChrono`, `renderObsTable`, `updateTimeMark`, `updatePreviewTimeMark`, `updateTrackWindowSpan`, `updateChronoSelection`, `updateChronoXDomainFromVideo`, `updateTagIntervals`). Inside a module the calls between these functions would bypass that replacement, and `refreshLog` (nesting, `test_l_refresh`) would lose them. So `RefreshInstrumentBridge.js` exports `instrument(phase, name, fn)` (the same wrapper, also recorded in `refreshInstrumented.wrapped`), the 11 names leave its `GLOBALS` list, and `ChronoControl.js` rebinds each at load: `refreshChronogram = instrument("chrono", "refreshChronogram", refreshChronogram)`. Callers inside the module, the handlers bound by reference in `initChrono` and the exports then all see the wrapped function, as before. Removed with the instrumentation (ADR 0009 step 7). `refreshInstrumented.missing` stays `[]`.
+3. **The four singletons stay globals.** `chrono`, `chronoDragControl`, `videoKeyframes`, `videoCacheStatus` are assigned from this file and read or assigned elsewhere (`labelBee.js:49` does `chrono = new Chronogram()`). A module-level `var` would become a private copy, so the module writes `window.chrono = this` etc. and reads the bare name; no module-level declaration.
+
+Other risks: a module is strict (the scan finds no other undeclared assignment; the file parses as a module); the dynamic `import("./chrono/X.js")` paths become `./X.js` (relative to the module); `ChronoIntervals`, defined after `Chronogram`, is used only at run time.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

@@ -212,7 +212,7 @@ function initChrono() {
 
   /* ## Build the axes (resizable) ## */
 
-  options = { useOrdinalScale: true };
+  const options = { useOrdinalScale: true };
   chrono.axes = new ChronoAxes(svg, getVideoInfo(), options);
   //axes.onClick = onAxesClick         // Callback when the user clicks in axes
   //axes.onAxesChanged = onAxesChanged // Callback when zooming or resizing axes
@@ -894,7 +894,7 @@ var __section__chronogram_timespans
 //put first and last frame in vid
 function initVideoSpan() {
   var chronoGroup = chrono.axes.chronoGroup;
-  videoSpan = chronoGroup
+  var videoSpan = chronoGroup
     .append("g")
     .attr("id", "videoSpan")
     .attr("clip-path", "url(#videoSpanClipPath)");
@@ -959,7 +959,7 @@ function updateVideoSpan() {
 
 function initTrackWindowSpan() {
   var chronoGroup = chrono.axes.chronoGroup;
-  trackWindowSpan = chronoGroup
+  var trackWindowSpan = chronoGroup
     .append("g")
     .attr("id", "trackWindowSpan")
     .attr("clip-path", "url(#trackWindowSpanClipPath)");
@@ -1695,7 +1695,7 @@ function updateTagsLabels() {
 
   // Find redundant Tracks
   for (let id in chronoState.flatTracksValidGroupById) {
-    obs_for_id = chronoState.flatTracksValidGroupById[id];
+    let obs_for_id = chronoState.flatTracksValidGroupById[id];
     for (let j in obs_for_id) {
       if (j == 0) continue;
       let i = j - 1;
@@ -1906,7 +1906,7 @@ function updateObsTable() {
   renderObsTable()
 }
 function renderObsTable() {
-  showObsTable = !$("#labelingTab > .ui-accordion-header").hasClass(
+  const showObsTable = !$("#labelingTab > .ui-accordion-header").hasClass(
     "ui-accordion-header-collapsed"
   );
   if (showObsTable) {
