@@ -54,7 +54,32 @@ import * as Alerts from './core/Alerts.js';
 import { VideoCache } from './video/VideoCache.js';
 import { HoverControl } from './video/HoverControl.js';
 import { VideoManager } from './video/VideoList.js';
-import { VisitWidget } from './VisitControl.js';
+import { VisitWidget } from './form/VisitControl.js';
+import {
+  initSelectionControl,
+  hardRefreshLabelTogglePanel,
+  updateSelectID,
+  onSelectIDChanged,
+  updateEventTree,
+  updateForm,
+  updateSelectionPanels,
+  updateDeleteButton,
+  labelsProcessKey,
+  onLabelToggled,
+  updateAnnotationStatistics,
+} from './form/Form.js';
+import {
+  swapID_callback,
+  selectBeeByIDandFrame,
+  activateSelection,
+  deselectBee,
+  getCurrentTag,
+  deleteSelected,
+  undoAction,
+  undoStack,
+  updateUndoButton,
+  modifyCurrentObsSpan,
+} from './SelectionControl.js';
 import {
   getVideoInfo,
   setVideoInfoObject,
@@ -195,6 +220,18 @@ window.VideoCache = VideoCache;
 window.HoverControl = HoverControl;
 window.VideoManager = VideoManager; // built by `init()` of labelBee.js (`videoManager = new VideoManager()`)
 window.VisitWidget = VisitWidget; // built by `OverlayControl` (`overlay.visitWidget = new VisitWidget(overlay)`)
+
+// The form and the selection (Form.js, SelectionControl.js, from the former SelectionControl.js): called by the classic scripts, the
+// inline handlers of the page and the tests. The entry points of the refresh are already wrapped by `instrument` in their module.
+installGlobals({
+  initSelectionControl, hardRefreshLabelTogglePanel, updateSelectID, onSelectIDChanged, updateEventTree, updateForm,
+  updateSelectionPanels, updateDeleteButton, labelsProcessKey, onLabelToggled, updateAnnotationStatistics,
+});
+installGlobals({
+  swapID_callback, selectBeeByIDandFrame, activateSelection, deselectBee, getCurrentTag, deleteSelected, undoAction,
+  updateUndoButton, modifyCurrentObsSpan,
+});
+window.undoStack = undoStack; // the same array (never reassigned), read by the tests
 installGlobals({
   getVideoInfo, setVideoInfoObject,
 });
