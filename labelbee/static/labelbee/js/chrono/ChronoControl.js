@@ -6,6 +6,9 @@
 // CHRONOGRAM
 
 import { instrument } from "../core/RefreshInstrumentBridge.js"
+import * as ChronoDragControl from "./ChronoDragControl.js"
+import { VideoCacheStatus } from "./VideoCacheStatus.js"
+import { VideoKeyframes } from "./VideoKeyframes.js"
 
 // The derived data shared by the chrono files is `chronoState` (chrono/ChronoState.js), the options are `chrono.config`,
 // the d3 elements `chrono.axes` and `chrono.layers`. TODO: move the remaining singletons inside Chrono
@@ -280,33 +283,29 @@ function initChrono() {
     updateTimeMark();
   });
 
-  // Drag modes of the chronogram (ADR 0011). One import, the namespace is global for now:
-  // step 8c replaces the three import() by static imports.
-  import("./ChronoDragControl.js").then(function (ns) {
-    window.ChronoDragControl = ns;
+  // Drag modes of the chronogram (ADR 0011)
+  {
     if (chronoDragControl) chronoDragControl.destroy();
     chronoDragControl = new ChronoDragControl.DragControl(
       chrono.axes.dragTarget,
-      [new ns.PanMode(), new ns.IgnoreMode(), new ns.PreviewMode()],
+      [new ChronoDragControl.PanMode(), new ChronoDragControl.IgnoreMode(), new ChronoDragControl.PreviewMode()],
       { initial: "pan" }
     );
     initDragMenu();
-  });
+  }
 
   // Video cache status strip under the frame axis (ADR 0012), toggled by Options/Chronogram. Off by default.
-  import("./VideoCacheStatus.js").then(function (ns) {
-    window.VideoCacheStatus = ns;
+  {
     if (videoCacheStatus) videoCacheStatus.destroy();
-    videoCacheStatus = new ns.VideoCacheStatus(chrono.axes, videoCache, function () {
+    videoCacheStatus = new VideoCacheStatus(chrono.axes, videoCache, function () {
       return { url: videoControl.video.src, frameOffset: getVideoInfo().frameoffset };
     });
     videoCacheStatus.setEnabled($("#showVideoCacheStatus").prop("checked"));
-  });
+  }
 
   // Keyframes of the video, from <video>.packets.csv when it exists (ADR 0014); "Preview Keyframes Only" in the Drag menu
-  import("./VideoKeyframes.js").then(function (ns) {
-    window.VideoKeyframes = ns;
-    videoKeyframes = new ns.VideoKeyframes();
+  {
+    videoKeyframes = new VideoKeyframes();
     function loadKeyframes() {
       var url = videoControl.video.src;
       if (!url) return;
@@ -315,7 +314,7 @@ function initChrono() {
     }
     $(videoControl).off("video:loaded.keyframes").on("video:loaded.keyframes", loadKeyframes);
     loadKeyframes();
-  });
+  }
   // Checkbox enabled only when the video has keyframes; the hover snaps to them while it is checked
   function syncKeyframesOption() {
     var $box = $("#chrono-drag-keyframes");

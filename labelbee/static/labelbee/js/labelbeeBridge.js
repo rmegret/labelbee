@@ -58,6 +58,7 @@ import {
   setVideoInfoObject,
 } from './video/VideoInfo.js';
 import { ChronoAxes } from './chrono/ChronoAxes.js';
+import * as ChronoDragControl from './chrono/ChronoDragControl.js';
 import { chronoState } from './chrono/ChronoState.js';
 import {
   gotoEvent,
@@ -190,6 +191,9 @@ installGlobals({
 
 // The chronogram axes (chrono/ChronoAxes.js); `initChrono` (ChronoControl.js) creates them with `new ChronoAxes(...)`.
 window.ChronoAxes = ChronoAxes;
+
+// The drag modes of the chronogram (chrono/ChronoDragControl.js): `ChronoDragControl.DragControl`, `.PanMode`, ... read by the tests.
+window.ChronoDragControl = ChronoDragControl;
 
 // The state shared by the chronogram files (chrono/ChronoState.js), read by the classic scripts as `chronoState.X`.
 window.chronoState = chronoState;
