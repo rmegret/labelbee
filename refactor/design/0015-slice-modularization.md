@@ -110,6 +110,14 @@ Step 2 (bridge skeleton) comes before 3. Steps 8 to 11 may each be cut into seve
 - Not moved: the singletons `chrono`, `chronoDragControl`, `videoKeyframes`, `videoCacheStatus` (declared, many readers outside), and the leaked locals (`options`, `videoSpan`, `trackWindowSpan`, `obs_for_id`, `showObsTable`), left for the module conversion of the file.
 - Later, separate commits: drop the `flag_` prefixes, rename `layers.svgX` to `layers.X`, flatten or re-home the config groups.
 
+## Step 7d: `ChronoControlInteraction.js` as a module (2026-11-21)
+
+The file (512 lines, 42 functions, no top-level statement, no implicit global, no `this`) is the navigation and seek side of the chronogram: `gotoEvent`, the `find*Event` searches, the comparison functions, the axes callbacks (`onAxesClick`, ...), the seek-mode buttons.
+
+- It moves to `chrono/ChronoControlInteraction.js` (same name, so the diff of the move stays readable) and becomes an ES module. Only the 14 functions other files use are exported: `gotoEvent` (`VisitControl.js`, `OverlayControl.js`, `ChronoControl.js`), `onAxesClick`, `onAxesDblClick`, `onAxesChanged`, `onAxesMoved`, `updateEventSeekMode` (`ChronoControl.js`), and the eight inline handlers of the page (`gotoFirstEvent`, `gotoLastEvent`, `gotoNextEvent`, `gotoPreviousEvent`, `onClickNextID`, `onClickPrevID`, `eventSeekModeClicked`, `onAutoEventButtonClick`). The other 28 become module-private.
+- `labelbeeBridge.js` imports it and installs the 14 names on `window` (`explicit `window.X = X` lines). The classic scripts call them at run time only (the load-time scan finds 0 hit), after the deferred bridge has run.
+- What the module still reads as page globals, resolved at call time: `chrono`, `chronoState`, `selection`, `videoControl`, `overlay`, `refresh`, `logging`, `getCurrentFrame`, `getObsHandle`, `autoCentering`, `focusTrackWindow`, and from `ChronoControl.js` `refreshChronogram`, `updateChrono`, `setRestrictID`, `validVisibleTagIdsDomain`. They become imports when their owners become modules (steps 8 to 12); the cycle `ChronoControl` <-> `ChronoControlInteraction` is broken at step 8 by importing in one direction only.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

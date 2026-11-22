@@ -1,5 +1,11 @@
+/*
+ * ChronoControlInteraction: navigation and seek of the chronogram (refactor slice 8 step 7d, ADR 0015). Moved as is from
+ * js/ChronoControlInteraction.js; a module now, so only the exported functions are visible to the other files. The
+ * bridge (labelbeeBridge.js) installs them on `window` for the classic scripts and the inline handlers of the page.
+ * Still read as page globals: chrono, chronoState, selection, videoControl, overlay, refresh, refreshChronogram, ...
+ */
 
-function gotoEvent(frame, id) {
+export function gotoEvent(frame, id) {
   videoControl.pause();
 
   frame = Number(frame);
@@ -26,7 +32,7 @@ function gotoEvent(frame, id) {
 }
 
 /* Callbacks to react to changes in chronogram axes */
-function onAxesClick(event) {
+export function onAxesClick(event) {
   // User clicked in chronogram axes
   var frame = event.frame;
   var id = event.id;
@@ -39,7 +45,7 @@ function onAxesClick(event) {
     videoControl.seekFrame(Number(frame)); // Avoid loosing current selection
   }
 }
-function onAxesDblClick(event) {
+export function onAxesDblClick(event) {
   // User double clicked in chronogram axes
   var frame = event.frame;
   var id = event.id;
@@ -51,7 +57,7 @@ function onAxesDblClick(event) {
     frame + overlay.trackWindow.forward * 1.05,
   ]);
 }
-function onAxesMoved(event) {
+export function onAxesMoved(event) {
   // User moved in chronogram axes with Shift
   var frame = event.frame;
   var id = event.id;
@@ -64,7 +70,7 @@ function onAxesMoved(event) {
   // }
   videoControl.seekFrame(frame, "preview");
 }
-function onAxesChanged(event) {
+export function onAxesChanged(event) {
   // User zoomed, scrolled or changed chronogram range or size */
   if (logging.axesEvents) console.log("onAxesChanged: event=", event);
 
@@ -73,7 +79,7 @@ function onAxesChanged(event) {
 
 // ### SEEK MODE
 
-function updateEventSeekMode() {
+export function updateEventSeekMode() {
   if (chrono.config.seek.eventSeekMode == "tag") {
     $(".eventSeekMode").removeClass("active");
     $(".eventSeekMode-tag").addClass("active");
@@ -91,7 +97,7 @@ function updateEventSeekMode() {
     $(".eventSeekMode-eventframe").addClass("active");
   }
 }
-function eventSeekModeClicked(mode) {
+export function eventSeekModeClicked(mode) {
   chrono.config.seek.eventSeekMode = mode;
   updateEventSeekMode();
 }
@@ -183,7 +189,7 @@ function gotoFrameId(frame, id) {
   videoControl.seekFrame(Number(frame));
 }
 
-function gotoFirstEvent() {
+export function gotoFirstEvent() {
   let from = { frame: -1, id: selection.getId() };
   if (chrono.config.seek.flag_autoEventMode) {
     let ids = chrono.axes.yScale.domain();
@@ -192,7 +198,7 @@ function gotoFirstEvent() {
   }
   gotoNextEvent(from);
 }
-function gotoLastEvent() {
+export function gotoLastEvent() {
   let from = { frame: videoControl.maxframe() + 1, id: selection.getId() };
   if (chrono.config.seek.flag_autoEventMode) {
     let ids = chrono.axes.yScale.domain();
@@ -201,7 +207,7 @@ function gotoLastEvent() {
   }
   gotoPreviousEvent(from);
 }
-function gotoNextEvent(from) {
+export function gotoNextEvent(from) {
   let frame = Number(videoControl.getCurrentFrame());
   let id = selection.getId();
   if (from) {
@@ -244,7 +250,7 @@ function gotoNextEvent(from) {
     gotoFrameId(newframe, id);
   } 
 }
-function gotoPreviousEvent(from) {
+export function gotoPreviousEvent(from) {
   let frame = Number(videoControl.getCurrentFrame());
   let id = selection.getId();
   if (from) {
@@ -429,7 +435,7 @@ function gotoEvent_seekCB() {
   focusTrackWindow();
 }
 
-function onClickNextID() {
+export function onClickNextID() {
   //let domain = validAllTagIdsDomain()
   //              .map(function(d){return String(d);})
   let domain = validVisibleTagIdsDomain().map(function (d) {
@@ -452,7 +458,7 @@ function onClickNextID() {
 
   refreshChronogram();
 }
-function onClickPrevID(gotoLast) {
+export function onClickPrevID(gotoLast) {
   let domain = validVisibleTagIdsDomain().map(function (d) {
     return String(d);
   });
@@ -496,7 +502,7 @@ function onClickNextIDStart() {
 
   //refreshChronogram()
 }
-function onAutoEventButtonClick() {
+export function onAutoEventButtonClick() {
   chrono.config.seek.flag_autoEventMode = !chrono.config.seek.flag_autoEventMode;
 
   update_autoEventMode();
