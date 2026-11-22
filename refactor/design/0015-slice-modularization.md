@@ -136,6 +136,10 @@ Decisions for 8b:
 
 As built in 8b: 38 names exported (the 44 minus the 4 singletons, minus `initChrono` and `updateFlatTracks`, which only comments name); the singletons are created at the top of the module as `window.chrono = undefined` etc., after which the existing `chrono = this` assignments are legal in strict mode and `labelBee.js` still assigns `chrono`; the 11 `instrument(...)` rebindings sit at the end of the file; `ChronoControlInteraction.js` keeps reading the ChronoControl names from `window` at call time, so there is no import cycle to break (the plain imports can replace those reads in a later cleanup).
 
+Install helper (after 8b, maintainer request 2026-11-21): `labelbeeBridge.js` installs the names of 7d and 8b with `installGlobals({ a, b, ... })`, a loop over the keys of the object it receives. The names stay written out at each call site, grouped by role (read by other files, inline handlers of the page); the helper never installs a module's exports wholesale, which `Object.assign(window, Module)` does. The three older `Object.assign(window, Module)` calls (`Model`, `EditActions`, `VideoInfo`) are converted the same way at the maintainer's request: each module's exports are imported by name and listed in an `installGlobals` call (same names, so no behavior change).
+
+Regrouping step (maintainer decision 2026-11-21, after 8c): the chrono functions are regrouped by topic, instead of staying in one 2000-line file plus the interaction file. Candidates: the filter (restrict and exclude ID, hide invalid and flowers) next to `chrono.config.filter`, the navigation and seek (`ChronoControlInteraction.js`), the display toggles and the axes scale. It needs its own survey and ADR section before any move.
+
 Other risks: a module is strict (the scan finds no other undeclared assignment; the file parses as a module); the dynamic `import("./chrono/X.js")` paths become `./X.js` (relative to the module); `ChronoIntervals`, defined after `Chronogram`, is used only at run time.
 
 ## Inventory (step 1, 2026-11-20)

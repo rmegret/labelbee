@@ -23,9 +23,29 @@ import * as Labels from './annotation/Labels.js';
 import * as WrongId from './annotation/WrongId.js';
 import * as CsvSchemas from './annotation/CsvSchemas.js';
 import * as EventTree from './annotation/EventTree.js';
-import * as Model from './annotation/Model.js';
+import {
+  Observation,
+  deepcopy,
+  hasParts,
+  getValidIDsForFrame,
+  getValidIDsForFrames,
+  obsDoesExist,
+  getObsHandle,
+  changeObservationID,
+  getFramesWithID,
+  getFramesWithSwapID,
+  obs_swapID,
+  printTracks,
+  cacheTags,
+  getTags,
+  getIdsInFocus,
+} from './annotation/Model.js';
 import { htmlCheckmark, url_for } from './core/Utils.js';
-import * as EditActions from './annotation/EditActions.js';
+import {
+  deleteEvent,
+  submitDraft,
+  storeUnit,
+} from './annotation/EditActions.js';
 import * as FileExport from './annotation/FileExport.js';
 import * as FileImport from './annotation/FileImport.js';
 import * as Load from './annotation/Load.js';
@@ -33,7 +53,10 @@ import * as ServerIO from './annotation/ServerIO.js';
 import * as Alerts from './core/Alerts.js';
 import { VideoCache } from './video/VideoCache.js';
 import { HoverControl } from './video/HoverControl.js';
-import * as VideoInfo from './video/VideoInfo.js';
+import {
+  getVideoInfo,
+  setVideoInfoObject,
+} from './video/VideoInfo.js';
 import { ChronoAxes } from './chrono/ChronoAxes.js';
 import { chronoState } from './chrono/ChronoState.js';
 import {
@@ -93,6 +116,12 @@ import {
   cleanObsoleteEvents,
 } from './chrono/ChronoControl.js';
 
+// Installs the given functions on window under their own names, for the classic scripts and the inline handlers of the page.
+// Nothing is implicit: each call site lists the names it installs (`installGlobals({ f, g })`).
+function installGlobals(fns) {
+  for (const name of Object.keys(fns)) window[name] = fns[name];
+}
+
 // ---- legacy globals still read by classic scripts ------------------------------------------------------------------
 window.logging = logging; // debug-level flags (`logging.io = true` from the console), same object the modules use
 window.refreshLog = refreshLog; // read from the console and the tests; filled by core/RefreshInstrumentBridge.js
@@ -113,7 +142,11 @@ window.EventTree = EventTree; // used by updateEventTree (SelectionControl.js)
 
 // Observation class and legacy accessors of the stored events (annotation/Model.js, moved from the classic Model.js);
 // read by the classic scripts at call time, never while the page parses.
-Object.assign(window, Model);
+installGlobals({
+  Observation, deepcopy, hasParts, getValidIDsForFrame, getValidIDsForFrames, obsDoesExist, getObsHandle,
+  changeObservationID, getFramesWithID, getFramesWithSwapID, obs_swapID, printTracks, cacheTags, getTags,
+  getIdsInFocus,
+});
 // The modules of the annotation IO export what they define; only the names a classic script, a template handler or a browser
 // test still calls are installed as globals (a misspelled name throws). The list shrinks as the callers move.
 function install(module, names) {
@@ -139,7 +172,10 @@ install(ServerIO, [
   "eventsToServer", // template button
 ]);
 install(Alerts, ["mainAlert"]); // test_alerts.py
-Object.assign(window, EditActions); // deleteEvent, storeUnit, submitDraft (annotation/EditActions.js)
+// annotation/EditActions.js
+installGlobals({
+  deleteEvent, submitDraft, storeUnit,
+});
 window.htmlCheckmark = htmlCheckmark; // core/Utils.js
 window.url_for = url_for;
 
@@ -148,7 +184,9 @@ window.url_for = url_for;
 // `getVideoInfo()` and `setVideoInfoObject()`.
 window.VideoCache = VideoCache;
 window.HoverControl = HoverControl;
-Object.assign(window, VideoInfo);
+installGlobals({
+  getVideoInfo, setVideoInfoObject,
+});
 
 // The chronogram axes (chrono/ChronoAxes.js); `initChrono` (ChronoControl.js) creates them with `new ChronoAxes(...)`.
 window.ChronoAxes = ChronoAxes;
@@ -157,63 +195,37 @@ window.ChronoAxes = ChronoAxes;
 window.chronoState = chronoState;
 
 // Navigation and seek of the chronogram (chrono/ChronoControlInteraction.js), the 14 names other files use.
-window.gotoEvent = gotoEvent; // VisitControl.js, OverlayControl.js, ChronoControl.js
-window.onAxesClick = onAxesClick; // ChronoControl.js (initChrono: axes events)
-window.onAxesDblClick = onAxesDblClick;
-window.onAxesChanged = onAxesChanged;
-window.onAxesMoved = onAxesMoved; // ChronoControl.js (preview of a frame)
-window.updateEventSeekMode = updateEventSeekMode; // ChronoControl.js (initChrono)
-// inline handlers of labelbee_page.html
-window.eventSeekModeClicked = eventSeekModeClicked;
-window.gotoFirstEvent = gotoFirstEvent;
-window.gotoLastEvent = gotoLastEvent;
-window.gotoNextEvent = gotoNextEvent;
-window.gotoPreviousEvent = gotoPreviousEvent;
-window.onClickNextID = onClickNextID;
-window.onClickPrevID = onClickPrevID;
-window.onAutoEventButtonClick = onAutoEventButtonClick;
+// Read by other files (VisitControl.js, OverlayControl.js, ChronoControl.js: initChrono and the preview of a frame)
+installGlobals({
+  gotoEvent, onAxesClick, onAxesDblClick, onAxesChanged, onAxesMoved, updateEventSeekMode,
+});
+// Inline handlers of labelbee_page.html (navigation and seek buttons)
+installGlobals({
+  eventSeekModeClicked, gotoFirstEvent, gotoLastEvent, gotoNextEvent, gotoPreviousEvent, onClickNextID,
+  onClickPrevID, onAutoEventButtonClick,
+});
 
 // The chronogram view (chrono/ChronoControl.js), the 38 names other files use. The singletons `chrono`, `chronoDragControl`,
 // `videoKeyframes` and `videoCacheStatus` are created on window by the module itself (labelBee.js also assigns `chrono`).
-// class and layout, used by labelBee.js, ChronoLayout.js, FitControls.js, OverlayControl.js
-window.Chronogram = Chronogram;
-window.refreshChronoLayout = refreshChronoLayout;
-window.adjustChronogramHeight = adjustChronogramHeight;
-// refresh entry points, wrapped by core/RefreshInstrumentBridge.js (instrument)
-window.refreshChronogram = refreshChronogram;
-window.updateChronoData = updateChronoData;
-window.drawChrono = drawChrono;
-window.updateChrono = updateChrono;
-window.renderObsTable = renderObsTable;
-window.updateTimeMark = updateTimeMark;
-window.updatePreviewTimeMark = updatePreviewTimeMark;
-window.updateTrackWindowSpan = updateTrackWindowSpan;
-window.updateChronoSelection = updateChronoSelection;
-window.updateChronoXDomainFromVideo = updateChronoXDomainFromVideo;
-window.updateTagIntervals = updateTagIntervals;
-// read by other files
-window.setRestrictID = setRestrictID;
-window.validAllTagIdsDomain = validAllTagIdsDomain;
-window.validVisibleTagIdsDomain = validVisibleTagIdsDomain;
-window.getWindow = getWindow;
-window.augmentTrackWithTag = augmentTrackWithTag;
-window.computeMotionDirection = computeMotionDirection;
-window.cleanObsoleteEvents = cleanObsoleteEvents;
-// inline handlers of labelbee_page.html
-window.onToggleButton_showPartsOnChrono = onToggleButton_showPartsOnChrono;
-window.onToggleButton_showIndividualEvents = onToggleButton_showIndividualEvents;
-window.onToggleButton_showSpans = onToggleButton_showSpans;
-window.onChronoParametersChanged = onChronoParametersChanged;
-window.onMousewheelModeToggled = onMousewheelModeToggled;
-window.restrictIDFromSelection = restrictIDFromSelection;
-window.restrictIDFromWindow = restrictIDFromWindow;
-window.click_restrictID = click_restrictID;
-window.onRestrictIDChanged = onRestrictIDChanged;
-window.click_excludeID = click_excludeID;
-window.onExcludeIDChanged = onExcludeIDChanged;
-window.click_hideInvalid = click_hideInvalid;
-window.click_hideFlowers = click_hideFlowers;
-window.chronoAdjust = chronoAdjust;
-window.scaleTimeDomain = scaleTimeDomain;
-window.shiftTimeDomain = shiftTimeDomain;
-window.cleanObsoleteEventsCB = cleanObsoleteEventsCB;
+// Class and layout, used by labelBee.js, ChronoLayout.js, FitControls.js, OverlayControl.js
+installGlobals({
+  Chronogram, refreshChronoLayout, adjustChronogramHeight,
+});
+// Refresh entry points, wrapped by core/RefreshInstrumentBridge.js (`instrument`)
+installGlobals({
+  refreshChronogram, updateChronoData, drawChrono, updateChrono, renderObsTable, updateTimeMark,
+  updatePreviewTimeMark, updateTrackWindowSpan, updateChronoSelection, updateChronoXDomainFromVideo,
+  updateTagIntervals,
+});
+// Read by other files
+installGlobals({
+  setRestrictID, validAllTagIdsDomain, validVisibleTagIdsDomain, getWindow, augmentTrackWithTag,
+  computeMotionDirection, cleanObsoleteEvents,
+});
+// Inline handlers of labelbee_page.html (chronogram toggles, filters, axes)
+installGlobals({
+  onToggleButton_showPartsOnChrono, onToggleButton_showIndividualEvents, onToggleButton_showSpans,
+  onChronoParametersChanged, onMousewheelModeToggled, restrictIDFromSelection, restrictIDFromWindow,
+  click_restrictID, onRestrictIDChanged, click_excludeID, onExcludeIDChanged, click_hideInvalid, click_hideFlowers,
+  chronoAdjust, scaleTimeDomain, shiftTimeDomain, cleanObsoleteEventsCB,
+});
