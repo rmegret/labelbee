@@ -1,7 +1,7 @@
 /*
  * ChronoAxes: the axes, zoom and time mark of the chronogram (refactor slice 8 step 7a, ADR 0015). Moved as is from the
  * classic script ChronoAxes.js; no behavior change. Installed as a global by labelbeeBridge.js for `initChrono`
- * (ChronoControl.js), its only caller. It reads `d3` and `$` (classic scripts of the page) and `logging`.
+ * (Chrono.js), its only caller. It reads `d3` and `$` (classic scripts of the page) and `logging`.
  *
  * Four names were assigned without a declaration (implicit globals in the classic script, an error in a module): they are
  * now local (`plotArea` is a variable of the constructor, as it is read by the later code of the constructor).

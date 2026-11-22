@@ -108,14 +108,16 @@ import {
   refreshChronogram,
   drawChrono,
   updateChrono,
-  updateChronoData,
-  augmentTrackWithTag,
-  updateTagIntervals,
   renderObsTable,
+} from './chrono/Chrono.js';
+import {
+  updateChronoData,
+  updateTagIntervals,
+  augmentTrackWithTag,
   computeMotionDirection,
-  cleanObsoleteEventsCB,
   cleanObsoleteEvents,
-} from './chrono/ChronoControl.js';
+  cleanObsoleteEventsCB,
+} from './chrono/ChronoData.js';
 
 // Installs the given functions on window under their own names, for the classic scripts and the inline handlers of the page.
 // Nothing is implicit: each call site lists the names it installs (`installGlobals({ f, g })`).
@@ -189,7 +191,7 @@ installGlobals({
   getVideoInfo, setVideoInfoObject,
 });
 
-// The chronogram axes (chrono/ChronoAxes.js); `initChrono` (ChronoControl.js) creates them with `new ChronoAxes(...)`.
+// The chronogram axes (chrono/ChronoAxes.js); `initChrono` (Chrono.js) creates them with `new ChronoAxes(...)`.
 window.ChronoAxes = ChronoAxes;
 
 // The drag modes of the chronogram (chrono/ChronoDragControl.js): `ChronoDragControl.DragControl`, `.PanMode`, ... read by the tests.
@@ -199,7 +201,7 @@ window.ChronoDragControl = ChronoDragControl;
 window.chronoState = chronoState;
 
 // Navigation and seek of the chronogram (chrono/ChronoControlInteraction.js), the 14 names other files use.
-// Read by other files (VisitControl.js, OverlayControl.js, ChronoControl.js: initChrono and the preview of a frame)
+// Read by other files (VisitControl.js, OverlayControl.js, Chrono.js: initChrono and the preview of a frame)
 installGlobals({
   gotoEvent, onAxesClick, onAxesDblClick, onAxesChanged, onAxesMoved, updateEventSeekMode,
 });
@@ -209,7 +211,7 @@ installGlobals({
   onClickPrevID, onAutoEventButtonClick,
 });
 
-// The chronogram view (chrono/ChronoControl.js), the 38 names other files use. The singletons `chrono`, `chronoDragControl`,
+// The chronogram view (chrono/Chrono.js and the modules split from it, ADR 0015 step 8d), the 38 names other files use. The singletons `chrono`, `chronoDragControl`,
 // `videoKeyframes` and `videoCacheStatus` are created on window by the module itself (labelBee.js also assigns `chrono`).
 // Class and layout, used by labelBee.js, ChronoLayout.js, FitControls.js, OverlayControl.js
 installGlobals({

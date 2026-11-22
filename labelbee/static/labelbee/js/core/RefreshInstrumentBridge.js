@@ -35,7 +35,7 @@ function wrap(phase, name, fn) {
 const wrapped = [];
 const missing = [];
 
-// For the modules that call their own entry points (chrono/ChronoControl.js): returns the wrapped function, which the
+// For the modules that call their own entry points (chrono/Chrono.js): returns the wrapped function, which the
 // module binds to its own name; the window name is installed by labelbeeBridge.js from that binding.
 export function instrument(phase, name, fn) {
   wrapped.push(name);

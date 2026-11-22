@@ -144,6 +144,24 @@ Regrouping step (maintainer decision 2026-11-21, after 8c): the chrono functions
 
 Other risks: a module is strict (the scan finds no other undeclared assignment; the file parses as a module); the dynamic `import("./chrono/X.js")` paths become `./X.js` (relative to the module); `ChronoIntervals`, defined after `Chronogram`, is used only at run time.
 
+## Step 8d: chrono functions regrouped by topic (2026-11-21)
+
+`chrono/ChronoControl.js` is one module of 2174 lines, 15 sections. A static call graph between the sections (`[ran]`, throwaway script) shows the dependencies go one way, from the handlers down to the data, with no cycle apart from the root (`Chronogram`/`initChrono` call into everything). To keep the number of files small (maintainer decision 2026-11-21: "typical utils, data, controls, render, overall") the sections are grouped in five modules, each importing only from the ones above it in this table:
+
+| Module (`chrono/`) | Content | Imports |
+|---|---|---|
+| `ChronoUtils.js` (~50 lines) | `format_HMS`, `flash`, `debouncer` | nothing |
+| `ChronoData.js` (~800) | tracks, tags, intervals, `updateChronoData`, `updateTagIntervals`, `interpolateTags`, `computeMotionDirection`, `augmentTrackWithTag`, `cleanObsoleteEvents*` | nothing |
+| `ChronoRender.js` (~700) | what draws: activities and `ChronoIntervals`, time marks, `videoSpan`/`trackWindowSpan`, `getWindow`, the obs table, the axes (domains, resizing, layout), and the refresh (`refreshChronogram`, `drawChrono`, `updateChrono`) | utils, data |
+| `ChronoControls.js` (~250) | what the user operates: the filter (restrict and exclude ID, hide invalid and flowers), the toolbar toggles, mousewheel, `onChronoParametersChanged`, and the axes buttons (`chronoAdjust`, `scaleTimeDomain`, `shiftTimeDomain`) | utils, render |
+| `Chrono.js` (~350) | overall: `Chronogram`, `initChrono` | all of the above |
+
+The names other files use keep their `window` names; the bridge imports each from its new module and the `installGlobals` lists are split accordingly. The 11 `instrument(...)` rebindings move with their functions (the module that defines a function rebinds it, so handlers bound by reference keep seeing the wrapped one; `refreshLog` in `test_l_refresh` is the check). The one variable shared across sections, `previewBar` (time marks and `initChrono`), is exported by the render module.
+
+Sub-steps, each a review gate and behavior-preserving, tests as for step 8: 8d1 utils and data (the two modules that call nothing), 8d2 render, 8d3 controls (what is left is the overall part, renamed `chrono/Chrono.js` by maintainer decision 2026-11-21, in 8d1 already, so the later sub-steps do not move a file twice). The split is by whole top-level statements, with the comments that precede them, moved by script; the only text change is `export` on the names another module needs.
+
+As built in 8d1: `ChronoUtils.js` (49 lines) and `ChronoData.js` (783 lines) cut out by script (`ChronoControl.js` 2174 to 1369 lines, then `git mv` to `Chrono.js`); `Chrono.js` imports 6 names from them; the bridge imports the 6 data names (`updateChronoData`, `updateTagIntervals`, `augmentTrackWithTag`, `computeMotionDirection`, `cleanObsoleteEvents`, `cleanObsoleteEventsCB`) from `ChronoData.js`. The two `instrument(...)` rebindings of the data functions moved with them. `ChronoControlInteraction.js` keeps its name (it is the interaction part, not the overall class).
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

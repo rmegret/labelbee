@@ -9,7 +9,7 @@
  *
  * DEBT: `getFramesWithID`, `getFramesWithSwapID`, `obs_swapID` read `getVideoInfo()` (video/VideoInfo.js), `getIdsInFocus` the globals `getCurrentFrame` (set by `init()`) and `getWindow` (ChronoControl.js),
  * at call time; they become imports when those owners move. `cacheTags` and `getTags(frame, id)` are dead
- * code: their only caller is `computeMotionDirection` (ChronoControl.js), which nobody calls.
+ * code: their only caller is `computeMotionDirection` (chrono/ChronoData.js), which nobody calls.
  */
 import { AnnotationStore } from './AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
