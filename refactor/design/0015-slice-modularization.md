@@ -162,6 +162,8 @@ Sub-steps, each a review gate and behavior-preserving, tests as for step 8: 8d1 
 
 As built in 8d1: `ChronoUtils.js` (49 lines) and `ChronoData.js` (783 lines) cut out by script (`ChronoControl.js` 2174 to 1369 lines, then `git mv` to `Chrono.js`); `Chrono.js` imports 6 names from them; the bridge imports the 6 data names (`updateChronoData`, `updateTagIntervals`, `augmentTrackWithTag`, `computeMotionDirection`, `cleanObsoleteEvents`, `cleanObsoleteEventsCB`) from `ChronoData.js`. The two `instrument(...)` rebindings of the data functions moved with them. `ChronoControlInteraction.js` keeps its name (it is the interaction part, not the overall class).
 
+As built in 8d2: `ChronoRender.js` (713 lines) holds the axes (layout, resizing, domains), the time marks, the video span and track window, the refresh, `ChronoIntervals` and the obs table, with the 9 `instrument(...)` rebindings; `Chrono.js` goes from 1369 to 664 lines. The static check found no reference from the render part back to what stays in `Chrono.js`, so the import order holds. `chronoAdjust`, `scaleTimeDomain` and `shiftTimeDomain` stay in `Chrono.js` until 8d3 (they are controls). `previewBar` is exported by the render module and only mutated through its properties. `Chrono.js` imports 11 names from it (the ones `initChrono` and the handlers call); the bridge imports 14 exported names from `ChronoRender.js` and 18 from `Chrono.js`, all keeping their `window` names.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

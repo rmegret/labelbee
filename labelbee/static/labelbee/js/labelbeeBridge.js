@@ -78,7 +78,6 @@ import {
 } from './chrono/ChronoControlInteraction.js';
 import {
   Chronogram,
-  refreshChronoLayout,
   onToggleButton_showPartsOnChrono,
   onToggleButton_showIndividualEvents,
   onToggleButton_showSpans,
@@ -94,12 +93,15 @@ import {
   click_hideInvalid,
   click_hideFlowers,
   chronoAdjust,
+  scaleTimeDomain,
+  shiftTimeDomain,
+} from './chrono/Chrono.js';
+import {
+  refreshChronoLayout,
   adjustChronogramHeight,
   validAllTagIdsDomain,
   validVisibleTagIdsDomain,
   updateChronoXDomainFromVideo,
-  scaleTimeDomain,
-  shiftTimeDomain,
   updateTimeMark,
   updatePreviewTimeMark,
   updateChronoSelection,
@@ -109,7 +111,7 @@ import {
   drawChrono,
   updateChrono,
   renderObsTable,
-} from './chrono/Chrono.js';
+} from './chrono/ChronoRender.js';
 import {
   updateChronoData,
   updateTagIntervals,
