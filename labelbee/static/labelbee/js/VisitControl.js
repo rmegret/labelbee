@@ -1,8 +1,12 @@
 // Visit module: the visit widget (Annotations > Visits, edit-visit mode) and the Pick Flower tool of the pick-frame mode.
 // Both edit `visit` and `span` of a stored observation, always through events.update (ADR 0008 R3).
-// Moved out of OverlayControl.js, loaded after it.
+// Moved out of OverlayControl.js. ES module (refactor slice 8 step 9b, ADR 0015): `VisitWidget` is installed on window by
+// labelbeeBridge.js (OverlayControl.js builds it), and the extension of `OverlayControl.prototype` below runs when the
+// module is evaluated, after the classic scripts. `default_id` was an implicit global, only written here.
 
-VisitWidget = function(overlay) {
+let default_id
+
+export const VisitWidget = function(overlay) {
     this.overlay = overlay
     
     this.pollinator = undefined // obs

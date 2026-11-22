@@ -178,6 +178,8 @@ Facts (static scan, `[read]`): `VideoList.js` 849 lines, one class `VideoManager
 
 As built in 9a: `video/VideoList.js` is the old file moved with `git mv`. Strict mode makes five implicit globals illegal: `videoListTable`, `videoListCurrentID` and `theManager` become module-level `let` (same sharing between instances; none is read from another file or the page), `out` and `html` become locals. The bridge installs `window.VideoManager` (read by `labelBee.js` at `init()`); the `<script>` tag leaves `labelbee_page.html`. The `.gitignore` line naming the old path `js/VideoList.js` is removed (the file was tracked, so it never hid anything; the check found no other ignored `.js` outside `extern/fabric/dist/`).
 
+As built in 9b: `VisitControl.js` becomes a module in place (the `overlay/` folder is decided in step 11). `VisitWidget` is `export const` and installed by the bridge (`OverlayControl.js` builds it); the extension `OverlayControl.prototype.drawImagePickFlowerMode` stays in the file and runs when the module is evaluated, after the classic scripts, so it needs no move now. `default_id`, an implicit global only written there, becomes a module-level `let`. The `<script>` tag leaves `labelbee_page.html`.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

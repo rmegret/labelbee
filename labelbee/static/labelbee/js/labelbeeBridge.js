@@ -54,6 +54,7 @@ import * as Alerts from './core/Alerts.js';
 import { VideoCache } from './video/VideoCache.js';
 import { HoverControl } from './video/HoverControl.js';
 import { VideoManager } from './video/VideoList.js';
+import { VisitWidget } from './VisitControl.js';
 import {
   getVideoInfo,
   setVideoInfoObject,
@@ -193,6 +194,7 @@ window.url_for = url_for;
 window.VideoCache = VideoCache;
 window.HoverControl = HoverControl;
 window.VideoManager = VideoManager; // built by `init()` of labelBee.js (`videoManager = new VideoManager()`)
+window.VisitWidget = VisitWidget; // built by `OverlayControl` (`overlay.visitWidget = new VisitWidget(overlay)`)
 installGlobals({
   getVideoInfo, setVideoInfoObject,
 });
