@@ -53,6 +53,7 @@ import * as ServerIO from './annotation/ServerIO.js';
 import * as Alerts from './core/Alerts.js';
 import { VideoCache } from './video/VideoCache.js';
 import { HoverControl } from './video/HoverControl.js';
+import { VideoManager } from './video/VideoList.js';
 import {
   getVideoInfo,
   setVideoInfoObject,
@@ -191,6 +192,7 @@ window.url_for = url_for;
 // `getVideoInfo()` and `setVideoInfoObject()`.
 window.VideoCache = VideoCache;
 window.HoverControl = HoverControl;
+window.VideoManager = VideoManager; // built by `init()` of labelBee.js (`videoManager = new VideoManager()`)
 installGlobals({
   getVideoInfo, setVideoInfoObject,
 });

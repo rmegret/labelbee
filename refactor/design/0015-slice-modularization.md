@@ -166,6 +166,18 @@ As built in 8d2: `ChronoRender.js` (713 lines) holds the axes (layout, resizing,
 
 As built in 8d3: `ChronoControls.js` (272 lines) holds the toolbar toggles, the mousewheel mode, `onChronoParametersChanged`, the filter (restrict and exclude ID, hide invalid and flowers) and the axes buttons (`chronoAdjust`, `scaleTimeDomain`, `shiftTimeDomain`); `Chrono.js` (395 lines) keeps `Chronogram`, `initChrono` and the window singletons. `Chrono.js` imports 5 names from it (the `update*` helpers `initChrono` calls); the bridge imports 17 names from it and only `Chronogram` from `Chrono.js`. The static check found no reference from the controls back to `Chrono.js`. Import order of the whole regrouping: `ChronoUtils`, `ChronoData`, `ChronoRender`, `ChronoControls`, `Chrono`.
 
+## Step 9: forms and dialogs, in three sub-steps (2026-11-22)
+
+Facts (static scan, `[read]`): `VideoList.js` 849 lines, one class `VideoManager` (all methods on the prototype); `VisitControl.js` 566 lines, `VisitWidget` plus `OverlayControl.prototype.drawImagePickFlowerMode`; `SelectionControl.js` 802 lines, ~45 functions (init, label panel and `LabelListDialog`, form, event tree, selection, undo, label toggles, span edits).
+
+| Sub-step | Content | Notes |
+|---|---|---|
+| 9a | `VideoList.js` becomes the module `video/VideoList.js` (`export function VideoManager`) | whole file moved, no split: the ADR already decided (step 5) that its constructor and methods mix DOM and data. Only `labelBee.js` and the inline handler `videoManager.receiveVideoSelection()` use it |
+| 9b | `VisitControl.js` as a module | `VisitWidget` and the `OverlayControl.prototype` extension; the latter reads the overlay, so decide at 9b whether it moves with 11 |
+| 9c | `SelectionControl.js` as a module, GUI half (`updateForm`, label toggles, event tree, panels) separated from selection, undo and span edits | the leaked globals `labelButtonsArray` (read and written by `AnnotationIO.js`) and `labelListDialog` (inline handler) need an owner |
+
+As built in 9a: `video/VideoList.js` is the old file moved with `git mv`. Strict mode makes five implicit globals illegal: `videoListTable`, `videoListCurrentID` and `theManager` become module-level `let` (same sharing between instances; none is read from another file or the page), `out` and `html` become locals. The bridge installs `window.VideoManager` (read by `labelBee.js` at `init()`); the `<script>` tag leaves `labelbee_page.html`. The `.gitignore` line naming the old path `js/VideoList.js` is removed (the file was tracked, so it never hid anything; the check found no other ignored `.js` outside `extern/fabric/dist/`).
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

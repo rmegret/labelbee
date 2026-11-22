@@ -3,11 +3,15 @@
 // ## VideoList
 // Video List: selection, metainformation, loading
 
-// export ...
+// ES module (refactor slice 8 step 9a, ADR 0015): `VideoManager` is installed on window by labelbeeBridge.js; `labelBee.js` builds it.
+// The shared table and current index were implicit globals; they are module state now (nothing else reads them).
+let videoListTable;
+let videoListCurrentID;
+let theManager;
 
 // The video metadata is owned by video/VideoInfo.js: `getVideoInfo()` and `setVideoInfoObject()` are installed by labelbeeBridge.js.
 
-function VideoManager() {
+export function VideoManager() {
   const videoManager = this;
   
   document
@@ -154,7 +158,7 @@ VideoManager.prototype.videoListToCSV = function (videoListTable) {
   var csv = fields.join(",");
   if (videoListTable == null) return csv;
   for (let item of videoListTable) {
-    out = [];
+    let out = [];
     for (let i in fields) {
       out.push(item[fields[i]]);
     }
@@ -545,7 +549,7 @@ VideoManager.prototype.videoListFromDB = function () {
 
 VideoManager.prototype.makeVideoListTable = function (json){
   // Default table structure
-  html =
+  let html =
     "<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br><br>" +
     "<table id='VideoListFromServerTable' style='width:100%'>" +
     "<thead>" +
