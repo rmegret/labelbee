@@ -26,7 +26,7 @@ structure -> data model -> classes/interactions -> smells -> questions & proposa
 - Frontend tests: TBD (see `refactor/tests/`)
 - Debugging in the browser console: the page has no `Tracks`, `TracksInfo`, `Tags`, `TagsInfo` or `tagsHaveDM` global any more (slice 4); `window.events` is the stored
   events (`events.get(f, id)`, `events.getFrame(f)`, `events.frames()`, `events.forEach(fn)`). For the old habit, open the page with `?debug_globals`
-  (or run `installDebugGlobals()` in the console): the five then exist as read-only views for the console and watch expressions, and
+  (or run `installDebugGlobals()` in the console): the five then exist as read-only views for the console and watch expressions (plus `videoCache`, registered by `labelbeeBridge.js`), and
   throw an error when page code reads them (`labelbee/static/labelbee/js/annotation/DebugGlobals.js`). The page itself uses `events` and
   `AnnotationStore.getTags()`, `getTagsInfo()`, `getTagsHaveDM()`.
 

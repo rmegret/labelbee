@@ -13,8 +13,6 @@ const GLOBALS = [
 ];
 // [phase, constructor, method]
 const METHODS = [
-  ["overlay", "VideoControl", "refresh"],
-  ["frame", "VideoControl", "onFrameChanged"],
   ["overlay", "OverlayControl", "hardRefresh"],
   ["overlay", "OverlayControl", "refreshOverlay"],
   ["zoom", "ZoomOverlay", "refreshZoom"],

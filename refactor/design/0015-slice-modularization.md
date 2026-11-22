@@ -184,6 +184,15 @@ As built in 9c: `SelectionControl.js` (802 lines) is cut in two modules by whole
 
 DEBT (maintainer, 2026-11-22): `SelectionControl.js` stays where it is until it is cleaned up. Long term: the undo stack and pop (core, nothing pushes on it since ADR 0008 step 1) go to `annotation/`, with the button and `undoAction` (GUI) staying in `form/`; `deleteSelected` and the delete button are GUI over the core `deleteEvent` (`annotation/EditActions.js:17`) and belong in `form/`; `selectBeeByIDandFrame`, `deselectBee` and `activateSelection` are controller and view over `annotation/SelectionModel.js` and the overlay, and follow the overlay in step 11; `getCurrentTag` is a data read that follows `getTag` (`OverlayControl.js:2137`).
 
+## Step 10: video player and zoom, in two sub-steps (2026-11-22)
+
+| Sub-step | Content | Why here |
+|---|---|---|
+| 10a | `VideoControl.js` (976 lines) to `video/VideoControl.js` as a module | its state and readers are already in `video/` (`VideoCache`, `HoverControl`, `VideoInfo`, `VideoList`) |
+| 10b | `ZoomView.js` (2276 lines) | it reads the overlay, so it waits for 11a (analysis of `OverlayControl.js`) |
+
+As built in 10a: the file is moved with `git mv` into `video/` and becomes a module (`export function VideoControl`); no statement is cut. Globals are cut instead of declared (maintainer: the fewer the better): `VideoControl.js` imports `VideoCache`, `HoverControl` and `getVideoInfo` (no cycle: they receive the `VideoControl` as an argument), `videojsoninfo` becomes a local, and the `videoCache` alias is removed (the 6 reads in `OverlayControl.js` and 1 in `chrono/Chrono.js` use `videoControl.videoCache`), so the bridge no longer installs `VideoCache` or `HoverControl`. `videoCache` stays as a console-only debug global, registered by the bridge with `registerDebugGlobal` (`annotation/DebugGlobals.js`) and installed by `installDebugGlobals()` or `?debug_globals`; `test_f_writers` and `test_q` adapted. The line `X.prototype = {}` of `VideoCache.js` and `VideoControl.js` is removed: it replaced the default prototype and its `constructor` link, so `videoCache.constructor` was `Object` and the statics (`isCanceled`) were unreachable from an instance (the methods are assigned on the default prototype just as well). DEBT: the same line remains in `HoverControl.js`, `VideoList.js`, `OverlayControl.js:165`, `ZoomView.js:155`, to remove when each file is handled. `lasthash` stays a page global (shared with `labelBee.js:onhashchange`, step 12). The two refresh entry points (`VideoControl.refresh`, `VideoControl.onFrameChanged`) are wrapped at the end of the module by `instrument`, and leave the `METHODS` list of `core/RefreshInstrumentBridge.js`; the other three methods of that list stay there until their files are modules. The bridge installs `window.VideoControl` (built by `init()`); the file-local `timeout` helper is no longer a page global (no other user). The `<script>` tag leaves the page.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

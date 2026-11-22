@@ -841,7 +841,7 @@ OverlayControl.prototype.videoToCanvasRect = function (rect) {
 OverlayControl.prototype.getFrameCropImg = async function(frame, crop) {
     let data = undefined
     if (frame>=0) {
-        data = await videoCache.getFrameCropDataURL(videoControl.video.src, frame, getVideoInfo().videofps, crop)
+        data = await videoControl.videoCache.getFrameCropDataURL(videoControl.video.src, frame, getVideoInfo().videofps, crop)
         //console.log(videoControl.video.src, frame)
         //console.log(crop)
         //console.log(data)
@@ -1133,7 +1133,7 @@ OverlayControl.prototype.exportFrame = async function() {
     let videoUrl = videoControl.video.src
     let frame = videoControl.currentFrame
     console.log('overlay.exportFrame: ', videoUrl, frame)
-    let img = await videoCache.getFrameImageAsync(videoUrl, frame, getVideoInfo().videofps)
+    let img = await videoControl.videoCache.getFrameImageAsync(videoUrl, frame, getVideoInfo().videofps)
     var newTab = window.open();
     newTab.document.body.innerHTML = 'Extracted Frame '+frame+' from <a target="_blank" href="'+videoUrl+'">'+videoUrl+'</a><br><div><img src="'+img.src+'" style="max-width:100%; max-height:95%;"></div>';
     newTab.document.title = 'Frame '+frame+', video '+videoUrl
@@ -1170,7 +1170,7 @@ OverlayControl.prototype.diffImage = function(canvas2, canvas1, gain) {
 OverlayControl.prototype.refreshIfLoaded = function(videoUrl, frame, frames) {
     if (videoControl.currentFrame !== frame || videoControl.video.src !== videoUrl) return
     for (let f of frames) {
-        if (f >= 0 && videoCache.getFrameState(videoUrl, f) !== 'incache') return
+        if (f >= 0 && videoControl.videoCache.getFrameState(videoUrl, f) !== 'incache') return
     }
     this.hardRefresh()
 }
@@ -1195,8 +1195,8 @@ OverlayControl.prototype.redrawVideoFrameDiff = function() {
     let frame=videoControl.currentFrame
 
     // Load async if frames not found
-    let state1 = videoCache.getFrameState(videoUrl, frame)
-    let state2 = videoCache.getFrameState(videoUrl, frame-1)
+    let state1 = videoControl.videoCache.getFrameState(videoUrl, frame)
+    let state2 = videoControl.videoCache.getFrameState(videoUrl, frame-1)
     if ((!state1) || ((frame-1>=0)&&!state2)) {
         // CAUTION: risk of infinite async loop if test always fail!
         //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), getVideoInfo().videofps)
@@ -1241,7 +1241,7 @@ OverlayControl.prototype.redrawVideoFromCache = function() {
   let frame=videoControl.currentFrame
 
   // Load async if frames not found
-  let state1 = videoCache.getFrameState(videoUrl, frame)
+  let state1 = videoControl.videoCache.getFrameState(videoUrl, frame)
   if (!state1) {
       // CAUTION: risk of infinite async loop if test always fail!
       //videoControl.videoCache.preloadFrames(videoUrl, interval(frame-20, frame+20), getVideoInfo().videofps)

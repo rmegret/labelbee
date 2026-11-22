@@ -34,7 +34,6 @@ export function VideoCache(videoControl, videoCacheTagId) {
   this.canvas = document.createElement('canvas'); // Precreated canvas
   this.ctx = this.canvas.getContext('2d');
 }
-VideoCache.prototype = {} // Prepare for all methods
 
 // GUI method
 VideoCache.prototype.onVideoCacheParamsChanged = function (event) {

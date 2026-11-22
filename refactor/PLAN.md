@@ -138,7 +138,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (9a) `VideoList.js` as module [x] `video/VideoList.js`, five implicit globals declared
   - (9b) `VisitControl.js` as module [x] now `form/VisitControl.js`, `default_id` declared
   - (9c) `SelectionControl.js` split [x] `form/Form.js` (GUI) and `SelectionControl.js`; refresh entry points instrumented
-  - (10)-(12) player and zoom, overlay, entry [ ]
+  - (10a) `VideoControl.js` as module [x] `video/VideoControl.js`, imports its video modules, `videoCache` debug-only
+  - (10b)-(12) zoom, overlay, entry [ ]
   - (13) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):

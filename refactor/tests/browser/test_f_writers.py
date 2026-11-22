@@ -231,7 +231,7 @@ def test_f9_pick_flower_sets_the_visit_of_the_observation(ui):
     load(ui, path)
     show_tabs(ui, "#showSelected", "#showPickFrame", "#showPickFlower")
     # finding F8 (browser README): the page's VideoCache never answers here, so the frame crop is stubbed with a 1x1 image
-    ui.js("videoCache.getFrameCropDataURL = async () => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='")
+    ui.js("videoControl.videoCache.getFrameCropDataURL = async () => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='")
     ui.click_box("1")
     ui.page.click("button[onclick=\"modifyCurrentObsSpan('setspan')\"]")
     ui.page.wait_for_selector("#pickframediv button:has-text('Pick Flower')")

@@ -297,7 +297,7 @@ function initChrono() {
   // Video cache status strip under the frame axis (ADR 0012), toggled by Options/Chronogram. Off by default.
   {
     if (videoCacheStatus) videoCacheStatus.destroy();
-    videoCacheStatus = new VideoCacheStatus(chrono.axes, videoCache, function () {
+    videoCacheStatus = new VideoCacheStatus(chrono.axes, videoControl.videoCache, function () {
       return { url: videoControl.video.src, frameOffset: getVideoInfo().frameoffset };
     });
     videoCacheStatus.setEnabled($("#showVideoCacheStatus").prop("checked"));

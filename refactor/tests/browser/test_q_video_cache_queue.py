@@ -12,7 +12,7 @@ SETUP = """() => {
   window.__req = (f, prio) => {
     const p = prio ? vc.enqueueFramePriority(__url, f, 25) : vc.enqueueFrame(__url, f, 25);
     window.__st[f] = 'waiting';
-    p.then(() => window.__st[f] = 'ok', (e) => window.__st[f] = VideoCache.isCanceled(e) ? 'canceled' : 'error');
+    p.then(() => window.__st[f] = 'ok', (e) => window.__st[f] = videoControl.videoCache.constructor.isCanceled(e) ? 'canceled' : 'error');
   };
 }"""
 QUEUE = "videoControl.videoCache.queryQueue.map(q => q.frame)"
@@ -215,8 +215,8 @@ def test_q13_full_queue_drops_its_last_frame_for_a_priority_request_and_refuses_
     _start(ui, sample_dir)
     ui.js("() => { videoControl.videoCache.setCacheSize(3); window.__req = (f, prio) => { const vc = videoControl.videoCache;"
           " const p = prio ? vc.enqueueFramePriority(__url, f, 25) : vc.enqueueFrame(__url, f, 25); window.__st[f] = 'waiting';"
-          " p.then(() => window.__st[f] = 'ok', (e) => window.__st[f] = VideoCache.isCanceled(e) ? 'canceled'"
-          " : VideoCache.isQueueFull(e) ? 'full' : 'error'); }; }")
+          " p.then(() => window.__st[f] = 'ok', (e) => window.__st[f] = videoControl.videoCache.constructor.isCanceled(e) ? 'canceled'"
+          " : videoControl.videoCache.constructor.isQueueFull(e) ? 'full' : 'error'); }; }")
     _regular(ui, 100, 101, 102)
     _regular(ui, 103)                                               # no room: refused, nothing queued
     assert ui.js(QUEUE) == [100, 101, 102]

@@ -16,6 +16,7 @@
 import { logging, refreshLog } from './core/Notifier.js';
 import './core/RefreshInstrumentBridge.js'; // wraps the classic refresh functions (window.refreshInstrumented)
 import './annotation/AnnotationStoreBridge.js'; // window.AnnotationStore, window.events, window.installDebugGlobals
+import { registerDebugGlobal } from './annotation/DebugGlobals.js';
 import './annotation/RefreshBridge.js'; // window.refresh (needs window.events)
 import './annotation/SelectionModelBridge.js'; // window.selection (needs window.events)
 import './annotation/AnnotationCodecBridge.js'; // the legacy converter names (loaders, savers)
@@ -51,9 +52,8 @@ import * as FileImport from './annotation/FileImport.js';
 import * as Load from './annotation/Load.js';
 import * as ServerIO from './annotation/ServerIO.js';
 import * as Alerts from './core/Alerts.js';
-import { VideoCache } from './video/VideoCache.js';
-import { HoverControl } from './video/HoverControl.js';
 import { VideoManager } from './video/VideoList.js';
+import { VideoControl } from './video/VideoControl.js';
 import { VisitWidget } from './form/VisitControl.js';
 import {
   initSelectionControl,
@@ -213,11 +213,9 @@ installGlobals({
 window.htmlCheckmark = htmlCheckmark; // core/Utils.js
 window.url_for = url_for;
 
-// Video data (video/*.js, moved from VideoControl.js, HoverControl.js and VideoList.js). `VideoControl` builds the cache and
-// the hover control in its constructor (`init()` time); the classic scripts get and set the video metadata through
-// `getVideoInfo()` and `setVideoInfoObject()`.
-window.VideoCache = VideoCache;
-window.HoverControl = HoverControl;
+// Video (video/*.js). `VideoControl` imports and builds the cache (`videoControl.videoCache`) and the hover control; the classic
+// scripts get and set the video metadata through `getVideoInfo()` and `setVideoInfoObject()`.
+window.VideoControl = VideoControl; // built by `init()` of labelBee.js (`videoControl = new VideoControl("video")`)
 window.VideoManager = VideoManager; // built by `init()` of labelBee.js (`videoManager = new VideoManager()`)
 window.VisitWidget = VisitWidget; // built by `OverlayControl` (`overlay.visitWidget = new VisitWidget(overlay)`)
 
@@ -280,3 +278,6 @@ installGlobals({
   click_restrictID, onRestrictIDChanged, click_excludeID, onExcludeIDChanged, click_hideInvalid, click_hideFlowers,
   chronoAdjust, scaleTimeDomain, shiftTimeDomain, cleanObsoleteEventsCB,
 });
+
+// Console only (`installDebugGlobals()` or `?debug_globals`): the cache of the video, `videoControl.videoCache`
+registerDebugGlobal("videoCache", () => window.videoControl.videoCache, "videoControl.videoCache");

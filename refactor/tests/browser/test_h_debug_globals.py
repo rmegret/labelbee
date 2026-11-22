@@ -37,3 +37,11 @@ def test_h3_installable_from_the_console(ui):
     ui.js("installDebugGlobals()")
     assert ui.js("Array.isArray(Tracks) || typeof Tracks === 'object'")
     assert "console-only debug global" in read_from_a_script(ui)
+
+
+def test_h4_the_video_cache_is_a_debug_global_too(ui):
+    """`videoCache` (the cache of `videoControl`) is registered by labelbeeBridge.js: off by default, console-only once installed."""
+    ui.open()
+    assert ui.js("typeof videoCache") == "undefined"
+    ui.js("installDebugGlobals()")
+    assert ui.js("videoCache === videoControl.videoCache")

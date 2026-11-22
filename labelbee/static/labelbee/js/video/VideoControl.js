@@ -3,11 +3,18 @@
 // ## VideoControl
 // Video Control: frame/time conversion, seek
 
+import { instrument } from "../core/RefreshInstrumentBridge.js";
+import { VideoCache } from "./VideoCache.js";
+import { HoverControl } from "./HoverControl.js";
+import { getVideoInfo } from "./VideoInfo.js";
+
+// `lasthash` (page global, shared with labelBee.js:onhashchange) is created by labelBee.js, which runs first
+
 //import {VideoFrame} from "extern/VideoFrame.js";
 //var LRUCache = require("extern/lru_cache-master/index").LRUCache
 
 
-function VideoControl(videoTagId) {
+export function VideoControl(videoTagId) {
   if (this === window) {
     console.log(
       'ERROR: VideoControl should be created with "new VideoControl()"'
@@ -66,16 +73,13 @@ function VideoControl(videoTagId) {
   this.previewVideo.addEventListener('timeupdate',
     function () { videoControl.onPreviewFrameChanged() }, false);
 
-  // FIXME: define videoCache as global
-  videoCache = new VideoCache(this);
-  this.videoCache = videoCache; // make it available from videoControl also
+  this.videoCache = new VideoCache(this);
 
   this.hover = new HoverControl(this); // hover preview queries (cache-preview mode)
 }
 
 
 
-VideoControl.prototype = {}; // Prepare for all VideoControl methods
 
 // #MARK ### Play/pause
 
@@ -765,7 +769,7 @@ VideoControl.prototype.loadPreviewVideoInfo = function (infoURL) {
   let _onVideoInfoLoaded = function (data) {
     if (logging.videoEvents) console.log("PREVIEW loadVideoInfo loaded");
     console.log("PREVIEW videojsoninfo = ", data);
-    videojsoninfo = data;
+    const videojsoninfo = data;
 
     if ($.isNumeric(videojsoninfo.timescale)) {
       getVideoInfo().preview.previewTimescale = Number(videojsoninfo.timescale);
@@ -833,7 +837,7 @@ VideoControl.prototype.loadVideoInfo = function (infourl) {
   let _onVideoInfoLoaded = function (data) {
     if (logging.videoEvents) console.log("loadVideoInfo loaded");
     console.log("videojsoninfo = ", data);
-    videojsoninfo = data;
+    const videojsoninfo = data;
 
     if ($.isNumeric(videojsoninfo.videofps)) {
       getVideoInfo().videofps = Number(videojsoninfo.videofps);
@@ -975,3 +979,7 @@ VideoControl.prototype.delayedSeek = function (frame) {
     this.seekFrame(frame)
   }
 }
+
+// Entry points of the refresh (ADR 0009 step 0): logged by `refreshLog`
+VideoControl.prototype.refresh = instrument("overlay", "VideoControl.refresh", VideoControl.prototype.refresh);
+VideoControl.prototype.onFrameChanged = instrument("frame", "VideoControl.onFrameChanged", VideoControl.prototype.onFrameChanged);

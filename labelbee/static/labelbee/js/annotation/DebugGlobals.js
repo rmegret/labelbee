@@ -18,6 +18,12 @@ const DEBUG_GLOBALS = {
   tagsHaveDM: [(store) => store.getTagsHaveDM(), 'AnnotationStore.getTagsHaveDM()'],
 };
 
+// Registered by the bridge for state that is not the store (`videoCache`): same shape, the value function ignores `store`
+const registered = {};
+export function registerDebugGlobal(name, value, instead) {
+  registered[name] = [value, instead];
+}
+
 /** Is the caller of the accessor a script? `stack` is `new Error().stack` taken in the accessor; frame 0 is the accessor. */
 export function callerIsPageCode(stack) {
   const frames = String(stack)
@@ -30,7 +36,7 @@ export function callerIsPageCode(stack) {
 
 /** Defines the debug globals on `target` (the page's window) as guarded read-only accessors over `store`. Idempotent. */
 export function installDebugGlobals(target, store) {
-  for (const [name, [value, instead]] of Object.entries(DEBUG_GLOBALS)) {
+  for (const [name, [value, instead]] of Object.entries({ ...DEBUG_GLOBALS, ...registered })) {
     Object.defineProperty(target, name, {
       get() {
         const stack = new Error().stack;
