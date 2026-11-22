@@ -78,6 +78,8 @@ import {
 } from './chrono/ChronoControlInteraction.js';
 import {
   Chronogram,
+} from './chrono/Chrono.js';
+import {
   onToggleButton_showPartsOnChrono,
   onToggleButton_showIndividualEvents,
   onToggleButton_showSpans,
@@ -95,7 +97,7 @@ import {
   chronoAdjust,
   scaleTimeDomain,
   shiftTimeDomain,
-} from './chrono/Chrono.js';
+} from './chrono/ChronoControls.js';
 import {
   refreshChronoLayout,
   adjustChronogramHeight,

@@ -164,6 +164,8 @@ As built in 8d1: `ChronoUtils.js` (49 lines) and `ChronoData.js` (783 lines) cut
 
 As built in 8d2: `ChronoRender.js` (713 lines) holds the axes (layout, resizing, domains), the time marks, the video span and track window, the refresh, `ChronoIntervals` and the obs table, with the 9 `instrument(...)` rebindings; `Chrono.js` goes from 1369 to 664 lines. The static check found no reference from the render part back to what stays in `Chrono.js`, so the import order holds. `chronoAdjust`, `scaleTimeDomain` and `shiftTimeDomain` stay in `Chrono.js` until 8d3 (they are controls). `previewBar` is exported by the render module and only mutated through its properties. `Chrono.js` imports 11 names from it (the ones `initChrono` and the handlers call); the bridge imports 14 exported names from `ChronoRender.js` and 18 from `Chrono.js`, all keeping their `window` names.
 
+As built in 8d3: `ChronoControls.js` (272 lines) holds the toolbar toggles, the mousewheel mode, `onChronoParametersChanged`, the filter (restrict and exclude ID, hide invalid and flowers) and the axes buttons (`chronoAdjust`, `scaleTimeDomain`, `shiftTimeDomain`); `Chrono.js` (395 lines) keeps `Chronogram`, `initChrono` and the window singletons. `Chrono.js` imports 5 names from it (the `update*` helpers `initChrono` calls); the bridge imports 17 names from it and only `Chronogram` from `Chrono.js`. The static check found no reference from the controls back to `Chrono.js`. Import order of the whole regrouping: `ChronoUtils`, `ChronoData`, `ChronoRender`, `ChronoControls`, `Chrono`.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then
