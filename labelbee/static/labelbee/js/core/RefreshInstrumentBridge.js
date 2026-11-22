@@ -7,19 +7,8 @@
  */
 import { timedRefresh } from "./Notifier.js";
 
-// [phase, global function]
+// [phase, global function], the functions of the classic scripts; the modules call `instrument` themselves
 const GLOBALS = [
-  ["chrono", "refreshChronogram"],
-  ["derived", "updateChronoData"],
-  ["chrono", "drawChrono"],
-  ["chrono", "updateChrono"],
-  ["table", "renderObsTable"],
-  ["chrono", "updateTimeMark"],
-  ["chrono", "updatePreviewTimeMark"],
-  ["chrono", "updateTrackWindowSpan"],
-  ["chrono", "updateChronoSelection"],
-  ["chrono", "updateChronoXDomainFromVideo"],
-  ["chrono", "updateTagIntervals"],
   ["form", "updateForm"],
   ["form", "updateEventTree"],
   ["form", "updateSelectID"],
@@ -45,6 +34,13 @@ function wrap(phase, name, fn) {
 
 const wrapped = [];
 const missing = [];
+
+// For the modules that call their own entry points (chrono/ChronoControl.js): returns the wrapped function, which the
+// module binds to its own name; the window name is installed by labelbeeBridge.js from that binding.
+export function instrument(phase, name, fn) {
+  wrapped.push(name);
+  return wrap(phase, name, fn);
+}
 for (const [phase, name] of GLOBALS) {
   if (typeof window[name] === "function") {
     window[name] = wrap(phase, name, window[name]);

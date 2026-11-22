@@ -5,16 +5,20 @@
 // ###########################################################
 // CHRONOGRAM
 
+import { instrument } from "../core/RefreshInstrumentBridge.js"
+
 // The derived data shared by the chrono files is `chronoState` (chrono/ChronoState.js), the options are `chrono.config`,
 // the d3 elements `chrono.axes` and `chrono.layers`. TODO: move the remaining singletons inside Chrono
 
 
 
-var chrono
-var chronoDragControl // instance of ChronoDragControl.DragControl (ADR 0011)
-var videoKeyframes // instance of VideoKeyframes.VideoKeyframes, keyframes of the video from its packets sidecar (ADR 0014)
-var videoCacheStatus // instance of VideoCacheStatus.VideoCacheStatus (ADR 0012)
-class Chronogram {
+// Page globals: assigned here (and `chrono` by labelBee.js), read by the other files and the page. Created on window
+// so that the bare names resolve inside this module.
+window.chrono = undefined
+window.chronoDragControl = undefined // instance of ChronoDragControl.DragControl (ADR 0011)
+window.videoKeyframes = undefined // instance of VideoKeyframes.VideoKeyframes, keyframes of the video from its packets sidecar (ADR 0014)
+window.videoCacheStatus = undefined // instance of VideoCacheStatus.VideoCacheStatus (ADR 0012)
+export class Chronogram {
   constructor() {
     //const chrono = this
     chrono = this // TODO: fix back to normal local variable once all encapsulation is done properly
@@ -277,8 +281,8 @@ function initChrono() {
   });
 
   // Drag modes of the chronogram (ADR 0011). One import, the namespace is global for now:
-  // when this file becomes a module, replace by `import * as ChronoDragControl from "./chrono/ChronoDragControl.js"`.
-  import("./chrono/ChronoDragControl.js").then(function (ns) {
+  // step 8c replaces the three import() by static imports.
+  import("./ChronoDragControl.js").then(function (ns) {
     window.ChronoDragControl = ns;
     if (chronoDragControl) chronoDragControl.destroy();
     chronoDragControl = new ChronoDragControl.DragControl(
@@ -290,7 +294,7 @@ function initChrono() {
   });
 
   // Video cache status strip under the frame axis (ADR 0012), toggled by Options/Chronogram. Off by default.
-  import("./chrono/VideoCacheStatus.js").then(function (ns) {
+  import("./VideoCacheStatus.js").then(function (ns) {
     window.VideoCacheStatus = ns;
     if (videoCacheStatus) videoCacheStatus.destroy();
     videoCacheStatus = new ns.VideoCacheStatus(chrono.axes, videoCache, function () {
@@ -300,7 +304,7 @@ function initChrono() {
   });
 
   // Keyframes of the video, from <video>.packets.csv when it exists (ADR 0014); "Preview Keyframes Only" in the Drag menu
-  import("./chrono/VideoKeyframes.js").then(function (ns) {
+  import("./VideoKeyframes.js").then(function (ns) {
     window.VideoKeyframes = ns;
     videoKeyframes = new ns.VideoKeyframes();
     function loadKeyframes() {
@@ -391,7 +395,7 @@ function initChrono() {
   debouncer(refreshChronoLayout, 300); // Avoid refreshing the chronogram too often
 }
 
-function refreshChronoLayout() {
+export function refreshChronoLayout() {
   const doRefresh = function () {
     if (logging.axesEvents) {
       console.log("refreshChronoLayout");
@@ -436,7 +440,7 @@ function updateButtons(classname, flag) {
 }
 
 // Need simpler binding framework over here !
-function onToggleButton_showPartsOnChrono(event) {
+export function onToggleButton_showPartsOnChrono(event) {
   chrono.config.chronoDisplay.flag_showPartsOnChrono = toggledNewState(event);
   updateButtons_showPartsOnChrono();
 
@@ -446,7 +450,7 @@ function updateButtons_showPartsOnChrono(event) {
   updateButtons("button_showPartsOnChrono", chrono.config.chronoDisplay.flag_showPartsOnChrono);
 }
 
-function onToggleButton_showIndividualEvents(event) {
+export function onToggleButton_showIndividualEvents(event) {
   chrono.config.chronoDisplay.flag_showIndividualEvents = toggledNewState(event);
   updateButtons_showIndividualEvents();
 
@@ -456,7 +460,7 @@ function updateButtons_showIndividualEvents(event) {
   updateButtons("button_showIndividualEvents", chrono.config.chronoDisplay.flag_showIndividualEvents);
 }
 
-function onToggleButton_showSpans(event) {
+export function onToggleButton_showSpans(event) {
   chrono.config.chronoDisplay.flag_showSpans = toggledNewState(event);
   updateButtons_showSpans();
 
@@ -470,7 +474,7 @@ function updateChronoCheckboxes() {
   $('#showTagsChrono').prop('checked', chrono.config.chronoDisplay.showTagsChrono)
   $('#showObsChrono').prop('checked', chrono.config.chronoDisplay.showObsChrono)
 }
-function onChronoParametersChanged() {
+export function onChronoParametersChanged() {
   // Callback when chronogram computation parameters have changed
   chrono.config.chronoDisplay.showTagsChrono = $("#showTagsChrono")[0].checked;
   chrono.config.chronoDisplay.showObsChrono = $("#showObsChrono")[0].checked;
@@ -479,7 +483,7 @@ function onChronoParametersChanged() {
 }
 
 // TODO unify all buttons and checkmarks click handling
-function onMousewheelModeToggled() {
+export function onMousewheelModeToggled() {
   chrono.axes.mousewheelMode = $("#mousewheelMode").prop("checked"); 
   if (logging.mouseMouseEvents) {
     console.log(
@@ -496,7 +500,7 @@ function updateMousewheelModeButton() {
 // ### RESTRICT ID
 var __subsection__chronogram_restrict_id
 
-function setRestrictID(ids) {
+export function setRestrictID(ids) {
   console.log("setRestrictID");
   chrono.config.filter.restrictID = String(ids);
   chrono.config.filter.restrictIDArray = chrono.config.filter.restrictID
@@ -512,13 +516,13 @@ function setRestrictID(ids) {
 
   if (chrono.config.filter.flag_restrictID) refreshChronogram();
 }
-function restrictIDFromSelection() {
+export function restrictIDFromSelection() {
   console.log("restrictIDFromSelection");
 
   chrono.config.filter.flag_restrictID = true;
   setRestrictID(selection.getId());
 }
-function restrictIDFromWindow() {
+export function restrictIDFromWindow() {
   console.log("restrictIDFromWindow");
   chrono.config.filter.restrictID = [];
   let win = getWindow();
@@ -554,14 +558,14 @@ function update_restrictID_GUI() {
   }
   $("#restrictID").val(chrono.config.filter.restrictID);
 }
-function click_restrictID() {
+export function click_restrictID() {
   chrono.config.filter.flag_restrictID = !chrono.config.filter.flag_restrictID;
 
   update_restrictID_GUI();
 
   refreshChronogram();
 }
-function onRestrictIDChanged() {
+export function onRestrictIDChanged() {
   chrono.config.filter.restrictID = $("#restrictID").val();
   chrono.config.filter.restrictIDArray = chrono.config.filter.restrictID.split(",");
 
@@ -572,7 +576,7 @@ function onRestrictIDChanged() {
 // ### EXCLUDE ID, INVALID AND FLOWERS
 var __subsection__chronogram_exclude_id
 
-function click_excludeID() {
+export function click_excludeID() {
   if ($("#excludeIDButton").hasClass("active")) {
     $("#excludeIDButton").removeClass("active");
     //$("#excludeIDButton").addClass("btn-default")
@@ -586,14 +590,14 @@ function click_excludeID() {
   }
   refreshChronogram();
 }
-function onExcludeIDChanged() {
+export function onExcludeIDChanged() {
   chrono.config.filter.excludeID = $("#excludeID").val();
   chrono.config.filter.excludeIDArray = chrono.config.filter.excludeID.split(",");
 
   refreshChronogram();
 }
 
-function click_hideInvalid() {
+export function click_hideInvalid() {
   if ($("#hideInvalidButton").hasClass("active")) {
     $("#hideInvalidButton").removeClass("active");
     chrono.config.filter.flag_hideInvalid = false;
@@ -604,7 +608,7 @@ function click_hideInvalid() {
   refreshChronogram();
 }
 
-function click_hideFlowers() {
+export function click_hideFlowers() {
     let button = $("#hideFlowersButton")
     chrono.config.filter.flag_hideFlowers = !button.hasClass("active");
     button.toggleClass( "active", chrono.config.filter.flag_hideFlowers )
@@ -632,7 +636,7 @@ function getChronoItemHeight() {
 
   return itemHeight;
 }
-function chronoAdjust(mode) {
+export function chronoAdjust(mode) {
   let debouncedRefresh = debouncer(function (event) {
     chrono.axes.refreshLayout();
   });
@@ -676,7 +680,7 @@ function chronoAdjust(mode) {
     debouncedRefresh();
   }
 }
-function adjustChronogramHeight(itemHeight) {
+export function adjustChronogramHeight(itemHeight) {
   if (itemHeight == null) {
     itemHeight = 12;
   }
@@ -755,19 +759,19 @@ function validTagIdsDomain() {
   }
   return [...ids]; // Convert to array
 }
-function validAllTagIdsDomain() {
+export function validAllTagIdsDomain() {
   return sortIds(chronoState.allTagsID);
 }
-function validVisibleTagIdsDomain() {
+export function validVisibleTagIdsDomain() {
   return sortIds(chrono.axes.ydomain());
 }
 
 /* Update chronogram axes properties */
-function updateChronoXDomainFromVideo() {
+export function updateChronoXDomainFromVideo() {
   chrono.axes.updateVideoinfo(getVideoInfo()) // Update starttime and realfps
   chrono.axes.xdomain(domainxFromVideo());
 }
-function scaleTimeDomain(scale) {
+export function scaleTimeDomain(scale) {
   let domain = chrono.axes.xdomain();
   let f = getCurrentFrame();
   if (f >= domain[0] && f <= domain[1]) {
@@ -777,7 +781,7 @@ function scaleTimeDomain(scale) {
     chrono.axes.xdomainScale(scale); // Zoom in center
   }
 }
-function shiftTimeDomain(factor) {
+export function shiftTimeDomain(factor) {
   let domain = chrono.axes.xdomain();
   let f = getCurrentFrame();
   let shift = Math.round(factor * (domain[1] - domain[0]));
@@ -864,7 +868,7 @@ var __section__chronogram_main_view
 var __section__chronogram_dynamic_elements
 
 var previewBar = { active: false, shown: false }; // a preview is going on / has shown a frame since it began
-function updateTimeMark() {
+export function updateTimeMark() {
   var frame = getCurrentFrame();
   if (previewBar.active) {
     previewBar.shown = true;
@@ -876,13 +880,13 @@ function updateTimeMark() {
   }
   chrono.axes.setTimeMark(frame);
 }
-function updatePreviewTimeMark() {
+export function updatePreviewTimeMark() {
   updateTimeMark();
   //     if (videoControl.previewFrame != null)
   //         axes.setTimeMark(videoControl.previewFrame);
 }
 
-function updateChronoSelection() {
+export function updateChronoSelection() {
   let id = selection.getId();
   chrono.axes.highlightId(id);
 }
@@ -988,7 +992,7 @@ function initTrackWindowSpan() {
   $(chrono.axes).on("previewframe:trackend", updateTrackWindowSpan);
   $(overlay).on("trackWindow:change", updateTrackWindowSpan);
 }
-function updateTrackWindowSpan() {
+export function updateTrackWindowSpan() {
   var trackWindowSpan = chrono.axes.chronoGroup.select("#trackWindowSpan");
   trackWindowSpan
     .selectAll("#trackWindowSpanClipPath > rect")
@@ -1004,7 +1008,7 @@ function updateTrackWindowSpan() {
     .attr("width", chrono.axes.xScale(fmax + 1) - chrono.axes.xScale(fmin)) // frame fmax is the interval [fmax, fmax+1)
     .attr("height", 11);
 }
-function getWindow() {
+export function getWindow() {
   let f = getCurrentFrame();
   let fmin = f - overlay.trackWindow.backward;
   let fmax = f + overlay.trackWindow.forward;
@@ -1022,7 +1026,7 @@ function getWindow() {
 var __section__chronogram_update
 
 /* Hard refresh: prepare data then redraw */
-function refreshChronogram() {
+export function refreshChronogram() {
   if (logging.chrono) console.log('refreshChronogram')
 
   updateTagsPanel()
@@ -1042,7 +1046,7 @@ function updateTagsPanel() {
 }
 
 /* Soft refresh: update ydomain and render */
-function drawChrono() {
+export function drawChrono() {
   // Strong update:
   // Redraw chronogram after change in chronogramData content
   // Need to adjust range
@@ -1054,7 +1058,7 @@ function drawChrono() {
 }
 
 /* Render chrono */
-function updateChrono() {
+export function updateChrono() {
   // Weak update:
   // Update chronogram without adjusting range
 
@@ -1106,7 +1110,7 @@ var __section__chronogram_data_preparation_tracks
 // updateTagIntervals : ttags           => tagIntervals, allTagsID
 
 /* Top-level update all chrono data. Do not render */
-function updateChronoData() {
+export function updateChronoData() {
 
   console.log('updateChronoData')
 
@@ -1166,7 +1170,7 @@ function updateChronoData() {
 
 /* Augment Tracks with tag id if same (frame,id) exist for both.
    LEGACY (DEBT-826), one-shot, console only: no longer called by the refresh (ADR 0009 Q34); the tags are expected in the events at load time. */
-function augmentTrackWithTag() {
+export function augmentTrackWithTag() {
   for (let F of events.frames()) {
     if (AnnotationStore.getTags()[F] != undefined) {
       for (var i = 0; i < AnnotationStore.getTags()[F].tags.length; i++) {
@@ -1530,7 +1534,7 @@ function getTTags() {
 
 
 /* ttags => tagIntervals */
-function updateTagIntervals() {
+export function updateTagIntervals() {
   // ttags => tagIntervals
   chronoState.tagIntervals = [];
 
@@ -1905,7 +1909,7 @@ function updateObsTable() {
   updateFlatTracks()
   renderObsTable()
 }
-function renderObsTable() {
+export function renderObsTable() {
   const showObsTable = !$("#labelingTab > .ui-accordion-header").hasClass(
     "ui-accordion-header-collapsed"
   );
@@ -2120,7 +2124,7 @@ function interpolateTags(maxgap) {
   }
 }
 
-function computeMotionDirection() {
+export function computeMotionDirection() {
   cacheTags();
   for (var activeInterval of chronoState.tagIntervals) {
     let tags1 = getTags(activeInterval.begin, activeInterval.id);
@@ -2137,7 +2141,7 @@ function computeMotionDirection() {
   updateTagIntervals();
 }
 
-function cleanObsoleteEventsCB() {
+export function cleanObsoleteEventsCB() {
   var r = confirm(
     "CAUTION !!!! Operation cannot be undone. Please confirm: Delete all obsolete events, i.e. no associated tag or low DM or inside excludeRects. "
   );
@@ -2149,7 +2153,7 @@ function cleanObsoleteEventsCB() {
   }
 }
 
-function cleanObsoleteEvents() {
+export function cleanObsoleteEvents() {
   events.forEach(function (obs, F, id) {
     if (hasLabel(obs, "falsealarm") || hasLabel(obs, "wrongid")) {
       if (!obs.tag) {
@@ -2172,3 +2176,18 @@ function cleanObsoleteEvents() {
   });
   refresh.rebuild();
 }
+
+// The refresh instrumentation (core/RefreshInstrumentBridge.js, ADR 0009) wraps the entry points of the chronogram
+// refresh so that `refreshLog` records them. A module-private call does not go through `window.X`, so each is rebound
+// here: calls inside the module, handlers bound by reference and the exports all see the wrapped function.
+refreshChronogram = instrument("chrono", "refreshChronogram", refreshChronogram)
+updateChronoData = instrument("derived", "updateChronoData", updateChronoData)
+drawChrono = instrument("chrono", "drawChrono", drawChrono)
+updateChrono = instrument("chrono", "updateChrono", updateChrono)
+renderObsTable = instrument("table", "renderObsTable", renderObsTable)
+updateTimeMark = instrument("chrono", "updateTimeMark", updateTimeMark)
+updatePreviewTimeMark = instrument("chrono", "updatePreviewTimeMark", updatePreviewTimeMark)
+updateTrackWindowSpan = instrument("chrono", "updateTrackWindowSpan", updateTrackWindowSpan)
+updateChronoSelection = instrument("chrono", "updateChronoSelection", updateChronoSelection)
+updateChronoXDomainFromVideo = instrument("chrono", "updateChronoXDomainFromVideo", updateChronoXDomainFromVideo)
+updateTagIntervals = instrument("chrono", "updateTagIntervals", updateTagIntervals)

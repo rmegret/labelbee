@@ -52,6 +52,46 @@ import {
   onClickPrevID,
   onAutoEventButtonClick,
 } from './chrono/ChronoControlInteraction.js';
+import {
+  Chronogram,
+  refreshChronoLayout,
+  onToggleButton_showPartsOnChrono,
+  onToggleButton_showIndividualEvents,
+  onToggleButton_showSpans,
+  onChronoParametersChanged,
+  onMousewheelModeToggled,
+  setRestrictID,
+  restrictIDFromSelection,
+  restrictIDFromWindow,
+  click_restrictID,
+  onRestrictIDChanged,
+  click_excludeID,
+  onExcludeIDChanged,
+  click_hideInvalid,
+  click_hideFlowers,
+  chronoAdjust,
+  adjustChronogramHeight,
+  validAllTagIdsDomain,
+  validVisibleTagIdsDomain,
+  updateChronoXDomainFromVideo,
+  scaleTimeDomain,
+  shiftTimeDomain,
+  updateTimeMark,
+  updatePreviewTimeMark,
+  updateChronoSelection,
+  updateTrackWindowSpan,
+  getWindow,
+  refreshChronogram,
+  drawChrono,
+  updateChrono,
+  updateChronoData,
+  augmentTrackWithTag,
+  updateTagIntervals,
+  renderObsTable,
+  computeMotionDirection,
+  cleanObsoleteEventsCB,
+  cleanObsoleteEvents,
+} from './chrono/ChronoControl.js';
 
 // ---- legacy globals still read by classic scripts ------------------------------------------------------------------
 window.logging = logging; // debug-level flags (`logging.io = true` from the console), same object the modules use
@@ -132,3 +172,48 @@ window.gotoPreviousEvent = gotoPreviousEvent;
 window.onClickNextID = onClickNextID;
 window.onClickPrevID = onClickPrevID;
 window.onAutoEventButtonClick = onAutoEventButtonClick;
+
+// The chronogram view (chrono/ChronoControl.js), the 38 names other files use. The singletons `chrono`, `chronoDragControl`,
+// `videoKeyframes` and `videoCacheStatus` are created on window by the module itself (labelBee.js also assigns `chrono`).
+// class and layout, used by labelBee.js, ChronoLayout.js, FitControls.js, OverlayControl.js
+window.Chronogram = Chronogram;
+window.refreshChronoLayout = refreshChronoLayout;
+window.adjustChronogramHeight = adjustChronogramHeight;
+// refresh entry points, wrapped by core/RefreshInstrumentBridge.js (instrument)
+window.refreshChronogram = refreshChronogram;
+window.updateChronoData = updateChronoData;
+window.drawChrono = drawChrono;
+window.updateChrono = updateChrono;
+window.renderObsTable = renderObsTable;
+window.updateTimeMark = updateTimeMark;
+window.updatePreviewTimeMark = updatePreviewTimeMark;
+window.updateTrackWindowSpan = updateTrackWindowSpan;
+window.updateChronoSelection = updateChronoSelection;
+window.updateChronoXDomainFromVideo = updateChronoXDomainFromVideo;
+window.updateTagIntervals = updateTagIntervals;
+// read by other files
+window.setRestrictID = setRestrictID;
+window.validAllTagIdsDomain = validAllTagIdsDomain;
+window.validVisibleTagIdsDomain = validVisibleTagIdsDomain;
+window.getWindow = getWindow;
+window.augmentTrackWithTag = augmentTrackWithTag;
+window.computeMotionDirection = computeMotionDirection;
+window.cleanObsoleteEvents = cleanObsoleteEvents;
+// inline handlers of labelbee_page.html
+window.onToggleButton_showPartsOnChrono = onToggleButton_showPartsOnChrono;
+window.onToggleButton_showIndividualEvents = onToggleButton_showIndividualEvents;
+window.onToggleButton_showSpans = onToggleButton_showSpans;
+window.onChronoParametersChanged = onChronoParametersChanged;
+window.onMousewheelModeToggled = onMousewheelModeToggled;
+window.restrictIDFromSelection = restrictIDFromSelection;
+window.restrictIDFromWindow = restrictIDFromWindow;
+window.click_restrictID = click_restrictID;
+window.onRestrictIDChanged = onRestrictIDChanged;
+window.click_excludeID = click_excludeID;
+window.onExcludeIDChanged = onExcludeIDChanged;
+window.click_hideInvalid = click_hideInvalid;
+window.click_hideFlowers = click_hideFlowers;
+window.chronoAdjust = chronoAdjust;
+window.scaleTimeDomain = scaleTimeDomain;
+window.shiftTimeDomain = shiftTimeDomain;
+window.cleanObsoleteEventsCB = cleanObsoleteEventsCB;
