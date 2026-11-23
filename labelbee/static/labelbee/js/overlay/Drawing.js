@@ -899,6 +899,7 @@ export function plotExcludeRects(ctx) {
   }
 }
 
+/* A partial tag (for instance only {id, frame} from an events CSV) has no center `c` */
 function tagHasCenter(tag) {
   return tag.c != null && tag.c[0] != null && tag.c[1] != null;
 }
