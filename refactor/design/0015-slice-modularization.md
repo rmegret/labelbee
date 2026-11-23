@@ -85,7 +85,9 @@ Inline `onclick=` handlers in the template (~180) also call globals.
 | 10 | Video player and zoom | `VideoControl.js` (82 out, 59 into `VideoList`), `ZoomView.js` (out ~34) | GUI classes over the model; `ZoomView` reads the overlay, so after 11a |
 | 11 | Overlay | 11a analysis table (display vs not, in this ADR, maintainer review); 11b non-display concerns out (ID prediction `[3085-3302]`, pick-frame timeline, parameters and ROI UI, activity helpers); 11c `overlay/Overlay.js` + `overlay/*.js` (rects <-> observations, drawing of IDs, tags, tracks, mouse events, fabric events) | 105 names, out ~83, 4000 lines: depends on everything; last big GUI class |
 | 12 | Entry | `labelBee.js` as module entry (`init`, `onKeyDown*`, `StatusWidget`, `printMessage`); remove aliases; list what `labelbeeBridge.js` still defines | wires the rest |
-| 13 | Record | PLAN, `intent/modules.md` state table, DEBT | |
+| 13 | IO dialogs, globals, `annotation/` | `AnnotationIO.js` split by concern and removed, the globals listed and reduced, `annotation/` split into data layer and GUI layer (maintainer, 2026-11-23): see section 13 below | what the modularization left |
+| 14 | Globals | the `window` properties listed, one ID each, classified necessary or spurious (`refactor/analysis/`); then the spurious ones reduced: few high-level singletons, no module function or singleton method shared through `window`, console helpers installed by an explicit `debug_xxx()` (maintainer, 2026-11-23); first data `refactor/scratch/globals-inventory.md` (244 properties, heuristic) | after 13, which removes many |
+| 15 | Record | PLAN, `intent/modules.md` state table, DEBT, what the bridge still defines | |
 
 Step 2 (bridge skeleton) comes before 3. Steps 8 to 11 may each be cut into several PLAN lines. Cycles found
 (for example `ChronoControl` <-> `ChronoControlInteraction`, `VideoControl` <-> `VideoList`, `VisitControl` <->
@@ -199,7 +201,7 @@ Analysis only, no code changed. `[read]`: 4016 lines, 156 top-level items (const
 
 **Rules of the split (maintainer, 2026-11-22).**
 - Pure code goes to `annotation/` (data and model); everything that belongs to the overlay display stays in a new `overlay/` folder.
-- `form/` is only the direct edit of the attributes of the selected rect or track. The options of a widget are the responsibility of that widget: the options of the overlay go in `overlay/`.
+- `form/` is the direct edit of data fields through a GUI: the attributes of the selected rect or track and, since 2026-11-23, other data fields such as the notes of the events. The options of a widget are the responsibility of that widget: the options of the overlay go in `overlay/`.
 - No prototype extension (`OverlayControl.prototype.x = ...` from another file). The overlay **delegates to registered objects with a well identified role**: the constructor creates each helper with `new Helper(overlay)` and registers it by role; the overlay calls the role, never the helper's internals.
 
 | Role (registered on the overlay) | Object | File | What the overlay calls |
@@ -405,6 +407,24 @@ The last classic script besides the extern libraries. As in 10a, 10b and 12 no s
 - Assigned on `window`: the instances read by the inline handlers and other modules (`labelListFromServerDialog`, `fromServerDialog`, `pickEventsCSVDialog`), `user_data` (read by `video/VideoList.js`), `user_id` and `labelButtonsArray` (declared by `labelBee.js` and `form/Form.js`).
 - Implicit globals declared at module level (`html`, `idx`, `buttonHTML`, `success`, `fileData`): temporaries of the dialogs, shared by their callbacks as before.
 - `updateEventsNotes` is wrapped by `instrument` in the module: the `GLOBALS` list of `core/RefreshInstrumentBridge.js` becomes empty.
+
+### 13: `AnnotationIO.js` split by concern, then `annotation/` data and GUI layers, then one feedback interface
+
+As a module (12c) `AnnotationIO.js` (934 lines) still mixes eight concerns: the init of the file inputs and dialogs (with a line that belongs to chrono, `chronoState.ttags = []`), the erase and server-load commands (48 lines), the login and user info (154), the manual picker of `/data` files (56), the label-list dialog (210), `FromServerDialog` (315), `tracksListFromServer` (104) and the events notes (15). Decisions of the maintainer (2026-11-23), in the order of the work (reorganize first, clean up after):
+- 13a: `eraseEvents` and `eraseTags` go to `annotation/Load.js` (the erase is a load of nothing; a better home may appear), `clickLoadTracksCSVFromServer` and `clickLoadTracksTaggedCSVFromServer` to `annotation/ServerIO.js`; the events notes (`#events-notes`, `updateEventsNotes`) go to `form/EventsNotes.js`: `form/` is opened to the editing of data fields in general, not only the selected rect or track (rule updated above). Moves only.
+- 13b: login, `whoami`, `user_data`, `try_login`, `try_logout` to `session/Login.js`.
+- 13c: the dialogs go to a new folder `dialogs/`, one file each: `FromServerDialog`, the label-list dialog, the manual picker, and `FilePickerFromServerDialog` (~400 lines, still in `labelBee.js`, the same family).
+- 13d: `initAnnotationIO` is removed: each module gets its own `initX` (called by `init()` or the bridge); `chronoState.ttags = []` goes to the chrono init; `AnnotationIO.js` is deleted; the dead code below is cut in the same step, own commit, with the maintainer's approval.
+- 13e: review of `annotation/` (many files) to split the data layer from the GUI layer; analysis first, then an amendment of this ADR.
+- 13f (behavior change, own commit, designed when reached): one clean GUI interface that gives the user standardized feedback on the operations on the annotations: the erase (today silent), the loads (today alerts), the saves and so on. It may involve cleaning up the code of the dialogs.
+
+Dead code check (2026-11-23, `[read]`): the candidates are dead, not dormant.
+| Candidate | Evidence | Verdict |
+|---|---|---|
+| `tracksListFromServer` (104 lines) | no caller in `labelbee/static/labelbee/js/` nor the template; it queries `/rest/events/`, which exists only in `labelbee/legacy/views.py:790` (nothing imports the legacy views); it fills `#loadTracksFromServerDialog`, which the template no longer has (0 occurrences); its job (list events files of the server, click to load) is done by `FromServerDialog` on `api/v1/annotations` | obsolete, redundant: cut |
+| `show_log_in` | empty body, no caller | cut |
+| top-level `formattimestamp` | its only uses (l.863, 900) call the copy local to `tracksListFromServer`; the dialogs do not call it | cut with the above |
+Not dead, recorded as DEBT: `clickLoadTracksCSVFromServer` and `clickLoadTracksTaggedCSVFromServer` hardcode the dataset (`bee_feeder`, `gurabo4`) in their `prompt` defaults; the buttons are in the template.
 
 ## Inventory (step 1, 2026-11-20)
 
