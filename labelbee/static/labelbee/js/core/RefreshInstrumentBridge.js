@@ -9,7 +9,6 @@ import { timedRefresh } from "./Notifier.js";
 
 // [phase, global function], the functions of the classic scripts; the modules call `instrument` themselves
 const GLOBALS = [
-  ["form", "updateEventsNotes"],
 ];
 // [phase, constructor, method]
 const METHODS = [

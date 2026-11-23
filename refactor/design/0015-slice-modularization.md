@@ -398,6 +398,14 @@ The seven classic scripts of `layout/` (`TouchResize`, `NavMenu`, `SplitLayout`,
 - `videoToolbar` (read by the inline `onclick` of the video toolbar buttons) is assigned on `window` explicitly: a module `var` would not be global.
 - Order: the ready callbacks used to be registered while the head was parsed; they are now registered by the deferred bridge, still before window.onload. No layout code reads what `init()` builds.
 
+### 12c: `AnnotationIO.js` becomes a module
+
+The last classic script besides the extern libraries. As in 10a, 10b and 12 no statement is cut (924 lines: the load buttons, `LabelListFromServerDialog`, `FromServerDialog`, `tracksListFromServer`, the login dialog and `whoami`, the notes of the events); the file stays at the root of `js/`. The earlier slices already moved its codec, loaders, exports and server IO out (`annotation/`).
+- Exported and installed by the bridge: `initAnnotationIO`, `LoginDialog`, `whoami` (`init()` of `labelBee.js`; `whoami` also by the buttons built by the login dialog), `eraseEvents`, `eraseTags`, `clickLoadTracksCSVFromServer`, `clickLoadTracksTaggedCSVFromServer` (buttons of the page), `try_login`, `try_logout` (buttons built by `whoami`), `updateEventsNotes` (`annotation/Load.js`). The other functions and the classes (`LabelListFromServerDialog`, `FromServerDialog`, `EventsCSVManualFilePicker`) become module-local.
+- Assigned on `window`: the instances read by the inline handlers and other modules (`labelListFromServerDialog`, `fromServerDialog`, `pickEventsCSVDialog`), `user_data` (read by `video/VideoList.js`), `user_id` and `labelButtonsArray` (declared by `labelBee.js` and `form/Form.js`).
+- Implicit globals declared at module level (`html`, `idx`, `buttonHTML`, `success`, `fileData`): temporaries of the dialogs, shared by their callbacks as before.
+- `updateEventsNotes` is wrapped by `instrument` in the module: the `GLOBALS` list of `core/RefreshInstrumentBridge.js` becomes empty.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

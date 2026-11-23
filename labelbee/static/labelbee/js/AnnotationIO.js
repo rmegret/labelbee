@@ -1,9 +1,18 @@
 /*jshint esversion: 6, asi: true */
+// Annotation IO dialogs: the load and save buttons, the dialogs that list the files of the server (labels, events, tags), the login
+// dialog and the user info, the notes of the events. ES module (refactor slice 8 step 12c, ADR 0015); no statement cut. Page globals
+// (`events`, `videoManager`, `loadTracks`, `printMessage`, `chronoState`...) are read at call time; what the page reads is on `window`
+// (the bridge installs the exported functions, this file assigns the instances `fromServerDialog`... and `user_data`).
+
+import { instrument } from "./core/RefreshInstrumentBridge.js"
+
+// Formerly implicit globals, used as temporaries by the dialogs below (module scope, same sharing as before)
+let html, idx, buttonHTML, success, fileData
 
 // ######################################################################
 // INPUT/OUTPUT
 
-function initAnnotationIO() {
+export function initAnnotationIO() {
   document
     .getElementById("load")
     .addEventListener("change", loadEventsFromFile);
@@ -12,16 +21,16 @@ function initAnnotationIO() {
     .addEventListener("change", loadTagsFromFile);
 
   chronoState.ttags = [];
-  labelListFromServerDialog = new LabelListFromServerDialog();
-  fromServerDialog = new FromServerDialog();
-  pickEventsCSVDialog = new EventsCSVManualFilePicker();
+  window.labelListFromServerDialog = new LabelListFromServerDialog();
+  window.fromServerDialog = new FromServerDialog();
+  window.pickEventsCSVDialog = new EventsCSVManualFilePicker();
 
   $("#events-notes").on("input", onChanged_events_notes);
 }
 
 // ## Annotations control (confirm and prompt dialogs, called by the template buttons; they wait for step 9 of slice 8)
 
-function eraseEvents() {
+export function eraseEvents() {
   var r = confirm(
     "Are you sure you want to ERASE all manual annotations (Tracks)?"
   );
@@ -32,7 +41,7 @@ function eraseEvents() {
     console.log("User CANCELED Erase Tracks ...");
   }
 }
-function eraseTags() {
+export function eraseTags() {
   var r = confirm("Are you sure you want to ERASE all Tags?");
   if (r == true) {
     console.log("ERASING all Tags...");
@@ -42,7 +51,7 @@ function eraseTags() {
   }
 }
 
-async function clickLoadTracksCSVFromServer() {
+export async function clickLoadTracksCSVFromServer() {
   console.log("clickLoadTracksCSVFromServer: loading .tracks.csv from URL");
   const url = prompt("Enter tracks URL", url_for("/data")+"/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv");
   if (url == null || url == "") {
@@ -51,7 +60,7 @@ async function clickLoadTracksCSVFromServer() {
   }
   return loadCSVFromServer(url, "tracks");
 }
-async function clickLoadTracksTaggedCSVFromServer() {
+export async function clickLoadTracksTaggedCSVFromServer() {
   console.log("clickLoadTracksTaggedCSVFromServer: loading video and .tracks_tagged.csv from URL");
   const col_videoname = prompt("Enter gurabo4 col_videoname", "col10/9_02_R_190809120000.cfr.mp4");
   if (col_videoname == null || col_videoname == "") {
@@ -119,7 +128,7 @@ function ajaxlogout(email, password) {
   });
 }
 
-function LoginDialog() {
+export function LoginDialog() {
   this.div = $("#dialog-login");
 
   this.openDialog = function () {
@@ -171,12 +180,12 @@ function LoginDialog() {
   this.initDialog();
 }
 
-function try_login() {
+export function try_login() {
   console.log("try_login: Open Login Dialog");
   loginDialog.openDialog();
 }
 
-function try_logout() {
+export function try_logout() {
   if (confirm("Confirm log out?")) {
     ajaxlogout();
   } else {
@@ -184,11 +193,11 @@ function try_logout() {
   }
 }
 
-user_data = {is_authenticated:false};
-function whoami() {
+window.user_data = {is_authenticated:false};
+export function whoami() {
   $.getJSON(url_for("/api/v1/auth/whoami"), function (data) {
     console.log("whoami: data=", data);
-    user_data = data;
+    window.user_data = data;
   })
     .done(function (data) {
       //$('#whoami').html(JSON.stringify(data))
@@ -199,7 +208,7 @@ function whoami() {
             data.first_name +
             ' <button onclick="try_logout()" type="button" class="btn btn-black btn-xs" title="Log out current user">Log out</button>'
         );
-        user_id = data.id
+        window.user_id = data.id
         $(".require-server").toggleClass("disabled", false);
       } else {
         $("#whoami").html(
@@ -456,7 +465,7 @@ function labelListFromServer(url) {
       }
 
       console.log("labelListFromServer: updating labelButtonsArray...");
-      labelButtonsArray = obj.labelButtonsArray;
+      window.labelButtonsArray = obj.labelButtonsArray;
 
       console.log("labelListFromServer: hardRefreshLabelTogglePanel...");
       hardRefreshLabelTogglePanel();
@@ -914,11 +923,12 @@ function onChanged_events_notes(event) {
     events.setInfo("notes", $("#events-notes").val());
   }
 }
-function updateEventsNotes() {
+// The refresh instrumentation (core/RefreshInstrumentBridge.js, ADR 0009) wraps this entry point of the form
+export const updateEventsNotes = instrument("form", "updateEventsNotes", function updateEventsNotes() {
   if (events.info) {
     $("#events-notes").val(events.info["notes"]);
   }
-}
+})
 
 // The loaders, loadTracks/loadTags, mainAlert, the AJAX errors and eventsToServer are in annotation/Load.js and
 // annotation/ServerIO.js (slice 8 step 6b)

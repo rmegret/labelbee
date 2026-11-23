@@ -69,6 +69,10 @@ import { initVideoSettings } from './layout/VideoSettings.js';
 import { initPanelRows } from './layout/PanelRows.js';
 import { initZoomView } from './zoom/ZoomView.js';
 import {
+  initAnnotationIO, eraseEvents, eraseTags, clickLoadTracksCSVFromServer, clickLoadTracksTaggedCSVFromServer,
+  LoginDialog, try_login, try_logout, whoami, updateEventsNotes,
+} from './AnnotationIO.js';
+import {
   init, printMessage, toggleFullScreen, FilePickerFromServerDialog, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
 } from './labelBee.js';
 import { autoCentering, newRectForCurrentTag, onMouseDown, onObjectDeselected, onObjectSelected } from './overlay/Mouse.js';
@@ -281,6 +285,14 @@ $(function () {
   initChronoLayout();
   initFitControls();
   initVideoSettings();
+});
+
+// The annotation IO dialogs (AnnotationIO.js): `initAnnotationIO`, `LoginDialog` and `whoami` are called by `init()` of labelBee.js (`whoami` also
+// by NavMenu and the inline handlers), `eraseEvents`, `eraseTags` and `clickLoadTracks*` by the buttons of the page, `try_login`, `try_logout` and
+// `whoami` by the buttons the login dialog builds, `updateEventsNotes` by Load.js.
+installGlobals({
+  initAnnotationIO, eraseEvents, eraseTags, clickLoadTracksCSVFromServer, clickLoadTracksTaggedCSVFromServer,
+  LoginDialog, try_login, try_logout, whoami, updateEventsNotes,
 });
 
 // The entry (labelBee.js): `init` is called by `window.onload` of the page, `printMessage` and `FilePickerFromServerDialog` by many modules
