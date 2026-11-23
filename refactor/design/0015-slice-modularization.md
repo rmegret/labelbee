@@ -376,6 +376,14 @@ State: the two module `let`s read by this section, `transformFactor` and `canvas
 
 DEBT: `Transform.js` mutates the `overlay` fields directly (`overlay.canvasTransform`, `transformFactor`, `canvasTransformReference`, `videoSize`) through the mixin. To do later: encapsulate the transform (a class owning its state, with accessors and the conversions, instead of methods reaching into the overlay).
 
+### 10b: `ZoomView.js` becomes the module `zoom/ZoomView.js`
+
+As in 10a: `git mv` into the new folder `zoom/`, no statement cut (2276 lines). The page globals it reads (`overlay`, `videoControl`, `events`, `refresh`, `selection`, `WrongId`, `deepcopy`, `storeUnit`, `tagAngle`, `rotatedRectGeometry`, `PerspT`...) are resolved on `window` at call time, as before. Changes:
+- `initZoomView` is exported and installed by the bridge (called by `init()` of `labelBee.js`); it assigns `window.zoomOverlay` (read by the inline handlers of the page and by `Form.js`, `BeeRect.js`, `RefreshBridge.js`). `ZoomOverlay` is no longer a global: its only reader was the `METHODS` list of `core/RefreshInstrumentBridge.js`, so `refreshZoom` is wrapped by `instrument` at the end of the module and the list becomes empty.
+- Implicit globals declared at module level (`idata`, `src_pts`, `angle`, `rotatep` as `const`) or in the loop (`for (let k in tags)`, 2 loops); no other file reads them. The top-level functions (`drawPixelated`, `hamming`, `getCoveredTags`...) were page globals with no reader outside the file.
+- The line `ZoomOverlay.prototype = {};` is removed (same reasoning as 10a: it replaced the default prototype and its `constructor`).
+- DEBT: `drawPixelated` and `drawTagBin` test `zoom` (not a parameter, never declared: it only resolves because the canvas `id="zoom"` creates a window property), then assign it; the assignment is unreachable. To fix when the file is cut.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

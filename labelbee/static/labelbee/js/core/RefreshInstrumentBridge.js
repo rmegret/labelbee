@@ -13,7 +13,6 @@ const GLOBALS = [
 ];
 // [phase, constructor, method]
 const METHODS = [
-  ["zoom", "ZoomOverlay", "refreshZoom"],
 ];
 
 function wrap(phase, name, fn) {

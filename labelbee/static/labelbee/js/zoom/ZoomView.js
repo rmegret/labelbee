@@ -1,7 +1,16 @@
+/*jshint esversion: 6, asi: true */
 // ## Auxiliary display
+// The zoom view: zoom on the selected bee or tag, tag image and tag fixes, parts (keypoints) editor. ES module (refactor slice 8
+// step 10b, ADR 0015), moved from js/ZoomView.js. Page globals (`overlay`, `videoControl`, `events`, `refresh`, `zoomOverlay`...)
+// are read at call time; the bridge installs `initZoomView` for `init()` of labelBee.js.
 
-function initZoomView() {
-  zoomOverlay = new ZoomOverlay($("#zoom")[0], $("#zoomOverlay")[0]);
+import { instrument } from "../core/RefreshInstrumentBridge.js"
+
+// Formerly implicit globals, shared by the functions below (module scope)
+let idata, src_pts, angle
+
+export function initZoomView() {
+  window.zoomOverlay = new ZoomOverlay($("#zoom")[0], $("#zoomOverlay")[0]);
   zoomOverlay.canvasExtract = $("zoomExtractedTagCanvas");
 
   zoomOverlay.tagImageRoot = "/data/tags/tag25h5inv/png";
@@ -152,7 +161,6 @@ function ZoomOverlay(canvas, canvasOverlay) {
   this.keypointLabelsFromServerDialog = new KeypointLabelsFromServerDialog();
 }
 
-ZoomOverlay.prototype = {};
 
 /* KEYPOINT LABELS LOADING */
 
@@ -1735,7 +1743,7 @@ ZoomOverlay.prototype.onClickAlternateTag = function (id) {
 };
 
 // LEGACY (DEBT-826): tag fixes are mutated on the tag store, not on the events
-rotatep = (function () {
+const rotatep = (function () {
   var unshift = Array.prototype.unshift,
     splice = Array.prototype.splice;
 
@@ -1836,7 +1844,7 @@ ZoomOverlay.prototype.spreadTagFix = function () {
 
   let tags = getCoveredTags(obs);
   console.log(tag);
-  for (k in tags) {
+  for (let k in tags) {
     var tag = tags[k];
 
     //console.log(tag)
@@ -1881,7 +1889,7 @@ ZoomOverlay.prototype.bakeTagFix = function (obs) {
   }
 
   let tags = getCoveredTags(obs);
-  for (k in tags) {
+  for (let k in tags) {
     var tag = tags[k];
 
     if (!tag.fix) {
@@ -2274,3 +2282,6 @@ ZoomOverlay.prototype.refreshInfo = function () {
     $("#zoomInfo").html("");
   }
 };
+
+// The refresh instrumentation (core/RefreshInstrumentBridge.js, ADR 0009) wraps the entry point of the zoom view
+ZoomOverlay.prototype.refreshZoom = instrument("zoom", "ZoomOverlay.refreshZoom", ZoomOverlay.prototype.refreshZoom)
