@@ -108,6 +108,6 @@ def test_s8_video_span_and_track_window_bars_cover_whole_frames(ui, sample_dir):
       const v = document.querySelector('#videoSpan .interval');
       const f = videoControl.currentFrame, w = chrono.config.trackWindow, t = document.querySelector('#trackWindowSpan .interval');
       return {vx: +v.getAttribute('x'), vw: +v.getAttribute('width'), x0: xs(0), xn: xs(n),
-              tx: +t.getAttribute('x'), tw: +t.getAttribute('width'), t0: xs(f - w.backward), t1: xs(f + w.forward + 1)}; }""")
+              tx: +t.getAttribute('x'), tw: +t.getAttribute('width'), t0: xs(f - w.trackWindowBackward), t1: xs(f + w.trackWindowForward + 1)}; }""")
     assert abs(r["vx"] + r["vw"] - r["xn"]) < 0.01 and abs(r["vx"] - r["x0"]) < 0.01
     assert abs(r["tx"] - r["t0"]) < 0.01 and abs(r["tx"] + r["tw"] - r["t1"]) < 0.01

@@ -2657,7 +2657,7 @@ function onMouseDown_predict(option) {
   // predictId takes video/obs coordinates units
     //let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
     let f = getCurrentFrame()
-    let interval = [f-chrono.config.trackWindow.backward, f+chrono.config.trackWindow.forward]
+    let interval = [f-chrono.config.trackWindow.trackWindowBackward, f+chrono.config.trackWindow.trackWindowForward]
     if (interval[0]<0) interval[0]=0
     if (interval[1]>=getVideoInfo().nframes) interval[1]=getVideoInfo().nframes-1
     let prediction = predictIdFromObsMultiframe(interval,videoXY, "distance")
@@ -2791,7 +2791,7 @@ function onMouseDown_interactiveRect(option) {
   //let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
 
   let f = getCurrentFrame()
-  let interval = [f - chrono.config.trackWindow.backward, f + chrono.config.trackWindow.forward]
+  let interval = [f - chrono.config.trackWindow.trackWindowBackward, f + chrono.config.trackWindow.trackWindowForward]
   if (interval[0] < 0) interval[0] = 0
   if (interval[1] >= getVideoInfo().nframes) interval[1] = getVideoInfo().nframes - 1
   let prediction = predictIdFromObsMultiframe(interval, videoXY, "distance")
@@ -2929,8 +2929,8 @@ function onMouseDown_selectMultiframe(option) {
     if (showObsTracks) {
       tmp = predictIdFromObsMultiframe(
         [
-          getCurrentFrame() - chrono.config.trackWindow.backward,
-          getCurrentFrame() + chrono.config.trackWindow.forward,
+          getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,
+          getCurrentFrame() + chrono.config.trackWindow.trackWindowForward,
         ],
         pt
       );
@@ -2949,8 +2949,8 @@ function onMouseDown_selectMultiframe(option) {
     if (!done && (showTagsTracks || showSelectedTagsTracks)) {
       tmp = predictIdFromTagsMultiframe(
         [
-          getCurrentFrame() - chrono.config.trackWindow.backward,
-          getCurrentFrame() + chrono.config.trackWindow.forward,
+          getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,
+          getCurrentFrame() + chrono.config.trackWindow.trackWindowForward,
         ],
         pt
       );

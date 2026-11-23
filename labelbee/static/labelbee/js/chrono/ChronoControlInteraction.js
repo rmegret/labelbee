@@ -54,8 +54,8 @@ export function onAxesDblClick(event) {
     console.log("onAxesDblClick: zooming chrono around frame=", frame, "...");
 
   chrono.axes.xdomainFocus([
-    frame - chrono.config.trackWindow.backward * 1.05,
-    frame + chrono.config.trackWindow.forward * 1.05,
+    frame - chrono.config.trackWindow.trackWindowBackward * 1.05,
+    frame + chrono.config.trackWindow.trackWindowForward * 1.05,
   ]);
 }
 export function onAxesMoved(event) {
@@ -519,25 +519,25 @@ function update_autoEventMode() {
 }
 
 /* Track window: the interval of frames around the current one that the overlay plots (tracks, tags) and the chronogram highlights.
-   State: `chrono.config.trackWindow` ({range, direction, forward, backward}, built by the Chronogram constructor); the inputs are
+   State: `chrono.config.trackWindow` ({trackWindowRange, trackWindowDirection, trackWindowForward, trackWindowBackward}, built by the Chronogram constructor); the inputs are
    #trackWindow and #selectboxTrackDir. Each change triggers `trackWindow:change` on `$(chrono)`; ChronoRender.js (span) and the
    "Follow" lock below listen to it. Moved from OverlayControl.js (step 11b3b2, ADR 0015). */
 export function onTrackWindowChanged(event, skipRefresh) {
   let range = Number($("#trackWindow")[0].value);
-  chrono.config.trackWindow.range = range;
+  chrono.config.trackWindow.trackWindowRange = range;
 
   let trackDir = $("#selectboxTrackDir").val();
-  chrono.config.trackWindow.direction = trackDir;
+  chrono.config.trackWindow.trackWindowDirection = trackDir;
 
   if (trackDir == "Bidirectional") {
-    chrono.config.trackWindow.forward = range;
-    chrono.config.trackWindow.backward = range;
+    chrono.config.trackWindow.trackWindowForward = range;
+    chrono.config.trackWindow.trackWindowBackward = range;
   } else if (trackDir == "Forward") {
-    chrono.config.trackWindow.forward = range;
-    chrono.config.trackWindow.backward = 0;
+    chrono.config.trackWindow.trackWindowForward = range;
+    chrono.config.trackWindow.trackWindowBackward = 0;
   } else if (trackDir == "Backward") {
-    chrono.config.trackWindow.forward = 0;
-    chrono.config.trackWindow.backward = range;
+    chrono.config.trackWindow.trackWindowForward = 0;
+    chrono.config.trackWindow.trackWindowBackward = range;
   } else {
     console.log(
       "onTrackWindowChanged: ERROR, trackDir unknown trackDir=",
@@ -612,8 +612,8 @@ function focusTrackWindow() {
   // Actually a Chronogram method
   let f = getCurrentFrame();
   chrono.axes.xdomainFocus([
-    f - chrono.config.trackWindow.backward,
-    f + chrono.config.trackWindow.forward,
+    f - chrono.config.trackWindow.trackWindowBackward,
+    f + chrono.config.trackWindow.trackWindowForward,
   ]);
 }
 function setFocusTrackWindow(flag) {

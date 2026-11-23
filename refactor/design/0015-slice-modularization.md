@@ -304,7 +304,7 @@ The code is moved as it is, `window.` prefixes aside. DEBT: `tagsIDFilter` is bu
 | Handlers | `onTrackWindowChanged`, `setTrackWindow`, `scaleTrackWindow`, `shiftTrackWindow`, `onClickFocusVideo`, `onClickFocusTrackWindow` (inline handlers and `labelBee.js`) | exports of `chrono/ChronoControlInteraction.js`, installed by the bridge |
 | Follow lock | page global `lockFocusTrackWindow` (11a listed it as an overlay option) | module-local `let` of `ChronoControlInteraction.js`, with `setFocusTrackWindow`, `focusTrackWindow`, `updateFocusTrackWindowButton`: it is a chronogram feature, not an overlay option, so it leaves the `OverlayOptions` list |
 
-Moved as it is. Tests adapted: `test_l_refresh` and `test_s8` read `chrono.config.trackWindow`; new `test_a10_track_window_follows_its_inputs_triggers_its_event_and_the_follow_lock`. `refactor/tools/refresh_mvc_pdf.py` still names `overlay.trackWindow` in its text (documentation tool, not run by the tests).
+Moved as it is, except the field names: a quick fix after 11b3c renamed `range`, `direction`, `forward`, `backward` to `trackWindowRange`, `trackWindowDirection`, `trackWindowForward`, `trackWindowBackward` (rule: an option name inside a `chrono.config` group is unique and meaningful alone, as the former globals were). Tests adapted: `test_l_refresh` and `test_s8` read `chrono.config.trackWindow`; new `test_a10_track_window_follows_its_inputs_triggers_its_event_and_the_follow_lock`. `refactor/tools/refresh_mvc_pdf.py` still names `overlay.trackWindow` in its text (documentation tool, not run by the tests).
 
 ## Inventory (step 1, 2026-11-20)
 

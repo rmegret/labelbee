@@ -63,13 +63,13 @@ export class Chronogram {
     }
     config.idMap.idAxisMap = Function("id",config.idMap.idAxisMapString)
     config.trackWindow = {           // frames around the current one that the overlay plots and the chronogram highlights
-      range: 10,
-      direction: "Backward",
-      forward: 0,
-      backward: 10,
+      trackWindowRange: 10,
+      trackWindowDirection: "Backward",
+      trackWindowForward: 0,
+      trackWindowBackward: 10,
     }
-    $("#trackWindow").val(config.trackWindow.range)
-    $("#selectboxTrackDir").val(config.trackWindow.direction)
+    $("#trackWindow").val(config.trackWindow.trackWindowRange)
+    $("#selectboxTrackDir").val(config.trackWindow.trackWindowDirection)
 
     chrono.layers = {}               // d3 layers, created by initChrono
     chrono.chronoIntervals = new ChronoIntervals()
