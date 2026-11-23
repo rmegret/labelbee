@@ -41,6 +41,26 @@ def test_a10_a_tags_file_attaches_its_tags_to_the_observations_with_the_same_id(
     assert ui.js("Object.keys(chronoState.ttags)") == ["1"]
 
 
+def test_a10_current_tag_reads_the_tag_of_the_observation_or_the_raw_tags_by_tag_mode(ui, sample_dir):
+    """`getCurrentTag()` (SelectionControl.js, through `getTag(frame, id)`): the tag stored in the observation in the 'Tracks'
+    mode, the raw tag of the video in the 'Tags' mode."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    tag = {"id": 1, "dm": 60, "c": [84, 104], "hamming": 0, "goodness": 45.5, "p": [[70, 90], [98, 90], [98, 118], [70, 118]]}
+    ui.load_tags(ui.write("tags_get_tag.json", {"0": {"tags": [tag]}}))
+    ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
+    ui.js("augmentTrackWithTag()")
+    ui.js("selection.select(0, 1)")
+    assert ui.js("getCurrentTag().dm") == 60
+    ui.js("selection.select(0, 99)")
+    assert ui.js("getCurrentTag()") is None
+    ui.js("selection.select(0, 1); tagMode = 'Tags'")
+    assert ui.js("getCurrentTag().c") == [84, 104]
+    ui.js("selection.select(0, 99)")
+    assert ui.js("getCurrentTag()") is None
+
+
 def test_a10_a_tag_with_no_matching_observation_is_stored_but_attaches_to_nothing(ui, sample_dir):
     ui.open()
     ui.load_events(sample_dir / "events_v2.json")
@@ -54,7 +74,7 @@ def test_a10_a_tag_with_no_matching_observation_is_stored_but_attaches_to_nothin
 
 
 def test_a10_the_standalone_tags_display_is_only_reachable_from_the_console(ui, sample_dir):
-    """`tagMode` is 'Tracks' in OverlayControl.js:5 and nothing in the page changes it: the display of the Tags structure
+    """`tagMode` is 'Tracks' in chrono/ChronoData.js and nothing in the page changes it: the display of the Tags structure
     itself (tagMode == 'Tags', legacy) is reachable only by switching the mode in the console, which is what this does."""
     ui.open()
     ui.load_tags(sample_dir / "tags_v2.json")

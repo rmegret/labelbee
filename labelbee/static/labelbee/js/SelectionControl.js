@@ -79,6 +79,25 @@ export function deselectBee() {
   overlay.canvas1.deactivateAllWithDispatch();
   selection.clear(); // Do not keep default when explicit deselect
 }
+/** Tag of the id `id` on frame `f`, from the mode `tagMode` (read by `getCurrentTag`) */
+export function getTag(f, id) {
+  if (tagMode == 'Tracks') {
+    const obj = events.get(f, id)
+    if (obj == undefined) return undefined
+    return obj.tag
+  }
+  // Else tagMode == 'Tags'
+  if (typeof AnnotationStore.getTags() === "undefined") return undefined;
+  let tagsFrame = AnnotationStore.getTags()[f];
+  if (typeof tagsFrame === "undefined") return undefined;
+  let tags = tagsFrame.tags;
+  for (let i in tags) {
+    if (tags[i].id == id) {
+      return tags[i];
+    }
+  }
+  return undefined;
+}
 export function getCurrentTag() {
   return getTag(getCurrentFrame(), selection.getId());
 }

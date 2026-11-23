@@ -225,24 +225,28 @@ Analysis only, no code changed. `[read]`: 4016 lines, 156 top-level items (const
 | 1170-1409 | 240 | video frame drawing, `refreshOverlay` | `RefreshBridge`, tests | `overlay/Overlay.js` |
 | 1413-1631 | 220 | rects <-> observations (`refreshRectFromObs`, `createRectsFromTracks`, ...) | `ZoomView`, `Form`, `SelectionControl` | `overlay/Overlay.js` |
 | 1632-1718 | 90 | `fabric.BeeRect` | none | `overlay/BeeRect.js` or `Overlay.js` |
-| 1721-1826 | ~20 | `newObservation` | none | `annotation/Model.js` |
-| 1721-1826 | ~85 | `activityString`, `paintDot`, `wrapText`, `createRect`, `addDraftRect`, `findRect` | none | `overlay/` (display helpers, stay) |
+| 1721-1826 | ~105 | `newObservation`, `activityString`, `paintDot`, `wrapText`, `createRect`, `addDraftRect`, `findRect` | none | `overlay/` (stay). Corrected in 11b1: `newObservation` reads the video singleton and is the GUI-side creator (called only by `createRect` and `addDraftRect`); the model has its own `Observation(ID)` and `form/VisitControl.js` builds its own literal |
 | 1827-2132 | 305 | `identify`, `identifyBeeRect`, `plotTracks` | `VisitControl` (1) | `overlay/Overlay.js` |
-| 2137-2194 | 60 | tag reading and geometry (`getTag`, `tagCorners`, `tagUp`, `tagAngle`, `tagSize`) | `SelectionControl.js`, `ZoomView.js` | `annotation/TagUtils.js` (`getCurrentTag` of `SelectionControl` follows) |
+| 2137-2194 | 60 | `getTag`: the tag of the selected bee, reads `tagMode` | `getCurrentTag` only (6 callers in the overlay and `ZoomView.js`) | `SelectionControl.js` next to `getCurrentTag` (11b1, done); `tagMode` to `chrono/ChronoData.js` |
+| | | `tagCorners`, `tagUp`, `tagAngle`: independent of `getTag` (they take the tag), canvas coordinates through `overlay.videoToCanvasPoint`; `tagSize`: no user at all | `ZoomView.js` (`tagAngle`), overlay (4) | `overlay/` (stay), `tagSize` DEBT dead code |
 | 2197-2583 | 385 | `plotTag*`, `plotTrackArrow`, `plotTagsTracks`, `onShowTags*` | template (4) | `overlay/Overlay.js` (drawing); `onShowTags*` checkboxes to `OverlayOptions` |
 | 2586-2686 | 100 | track window (state and UI) | `ChronoControlInteraction.js`, `ChronoRender.js`, template (~9) | chronogram (`chrono/ChronoControlInteraction.js`), the overlay reads it ([Q42](../QUESTIONS.md#q42)) |
 | 2690-2937 | 250 | ROI and exclude rects: UI and dialog (~170), `plotROI` and `plotExcludeRects` (~80) | template (~10) | UI to `OverlayOptions`; the two `plot*` stay drawing |
 | 2940-3072 | 135 | tag filters (`tagsSampleFilter*`, `tagsIntervalFilter`, `chronoFilter`), `refreshTagsParameters` | `ChronoData.js` (5), template (8) | `chrono/ChronoData.js`, with `refreshTagsParameters`, `onTagsParametersChanged`, `chronoFilter` and their inputs (the filters are read only by the chronogram, [Q39](../QUESTIONS.md#q39)); ROI and exclude-rect filters: [Q41](../QUESTIONS.md#q41) |
-| 3077-3302 | 225 | `dist`, ID prediction (`predictId*`, `computeDefaultNewID`) | none | `annotation/IDPrediction.js` (pure) |
+| 3077-3302 | 225 | `dist`, ID prediction (`predictId*`, `computeDefaultNewID`) | none | `overlay/` (stay; maintainer: a class next to the overlay, no extra file). Corrected in 11b1: it calls `findRect`, `overlay.opts.predictIdClickRadius` and the video singleton, so it is not pure |
 | 3294-3357 | 65 | default rect size, `newRectForTag` | `Form` (7), `ZoomView` | `overlay/Overlay.js` |
 | 3360-3906 | 545 | mouse handlers | `ZoomView` (8) | `overlay/Mouse.js` (11c) |
 | 3910-4016 | 105 | fabric events, `autoCentering`, `tagHasCenter` | `ZoomView` (12), `ChronoControlInteraction` | `overlay/Overlay.js` or `Mouse.js` |
 
-Resulting size (`~`): `annotation/IDPrediction.js` 225, `annotation/TagUtils.js` 60, `annotation/Model.js` +20; `overlay/TimelinePicker.js` ~400 (widget 115, crops and timelines 145, pick-frame branch of `hardRefresh` ~80, button callback); `overlay/OverlayOptions.js` ~500; `form/Form.js` +30; the rest (~2750) is the overlay proper, itself cut in 11c into `Overlay.js`, `Transform.js`, `Mouse.js`, `BeeRect.js`.
+Resulting size (`~`): `chrono/ChronoData.js` +5 (`tagMode`), `SelectionControl.js` +19 (`getTag`); `overlay/TimelinePicker.js` ~400 (widget 115, crops and timelines 145, pick-frame branch of `hardRefresh` ~80, button callback); `overlay/OverlayOptions.js` ~500; `form/Form.js` +30; the rest (~2750) is the overlay proper, itself cut in 11c into `Overlay.js`, `Transform.js`, `Mouse.js`, `BeeRect.js`.
 
-Sub-steps (proposed, each its own review): **11b1** `annotation/IDPrediction.js`, `TagUtils.js`, `newObservation` to `Model.js` (plain moves, `export` and `import`, classic callers through the bridge); **11b2** `overlay/TimelinePicker.js` and the `mode[...]` registry (new, behavior preserving; the picker is half broken, so only the move is promised); **11b3** `overlay/OverlayOptions.js` and the angle buttons to `form/`; **11c** the remaining overlay as a module, `OverlayControl.prototype = {}` removed as in 10a. `ZoomView.js` (10b) follows 11c ([Q40](../QUESTIONS.md#q40)).
+Sub-steps (proposed, each its own review): **11b1** `tagMode` to `chrono/ChronoData.js`, `getTag` to `SelectionControl.js` (the ID prediction, `newObservation` and the canvas tag functions stay in the overlay, see the corrected rows); **11b2** `overlay/TimelinePicker.js` and the `mode[...]` registry (new, behavior preserving; the picker is half broken, so only the move is promised); **11b3** `overlay/OverlayOptions.js` and the angle buttons to `form/`; **11c** the remaining overlay as a module, `OverlayControl.prototype = {}` removed as in 10a. `ZoomView.js` (10b) follows 11c ([Q40](../QUESTIONS.md#q40)).
 
 Risks: the `mode[...]` dispatch replaces the mode branches of three methods; this is the only logic change. State reads (`overlay.opts`, `overlay.trackWindow`) do not change. Template handlers that move change from `overlay.X` to `overlay.options.X` or the picker; `overlay.timeline` becomes the registered picker, and the tests that read it are adapted.
+
+### Step 11b1 as built (2026-11-22)
+
+`tagMode` moves to `chrono/ChronoData.js` (maintainer: a chronogram parameter; read by `ChronoData.js` twice, `ChronoRender.js` once and `getTag`). It stays a page global, now defined there (`window.tagMode = 'Tracks'`), because the console and `test_a_features.py` set it and the readers read it at call time; it becomes a field of the chrono config with the track window in 11b3. `getTag` is not chrono data: its only caller is `getCurrentTag` (selected bee, used by the angle-from-tag button, the zoom distractors, crop geometry and info line), so it moves next to it in `SelectionControl.js` and is no longer a global. Reading the code corrected three rows of the 11a table: the ID prediction and `newObservation` are not pure, `tagCorners`, `tagUp` and `tagAngle` work in canvas coordinates; they stay in the overlay. DEBT: `tagSize` has no user. The 'Tags' mode is legacy, reachable only from the console.
 
 ## Inventory (step 1, 2026-11-20)
 
