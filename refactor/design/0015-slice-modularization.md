@@ -437,6 +437,13 @@ As built in 13b: the login block of `AnnotationIO.js` (`ajaxlogin`, `ajaxlogout`
 - `getUserId()` is `undefined` until an authenticated answer, and keeps its value after a log out, as `user_id` did.
 - `show_log_in` (empty) stays in `AnnotationIO.js` until 13d, which cuts it.
 
+As built in 13c: the four dialogs move unchanged, one file each, to the new folder `dialogs/`.
+- `dialogs/FromServerDialog.js` (from `AnnotationIO.js`), `dialogs/LabelListFromServerDialog.js` (with `labelListFromServer`), `dialogs/EventsCSVManualFilePicker.js` (all from `AnnotationIO.js`), `dialogs/FilePickerFromServerDialog.js` (from `labelBee.js`, 416 lines). `AnnotationIO.js` goes from 717 to ~150 lines, `labelBee.js` from 980 to ~570.
+- Each of the three first files exports an `initX()` that builds its instance on `window` (`fromServerDialog`, `labelListFromServerDialog`, `pickEventsCSVDialog`), called by `init()` of `labelBee.js` where `initAnnotationIO` made them. The instances stay on `window` in this step: the page buttons and the HTML the dialogs build call their methods from inline handlers, and four modules read `fromServerDialog`. Step 14 and the feedback interface of 13f handle them.
+- `FilePickerFromServerDialog` is imported by `EventsCSVManualFilePicker.js` and `video/VideoList.js`; it leaves `window`.
+- The temporaries (`html`, `success`, `idx`, `buttonHTML`, `fileData`) are declared per file where used, as module scope like before (they were shared by all dialogs; no dialog read what another assigned).
+- Left in `AnnotationIO.js`: the file inputs wiring, `chronoState.ttags = []`, `show_log_in`, `formattimestamp` and `tracksListFromServer` (already marked DEPRECATED), cut by 13d.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

@@ -12,6 +12,7 @@ let theManager;
 // The video metadata is owned by video/VideoInfo.js: `getVideoInfo()` and `setVideoInfoObject()` are installed by labelbeeBridge.js.
 
 import { getUserData } from "../session/Login.js";
+import { FilePickerFromServerDialog } from "../dialogs/FilePickerFromServerDialog.js";
 
 export function VideoManager() {
   const videoManager = this;

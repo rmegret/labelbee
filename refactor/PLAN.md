@@ -160,7 +160,7 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (12c) `AnnotationIO.js` as module [x] dialogs and login, 9 functions installed by the bridge
   - (13a) erase, server-load commands, events notes [x] to `Load.js`, `ServerIO.js`, new `form/EventsNotes.js`
   - (13b) login [x] `session/Login.js` owns user state and buttons; no login global left
-  - (13c) dialogs [ ] new folder `dialogs/`, one file each, with `FilePickerFromServerDialog`
+  - (13c) dialogs [x] four dialogs in new `dialogs/`, one file each; `FilePickerFromServerDialog` off `window`
   - (13d) `initAnnotationIO` removed [ ] `AnnotationIO.js` deleted, verified dead code cut
   - (13e) `annotation/` review [ ] data layer split from GUI layer, analysis first
   - (13f) user feedback interface [ ] one GUI interface for erase, load, save feedback (behavior change)

@@ -72,7 +72,7 @@ import {
   initAnnotationIO,
 } from './AnnotationIO.js';
 import {
-  init, printMessage, toggleFullScreen, FilePickerFromServerDialog, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
+  init, printMessage, toggleFullScreen, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
 } from './labelBee.js';
 import { autoCentering, newRectForCurrentTag, onMouseDown, onObjectDeselected, onObjectSelected } from './overlay/Mouse.js';
 import { identifyBeeRect, plotExcludeRects, plotROI, rotatedRectGeometry, tagAngle } from './overlay/Drawing.js';
@@ -296,7 +296,7 @@ installGlobals({
 // The entry (labelBee.js): `init` is called by `window.onload` of the page, `printMessage` and `FilePickerFromServerDialog` by many modules
 // and by AnnotationIO.js, the others by inline handlers.
 installGlobals({
-  init, printMessage, toggleFullScreen, FilePickerFromServerDialog, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
+  init, printMessage, toggleFullScreen, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
 });
 
 // The form and the selection (Form.js, SelectionControl.js, from the former SelectionControl.js): called by the classic scripts, the
