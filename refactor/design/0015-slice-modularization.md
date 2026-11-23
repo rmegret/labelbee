@@ -283,6 +283,19 @@ from `form/VisitControl.js`: `OverlayControl.prototype.drawImagePickFlowerMode` 
 
 Both moved buttons edit the angle of the selected observation (`storeUnit`, then `refresh.overlayUpdate()` and `refresh.form()`), which is the definition of `form/`. The bodies are unchanged, apart from the dead local `const obs = activeObject.obs` removed from the tag button and the log prefix (`overlay.onClick...` became `onClick...`). Tests: `test_j10b` calls the new name; `test_j10c_angle_from_tag_writes_the_angle_of_the_tag_alone` is new (the button had none).
 
+### 11b3b: tag filters to `chrono/ChronoData.js`
+
+The track window is not in this step: it is state and handlers of its own (`overlay.trackWindow` is read by ~15 sites in the overlay, `ChronoRender.js` and `ChronoControlInteraction.js`) and becomes 11b3b2.
+
+| Item | Before (`OverlayControl.js`, `/* Filters */`) | After (`chrono/ChronoData.js`) |
+|---|---|---|
+| `tagsSampleFilter`, `tagsIntervalFilter` | page globals, rebuilt by `refreshTagsParameters` | `window.` properties of the module (read by `updateTagIntervals` and by the overlay tag display, ~6 call sites) |
+| `tagsSampleFilterROI`, `tagsSampleFilterExcludeRects` | page globals, replaced by `ROIChanged` and `excludeRectsChanged` | defaults are `window.` properties of the module; the replacements stay in the overlay until 11b3c |
+| `tagsHammingSampleFilter`, `tagsDMSampleFilter`, `tagsRGBSampleFilter`, `tagsSampleFilterCustom`, `tagsIDFilter` | page globals | module-local `let` (nothing else reads them; `tagsSampleFilterCustom` was an undeclared implicit global) |
+| `refreshTagsParameters`, `onTagsParametersChanged`, `onTagsParametersSelectChanged`, `chronoFilter` | functions of the overlay file | exports of the module, installed by the bridge (inline handlers of the page and the overlay constructor call them) |
+
+The code is moved as it is, `window.` prefixes aside. DEBT: `tagsIDFilter` is built from `#tagsIDFilter` and read by nobody; `onTagsParametersSelectChanged` has no caller in the page. Test: `test_a10_tag_filters_are_rebuilt_from_the_buttons_and_the_inputs_of_the_tags_panel` (the filters had only the exclude-rect test).
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

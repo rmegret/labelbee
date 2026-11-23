@@ -85,6 +85,20 @@ def test_a10_the_standalone_tags_display_is_only_reachable_from_the_console(ui, 
     ui.page.wait_for_function("/\\b3 tags/.test(document.body.innerText)")   # the 3 tag detections of the file
 
 
+def test_a10_tag_filters_are_rebuilt_from_the_buttons_and_the_inputs_of_the_tags_panel(ui, sample_dir):
+    """`chronoFilter` (Hamming buttons) and `refreshTagsParameters` (interval length) rebuild the page globals
+    `tagsSampleFilter` and `tagsIntervalFilter` that the chronogram data and the overlay call (chrono/ChronoData.js)."""
+    ui.open()
+    ui.js("window.t0 = {c: [1, 1], hamming: 0, dm: 60}; window.t2 = {c: [1, 1], hamming: 2, dm: 30}")
+    assert ui.js("tagsSampleFilter(t0) && tagsSampleFilter(t2)") is True
+    ui.js("chronoFilter('H0')")
+    assert ui.js("[tagsSampleFilter(t0), tagsSampleFilter(t2)]") == [True, False]
+    ui.js("chronoFilter('H2')")
+    assert ui.js("[tagsSampleFilter(t0), tagsSampleFilter(t2)]") == [True, True]
+    ui.js("chronoFilter('Hall'); $('#tagsIntervalFilterMinLength').val(5); onTagsParametersChanged()")
+    assert ui.js("[tagsIntervalFilter({begin: 0, end: 3}), tagsIntervalFilter({begin: 0, end: 9})]") == [False, True]
+
+
 def test_a11_parts_of_a_tracks_csv_and_the_show_on_video_toggle(ui):
     ui.open()
     ui.open_subpanel("Server storage")

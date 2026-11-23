@@ -149,6 +149,10 @@ import {
   computeMotionDirection,
   cleanObsoleteEvents,
   cleanObsoleteEventsCB,
+  refreshTagsParameters,
+  onTagsParametersChanged,
+  onTagsParametersSelectChanged,
+  chronoFilter,
 } from './chrono/ChronoData.js';
 
 // Installs the given functions on window under their own names, for the classic scripts and the inline handlers of the page.
@@ -280,6 +284,7 @@ installGlobals({
   onChronoParametersChanged, onMousewheelModeToggled, restrictIDFromSelection, restrictIDFromWindow,
   click_restrictID, onRestrictIDChanged, click_excludeID, onExcludeIDChanged, click_hideInvalid, click_hideFlowers,
   chronoAdjust, scaleTimeDomain, shiftTimeDomain, cleanObsoleteEventsCB,
+  refreshTagsParameters, onTagsParametersChanged, onTagsParametersSelectChanged, chronoFilter,
 });
 
 // Console only (`installDebugGlobals()` or `?debug_globals`): the cache of the video, `videoControl.videoCache`

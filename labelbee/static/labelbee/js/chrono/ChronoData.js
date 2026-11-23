@@ -784,5 +784,146 @@ export function cleanObsoleteEvents() {
   });
   refresh.rebuild();
 }
+
+/* Tag filters. Rebuilt by `refreshTagsParameters` from the inputs of the Tags panel and the buttons of `chronoFilter`; the chronogram
+   data (`updateTagIntervals`) and the overlay (tag display) call the page globals `tagsSampleFilter` and `tagsIntervalFilter`.
+   `tagsSampleFilterROI` and `tagsSampleFilterExcludeRects` are replaced by `ROIChanged` and `excludeRectsChanged` (OverlayControl.js). */
+let tagsRGBSampleFilter = function (tag) {
+  return true;
+};
+let tagsDMSampleFilter = function (tag) {
+  return true;
+};
+let tagsHammingSampleFilter = function (tag) {
+  return true;
+};
+let tagsSampleFilterCustom = function (tag) {
+  return true;
+};
+let tagsIDFilter = function (idinfo) {   // DEBT: built from #tagsIDFilter, read by nobody
+  return true;
+};
+window.tagsSampleFilter = function (tag) {
+  return true;
+};
+window.tagsIntervalFilter = function (interval) {
+  return true;
+};
+window.tagsSampleFilterROI = function (tag) {
+  return true;
+};
+window.tagsSampleFilterExcludeRects = function (tag) {
+  return true;
+};
+export function refreshTagsParameters() {
+  if (logging.overlay) {
+    console.log("refreshTagsParameters");
+  }
+  // Reread tag parameters from GUI
+
+  tagsSampleFilterCustom = Function("tag", $("#tagsSampleFilter")[0].value);
+
+  let minDM = Number($("#tagsMinDM").val());
+  if (minDM > 0) {
+    tagsDMSampleFilter = function (tag) {
+      return !AnnotationStore.getTagsHaveDM() || tag.dm >= minDM;
+    };
+  } else {
+    tagsDMSampleFilter = function (tag) {
+      return true;
+    };
+  }
+
+  let useRGBfilter = $("#tagsUseRgbFilter").hasClass("active");
+  if (useRGBfilter) {
+    tagsRGBSampleFilter = function (tag) {
+      let rgb_mean = tag.rgb_mean;
+      if (!rgb_mean) return true;
+      let y = 0.299 * rgb_mean[0] + 0.587 * rgb_mean[1] + 0.1114 * rgb_mean[2];
+      let CB = (rgb_mean[2] - y) / y;
+      let CR = (rgb_mean[0] - y) / y;
+      return CB - CR < 0.35;
+    };
+    $("#tagsUseRgbFilter").addClass("active");
+  } else {
+    tagsRGBSampleFilter = function (tag) {
+      return true;
+    };
+    $("#tagsUseRgbFilter").removeClass("active");
+  }
+
+  window.tagsSampleFilter = function (tag) {
+    return (
+      tagsHammingSampleFilter(tag) &&
+      tagsSampleFilterROI(tag) &&
+      tagsSampleFilterExcludeRects(tag) &&
+      tagsDMSampleFilter(tag) &&
+      tagsRGBSampleFilter(tag) &&
+      tagsSampleFilterCustom(tag)
+    );
+  };
+
+  let minLength = Number($("#tagsIntervalFilterMinLength").val());
+
+  window.tagsIntervalFilter = function (interval) {
+    let fun = Function("interval", $("#tagsIntervalFilter")[0].value);
+    return interval.end - interval.begin >= minLength && fun(interval);
+  };
+  tagsIDFilter = Function("idinfo", $("#tagsIDFilter")[0].value);
+
+  if (logging.overlay) {
+    console.log(
+      "refreshTagsParameters:",
+      "\ntagsSampleFilter=",
+      tagsSampleFilter,
+      "\ntagsIntervalFilter=",
+      tagsIntervalFilter,
+      "\ntagsIDFilter=",
+      tagsIDFilter
+    );
+  }
+}
+export function onTagsParametersChanged() {
+  console.log("onTagsParametersChanged");
+  // Callback when tags chronogram computation parameters have changed
+  refreshTagsParameters();
+  refreshChronogram();
+  videoControl.refresh();
+}
+export function onTagsParametersSelectChanged(event) {
+  $("#tagsIntervalFilter").val($("#tagsIntervalFilterSelect").val());
+  onTagsParametersChanged();
+}
+export function chronoFilter(mode) {
+  if (mode == "H0") {
+    tagsHammingSampleFilter = function (tag) {
+      return tag.hamming == 0;
+    };
+    onTagsParametersChanged();
+  }
+  if (mode == "H1") {
+    tagsHammingSampleFilter = function (tag) {
+      return tag.hamming <= 1;
+    };
+    onTagsParametersChanged();
+  }
+  if (mode == "H2") {
+    tagsHammingSampleFilter = function (tag) {
+      return tag.hamming <= 2;
+    };
+    onTagsParametersChanged();
+  }
+  if (mode == "Hall") {
+    tagsHammingSampleFilter = function (tag) {
+      return true;
+    };
+    onTagsParametersChanged();
+  }
+  if (mode == "RGB") {
+    $("#tagsUseRgbFilter").toggleClass("active");
+    onTagsParametersChanged();
+  }
+}
+
 updateChronoData = instrument("derived", "updateChronoData", updateChronoData)
 updateTagIntervals = instrument("chrono", "updateTagIntervals", updateTagIntervals)
