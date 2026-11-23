@@ -555,7 +555,7 @@ function onLabelsChanged() {
 
 
 // Angle of the selected observation (buttons of the Bounding Box Angle panel; the toggle "Disable Angle Control" is an overlay
-// option, `overlay.guiAngle`)
+// option, `overlay.opts.angleEnabled`)
 export function onClickResetAngle() {
   console.log("onClickResetAngle");
 

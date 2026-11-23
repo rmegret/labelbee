@@ -146,7 +146,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (11b3b) tag filters [x] to `chrono/ChronoData.js` (`chronoFilter`, `refreshTagsParameters`)
   - (11b3b2) track window [x] to `ChronoControlInteraction.js`, state `chrono.config.trackWindow`
   - (11b3c) ROI and exclude rects [x], state in `chrono.config`, filters in `ChronoData.js`, handlers in `ChronoControlInteraction.js`
-  - (10b), (11b3d)-(12) zoom, overlay split and module, entry [ ]
+  - (11b3d) `overlay/OverlayOptions.js` [x], `overlay.opts` class owns display options, angle switch, show flags, tag marker
+  - (10b), (11c)-(12) zoom, overlay split and module, entry [ ]
   - (13) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):

@@ -26,52 +26,8 @@ function OverlayControl(canvasTagId) {
     overlay.canvas2 = $('<canvas/>')[0]
     overlay.ctx2 = overlay.canvas2.getContext('2d');
 
-  overlay.guiAngle = {
-    angleEnabled: true,
-  };
-
-  showObs = true;
-  showObsTracks = true;
-  showTags = true;
-  showTagsTracks = true
-  showSelectedTagsTracks = true
-  showTagsOrientation = false
-  $('#showObs').prop('checked',showObs)
-  $('#showObsTracks').prop('checked',showObsTracks)
-  $('#showTags').prop('checked',showTags)
-  $('#showTagsTracks').prop('checked',showTagsTracks)
-  $('#showSelectedTagsTracks').prop('checked',showTagsTracks)
-  $('#showTagsOrientation').prop('checked',showTagsOrientation)
-
-  overlay.opts = {
-      showRect: true,
-      showID: true,
-      showLabels: true,
-      /* labelFormatter: function(obs) {return activityString(obs)}, */
-      labelFormatter: (obs)=>obs.labels,
-      label_offsetType: 'bottom',
-      wrapLabels: true,
-      wrapLabelsWidth: 80,
-      showNotes: true,
-      showSpan: false,
-      resizeAroundCenter: false,
-      ID_dotRadius: 4, // Radius of dot center
-      ID_fontSize: 20,
-      ID_color: 'yellow',
-      ID_offsetType: 'center',
-      clickModeSelectMultiframe: false,
-      clickModeNewAnnotation: false,
-      clickModeAutoCentering: false,
-      predictIdClickRadius: 120,
-      showImageDiff: false,
-      useImageCache: false,
-      showPredictedStatus : false,
-      timelineZoom : 4.0,
-      timelineMaxDelta : 3,
-      timelineDisplaySize : 300,
-      fixedAspect : true
-  }
-  overlay.updateOptsButtons()
+  overlay.opts = new OverlayOptions(overlay) // display options (overlay/OverlayOptions.js, step 11b3d)
+  overlay.opts.init()
 
   overlay.interaction = {
       mode: 'main', // 'pick-frame'
@@ -82,11 +38,6 @@ function OverlayControl(canvasTagId) {
   overlay.visitWidget = new VisitWidget(overlay)
   overlay.modes['edit-visit'] = overlay.visitWidget
   
-  overlay.tagMarkerOptions = ['quad','cross','circle']
-  overlay.selectboxTagMarkerInit()
-  overlay.tagMarker = 'quad'
-  overlay.selectboxTagMarkerUpdate()
-
   /* Overlay and selection */
 
   let canvas1 = new fabric.Canvas("canvas1");
@@ -130,7 +81,6 @@ function OverlayControl(canvasTagId) {
   overlay.videoSize = { x: 600, y: 400 };
 
   refreshTagsParameters();
-  overlay.updateDisableAngleButton();
 }
 OverlayControl.prototype = {};
 
@@ -171,109 +121,6 @@ OverlayControl.prototype.refreshInteraction = function() {
     if (handler && handler.refreshInteraction) handler.refreshInteraction(opts)
 }
 
-OverlayControl.prototype.optsClick = function(option) {
-    console.log('overlay.onClickDisableAngle')
-    
-    this.opts[option] = !this.opts[option]
-    this.updateOptsButtons()
-
-    if (option=="useImageCache") {
-      if (this.opts[option]) { // Enable cache
-        if (videoControl.currentMode != "cache") {
-          console.log('optsClick: changing videoControl.currentMode to cache')
-          videoControl.currentMode = "cache"
-          videoControl.hardRefresh()
-          return
-        } else {
-          this.hardRefresh()
-          return
-        }
-      } else { // Disable cache
-        if (videoControl.currentMode == "cache") {
-          console.log('optsClick: changing videoControl.currentMode to video')
-          videoControl.currentMode = "video"
-          videoControl.hardRefresh()
-          return
-        } else {
-          this.hardRefresh()
-          return
-        }
-      }
-    }
-    if (option=="fixedAspect") {
-      if (this.opts[option]) { // Enable fixed aspect ratio
-        this.canvasSetVideoSize(this.videoSize.w,this.videoSize.h)
-        $("#canvasresize")
-          .resizable("option", "aspectRatio", this.videoSize.w/this.videoSize.h)
-          .data('ui-resizable')._aspectRatio = this.videoSize.w/this.videoSize.h;
-      } else {
-        $("#canvasresize")
-          .resizable("option", "aspectRatio", false)
-          .data('ui-resizable')._aspectRatio = false;
-      }
-    }
-    this.hardRefresh()
-}
-OverlayControl.prototype.updateOptsButtons = function() {
-    //console.log('overlay.updateDisableAngleButton')
-    for (option of ['showRect','showID','showLabels','showNotes','showSpan','resizeAroundCenter',
-                    'clickModeSelectMultiframe','clickModeNewAnnotation','clickModeAutoCentering',
-                    'showImageDiff','useImageCache','showPredictedStatus', 'fixedAspect']) {
-        //console.log(option)
-        if ( this.opts[option] ) {
-            $(".overlayOpts-"+option).addClass("active")
-        } else {
-            $(".overlayOpts-"+option).removeClass("active")      
-        }
-    }
-    $('#overlayOpts-ID_dotRadius').val(String(this.opts.ID_dotRadius))
-    $('#overlayOpts-ID_fontSize').val(String(this.opts.ID_fontSize))
-    $('#overlayOpts-ID_color').val(String(this.opts.ID_color))
-    $('#overlayOpts-ID_offsetType').val(String(this.opts.ID_offsetType))
-    $('#overlayOpts-label_offsetType').val(String(this.opts.label_offsetType))
-}
-function onOverlayParamsChanged(event) {
-    console.log('onOverlayParamsChanged')
-    overlay.opts.ID_dotRadius = Number($('#overlayOpts-ID_dotRadius').val())
-    overlay.opts.ID_fontSize = Number($('#overlayOpts-ID_fontSize').val())
-    overlay.opts.ID_color = $('#overlayOpts-ID_color').val()
-    overlay.opts.ID_offsetType = $('#overlayOpts-ID_offsetType').val()
-    overlay.opts.label_offsetType = $('#overlayOpts-label_offsetType').val()
-    overlay.refreshOverlay()
-}
-
-function selectboxSetOptions(selectbox, options, names) {
-  selectbox.find("option").remove();
-  $.each(options, function (i, el) {
-    let name;
-    if (name == null) {
-      name = el;
-    } else {
-      name = names[i];
-    }
-    selectbox.append("<option value='" + el + "'>" + name + "</option>");
-  });
-}
-
-OverlayControl.prototype.selectboxTagMarkerInit = function () {
-  var selectbox = $("#selectboxTagMarker");
-
-  selectboxSetOptions(selectbox, this.tagMarkerOptions);
-};
-OverlayControl.prototype.selectboxTagMarkerUpdate = function (value) {
-  var selectbox = $("#selectboxTagMarker");
-
-  if (value != null) {
-    this.tagMarker = value;
-  }
-
-  selectbox.val(this.tagMarker);
-};
-OverlayControl.prototype.selectboxTagMarkerChanged = function () {
-  this.tagMarker = $("#selectboxTagMarker").val();
-  this.hardRefresh();
-};
-
 // "Active" is fabric's own state (the rectangle being edited); "selected" is the model's (`selection`)
 // getActiveRect: return null or a Fabric.js rect (truth on the active rectangle comes from the Fabric.js canvas)
 OverlayControl.prototype.getActiveRect = function () {
@@ -311,24 +158,6 @@ OverlayControl.prototype.setActiveRectID = function (id) {
     if (logging.selectionEvents)
       console.log("setActiveRectID: No rect found for id=", id);
     return false;
-  }
-};
-
-// GUI for enabling/disabling angle in BB
-OverlayControl.prototype.onClickDisableAngle = function () {
-  console.log("overlay.onClickDisableAngle");
-
-  this.guiAngle.angleEnabled = !this.guiAngle.angleEnabled;
-  this.updateDisableAngleButton();
-
-  this.refreshOverlay();
-};
-OverlayControl.prototype.updateDisableAngleButton = function () {
-  console.log("overlay.updateDisableAngleButton");
-  if (!this.guiAngle.angleEnabled) {
-    $(".guiAngle-disableAngle").addClass("active");
-  } else {
-    $(".guiAngle-disableAngle").removeClass("active");
   }
 };
 
@@ -913,14 +742,14 @@ OverlayControl.prototype.refreshOverlay = function (skipVideoFrame) {
   if (!skipVideoFrame) overlay.redrawVideoFrame();
 
   if (overlay.canvas1) {
-    if (showTagsTracks || showSelectedTagsTracks) plotTagsTracks(overlay.ctx);
-    if (showTags) plotTags(overlay.ctx);
+    if (overlay.opts.showTagsTracks || overlay.opts.showSelectedTagsTracks) plotTagsTracks(overlay.ctx);
+    if (overlay.opts.showTags) plotTags(overlay.ctx);
 
-    if (showObsTracks) {
+    if (overlay.opts.showObsTracks) {
       plotTracks(overlay.ctx);
     }
 
-    if (showObs) {
+    if (overlay.opts.showObs) {
       refreshRectFromObs();
       overlay.canvas1.renderAll(); // Clear and render all rectangles
     } else {
@@ -950,7 +779,7 @@ function refreshRectStyle(rect) {
   let lockRotation = true
   if (overlay.opts.showRect) {
     lockRotation = false
-    if (!overlay.guiAngle.angleEnabled) {
+    if (!overlay.opts.angleEnabled) {
       lockRotation = true;
     }
 
@@ -1612,7 +1441,7 @@ function plotTracks(ctx) {
       z = z2;
     }
     for (let f = fmin; f <= fmax; f++) {
-      if (showObs && f == F) continue;
+      if (overlay.opts.showObs && f == F) continue;
 
       let obs = getObsHandle(f, id, false);
       if (!obs) continue;
@@ -1644,15 +1473,6 @@ function plotTracks(ctx) {
       ctx.textBaseline = "alphabetic";
     }
   }
-}
-
-/* Options */
-var showObsTracks = false;
-function onShowObsChanged() {
-  showObs = $("#showObs")[0].checked;
-  showObsTracks = $("#showObsTracks")[0].checked;
-  //videoControl.refresh()
-  overlay.hardRefresh();
 }
 
 // #MARK ## Tag tracks
@@ -1725,11 +1545,11 @@ function plotTag(ctx, tag, color, flags) {
 
   if (isCurrentSelection(tag.id)) {
     if (tag.frame == getCurrentFrame()) {
-      if (showTagsOrientation) {
+      if (overlay.opts.showTagsOrientation) {
         plotTagOrientation(ctx, tag, "#00ff00");
       } else {
         ctx.beginPath();
-        if (overlay.tagMarker == "quad" && tag.p) {
+        if (overlay.opts.tagMarker == "quad" && tag.p) {
           let p = tag.p;
           let q = [
             overlay.videoToCanvasPoint({ x: p[0][0], y: p[0][1] }),
@@ -1744,14 +1564,14 @@ function plotTag(ctx, tag, color, flags) {
           ctx.lineTo(q[0].x, q[0].y);
           ctx.strokeStyle = "#00FF00";
           ctx.lineWidth = 2;
-        } else if (overlay.tagMarker == "cross") {
+        } else if (overlay.opts.tagMarker == "cross") {
           ctx.moveTo(pt.x - 20, pt.y);
           ctx.lineTo(pt.x + 20, pt.y);
           ctx.moveTo(pt.x, pt.y - 20);
           ctx.lineTo(pt.x, pt.y + 20);
           ctx.strokeStyle = "#00FF00";
           ctx.lineWidth = 2;
-        } else if (overlay.tagMarker == "circle") {
+        } else if (overlay.opts.tagMarker == "circle") {
           // 'round'
           ctx.arc(pt.x, pt.y, 10, 0, Math.PI * 2, true);
           ctx.strokeStyle = "#00FF00";
@@ -1786,7 +1606,7 @@ function plotTag(ctx, tag, color, flags) {
     ctx.strokeStyle = color;
     ctx.closePath();
     ctx.stroke();
-    if (tag.frame == getCurrentFrame() && showTagsOrientation) {
+    if (tag.frame == getCurrentFrame() && overlay.opts.showTagsOrientation) {
       plotTagOrientation(ctx, tag, "magenta");
     }
   }
@@ -1903,7 +1723,7 @@ function plotTagsTracks(ctx) {
     return color;
   };
 
-  if (showTagsTracks) {
+  if (overlay.opts.showTagsTracks) {
     // Plot past and future tag positions
 
     for (var id in chronoState.ttags) {
@@ -1959,7 +1779,7 @@ function plotTagsTracks(ctx) {
     }
   }
 
-  if (showSelectedTagsTracks) {
+  if (overlay.opts.showSelectedTagsTracks) {
     // Plot track of selected bee
     if (typeof selection.getId() !== "undefined") {
       let setColor2 = function (f, alpha) {
@@ -2074,19 +1894,6 @@ function plotTagsTracks(ctx) {
 }
 
 // #MARK # OVERLAY PARAMETERS MANAGEMENT
-
-/* Options */
-function onShowTagsChanged() {
-  // Callback when display parameters have changed
-  showTags = $("#showTags")[0].checked;
-  showTagsOrientation = $("#showTagsOrientation")[0].checked;
-  videoControl.refresh();
-}
-function onShowTagsTracksChanged() {
-  showTagsTracks = $("#showTagsTracks")[0].checked;
-  showSelectedTagsTracks = $("#showSelectedTagsTracks")[0].checked;
-  videoControl.refresh();
-}
 
 /* ROI and exclude rects: drawing only. State and filters are in chrono/ChronoData.js (`chrono.config.region`),
    buttons and dialog in chrono/ChronoControlInteraction.js */
@@ -2408,7 +2215,7 @@ var default_height = 100;
 
 function newRectForTag(tag) {
   let angle = tagAngle(tag);
-  if (!overlay.guiAngle.angleEnabled) {
+  if (!overlay.opts.angleEnabled) {
     angle = 0;
   }
   let pt = overlay.videoToCanvasPoint({ x: tag.c[0], y: tag.c[1] });
@@ -2753,7 +2560,7 @@ function onMouseDown_selectMultiframe(option) {
     }
   } else {
     let done = false;
-    if (showObsTracks) {
+    if (overlay.opts.showObsTracks) {
       tmp = predictIdFromObsMultiframe(
         [
           getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,
@@ -2773,7 +2580,7 @@ function onMouseDown_selectMultiframe(option) {
         done = true;
       }
     }
-    if (!done && (showTagsTracks || showSelectedTagsTracks)) {
+    if (!done && (overlay.opts.showTagsTracks || overlay.opts.showSelectedTagsTracks)) {
       tmp = predictIdFromTagsMultiframe(
         [
           getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,

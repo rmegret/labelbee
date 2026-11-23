@@ -146,6 +146,32 @@ def test_a10_roi_and_exclude_rects_switch_the_tag_filters_and_the_exclude_rects_
     assert ui.js("[chrono.config.region.excludeRects.length, chrono.config.region.excludeRectSelection]") == [0, -1]
 
 
+def test_a10_overlay_options_toggle_and_sync_their_buttons_and_the_display_flags(ui, sample_dir):
+    """`overlay.opts` is an `OverlayOptions` (overlay/OverlayOptions.js): the buttons flip the option and its `active` class, the
+    angle switch and the show checkboxes are fields (no page global), the tag marker select follows `opts.tagMarker`."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    assert ui.js("overlay.opts.constructor.name") == "OverlayOptions"
+    assert ui.js("[typeof onShowObsChanged, typeof onOverlayParamsChanged, typeof overlay.optsClick]") == ["undefined"] * 3
+    assert ui.js("[overlay.opts.showSpan, $('.overlayOpts-showSpan').hasClass('active')]") == [False, False]
+    ui.js("overlay.opts.toggle('showSpan')")
+    assert ui.js("[overlay.opts.showSpan, $('.overlayOpts-showSpan').hasClass('active')]") == [True, True]
+    ui.js("""$('#overlayOpts-ID_dotRadius').val('7'); $('#overlayOpts-ID_fontSize').val('33'); $('#overlayOpts-ID_color').val('red')
+             $('#overlayOpts-ID_offsetType').val('top'); $('#overlayOpts-label_offsetType').val('center'); overlay.opts.onParamsChanged()""")
+    assert ui.js("[7, 33, 'red', 'top', 'center'].join() == [overlay.opts.ID_dotRadius, overlay.opts.ID_fontSize, overlay.opts.ID_color, overlay.opts.ID_offsetType, overlay.opts.label_offsetType].join()") is True
+    assert ui.js("$('#showSelectedTagsTracks').prop('checked') === overlay.opts.showSelectedTagsTracks") is True
+    ui.js("overlay.opts.onClickDisableAngle()")
+    assert ui.js("[overlay.opts.angleEnabled, $('.guiAngle-disableAngle').hasClass('active')]") == [False, True]
+    ui.js("$('#showTags').prop('checked', false); overlay.opts.onShowTagsChanged()")
+    assert ui.js("overlay.opts.showTags") is False
+    ui.js("$('#showObsTracks').prop('checked', false); overlay.opts.onShowObsChanged()")
+    assert ui.js("[overlay.opts.showObs, overlay.opts.showObsTracks]") == [True, False]
+    ui.js("$('#selectboxTagMarker').val('cross'); overlay.opts.selectboxTagMarkerChanged()")
+    assert ui.js("overlay.opts.tagMarker") == "cross"
+    assert ui.js("$('#selectboxTagMarker option').length") == 3
+
+
 def test_a11_parts_of_a_tracks_csv_and_the_show_on_video_toggle(ui):
     ui.open()
     ui.open_subpanel("Server storage")

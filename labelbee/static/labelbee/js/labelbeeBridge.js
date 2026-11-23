@@ -56,6 +56,7 @@ import { VideoManager } from './video/VideoList.js';
 import { VideoControl } from './video/VideoControl.js';
 import { VisitWidget } from './form/VisitControl.js';
 import { TimelinePicker } from './overlay/TimelinePicker.js';
+import { OverlayOptions } from './overlay/OverlayOptions.js';
 import {
   initSelectionControl,
   hardRefreshLabelTogglePanel,
@@ -239,6 +240,7 @@ window.VideoControl = VideoControl; // built by `init()` of labelBee.js (`videoC
 window.VideoManager = VideoManager; // built by `init()` of labelBee.js (`videoManager = new VideoManager()`)
 window.VisitWidget = VisitWidget; // built by `OverlayControl` (`overlay.visitWidget = new VisitWidget(overlay)`)
 window.TimelinePicker = TimelinePicker; // built by `OverlayControl` (`overlay.modes['pick-frame'] = new TimelinePicker(overlay)`)
+window.OverlayOptions = OverlayOptions; // built by `OverlayControl` (`overlay.opts = new OverlayOptions(overlay)`)
 
 // The form and the selection (Form.js, SelectionControl.js, from the former SelectionControl.js): called by the classic scripts, the
 // inline handlers of the page and the tests. The entry points of the refresh are already wrapped by `instrument` in their module.

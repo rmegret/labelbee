@@ -319,6 +319,20 @@ Preceded by a quick fix (`23c2dab9`): the four tag filter globals became `chrono
 
 Revision of the 11b3 list ("dialogs to the options"): the buttons and the dialog are the interaction of a chronogram setting, like the track window handlers of 11b3b2, so they go to `ChronoControlInteraction.js`; 11b3d has no ROI part and `excludeRectSelection` is not an `OverlayOptions` field. `onClickExcludeRectAdd` reads `overlay.getActiveRect()` and `deleteSelected()` (page globals), as other chrono code reads the overlay. Test: `test_a10_roi_and_exclude_rects_switch_the_tag_filters_and_the_exclude_rects_are_edited_by_the_buttons` (the ROI had no test); `test_f6` adapted to the new names.
 
+### 11b3d: `overlay/OverlayOptions.js`
+
+`overlay.opts` becomes an instance of `OverlayOptions` (ES module, installed on window by the bridge as the overlay is not a module yet). It owns every display option of the overlay and the handlers of their buttons. Readers of `overlay.opts.<name>` (tests, `TimelinePicker.js`, `FitControls.js`, `ChronoControlInteraction.js`) are unchanged.
+
+| Item | Before (`OverlayControl.js`) | After |
+|---|---|---|
+| Fields of `opts` (`showRect`, `ID_*`, `clickMode*`, `timeline*`, `fixedAspect`...) | object literal in the constructor | fields of `OverlayOptions`, same names and defaults |
+| Angle switch | `overlay.guiAngle.angleEnabled`, `onClickDisableAngle`, `updateDisableAngleButton` | `opts.angleEnabled`, `opts.onClickDisableAngle()`, `opts.updateDisableAngleButton()` |
+| Observation and tag display | page globals `showObs`, `showObsTracks`, `showTags`, `showTagsTracks`, `showSelectedTagsTracks`, `showTagsOrientation` and `onShowObsChanged`, `onShowTagsChanged`, `onShowTagsTracksChanged` | fields `opts.showObs`... and methods `opts.onShowObsChanged()`...; no global left |
+| Tag marker | `overlay.tagMarker`, `overlay.tagMarkerOptions`, `selectboxTagMarker*`, `selectboxSetOptions` | `opts.tagMarker`, `opts.tagMarkerOptions`, `opts.selectboxTagMarkerInit/Update/Changed()` (`selectboxSetOptions` module-local) |
+| Buttons | `overlay.optsClick(option)`, `overlay.updateOptsButtons()`, global `onOverlayParamsChanged(event)` | `opts.toggle(option)`, `opts.updateButtons()`, `opts.onParamsChanged()`; template handlers prefixed `overlay.opts.` |
+
+Moved as it is, with: `this.overlay` instead of the closure variable; `for (const option ...)` instead of the implicit global `option` (an error in a module); `onParamsChanged` takes no `event` (unused). `optsClick` was renamed `toggle` since it flips the option (its log line said `onClickDisableAngle`, a copy-paste; the line is now `opts.toggle`). Export frame and Open video stay on the overlay: they are actions on the video, not options. The constructor ticked `#showSelectedTagsTracks` from `showTagsTracks` (both `true`); `init` now sets each checkbox from its own field (quick fix: state first, then the buttons reflect it). Test: `test_a10_overlay_options_toggle_and_sync_their_buttons_and_the_display_flags` is new.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then
