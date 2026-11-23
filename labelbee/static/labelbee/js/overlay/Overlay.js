@@ -1,8 +1,18 @@
 /*jshint esversion: 6, asi: true */
+// The overlay: the canvas over the video, the fabric rectangles of the observations, the drawing of IDs, tags and tracks, the
+// ID prediction, the mouse and fabric events. ES module (refactor slice 8 step 11c1, ADR 0015), moved as it is from
+// js/OverlayControl.js (a classic script). `OverlayControl` and the 11 functions that other files still call are installed on
+// window by labelbeeBridge.js; the other functions are module-local. Page globals (`overlay`, `chrono`, `videoControl`,
+// `selection`, `events`, `fabric`...) are read at call time.
+
+import { instrument } from "../core/RefreshInstrumentBridge.js"
 
 // ## Video + canvas
 
-function OverlayControl(canvasTagId) {
+// Canvas transform of the overlay (zoom and pan), shared by the methods below; implicit globals before the module
+let transformFactor, canvasTransform, canvasTransformReference
+
+export function OverlayControl(canvasTagId) {
   if (this === window) {
     console.log(
       'ERROR: OverlayControl should be created with "new OverlayControl()". Fixing that for you.'
@@ -28,6 +38,7 @@ function OverlayControl(canvasTagId) {
 
   overlay.opts = new OverlayOptions(overlay) // display options (overlay/OverlayOptions.js, step 11b3d)
   overlay.opts.init()
+  overlay.defaultRectSize = { width: 100, height: 100 } // size of a new rectangle, canvas pixels (was `default_width`, `overlay.defaultRectSize.height`)
 
   overlay.interaction = {
       mode: 'main', // 'pick-frame'
@@ -82,7 +93,6 @@ function OverlayControl(canvasTagId) {
 
   refreshTagsParameters();
 }
-OverlayControl.prototype = {};
 
 
 
@@ -907,7 +917,7 @@ function createRectsFromTracks(F) {
   overlay.canvas1.renderAll(); // Render only once at the end
   overlay.canvas1.renderOnAddRemove = true
 }
-function addRectFromObs(inputObs, draft) {
+export function addRectFromObs(inputObs, draft) {
   if (typeof inputObs === "undefined") {
     console.log("ERROR in addRectFromObs: input obs undefined");
     return undefined;
@@ -954,7 +964,7 @@ function addRectFromObs(inputObs, draft) {
   return rect;
 }
 /* Rectangles */
-function rotatedRectGeometry(rect) {
+export function rotatedRectGeometry(rect) {
   // Compute various properties of Fabric.js rotated rect
   var geom = {};
 
@@ -1221,7 +1231,8 @@ function identify(ctx, rect, radius) {
 }
 
 // Main function to display annotation info
-function identifyBeeRect(ctx, rect, radius, isActive) {
+export function identifyBeeRect(ctx, rect, radius, isActive) {
+  let font
 
   var color = overlay.opts.ID_color
   // if (rect.status === "new")
@@ -1369,7 +1380,8 @@ function plotTracks(ctx) {
     fmax = win[1];
   let ids = getValidIDsForFrames(win);
 
-  setColor = function (f) {
+  let color, radius
+  const setColor = function (f) {
     if (f <= F) {
       color =
         "rgba(255,0,128," + (1 - Math.abs((f - F) / (fmin - F - 1))) + ")";
@@ -1380,7 +1392,7 @@ function plotTracks(ctx) {
     }
     return color;
   };
-  setColorS = function (f) {
+  const setColorS = function (f) {
     if (f <= F) {
       color = "rgba(255,0,0," + (1 - Math.abs((f - F) / (fmin - F - 1))) + ")";
       //ctx.strokeStyle = "rgba(255,0,0, 0.5)"
@@ -1498,7 +1510,7 @@ function tagUp(tag) {
   dir = [dir[0] / m, dir[1] / m];
   return dir;
 }
-function tagAngle(tag) {
+export function tagAngle(tag) {
   let up = tagUp(tag);
   if (typeof up === "undefined") return undefined;
   let angle = (Math.atan2(up[0], -up[1]) / Math.PI) * 180;
@@ -1898,7 +1910,7 @@ function plotTagsTracks(ctx) {
 /* ROI and exclude rects: drawing only. State and filters are in chrono/ChronoData.js (`chrono.config.region`),
    buttons and dialog in chrono/ChronoControlInteraction.js */
 // Plot
-function plotROI(ctx) {
+export function plotROI(ctx) {
   if (!chrono.config.region.useROI) return;
 
   let R = {
@@ -1939,7 +1951,7 @@ function plotROI(ctx) {
 }
 
 // Plot
-function plotExcludeRects(ctx) {
+export function plotExcludeRects(ctx) {
   if (!chrono.config.region.useExcludeRects) return;
   //console.log('plotExcludeRects')
   for (let r of chrono.config.region.excludeRects) {
@@ -1970,7 +1982,7 @@ function plotExcludeRects(ctx) {
   }
 
   if (chrono.config.region.excludeRectSelection >= 0) {
-    r = chrono.config.region.excludeRects[chrono.config.region.excludeRectSelection];
+    let r = chrono.config.region.excludeRects[chrono.config.region.excludeRectSelection];
     let R = {
       left: r.cx - r.w / 2,
       top: r.cy - r.h / 2,
@@ -2210,8 +2222,6 @@ function computeDefaultNewID() {
 
 // #MARK # LOW-LEVEL MOUSE EVENTS
 
-var default_width = 100;
-var default_height = 100;
 
 function newRectForTag(tag) {
   let angle = tagAngle(tag);
@@ -2219,6 +2229,7 @@ function newRectForTag(tag) {
     angle = 0;
   }
   let pt = overlay.videoToCanvasPoint({ x: tag.c[0], y: tag.c[1] });
+  let rect
   if (typeof angle !== "undefined") {
     console.log("newObsForTag: found angle=", angle);
     let ds=getDefaultRectSizeCanvas()
@@ -2245,7 +2256,7 @@ function newRectForTag(tag) {
 }
 // LEGACY, obsolete (ADR 0009, refactor/design/0009-refresh-triggers.md 1e): creates a rect by hand and refreshes
 // on its own. To be replaced by a plain events.create with default values.
-function newRectForCurrentTag() {
+export function newRectForCurrentTag() {
   if ($("#newRectForCurrentTag").hasClass("disabled")) {
     return;
   }
@@ -2402,13 +2413,13 @@ function onMouseDown_predict(option) {
 }
 
 function updateDefaultSizeFromRect(rect) {
-  default_width = rect.width * canvasTransform[0];
-  default_height = rect.height * canvasTransform[3];
-  if (default_width<1) default_width=1
-  if (default_height<1) default_height=1
+  overlay.defaultRectSize.width = rect.width * canvasTransform[0];
+  overlay.defaultRectSize.height = rect.height * canvasTransform[3];
+  if (overlay.defaultRectSize.width<1) overlay.defaultRectSize.width=1
+  if (overlay.defaultRectSize.height<1) overlay.defaultRectSize.height=1
 }
 function getDefaultRectSizeCanvas() {
-  return {w: default_width / canvasTransform[0], h: default_height / canvasTransform[3]};
+  return {w: overlay.defaultRectSize.width / canvasTransform[0], h: overlay.defaultRectSize.height / canvasTransform[3]};
 }
 
 /* Create new rectangle interactively (dragging) */
@@ -2645,7 +2656,7 @@ function onMouseDown_panning(option) {
   overlay.canvas1.on("mouse:move", onMouseMove_panning);
 }
 
-function onMouseDown(option) {
+export function onMouseDown(option) {
   if (logging.mouseEvents) console.log("onMouseDown: option=", option);
 
   videoControl.pause();
@@ -2735,7 +2746,7 @@ function onMouseDown(option) {
   }
 }
 
-extraScale = 1;
+let extraScale = 1;
 function onMouseWheel(option) {
   if (option.altKey && option.ctrlKey) onMouseWheel_Zooming(option);
   else if (option.altKey) onMouseWheel_Panning(option);
@@ -2751,8 +2762,8 @@ function onMouseWheel_Zooming(option) {
   //var rect = canvas.getBoundingClientRect();
   //let cx = option.originalEvent.clientX - rect.left
   //let cy = option.originalEvent.clientY - rect.top
-  cx = option.originalEvent.offsetX;
-  cy = option.originalEvent.offsetY;
+  let cx = option.originalEvent.offsetX;
+  let cy = option.originalEvent.offsetY;
 
   let center = [cx, cy];
 
@@ -2826,7 +2837,7 @@ function onMouseUp(option) {
 
 // #MARK # FABRICJS EVENTS
 
-function onObjectSelected(option) {
+export function onObjectSelected(option) {
   if (logging.selectionEvents) console.log("onObjectSelected:", option);
   //var activeObject = canvas1.getActiveObject();
   if (typeof option.target.id != "undefined") {
@@ -2856,7 +2867,7 @@ function onObjectSelected(option) {
   }
 }
 
-function autoCentering(obs) {
+export function autoCentering(obs) {
   if (!obs) {
     console.log('autoCentering: ABORT, no suitable obs:', obs)
     return
@@ -2866,7 +2877,7 @@ function autoCentering(obs) {
   overlay.canvasTransformCenter(cx, cy)
 }
 
-function onObjectDeselected(option) {
+export function onObjectDeselected(option) {
   if (logging.selectionEvents) console.log("onObjectDeselected: ", option);
 
   if (overlay.lastActiveRect !== null) {
@@ -2933,3 +2944,7 @@ function onObjectModified(option) {
 function tagHasCenter(tag) {
   return tag.c != null && tag.c[0] != null && tag.c[1] != null;
 }
+
+// The refresh instrumentation (core/RefreshInstrumentBridge.js, ADR 0009) wraps the entry points of the overlay
+OverlayControl.prototype.hardRefresh = instrument("overlay", "OverlayControl.hardRefresh", OverlayControl.prototype.hardRefresh)
+OverlayControl.prototype.refreshOverlay = instrument("overlay", "OverlayControl.refreshOverlay", OverlayControl.prototype.refreshOverlay)

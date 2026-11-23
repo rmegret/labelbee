@@ -333,6 +333,23 @@ Revision of the 11b3 list ("dialogs to the options"): the buttons and the dialog
 
 Moved as it is, with: `this.overlay` instead of the closure variable; `for (const option ...)` instead of the implicit global `option` (an error in a module); `onParamsChanged` takes no `event` (unused). `optsClick` was renamed `toggle` since it flips the option (its log line said `onClickDisableAngle`, a copy-paste; the line is now `opts.toggle`). Export frame and Open video stay on the overlay: they are actions on the video, not options. The constructor ticked `#showSelectedTagsTracks` from `showTagsTracks` (both `true`); `init` now sets each checkbox from its own field (quick fix: state first, then the buttons reflect it). Test: `test_a10_overlay_options_toggle_and_sync_their_buttons_and_the_display_flags` is new.
 
+## Step 11c: the overlay as a module, split in sub-steps (2026-11-23)
+
+What is left of `OverlayControl.js` is ~2900 lines: the constructor and its ~35 prototype methods (~720), the rect <-> observation functions, `fabric.BeeRect`, the drawing of IDs, tags and tracks (~800), the ID prediction (~220), the mouse and fabric handlers (~700). Only 16 of its 62 top-level names are used outside the file (scan of `refactor/tools/modularity_scan.js`, grep of the template). Cut in separately reviewed parts: **11c1** the whole file becomes the module `overlay/Overlay.js` (no cut yet); **11c2** the ID prediction becomes a class in `Overlay.js` (maintainer: next to the overlay, no extra file); **11c3** onwards the proposed cuts (`BeeRect.js`, `Transform.js`, `Mouse.js`), one review each, to be confirmed after 11c2 with the new sizes. 10b (`ZoomView.js`) and 12 follow.
+
+### 11c1: `OverlayControl.js` becomes the module `overlay/Overlay.js`
+
+| Item | Before | After |
+|---|---|---|
+| File | `js/OverlayControl.js`, classic `<script>` of the template | `overlay/Overlay.js` (`git mv`, history kept), no template tag; imported by `labelbeeBridge.js` |
+| Constructor | page global `function OverlayControl` + `OverlayControl.prototype = {}` | `export function OverlayControl` (prototype object kept, the `= {}` line removed as in 10a); installed as `window.OverlayControl` (`init` of `labelBee.js`) |
+| Names used outside | implicit page globals | exported and installed by the bridge: `addRectFromObs`, `autoCentering`, `identifyBeeRect`, `newRectForCurrentTag`, `onMouseDown`, `onObjectDeselected`, `onObjectSelected`, `plotExcludeRects`, `plotROI`, `rotatedRectGeometry`, `tagAngle` (callers: `ZoomView.js`, `Form.js`, `SelectionControl.js`, `TimelinePicker.js`, `ChronoControlInteraction.js`, template) |
+| The other 46 names | page globals | module-local (no reader outside, checked by scan and grep of the template and the tests) |
+| `default_width`, `default_height` | page globals, written by the overlay, read by `VisitControl.js` | `overlay.defaultRectSize = {width, height}`, the reader updated |
+| Implicit globals (strict mode) | `canvasTransform`, `canvasTransformReference`, `transformFactor`, `extraScale`; `color`, `radius`, `setColor`, `setColorS` (`plotTracks`), `font` (`identifyBeeRect`), `r` (`plotExcludeRects`), `rect` (`newRectForTag`), `cx`, `cy` (`onMouseWheel_Zooming`) | module-level `let` for the first four (read only in the file); a local declaration in the function for the others; found with eslint `no-undef` run from `$TMPDIR` (nothing added to the repo) |
+
+Bodies unchanged otherwise. `DEBT` seen and kept: `w`, `h` undefined in `predictId` (`pointinside`), `obs` undefined in `defaultIfIDExists`; both throw in sloppy mode as well. The page-global reads of the module (`overlay`, `chrono`, `videoControl`, `selection`, `events`, `fabric`...) resolve at call time. The file keeps its class name `OverlayControl`; the file name follows the table of 11a.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

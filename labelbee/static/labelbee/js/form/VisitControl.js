@@ -82,8 +82,8 @@ VisitWidget.prototype.newVisit = function() {
     let y2 = this.flower.y+this.flower.height/2
     let cx = (x1+x2)/2
     let cy = (y1+y2)/2
-    let w = default_width
-    let h = default_height
+    let w = overlay.defaultRectSize.width
+    let h = overlay.defaultRectSize.height
 
     // Create the new event in memory, then refresh
     let tmpObs = {

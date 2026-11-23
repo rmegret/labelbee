@@ -58,6 +58,10 @@ import { VisitWidget } from './form/VisitControl.js';
 import { TimelinePicker } from './overlay/TimelinePicker.js';
 import { OverlayOptions } from './overlay/OverlayOptions.js';
 import {
+  OverlayControl, addRectFromObs, autoCentering, identifyBeeRect, newRectForCurrentTag, onMouseDown, onObjectDeselected,
+  onObjectSelected, plotExcludeRects, plotROI, rotatedRectGeometry, tagAngle,
+} from './overlay/Overlay.js';
+import {
   initSelectionControl,
   hardRefreshLabelTogglePanel,
   updateSelectID,
@@ -241,6 +245,14 @@ window.VideoManager = VideoManager; // built by `init()` of labelBee.js (`videoM
 window.VisitWidget = VisitWidget; // built by `OverlayControl` (`overlay.visitWidget = new VisitWidget(overlay)`)
 window.TimelinePicker = TimelinePicker; // built by `OverlayControl` (`overlay.modes['pick-frame'] = new TimelinePicker(overlay)`)
 window.OverlayOptions = OverlayOptions; // built by `OverlayControl` (`overlay.opts = new OverlayOptions(overlay)`)
+
+// The overlay (overlay/Overlay.js): `OverlayControl` is built by `init()` of labelBee.js; the functions are called by ZoomView.js,
+// Form.js, SelectionControl.js, TimelinePicker.js, ChronoControlInteraction.js and the page.
+window.OverlayControl = OverlayControl;
+installGlobals({
+  addRectFromObs, autoCentering, identifyBeeRect, newRectForCurrentTag, onMouseDown, onObjectDeselected, onObjectSelected,
+  plotExcludeRects, plotROI, rotatedRectGeometry, tagAngle,
+});
 
 // The form and the selection (Form.js, SelectionControl.js, from the former SelectionControl.js): called by the classic scripts, the
 // inline handlers of the page and the tests. The entry points of the refresh are already wrapped by `instrument` in their module.

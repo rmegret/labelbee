@@ -13,8 +13,6 @@ const GLOBALS = [
 ];
 // [phase, constructor, method]
 const METHODS = [
-  ["overlay", "OverlayControl", "hardRefresh"],
-  ["overlay", "OverlayControl", "refreshOverlay"],
   ["zoom", "ZoomOverlay", "refreshZoom"],
 ];
 
