@@ -20,10 +20,13 @@ def _start(ui, sample_dir):
     ui.open()
     ui.load_events(sample_dir / "events_v2.json")
     ui.wait_tracks()
+    ui.settle()                                          # the refresh 500 ms after the video load shows frame 0 again: not after the gate
     ui.js(GATE)
     ui.js("videoControl.seekFrame(0)")
     ui.page.wait_for_function("videoControl.currentFrame === 0")
-    ui.js("window.__changed.length = 0")
+    ui.js("window.__open()")                             # frame 0's own answer is behind the gate: let it arrive now, not at the first _release
+    ui.page.wait_for_function("videoControl.videoCache.queryQueue.length === 0 && !videoControl.videoCache.processingQueue")
+    ui.js("() => { window.__gate = new Promise(r => window.__open = r); window.__changed.length = 0; }")   # the gate is closed again
 
 
 def _release(ui):

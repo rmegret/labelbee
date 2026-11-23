@@ -189,6 +189,9 @@ def test_f6_clean_obsolete_events_leaves_the_emptied_frame(ui):
     # tag-track overlay throw at every redraw (OverlayControl.js:2972 plotTagsTracks). Declared, not fixed here.
     ui.allow(r"Cannot read properties of undefined \(reading 'c'\)")
     load(ui, path)
+    # the same throw also reaches the loader, which opens the main alert "ERROR loading events ..." over the page: close it
+    ui.wait_main_alert("Cannot read properties of undefined")
+    ui.close_main_alert()
     ui.open_panel("Options")
     ui.open_subpanel("Tag filtering")
     ui.js("chrono.config.region.excludeRects.push({cx: 84, cy: 104, w: 100, h: 100})")

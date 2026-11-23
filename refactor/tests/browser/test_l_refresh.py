@@ -72,7 +72,13 @@ def loaded(ui, sample_dir):
 DRAG_MOVE = r"^(?:OverlayControl\.refreshOverlay,updateForm\(updateEventTree\),ZoomOverlay\.refreshZoom,?)+"
 
 
+# A timer-driven chrono update lands after the action: on a loaded machine (parallel run) before the log is read, else after.
+# The baseline never ends with it, so a trailing one is the late one and is not part of the sequence.
+LATE_CHRONO = ",updateChrono(updateTagIntervals,updateTimeMark,updateTrackWindowSpan)"
+
+
 def normalize(name, got):
+    got = got.removesuffix(LATE_CHRONO)
     return re.sub(DRAG_MOVE, "MOVE*,", got) if name == "drag" else got
 
 
@@ -81,7 +87,7 @@ def check(name, got):
     got = normalize(name, got)
     if os.environ.get("UPDATE_REFRESH_BASELINE"):
         return
-    assert got == json.loads(BASELINE.read_text())[name]
+    assert got == normalize(name, json.loads(BASELINE.read_text())[name])
 
 
 def test_l1_load_events(ui, sample_dir):
