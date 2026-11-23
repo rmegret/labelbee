@@ -461,7 +461,7 @@ export function updateTagIntervals() {
       let tags = obsarray[frame];
       let f = Number(frame);
 
-      if (!tagsSampleFilter(tags)) {
+      if (!filters.sample(tags)) {
         continue;
       }
 
@@ -485,7 +485,7 @@ export function updateTagIntervals() {
         if (doPush) {
           // Close previous
           //activeInterval['end']++
-          if (tagsIntervalFilter(activeInterval)) {
+          if (filters.interval(activeInterval)) {
             let len = activeInterval["end"] - activeInterval["begin"] + 1;
             activeInterval.hammingavg = activeInterval.hammingavg / len;
             activeInterval.dmavg = activeInterval.dmavg / len;
@@ -522,7 +522,7 @@ export function updateTagIntervals() {
     }
     // Close if active
     if (isActive)
-      if (tagsIntervalFilter(activeInterval)) {
+      if (filters.interval(activeInterval)) {
         //activeInterval['end']++
         let len = activeInterval["end"] - activeInterval["begin"] + 1;
         activeInterval.hammingavg = activeInterval.hammingavg / len;
@@ -696,7 +696,7 @@ function interpolateTags(maxgap) {
       let f = Number(f0);
       let tags = obsarray[f];
 
-      if (!tagsSampleFilter(tags)) {
+      if (!filters.sample(tags)) {
         continue;
       }
 
@@ -772,7 +772,7 @@ export function cleanObsoleteEvents() {
           console.log("low DM: Delete Tracks[" + F + "][" + id + "] = ", obs);
           events.delete(F, id);
         }
-        if (!tagsSampleFilterExcludeRects(obs.tag)) {
+        if (!filters.excludeRects(obs.tag)) {
           console.log(
             "excludeRect: Delete Tracks[" + F + "][" + id + "] = ",
             obs
@@ -786,8 +786,10 @@ export function cleanObsoleteEvents() {
 }
 
 /* Tag filters. Rebuilt by `refreshTagsParameters` from the inputs of the Tags panel and the buttons of `chronoFilter`; the chronogram
-   data (`updateTagIntervals`) and the overlay (tag display) call the page globals `tagsSampleFilter` and `tagsIntervalFilter`.
-   `tagsSampleFilterROI` and `tagsSampleFilterExcludeRects` are replaced by `ROIChanged` and `excludeRectsChanged` (OverlayControl.js). */
+   data (`updateTagIntervals`) and the overlay (tag display) call `chrono.filters.sample` and `chrono.filters.interval`.
+   `filters.roi` and `filters.excludeRects` are replaced by `ROIChanged` and `excludeRectsChanged` (OverlayControl.js).
+   `filters` is created at module load, because the overlay constructor calls `refreshTagsParameters` before the chronogram exists;
+   the Chronogram constructor publishes it as `chrono.filters`. */
 let tagsRGBSampleFilter = function (tag) {
   return true;
 };
@@ -803,17 +805,11 @@ let tagsSampleFilterCustom = function (tag) {
 let tagsIDFilter = function (idinfo) {   // DEBT: built from #tagsIDFilter, read by nobody
   return true;
 };
-window.tagsSampleFilter = function (tag) {
-  return true;
-};
-window.tagsIntervalFilter = function (interval) {
-  return true;
-};
-window.tagsSampleFilterROI = function (tag) {
-  return true;
-};
-window.tagsSampleFilterExcludeRects = function (tag) {
-  return true;
+export const filters = {
+  sample: function (tag) { return true; },          // all the tag filters below combined
+  interval: function (interval) { return true; },   // length and custom code of an interval
+  roi: function (tag) { return true; },
+  excludeRects: function (tag) { return true; },
 };
 export function refreshTagsParameters() {
   if (logging.overlay) {
@@ -852,11 +848,11 @@ export function refreshTagsParameters() {
     $("#tagsUseRgbFilter").removeClass("active");
   }
 
-  window.tagsSampleFilter = function (tag) {
+  filters.sample = function (tag) {
     return (
       tagsHammingSampleFilter(tag) &&
-      tagsSampleFilterROI(tag) &&
-      tagsSampleFilterExcludeRects(tag) &&
+      filters.roi(tag) &&
+      filters.excludeRects(tag) &&
       tagsDMSampleFilter(tag) &&
       tagsRGBSampleFilter(tag) &&
       tagsSampleFilterCustom(tag)
@@ -865,7 +861,7 @@ export function refreshTagsParameters() {
 
   let minLength = Number($("#tagsIntervalFilterMinLength").val());
 
-  window.tagsIntervalFilter = function (interval) {
+  filters.interval = function (interval) {
     let fun = Function("interval", $("#tagsIntervalFilter")[0].value);
     return interval.end - interval.begin >= minLength && fun(interval);
   };
@@ -874,10 +870,10 @@ export function refreshTagsParameters() {
   if (logging.overlay) {
     console.log(
       "refreshTagsParameters:",
-      "\ntagsSampleFilter=",
-      tagsSampleFilter,
-      "\ntagsIntervalFilter=",
-      tagsIntervalFilter,
+      "\nfilters.sample=",
+      filters.sample,
+      "\nfilters.interval=",
+      filters.interval,
       "\ntagsIDFilter=",
       tagsIDFilter
     );

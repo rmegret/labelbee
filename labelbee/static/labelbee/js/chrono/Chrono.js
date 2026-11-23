@@ -7,6 +7,7 @@
 
 import * as ChronoDragControl from "./ChronoDragControl.js"
 import { ChronoIntervals, getChronoItemHeight, initTrackWindowSpan, initVideoSpan, previewBar, refreshChronoLayout, refreshChronogram, updatePreviewTimeMark, updateTimeMark } from "./ChronoRender.js"
+import { filters } from "./ChronoData.js"
 import { debouncer, flash } from "./ChronoUtils.js"
 import { VideoCacheStatus } from "./VideoCacheStatus.js"
 import { VideoKeyframes } from "./VideoKeyframes.js"
@@ -27,6 +28,7 @@ export class Chronogram {
     chrono = this // TODO: fix back to normal local variable once all encapsulation is done properly
     const config = {}
     chrono.config = config
+    chrono.filters = filters          // tag filters of ChronoData.js (created at module load, see there)
     // Options, grouped by role (ADR 0015 step 7c); the names inside the groups are the former globals
     config.filter = {                // which observations the chronogram, its table and the navigation consider
       frameFilter: { active: false,

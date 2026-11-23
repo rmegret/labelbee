@@ -192,7 +192,7 @@ def test_f6_clean_obsolete_events_leaves_the_emptied_frame(ui):
     ui.open_panel("Options")
     ui.open_subpanel("Tag filtering")
     ui.js("excludeRects.push({cx: 84, cy: 104, w: 100, h: 100})")
-    ui.page.click("#useExcludeRects")                                  # switches tagsSampleFilterExcludeRects to the rect test
+    ui.page.click("#useExcludeRects")                                  # switches chrono.filters.excludeRects to the rect test
     assert ui.js("flag_useExcludeRects") is True
     ui.page.click("#cleanObsoleteEventsButton")
     assert ui.dialogs[-1][0] == "confirm"                              # the confirmation was asked (and accepted)

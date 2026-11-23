@@ -289,8 +289,7 @@ The track window is not in this step: it is state and handlers of its own (`over
 
 | Item | Before (`OverlayControl.js`, `/* Filters */`) | After (`chrono/ChronoData.js`) |
 |---|---|---|
-| `tagsSampleFilter`, `tagsIntervalFilter` | page globals, rebuilt by `refreshTagsParameters` | `window.` properties of the module (read by `updateTagIntervals` and by the overlay tag display, ~6 call sites) |
-| `tagsSampleFilterROI`, `tagsSampleFilterExcludeRects` | page globals, replaced by `ROIChanged` and `excludeRectsChanged` | defaults are `window.` properties of the module; the replacements stay in the overlay until 11b3c |
+| `tagsSampleFilter`, `tagsIntervalFilter`, `tagsSampleFilterROI`, `tagsSampleFilterExcludeRects` | page globals, rebuilt by `refreshTagsParameters`; the last two replaced by `ROIChanged` and `excludeRectsChanged` | one exported object `filters` of the module = `chrono.filters` with fields `sample`, `interval`, `roi`, `excludeRects` (quick fix after 11b3b: no globals). The object exists at module load because the overlay constructor calls `refreshTagsParameters` before the chronogram is built; the `Chronogram` constructor publishes it. Readers: `updateTagIntervals` (module-local) and the overlay tag display (`chrono.filters.sample`, ~3 sites) |
 | `tagsHammingSampleFilter`, `tagsDMSampleFilter`, `tagsRGBSampleFilter`, `tagsSampleFilterCustom`, `tagsIDFilter` | page globals | module-local `let` (nothing else reads them; `tagsSampleFilterCustom` was an undeclared implicit global) |
 | `refreshTagsParameters`, `onTagsParametersChanged`, `onTagsParametersSelectChanged`, `chronoFilter` | functions of the overlay file | exports of the module, installed by the bridge (inline handlers of the page and the overlay constructor call them) |
 

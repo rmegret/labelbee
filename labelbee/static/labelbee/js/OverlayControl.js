@@ -1718,7 +1718,7 @@ function tagSize(tag) {
 
 /* Basic drawing */
 function plotTag(ctx, tag, color, flags) {
-  if (!tagsSampleFilter(tag)) {
+  if (!chrono.filters.sample(tag)) {
     return;
   }
   if (color === undefined) {
@@ -1933,7 +1933,7 @@ function plotTagsTracks(ctx) {
         let tag = tagline[f];
 
         if (f < fmin || f > fmax) continue;
-        if (!tagsSampleFilter(tag)) {
+        if (!chrono.filters.sample(tag)) {
           continue;
         }
 
@@ -2020,7 +2020,7 @@ function plotTagsTracks(ctx) {
           //console.log('tag=',tag)
           if (!tag) continue;
 
-          if (!tagsSampleFilter(tag)) {
+          if (!chrono.filters.sample(tag)) {
             continue;
           }
 
@@ -2115,7 +2115,7 @@ function onClickROI() {
 // Change Callback
 function ROIChanged() {
   if (flag_useROI) {
-    tagsSampleFilterROI = function (tag) {
+    chrono.filters.roi = function (tag) {
       return (
         tag.c[0] >= ROI.left &&
         tag.c[0] <= ROI.right &&
@@ -2124,7 +2124,7 @@ function ROIChanged() {
       );
     };
   } else {
-    tagsSampleFilterROI = function (tag) {
+    chrono.filters.roi = function (tag) {
       return true;
     };
   }
@@ -2206,7 +2206,7 @@ function onClickExcludeRects() {
 // Change callback
 function excludeRectsChanged() {
   if (flag_useExcludeRects) {
-    tagsSampleFilterExcludeRects = function (tag) {
+    chrono.filters.excludeRects = function (tag) {
       for (let r of excludeRects) {
         //console.log(tag,r)
         let dx = Math.abs(tag.c[0] - r.cx);
@@ -2216,7 +2216,7 @@ function excludeRectsChanged() {
       return true;
     };
   } else {
-    tagsSampleFilterExcludeRects = function (tag) {
+    chrono.filters.excludeRects = function (tag) {
       return true;
     };
   }
