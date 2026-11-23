@@ -193,6 +193,57 @@ DEBT (maintainer, 2026-11-22): `SelectionControl.js` stays where it is until it 
 
 As built in 10a: the file is moved with `git mv` into `video/` and becomes a module (`export function VideoControl`); no statement is cut. Globals are cut instead of declared (maintainer: the fewer the better): `VideoControl.js` imports `VideoCache`, `HoverControl` and `getVideoInfo` (no cycle: they receive the `VideoControl` as an argument), `videojsoninfo` becomes a local, and the `videoCache` alias is removed (the 6 reads in `OverlayControl.js` and 1 in `chrono/Chrono.js` use `videoControl.videoCache`), so the bridge no longer installs `VideoCache` or `HoverControl`. `videoCache` stays as a console-only debug global, registered by the bridge with `registerDebugGlobal` (`annotation/DebugGlobals.js`) and installed by `installDebugGlobals()` or `?debug_globals`; `test_f_writers` and `test_q` adapted. The line `X.prototype = {}` of `VideoCache.js` and `VideoControl.js` is removed: it replaced the default prototype and its `constructor` link, so `videoCache.constructor` was `Object` and the statics (`isCanceled`) were unreachable from an instance (the methods are assigned on the default prototype just as well). DEBT: the same line remains in `HoverControl.js`, `VideoList.js`, `OverlayControl.js:165`, `ZoomView.js:155`, to remove when each file is handled. `lasthash` stays a page global (shared with `labelBee.js:onhashchange`, step 12). The two refresh entry points (`VideoControl.refresh`, `VideoControl.onFrameChanged`) are wrapped at the end of the module by `instrument`, and leave the `METHODS` list of `core/RefreshInstrumentBridge.js`; the other three methods of that list stay there until their files are modules. The bridge installs `window.VideoControl` (built by `init()`); the file-local `timeout` helper is no longer a page global (no other user). The `<script>` tag leaves the page.
 
+## Step 11a: `OverlayControl.js`, what it contains and where it goes (2026-11-22, redone after maintainer review)
+
+Analysis only, no code changed. `[read]`: 4016 lines, 156 top-level items (constructor, ~120 prototype methods, ~70 functions, `fabric.BeeRect`). Line numbers are those of the file at the commit of step 10a. "Used outside" is a name search over `js/` and the page template (generic names are inflated). The singletons it reads (`videoControl`, `events`, `selection`, `chrono`, ...) are page globals resolved at call time.
+
+**Rules of the split (maintainer, 2026-11-22).**
+- Pure code goes to `annotation/` (data and model); everything that belongs to the overlay display stays in a new `overlay/` folder.
+- `form/` is only the direct edit of the attributes of the selected rect or track. The options of a widget are the responsibility of that widget: the options of the overlay go in `overlay/`.
+- No prototype extension (`OverlayControl.prototype.x = ...` from another file). The overlay **delegates to registered objects with a well identified role**: the constructor creates each helper with `new Helper(overlay)` and registers it by role; the overlay calls the role, never the helper's internals.
+
+| Role (registered on the overlay) | Object | File | What the overlay calls |
+|---|---|---|---|
+| `options` | `OverlayOptions` | `overlay/OverlayOptions.js` | one class, `overlay.opts = new OverlayOptions(overlay)`: the fields keep their names (`opts.showRect`, ...), the methods are the API (`optsClick`, `updateOptsButtons`, track window, ROI and exclude-rects dialogs, tag marker select, export buttons); the page globals the overlay owns (`showObs`, `showObsTracks`, `showTags`, `showTagsTracks`, `showSelectedTagsTracks`, `showTagsOrientation`, `lockFocusTrackWindow`, `excludeRectSelection`, `tagMarker`) become fields; `trackWindow` and `tagMode` are not overlay options, they go to `chrono/` ([Q42](../QUESTIONS.md#q42)); `overlay.opts.*` reads are unchanged. Not in `opts` either: `overlay.interaction` (current mode, moving state), `lastActiveRect`, `videoSize`, the canvas transform |
+| `mode['pick-frame']` | `TimelinePicker` | `overlay/TimelinePicker.js` | `enter(opts)`, `drawOverlay()` (replaces the pick-frame branch of `hardRefresh`), timeline strip, crops, "Pick Flower" button |
+| `mode['edit-visit']` | `VisitWidget` (exists, `form/VisitControl.js`) | unchanged | same interface: `enter(opts)`, `drawOverlay()` |
+
+`setInteractionMode` and `refreshInteraction` stay in the overlay (they only dispatch to `mode[...]`); today they and `hardRefresh` hold `if (mode == 'pick-frame') ... else if (mode == 'edit-visit')` branches, which become the dispatch. Consequence for the page: only the calls of the handlers that move change (`overlay.optsClick(...)` becomes `overlay.opts.optsClick(...)`, 18 uses in the template, plus the few picker and export handlers). The `show*` globals are read only by `OverlayControl.js` (the template reaches them through element ids and `onShow*Changed` handlers), so turning them into `opts` fields is a mechanical rename inside the file being moved. Not moved into `opts`: the region and the filters, which belong to the chronogram ([Q39](../QUESTIONS.md#q39), [Q41](../QUESTIONS.md#q41)); the dialogs and buttons that edit the ROI and exclude rects stay in `OverlayOptions` as an interface to that data.
+
+| Lines | ~n | Content | Used outside | Destination |
+|---|---|---|---|---|
+| 5-164 | 160 | `tagMode`, constructor | `labelBee.js` `init()`, tests | `overlay/Overlay.js`; creates and registers the helpers |
+| 169-237 | 70 | `setInteractionMode`, `refreshInteraction` | `form/VisitControl.js` (13), `SelectionControl.js` | `overlay/Overlay.js` (dispatch to `mode[...]`) |
+| 240-352 | 115 | `TimelineWidget` | `OverlayControl` only | `overlay/TimelinePicker.js` |
+| 356-457 | 100 | options panel: `optsClick`, `updateOptsButtons`, `onOverlayParamsChanged`, `selectbox*` | template (`optsClick` 18, `selectboxTagMarkerChanged` 1) | `overlay/OverlayOptions.js` |
+| 461-551 | 60 | active rect getters and setters (25 uses in `ZoomView.js`, `Form.js`, `labelBee.js`, `SelectionControl.js`) | 4 files | `overlay/Overlay.js` (selection DEBT of 9c) |
+| 461-551 | ~30 | angle buttons (`onClickDisableAngle`, `ResetAngle`, `AngleFromTag`): edit the angle of the selected rect | template (3) | `form/Form.js` side (direct edit of the rect) |
+| 555-838 | 285 | canvas size, transform, coordinate conversions | `ZoomView.js` (~20), `VideoControl.js`, `VisitControl`, `Form` | `overlay/Overlay.js` or `overlay/Transform.js` (11c) |
+| 841-984 | 145 | crops of the current object, `drawTimeline*` | `VisitControl` (2), template (1) | `overlay/TimelinePicker.js` |
+| 985-1123 | 140 | `hardRefresh`, `pickFlowerButtonCallback` | `VideoControl` (11), `Chrono`, `Form` | `hardRefresh` stays; its pick-frame branch (~80) and `pickFlowerButtonCallback` go to `TimelinePicker` |
+| 1126-1166 | 40 | `openVideoNewTab`, `exportFrame`, `diffImage` | template (2) | `overlay/OverlayOptions.js` (buttons of the overlay) |
+| 1170-1409 | 240 | video frame drawing, `refreshOverlay` | `RefreshBridge`, tests | `overlay/Overlay.js` |
+| 1413-1631 | 220 | rects <-> observations (`refreshRectFromObs`, `createRectsFromTracks`, ...) | `ZoomView`, `Form`, `SelectionControl` | `overlay/Overlay.js` |
+| 1632-1718 | 90 | `fabric.BeeRect` | none | `overlay/BeeRect.js` or `Overlay.js` |
+| 1721-1826 | ~20 | `newObservation` | none | `annotation/Model.js` |
+| 1721-1826 | ~85 | `activityString`, `paintDot`, `wrapText`, `createRect`, `addDraftRect`, `findRect` | none | `overlay/` (display helpers, stay) |
+| 1827-2132 | 305 | `identify`, `identifyBeeRect`, `plotTracks` | `VisitControl` (1) | `overlay/Overlay.js` |
+| 2137-2194 | 60 | tag reading and geometry (`getTag`, `tagCorners`, `tagUp`, `tagAngle`, `tagSize`) | `SelectionControl.js`, `ZoomView.js` | `annotation/TagUtils.js` (`getCurrentTag` of `SelectionControl` follows) |
+| 2197-2583 | 385 | `plotTag*`, `plotTrackArrow`, `plotTagsTracks`, `onShowTags*` | template (4) | `overlay/Overlay.js` (drawing); `onShowTags*` checkboxes to `OverlayOptions` |
+| 2586-2686 | 100 | track window (state and UI) | `ChronoControlInteraction.js`, `ChronoRender.js`, template (~9) | chronogram (`chrono/ChronoControlInteraction.js`), the overlay reads it ([Q42](../QUESTIONS.md#q42)) |
+| 2690-2937 | 250 | ROI and exclude rects: UI and dialog (~170), `plotROI` and `plotExcludeRects` (~80) | template (~10) | UI to `OverlayOptions`; the two `plot*` stay drawing |
+| 2940-3072 | 135 | tag filters (`tagsSampleFilter*`, `tagsIntervalFilter`, `chronoFilter`), `refreshTagsParameters` | `ChronoData.js` (5), template (8) | `chrono/ChronoData.js`, with `refreshTagsParameters`, `onTagsParametersChanged`, `chronoFilter` and their inputs (the filters are read only by the chronogram, [Q39](../QUESTIONS.md#q39)); ROI and exclude-rect filters: [Q41](../QUESTIONS.md#q41) |
+| 3077-3302 | 225 | `dist`, ID prediction (`predictId*`, `computeDefaultNewID`) | none | `annotation/IDPrediction.js` (pure) |
+| 3294-3357 | 65 | default rect size, `newRectForTag` | `Form` (7), `ZoomView` | `overlay/Overlay.js` |
+| 3360-3906 | 545 | mouse handlers | `ZoomView` (8) | `overlay/Mouse.js` (11c) |
+| 3910-4016 | 105 | fabric events, `autoCentering`, `tagHasCenter` | `ZoomView` (12), `ChronoControlInteraction` | `overlay/Overlay.js` or `Mouse.js` |
+
+Resulting size (`~`): `annotation/IDPrediction.js` 225, `annotation/TagUtils.js` 60, `annotation/Model.js` +20; `overlay/TimelinePicker.js` ~400 (widget 115, crops and timelines 145, pick-frame branch of `hardRefresh` ~80, button callback); `overlay/OverlayOptions.js` ~500; `form/Form.js` +30; the rest (~2750) is the overlay proper, itself cut in 11c into `Overlay.js`, `Transform.js`, `Mouse.js`, `BeeRect.js`.
+
+Sub-steps (proposed, each its own review): **11b1** `annotation/IDPrediction.js`, `TagUtils.js`, `newObservation` to `Model.js` (plain moves, `export` and `import`, classic callers through the bridge); **11b2** `overlay/TimelinePicker.js` and the `mode[...]` registry (new, behavior preserving; the picker is half broken, so only the move is promised); **11b3** `overlay/OverlayOptions.js` and the angle buttons to `form/`; **11c** the remaining overlay as a module, `OverlayControl.prototype = {}` removed as in 10a. `ZoomView.js` (10b) follows 11c ([Q40](../QUESTIONS.md#q40)).
+
+Risks: the `mode[...]` dispatch replaces the mode branches of three methods; this is the only logic change. State reads (`overlay.opts`, `overlay.trackWindow`) do not change. Template handlers that move change from `overlay.X` to `overlay.options.X` or the picker; `overlay.timeline` becomes the registered picker, and the tests that read it are adapted.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

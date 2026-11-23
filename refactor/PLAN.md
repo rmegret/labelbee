@@ -139,7 +139,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (9b) `VisitControl.js` as module [x] now `form/VisitControl.js`, `default_id` declared
   - (9c) `SelectionControl.js` split [x] `form/Form.js` (GUI) and `SelectionControl.js`; refresh entry points instrumented
   - (10a) `VideoControl.js` as module [x] `video/VideoControl.js`, imports its video modules, `videoCache` debug-only
-  - (10b)-(12) zoom, overlay, entry [ ]
+  - (11a) `OverlayControl.js` analysis [x] table in ADR: delegation to registered helpers, `overlay/` folder; Q39-Q42 answered
+  - (10b), (11b)-(12) zoom, overlay split and module, entry [ ]
   - (13) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
