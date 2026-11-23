@@ -86,14 +86,14 @@ function onMouseDown_predict(option) {
   }
 
   // predictId takes video/obs coordinates units
-    //let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
-    let f = getCurrentFrame()
+    //let prediction = predictId(videoControl.getCurrentFrame(), videoXY, "pointinside");
+    let f = videoControl.getCurrentFrame()
     let interval = [f-chrono.config.trackWindow.trackWindowBackward, f+chrono.config.trackWindow.trackWindowForward]
     if (interval[0]<0) interval[0]=0
     if (interval[1]>=getVideoInfo().nframes) interval[1]=getVideoInfo().nframes-1
     let prediction = overlay.idPredictor.predictIdFromObsMultiframe(interval,videoXY, "distance")
     prediction = overlay.idPredictor.defaultIfIDExists(prediction)
-  let predictionTag = overlay.idPredictor.predictIdFromTags(getCurrentFrame(), videoXY, "distance");
+  let predictionTag = overlay.idPredictor.predictIdFromTags(videoControl.getCurrentFrame(), videoXY, "distance");
   //$("#I").val(prediction.id)
 
   if (logging.mouseEvents) {
@@ -164,11 +164,11 @@ function onMouseDown_predict(option) {
     let id = selection.getId();
     if (
       id == null ||
-      getObsHandle(getCurrentFrame(), id, false) !== undefined
+      getObsHandle(videoControl.getCurrentFrame(), id, false) !== undefined
     ) {
       id = prediction.id;
     }
-    while (getObsHandle(getCurrentFrame(), id, false) !== undefined) {
+    while (getObsHandle(videoControl.getCurrentFrame(), id, false) !== undefined) {
       id = id + 1;
     }
     // Did not find any tag nor rect
@@ -219,9 +219,9 @@ function onMouseDown_interactiveRect(option) {
   let canvasXY = { x: startX, y: startY }
   let clientXY = { x: option.e.clientX, y: option.e.clientY }
   let videoXY = overlay.canvasToVideoPoint(canvasXY)
-  //let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
+  //let prediction = predictId(videoControl.getCurrentFrame(), videoXY, "distance_topleft");
 
-  let f = getCurrentFrame()
+  let f = videoControl.getCurrentFrame()
   let interval = [f - chrono.config.trackWindow.trackWindowBackward, f + chrono.config.trackWindow.trackWindowForward]
   if (interval[0] < 0) interval[0] = 0
   if (interval[1] >= getVideoInfo().nframes) interval[1] = getVideoInfo().nframes - 1
@@ -345,11 +345,11 @@ function onMouseDown_selectMultiframe(option) {
 
   let clickMultiframe = true;
   if (!clickMultiframe) {
-    tmp = overlay.idPredictor.predictIdFromTags(getCurrentFrame(), pt);
+    tmp = overlay.idPredictor.predictIdFromTags(videoControl.getCurrentFrame(), pt);
 
     if (tmp.id != null) {
       console.log("onMouseDown_selectMultiframe: found id=", tmp.id);
-      selection.select(getCurrentFrame(), tmp.id);
+      selection.select(videoControl.getCurrentFrame(), tmp.id);
       videoControl.refresh();
     } else {
       deselectBee();
@@ -360,8 +360,8 @@ function onMouseDown_selectMultiframe(option) {
     if (overlay.opts.showObsTracks) {
       tmp = overlay.idPredictor.predictIdFromObsMultiframe(
         [
-          getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,
-          getCurrentFrame() + chrono.config.trackWindow.trackWindowForward,
+          videoControl.getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,
+          videoControl.getCurrentFrame() + chrono.config.trackWindow.trackWindowForward,
         ],
         pt
       );
@@ -380,8 +380,8 @@ function onMouseDown_selectMultiframe(option) {
     if (!done && (overlay.opts.showTagsTracks || overlay.opts.showSelectedTagsTracks)) {
       tmp = overlay.idPredictor.predictIdFromTagsMultiframe(
         [
-          getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,
-          getCurrentFrame() + chrono.config.trackWindow.trackWindowForward,
+          videoControl.getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,
+          videoControl.getCurrentFrame() + chrono.config.trackWindow.trackWindowForward,
         ],
         pt
       );
@@ -634,7 +634,7 @@ export function onObjectSelected(option) {
       );
     }
     overlay.previousActiveRect = overlay.lastActiveRect
-    let frame = option.target.obs ? option.target.obs.frame : getCurrentFrame()
+    let frame = option.target.obs ? option.target.obs.frame : videoControl.getCurrentFrame()
     let draft = !!option.target.draft
     // A selection already there is the echo of a view activating the rectangle (setActiveRectID): the caller shows it
     let echo = selection.is(frame, option.target.id, draft)

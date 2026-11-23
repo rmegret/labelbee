@@ -277,7 +277,7 @@ function initChrono() {
     let stayHere = false;
     if (stayHere) {
       // Stay at preview frame
-      videoControl.seekFrame(getCurrentFrame(),"end-preview");
+      videoControl.seekFrame(videoControl.getCurrentFrame(),"end-preview");
       // Update should be called by callbacks
     } else {
       // Come back to initial frame before preview

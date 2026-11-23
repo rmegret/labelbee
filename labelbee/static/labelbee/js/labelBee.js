@@ -1,17 +1,13 @@
 /*jshint esversion: 6, asi: true */
 
 ////////////////////////////////////////////////////////////////////////////////
-// Global variables
-var canvas,
-  canvas1,
-  ctx,
-  ctx2,
-  vid,
-  radius = 5,
-  dragging = false,
-  final_id = 0;
-var x, y, cx, cy, width, height;
-var user_id;
+// ES module (refactor slice 8 step 12, ADR 0015): the page globals `canvas`, `canvas1`, `ctx`, `ctx2`, `vid`, `radius`, `dragging`,
+// `final_id`, `x`, `y`, `cx`, `cy`, `width`, `height` declared here had no reader (the `radius` of TimelinePicker.js is now its own).
+// Page globals (`overlay`, `videoControl`, `events`, `refresh`...) are read at call time; the ones this file builds are assigned on `window`.
+// Installed by labelbeeBridge.js (`init`, `printMessage`, `toggleFullScreen`, `FilePickerFromServerDialog`, `onKeyDown_*`).
+
+// `user_id`: set by AnnotationIO.js at login, read by annotation/ServerIO.js (undefined before)
+window.user_id = undefined
 
 //var vis;
 
@@ -21,32 +17,30 @@ var user_id;
 // INITIALIZATION
 
 /** Global init */
-function init(videoID, tagID) {
+export function init(videoID, tagID) {
   console.log("init()", videoID, tagID)
 
   // Parameter passed through HTML Jinja template
   if (http_script_name_0) {
-    http_script_name = http_script_name_0;
+    window.http_script_name = http_script_name_0;
   } else {
-    http_script_name = "/";
+    window.http_script_name = "/";
   }
 
-  statusWidget = new StatusWidget();
+  window.statusWidget = new StatusWidget();
 
   // import * from "VideoList.js";
-  videoManager = new VideoManager();
+  window.videoManager = new VideoManager();
 
   // import * from "VideoNavigation";
-  videoControl = new VideoControl("video"); // Attach control to #video
-  // Polyfill to get a global getCurrentFrame
-  getCurrentFrame = videoControl.getCurrentFrame.bind(videoControl);
+  window.videoControl = new VideoControl("video"); // Attach control to #video
 
   // import * from "OverlayControl.js";
-  overlay = new OverlayControl("canvas");
+  window.overlay = new OverlayControl("canvas");
 
   // import * from "ChronoControl.js";
   //initChrono();
-  chrono = new Chronogram(); // TODO: fix direct access to #chronoTab, #chronoDiv, #svgVisualize
+  window.chrono = new Chronogram(); // TODO: fix direct access to #chronoTab, #chronoDiv, #svgVisualize
   initRegionFilters(); // ROI and exclude rects inputs (chrono/ChronoControlInteraction.js)
 
   // import * from "AnnotationIO.js"
@@ -124,7 +118,7 @@ function init(videoID, tagID) {
   // Missing a model to store all these properties
   // For the moment, just call toggleHidden at least once to sync with 
   // the existing 'checked' attribute from the GUI button
-  for (buttonid_property of [["showTimeline", "timelineTab"],
+  for (let buttonid_property of [["showTimeline", "timelineTab"],
     ["showFocusInterval", "focusIntervalTab"],
     ["showSelected", "selectedTab"],
     ["showEvents", "eventsTab"],
@@ -169,7 +163,7 @@ function init(videoID, tagID) {
   // refresh();
   updateForm(null);
   selection.clear();
-  change_id_force = 'swap'  // What to do if conflict when changing id
+  window.change_id_force = 'swap'  // What to do if conflict when changing id
 
   $('#alerttextblock').resizable()
 
@@ -205,7 +199,7 @@ function init(videoID, tagID) {
   // Done
   loadTracks([], true); // skipRefresh
 
-  loginDialog = new LoginDialog();
+  window.loginDialog = new LoginDialog();
 
   // Preload video list
   videoManager.receiveVideoSelection();
@@ -221,10 +215,10 @@ function init(videoID, tagID) {
 
 /* ROUTER */
 
-lasthash = ""
+window.lasthash = ""
 
 addEventListener("hashchange", onhashchange);
-onhashchange = async function(event) {
+window.onhashchange = async function(event) {
   let newhash = location.hash
   console.log('onhashchange: current hash=',newhash)
   if (!newhash) return
@@ -301,7 +295,7 @@ onhashchange = async function(event) {
 
 /* MISC */
 
-function printMessage(html, color) {
+export function printMessage(html, color) {
   if (typeof color === "undefined") color = "black";
 
   $("#alerttext").html(html);
@@ -369,7 +363,7 @@ function StatusWidget() {
   };
 }
 
-function toggleFullScreen() {
+export function toggleFullScreen() {
   var main = $(".container.main")[0];
   if (!document.fullscreenElement) {
     document.body.webkitRequestFullscreen();
@@ -378,7 +372,7 @@ function toggleFullScreen() {
   }
 }
 
-function FilePickerFromServerDialog() {
+export function FilePickerFromServerDialog() {
 
   //#region INIT, OPEN, CLOSE FilePickerFromServerDialog
 
@@ -799,11 +793,11 @@ function FilePickerFromServerDialog() {
 
 // ## Keyboard
 
-function onKeyDown_IDEdit(event) {
+export function onKeyDown_IDEdit(event) {
   if (logging.keyEvents) console.log("onKeyDown_IDEdit: event=", event)
   //var key = event.which || event.keyCode;
   if (event.key == 'Enter') { // Enter
-    let frame = getCurrentFrame()
+    let frame = videoControl.getCurrentFrame()
     let fieldID = document.getElementById("I");
     let new_id = fieldID.value;
 
@@ -841,12 +835,12 @@ function onKeyDown_IDEdit(event) {
   }
 }
 
-function onKeyDown_NewIDEdit(event) {
+export function onKeyDown_NewIDEdit(event) {
   if (logging.keyEvents) console.log("onKeyDown_NewIDEdit: event=", event);
   var key = event.which || event.keyCode;
   if (key == 13) {
     // Enter
-    let frame = getCurrentFrame();
+    let frame = videoControl.getCurrentFrame();
     let fieldID = document.getElementById("newid");
     let new_id = fieldID.value;
 

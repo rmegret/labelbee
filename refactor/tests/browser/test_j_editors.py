@@ -354,7 +354,7 @@ def test_j12_dragging_a_part_in_the_zoom_view_updates_the_parts_of_the_observati
     ui.open_panel("Annotations")
     before = ui.tracks()["0"]["1"]
     ui.settle()
-    ui.js("selection.select(getCurrentFrame(), '1'); refresh.selection()")                                          # the two boxes of this file overlap: select through the page
+    ui.js("selection.select(videoControl.getCurrentFrame(), '1'); refresh.selection()")                                          # the two boxes of this file overlap: select through the page
     ui.open_panel("Zoom")
     ui.open_subpanel("Parts labeling")
     ui.page.locator("#zoom").scroll_into_view_if_needed()                # the zoom canvas is partly below the viewport

@@ -6,7 +6,7 @@ import { instrument } from "./core/RefreshInstrumentBridge.js";
 import { updateSelectionPanels } from "./form/Form.js";
 
 function swapID_findAll(ID) {
-    let frames = getFramesWithID([getCurrentFrame(),-1],ID)
+    let frames = getFramesWithID([videoControl.getCurrentFrame(),-1],ID)
 
 }
 export function swapID_callback() {
@@ -25,7 +25,7 @@ export function swapID_callback() {
         refresh.rebuild()
     }
     function doSwap() {
-        let interval = [getCurrentFrame(),-1]
+        let interval = [videoControl.getCurrentFrame(),-1]
         let old_id = activeObject.id
         let new_id = swapNewID.val()
         console.log('Swapping ID '+old_id+' with '+new_id)
@@ -42,7 +42,7 @@ export function swapID_callback() {
     swapNewID.val(activeObject.id)
 
     //printMessage(
-    $('#alerttext').html("Swap current ID="+activeObject.id+" with new ID for frame "+getCurrentFrame()+" until end. NewID=")
+    $('#alerttext').html("Swap current ID="+activeObject.id+" with new ID for frame "+videoControl.getCurrentFrame()+" until end. NewID=")
     .append(swapNewID)
     .append($('<button>SWAP</button>').click(doSwap))
     .append($(document.createTextNode(' ')))
@@ -52,7 +52,7 @@ export function swapID_callback() {
 /* Selection */
 
 export function selectBeeByIDandFrame(id, frame) {
-  if (frame != getCurrentFrame()) {
+  if (frame != videoControl.getCurrentFrame()) {
     deselectBee();
     selection.select(frame, id);
     videoControl.seekFrame(frame);
@@ -99,7 +99,7 @@ export function getTag(f, id) {
   return undefined;
 }
 export function getCurrentTag() {
-  return getTag(getCurrentFrame(), selection.getId());
+  return getTag(videoControl.getCurrentFrame(), selection.getId());
 }
 
 /* Deleting bees  */
@@ -112,7 +112,7 @@ export function deleteSelected() {
   if (activeObject) {
     overlay.canvas1.remove(activeObject);
     console.log("deleteObjects ", activeObject.id);
-    deleteEvent(getCurrentFrame(), activeObject.id)
+    deleteEvent(videoControl.getCurrentFrame(), activeObject.id)
     //videoControl.refresh()
     //refreshChronogram();
   }
@@ -124,7 +124,7 @@ export function undoAction() {
     if (undoInfo.action === "delete") {
       let obs = undoInfo.obs;
 
-      if (obs.frame != getCurrentFrame()) {
+      if (obs.frame != videoControl.getCurrentFrame()) {
         // Put it back in the DB and jump to frame
         events.commit(obs);
         videoControl.seekFrame(obs.frame);
@@ -193,7 +193,7 @@ export function updateUndoButton() {
   var action = undoInfo.action;
   if (action === "delete") {
     let obs = undoInfo.obs;
-    if (obs.frame == getCurrentFrame()) {
+    if (obs.frame == videoControl.getCurrentFrame()) {
       $("#undoButton").html("Undelete " + obs.ID);
     } else {
       $("#undoButton").html(

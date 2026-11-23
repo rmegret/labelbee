@@ -61,6 +61,9 @@ import {
   OverlayControl,
 } from './overlay/Overlay.js';
 import { initZoomView } from './zoom/ZoomView.js';
+import {
+  init, printMessage, toggleFullScreen, FilePickerFromServerDialog, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
+} from './labelBee.js';
 import { autoCentering, newRectForCurrentTag, onMouseDown, onObjectDeselected, onObjectSelected } from './overlay/Mouse.js';
 import { identifyBeeRect, plotExcludeRects, plotROI, rotatedRectGeometry, tagAngle } from './overlay/Drawing.js';
 import { addRectFromObs } from './overlay/BeeRect.js';
@@ -260,6 +263,12 @@ installGlobals({
 // The zoom view (zoom/ZoomView.js): `initZoomView` is called by `init()` of labelBee.js, which builds `window.zoomOverlay` (read by the
 // inline handlers of the page and by the other modules).
 installGlobals({ initZoomView });
+
+// The entry (labelBee.js): `init` is called by `window.onload` of the page, `printMessage` and `FilePickerFromServerDialog` by many modules
+// and by AnnotationIO.js, the others by inline handlers.
+installGlobals({
+  init, printMessage, toggleFullScreen, FilePickerFromServerDialog, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
+});
 
 // The form and the selection (Form.js, SelectionControl.js, from the former SelectionControl.js): called by the classic scripts, the
 // inline handlers of the page and the tests. The entry points of the refresh are already wrapped by `instrument` in their module.

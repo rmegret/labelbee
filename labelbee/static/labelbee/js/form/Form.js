@@ -323,7 +323,7 @@ export function updateSelectID() {
 }
 export function onSelectIDChanged() {
   let id = $("#selectID").val().trim();
-  selection.select(getCurrentFrame(), id);
+  selection.select(videoControl.getCurrentFrame(), id);
   refresh.selection();
 }
 

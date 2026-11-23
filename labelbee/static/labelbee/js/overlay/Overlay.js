@@ -697,7 +697,7 @@ class IdPredictor {
 }
   computeDefaultNewID() {
   var default_id = 0;
-  let frame = getCurrentFrame();
+  let frame = videoControl.getCurrentFrame();
   let ids = getValidIDsForFrame(frame);
   if (ids.length == 0) {
     return 0;

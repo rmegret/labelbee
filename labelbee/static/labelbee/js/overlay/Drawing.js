@@ -270,7 +270,7 @@ export function identifyBeeRect(ctx, rect, radius, isActive) {
 
 /* Obs tracks */
 export function plotTracks(ctx) {
-  let F = getCurrentFrame();
+  let F = videoControl.getCurrentFrame();
 
   let win = getWindow();
   let fmin = win[0],
@@ -453,7 +453,7 @@ function plotTag(ctx, tag, color, flags) {
   let pt = overlay.videoToCanvasPoint({ x: tag.c[0], y: tag.c[1] });
 
   if (isCurrentSelection(tag.id)) {
-    if (tag.frame == getCurrentFrame()) {
+    if (tag.frame == videoControl.getCurrentFrame()) {
       if (overlay.opts.showTagsOrientation) {
         plotTagOrientation(ctx, tag, "#00ff00");
       } else {
@@ -515,7 +515,7 @@ function plotTag(ctx, tag, color, flags) {
     ctx.strokeStyle = color;
     ctx.closePath();
     ctx.stroke();
-    if (tag.frame == getCurrentFrame() && overlay.opts.showTagsOrientation) {
+    if (tag.frame == videoControl.getCurrentFrame() && overlay.opts.showTagsOrientation) {
       plotTagOrientation(ctx, tag, "magenta");
     }
   }
@@ -554,7 +554,7 @@ function plotTagOrientation(ctx, tag, color) {
   }
 }
 export function plotTags(ctx) {
-  let F = getCurrentFrame();
+  let F = videoControl.getCurrentFrame();
   let tagsFrame = AnnotationStore.getTags()[F];
   if (tagsFrame !== undefined) {
     let tags = tagsFrame.tags;
@@ -598,7 +598,7 @@ function plotTrackArrow(ctx, p0, p1, L) {
 
 /* Tag tracks */
 export function plotTagsTracks(ctx) {
-  let F = getCurrentFrame();
+  let F = videoControl.getCurrentFrame();
 
   let win = getWindow();
   let fmin = win[0],

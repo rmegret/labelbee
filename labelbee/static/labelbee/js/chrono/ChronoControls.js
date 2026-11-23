@@ -253,7 +253,7 @@ export function chronoAdjust(mode) {
 }
 export function scaleTimeDomain(scale) {
   let domain = chrono.axes.xdomain();
-  let f = getCurrentFrame();
+  let f = videoControl.getCurrentFrame();
   if (f >= domain[0] && f <= domain[1]) {
     // If timemark visible
     chrono.axes.xdomainScale(scale, f); // Zoom in the timemark
@@ -263,7 +263,7 @@ export function scaleTimeDomain(scale) {
 }
 export function shiftTimeDomain(factor) {
   let domain = chrono.axes.xdomain();
-  let f = getCurrentFrame();
+  let f = videoControl.getCurrentFrame();
   let shift = Math.round(factor * (domain[1] - domain[0]));
   chrono.axes.xdomainShift(shift);
   //     if (f>=domain[0] && f<=domain[1]) { // If timemark visible

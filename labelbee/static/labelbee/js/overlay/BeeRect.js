@@ -138,7 +138,7 @@ export function updateRectObsGeometry(activeObject) {
 }
 
 export function createRectsFromTracks(F) {
-  if (typeof F === "undefined") F = getCurrentFrame();
+  if (typeof F === "undefined") F = videoControl.getCurrentFrame();
   let ids = getValidIDsForFrame(F);
   if (logging.overlay) {
     console.log("createRectsFromTracks: ", { frame: F, ids: ids });

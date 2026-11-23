@@ -133,7 +133,7 @@ def test_n8_zoom_draws_the_hovered_frame_not_the_live_video(ui, sample_dir):
     _start(ui, sample_dir)
     ui.open_panel("Zoom")                                                               # refreshZoom is cancelled while #zoom is hidden
     ui.page.wait_for_function("$('#zoom').is(':visible')")
-    ui.js("selection.select(getCurrentFrame(), '1'); refresh.selection()")              # the zoom follows the selected tag
+    ui.js("selection.select(videoControl.getCurrentFrame(), '1'); refresh.selection()")              # the zoom follows the selected tag
     ui.js("""() => {
       window.__zoomSrc = [];
       const d = CanvasRenderingContext2D.prototype.drawImage;

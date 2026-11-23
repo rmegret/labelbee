@@ -17,7 +17,7 @@ export function gotoEvent(frame, id) {
   let obs = getObsHandle(frame, id)
 
   selection.select(frame, id)
-  if (frame==getCurrentFrame()) {
+  if (frame==videoControl.getCurrentFrame()) {
     // Try to select the bee in current frame
     refresh.selection();
   } else {
@@ -451,7 +451,7 @@ export function onClickNextID() {
   let id = String(selection.getId());
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
-  selection.select(getCurrentFrame(), newID);
+  selection.select(videoControl.getCurrentFrame(), newID);
   refresh.selection();
 
   setRestrictID(newID);
@@ -472,7 +472,7 @@ export function onClickPrevID(gotoLast) {
   let id = String(selection.getId());
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[N - 1] : domain[(pos + N - 1) % N];
-  selection.select(getCurrentFrame(), newID);
+  selection.select(videoControl.getCurrentFrame(), newID);
   refresh.selection();
 
   setRestrictID(newID);
@@ -497,7 +497,7 @@ function onClickNextIDStart() {
   let id = String(selection.getId());
   let pos = $.inArray(id, domain);
   let newID = pos == -1 ? domain[0] : domain[(pos + 1) % N];
-  selection.select(getCurrentFrame(), newID);
+  selection.select(videoControl.getCurrentFrame(), newID);
   refresh.selection();
 
   setRestrictID(newID);
@@ -571,7 +571,7 @@ export function scaleTrackWindow(factor) {
 }
 export function shiftTrackWindow(factor) {
   let L = Number($("#trackWindow").val());
-  let frame = getCurrentFrame();
+  let frame = videoControl.getCurrentFrame();
   console.log(
     "shiftTrackWindow: factor=",
     factor,
@@ -613,7 +613,7 @@ function updateFocusTrackWindowButton() {
 // Control
 function focusTrackWindow() {
   // Actually a Chronogram method
-  let f = getCurrentFrame();
+  let f = videoControl.getCurrentFrame();
   chrono.axes.xdomainFocus([
     f - chrono.config.trackWindow.trackWindowBackward,
     f + chrono.config.trackWindow.trackWindowForward,

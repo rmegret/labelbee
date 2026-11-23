@@ -214,7 +214,7 @@ var __section__chronogram_dynamic_elements
 
 export var previewBar = { active: false, shown: false }; // a preview is going on / has shown a frame since it began
 export function updateTimeMark() {
-  var frame = getCurrentFrame();
+  var frame = videoControl.getCurrentFrame();
   if (previewBar.active) {
     previewBar.shown = true;
     chrono.axes.setTimeMarkState("preview");
@@ -343,7 +343,7 @@ export function updateTrackWindowSpan() {
     .selectAll("#trackWindowSpanClipPath > rect")
     .attr("width", chrono.axes.width())
     .attr("y", -15);
-  let f = getCurrentFrame();
+  let f = videoControl.getCurrentFrame();
   let fmin = f - chrono.config.trackWindow.trackWindowBackward;
   let fmax = f + chrono.config.trackWindow.trackWindowForward;
   trackWindowSpan
@@ -354,7 +354,7 @@ export function updateTrackWindowSpan() {
     .attr("height", 11);
 }
 export function getWindow() {
-  let f = getCurrentFrame();
+  let f = videoControl.getCurrentFrame();
   let fmin = f - chrono.config.trackWindow.trackWindowBackward;
   let fmax = f + chrono.config.trackWindow.trackWindowForward;
 

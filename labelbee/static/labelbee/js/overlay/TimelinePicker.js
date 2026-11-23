@@ -590,6 +590,7 @@ TimelinePicker.prototype.drawImagePickFlowerMode = async function(size, displayS
             drawFlowers(flowers, visitedFlower())
         }
         function drawFlowersMainCanvas(flowers, selectedID) {
+            const radius = 5 // formerly the page global of labelBee.js
             //overlay.ctx.drawImage(img, 0, 0)
             let ctx = overlay.ctx
             for (let obs of flowers) {

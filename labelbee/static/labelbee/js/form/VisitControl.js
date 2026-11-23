@@ -73,7 +73,7 @@ VisitWidget.prototype.newVisit = function() {
     let pollinator_id = this.pollinator.ID
     let flower_id = this.flower.ID
     let id = "V-"+pollinator_id+"-"+flower_id
-    let frame= getCurrentFrame()
+    let frame= videoControl.getCurrentFrame()
     let time = videoControl.getCurrentVideoTime()
 
     let x1 = this.pollinator.x+this.pollinator.width/2

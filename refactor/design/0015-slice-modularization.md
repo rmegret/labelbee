@@ -384,6 +384,14 @@ As in 10a: `git mv` into the new folder `zoom/`, no statement cut (2276 lines). 
 - The line `ZoomOverlay.prototype = {};` is removed (same reasoning as 10a: it replaced the default prototype and its `constructor`).
 - DEBT: `drawPixelated` and `drawTagBin` test `zoom` (not a parameter, never declared: it only resolves because the canvas `id="zoom"` creates a window property), then assign it; the assignment is unreachable. To fix when the file is cut.
 
+### 12: `labelBee.js` becomes a module
+
+As in 10a and 10b, no statement is cut (987 lines: `init`, the router, `printMessage`, `StatusWidget`, `FilePickerFromServerDialog`, the key handlers); the file stays at the root of `js/` as the entry, imported by the bridge, and its `<script>` tag leaves the page. The module exports `init`, `printMessage`, `toggleFullScreen`, `FilePickerFromServerDialog`, `onKeyDown_IDEdit` and `onKeyDown_NewIDEdit`; the bridge installs them (`init` for `window.onload` of the page, `printMessage` for 13 modules and AnnotationIO.js, `FilePickerFromServerDialog` for AnnotationIO.js and `VideoList.js`, the others for inline handlers). `StatusWidget`, `onKeyDown` and the other functions become module-local.
+- Globals cut: `canvas`, `canvas1`, `ctx`, `ctx2`, `vid`, `radius`, `dragging`, `final_id`, `x`, `y`, `cx`, `cy`, `width`, `height` had no reader (eslint `no-undef` over every other file); the one exception, `radius` read by `drawFlowersMainCanvas` in `overlay/TimelinePicker.js` (value 5), becomes a local constant there.
+- Kept on `window`, assigned explicitly: the singletons built by `init` (`statusWidget`, `videoManager`, `videoControl`, `overlay`, `chrono`, `loginDialog`), `http_script_name`, `change_id_force`, `lasthash` (also written by `VideoControl.js`), `onhashchange` and `user_id` (declared undefined: AnnotationIO.js sets it at login, `ServerIO.js` reads it, a ReferenceError before login otherwise). The loop variable `buttonid_property` gets a `let`.
+- Alias removed: `getCurrentFrame` (assigned by `init`, `videoControl.getCurrentFrame.bind(videoControl)`) had ~50 free callers in 13 files and 4 test lines; they call `videoControl.getCurrentFrame()` (same method, same receiver), as 10a did for `videoCache`. `refactor/tests/browser/test_j_editors.py`, `test_l_refresh.py`, `test_n_hover_control.py` adapted.
+- What the bridge still defines after this step: see the record (step 13).
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

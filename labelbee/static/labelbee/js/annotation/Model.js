@@ -174,7 +174,7 @@ export function getTags(frame, id) {
 
 /** The ids of the tags in the frames of the tracking window around the current frame (strings). */
 export function getIdsInFocus() {
-  let F = getCurrentFrame();
+  let F = videoControl.getCurrentFrame();
 
   let win = getWindow();
   let fmin = win[0],
