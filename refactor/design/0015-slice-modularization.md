@@ -368,6 +368,14 @@ The sections `# LOW-LEVEL MOUSE EVENTS` and `# FABRICJS EVENTS` (~720 lines, tex
 
 Shared state: the mouse code reads the canvas transform (`canvasTransform`, 7 reads, which lived as a module `let` of `Overlay.js`). It becomes `overlay.canvasTransform` (the array is still updated in place, assigned once by the constructor; ~65 occurrences renamed in both files, no reader elsewhere), the state-on-the-object choice of ADR 0015; `transformFactor` and `canvasTransformReference` stay module-local (read only by the canvas methods). `extraScale` (constant 1: its updates are commented out) stays in `Overlay.js`, its only reader being `redrawVideoFrame`. Also fixed: the comment of `tagHasCenter`, left behind in `Overlay.js` by 11c4, goes back to `Drawing.js`.
 
+### 11c6: canvas size and transform move to `overlay/Transform.js`
+
+The section `# UTILS CANVAS SIZE` of `Overlay.js` (~285 lines, text unchanged) becomes the module `overlay/Transform.js`: `canvasSetVideoSize`, `refreshCanvasSize`, the `canvasTransform*` family (reset, set, fix, scale, pan, center) and the conversions `obsToCanvasRect`, `canvasToVideoPoint/Rect`, `videoToCanvasPoint/Rect`. Every method already starts with `let overlay = this`, so the module exports them as one object `canvasMethods` (`canvasMethods.X = function ...`, the former `OverlayControl.prototype.X` lines with only the prefix changed) and `Overlay.js` installs it with `Object.assign(OverlayControl.prototype, canvasMethods)`. The public API (`overlay.canvasToVideoPoint(...)` etc., ~25 callers in `ZoomView.js`, `BeeRect.js`, `Drawing.js`, `Mouse.js`, `OverlayOptions.js`) is unchanged, and the module imports nothing.
+
+State: the two module `let`s read by this section, `transformFactor` and `canvasTransformReference`, become `overlay.transformFactor` and `overlay.canvasTransformReference` next to `overlay.canvasTransform` (11c5); the constructor initialises them, and `redrawVideoFrame` (stays in `Overlay.js`) reads `overlay.transformFactor`. `extraScale` stays in `Overlay.js`.
+
+DEBT: `Transform.js` mutates the `overlay` fields directly (`overlay.canvasTransform`, `transformFactor`, `canvasTransformReference`, `videoSize`) through the mixin. To do later: encapsulate the transform (a class owning its state, with accessors and the conversions, instead of methods reaching into the overlay).
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

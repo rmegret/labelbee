@@ -9,6 +9,7 @@ import { instrument } from "../core/RefreshInstrumentBridge.js"
 import {
   addDraftRect, createRect, createRectsFromTracks, findRect, rectToGeometry, refreshRectFromObs, updateRectObsGeometry,
 } from "./BeeRect.js"
+import { canvasMethods } from "./Transform.js"
 import {
   onMouseDown, onMouseDown2, onMouseUp, onMouseWheel, onObjectDeselected, onObjectModified, onObjectMoving, onObjectSelected,
 } from "./Mouse.js"
@@ -17,7 +18,6 @@ import { plotROI, plotExcludeRects, plotTags, plotTagsTracks, plotTracks, rotate
 // ## Video + canvas
 
 // Canvas transform of the overlay (zoom and pan): the array is `overlay.canvasTransform`, the scale and the reference size are module state
-let transformFactor, canvasTransformReference
 let extraScale = 1 // extra zoom of the video frame (constant: its updates in onMouseWheel are commented out)
 
 export function OverlayControl(canvasTagId) {
@@ -95,15 +95,18 @@ export function OverlayControl(canvasTagId) {
   $("#canvasresize").on("resizestop", overlay.refreshCanvasSize.bind(overlay));
   //$("#canvasresize").on( "resize", refreshCanvasSize ); // Continuous (not working)
 
-  transformFactor = 1.0;
+  overlay.transformFactor = 1.0;
   overlay.canvasTransform = [1, 0, 0, 1, 0, 0]; // canvas->video affine [sx, 0, 0, sy, tx, ty], updated in place
-  canvasTransformReference = { w: 100, h: 100 }; // Keep previous canvas size
+  overlay.canvasTransformReference = { w: 100, h: 100 }; // Keep previous canvas size
   overlay.videoSize = { x: 600, y: 400 };
 
   refreshTagsParameters();
 }
 
 
+
+// Canvas size and transform methods (overlay/Transform.js)
+Object.assign(OverlayControl.prototype, canvasMethods)
 
 OverlayControl.prototype.setInteractionMode = function(mode, opts) {
     console.log('overlay.setInteractionMode', mode, opts)
@@ -178,293 +181,6 @@ OverlayControl.prototype.setActiveRectID = function (id) {
       console.log("setActiveRectID: No rect found for id=", id);
     return false;
   }
-};
-
-// #MARK # UTILS CANVAS SIZE
-
-OverlayControl.prototype.canvasSetVideoSize = function (w, h) {
-  // Resize canvas to have same aspect-ratio as video
-  let overlay = this;
-
-  overlay.videoSize.w = w;
-  overlay.videoSize.h = h;
-
-  var wd = w,
-    hd = h;
-  if (true) {
-    // Keep same canvas width as before, simply adjust aspect-ratio
-    wd = overlay.canvas.width;
-    hd = Math.round((h * overlay.canvas.width) / w);
-  } else {
-    // Automatic scaling to be smaller than 800pix
-    while (wd > 800) {
-      wd /= 2.0;
-      hd /= 2.0;
-    }
-  }
-
-  var borderThickness = 2;
-
-  $("#canvasresize")[0].style.width =
-    (wd + 16 + borderThickness).toString() + "px";
-  $("#canvasresize")[0].style.height = (hd + borderThickness).toString() + "px";
-  $("#canvasresize").resizable({
-    helper: "ui-resizable-helper",
-    aspectRatio: w / h,
-  });
-
-  overlay.refreshCanvasSize();
-  overlay.canvasTransformReset();
-};
-OverlayControl.prototype.refreshCanvasSize = function (event, ui) {
-  let overlay = this;
-
-  // Refresh based on new video size or new canvas size
-  if (logging.canvasEvents) {
-    console.log("refreshCanvasSize: event=", event);
-    console.log(
-      "refreshCanvasSize: event.target.clientWidth=",
-      event.target.clientWidth
-    );
-  }
-
-  // Internal canvas size adjusting utility
-  // Ensures all canvas elements have same size
-  function resizeCanvas(wd, hd) {
-    if (logging.canvasEvents)
-      console.log("refreshCanvasSize.resizeCanvas: wd=", wd, " hd=", hd);
-
-    overlay.canvas.width = wd;
-    overlay.canvas.height = hd;
-    overlay.canvas1.setWidth(wd);
-    overlay.canvas1.setHeight(hd);
-
-    $("#video").width(wd);
-    $("#video").height(hd);
-
-    var wrap = $(".canvaswrapper")[0];
-    wrap.style.width = wd.toString() + "px";
-    wrap.style.height = hd.toString() + "px";
-
-    var borderThickness = 2;
-    $("#canvasresize")[0].style.width =
-      (wd + 16 + borderThickness).toString() + "px";
-    $("#canvasresize")[0].style.height =
-      (hd + borderThickness).toString() + "px";
-  }
-
-  // TODO: remove jQuery reference
-  let video = $("#video")[0];
-
-  var borderThickness = 4;
-
-  let hd = 100, wd = 100;
-  if (overlay.opts.fixedAspect) {
-    // Assume width is in px to parse #canvasresize size
-    hd = Math.round( parseInt($("#canvasresize")[0].style.height) - borderThickness );
-    wd = Math.round( (hd / overlay.videoSize.h) * overlay.videoSize.w );
-  } else {
-    hd = Math.round( parseInt($("#canvasresize")[0].style.height) - borderThickness );
-    wd = Math.round( parseInt($("#canvasresize")[0].style.width) - borderThickness );
-  }
-  resizeCanvas(wd, hd);
-
-  $("#videoSize")[0].innerHTML =
-    "videoSize: " +
-    overlay.videoSize.w.toString() +
-    "x" +
-    overlay.videoSize.h.toString();
-  $("#canvasSize")[0].innerHTML =
-    "canvasSize: " + wd.toString() + "x" + hd.toString();
-
-  // Change transform to keep same image content, just scaled
-  var scaling = canvasTransformReference.w / overlay.canvas.width;
-  var center = [canvasTransformReference.w / 2, canvasTransformReference.h / 2];
-  var center2 = [overlay.canvas.width / 2, overlay.canvas.height / 2];
-  canvasTransformReference.w = overlay.canvas.width;
-  canvasTransformReference.h = overlay.canvas.height;
-
-  overlay.canvasTransformScale(scaling, center, center2);
-
-  // Don't use ctx.transform, as it also reduces the drawings overlays
-  // Instead, we scale everything manually
-  //var ctx=canvas.getContext("2d");
-  //ctx.transform(...canvasTransform);
-
-  //overlay.refreshOverlay() // Already done in canvasTransformScale()
-};
-
-/* Canvas Transform */
-OverlayControl.prototype.canvasTransformInternalReset = function () {
-  let overlay = this;
-
-  let video = $("#video")[0];
-  transformFactor = overlay.videoSize.w / overlay.canvas.width;
-
-  let array = [transformFactor, 0, 0, transformFactor, 0, 0];
-  if (isNaN(transformFactor)) {
-    array = [1, 0, 0, 1, 0, 0];
-  }
-  for (let i = 0; i < 6; i++) {
-    overlay.canvasTransform[i] = array[i];
-  }
-
-  canvasTransformReference.w = overlay.canvas.width;
-  canvasTransformReference.h = overlay.canvas.height;
-};
-OverlayControl.prototype.canvasTransformReset = function () {
-  let overlay = this;
-
-  overlay.canvasTransformInternalReset();
-  overlay.canvasTransform_Fix();
-  overlay.hardRefresh();
-};
-OverlayControl.prototype.canvasTransformSet = function (array) {
-  let overlay = this;
-
-  for (let i = 0; i < 6; i++) {
-    overlay.canvasTransform[i] = array[i];
-  }
-  overlay.canvasTransform_Fix();
-  overlay.refreshOverlay(); // only the transform changed: the rects follow their obs
-};
-OverlayControl.prototype.canvasTransform_Fix = function () {
-  let overlay = this;
-
-  //let video = $('#video')[0]
-  let w1 = overlay.canvas.width;
-  let h1 = overlay.canvas.height;
-  let w2 = overlay.videoSize.w;
-  let h2 = overlay.videoSize.h;
-
-  if (overlay.canvasTransform[0] * w1 > w2 || overlay.canvasTransform[3] * h1 > h2) {
-    let scaling = Math.min(w2 / w1, h2 / h1);
-    overlay.canvasTransform[0] = scaling;
-    overlay.canvasTransform[3] = scaling;
-  }
-  //console.log(w1,h1,w2,h2)
-
-  if (overlay.canvasTransform[4] < 0) overlay.canvasTransform[4] = 0;
-  if (overlay.canvasTransform[5] < 0) overlay.canvasTransform[5] = 0;
-  if (overlay.canvasTransform[4] + overlay.canvasTransform[0] * w1 > w2)
-    overlay.canvasTransform[4] = w2 - overlay.canvasTransform[0] * w1;
-  if (overlay.canvasTransform[5] + overlay.canvasTransform[3] * h1 > h2)
-    overlay.canvasTransform[5] = h2 - overlay.canvasTransform[3] * h1;
-
-  // Check degenerate
-  var hasNan = false;
-  for (let i = 0; i < 6; i++) hasNan |= isNaN(overlay.canvasTransform[i]);
-  if (hasNan || overlay.canvasTransform[0] <= 0 || overlay.canvasTransform[3] <= 0) {
-    console.log(
-      "ERROR in canvasTransform_Fix: degenerate canvasTransform. Reinit"
-    );
-    overlay.canvasTransformInternalReset();
-  }
-};
-OverlayControl.prototype.canvasTransformScale = function (
-  scaling,
-  center,
-  center2
-) {
-  // center is scaling center in current canvas coordinates
-  // center2 (optional) is scaling center in new canvas coordinates
-  /*
-    if (overlay.canvasTransform[0]*scaling > transformFactor) 
-        scaling = transformFactor/overlay.canvasTransform[0] 
-        // Can not zoom out more than initial
-    */
-
-  //center[1]+=2
-  //center[0]+=2
-  let overlay = this;
-
-  if (typeof center2 === "undefined") center2 = center;
-
-  //console.log('canvasTransformScale: center=',center)
-  overlay.canvasTransform[4] += overlay.canvasTransform[0] * (center[0] - scaling * center2[0]);
-  overlay.canvasTransform[5] += overlay.canvasTransform[3] * (center[1] - scaling * center2[1]);
-  overlay.canvasTransform[0] = overlay.canvasTransform[0] * scaling;
-  overlay.canvasTransform[3] = overlay.canvasTransform[3] * scaling;
-
-  overlay.canvasTransform_Fix();
-
-  overlay.refreshOverlay(); // only the transform changed: the rects follow their obs
-};
-OverlayControl.prototype.canvasTransformPan = function (dx, dy) {
-  let overlay = this;
-
-  overlay.canvasTransform[4] -= dx * overlay.canvasTransform[0];
-  overlay.canvasTransform[5] -= dy * overlay.canvasTransform[3];
-
-  overlay.canvasTransform_Fix();
-
-  overlay.refreshOverlay(); // only the transform changed: the rects follow their obs
-};
-OverlayControl.prototype.canvasTransformCenter = function (cx, cy) {
-  // cx,cy: new center in video coordinates
-  let overlay = this
-
-  if ((cx === undefined) || (cy === undefined)) {
-    console.log('canvasTransformCenter: ABORT, center undefined', cx, cy)
-    return
-  }
-
-  let w1 = overlay.canvas.width
-  let h1 = overlay.canvas.height
-
-  let sx = overlay.canvasTransform[0]   // canvas->video
-  let sy = overlay.canvasTransform[3]
-
-  overlay.canvasTransform[4] = cx - sx * w1 / 2   // tx   canvas->video
-  overlay.canvasTransform[5] = cy - sy * h1 / 2   // ty
-
-  overlay.canvasTransform_Fix() // Avoid being outside of video
-
-  overlay.hardRefresh()
-}
-
-OverlayControl.prototype.obsToCanvasRect = function (obs) {
-  let overlay = this;
-
-  let R = { left: obs.x, top: obs.y, width: obs.width, height: obs.height };
-  let R2 = overlay.videoToCanvasRect(R);
-  return R2;
-};
-OverlayControl.prototype.canvasToVideoPoint = function (pt) {
-  let overlay = this;
-
-  return {
-    x: overlay.canvasTransform[0] * pt.x + overlay.canvasTransform[4],
-    y: overlay.canvasTransform[3] * pt.y + overlay.canvasTransform[5],
-  };
-};
-OverlayControl.prototype.videoToCanvasPoint = function (pt) {
-  let overlay = this;
-
-  return {
-    x: (pt.x - overlay.canvasTransform[4]) / overlay.canvasTransform[0],
-    y: (pt.y - overlay.canvasTransform[5]) / overlay.canvasTransform[3],
-  };
-};
-OverlayControl.prototype.canvasToVideoRect = function (rect) {
-  let overlay = this;
-
-  return {
-    left: overlay.canvasTransform[0] * rect.left + overlay.canvasTransform[4],
-    top: overlay.canvasTransform[3] * rect.top + overlay.canvasTransform[5],
-    width: overlay.canvasTransform[0] * rect.width,
-    height: overlay.canvasTransform[3] * rect.height,
-  };
-};
-OverlayControl.prototype.videoToCanvasRect = function (rect) {
-  let overlay = this;
-
-  return {
-    left: (rect.left - overlay.canvasTransform[4]) / overlay.canvasTransform[0],
-    top: (rect.top - overlay.canvasTransform[5]) / overlay.canvasTransform[3],
-    width: rect.width / overlay.canvasTransform[0],
-    height: rect.height / overlay.canvasTransform[3],
-  };
 };
 
 // #MARK # OVERLAY REFRESH
@@ -705,8 +421,8 @@ OverlayControl.prototype.redrawVideoFrame = function() {
       // may have some time discrepency between video and overlay
       overlay.ctx.clearRect(
         0, 0,
-        (video.videoWidth * extraScale) / transformFactor,
-        (video.videoHeight * extraScale) / transformFactor
+        (video.videoWidth * extraScale) / overlay.transformFactor,
+        (video.videoHeight * extraScale) / overlay.transformFactor
       );
     }
   } else if (videoControl.currentMode == "preview") {

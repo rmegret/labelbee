@@ -153,7 +153,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (11c4) drawing to `overlay/Drawing.js` [x], ~865 lines, 7 exports
   - (11c5) mouse and fabric events to `overlay/Mouse.js` [x], ~720 lines, `overlay.canvasTransform`
   - (11t) parallel browser tests [x], pytest-xdist `-n 8`, full suite 224 s to 30 s; `test_f6` fixed
-  - (10b), (11c6)-(12) zoom, transform cut, entry [ ]
+  - (11c6) canvas size and transform to `overlay/Transform.js` [x], `canvasMethods` mixin, state on `overlay`
+  - (10b), (12) zoom, entry [ ]
   - (13) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
