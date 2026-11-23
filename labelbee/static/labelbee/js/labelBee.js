@@ -7,9 +7,7 @@
 // Installed by labelbeeBridge.js (`init`, `printMessage`, `toggleFullScreen`, `FilePickerFromServerDialog`, `onKeyDown_*`).
 
 import { initEventsNotes } from "./form/EventsNotes.js"
-
-// `user_id`: set by AnnotationIO.js at login, read by annotation/ServerIO.js (undefined before)
-window.user_id = undefined
+import { initLogin } from "./session/Login.js"
 
 //var vis;
 
@@ -188,7 +186,7 @@ export function init(videoID, tagID) {
 
   /* Set defaults */
 
-  whoami(); // Refresh user status
+  initLogin(); // Login dialog, buttons of #whoami, user status
 
   window.onbeforeunload = function (e) {
     console.log("Leaving...");
@@ -201,8 +199,6 @@ export function init(videoID, tagID) {
 
   // Done
   loadTracks([], true); // skipRefresh
-
-  window.loginDialog = new LoginDialog();
 
   // Preload video list
   videoManager.receiveVideoSelection();

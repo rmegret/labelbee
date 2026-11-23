@@ -11,6 +11,8 @@ let theManager;
 
 // The video metadata is owned by video/VideoInfo.js: `getVideoInfo()` and `setVideoInfoObject()` are installed by labelbeeBridge.js.
 
+import { getUserData } from "../session/Login.js";
+
 export function VideoManager() {
   const videoManager = this;
   
@@ -532,7 +534,7 @@ VideoManager.prototype.videoListFromDB = function () {
   if (this.videoListJSON == "Error"){
     fromServerDialog.setBody("<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br>");
     let errormsg;
-    if (user_data.is_authenticated){
+    if (getUserData().is_authenticated){
       errormsg = "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.<br>Press the refresh button above to try again.";
     }
     else{
@@ -635,7 +637,7 @@ VideoManager.prototype.receiveVideoSelection = function(){
         // Display error message in dialog menu
         fromServerDialog.setBody("<button onclick='videoManager.receiveVideoSelection();'>Refresh Video List</button><br>"); 
         let errormsg;
-        if (user_data.is_authenticated){
+        if (getUserData().is_authenticated){
           errormsg = "VideoManager.receiveVideoSelection ERROR: Unable to retrieve video list from server.<br>Press the refresh button above to try again.";
         }
         else{

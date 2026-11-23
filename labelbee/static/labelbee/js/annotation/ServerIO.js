@@ -8,7 +8,7 @@
  *
  * Strict mode: the implicit globals `dataToSend`, `alertMSG`, `success` and `tags` of the old code are declared; nobody read them.
  *
- * DEBT: globals read at call time: `$`, `d3`, `user_id` (set by the login), `videoManager`, `fromServerDialog` (the lineage
+ * DEBT: globals read at call time: `$`, `d3`, `videoManager`, `fromServerDialog` (the lineage
  * `basedOn`, its message and the dialog to hide) and `statusWidget`. `eventsToServer(format)` ignores `format` (always V2).
  */
 import { exportTracks } from './Export.js';
@@ -17,6 +17,7 @@ import { classifyFilename } from './CsvSchemas.js';
 import { mainAlert, reportLoadError } from '../core/Alerts.js';
 import { logging } from '../core/Notifier.js';
 import { url_for } from '../core/Utils.js';
+import { getUserId } from '../session/Login.js';
 
 /* REQUESTS. A loader is: get (a Promise) -> payload (Load.js) -> report. Chain the apply stage with `.then(apply, onError)`,
  * never with `.then(apply).catch(onError)`: an exception of the apply stage is not a request error. */
@@ -250,7 +251,7 @@ export function eventsToServer(format) {
 
   const dataToSend = {
     video_id: videoManager.currentVideoID,
-    created_by_id: user_id,
+    created_by_id: getUserId(),
     data_type: "event",
     data: JSON.stringify(exportTracks("v2")),
     created_from_id: fromServerDialog.basedOn

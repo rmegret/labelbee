@@ -431,6 +431,12 @@ As built in 13a: moves of whole top-level statements, `AnnotationIO.js` 934 to ~
 - The events notes to the new `form/EventsNotes.js`: `initEventsNotes` (the `input` handler, called by `init()` of `labelBee.js` next to `initAnnotationIO`) and `updateEventsNotes`, wrapped by `instrument` in the module. `Load.js` now imports it, so `updateEventsNotes` is no longer on `window`.
 - Golden harness `refactor/tests/golden/harness/io-env.js`: `form/EventsNotes.js` replaces `AnnotationIO.js` in the sources it evaluates (the erase and prompt handlers come from `Load.js` and `ServerIO.js`); the module declares a plain `function updateEventsNotes` and exports the instrumented one, so the harness finds it.
 
+As built in 13b: the login block of `AnnotationIO.js` (`ajaxlogin`, `ajaxlogout`, `LoginDialog`, `try_login`, `try_logout`, `whoami`, `user_data`, ~150 lines) moves to `session/Login.js`, and the module owns its state and its buttons (maintainer, 2026-11-23: no globals for it).
+- The state is module-local: `userData` and `userId` behind the exports `getUserData()` and `getUserId()`, read by `video/VideoList.js` and `annotation/ServerIO.js` (imports). The `user_data`, `user_id` and `loginDialog` globals are gone.
+- The functions are module-local too (`whoami`, `try_login`, `try_logout`, `LoginDialog`): the buttons that `whoami` builds carry `data-login-action` (`whoami`, `login`, `logout`) instead of `onclick` strings, handled by one delegated click listener on `#whoami`, set by the new `initLogin()`, which also builds the dialog and calls `whoami()` once. `init()` of `labelBee.js` calls `initLogin()` where it called `whoami()`. Nothing of the login is installed by the bridge.
+- `getUserId()` is `undefined` until an authenticated answer, and keeps its value after a log out, as `user_id` did.
+- `show_log_in` (empty) stays in `AnnotationIO.js` until 13d, which cuts it.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

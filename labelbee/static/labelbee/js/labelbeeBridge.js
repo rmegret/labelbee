@@ -70,7 +70,6 @@ import { initPanelRows } from './layout/PanelRows.js';
 import { initZoomView } from './zoom/ZoomView.js';
 import {
   initAnnotationIO,
-  LoginDialog, try_login, try_logout, whoami,
 } from './AnnotationIO.js';
 import {
   init, printMessage, toggleFullScreen, FilePickerFromServerDialog, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
@@ -289,11 +288,9 @@ $(function () {
   initVideoSettings();
 });
 
-// The annotation IO dialogs (AnnotationIO.js): `initAnnotationIO`, `LoginDialog` and `whoami` are called by `init()` of labelBee.js (`whoami` also
-// by NavMenu and the inline handlers), `try_login`, `try_logout` and `whoami` by the buttons the login dialog builds.
+// The annotation IO dialogs (AnnotationIO.js): `initAnnotationIO` is called by `init()` of labelBee.js.
 installGlobals({
   initAnnotationIO,
-  LoginDialog, try_login, try_logout, whoami,
 });
 
 // The entry (labelBee.js): `init` is called by `window.onload` of the page, `printMessage` and `FilePickerFromServerDialog` by many modules
