@@ -248,6 +248,27 @@ Risks: the `mode[...]` dispatch replaces the mode branches of three methods; thi
 
 `tagMode` moves to `chrono/ChronoData.js` (maintainer: a chronogram parameter; read by `ChronoData.js` twice, `ChronoRender.js` once and `getTag`). It stays a page global, now defined there (`window.tagMode = 'Tracks'`), because the console and `test_a_features.py` set it and the readers read it at call time; it becomes a field of the chrono config with the track window in 11b3. `getTag` is not chrono data: its only caller is `getCurrentTag` (selected bee, used by the angle-from-tag button, the zoom distractors, crop geometry and info line), so it moves next to it in `SelectionControl.js` and is no longer a global. Reading the code corrected three rows of the 11a table: the ID prediction and `newObservation` are not pure, `tagCorners`, `tagUp` and `tagAngle` work in canvas coordinates; they stay in the overlay. DEBT: `tagSize` has no user. The 'Tags' mode is legacy, reachable only from the console.
 
+### Step 11b2: `overlay/TimelinePicker.js` and the mode registry (2026-11-22)
+
+**What moves** (maintainer: the whole timeline picking stays together, as it is, "half broken, deal with it later"):
+from `OverlayControl.js`: `TimelineWidget`, `getFrameCropImg`, `getFrameCropCurrentObject`, `drawTimelineCurrentObject`, `drawTimelinePickFrameMode`, `pickFlowerButtonCallback`, the pick-frame branch of `hardRefresh` (buttons, Set Start/End, Show Timeline) and of `setInteractionMode` (default span) and `refreshInteraction`;
+from `form/VisitControl.js`: `OverlayControl.prototype.drawImagePickFlowerMode` (the Pick Flower tool of the pick-frame mode; it was a prototype extension of the overlay written in a form file).
+`VisitWidget.prototype.open` (same file, uses `this.interaction`, no caller) is not touched: DEBT.
+
+**Registry.** `overlay.modes` maps a mode name to the helper that owns it: `'pick-frame'` is a `TimelinePicker`, `'edit-visit'` is the existing `VisitWidget`. (Named `modes` to not clash with `overlay.interaction.mode`, the current mode name.) `'main'` has no helper. A helper may have:
+
+| hook | called by | meaning |
+|---|---|---|
+| `enter(opts)` | `setInteractionMode` | sets `overlay.interaction` (mode and opts) and returns `{wroteSpan}`, or `null` to cancel (nothing selected) |
+| `refreshInteraction(opts)` | `refreshInteraction` | highlights its buttons |
+| `hardRefresh()` | `hardRefresh` | selects the rect and builds its panel; returns `false` when it left the mode (the overlay stops there) |
+
+`setInteractionMode`, `refreshInteraction` and `hardRefresh` stay in the overlay and call the hooks instead of the if/else on the mode name; a helper without `hardRefresh` gets the default (select the rect of the selection). The state of the mode (`obs`, `id`, `frame`, `showTimeline`, `showPickFlower`) stays in `overlay.interaction.opts`, which the mouse handlers and `VisitWidget` read; moving it into the helper is for later.
+
+**Strict mode.** Module code is strict: the implicit globals of the moved code (`TimelineWidget = function`, `for (delta of ...)`, `for (i of ...)`) get a declaration. The template button `overlay.drawTimelineCurrentObject()` becomes `overlay.modes['pick-frame'].drawTimelineCurrentObject()`. `overlay.timeline` (no reader) becomes `picker.timeline`. The bridge installs `TimelinePicker` for the overlay constructor, as for `VisitWidget`, until 11c.
+
+**Risks.** The error path of the pick-frame `hardRefresh` (no valid obs) falls back to `main` and repeats the refresh itself; kept as is. The timeline display had no test: `test_f2a_pick_frame_show_timeline_draws_the_frames_around_the_current_one` is added (and checks `overlay.modes`). The default branch of `hardRefresh` now also logs `using selection id` in `edit-visit` (a console line). Pick Flower and Set Start/End are covered by `test_f_writers.py`, the entry by `test_l_refresh.py`.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

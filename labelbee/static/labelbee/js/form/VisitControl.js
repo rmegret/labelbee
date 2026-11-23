@@ -1,8 +1,8 @@
-// Visit module: the visit widget (Annotations > Visits, edit-visit mode) and the Pick Flower tool of the pick-frame mode.
-// Both edit `visit` and `span` of a stored observation, always through events.update (ADR 0008 R3).
+// Visit module: the visit widget (Annotations > Visits, edit-visit mode). The Pick Flower tool of the pick-frame mode is in
+// overlay/TimelinePicker.js. Both edit `visit` and `span` of a stored observation, always through events.update (ADR 0008 R3).
 // Moved out of OverlayControl.js. ES module (refactor slice 8 step 9b, ADR 0015): `VisitWidget` is installed on window by
-// labelbeeBridge.js (OverlayControl.js builds it), and the extension of `OverlayControl.prototype` below runs when the
-// module is evaluated, after the classic scripts. `default_id` was an implicit global, only written here.
+// labelbeeBridge.js (OverlayControl.js builds it) and is the helper of the mode 'edit-visit' (`overlay.modes`, step 11b2).
+// `default_id` was an implicit global, only written here.
 
 let default_id
 
@@ -17,6 +17,18 @@ export const VisitWidget = function(overlay) {
     this.frame = undefined
 
     this.create()
+}
+// Interaction mode 'edit-visit' (registered in `overlay.modes`, see OverlayControl.js `setInteractionMode`)
+VisitWidget.prototype.enter = function(opts) {
+    console.log('overlay.setInteractionMode', 'changing to edit-visit')
+    if (!opts) opts = {}
+
+    this.overlay.interaction.mode = 'edit-visit'
+    this.overlay.interaction.opts = opts
+    return {}
+}
+VisitWidget.prototype.refreshInteraction = function(opts) {
+    $('.edit-visit').addClass("active")
 }
 VisitWidget.prototype.pickMode = function(mode) {
     console.log('VisitWidget.pickMode', mode)
@@ -383,188 +395,4 @@ VisitWidget.prototype.open = function() {
     //     }
     // }
 
-}
-
-OverlayControl.prototype.drawImagePickFlowerMode = async function(size, displaySize) {
-    let overlay = this
-    
-    videoControl.pause()
-    printMessage("Paused, need to preload video frames")
-    console.log('Creating pick flower image ...')
-
-    if (this.interaction.mode != 'pick-frame') {
-        console.log('Not picking frame... ABORT')
-        return
-    }
-
-    let id = overlay.interaction.opts.id
-    let frame0 = overlay.interaction.opts.frame
-    let obs=getObsHandle(frame0,id) 
-    let currentObs = obs
-    if (!obs) {
-        printMessage("Timeline: didn't find annotation to pick flower for")
-        return
-    }
-    // The `visit` of the observation is the unit written here, always stored whole with events.update (nothing is
-    // written by just opening the tool)
-    function visitedFlower() {
-        return currentObs.visit ? currentObs.visit.flowerid : undefined
-    }
-    function storeVisitedFlower(flowerid) {
-        events.update(frame0, id, {visit: Object.assign({}, currentObs.visit, {flowerid: flowerid})})
-    }
-    if (!size) {
-        size = obs.width>obs.height ? obs.width : obs.height
-        size *= overlay.opts.timelineZoom
-        size = Math.round(size)
-    }
-    if (!displaySize) {
-        displaySize = overlay.opts.timelineDisplaySize
-    }
-    let w = size
-    let h = size
-    let cx = obs.x + obs.width/2
-    let cy = obs.y + obs.height/2
-    let crop = {x: Math.round(cx-w/2), y: Math.round(cy-h/2), w: w, h: h}
-    
-    //$('#pickflowerdiv').html("Pick Flower for id="+id+" in frame="+frame0+"<br>")
-
-    let frame = frame0
-    let img = await this.getFrameCropImg(frame, crop)
-    //img.width = displaySize
-    //img.height = displaySize
-    if (img) {
-        let canvas = document.createElement('canvas'); // Precreated canvas
-        let ctx = canvas.getContext('2d');
-        canvas.width = w; canvas.height = h // pixel size
-        $(canvas).css({width: displaySize, height: displaySize}) // Display size
-        ctx.drawImage(img, 0, 0)
-
-        let div = $('<div style="display: inline-block"></div>')
-        //div.addClass('timeline')
-        $('#pickflowerdiv').append(div)
-        let text = $("<small>Pick Flower for id="+id+" in frame="+frame+"<br>")
-            .append($('<button class="btn btn-default btn-xs" style="inline">No visit</button>').click(removeVisit))
-        div.append(text)//html("<small>Pick Flower for id="+id+" in frame="+frame+"<br>")
-        //div.append(img)
-        div.append(canvas)
-
-        function isFlower(obs) {
-            return String(obs.ID).startsWith('F')
-        }
-        let flowers = Object.values(events.getFrame(0)).filter(isFlower)
-
-        function drawCenter(obs, selected) {
-            let x0 = crop.x
-            let y0 = crop.y
-
-            let x = obs.x+obs.width/2 - x0 // cx not reliable??
-            let y = obs.y+obs.height/2 - y0
-
-            let color = 'yellow'
-            let radius = 2
-
-            if (obs.ID == visitedFlower()) {
-                color = 'green'
-            }
-            if (selected) {
-                color = 'green'
-                radius = 4
-            }
-
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = color;
-            ctx.closePath();
-            ctx.fill();    
-
-            ctx.font = "7px Arial";
-            ctx.fillStyle = color;
-            ctx.textAlign = 'center';
-            ctx.fillText(String(obs.ID), x, y - radius - 1);
-        }
-        function closestFlower(flowers, pt, maxdist) {
-            function euclid(pt1,pt2) {
-                return Math.sqrt((pt1.x-pt2.x)**2+(pt1.y-pt2.y)**2)
-            }
-            let dist = maxdist
-            let pickedObs = undefined
-            for (let obs of flowers) {
-                let ptf = {x:obs.x+obs.width/2, y: obs.y+obs.height/2}
-                let d = euclid(pt,ptf)
-                //console.log('d=',d,'pickedObs',pickedObs)
-                if (d<dist) {
-                    dist=d; pickedObs = obs
-                }
-            }
-            return pickedObs
-        }
-        function drawFlowers(flowers, selectedID) {
-            ctx.drawImage(img, 0, 0)
-            for (let obs of flowers) {
-                //console.log('Draw',obs)
-                let selected = (obs.ID==selectedID)
-                drawCenter(obs, selected)
-            }
-        }
-        function canvasPtToVideoPt(ptGUI) {
-            let pt = {x: ptGUI.x/displaySize*w+crop.x, y: ptGUI.y/displaySize*h+crop.y}
-            return pt
-        }
-        function pickFlower_mouseMove(option) {
-            console.log(option)
-            let ptGUI = {x: option.offsetX, y: option.offsetY}
-            let pt = canvasPtToVideoPt( ptGUI )
-            console.log(ptGUI, pt)
-
-            let pickedObs = closestFlower(flowers, pt, 200)
-            drawFlowers(flowers, pickedObs?pickedObs.ID:undefined)
-
-            // ctx.beginPath();
-            // ctx.arc(pt.x-crop.x, pt.y-crop.y, radius, 0, Math.PI * 2);
-            // ctx.fillStyle = 'red';
-            // ctx.closePath();
-            // ctx.fill();    
-
-        }
-        function pickFlower_mouseClick(option) {
-            console.log(option)
-            let ptGUI = {x: option.offsetX, y: option.offsetY}
-            let pt = canvasPtToVideoPt( ptGUI )
-
-            let pickedObs = closestFlower(flowers, pt, 200)
-
-            if (pickedObs) {
-                console.log('Change visited flower for ',currentObs, 'to flower', pickedObs)
-                storeVisitedFlower(pickedObs.ID)
-            }
-            drawFlowers(flowers, visitedFlower())
-            drawFlowersMainCanvas(flowers, visitedFlower())
-        }
-        function pickFlower_mouseLeave(option) {
-            drawFlowers(flowers, visitedFlower())
-        }
-        function removeVisit() {
-            storeVisitedFlower(undefined)
-            drawFlowers(flowers, visitedFlower())
-        }
-        function drawFlowersMainCanvas(flowers, selectedID) {
-            //overlay.ctx.drawImage(img, 0, 0)
-            let ctx = overlay.ctx
-            for (let obs of flowers) {
-                //console.log('Draw',obs)
-                let isSelected = (obs.ID==selectedID)
-                //drawCenter(obs, selected)
-                let rect = overlay.obsToCanvasRect(obs)
-                let x = rect.left+rect.width/2
-                let y = rect.top+rect.height/2
-                identifyBeeRect(ctx, rect, radius, isSelected)
-            }
-        }
-
-        $(canvas).click(pickFlower_mouseClick)
-        $(canvas).mousemove(pickFlower_mouseMove)
-        $(canvas).mouseleave(pickFlower_mouseLeave)
-        drawFlowers(flowers, visitedFlower())
-    }
 }

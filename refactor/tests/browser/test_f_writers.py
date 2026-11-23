@@ -78,6 +78,22 @@ def test_f2_pick_frame_sets_the_span_start_and_end(ui, sample_dir):
     assert ui.js("overlay.interaction.mode") == "main"
 
 
+def test_f2a_pick_frame_show_timeline_draws_the_frames_around_the_current_one(ui, sample_dir):
+    """The Show Timeline button of the pick-frame mode (overlay/TimelinePicker.js) lists the frames around the current one,
+    from the video cache; the modes registry gives the overlay the helper of each mode."""
+    load(ui, sample_dir / "events_v2.json")
+    assert ui.js("Object.keys(overlay.modes).sort().join()") == "edit-visit,pick-frame"
+    show_tabs(ui, "#showSelected", "#showPickFrame")
+    ui.click_box("1")
+    ui.page.click("button[onclick=\"modifyCurrentObsSpan('setspan')\"]")
+    ui.page.wait_for_selector("#pickframediv button:has-text('Show Timeline')")
+    ui.page.click("#pickframediv button:has-text('Show Timeline')")
+    ui.page.wait_for_function("document.querySelectorAll('#pick-frame-timeline div.timeline').length == 7")  # timelineMaxDelta 3
+    assert ui.js("overlay.interaction.opts.showTimeline") is True
+    ui.page.click("#pickframediv button:has-text('Show Timeline')")
+    assert ui.js("document.querySelectorAll('#pick-frame-timeline div.timeline').length") == 0
+
+
 def test_f2b_pick_frame_default_span_is_written_at_entry_not_by_a_refresh(ui, sample_dir):
     """DEBT-825: the default span {f1: f, f2: f} is written when the mode is entered; a later hardRefresh writes nothing."""
     load(ui, sample_dir / "events_v2.json")
