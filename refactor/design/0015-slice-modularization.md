@@ -392,6 +392,12 @@ As in 10a and 10b, no statement is cut (987 lines: `init`, the router, `printMes
 - Alias removed: `getCurrentFrame` (assigned by `init`, `videoControl.getCurrentFrame.bind(videoControl)`) had ~50 free callers in 13 files and 4 test lines; they call `videoControl.getCurrentFrame()` (same method, same receiver), as 10a did for `videoCache`. `refactor/tests/browser/test_j_editors.py`, `test_l_refresh.py`, `test_n_hover_control.py` adapted.
 - What the bridge still defines after this step: see the record (step 13).
 
+### 12b: the `layout/` scripts become modules
+
+The seven classic scripts of `layout/` (`TouchResize`, `NavMenu`, `SplitLayout`, `ChronoLayout`, `FitControls`, `VideoSettings`, `PanelRows`, ~460 lines; slice 7) were IIFEs, most registering a `$(function () {...})` DOM-ready callback. Each file now exports one function (`initTouchResize`, `initNavMenu`...) holding the same body, and the bridge calls them: `initTouchResize` and `initPanelRows` at once (they patch jQuery UI or register delegated handlers; every `.resizable()` and `.sortable()` is called by `init()` on window.onload, later), the five widgets that look up DOM elements from one `$(function () {...})` of the bridge (DOM ready). The `<script>` tags leave the page; the inner `$(function)` of each widget is removed (its body is the body of `initX`, dedented, same early returns): the bridge decides when it runs.
+- `videoToolbar` (read by the inline `onclick` of the video toolbar buttons) is assigned on `window` explicitly: a module `var` would not be global.
+- Order: the ready callbacks used to be registered while the head was parsed; they are now registered by the deferred bridge, still before window.onload. No layout code reads what `init()` builds.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

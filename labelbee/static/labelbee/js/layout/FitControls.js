@@ -1,9 +1,10 @@
+// ES module (refactor slice 8 step 12b, ADR 0015): `initFitControls` is called once by labelbeeBridge.js (it was a classic script).
 // FitControls: "fit to the available width" buttons. Layout only.
 //  - #video-fit-button (top-right of the video): resizes the video to the width of its
 //    pane, keeping the aspect ratio ("Expand to Fit");
 //  - #chrono-fit-button ("Fit" in the chronogram Size panel): resizes the chronogram to the
 //    width of its pane, so that no horizontal scrollbar is needed.
-(function () {
+export function initFitControls() {
   function contentWidth(pane) {
     var cs = window.getComputedStyle(pane);
     return pane.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
@@ -39,10 +40,8 @@
     refreshChronoLayout();
   }
 
-  $(function () {
-    var v = document.getElementById("video-fit-button");
-    var c = document.getElementById("chrono-fit-button");
-    if (v) v.addEventListener("click", expandVideoToFit);
-    if (c) c.addEventListener("click", fitChronogram);
-  });
-})();
+  var v = document.getElementById("video-fit-button");
+  var c = document.getElementById("chrono-fit-button");
+  if (v) v.addEventListener("click", expandVideoToFit);
+  if (c) c.addEventListener("click", fitChronogram);
+}

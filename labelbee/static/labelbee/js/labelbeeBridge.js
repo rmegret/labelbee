@@ -60,6 +60,13 @@ import { OverlayOptions } from './overlay/OverlayOptions.js';
 import {
   OverlayControl,
 } from './overlay/Overlay.js';
+import { initTouchResize } from './layout/TouchResize.js';
+import { initNavMenu } from './layout/NavMenu.js';
+import { initSplitLayout } from './layout/SplitLayout.js';
+import { initChronoLayout } from './layout/ChronoLayout.js';
+import { initFitControls } from './layout/FitControls.js';
+import { initVideoSettings } from './layout/VideoSettings.js';
+import { initPanelRows } from './layout/PanelRows.js';
 import { initZoomView } from './zoom/ZoomView.js';
 import {
   init, printMessage, toggleFullScreen, FilePickerFromServerDialog, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
@@ -263,6 +270,18 @@ installGlobals({
 // The zoom view (zoom/ZoomView.js): `initZoomView` is called by `init()` of labelBee.js, which builds `window.zoomOverlay` (read by the
 // inline handlers of the page and by the other modules).
 installGlobals({ initZoomView });
+
+// The page layout (layout/): patches and widgets that only touch the DOM, started once (they were classic scripts whose own
+// `$(function)` did the same). `initTouchResize` patches jQuery UI before any `.resizable()` (made by `init()` on window.onload).
+initTouchResize();
+initPanelRows();
+$(function () {
+  initNavMenu();
+  initSplitLayout();
+  initChronoLayout();
+  initFitControls();
+  initVideoSettings();
+});
 
 // The entry (labelBee.js): `init` is called by `window.onload` of the page, `printMessage` and `FilePickerFromServerDialog` by many modules
 // and by AnnotationIO.js, the others by inline handlers.

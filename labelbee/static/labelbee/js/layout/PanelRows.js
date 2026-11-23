@@ -1,3 +1,4 @@
+// ES module (refactor slice 8 step 12b, ADR 0015): `initPanelRows` is called once by labelbeeBridge.js (it was a classic script).
 // PanelRows: while a .block panel is dragged in a .sortable container, the placeholder takes
 // data-newrow="true"/"false" (starts a new row / continues the row of the previous panel) and
 // the dropped panel keeps the flag. The CSS (custom.css, ".sortable > .block[data-newrow]")
@@ -7,7 +8,7 @@
 //  - placeholder before H: the panel takes the place of H, so it starts a row if H did.
 // The sortable widgets themselves are created in labelBee.js (also for the sidebar panels, which
 // are not .block and are not affected). Layout only, nothing is stored.
-(function () {
+export function initPanelRows() {
   function isPanel(e) {
     return e && e.classList.contains("block") && !e.classList.contains("ui-sortable-helper")
       && !e.classList.contains("ui-sortable-placeholder") && e.offsetParent !== null;
@@ -44,4 +45,4 @@
     if (!ph || !ph.classList.contains("block")) return;
     ui.item[0].setAttribute("data-newrow", ph.getAttribute("data-newrow") || "false");
   });
-})();
+}

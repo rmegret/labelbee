@@ -1,9 +1,11 @@
+// ES module (refactor slice 8 step 12b, ADR 0015): `initTouchResize` is called once by labelbeeBridge.js (it was a classic script).
 /* Touch support for the jQuery UI resizable handles (video, zoom and chronogram divs).
  * jQuery UI 1.12 `$.ui.mouse` only listens to mousedown/mousemove/mouseup, and a touch drag sends no mousemove.
  * A touch that starts on a `.ui-resizable-handle` is replayed as mouse events; the handle's own widget does the rest
  * (helper outline, aspect ratio, `stop` callbacks). Only resizable is patched: other jQuery UI widgets are untouched.
- * Load right after jquery-ui.js, before any `.resizable()` call. */
-(function ($) {
+ * Called by the bridge before any `.resizable()` call (they are made by `init()` on window.onload). */
+export function initTouchResize() {
+  const $ = window.jQuery
   if (!$.ui || !$.ui.resizable) return;
 
   var base = $.ui.resizable.prototype._mouseInit;
@@ -52,4 +54,4 @@
       replay("mousedown", t, h);
     }, { passive: false });
   };
-})(jQuery);
+}

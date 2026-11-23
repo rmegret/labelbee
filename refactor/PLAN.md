@@ -156,6 +156,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (11c6) canvas size and transform to `overlay/Transform.js` [x], `canvasMethods` mixin, state on `overlay`
   - (10b) `ZoomView.js` as module [x] now `zoom/ZoomView.js`, implicit globals declared, `refreshZoom` instrumented
   - (12) `labelBee.js` as module [x] entry, `init` and 5 functions installed by the bridge, dead globals cut
+  - (12b) `layout/` scripts as modules [x] seven `initX` called by the bridge, tags leave the page
+  - (12c) `AnnotationIO.js` as module(s) [ ]
   - (13) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
