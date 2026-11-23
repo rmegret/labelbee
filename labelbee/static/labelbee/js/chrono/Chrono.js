@@ -60,6 +60,14 @@ export class Chronogram {
       idAxisMapString: 'return id',
     }
     config.idMap.idAxisMap = Function("id",config.idMap.idAxisMapString)
+    config.trackWindow = {           // frames around the current one that the overlay plots and the chronogram highlights
+      range: 10,
+      direction: "Backward",
+      forward: 0,
+      backward: 10,
+    }
+    $("#trackWindow").val(config.trackWindow.range)
+    $("#selectboxTrackDir").val(config.trackWindow.direction)
 
     chrono.layers = {}               // d3 layers, created by initChrono
     chrono.chronoIntervals = new ChronoIntervals()
@@ -238,10 +246,10 @@ function initChrono() {
   $(videoControl).on("previewframe:changed", updatePreviewTimeMark);
 
   $(videoControl).on("frame:changed", function () {
-    $(overlay).trigger("trackWindow:change");
+    $(chrono).trigger("trackWindow:change");
   });
   $(videoControl).on("previewframe:changed", function () {
-    $(overlay).trigger("trackWindow:change");
+    $(chrono).trigger("trackWindow:change");
   });
 
   $(chrono.axes).on("axes:clicked", onAxesClick);

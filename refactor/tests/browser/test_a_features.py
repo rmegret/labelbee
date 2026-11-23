@@ -99,6 +99,28 @@ def test_a10_tag_filters_are_rebuilt_from_the_buttons_and_the_inputs_of_the_tags
     assert ui.js("[tagsIntervalFilter({begin: 0, end: 3}), tagsIntervalFilter({begin: 0, end: 9})]") == [False, True]
 
 
+def test_a10_track_window_follows_its_inputs_triggers_its_event_and_the_follow_lock(ui, sample_dir):
+    """The track window (`chrono.config.trackWindow`, chrono/ChronoControlInteraction.js): the inputs set range and direction,
+    `scaleTrackWindow` rescales it, each change triggers `trackWindow:change` on `$(chrono)`, and "Follow" focuses the chronogram."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    assert ui.js("({...chrono.config.trackWindow})") == {"range": 10, "direction": "Backward", "forward": 0, "backward": 10}
+    ui.js("window.nChange = 0; $(chrono).on('trackWindow:change', () => window.nChange++)")
+    ui.js("$('#selectboxTrackDir').val('Bidirectional'); $('#trackWindow').val(20); onTrackWindowChanged()")
+    assert ui.js("({...chrono.config.trackWindow})") == {"range": 20, "direction": "Bidirectional", "forward": 20, "backward": 20}
+    assert ui.js("nChange") >= 1
+    ui.js("scaleTrackWindow(0.5)")
+    assert ui.js("[chrono.config.trackWindow.range, $('#trackWindow').val()]") == [10, "10"]
+    ui.js("onClickFocusTrackWindow()")
+    assert ui.js("$('#focusTrackWindow').hasClass('active')") is True
+    f = ui.js("videoControl.currentFrame")
+    lo, hi = ui.js("chrono.axes.xScale.domain()")                          # the window plus a margin
+    assert f - 12 <= lo <= f - 10 and f + 10 <= hi <= f + 12
+    ui.js("onClickFocusVideo()")
+    assert ui.js("$('#focusTrackWindow').hasClass('active')") is False
+
+
 def test_a11_parts_of_a_tracks_csv_and_the_show_on_video_toggle(ui):
     ui.open()
     ui.open_subpanel("Server storage")

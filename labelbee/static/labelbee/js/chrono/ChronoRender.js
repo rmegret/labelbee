@@ -335,7 +335,7 @@ export function initTrackWindowSpan() {
   $(videoControl).on("frame:changed", updateTrackWindowSpan);
   $(videoControl).on("previewframe:changed", updateTrackWindowSpan);
   $(chrono.axes).on("previewframe:trackend", updateTrackWindowSpan);
-  $(overlay).on("trackWindow:change", updateTrackWindowSpan);
+  $(chrono).on("trackWindow:change", updateTrackWindowSpan);
 }
 export function updateTrackWindowSpan() {
   var trackWindowSpan = chrono.axes.chronoGroup.select("#trackWindowSpan");
@@ -344,8 +344,8 @@ export function updateTrackWindowSpan() {
     .attr("width", chrono.axes.width())
     .attr("y", -15);
   let f = getCurrentFrame();
-  let fmin = f - overlay.trackWindow.backward;
-  let fmax = f + overlay.trackWindow.forward;
+  let fmin = f - chrono.config.trackWindow.backward;
+  let fmax = f + chrono.config.trackWindow.forward;
   trackWindowSpan
     .selectAll(".interval")
     .attr("x", chrono.axes.xScale(fmin))
@@ -355,8 +355,8 @@ export function updateTrackWindowSpan() {
 }
 export function getWindow() {
   let f = getCurrentFrame();
-  let fmin = f - overlay.trackWindow.backward;
-  let fmax = f + overlay.trackWindow.forward;
+  let fmin = f - chrono.config.trackWindow.backward;
+  let fmax = f + chrono.config.trackWindow.forward;
 
   if (fmin < 0) fmin = 0;
   if (fmax > videoControl.maxframe()) fmax = videoControl.maxframe();

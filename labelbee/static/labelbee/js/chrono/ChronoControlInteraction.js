@@ -2,6 +2,7 @@
  * ChronoControlInteraction: navigation and seek of the chronogram (refactor slice 8 step 7d, ADR 0015). Moved as is from
  * js/ChronoControlInteraction.js; a module now, so only the exported functions are visible to the other files. The
  * bridge (labelbeeBridge.js) installs them on `window` for the classic scripts and the inline handlers of the page.
+ * The track window (state `chrono.config.trackWindow`, handlers, Follow lock) joined it in step 11b3b2.
  * Still read as page globals: chrono, chronoState, selection, videoControl, overlay, refresh, refreshChronogram, ...
  */
 
@@ -53,8 +54,8 @@ export function onAxesDblClick(event) {
     console.log("onAxesDblClick: zooming chrono around frame=", frame, "...");
 
   chrono.axes.xdomainFocus([
-    frame - overlay.trackWindow.backward * 1.05,
-    frame + overlay.trackWindow.forward * 1.05,
+    frame - chrono.config.trackWindow.backward * 1.05,
+    frame + chrono.config.trackWindow.forward * 1.05,
   ]);
 }
 export function onAxesMoved(event) {
@@ -515,4 +516,111 @@ function update_autoEventMode() {
   } else {
     $("#autoEventButton").removeClass("active");
   }
+}
+
+/* Track window: the interval of frames around the current one that the overlay plots (tracks, tags) and the chronogram highlights.
+   State: `chrono.config.trackWindow` ({range, direction, forward, backward}, built by the Chronogram constructor); the inputs are
+   #trackWindow and #selectboxTrackDir. Each change triggers `trackWindow:change` on `$(chrono)`; ChronoRender.js (span) and the
+   "Follow" lock below listen to it. Moved from OverlayControl.js (step 11b3b2, ADR 0015). */
+export function onTrackWindowChanged(event, skipRefresh) {
+  let range = Number($("#trackWindow")[0].value);
+  chrono.config.trackWindow.range = range;
+
+  let trackDir = $("#selectboxTrackDir").val();
+  chrono.config.trackWindow.direction = trackDir;
+
+  if (trackDir == "Bidirectional") {
+    chrono.config.trackWindow.forward = range;
+    chrono.config.trackWindow.backward = range;
+  } else if (trackDir == "Forward") {
+    chrono.config.trackWindow.forward = range;
+    chrono.config.trackWindow.backward = 0;
+  } else if (trackDir == "Backward") {
+    chrono.config.trackWindow.forward = 0;
+    chrono.config.trackWindow.backward = range;
+  } else {
+    console.log(
+      "onTrackWindowChanged: ERROR, trackDir unknown trackDir=",
+      trackDir
+    );
+  }
+
+  if (logging.overlay) {
+    console.log("onTrackWindowChanged:", chrono.config.trackWindow);
+  }
+
+  $(chrono).trigger("trackWindow:change"); // listeners: the chronogram span, the Follow lock
+
+  if (!skipRefresh)
+    refresh.overlayUpdate();
+}
+export function setTrackWindow(L) {
+  $("#trackWindow").val(L);
+  onTrackWindowChanged();
+}
+export function scaleTrackWindow(factor) {
+  let L = Number($("#trackWindow").val());
+  console.log("scaleTrackWindow: factor=", factor, "with L=", L);
+  L = Math.ceil(L * Number(factor));
+  if (L < 0) L = 0;
+  if (isNaN(L)) L = 1;
+  setTrackWindow(L);
+}
+export function shiftTrackWindow(factor) {
+  let L = Number($("#trackWindow").val());
+  let frame = getCurrentFrame();
+  console.log(
+    "shiftTrackWindow: factor=",
+    factor,
+    "with frame=",
+    frame,
+    "L=",
+    L
+  );
+  let newF = Math.round(frame + factor * L);
+  videoControl.seekFrame(newF);
+  // changeFrame generates trackWindow:change
+}
+
+/* FocusTrackWindow */
+let lockFocusTrackWindow = false;  // "Follow": the chronogram view follows the track window
+// UI
+export function onClickFocusVideo() {
+  console.log("onClickFocusVideo");
+  setFocusTrackWindow(false);
+
+  updateChronoXDomainFromVideo();
+}
+export function onClickFocusTrackWindow() {
+  console.log("onClickFocusTrackWindow");
+
+  setFocusTrackWindow(!lockFocusTrackWindow);
+
+  if (lockFocusTrackWindow) {
+    focusTrackWindow();
+  }
+}
+function updateFocusTrackWindowButton() {
+  if (lockFocusTrackWindow) {
+    $("#focusTrackWindow").addClass("active");
+  } else {
+    $("#focusTrackWindow").removeClass("active");
+  }
+}
+// Control
+function focusTrackWindow() {
+  // Actually a Chronogram method
+  let f = getCurrentFrame();
+  chrono.axes.xdomainFocus([
+    f - chrono.config.trackWindow.backward,
+    f + chrono.config.trackWindow.forward,
+  ]);
+}
+function setFocusTrackWindow(flag) {
+  lockFocusTrackWindow = flag;
+  if (lockFocusTrackWindow)
+    $(chrono).on("trackWindow:change", focusTrackWindow);
+  else $(chrono).off("trackWindow:change", focusTrackWindow);
+
+  updateFocusTrackWindowButton();
 }

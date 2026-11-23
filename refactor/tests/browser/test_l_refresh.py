@@ -437,7 +437,7 @@ def test_l24_overlay_update_redraws_over_a_clean_frame(ui, sample_dir):
     ui.goto_frame(10)
     ui.settle(500)
     pixels = "(() => { const c = overlay.canvas; const d = overlay.ctx.getImageData(0, 0, c.width, c.height).data; let h = 0; for (let i = 0; i < d.length; i++) h = (h * 31 + d[i]) | 0; return h; })()"
-    ui.js("showObsTracks = true; overlay.trackWindow.backward = 20; overlay.trackWindow.forward = 20; overlay.hardRefresh()")
+    ui.js("showObsTracks = true; chrono.config.trackWindow.backward = 20; chrono.config.trackWindow.forward = 20; overlay.hardRefresh()")
     one = ui.js(pixels)
     ui.js("overlay.refreshOverlay(); overlay.refreshOverlay(); overlay.refreshOverlay()")
     assert ui.js(pixels) == one                                     # the update erases the previous plot

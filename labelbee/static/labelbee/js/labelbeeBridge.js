@@ -103,6 +103,12 @@ import {
   onClickNextID,
   onClickPrevID,
   onAutoEventButtonClick,
+  onTrackWindowChanged,
+  setTrackWindow,
+  scaleTrackWindow,
+  shiftTrackWindow,
+  onClickFocusVideo,
+  onClickFocusTrackWindow,
 } from './chrono/ChronoControlInteraction.js';
 import {
   Chronogram,
@@ -259,6 +265,7 @@ installGlobals({
 installGlobals({
   eventSeekModeClicked, gotoFirstEvent, gotoLastEvent, gotoNextEvent, gotoPreviousEvent, onClickNextID,
   onClickPrevID, onAutoEventButtonClick,
+  onTrackWindowChanged, setTrackWindow, scaleTrackWindow, shiftTrackWindow, onClickFocusVideo, onClickFocusTrackWindow,
 });
 
 // The chronogram view (chrono/Chrono.js and the modules split from it, ADR 0015 step 8d), the 38 names other files use. The singletons `chrono`, `chronoDragControl`,

@@ -13,7 +13,6 @@ function OverlayControl(canvasTagId) {
   var overlay = this; // Standard name for simpler search in code
 
   // Events:
-  // overlayControl.on('trackWindow:change',...)
   $(videoControl).on("videosize:changed", (e, w, h) => {
     overlay.canvasSetVideoSize(w, h);
   });
@@ -26,16 +25,6 @@ function OverlayControl(canvasTagId) {
 
     overlay.canvas2 = $('<canvas/>')[0]
     overlay.ctx2 = overlay.canvas2.getContext('2d');
-
-  overlay.trackWindow = {
-    range: 10,
-    direction: "Backward",
-    forward: 0,
-    backward: 10,
-  };
-  /* Obs and Tags plotting params */
-  $("#trackWindow").val(overlay.trackWindow.range);
-  $("#selectboxTrackDir").val(overlay.trackWindow.direction);
 
   overlay.guiAngle = {
     angleEnabled: true,
@@ -156,8 +145,6 @@ function OverlayControl(canvasTagId) {
   canvasTransform = [1, 0, 0, 1, 0, 0]; // Global
   canvasTransformReference = { w: 100, h: 100 }; // Keep previous canvas size
   overlay.videoSize = { x: 600, y: 400 };
-
-  lockFocusTrackWindow = false;
 
   refreshTagsParameters();
   overlay.updateDisableAngleButton();
@@ -2118,109 +2105,6 @@ function onShowTagsTracksChanged() {
   videoControl.refresh();
 }
 
-/* Track Window */
-function onTrackWindowChanged(event, skipRefresh) {
-  let range = Number($("#trackWindow")[0].value);
-  overlay.trackWindow.range = range;
-
-  let trackDir = $("#selectboxTrackDir").val();
-  overlay.trackWindow.direction = trackDir;
-
-  if (trackDir == "Bidirectional") {
-    overlay.trackWindow.forward = range;
-    overlay.trackWindow.backward = range;
-  } else if (trackDir == "Forward") {
-    overlay.trackWindow.forward = range;
-    overlay.trackWindow.backward = 0;
-  } else if (trackDir == "Backward") {
-    overlay.trackWindow.forward = 0;
-    overlay.trackWindow.backward = range;
-  } else {
-    console.log(
-      "onTrackWindowChanged: ERROR, trackDir unknown trackDir=",
-      trackDir
-    );
-  }
-
-  if (logging.overlay) {
-    console.log("onTrackWindowChanged:", overlay.trackWindow);
-  }
-
-  $(overlay).trigger("trackWindow:change"); // the chronogram updates its span
-
-  if (!skipRefresh)
-    refresh.overlayUpdate();
-}
-function setTrackWindow(L) {
-  $("#trackWindow").val(L);
-  onTrackWindowChanged();
-}
-function scaleTrackWindow(factor) {
-  let L = Number($("#trackWindow").val());
-  console.log("scaleTrackWindow: factor=", factor, "with L=", L);
-  L = Math.ceil(L * Number(factor));
-  if (L < 0) L = 0;
-  if (isNaN(L)) L = 1;
-  setTrackWindow(L);
-}
-function shiftTrackWindow(factor) {
-  let L = Number($("#trackWindow").val());
-  let frame = getCurrentFrame();
-  console.log(
-    "shiftTrackWindow: factor=",
-    factor,
-    "with frame=",
-    frame,
-    "L=",
-    L
-  );
-  let newF = Math.round(frame + factor * L);
-  videoControl.seekFrame(newF);
-  // changeFrame generates trackWindow:change
-}
-
-/* FocusTrackWindow */
-// UI
-function onClickFocusVideo() {
-  console.log("onClickFocusVideo");
-  setFocusTrackWindow(false);
-
-  updateChronoXDomainFromVideo();
-}
-function onClickFocusTrackWindow() {
-  console.log("onClickFocusTrackWindow");
-
-  setFocusTrackWindow(!lockFocusTrackWindow);
-
-  if (lockFocusTrackWindow) {
-    focusTrackWindow();
-  }
-}
-function updateFocusTrackWindowButton() {
-  if (lockFocusTrackWindow) {
-    $("#focusTrackWindow").addClass("active");
-  } else {
-    $("#focusTrackWindow").removeClass("active");
-  }
-}
-// Control
-function focusTrackWindow() {
-  // Actually a Chronogram method
-  let f = getCurrentFrame();
-  chrono.axes.xdomainFocus([
-    f - overlay.trackWindow.backward,
-    f + overlay.trackWindow.forward,
-  ]);
-}
-function setFocusTrackWindow(flag) {
-  lockFocusTrackWindow = flag;
-  if (lockFocusTrackWindow)
-    $(overlay).on("trackWindow:change", focusTrackWindow);
-  else $(overlay).off("trackWindow:change", focusTrackWindow);
-
-  updateFocusTrackWindowButton();
-}
-
 /* ROI GUI */
 // On/Off
 function onClickROI() {
@@ -2773,7 +2657,7 @@ function onMouseDown_predict(option) {
   // predictId takes video/obs coordinates units
     //let prediction = predictId(getCurrentFrame(), videoXY, "pointinside");
     let f = getCurrentFrame()
-    let interval = [f-overlay.trackWindow.backward, f+overlay.trackWindow.forward]
+    let interval = [f-chrono.config.trackWindow.backward, f+chrono.config.trackWindow.forward]
     if (interval[0]<0) interval[0]=0
     if (interval[1]>=getVideoInfo().nframes) interval[1]=getVideoInfo().nframes-1
     let prediction = predictIdFromObsMultiframe(interval,videoXY, "distance")
@@ -2907,7 +2791,7 @@ function onMouseDown_interactiveRect(option) {
   //let prediction = predictId(getCurrentFrame(), videoXY, "distance_topleft");
 
   let f = getCurrentFrame()
-  let interval = [f - overlay.trackWindow.backward, f + overlay.trackWindow.forward]
+  let interval = [f - chrono.config.trackWindow.backward, f + chrono.config.trackWindow.forward]
   if (interval[0] < 0) interval[0] = 0
   if (interval[1] >= getVideoInfo().nframes) interval[1] = getVideoInfo().nframes - 1
   let prediction = predictIdFromObsMultiframe(interval, videoXY, "distance")
@@ -3045,8 +2929,8 @@ function onMouseDown_selectMultiframe(option) {
     if (showObsTracks) {
       tmp = predictIdFromObsMultiframe(
         [
-          getCurrentFrame() - overlay.trackWindow.backward,
-          getCurrentFrame() + overlay.trackWindow.forward,
+          getCurrentFrame() - chrono.config.trackWindow.backward,
+          getCurrentFrame() + chrono.config.trackWindow.forward,
         ],
         pt
       );
@@ -3065,8 +2949,8 @@ function onMouseDown_selectMultiframe(option) {
     if (!done && (showTagsTracks || showSelectedTagsTracks)) {
       tmp = predictIdFromTagsMultiframe(
         [
-          getCurrentFrame() - overlay.trackWindow.backward,
-          getCurrentFrame() + overlay.trackWindow.forward,
+          getCurrentFrame() - chrono.config.trackWindow.backward,
+          getCurrentFrame() + chrono.config.trackWindow.forward,
         ],
         pt
       );

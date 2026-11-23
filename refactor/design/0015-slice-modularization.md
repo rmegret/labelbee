@@ -296,6 +296,17 @@ The track window is not in this step: it is state and handlers of its own (`over
 
 The code is moved as it is, `window.` prefixes aside. DEBT: `tagsIDFilter` is built from `#tagsIDFilter` and read by nobody; `onTagsParametersSelectChanged` has no caller in the page. Test: `test_a10_tag_filters_are_rebuilt_from_the_buttons_and_the_inputs_of_the_tags_panel` (the filters had only the exclude-rect test).
 
+### 11b3b2: track window to `chrono/ChronoControlInteraction.js`
+
+| Item | Before | After |
+|---|---|---|
+| State | `overlay.trackWindow` (built by the overlay constructor, 8 readers in `OverlayControl.js`, 4 in `ChronoRender.js`, 2 in `ChronoControlInteraction.js`) | `chrono.config.trackWindow`, a group of the chronogram options built by the `Chronogram` constructor (the overlay is built before the chronogram, but nothing reads the window before `init` calls `onTrackWindowChanged`); the two inputs are initialized there |
+| Event | `$(overlay).trigger("trackWindow:change")` (3 triggers, 2 listeners) | `$(chrono)`: triggered by `onTrackWindowChanged` and by `Chrono.js` on the frame events; listened by `updateTrackWindowSpan` and the Follow lock |
+| Handlers | `onTrackWindowChanged`, `setTrackWindow`, `scaleTrackWindow`, `shiftTrackWindow`, `onClickFocusVideo`, `onClickFocusTrackWindow` (inline handlers and `labelBee.js`) | exports of `chrono/ChronoControlInteraction.js`, installed by the bridge |
+| Follow lock | page global `lockFocusTrackWindow` (11a listed it as an overlay option) | module-local `let` of `ChronoControlInteraction.js`, with `setFocusTrackWindow`, `focusTrackWindow`, `updateFocusTrackWindowButton`: it is a chronogram feature, not an overlay option, so it leaves the `OverlayOptions` list |
+
+Moved as it is. Tests adapted: `test_l_refresh` and `test_s8` read `chrono.config.trackWindow`; new `test_a10_track_window_follows_its_inputs_triggers_its_event_and_the_follow_lock`. `refactor/tools/refresh_mvc_pdf.py` still names `overlay.trackWindow` in its text (documentation tool, not run by the tests).
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then
