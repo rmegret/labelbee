@@ -300,10 +300,29 @@ def test_j10b_reset_angle_writes_the_angle_alone(ui, sample_dir):
     ui.drag(handle, {"x": c["x"] + 80, "y": c["y"]})
     rotated = ui.tracks()["5"]["1"]
     assert rotated["angle"] != 0
-    ui.js("overlay.onClickResetAngle()")
+    ui.js("onClickResetAngle()")
     after = ui.tracks()["5"]["1"]
     assert after["angle"] == 0
     assert {k: v for k, v in after.items() if k != "angle"} == {k: v for k, v in rotated.items() if k != "angle"}
+
+
+def test_j10c_angle_from_tag_writes_the_angle_of_the_tag_alone(ui, sample_dir):
+    """"Angle from tag" (`onClickAngleFromTag`, form/Form.js) stores `tagAngle(getCurrentTag())`; without a tag it does nothing."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    tag = {"id": 1, "dm": 60, "c": [84, 104], "hamming": 0, "goodness": 45.5, "p": [[70, 90], [98, 92], [96, 118], [70, 116]]}
+    ui.load_tags(ui.write("tags_angle.json", {"0": {"tags": [tag]}}))
+    ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
+    ui.js("augmentTrackWithTag()")
+    ui.wait_tracks()
+    before = select_at(ui, 0, "1")
+    expected = ui.js("tagAngle(getCurrentTag())")
+    assert expected is not None and expected != before["angle"]
+    ui.js("onClickAngleFromTag()")
+    after = ui.tracks()["0"]["1"]
+    assert abs(after["angle"] - expected) < 1e-6
+    assert {k: v for k, v in after.items() if k not in ("angle", "tag")} == {k: v for k, v in before.items() if k not in ("angle", "tag")}
 
 
 def test_j11_dot_mode_moves_the_center_and_keeps_the_size_and_the_angle(ui, sample_dir):

@@ -361,42 +361,6 @@ OverlayControl.prototype.updateDisableAngleButton = function () {
     $(".guiAngle-disableAngle").removeClass("active");
   }
 };
-OverlayControl.prototype.onClickResetAngle = function () {
-  console.log("overlay.onClickResetAngle");
-
-  var activeObject = overlay.getActiveRect();
-  if (activeObject == null) {
-    console.log("onClickResetAngle: aborted, could not get an activeObject");
-    return;
-  }
-  storeUnit(activeObject, { angle: 0 });
-  refresh.overlayUpdate(); // the chronogram does not read the angle
-  refresh.form();
-};
-OverlayControl.prototype.onClickAngleFromTag = function () {
-  console.log("overlay.onClickAngleFromTag");
-
-  var activeObject = overlay.getActiveRect();
-  if (activeObject == null) {
-    console.log("onClickAngleFromTag: could not get an activeObject. abort.");
-    return;
-  }
-  const obs = activeObject.obs;
-
-  const tag = getCurrentTag();
-  if (tag == null) {
-    console.log(
-      "onClickAngleFromTag: tag not defined for current event. abort."
-    );
-    return;
-  }
-
-  storeUnit(activeObject, { angle: tagAngle(tag) });
-  refresh.overlayUpdate();
-  refresh.form();
-
-  //    this.refreshOverlay()
-};
 
 // #MARK # UTILS CANVAS SIZE
 

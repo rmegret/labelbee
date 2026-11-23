@@ -554,6 +554,40 @@ function onLabelsChanged() {
 
 
 
+// Angle of the selected observation (buttons of the Bounding Box Angle panel; the toggle "Disable Angle Control" is an overlay
+// option, `overlay.guiAngle`)
+export function onClickResetAngle() {
+  console.log("onClickResetAngle");
+
+  var activeObject = overlay.getActiveRect();
+  if (activeObject == null) {
+    console.log("onClickResetAngle: aborted, could not get an activeObject");
+    return;
+  }
+  storeUnit(activeObject, { angle: 0 });
+  refresh.overlayUpdate(); // the chronogram does not read the angle
+  refresh.form();
+}
+export function onClickAngleFromTag() {
+  console.log("onClickAngleFromTag");
+
+  var activeObject = overlay.getActiveRect();
+  if (activeObject == null) {
+    console.log("onClickAngleFromTag: could not get an activeObject. abort.");
+    return;
+  }
+
+  const tag = getCurrentTag();
+  if (tag == null) {
+    console.log("onClickAngleFromTag: tag not defined for current event. abort.");
+    return;
+  }
+
+  storeUnit(activeObject, { angle: tagAngle(tag) });
+  refresh.overlayUpdate();
+  refresh.form();
+}
+
 export function updateAnnotationStatistics() {
   let L=[]; events.forEach((obs) => {L.push(obs)})
   let S=new Set(L.map(x => x.ID))

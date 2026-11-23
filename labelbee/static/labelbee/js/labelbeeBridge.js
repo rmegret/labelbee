@@ -67,7 +67,7 @@ import {
   updateDeleteButton,
   labelsProcessKey,
   onLabelToggled,
-  updateAnnotationStatistics,
+  updateAnnotationStatistics, onClickResetAngle, onClickAngleFromTag,
 } from './form/Form.js';
 import {
   swapID_callback,
@@ -226,6 +226,7 @@ window.TimelinePicker = TimelinePicker; // built by `OverlayControl` (`overlay.m
 installGlobals({
   initSelectionControl, hardRefreshLabelTogglePanel, updateSelectID, onSelectIDChanged, updateEventTree, updateForm,
   updateSelectionPanels, updateDeleteButton, labelsProcessKey, onLabelToggled, updateAnnotationStatistics,
+  onClickResetAngle, onClickAngleFromTag,
 });
 installGlobals({
   swapID_callback, selectBeeByIDandFrame, activateSelection, deselectBee, getCurrentTag, deleteSelected, undoAction,

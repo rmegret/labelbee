@@ -269,6 +269,20 @@ from `form/VisitControl.js`: `OverlayControl.prototype.drawImagePickFlowerMode` 
 
 **Risks.** The error path of the pick-frame `hardRefresh` (no valid obs) falls back to `main` and repeats the refresh itself; kept as is. The timeline display had no test: `test_f2a_pick_frame_show_timeline_draws_the_frames_around_the_current_one` is added (and checks `overlay.modes`). The default branch of `hardRefresh` now also logs `using selection id` in `edit-visit` (a console line). Pick Flower and Set Start/End are covered by `test_f_writers.py`, the entry by `test_l_refresh.py`.
 
+## Step 11b3: split in sub-steps (2026-11-23)
+
+11b3 as listed in 11a bundles four unrelated moves, so it is cut in separately reviewed parts: **11b3a** the angle buttons to `form/Form.js`; **11b3b** the tag filters, `chronoFilter`, `trackWindow` and their inputs to `chrono/`; **11b3c** the ROI and exclude-rect state and filter to `chrono/`, their dialogs to the options; **11b3d** `overlay/OverlayOptions.js` (`overlay.opts` as a class, `optsClick`, the `show*` fields, export buttons). Each keeps behavior; the template handlers that move lose their `overlay.` prefix or gain `overlay.opts.`.
+
+### 11b3a: angle buttons to `form/Form.js`
+
+| Item | Before | After |
+|---|---|---|
+| "Reset angle to 0" | `OverlayControl.prototype.onClickResetAngle` (template: `overlay.onClickResetAngle()`) | `export function onClickResetAngle` in `form/Form.js`, installed by the bridge; template `onClickResetAngle()` |
+| "Angle from tag" | `OverlayControl.prototype.onClickAngleFromTag` | `export function onClickAngleFromTag` in `form/Form.js`; reads `getCurrentTag()` and `tagAngle(tag)` (page globals, resolved at call time) |
+| "Disable Angle Control" (`onClickDisableAngle`, `updateDisableAngleButton`, `overlay.guiAngle`) | overlay | **stays**: it is a display option read by `refreshRectStyle` and `newRectForTag`, so it goes to `OverlayOptions` in 11b3d |
+
+Both moved buttons edit the angle of the selected observation (`storeUnit`, then `refresh.overlayUpdate()` and `refresh.form()`), which is the definition of `form/`. The bodies are unchanged, apart from the dead local `const obs = activeObject.obs` removed from the tag button and the log prefix (`overlay.onClick...` became `onClick...`). Tests: `test_j10b` calls the new name; `test_j10c_angle_from_tag_writes_the_angle_of_the_tag_alone` is new (the button had none).
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then
