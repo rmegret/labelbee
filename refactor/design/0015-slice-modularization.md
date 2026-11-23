@@ -354,6 +354,10 @@ Bodies unchanged otherwise. `DEBT` seen and kept: `w`, `h` undefined in `predict
 
 Maintainer decision: a class next to the overlay, no extra file. The 6 functions under `# ID PREDICTION` (`predictId`, `defaultIfIDExists`, `predictIdFromObsMultiframe`, `predictIdFromTags`, `predictIdFromTagsMultiframe`, `computeDefaultNewID`) become the methods of `class IdPredictor`, built by the constructor of the overlay as `overlay.idPredictor = new IdPredictor(overlay)`. The class has no state of its own (the answer depends on the annotations and the current frame); it holds the overlay to read `overlay.opts.predictIdClickRadius`. The helper `dist` stays a module-local function. The 7 call sites (`onMouseDown_predict`, `onMouseDown_interactiveRect`, `onMouseDown_selectMultiframe`) call `overlay.idPredictor.<method>(...)`. No reader outside `Overlay.js` (scan, grep of the template and the tests), so nothing is exported or installed. Bodies unchanged. `DEBT` kept: `predictId` has no caller (only commented ones) and reads undefined `w`, `h`; `defaultIfIDExists` reads an undefined `obs` in the conflict branch.
 
+### 11c3: the rectangles move to `overlay/BeeRect.js`
+
+First cut of `Overlay.js`: the section `# FABRICJS RECTS MANAGEMENT` (~365 lines: `fabric.BeeRect`, `createRect`, `createRectsFromTracks`, `addDraftRect`, `addRectFromObs`, `refreshRectFromObs`, `findRect`, `rectToGeometry`, `rotatedRectGeometry`, `updateRectObsGeometry`...) becomes the module `overlay/BeeRect.js`, text unchanged. It exports the 8 names the rest of `Overlay.js` calls, plus `addRectFromObs` and `rotatedRectGeometry` (installed by the bridge, now imported from `BeeRect.js`); the other names stay module-local. `BeeRect.js` imports `identifyBeeRect` from `Overlay.js` (called by `fabric.BeeRect.render`); the import is circular but only used at call time, and disappears when the drawing is cut (next step). Chosen first because the section has a single back-reference (`identifyBeeRect`).
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then
