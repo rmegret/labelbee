@@ -121,6 +121,31 @@ def test_a10_track_window_follows_its_inputs_triggers_its_event_and_the_follow_l
     assert ui.js("$('#focusTrackWindow').hasClass('active')") is False
 
 
+def test_a10_roi_and_exclude_rects_switch_the_tag_filters_and_the_exclude_rects_are_edited_by_the_buttons(ui, sample_dir):
+    """The region filters (`chrono.config.region`, buttons in chrono/ChronoControlInteraction.js, filters
+    in chrono/ChronoData.js): "Apply" of the ROI switches `chrono.filters.roi`, the text input sets the ROI, and the exclude-rect
+    buttons select and delete rects that `chrono.filters.excludeRects` rejects."""
+    ui.open()
+    ui.load_events(sample_dir / "events_v2.json")
+    ui.wait_tracks()
+    ui.js("window.tIn = {c: [50, 50]}; window.tOut = {c: [500, 500]}")
+    assert ui.js("$('#ROI').val()") == "175,250,2305,1240"
+    assert ui.js("chrono.filters.roi(tOut)") is True                      # off: everything passes
+    ui.js("$('#ROI').val('0,0,100,100'); onROITextChanged()")
+    ui.js("$('#useROI').click()")
+    assert ui.js("chrono.config.region.useROI") is True
+    assert ui.js("[chrono.filters.roi(tIn), chrono.filters.roi(tOut)]") == [True, False]
+    ui.js("$('#useROI').click()")
+    assert ui.js("chrono.filters.roi(tOut)") is True
+    ui.js("chrono.config.region.excludeRects = [{cx: 500, cy: 500, w: 20, h: 20}]")
+    ui.js("$('#useExcludeRects').click()")
+    assert ui.js("[chrono.filters.excludeRects(tIn), chrono.filters.excludeRects(tOut)]") == [True, False]
+    ui.js("onClickExcludeRectNext()")
+    assert ui.js("chrono.config.region.excludeRectSelection") == 0
+    ui.js("$('#excludeRectDeleteButton').click()")
+    assert ui.js("[chrono.config.region.excludeRects.length, chrono.config.region.excludeRectSelection]") == [0, -1]
+
+
 def test_a11_parts_of_a_tracks_csv_and_the_show_on_video_toggle(ui):
     ui.open()
     ui.open_subpanel("Server storage")

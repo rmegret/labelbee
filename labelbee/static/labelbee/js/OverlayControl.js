@@ -30,23 +30,6 @@ function OverlayControl(canvasTagId) {
     angleEnabled: true,
   };
 
-  flag_useROI = false;
-  ROI = { left: 175, top: 250, right: 2305, bottom: 1240 }; // For Gurabo videos 5MP
-  $("#ROI").val([ROI.left, ROI.top, ROI.right, ROI.bottom].join(","));
-  //$(videoControl).on('video:loaded', updateROIFromVideo)
-  $("#useROI").toggleClass("active", flag_useROI);
-
-  flag_useExcludeRects = false;
-  excludeRects = [
-    { cx: 335, cy: 75, w: 50, h: 50 },
-    { cx: 2165, cy: 80, w: 50, h: 50 },
-    { cx: 320, cy: 1034, w: 50, h: 50 },
-    { cx: 2130, cy: 1080, w: 50, h: 50 },
-  ];
-  initExcludeRectsDialog();
-  $("#useExcludeRects").toggleClass("active", flag_useExcludeRects);
-  excludeRectSelection = -1;
-
   showObs = true;
   showObsTracks = true;
   showTags = true;
@@ -2105,65 +2088,17 @@ function onShowTagsTracksChanged() {
   videoControl.refresh();
 }
 
-/* ROI GUI */
-// On/Off
-function onClickROI() {
-  $("#useROI").toggleClass("active");
-  flag_useROI = $("#useROI").hasClass("active");
-  ROIChanged();
-}
-// Change Callback
-function ROIChanged() {
-  if (flag_useROI) {
-    chrono.filters.roi = function (tag) {
-      return (
-        tag.c[0] >= ROI.left &&
-        tag.c[0] <= ROI.right &&
-        tag.c[1] >= ROI.top &&
-        tag.c[1] <= ROI.bottom
-      );
-    };
-  } else {
-    chrono.filters.roi = function (tag) {
-      return true;
-    };
-  }
-  onTagsParametersChanged();
-  refreshChronogram();
-  videoControl.refresh();
-}
-// Edit
-function updateROIFromVideo() {
-  let R = videoControl.videoSize();
-  $("#ROI").val([R.left, R.top, R.right, R.bottom].join(","));
-  ROIChanged();
-}
-function onROITextChanged() {
-  let roitext = $("#ROI").val();
-  let roi = roitext.split(",");
-  if (roi.length != 4) {
-    console.log(
-      "onROIChanged: ERROR, ROI should have 4 coordinates, left,top,right,bottom"
-    );
-    return;
-  }
-  ROI = {
-    left: Number(roi[0]),
-    top: Number(roi[1]),
-    right: Number(roi[2]),
-    bottom: Number(roi[3]),
-  };
-  ROIChanged();
-}
+/* ROI and exclude rects: drawing only. State and filters are in chrono/ChronoData.js (`chrono.config.region`),
+   buttons and dialog in chrono/ChronoControlInteraction.js */
 // Plot
 function plotROI(ctx) {
-  if (!flag_useROI) return;
+  if (!chrono.config.region.useROI) return;
 
   let R = {
-    left: ROI.left,
-    top: ROI.top,
-    width: ROI.right - ROI.left,
-    height: ROI.bottom - ROI.top,
+    left: chrono.config.region.ROI.left,
+    top: chrono.config.region.ROI.top,
+    width: chrono.config.region.ROI.right - chrono.config.region.ROI.left,
+    height: chrono.config.region.ROI.bottom - chrono.config.region.ROI.top,
   };
   let R2 = overlay.videoToCanvasRect(R);
 
@@ -2196,119 +2131,11 @@ function plotROI(ctx) {
   ctx.restore();
 }
 
-/* Exclude Rects GUI */
-// On/Off
-function onClickExcludeRects() {
-  $("#useExcludeRects").toggleClass("active");
-  flag_useExcludeRects = $("#useExcludeRects").hasClass("active");
-  excludeRectsChanged();
-}
-// Change callback
-function excludeRectsChanged() {
-  if (flag_useExcludeRects) {
-    chrono.filters.excludeRects = function (tag) {
-      for (let r of excludeRects) {
-        //console.log(tag,r)
-        let dx = Math.abs(tag.c[0] - r.cx);
-        let dy = Math.abs(tag.c[1] - r.cy);
-        if (dx < r.w / 2 && dy < r.h / 2) return false;
-      }
-      return true;
-    };
-  } else {
-    chrono.filters.excludeRects = function (tag) {
-      return true;
-    };
-  }
-  $("#excludeRectDeleteButton").toggleClass(
-    "disabled",
-    !(excludeRectSelection >= 0)
-  );
-  onTagsParametersChanged();
-  refreshChronogram();
-  videoControl.refresh();
-}
-// Direct edition
-function onClickExcludeRectAdd() {
-  let R = overlay.getActiveRect();
-  if (!R) return;
-
-  let obs = R.obs;
-  excludeRects.push({
-    cx: obs.x + obs.width / 2,
-    cy: obs.y + obs.height / 2,
-    w: obs.width,
-    h: obs.height,
-  });
-  deleteSelected();
-  excludeRectsChanged();
-}
-function onClickExcludeRectDelete() {
-  let i = excludeRectSelection;
-  if (!(i >= 0)) return;
-
-  excludeRects.splice(i, 1);
-  excludeRectSelection = -1;
-  excludeRectsChanged();
-}
-function onClickExcludeRectNext() {
-  let n = excludeRects.length;
-  if (n == 0) {
-    excludeRectSelection = -1;
-    return;
-  }
-
-  excludeRectSelection = excludeRectSelection + 1;
-  if (excludeRectSelection >= n) excludeRectSelection = -1;
-  excludeRectsChanged();
-}
-// Advanced Dialog
-function onClickExcludeRectParams() {
-  openExcludeRectsDialog();
-}
-openExcludeRectsDialog = function () {
-  var jsontext = JSON.stringify(excludeRects, null, 4);
-
-  $("#excludeRects-json").val(jsontext);
-
-  $("#dialog-form-excludeRects").dialog("open");
-};
-initExcludeRectsDialog = function () {
-  $("#dialog-form-excludeRects").dialog({
-    autoOpen: false,
-    modal: true,
-    buttons: {
-      Ok: function () {
-        var jsontext = $("#excludeRects-json").val();
-
-        if (logging.zoomOverlay)
-          console.log("excludeRects dialog. jsontext = ", jsontext);
-
-        excludeRects = JSON.parse(jsontext);
-
-        if (logging.zoomOverlay) console.log("excludeRects = ", excludeRects);
-
-        $(this).dialog("close");
-
-        excludeRectsChanged();
-      },
-      Cancel: function () {
-        $(this).dialog("close");
-      },
-    },
-    open: function () {
-      $("body").css("overflow", "hidden");
-    },
-    close: function () {
-      $("body").css("overflow", "auto");
-    },
-  });
-};
 // Plot
 function plotExcludeRects(ctx) {
-  if (!flag_useExcludeRects) return;
+  if (!chrono.config.region.useExcludeRects) return;
   //console.log('plotExcludeRects')
-  for (let r of excludeRects) {
+  for (let r of chrono.config.region.excludeRects) {
     let R = {
       left: r.cx - r.w / 2,
       top: r.cy - r.h / 2,
@@ -2335,8 +2162,8 @@ function plotExcludeRects(ctx) {
     ctx.restore();
   }
 
-  if (excludeRectSelection >= 0) {
-    r = excludeRects[excludeRectSelection];
+  if (chrono.config.region.excludeRectSelection >= 0) {
+    r = chrono.config.region.excludeRects[chrono.config.region.excludeRectSelection];
     let R = {
       left: r.cx - r.w / 2,
       top: r.cy - r.h / 2,
@@ -3287,7 +3114,7 @@ function onObjectModified(option) {
 
   refresh.overlayUpdate(); // the rectangle already shows the geometry
   refresh.form();
-  if (flag_useROI) refresh.chrono(); // the chronogram reads cx, cy only for the ROI filter
+  if (chrono.config.region.useROI) refresh.chrono(); // the chronogram reads cx, cy only for the ROI filter
   //showZoom(activeObject)
 
   $(overlay).trigger("object:modified");

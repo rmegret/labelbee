@@ -3,8 +3,11 @@
  * js/ChronoControlInteraction.js; a module now, so only the exported functions are visible to the other files. The
  * bridge (labelbeeBridge.js) installs them on `window` for the classic scripts and the inline handlers of the page.
  * The track window (state `chrono.config.trackWindow`, handlers, Follow lock) joined it in step 11b3b2.
+ * The region filters (ROI, exclude rects: buttons and dialog) joined it in step 11b3c.
  * Still read as page globals: chrono, chronoState, selection, videoControl, overlay, refresh, refreshChronogram, ...
  */
+
+import { ROIChanged, excludeRectsChanged } from "./ChronoData.js"
 
 export function gotoEvent(frame, id) {
   videoControl.pause();
@@ -623,4 +626,129 @@ function setFocusTrackWindow(flag) {
   else $(chrono).off("trackWindow:change", focusTrackWindow);
 
   updateFocusTrackWindowButton();
+}
+
+/* Region filters: the buttons, the ROI text input and the exclude-rects dialog. State `chrono.config.region` ({useROI, ROI, useExcludeRects, excludeRects,
+   excludeRectSelection}), built by the Chronogram constructor; the filters `ROIChanged` and
+   `excludeRectsChanged` are in ChronoData.js, the drawing (`plotROI`, `plotExcludeRects`) in OverlayControl.js.
+   Moved from OverlayControl.js (step 11b3c, ADR 0015). `initRegionFilters` sets the inputs, called by `init` after the chronogram is built. */
+export function initRegionFilters() {
+  const roi = chrono.config.region.ROI
+  $("#ROI").val([roi.left, roi.top, roi.right, roi.bottom].join(","));
+  $("#useROI").toggleClass("active", chrono.config.region.useROI);
+  initExcludeRectsDialog();
+  $("#useExcludeRects").toggleClass("active", chrono.config.region.useExcludeRects);
+}
+/* ROI GUI */
+// On/Off
+export function onClickROI() {
+  $("#useROI").toggleClass("active");
+  chrono.config.region.useROI = $("#useROI").hasClass("active");
+  ROIChanged();
+}
+// Edit
+export function updateROIFromVideo() {
+  let R = videoControl.videoSize();
+  $("#ROI").val([R.left, R.top, R.right, R.bottom].join(","));
+  ROIChanged();
+}
+export function onROITextChanged() {
+  let roitext = $("#ROI").val();
+  let roi = roitext.split(",");
+  if (roi.length != 4) {
+    console.log(
+      "onROIChanged: ERROR, ROI should have 4 coordinates, left,top,right,bottom"
+    );
+    return;
+  }
+  chrono.config.region.ROI = {
+    left: Number(roi[0]),
+    top: Number(roi[1]),
+    right: Number(roi[2]),
+    bottom: Number(roi[3]),
+  };
+  ROIChanged();
+}
+/* Exclude Rects GUI */
+// On/Off
+export function onClickExcludeRects() {
+  $("#useExcludeRects").toggleClass("active");
+  chrono.config.region.useExcludeRects = $("#useExcludeRects").hasClass("active");
+  excludeRectsChanged();
+}
+// Direct edition
+export function onClickExcludeRectAdd() {
+  let R = overlay.getActiveRect();
+  if (!R) return;
+
+  let obs = R.obs;
+  chrono.config.region.excludeRects.push({
+    cx: obs.x + obs.width / 2,
+    cy: obs.y + obs.height / 2,
+    w: obs.width,
+    h: obs.height,
+  });
+  deleteSelected();
+  excludeRectsChanged();
+}
+export function onClickExcludeRectDelete() {
+  let i = chrono.config.region.excludeRectSelection;
+  if (!(i >= 0)) return;
+
+  chrono.config.region.excludeRects.splice(i, 1);
+  chrono.config.region.excludeRectSelection = -1;
+  excludeRectsChanged();
+}
+export function onClickExcludeRectNext() {
+  let n = chrono.config.region.excludeRects.length;
+  if (n == 0) {
+    chrono.config.region.excludeRectSelection = -1;
+    return;
+  }
+
+  chrono.config.region.excludeRectSelection = chrono.config.region.excludeRectSelection + 1;
+  if (chrono.config.region.excludeRectSelection >= n) chrono.config.region.excludeRectSelection = -1;
+  excludeRectsChanged();
+}
+// Advanced Dialog
+export function onClickExcludeRectParams() {
+  openExcludeRectsDialog();
+}
+function openExcludeRectsDialog() {
+  var jsontext = JSON.stringify(chrono.config.region.excludeRects, null, 4);
+
+  $("#excludeRects-json").val(jsontext);
+
+  $("#dialog-form-excludeRects").dialog("open");
+}
+function initExcludeRectsDialog() {
+  $("#dialog-form-excludeRects").dialog({
+    autoOpen: false,
+    modal: true,
+    buttons: {
+      Ok: function () {
+        var jsontext = $("#excludeRects-json").val();
+
+        if (logging.zoomOverlay)
+          console.log("excludeRects dialog. jsontext = ", jsontext);
+
+        chrono.config.region.excludeRects = JSON.parse(jsontext);
+
+        if (logging.zoomOverlay) console.log("excludeRects = ", chrono.config.region.excludeRects);
+
+        $(this).dialog("close");
+
+        excludeRectsChanged();
+      },
+      Cancel: function () {
+        $(this).dialog("close");
+      },
+    },
+    open: function () {
+      $("body").css("overflow", "hidden");
+    },
+    close: function () {
+      $("body").css("overflow", "auto");
+    },
+  });
 }

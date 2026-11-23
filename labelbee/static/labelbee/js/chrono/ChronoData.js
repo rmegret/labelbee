@@ -177,11 +177,11 @@ function updateChronogramData() {
         //events.update(F, id, { cx: obs.x + obs.width/2, cy: obs.y + obs.height/2 })
         events.checkValid(F, id)
 
-        //if (flag_useROI) {  // TODO; Check x vs cx
-            inROI = (obs.cx >= ROI.left &&
-              obs.cx <= ROI.right &&
-              obs.cy >= ROI.top &&
-              obs.cy <= ROI.bottom
+        //if (chrono.config.region.useROI) {  // TODO; Check x vs cx
+            inROI = (obs.cx >= chrono.config.region.ROI.left &&
+              obs.cx <= chrono.config.region.ROI.right &&
+              obs.cy >= chrono.config.region.ROI.top &&
+              obs.cy <= chrono.config.region.ROI.bottom
             );
         //};
 
@@ -354,7 +354,7 @@ function createIntervalList() {
   }
 
   // Filter out
-  if (flag_useROI)
+  if (chrono.config.region.useROI)
     chronoState.allIntervals = chronoState.allIntervals.filter( interval => interval.passThroughROI )
 
   // Pass extra data from chronogramData to allInterval
@@ -919,6 +919,54 @@ export function chronoFilter(mode) {
     $("#tagsUseRgbFilter").toggleClass("active");
     onTagsParametersChanged();
   }
+}
+
+/* ROI and exclude rects: the filters `filters.roi` and `filters.excludeRects` follow `chrono.config.region`;
+   their buttons and dialog are in ChronoControlInteraction.js (step 11b3c, ADR 0015) */
+// ROI changed
+export function ROIChanged() {
+  if (chrono.config.region.useROI) {
+    filters.roi = function (tag) {
+      return (
+        tag.c[0] >= chrono.config.region.ROI.left &&
+        tag.c[0] <= chrono.config.region.ROI.right &&
+        tag.c[1] >= chrono.config.region.ROI.top &&
+        tag.c[1] <= chrono.config.region.ROI.bottom
+      );
+    };
+  } else {
+    filters.roi = function (tag) {
+      return true;
+    };
+  }
+  onTagsParametersChanged();
+  refreshChronogram();
+  videoControl.refresh();
+}
+// Exclude rects changed
+export function excludeRectsChanged() {
+  if (chrono.config.region.useExcludeRects) {
+    filters.excludeRects = function (tag) {
+      for (let r of chrono.config.region.excludeRects) {
+        //console.log(tag,r)
+        let dx = Math.abs(tag.c[0] - r.cx);
+        let dy = Math.abs(tag.c[1] - r.cy);
+        if (dx < r.w / 2 && dy < r.h / 2) return false;
+      }
+      return true;
+    };
+  } else {
+    filters.excludeRects = function (tag) {
+      return true;
+    };
+  }
+  $("#excludeRectDeleteButton").toggleClass(
+    "disabled",
+    !(chrono.config.region.excludeRectSelection >= 0)
+  );
+  onTagsParametersChanged();
+  refreshChronogram();
+  videoControl.refresh();
 }
 
 updateChronoData = instrument("derived", "updateChronoData", updateChronoData)

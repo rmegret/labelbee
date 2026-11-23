@@ -109,6 +109,15 @@ import {
   shiftTrackWindow,
   onClickFocusVideo,
   onClickFocusTrackWindow,
+  initRegionFilters,
+  onClickROI,
+  updateROIFromVideo,
+  onROITextChanged,
+  onClickExcludeRects,
+  onClickExcludeRectAdd,
+  onClickExcludeRectDelete,
+  onClickExcludeRectNext,
+  onClickExcludeRectParams,
 } from './chrono/ChronoControlInteraction.js';
 import {
   Chronogram,
@@ -266,6 +275,8 @@ installGlobals({
   eventSeekModeClicked, gotoFirstEvent, gotoLastEvent, gotoNextEvent, gotoPreviousEvent, onClickNextID,
   onClickPrevID, onAutoEventButtonClick,
   onTrackWindowChanged, setTrackWindow, scaleTrackWindow, shiftTrackWindow, onClickFocusVideo, onClickFocusTrackWindow,
+  initRegionFilters, onClickROI, updateROIFromVideo, onROITextChanged, onClickExcludeRects, onClickExcludeRectAdd,
+  onClickExcludeRectDelete, onClickExcludeRectNext, onClickExcludeRectParams,
 });
 
 // The chronogram view (chrono/Chrono.js and the modules split from it, ADR 0015 step 8d), the 38 names other files use. The singletons `chrono`, `chronoDragControl`,

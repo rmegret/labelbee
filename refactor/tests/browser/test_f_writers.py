@@ -191,9 +191,9 @@ def test_f6_clean_obsolete_events_leaves_the_emptied_frame(ui):
     load(ui, path)
     ui.open_panel("Options")
     ui.open_subpanel("Tag filtering")
-    ui.js("excludeRects.push({cx: 84, cy: 104, w: 100, h: 100})")
+    ui.js("chrono.config.region.excludeRects.push({cx: 84, cy: 104, w: 100, h: 100})")
     ui.page.click("#useExcludeRects")                                  # switches chrono.filters.excludeRects to the rect test
-    assert ui.js("flag_useExcludeRects") is True
+    assert ui.js("chrono.config.region.useExcludeRects") is True
     ui.page.click("#cleanObsoleteEventsButton")
     assert ui.dialogs[-1][0] == "confirm"                              # the confirmation was asked (and accepted)
     assert frames_of(ui) == {"0": ["1"], "10": ["5"]}                  # emptied frames are pruned (step 3b; they stayed as {} before)

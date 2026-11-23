@@ -306,6 +306,19 @@ The code is moved as it is, `window.` prefixes aside. DEBT: `tagsIDFilter` is bu
 
 Moved as it is, except the field names: a quick fix after 11b3c renamed `range`, `direction`, `forward`, `backward` to `trackWindowRange`, `trackWindowDirection`, `trackWindowForward`, `trackWindowBackward` (rule: an option name inside a `chrono.config` group is unique and meaningful alone, as the former globals were). Tests adapted: `test_l_refresh` and `test_s8` read `chrono.config.trackWindow`; new `test_a10_track_window_follows_its_inputs_triggers_its_event_and_the_follow_lock`. `refactor/tools/refresh_mvc_pdf.py` still names `overlay.trackWindow` in its text (documentation tool, not run by the tests).
 
+### 11b3c: ROI and exclude rects to `chrono/`
+
+Preceded by a quick fix (`23c2dab9`): the four tag filter globals became `chrono.filters` (`sample`, `interval`, `roi`, `excludeRects`).
+
+| Item | Before (`OverlayControl.js`, `/* ROI GUI */`, `/* Exclude Rects GUI */`) | After |
+|---|---|---|
+| State | page globals `flag_useROI`, `ROI`, `flag_useExcludeRects`, `excludeRects`, `excludeRectSelection`, built by the overlay constructor | `chrono.config.region = {useROI, ROI, useExcludeRects, excludeRects, excludeRectSelection}`, built by the `Chronogram` constructor (same defaults); no global left. Readers: `updateTagIntervals`, `plotROI`, `plotExcludeRects`, the drag end of the overlay, the tests |
+| Filters | `ROIChanged`, `excludeRectsChanged` replace `tagsSampleFilterROI`/`tagsSampleFilterExcludeRects` | exports of `chrono/ChronoData.js`, replacing `filters.roi`/`filters.excludeRects` |
+| Buttons, text input, dialog | `onClickROI`, `updateROIFromVideo`, `onROITextChanged`, `onClickExcludeRects`, `onClickExcludeRectAdd/Delete/Next/Params` (template), `openExcludeRectsDialog`, `initExcludeRectsDialog` (implicit globals) | exports of `chrono/ChronoControlInteraction.js` installed by the bridge, the dialog functions module-local; `initRegionFilters()` sets the inputs, called by `init` after `new Chronogram()` |
+| Drawing | `plotROI`, `plotExcludeRects` | stay in `OverlayControl.js` |
+
+Revision of the 11b3 list ("dialogs to the options"): the buttons and the dialog are the interaction of a chronogram setting, like the track window handlers of 11b3b2, so they go to `ChronoControlInteraction.js`; 11b3d has no ROI part and `excludeRectSelection` is not an `OverlayOptions` field. `onClickExcludeRectAdd` reads `overlay.getActiveRect()` and `deleteSelected()` (page globals), as other chrono code reads the overlay. Test: `test_a10_roi_and_exclude_rects_switch_the_tag_filters_and_the_exclude_rects_are_edited_by_the_buttons` (the ROI had no test); `test_f6` adapted to the new names.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

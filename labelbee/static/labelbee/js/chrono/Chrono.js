@@ -70,6 +70,18 @@ export class Chronogram {
     }
     $("#trackWindow").val(config.trackWindow.trackWindowRange)
     $("#selectboxTrackDir").val(config.trackWindow.trackWindowDirection)
+    config.region = {                // regions filtering the tags and the observations (filters in ChronoData.js)
+      useROI: false,
+      ROI: { left: 175, top: 250, right: 2305, bottom: 1240 }, // For Gurabo videos 5MP
+      useExcludeRects: false,
+      excludeRects: [                // rectangles (centre, size) where the tags are ignored
+        { cx: 335, cy: 75, w: 50, h: 50 },
+        { cx: 2165, cy: 80, w: 50, h: 50 },
+        { cx: 320, cy: 1034, w: 50, h: 50 },
+        { cx: 2130, cy: 1080, w: 50, h: 50 },
+      ],
+      excludeRectSelection: -1,      // index of the selected rect, -1 for none
+    }
 
     chrono.layers = {}               // d3 layers, created by initChrono
     chrono.chronoIntervals = new ChronoIntervals()

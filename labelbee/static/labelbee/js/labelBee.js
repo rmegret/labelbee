@@ -47,6 +47,7 @@ function init(videoID, tagID) {
   // import * from "ChronoControl.js";
   //initChrono();
   chrono = new Chronogram(); // TODO: fix direct access to #chronoTab, #chronoDiv, #svgVisualize
+  initRegionFilters(); // ROI and exclude rects inputs (chrono/ChronoControlInteraction.js)
 
   // import * from "AnnotationIO.js"
   initAnnotationIO();
