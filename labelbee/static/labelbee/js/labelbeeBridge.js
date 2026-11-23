@@ -58,10 +58,10 @@ import { VisitWidget } from './form/VisitControl.js';
 import { TimelinePicker } from './overlay/TimelinePicker.js';
 import { OverlayOptions } from './overlay/OverlayOptions.js';
 import {
-  OverlayControl, autoCentering, identifyBeeRect, newRectForCurrentTag, onMouseDown, onObjectDeselected,
-  onObjectSelected, plotExcludeRects, plotROI, tagAngle,
+  OverlayControl, autoCentering, newRectForCurrentTag, onMouseDown, onObjectDeselected, onObjectSelected,
 } from './overlay/Overlay.js';
-import { addRectFromObs, rotatedRectGeometry } from './overlay/BeeRect.js';
+import { identifyBeeRect, plotExcludeRects, plotROI, rotatedRectGeometry, tagAngle } from './overlay/Drawing.js';
+import { addRectFromObs } from './overlay/BeeRect.js';
 import {
   initSelectionControl,
   hardRefreshLabelTogglePanel,

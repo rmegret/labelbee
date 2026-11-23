@@ -3,7 +3,7 @@
 // the observation and back, their lookup. ES module (refactor slice 8 step 11c3, ADR 0015), cut from overlay/Overlay.js as it was.
 // Page globals (`overlay`, `selection`, `fabric`...) are read at call time.
 
-import { identifyBeeRect } from "./Overlay.js" // drawn by `fabric.BeeRect.render` (circular until the drawing is cut, runs at call time only)
+import { identifyBeeRect, rotatedRectGeometry } from "./Drawing.js"
 
 // #MARK # FABRICJS RECTS MANAGEMENT
 
@@ -196,35 +196,6 @@ export function addRectFromObs(inputObs, draft) {
 
   //var rect = addRect(obs.ID, r.left, r.top, r.width, r.height, "db", obs)
   return rect;
-}
-/* Rectangles */
-export function rotatedRectGeometry(rect) {
-  // Compute various properties of Fabric.js rotated rect
-  var geom = {};
-
-  rect.setCoords(); // Compute coordinates
-  var coords = rect.oCoords;
-  //console.log(rect)
-  let center = {
-    x: (coords.tl.x + coords.br.x) / 2,
-    y: (coords.tl.y + coords.br.y) / 2,
-  };
-  geom.center = center;
-  geom.tl = { x: coords.tl.x, y: coords.tl.y };
-  geom.tr = { x: coords.tr.x, y: coords.tr.y };
-  geom.bl = { x: coords.bl.x, y: coords.bl.y };
-  geom.br = { x: coords.br.x, y: coords.br.y };
-  geom.unrotated = {
-    left: center.x - rect.width / 2,
-    top: center.y - rect.height / 2,
-    width: rect.width,
-    height: rect.height,
-  };
-
-  if (typeof rect.angle !== "undefined") geom.angle = rect.angle;
-  else geom.angle = 0;
-
-  return geom;
 }
 fabric.BeeRect = fabric.util.createClass(fabric.Rect, {
   type: "beerect",
