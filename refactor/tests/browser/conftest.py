@@ -194,9 +194,30 @@ EVENTS_OPERATIONS = ("replace", "create", "commit", "update", "delete", "rename"
 
 
 def pytest_sessionfinish(session):
+    cfg = session.config
+    if hasattr(cfg, "workerinput"):         # pytest-xdist worker: hand the collections to the controller (pytest_testnodedown)
+        cfg.workeroutput["dirty"] = {       # JSON only: the sets become lists
+            "writes": {k: {**e, "tests": sorted(e["tests"])} for k, e in cfg._dirty_writes.items()},
+            "api": {k: {**e, "tests": sorted(e["tests"])} for k, e in cfg._dirty_api.items()},
+            "seen": sorted(cfg._dirty_seen)}
+        return
     path = session.config.getoption("--dirty-writes")
     if path:
         Path(path).write_text(json.dumps({"dirty": _dirty_rows(session.config), "api": _api_rows(session.config)}, indent=1))
+
+
+def pytest_testnodedown(node, error):
+    """pytest-xdist, on the controller: merge what a finished worker collected (the same keys add up, as in the `ui` teardown)."""
+    out = getattr(node, "workeroutput", {}).get("dirty")
+    if not out:
+        return
+    cfg = node.config
+    for source, target in ((out["writes"], cfg._dirty_writes), (out["api"], cfg._dirty_api)):
+        for key, e in source.items():
+            merged = target.setdefault(key, {**e, "count": 0, "tests": set()})
+            merged["count"] += e["count"]
+            merged["tests"].update(e["tests"])
+    cfg._dirty_seen.update(tuple(s) for s in out["seen"])
 
 
 def pytest_terminal_summary(terminalreporter):
