@@ -16,8 +16,8 @@ const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js'
 const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;
 const FIXED_DATE = '2000-01-02T03:04:05.000Z';
 
-// AnnotationIO.js: updateEventsNotes, the erase and prompt handlers. The others were in AnnotationIO.js until slice 8 step 6b
-const IO_SOURCES = ['annotation/Load.js', 'annotation/FileImport.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'AnnotationIO.js'];
+// form/EventsNotes.js: updateEventsNotes (slice 8 step 13a); the erase and prompt handlers are in Load.js and ServerIO.js since the same step
+const IO_SOURCES = ['annotation/Load.js', 'annotation/FileImport.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'form/EventsNotes.js'];
 const IO_FUNCTIONS = [
   'loadTracks', 'eraseEvents', 'loadEventsFromFile0', 'loadEventsFromFile',
   'eraseTags', 'loadTags', 'loadTagsFromFile', 'loadEventsFromServerByID',

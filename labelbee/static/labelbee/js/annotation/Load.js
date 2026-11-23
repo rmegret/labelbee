@@ -4,18 +4,19 @@
  * are here (converters, `centerPolicy`, info headers); the transports that fetch the payload, FileImport.js (a local file) and
  * ServerIO.js (AJAX), know the formats only by name, and show the errors (core/Alerts.js). A load that fails throws;
  * `loadTracks` and `loadTags` return a boolean for the callers that check it.
- * `loadTracks` and `loadTags` are installed as globals by labelbeeBridge.js (labelBee.js, AnnotationIO.js, tests).
+ * `loadTracks`, `loadTags`, `eraseEvents` and `eraseTags` are installed as globals by labelbeeBridge.js (labelBee.js, template buttons, tests).
  *
  * A load is: decode (the codec validates, nothing is written when it rejects), replace in the store, refresh.chrono(), refresh.frame().
  *
- * DEBT: globals read at call time, set by the page and not yet modules: `db`, `adjustChronogramHeight`, `updateEventsNotes`
- * (a form update that stays in AnnotationIO.js: core/RefreshInstrumentBridge.js instruments it by its global name, so
- * `loadTracks` must call the global).
+ * `eraseEvents` and `eraseTags` (the confirm dialogs of the template buttons) are here too: an erase is a load of nothing.
+ *
+ * DEBT: globals read at call time, set by the page and not yet modules: `db`, `adjustChronogramHeight`.
  */
 import * as codec from './AnnotationCodec.js';
 import { AnnotationStore } from './AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
 import { refresh } from './RefreshBridge.js';
+import { updateEventsNotes } from '../form/EventsNotes.js';
 
 const {
   sanitizeEvents, decodeTags, tagsAddFrames, db_to_json, tracks_csv_to_json, tags_csv_to_json, tags_csv_to_tagjson,
@@ -63,6 +64,28 @@ export function loadTags(obj) {
   adjustChronogramHeight();
   refresh.frame();
   return true;
+}
+
+// Buttons of the page: confirm, then replace by an empty set
+export function eraseEvents() {
+  var r = confirm(
+    "Are you sure you want to ERASE all manual annotations (Tracks)?"
+  );
+  if (r == true) {
+    console.log("ERASING all Tracks...");
+    loadTracks([]);
+  } else {
+    console.log("User CANCELED Erase Tracks ...");
+  }
+}
+export function eraseTags() {
+  var r = confirm("Are you sure you want to ERASE all Tags?");
+  if (r == true) {
+    console.log("ERASING all Tags...");
+    loadTags({});
+  } else {
+    console.log("User CANCELED Erase Tags ...");
+  }
 }
 
 // From the JSON text of the events or of the tags; throws if the text or the format is invalid

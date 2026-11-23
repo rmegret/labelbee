@@ -426,6 +426,11 @@ Dead code check (2026-11-23, `[read]`): the candidates are dead, not dormant.
 | top-level `formattimestamp` | its only uses (l.863, 900) call the copy local to `tracksListFromServer`; the dialogs do not call it | cut with the above |
 Not dead, recorded as DEBT: `clickLoadTracksCSVFromServer` and `clickLoadTracksTaggedCSVFromServer` hardcode the dataset (`bee_feeder`, `gurabo4`) in their `prompt` defaults; the buttons are in the template.
 
+As built in 13a: moves of whole top-level statements, `AnnotationIO.js` 934 to ~770 lines.
+- `eraseEvents`, `eraseTags` to `annotation/Load.js` (installed by the bridge, template buttons); `clickLoadTracksCSVFromServer`, `clickLoadTracksTaggedCSVFromServer` to `annotation/ServerIO.js` (same).
+- The events notes to the new `form/EventsNotes.js`: `initEventsNotes` (the `input` handler, called by `init()` of `labelBee.js` next to `initAnnotationIO`) and `updateEventsNotes`, wrapped by `instrument` in the module. `Load.js` now imports it, so `updateEventsNotes` is no longer on `window`.
+- Golden harness `refactor/tests/golden/harness/io-env.js`: `form/EventsNotes.js` replaces `AnnotationIO.js` in the sources it evaluates (the erase and prompt handlers come from `Load.js` and `ServerIO.js`); the module declares a plain `function updateEventsNotes` and exports the instrumented one, so the harness finds it.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

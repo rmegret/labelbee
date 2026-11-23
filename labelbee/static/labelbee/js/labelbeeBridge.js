@@ -69,8 +69,8 @@ import { initVideoSettings } from './layout/VideoSettings.js';
 import { initPanelRows } from './layout/PanelRows.js';
 import { initZoomView } from './zoom/ZoomView.js';
 import {
-  initAnnotationIO, eraseEvents, eraseTags, clickLoadTracksCSVFromServer, clickLoadTracksTaggedCSVFromServer,
-  LoginDialog, try_login, try_logout, whoami, updateEventsNotes,
+  initAnnotationIO,
+  LoginDialog, try_login, try_logout, whoami,
 } from './AnnotationIO.js';
 import {
   init, printMessage, toggleFullScreen, FilePickerFromServerDialog, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
@@ -236,7 +236,8 @@ install(FileExport, [
   "saveObjToJsonFile", "saveCSVToFile", "getTimestampNow", // VideoList.js
 ]);
 install(Load, [
-  "loadTracks", "loadTags", // labelBee.js, AnnotationIO.js (eraseEvents, eraseTags), tests
+  "loadTracks", "loadTags", // labelBee.js, tests
+  "eraseEvents", "eraseTags", // template buttons
 ]);
 install(FileImport, [
   "loadEventsFromFile", "loadTagsFromFile", // AnnotationIO.js: the file inputs
@@ -246,6 +247,7 @@ install(ServerIO, [
   "loadEventsFromServerByID", // labelBee.js
   "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, AnnotationIO.js
   "eventsToServer", // template button
+  "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
 ]);
 install(Alerts, ["mainAlert"]); // test_alerts.py
 // annotation/EditActions.js
@@ -288,11 +290,10 @@ $(function () {
 });
 
 // The annotation IO dialogs (AnnotationIO.js): `initAnnotationIO`, `LoginDialog` and `whoami` are called by `init()` of labelBee.js (`whoami` also
-// by NavMenu and the inline handlers), `eraseEvents`, `eraseTags` and `clickLoadTracks*` by the buttons of the page, `try_login`, `try_logout` and
-// `whoami` by the buttons the login dialog builds, `updateEventsNotes` by Load.js.
+// by NavMenu and the inline handlers), `try_login`, `try_logout` and `whoami` by the buttons the login dialog builds.
 installGlobals({
-  initAnnotationIO, eraseEvents, eraseTags, clickLoadTracksCSVFromServer, clickLoadTracksTaggedCSVFromServer,
-  LoginDialog, try_login, try_logout, whoami, updateEventsNotes,
+  initAnnotationIO,
+  LoginDialog, try_login, try_logout, whoami,
 });
 
 // The entry (labelBee.js): `init` is called by `window.onload` of the page, `printMessage` and `FilePickerFromServerDialog` by many modules

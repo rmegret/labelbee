@@ -158,7 +158,7 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (12) `labelBee.js` as module [x] entry, `init` and 5 functions installed by the bridge, dead globals cut
   - (12b) `layout/` scripts as modules [x] seven `initX` called by the bridge, tags leave the page
   - (12c) `AnnotationIO.js` as module [x] dialogs and login, 9 functions installed by the bridge
-  - (13a) erase, server-load commands, events notes [ ] to `Load.js`, `ServerIO.js`, `form/EventsNotes.js`
+  - (13a) erase, server-load commands, events notes [x] to `Load.js`, `ServerIO.js`, new `form/EventsNotes.js`
   - (13b) login [ ] `session/Login.js`
   - (13c) dialogs [ ] new folder `dialogs/`, one file each, with `FilePickerFromServerDialog`
   - (13d) `initAnnotationIO` removed [ ] `AnnotationIO.js` deleted, verified dead code cut

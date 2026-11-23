@@ -1,10 +1,9 @@
 /*jshint esversion: 6, asi: true */
 // Annotation IO dialogs: the load and save buttons, the dialogs that list the files of the server (labels, events, tags), the login
-// dialog and the user info, the notes of the events. ES module (refactor slice 8 step 12c, ADR 0015); no statement cut. Page globals
+// dialog and the user info. ES module (refactor slice 8 step 12c, ADR 0015); no statement cut. Page globals
 // (`events`, `videoManager`, `loadTracks`, `printMessage`, `chronoState`...) are read at call time; what the page reads is on `window`
 // (the bridge installs the exported functions, this file assigns the instances `fromServerDialog`... and `user_data`).
 
-import { instrument } from "./core/RefreshInstrumentBridge.js"
 
 // Formerly implicit globals, used as temporaries by the dialogs below (module scope, same sharing as before)
 let html, idx, buttonHTML, success, fileData
@@ -25,55 +24,6 @@ export function initAnnotationIO() {
   window.fromServerDialog = new FromServerDialog();
   window.pickEventsCSVDialog = new EventsCSVManualFilePicker();
 
-  $("#events-notes").on("input", onChanged_events_notes);
-}
-
-// ## Annotations control (confirm and prompt dialogs, called by the template buttons; they wait for step 9 of slice 8)
-
-export function eraseEvents() {
-  var r = confirm(
-    "Are you sure you want to ERASE all manual annotations (Tracks)?"
-  );
-  if (r == true) {
-    console.log("ERASING all Tracks...");
-    loadTracks([]);
-  } else {
-    console.log("User CANCELED Erase Tracks ...");
-  }
-}
-export function eraseTags() {
-  var r = confirm("Are you sure you want to ERASE all Tags?");
-  if (r == true) {
-    console.log("ERASING all Tags...");
-    loadTags({});
-  } else {
-    console.log("User CANCELED Erase Tags ...");
-  }
-}
-
-export async function clickLoadTracksCSVFromServer() {
-  console.log("clickLoadTracksCSVFromServer: loading .tracks.csv from URL");
-  const url = prompt("Enter tracks URL", url_for("/data")+"/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv");
-  if (url == null || url == "") {
-    console.log("clickLoadTracksCSVFromServer: no URL entered");
-    return;
-  }
-  return loadCSVFromServer(url, "tracks");
-}
-export async function clickLoadTracksTaggedCSVFromServer() {
-  console.log("clickLoadTracksTaggedCSVFromServer: loading video and .tracks_tagged.csv from URL");
-  const col_videoname = prompt("Enter gurabo4 col_videoname", "col10/9_02_R_190809120000.cfr.mp4");
-  if (col_videoname == null || col_videoname == "") {
-    console.log("clickLoadTracksCSVFromServer: no video entered");
-    return;
-  }
-  const videoURL = url_for("/data")+`/datasets/gurabo4/mp4/${col_videoname}`
-  console.log(`Trying to load video from ${videoURL}`)
-  videoManager.loadVideoManual(videoURL);
-  
-  const tracksURL = url_for("/data")+`/datasets/gurabo4/tracks/${col_videoname}.tracks_tagged.csv`
-  console.log(`Trying to load tracks_tagged from ${tracksURL}`)
-  return loadCSVFromServer(tracksURL, "tracks_tagged")
 }
 
 function ajaxlogin(email, password) {
@@ -915,20 +865,6 @@ function tracksListFromServer() {
     }),
   });
 }
-
-/* METADATA EDITION */
-
-function onChanged_events_notes(event) {
-  if (events.info) {
-    events.setInfo("notes", $("#events-notes").val());
-  }
-}
-// The refresh instrumentation (core/RefreshInstrumentBridge.js, ADR 0009) wraps this entry point of the form
-export const updateEventsNotes = instrument("form", "updateEventsNotes", function updateEventsNotes() {
-  if (events.info) {
-    $("#events-notes").val(events.info["notes"]);
-  }
-})
 
 // The loaders, loadTracks/loadTags, mainAlert, the AJAX errors and eventsToServer are in annotation/Load.js and
 // annotation/ServerIO.js (slice 8 step 6b)

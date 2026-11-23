@@ -6,6 +6,8 @@
 // Page globals (`overlay`, `videoControl`, `events`, `refresh`...) are read at call time; the ones this file builds are assigned on `window`.
 // Installed by labelbeeBridge.js (`init`, `printMessage`, `toggleFullScreen`, `FilePickerFromServerDialog`, `onKeyDown_*`).
 
+import { initEventsNotes } from "./form/EventsNotes.js"
+
 // `user_id`: set by AnnotationIO.js at login, read by annotation/ServerIO.js (undefined before)
 window.user_id = undefined
 
@@ -45,6 +47,7 @@ export function init(videoID, tagID) {
 
   // import * from "AnnotationIO.js"
   initAnnotationIO();
+  initEventsNotes();
 
   // ## Control panel
   // import * from "SelectionControl.js"

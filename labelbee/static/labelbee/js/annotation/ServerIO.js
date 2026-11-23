@@ -4,7 +4,7 @@
  * metadata: `json.data.data`, `created_by_id`...) from the payload, which it hands to Load.js; it knows the formats only by name
  * (`exportTracks("v2")`, the CSV schema of `loadCSVFromServer`). A failed load is shown by core/Alerts.js and rejects.
  * The AJAX error handlers and the entry points still called by a classic script, a template button or a test are installed as
- * globals by labelbeeBridge.js.
+ * globals by labelbeeBridge.js (the template buttons `clickLoadTracks*`).
  *
  * Strict mode: the implicit globals `dataToSend`, `alertMSG`, `success` and `tags` of the old code are declared; nobody read them.
  *
@@ -155,6 +155,32 @@ export function loadCSVFromServer(url, schema) {
       loadCSVFromRows(rows, schema, url);
     })
   .catch(reportLoadError("loading " + schema + " CSV from " + url))
+}
+
+// Buttons of the page: ask the user for a URL, then load it (DEBT: the defaults hardcode the datasets `bee_feeder` and `gurabo4`)
+export async function clickLoadTracksCSVFromServer() {
+  console.log("clickLoadTracksCSVFromServer: loading .tracks.csv from URL");
+  const url = prompt("Enter tracks URL", url_for("/data")+"/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv");
+  if (url == null || url == "") {
+    console.log("clickLoadTracksCSVFromServer: no URL entered");
+    return;
+  }
+  return loadCSVFromServer(url, "tracks");
+}
+export async function clickLoadTracksTaggedCSVFromServer() {
+  console.log("clickLoadTracksTaggedCSVFromServer: loading video and .tracks_tagged.csv from URL");
+  const col_videoname = prompt("Enter gurabo4 col_videoname", "col10/9_02_R_190809120000.cfr.mp4");
+  if (col_videoname == null || col_videoname == "") {
+    console.log("clickLoadTracksCSVFromServer: no video entered");
+    return;
+  }
+  const videoURL = url_for("/data")+`/datasets/gurabo4/mp4/${col_videoname}`
+  console.log(`Trying to load video from ${videoURL}`)
+  videoManager.loadVideoManual(videoURL);
+  
+  const tracksURL = url_for("/data")+`/datasets/gurabo4/tracks/${col_videoname}.tracks_tagged.csv`
+  console.log(`Trying to load tracks_tagged from ${tracksURL}`)
+  return loadCSVFromServer(tracksURL, "tracks_tagged")
 }
 
 export function tagsFromServer(tagFileID) {
