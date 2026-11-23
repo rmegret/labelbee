@@ -38,6 +38,7 @@ export function OverlayControl(canvasTagId) {
 
   overlay.opts = new OverlayOptions(overlay) // display options (overlay/OverlayOptions.js, step 11b3d)
   overlay.opts.init()
+  overlay.idPredictor = new IdPredictor(overlay)
   overlay.defaultRectSize = { width: 100, height: 100 } // size of a new rectangle, canvas pixels (was `default_width`, `overlay.defaultRectSize.height`)
 
   overlay.interaction = {
@@ -2009,10 +2010,17 @@ function dist(x, y, x2, y2) {
   return Math.sqrt((x - x2) * (x - x2) + (y - y2) * (y - y2));
 }
 
+// Predicts the ID of a new rectangle from the observations and tags of the neighboring frames (11c2, ADR 0015); built by the
+// constructor of the overlay as `overlay.idPredictor`. Coordinates in video/obs units.
+class IdPredictor {
+  constructor(overlay) {
+    this.overlay = overlay
+  }
+
 // predictId:
 // rect=={x:xx,y:yy} or rect={x:xx,y:yy,width:ww,height:hh}
 // all units in video/obs coordinates
-function predictId(frame, rect, mode) {
+  predictId(frame, rect, mode) {
   //console.log('predictId(info), info=',info)
   // Auxiliary function: checks if two rectangles match using various modes
   var checkMatch = function (obs, rect, mode) {
@@ -2070,7 +2078,7 @@ function predictId(frame, rect, mode) {
       if (checkMatch(obs, rect, mode)) {
         if (findRect(id))
           return {
-            id: computeDefaultNewID(),
+            id: this.computeDefaultNewID(),
             predicted_id: id,
             predicted_obs: obs,
             reason: "conflict",
@@ -2091,7 +2099,7 @@ function predictId(frame, rect, mode) {
     if (checkMatch(obs, rect, mode)) {
       if (findRect(id))
         return {
-          id: computeDefaultNewID(),
+          id: this.computeDefaultNewID(),
           predicted_id: id,
           predicted_obs: obs,
           reason: "conflict",
@@ -2104,15 +2112,15 @@ function predictId(frame, rect, mode) {
     }
   }
   return {
-    id: computeDefaultNewID(),
+    id: this.computeDefaultNewID(),
     reason: "default",
   };
 }
-function defaultIfIDExists(predictStruct) {
+  defaultIfIDExists(predictStruct) {
     let id = predictStruct.id
     if (id==null) {
         return {
-            id: computeDefaultNewID(),
+            id: this.computeDefaultNewID(),
             obs: undefined,
             d: Infinity,
             frame: undefined,
@@ -2121,7 +2129,7 @@ function defaultIfIDExists(predictStruct) {
     } 
     if (findRect(id))
         return {
-            id: computeDefaultNewID(),
+            id: this.computeDefaultNewID(),
             predicted_id: id,
             predicted_obs: obs,
             reason: 'conflict'
@@ -2129,7 +2137,7 @@ function defaultIfIDExists(predictStruct) {
     else
         return predictStruct;
 }
-function predictIdFromObsMultiframe(frameInterval, pt, mode) {
+  predictIdFromObsMultiframe(frameInterval, pt, mode) {
   let out = {
     id: undefined,
     obs: undefined,
@@ -2146,7 +2154,7 @@ function predictIdFromObsMultiframe(frameInterval, pt, mode) {
         cy = obs.y + obs.height / 2;
       //console.log("id=",id,"obs=",obs)
       let d = dist(pt.x, pt.y, cx, cy);
-      if (d < overlay.opts.predictIdClickRadius && d < out.d) {
+      if (d < this.overlay.opts.predictIdClickRadius && d < out.d) {
         out = { id: id, obs: obs, reason: "distance", d: d, frame: frame };
       }
     }
@@ -2154,7 +2162,7 @@ function predictIdFromObsMultiframe(frameInterval, pt, mode) {
   return out;
 }
 
-function predictIdFromTags(frame, pt, mode) {
+  predictIdFromTags(frame, pt, mode) {
   var tmp = AnnotationStore.getTags()[frame];
   if (tmp == null) return { id: undefined, tag: undefined, reason: "notFound" };
   var frame_tags = tmp.tags;
@@ -2162,14 +2170,14 @@ function predictIdFromTags(frame, pt, mode) {
     for (let k in frame_tags) {
       let tag = frame_tags[k];
       let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
-      if (d < overlay.opts.predictIdClickRadius) {
+      if (d < this.overlay.opts.predictIdClickRadius) {
         return { id: tag.id, tag: tag, reason: 'distance' };
       }
     }
   }
   return { id: undefined, tag: undefined, reason: "notFound" };
 }
-function predictIdFromTagsMultiframe(frameInterval, pt, mode) {
+  predictIdFromTagsMultiframe(frameInterval, pt, mode) {
   let out = {
     id: undefined,
     tag: undefined,
@@ -2186,7 +2194,7 @@ function predictIdFromTagsMultiframe(frameInterval, pt, mode) {
       for (let k in frame_tags) {
         let tag = frame_tags[k];
         let d = dist(pt.x, pt.y, tag.c[0], tag.c[1]);
-        if (d < overlay.opts.predictIdClickRadius && d < out.d) {
+        if (d < this.overlay.opts.predictIdClickRadius && d < out.d) {
           out = { id: tag.id, tag: tag, reason: 'distance', d: d, frame: frame };
         }
       }
@@ -2194,7 +2202,7 @@ function predictIdFromTagsMultiframe(frameInterval, pt, mode) {
   }
   return out;
 }
-function computeDefaultNewID() {
+  computeDefaultNewID() {
   var default_id = 0;
   let frame = getCurrentFrame();
   let ids = getValidIDsForFrame(frame);
@@ -2218,6 +2226,7 @@ function computeDefaultNewID() {
     console.log("   ids=", ids);
   }
   return String(default_id)
+}
 }
 
 // #MARK # LOW-LEVEL MOUSE EVENTS
@@ -2305,9 +2314,9 @@ function onMouseDown_predict(option) {
     let interval = [f-chrono.config.trackWindow.trackWindowBackward, f+chrono.config.trackWindow.trackWindowForward]
     if (interval[0]<0) interval[0]=0
     if (interval[1]>=getVideoInfo().nframes) interval[1]=getVideoInfo().nframes-1
-    let prediction = predictIdFromObsMultiframe(interval,videoXY, "distance")
-    prediction = defaultIfIDExists(prediction)
-  let predictionTag = predictIdFromTags(getCurrentFrame(), videoXY, "distance");
+    let prediction = overlay.idPredictor.predictIdFromObsMultiframe(interval,videoXY, "distance")
+    prediction = overlay.idPredictor.defaultIfIDExists(prediction)
+  let predictionTag = overlay.idPredictor.predictIdFromTags(getCurrentFrame(), videoXY, "distance");
   //$("#I").val(prediction.id)
 
   if (logging.mouseEvents) {
@@ -2439,8 +2448,8 @@ function onMouseDown_interactiveRect(option) {
   let interval = [f - chrono.config.trackWindow.trackWindowBackward, f + chrono.config.trackWindow.trackWindowForward]
   if (interval[0] < 0) interval[0] = 0
   if (interval[1] >= getVideoInfo().nframes) interval[1] = getVideoInfo().nframes - 1
-  let prediction = predictIdFromObsMultiframe(interval, videoXY, "distance")
-  prediction = defaultIfIDExists(prediction)
+  let prediction = overlay.idPredictor.predictIdFromObsMultiframe(interval, videoXY, "distance")
+  prediction = overlay.idPredictor.defaultIfIDExists(prediction)
   if (logging.mouseEvents)
     console.log("onMouseDown_interactiveRect: prediction", prediction, 'from videoXY', videoXY)
 
@@ -2559,7 +2568,7 @@ function onMouseDown_selectMultiframe(option) {
 
   let clickMultiframe = true;
   if (!clickMultiframe) {
-    tmp = predictIdFromTags(getCurrentFrame(), pt);
+    tmp = overlay.idPredictor.predictIdFromTags(getCurrentFrame(), pt);
 
     if (tmp.id != null) {
       console.log("onMouseDown_selectMultiframe: found id=", tmp.id);
@@ -2572,7 +2581,7 @@ function onMouseDown_selectMultiframe(option) {
   } else {
     let done = false;
     if (overlay.opts.showObsTracks) {
-      tmp = predictIdFromObsMultiframe(
+      tmp = overlay.idPredictor.predictIdFromObsMultiframe(
         [
           getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,
           getCurrentFrame() + chrono.config.trackWindow.trackWindowForward,
@@ -2592,7 +2601,7 @@ function onMouseDown_selectMultiframe(option) {
       }
     }
     if (!done && (overlay.opts.showTagsTracks || overlay.opts.showSelectedTagsTracks)) {
-      tmp = predictIdFromTagsMultiframe(
+      tmp = overlay.idPredictor.predictIdFromTagsMultiframe(
         [
           getCurrentFrame() - chrono.config.trackWindow.trackWindowBackward,
           getCurrentFrame() + chrono.config.trackWindow.trackWindowForward,

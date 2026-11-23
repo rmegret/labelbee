@@ -350,6 +350,10 @@ What is left of `OverlayControl.js` is ~2900 lines: the constructor and its ~35 
 
 Bodies unchanged otherwise. `DEBT` seen and kept: `w`, `h` undefined in `predictId` (`pointinside`), `obs` undefined in `defaultIfIDExists`; both throw in sloppy mode as well. The page-global reads of the module (`overlay`, `chrono`, `videoControl`, `selection`, `events`, `fabric`...) resolve at call time. The file keeps its class name `OverlayControl`; the file name follows the table of 11a.
 
+### 11c2: the ID prediction becomes the class `IdPredictor` (in `overlay/Overlay.js`)
+
+Maintainer decision: a class next to the overlay, no extra file. The 6 functions under `# ID PREDICTION` (`predictId`, `defaultIfIDExists`, `predictIdFromObsMultiframe`, `predictIdFromTags`, `predictIdFromTagsMultiframe`, `computeDefaultNewID`) become the methods of `class IdPredictor`, built by the constructor of the overlay as `overlay.idPredictor = new IdPredictor(overlay)`. The class has no state of its own (the answer depends on the annotations and the current frame); it holds the overlay to read `overlay.opts.predictIdClickRadius`. The helper `dist` stays a module-local function. The 7 call sites (`onMouseDown_predict`, `onMouseDown_interactiveRect`, `onMouseDown_selectMultiframe`) call `overlay.idPredictor.<method>(...)`. No reader outside `Overlay.js` (scan, grep of the template and the tests), so nothing is exported or installed. Bodies unchanged. `DEBT` kept: `predictId` has no caller (only commented ones) and reads undefined `w`, `h`; `defaultIfIDExists` reads an undefined `obs` in the conflict branch.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then
