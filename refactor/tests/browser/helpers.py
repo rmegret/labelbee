@@ -11,9 +11,26 @@ KNOWN_404 = (
 )
 
 
+# Init script of every page: counts the timers that VideoControl.js onVideoLoaded2 sets 500 ms after a video load
+# (`setTimeout(() => videoControl.hardRefresh(), 500)`, or `videoControl.seekFrame(frame)` after a delayed seek),
+# so that settle() can wait for them to have run instead of for a fixed time.
+POST_LOAD_TIMERS_JS = """(() => {
+  const st = window.setTimeout;
+  window.__postLoadTimers = 0;
+  window.setTimeout = function (fn, ms, ...args) {
+    if (ms === 500 && typeof fn === 'function' && /videoControl\\.(hardRefresh|seekFrame)\\(/.test(Function.prototype.toString.call(fn))) {
+      window.__postLoadTimers++;
+      return st.call(this, function () { try { return fn.apply(this, arguments); } finally { window.__postLoadTimers--; } }, ms, ...args);
+    }
+    return st.call(this, fn, ms, ...args);
+  };
+})();"""
+
+
 class App:
     def __init__(self, page, base_url, tmp_path):
         self.page = page
+        page.add_init_script(POST_LOAD_TIMERS_JS)
         self.base = base_url
         self.tmp = Path(tmp_path)
         self.console_errors = []   # console.error texts, resource 404s excluded (listed in not_found)
@@ -170,14 +187,15 @@ class App:
             self.page.wait_for_function("(l) => getComputedStyle(l.nextElementSibling).display !== 'none'", arg=label.element_handle())
 
     # ---- the overlay (a fabric.js canvas, overlay.canvas1) and the frame
-    def settle(self, ms=800):
+    def settle(self, ms=None):
         """Wait until the refresh that the page schedules 500 ms after a video is loaded has run
         (VideoControl.js onVideoLoaded2: setTimeout(hardRefresh, 500)). It rebuilds the fabric objects, so a click or a drag
-        started just before it can hit a box that no longer exists (it made the drag test fail about 1 run in 8)."""
+        started just before it can hit a box that no longer exists (it made the drag test fail about 1 run in 8).
+        Waits for that timer itself (POST_LOAD_TIMERS_JS) and one more frame, not for a time since the load; `ms` is kept
+        for the callers and ignored (it used to be the minimum time since the load, 800 ms by default)."""
         if self._video_loaded_at is not None:
-            left = ms / 1000 - (time.monotonic() - self._video_loaded_at)
-            if left > 0:
-                self.page.wait_for_timeout(int(left * 1000))
+            self.page.wait_for_function("window.__postLoadTimers === 0", timeout=10000)
+            self.page.evaluate("() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))")
 
     def box_center(self, obs_id):
         """Client coordinates of the centre of the box of observation `obs_id` in the current frame."""

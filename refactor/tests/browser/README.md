@@ -4,8 +4,8 @@ Automated version of [../CHECKLIST.md](../CHECKLIST.md): the real page in headle
 the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design/0006-browser-tests.md).
 
     conda activate labelbeedev                  # see ../devenv/README.md
-    pytest refactor/tests/browser               # ~4 minutes, 203 tests, one after the other
-    pytest refactor/tests/browser -n 8          # ~50 s: 8 parallel workers (pytest-xdist), see "Parallel run" below
+    pytest refactor/tests/browser               # ~3.5 minutes, 203 tests, one after the other
+    pytest refactor/tests/browser -n 8          # ~30 s: 8 parallel workers (pytest-xdist), see "Parallel run" below
     pytest refactor/tests/browser -k c9 -x      # one item, stop at the first failure
     pytest refactor/tests/browser --headed      # watch the browser (pytest-playwright option)
 
@@ -47,10 +47,12 @@ the dev webapp `tests/webapp/serve.py`. Decision record: [ADR 0006](../../design
 
 ## Parallel run
 `-n 8` (pytest-xdist, in `devenv/requirements-dev.txt`) starts 8 workers; each builds its own temporary webapp copy, sample video and
-server on a free port, so nothing is shared. Measured on a 64-core machine: serial 247 s, `-n 8` 49 s, `-n 16` 42 s (more workers add
-flaky timing, not speed). The dirty-write collections of the workers are merged by the controller (`pytest_testnodedown` in
-`conftest.py`), so the allow-list summary and `--dirty-writes=REPORT.json` are the same as in a serial run. Tests that compare timing
-under load (`test_l_refresh.py` refresh log, `test_n_hover_control.py`) can fail once in a parallel run; rerun them alone before suspecting a regression.
+server on a free port, so nothing is shared. Measured on a 64-core machine: serial 207 s, `-n 8` 30 s (it was 247 s and 49 s while `test_f6`
+timed out at 30 s and `settle()` waited a fixed 800 ms; `-n 16` gained only 7 s more and was flaky). The dirty-write collections of the
+workers are merged by the controller (`pytest_testnodedown` in `conftest.py`), so the allow-list summary and `--dirty-writes=REPORT.json`
+are the same as in a serial run. The tests that read a timing under load were made load-proof (the trailing late `updateChrono` of the
+refresh log is ignored in `test_l_refresh.py`; `test_n_hover_control.py` drains frame 0 before it closes its gate): 48 concurrent copies of
+that file pass. A new test that depends on a delay will show up first as a flake in a parallel run: wait for a condition instead.
 
 ## Dirty-write detector
 **On in every browser test, by default** (strict mode, below): no test is "designed for it", every one of them runs under the detector and fails if
@@ -87,6 +89,9 @@ Not reachable from the page, so not in the list: the `span` creation in `Overlay
 
 `ui.settle()` (used by `click_box` and `shift_click_background`) waits for the `hardRefresh` that the page schedules 500 ms after a
 video loads (`VideoControl.js` `onVideoLoaded2`); it rebuilds the fabric objects and made the drag test fail about 1 run in 8.
+It waits for that timer itself, not for a time since the load: an init script of every page (`POST_LOAD_TIMERS_JS` in `helpers.py`)
+counts the pending timers in `window.__postLoadTimers` and `settle()` waits for 0 and two frames (about 550 ms after the load, it was a
+fixed 800 ms). Without the wait, `test_j12` fails in every run and `test_a6` in about a quarter of them (checked by making `settle()` a no-op).
 
 ## Findings of the first run
 Not caused by the refactor unless noted. Recorded in the intent spec: F1 in `DEBT-202`, F2 in `DEBT-203` (6), F3 as `DEBT-738`, F4 as `DEC-006`, F5 as `DEBT-125`.
