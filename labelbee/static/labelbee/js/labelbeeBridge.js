@@ -49,7 +49,7 @@ import {
 } from './annotation/EditActions.js';
 import * as FileExport from './annotation/FileExport.js';
 import * as LocalFile from './io/LocalFile.js';
-import * as Load from './annotation/Load.js';
+import * as Load from './commands/Load.js';
 import * as ServerIO from './annotation/ServerIO.js';
 import * as Alerts from './core/Alerts.js';
 import { VideoManager } from './video/VideoList.js';

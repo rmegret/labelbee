@@ -17,11 +17,11 @@ const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;
 const FIXED_DATE = '2000-01-02T03:04:05.000Z';
 
 // form/EventsNotes.js: updateEventsNotes (slice 8 step 13a); the erase and prompt handlers are in Load.js and ServerIO.js since the same step
-const IO_SOURCES = ['annotation/Load.js', 'annotation/FileImport.js', 'io/LocalFile.js', 'io/ServerIO.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'form/EventsNotes.js'];
+const IO_SOURCES = ['commands/Load.js', 'codecs/Decode.js', 'annotation/FileImport.js', 'io/LocalFile.js', 'io/ServerIO.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'form/EventsNotes.js'];
 const IO_FUNCTIONS = [
   'loadTracks', 'eraseEvents', 'loadEventsFromFile',
   'eraseTags', 'loadTags', 'loadTagsFromFile', 'loadEventsFromServerByID',
-  'eventsFromServer', 'loadTracksCSVFromDB', 'loadCSVFromRows', 'loadCSVFromServer',
+  'eventsFromServer', 'loadTracksCSVFromDB', 'loadCSVFromRows', 'decodeCSVRows', 'decodeDBEvents', 'loadCSVFromServer',
   'clickLoadTracksCSVFromServer', 'clickLoadTracksTaggedCSVFromServer',
   'tagsFromServer', 'mainAlert', 'showAjaxError', 'updateEventsNotes',
   // loader helpers (slice 3 step 4)

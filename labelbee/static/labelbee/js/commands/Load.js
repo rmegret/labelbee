@@ -1,7 +1,8 @@
 /*
- * Load: what takes a payload (events, tags, CSV rows) into the store: `loadTracks`, `loadTags`, the loads from a text, from CSV
- * rows and from the database (refactor slice 8 steps 6b to 6d, ADR 0015). Mirror of Export.js: all the details of the formats
- * are here (converters, `centerPolicy`, info headers); the transports that fetch the payload, FileImport.js (a local file) and
+ * Load: the commands that take a payload (events, tags, CSV rows) into the store: `loadTracks`, `loadTags`, the loads from a text,
+ * from CSV rows and from the database, and the erases (refactor slice 8 steps 6b to 6d and 14f, ADR 0015, 0016). The details of the
+ * formats (converters, `centerPolicy`, info headers) are in codecs/Decode.js and codecs/AnnotationCodec.js; this file validates through
+ * them, replaces the store, refreshes and confirms. The transports that fetch the payload, FileImport.js (a local file) and
  * ServerIO.js (AJAX), know the formats only by name, and show the errors (core/Alerts.js). A load that fails throws;
  * `loadTracks` and `loadTags` return a boolean for the callers that check it.
  * `loadTracks`, `loadTags`, `eraseEvents` and `eraseTags` are installed as globals by labelbeeBridge.js (labelBee.js, template buttons, tests).
@@ -13,15 +14,13 @@
  * DEBT: globals read at call time, set by the page and not yet modules: `db`, `adjustChronogramHeight`.
  */
 import * as codec from '../codecs/AnnotationCodec.js';
-import { AnnotationStore } from './AnnotationStore.js';
+import { decodeCSVRows, decodeDBEvents } from '../codecs/Decode.js';
+import { AnnotationStore } from '../annotation/AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
-import { refresh } from './RefreshBridge.js';
+import { refresh } from '../annotation/RefreshBridge.js';
 import { updateEventsNotes } from '../form/EventsNotes.js';
 
-const {
-  sanitizeEvents, decodeTags, tagsAddFrames, db_to_json, tracks_csv_to_json, tags_csv_to_json, tags_csv_to_tagjson,
-  tracks_tagged_csv_to_json, events_csv_to_json, detections_csv_to_json,
-} = codec;
+const { sanitizeEvents, decodeTags, tagsAddFrames } = codec;
 
 /* options.centerPolicy: which fields are the truth for the center when x, y and cx, cy disagree, "xy" (default,
  * the JSON formats) or "cxcy" (the CSV and database sources): the loader knows its source (ADR 0008 R7).
@@ -109,50 +108,21 @@ export function loadTagsFromText(text) {
   console.log("loadTagsFromFile: importing from JSON file. DONE");
 }
 
-/* From the rows of a CSV of one of the schemas of codecs/CsvSchemas.js (the `loader` field of a schema: tracks, tags,
- * tracks_tagged, events, detections); `url` only names the source in the info of the loaded data. The CSV and database sources
- * trust cx, cy over x, y (ADR 0008 R7), except the detections. Throws if the schema is unknown or the data is invalid. */
+/* From the rows of a CSV of one of the schemas of codecs/CsvSchemas.js (see decodeCSVRows); `url` only names the source in the
+ * info of the loaded data. Throws if the schema is unknown or the data is invalid. */
 export function loadCSVFromRows(rows, schema, url) {
-  const info = (type) => ({
-    type: type,
-    source: `Converted from CSV "${url}"`,
-    history: `Loaded in Labelbee on ${new Date().toISOString()}`,
-  });
+  const decoded = decodeCSVRows(rows, schema, url);
 
-  if (schema == "tags") {
-    // one CSV builds both: the events, then the tags
-    let obj = tags_csv_to_json(rows, info("events-multiframe"));
-    let objtag = tags_csv_to_tagjson(rows, info("tags-multiframe"));
-
-    // skipRefresh in loadTracks: loadTags below refreshes once for the events and the tags
-    if (!loadTracks(obj, true, { centerPolicy: "cxcy" })) throw new Error("Invalid events in the CSV (details in the console)");
-    if (!loadTags(objtag)) throw new Error("Invalid tags in the CSV (details in the console)");
-    return;
+  // skipRefresh when there are tags: loadTags below refreshes once for the events and the tags
+  if (!loadTracks(decoded.events.obj, !!decoded.tags, { centerPolicy: decoded.events.centerPolicy })) {
+    throw new Error("Invalid events in the CSV (details in the console)");
   }
-
-  const converters = {
-    tracks: [tracks_csv_to_json, "cxcy"],
-    tracks_tagged: [tracks_tagged_csv_to_json, "cxcy"],
-    events: [events_csv_to_json, "cxcy"],
-    detections: [detections_csv_to_json, "xy"],
-  };
-  if (!converters[schema]) throw new Error("Unknown CSV schema: " + schema);
-  const [convert, centerPolicy] = converters[schema];
-
-  let obj = convert(rows, info("events-multiframe"));
-  if (!loadTracks(obj, false, { centerPolicy: centerPolicy })) throw new Error("Invalid events in the CSV (details in the console)");
+  if (decoded.tags && !loadTags(decoded.tags)) throw new Error("Invalid tags in the CSV (details in the console)");
 }
 
 export function loadTracksCSVFromDB(limit = 100) {
-
-    let info = {
-        type: "events-multiframe",
-        source: `Imported form DB`,
-        history: `Loaded in Labelbee on ${new Date().toISOString()}`,
-      }
-
   const a=performance.now();
-  let obj = db_to_json(db, info, limit)
+  let obj = decodeDBEvents(db, limit)
   const b=performance.now();
   console.log('DB query + convert to JSON',b-a)
   loadTracks(obj, false, { centerPolicy: "cxcy" })

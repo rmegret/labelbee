@@ -1,6 +1,6 @@
 /*jshint esversion: 6, asi: true */
 // The notes of the events (`#events-notes`, `events.info.notes`): a data field edited directly through the page, which is what
-// `form/` is for (ES module, refactor slice 8 step 13a, ADR 0015). `updateEventsNotes` is called by annotation/Load.js after a load.
+// `form/` is for (ES module, refactor slice 8 step 13a, ADR 0015). `updateEventsNotes` is called by commands/Load.js after a load.
 // `events` is the page global, read at call time.
 
 import { instrument } from "../core/RefreshInstrumentBridge.js"

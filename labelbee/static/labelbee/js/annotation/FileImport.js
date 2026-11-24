@@ -1,13 +1,13 @@
 /*
  * FileImport: the loads from a local file, mirror of FileExport.js (refactor slice 8 step 6c, ADR 0015). Moved from
- * annotation/Load.js: it reads the file (`readFileAsText`, io/LocalFile.js) and hands the text to Load.js, which knows the formats; a failure is shown by
+ * commands/Load.js: it reads the file (`readFileAsText`, io/LocalFile.js) and hands the text to Load.js, which knows the formats; a failure is shown by
  * core/Alerts.js. `initFileImport` wires them to the file inputs `#load` and `#loadtags` (called by `init()` of labelBee.js);
  * nothing is on `window`.
  *
  * Chain the apply stage with `.then(apply)` before the final `.catch(report)`: a rejection of the apply stage is reported
  * as the load error of the file too (slice 3 step 4, ADR 0005).
  */
-import { loadTracksFromText, loadTagsFromText } from './Load.js';
+import { loadTracksFromText, loadTagsFromText } from '../commands/Load.js';
 import { reportLoadError } from '../core/Alerts.js';
 import { readFileAsText } from '../io/LocalFile.js';
 

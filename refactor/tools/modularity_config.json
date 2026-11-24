@@ -140,7 +140,7 @@
       "ChronoAxes.js": "chrono", "ChronoControl.js": "chrono", "ChronoControlActivitiesLegacy.js": "chrono", "ChronoControlInteraction.js": "chrono",
       "chrono/": "chrono",
       "SelectionControl.js": "select", "ZoomView.js": "select",
-      "Model.js": "data", "AnnotationIO.js": "data", "annotation/": "data", "codecs/": "data", "io/": "data", "core/": "data",
+      "Model.js": "data", "AnnotationIO.js": "data", "annotation/": "data", "commands/": "data", "codecs/": "data", "io/": "data", "core/": "data",
       "labelBee.js": "shell", "layout/": "shell"
     },
     "byBox": {

@@ -1,7 +1,7 @@
 /*
  * Alerts: the main alert modal, the display of a failed load and the AJAX error callbacks (refactor slice 8 steps 6c and 14c,
  * ADR 0015, 0016). `mainAlert` and the AJAX error callbacks moved from annotation/ServerIO.js, `reportLoadError` from
- * annotation/Load.js (slice 3, ADR 0005, Q23). Shared by the file and the server loaders and the dialogs; it knows nothing of the
+ * commands/Load.js (slice 3, ADR 0005, Q23). Shared by the file and the server loaders and the dialogs; it knows nothing of the
  * data. `mainAlert` and the AJAX error callbacks are installed as globals by labelbeeBridge.js.
  *
  * DEBT: globals read at call time: `$`, `fromServerDialog` (the load error goes to its message area while it is open).

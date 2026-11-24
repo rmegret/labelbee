@@ -13,7 +13,7 @@
  * `basedOn` and its message) and `statusWidget`. `eventsToServer(format)` ignores `format` (always V2).
  */
 import { exportTracks } from '../codecs/Export.js';
-import { loadTracks, loadTags, loadCSVFromRows } from './Load.js';
+import { loadTracks, loadTags, loadCSVFromRows } from '../commands/Load.js';
 import { classifyFilename } from '../codecs/CsvSchemas.js';
 import { ajaxGetJSON, getJSONPromise, ajaxPostJSON, fetchCSVRows } from '../io/ServerIO.js';
 import { reportLoadError, showAjaxError } from '../core/Alerts.js';
