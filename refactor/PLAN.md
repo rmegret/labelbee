@@ -164,7 +164,7 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (13d) `initAnnotationIO` removed [x] `AnnotationIO.js` deleted; dead code cut in its own commit
   - (13e) `annotation/` review [x] analysis/08 and ADR 0016 (layers annotation, codecs, io, commands)
   - (14) annotation layers reorg per [ADR 0016](design/0016-annotation-layers.md) (revised 2026-11-24), one commit each:
-    - (14a) dead code of `ServerIO.js` cut [ ]
+    - (14a) dead code of `ServerIO.js` cut [x] `loadEventsFromFile0` and two dead blocks gone
     - (14b) `EventTree.js` to `form/` [ ]
     - (14c) AJAX error helpers to `core/Alerts.js` [ ]
     - (14d) `io/ServerIO.js` (requests), `io/LocalFile.js` (read, download) [ ]

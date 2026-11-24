@@ -174,8 +174,6 @@ export function init(videoID, tagID) {
 
   $('#alerttextblock').resizable()
 
-  //loadEventsFromFile0('data/Tracks-demo.json')
-
   // // Loading video tag data
   // $.ajax({
   //   url: "rest/v2/videodata",

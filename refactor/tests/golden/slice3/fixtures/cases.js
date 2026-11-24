@@ -54,7 +54,6 @@ const cases = [
   { name: 'loadEventsFromFile wrong format is an error shown to the user (Q23)', fn: 'loadEventsFromFile', args: () => [file({ a: 1 })], init: OLD() },
   { name: 'loadEventsFromFile error text is escaped (Q23)', fn: 'loadEventsFromFile', args: () => [file('<img src=x onerror=alert(1)>')], init: OLD() },
   { name: 'loadEventsFromFile canceled', fn: 'loadEventsFromFile', args: () => [{ target: { files: [], value: 'x' } }] },
-  { name: 'loadEventsFromFile0 from URL', fn: 'loadEventsFromFile0', args: () => ['data/Tracks.json'], net: { get: { ok: text(v2()) } } },
 
   // ---- loadTags (decode + apply) ----
   { name: 'loadTags v1 with dm', fn: 'loadTags', pinReturn: true, args: () => [tagsV1()], init: { Tags: {} } },

@@ -1188,90 +1188,6 @@
    }
   ]
  },
- "loadEventsFromFile0 from URL": {
-  "state": {
-   "Tracks": {
-    "0": {
-     "1": {
-      "ID": "1",
-      "cx": 3.5,
-      "cy": 5,
-      "angle": 30,
-      "width": 5,
-      "height": 6,
-      "x": 1,
-      "y": 2,
-      "labels": ""
-     },
-     "2": {
-      "ID": "2",
-      "cx": 3.5,
-      "cy": 5,
-      "angle": 30,
-      "width": 5,
-      "height": 6,
-      "x": 1,
-      "y": 2,
-      "labels": ""
-     }
-    },
-    "4": {
-     "1": {
-      "ID": "1",
-      "cx": 3.5,
-      "cy": 5,
-      "angle": 30,
-      "width": 5,
-      "height": 6,
-      "x": 1,
-      "y": 2,
-      "labels": ""
-     }
-    }
-   },
-   "TracksInfo": {
-    "type": "events-multiframe",
-    "source": "synthetic"
-   },
-   "Tags": {
-    "$": "undefined"
-   },
-   "TagsInfo": {
-    "$": "undefined"
-   },
-   "tagsHaveDM": false
-  },
-  "fx": [
-   [
-    "get",
-    "data/Tracks.json"
-   ],
-   [
-    "$",
-    "#events-notes",
-    "val",
-    {
-     "$": "undefined"
-    }
-   ],
-   [
-    "refreshChronogram"
-   ],
-   [
-    "onFrameChanged"
-   ]
-  ],
-  "cbErrors": [],
-  "rejections": [],
-  "alerts": [],
-  "logs": [
-   "sanitizeEvents: WARNING 3 observation(s) had x, y and cx, cy that disagree; x, y are the truth, cx, cy recomputed"
-  ],
-  "errors": [],
-  "argsAfter": [
-   "data/Tracks.json"
-  ]
- },
  "loadTags v1 with dm": {
   "returned": true,
   "state": {
@@ -2844,12 +2760,6 @@
    ],
    [
     "onFrameChanged"
-   ],
-   [
-    "$",
-    "#loadTracksFromServerDialog",
-    "modal",
-    "hide"
    ]
   ],
   "cbErrors": [],

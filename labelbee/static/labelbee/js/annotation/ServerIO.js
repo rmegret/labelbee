@@ -9,10 +9,10 @@
  * Strict mode: the implicit globals `dataToSend`, `alertMSG`, `success` and `tags` of the old code are declared; nobody read them.
  *
  * DEBT: globals read at call time: `$`, `d3`, `videoManager`, `fromServerDialog` (the lineage
- * `basedOn`, its message and the dialog to hide) and `statusWidget`. `eventsToServer(format)` ignores `format` (always V2).
+ * `basedOn` and its message) and `statusWidget`. `eventsToServer(format)` ignores `format` (always V2).
  */
 import { exportTracks } from './Export.js';
-import { loadTracks, loadTags, loadTracksFromText, loadCSVFromRows } from './Load.js';
+import { loadTracks, loadTags, loadCSVFromRows } from './Load.js';
 import { classifyFilename } from './CsvSchemas.js';
 import { mainAlert, reportLoadError } from '../core/Alerts.js';
 import { logging } from '../core/Notifier.js';
@@ -85,17 +85,6 @@ export function showAjaxError(title, prehook, onlyConsole) {
 }
 
 /* LOADS FROM THE SERVER */
-export function loadEventsFromFile0(fileToRead) {
-  console.log("loadFromFile0: importing from JSON...");
-
-  return new Promise(function (resolve, reject) {
-    $.get(fileToRead, resolve).fail(reject);
-  }).then(function (data) {
-    console.log("JSON loaded: ", data);
-    loadTracksFromText(data);
-  }).catch(reportLoadError("loading events from " + fileToRead));
-}
-
 export async function loadEventsFromServerByID(video_data_id) {
     //Sending GET request to flask API to retrieve json containing annotation data
     // Resolves once the events are loaded; rejects when the request fails or the data is invalid
@@ -134,8 +123,6 @@ export function eventsFromServer(url) {
       let obj = json; //JSON.parse(json);
 
       if (!loadTracks(obj)) throw new Error("Invalid events format (details in the console)");
-
-      $("#loadTracksFromServerDialog").modal("hide");
     },
     function (err) {
       showAjaxError("ERROR in eventsFromServer")(err.jqXHR, err.textStatus, err.errorThrown);
@@ -185,29 +172,6 @@ export async function clickLoadTracksTaggedCSVFromServer() {
 }
 
 export function tagsFromServer(tagFileID) {
-
-  // Files are not being loaded from a specific URL anymore,
-  // Commented code block should no longer be necessary
-
-  //var path = "data/Gurabo/Tags-C02_170624100000.json" ;// Default
-
-  // if (path == null) {
-  //   var p = videoControl.name.split("/");
-  //   var q = p[p.length - 1].split(".");
-  //   q[0] = "Tags-" + q[0];
-  //   q[q.length - 1] = "json";
-  //   p[p.length - 1] = q.join(".");
-
-  //   var path = p.join("/"); // Default
-  // }
-  // if (!quiet) {
-  //   path = window.prompt("Please enter path for Tags JSON (server)", path);
-  //   if (path == null || path == "") {
-  //     console.log("tagsFromServer: canceled");
-  //     return;
-  //   }
-  // }
-
   if (logging.io) {
     console.log('tagsFromServer: loading tag file with ID "' + tagFileID + '"...');
   }
@@ -240,14 +204,6 @@ export function eventsToServer(format) {
   var route = "/api/v1/annotations";
 
   console.log("eventsToServer");
-
-  // Hardcoded test data
-  // dataToSend = {
-  //   video_id: "1",
-  //   created_by_id: "1",
-  //   data_type:"event",
-  //   data:"testData"
-  // }
 
   const dataToSend = {
     video_id: videoManager.currentVideoID,
