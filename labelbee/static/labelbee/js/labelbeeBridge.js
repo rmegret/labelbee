@@ -48,6 +48,7 @@ import {
   storeUnit,
 } from './annotation/EditActions.js';
 import * as FileExport from './annotation/FileExport.js';
+import * as LocalFile from './io/LocalFile.js';
 import * as Load from './annotation/Load.js';
 import * as ServerIO from './annotation/ServerIO.js';
 import * as Alerts from './core/Alerts.js';
@@ -228,8 +229,9 @@ function install(module, names) {
 }
 install(FileExport, [
   "saveEventsToFile", "saveEventsToCSV", "saveEventsToBBoxes", "saveTagsToFile", // template buttons
-  "saveObjToJsonFile", "saveCSVToFile", "getTimestampNow", // VideoList.js
+  "getTimestampNow", // VideoList.js
 ]);
+install(LocalFile, ["saveObjToJsonFile", "saveCSVToFile"]); // VideoList.js
 install(Load, [
   "loadTracks", "loadTags", // labelBee.js, tests
   "eraseEvents", "eraseTags", // template buttons
