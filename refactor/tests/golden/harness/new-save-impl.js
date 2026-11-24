@@ -1,4 +1,4 @@
-// Adapts the save side of the ES module annotation/AnnotationCodec.js to the {fns, rec} shape used by
+// Adapts the save side of the ES module codecs/AnnotationCodec.js to the {fns, rec} shape used by
 // run-case.js (slice 2, ADR 0004). Notifier recorded like the page bridge does; Date() replaced by the
 // fixed string the goldens were generated with, only for the duration of each call.
 'use strict';
@@ -20,7 +20,7 @@ function withFixedDate(fn) {
 
 // Async because the modules are ESM; returns a sync factory usable by runCase.
 async function loadNewSaveImpl() {
-  const codec = await import(urlOf('annotation/AnnotationCodec.js'));
+  const codec = await import(urlOf('codecs/AnnotationCodec.js'));
   const { setNotifier, logging } = await import(urlOf('core/Notifier.js'));
   return function makeNewSaveImpl({ logIO = true } = {}) {
     const { rec, stubs } = makeRecorder();

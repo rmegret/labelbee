@@ -1,7 +1,7 @@
-// annotation/AnnotationCodec.js: the two CSV loaders added with the /data dialog schemas (CSV loading debuggability),
+// codecs/AnnotationCodec.js: the two CSV loaders added with the /data dialog schemas (CSV loading debuggability),
 // events_csv_to_json (*.events.csv, *.events_tagged.csv) and detections_csv_to_json (*.detections.csv).
 // New code, no old implementation to pin: the expected values are written by hand from the mapping documented in
-// annotation/CsvSchemas.js. Run: node --test refactor/tests/golden/csvloaders/
+// codecs/CsvSchemas.js. Run: node --test refactor/tests/golden/csvloaders/
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -13,7 +13,7 @@ const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;
 const load = async () => {
   const { setNotifier } = await import(urlOf('core/Notifier.js'));
   setNotifier({ alert() {}, log() {}, logError() {} });
-  return import(urlOf('annotation/AnnotationCodec.js'));
+  return import(urlOf('codecs/AnnotationCodec.js'));
 };
 
 const INFO = { type: 'events-multiframe', source: 'synthetic' };

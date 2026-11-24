@@ -8,7 +8,7 @@
  * Behavior changes, each approved by the maintainer: an unknown format of `saveEventsToFile` or version of `saveTagsToFile`
  * throws (it saved a file containing `null`, or logged only); `saveTagsToFile` v2 no longer writes an implicit global.
  */
-import { exportTracks, exportTracksCSV, exportBBoxes, exportTags } from './Export.js';
+import { exportTracks, exportTracksCSV, exportBBoxes, exportTags } from '../codecs/Export.js';
 import { saveObjToJsonFile, saveCSVToFile } from '../io/LocalFile.js';
 import { getVideoInfo } from '../video/VideoInfo.js';
 

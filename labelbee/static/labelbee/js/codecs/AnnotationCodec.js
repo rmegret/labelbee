@@ -7,7 +7,7 @@
  * (ADR 0003); the labels helpers are the pure module Labels.js (ADR 0008 step 2).
  */
 import { alert, log, logError, logIO } from "../core/Notifier.js";
-import * as Labels from "./Labels.js";
+import * as Labels from "../annotation/Labels.js";
 
 /* Geometry of an observation: two sets describe the same box, the top-left corner (x, y) and the center
  * (cx, cy), with width and height. They must agree: cx = x + width/2, cy = y + height/2 (the angle is around

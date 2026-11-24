@@ -98,7 +98,7 @@
     "annotation/AnnotationStoreBridge.js": "annotation/AnnotationStore.js",
     "annotation/RefreshBridge.js": "annotation/Refresh.js",
     "annotation/SelectionModelBridge.js": "annotation/SelectionModel.js",
-    "annotation/AnnotationCodecBridge.js": "annotation/AnnotationCodec.js"
+    "annotation/AnnotationCodecBridge.js": "codecs/AnnotationCodec.js"
   },
   "singletons": {
     "_doc": "Global name -> class or module box, when the code does not say it with `x = new C` (bridges, factories).",
@@ -110,7 +110,7 @@
     "Labels": "annotation/Labels.js",
     "WrongId": "annotation/WrongId.js",
     "EventTree": "form/EventTree.js",
-    "CsvSchemas": "annotation/CsvSchemas.js",
+    "CsvSchemas": "codecs/CsvSchemas.js",
     "logging": "core/Notifier.js",
     "refreshLog": "core/Notifier.js",
     "refreshInstrumented": "core/Notifier.js",
@@ -140,7 +140,7 @@
       "ChronoAxes.js": "chrono", "ChronoControl.js": "chrono", "ChronoControlActivitiesLegacy.js": "chrono", "ChronoControlInteraction.js": "chrono",
       "chrono/": "chrono",
       "SelectionControl.js": "select", "ZoomView.js": "select",
-      "Model.js": "data", "AnnotationIO.js": "data", "annotation/": "data", "core/": "data",
+      "Model.js": "data", "AnnotationIO.js": "data", "annotation/": "data", "codecs/": "data", "io/": "data", "core/": "data",
       "labelBee.js": "shell", "layout/": "shell"
     },
     "byBox": {

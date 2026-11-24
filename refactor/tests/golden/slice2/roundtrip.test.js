@@ -1,5 +1,5 @@
 // Round trip (slice 2, ADR 0004): what convertTracksToV2 saves, sanitizeEvents (slice 1) loads back.
-// Both from annotation/AnnotationCodec.js. Assertions on the documented contract (BEH-710, BEH-717),
+// Both from codecs/AnnotationCodec.js. Assertions on the documented contract (BEH-710, BEH-717),
 // not a golden.
 'use strict';
 const test = require('node:test');

@@ -99,8 +99,8 @@ function makeD3(rec, net) {
 
 // Async: loads the ES modules once; returns a sync factory (case) -> env.
 async function loadIoEnv() {
-  const codec = await import(urlOf('annotation/AnnotationCodec.js'));
-  const { classifyFilename } = await import(urlOf('annotation/CsvSchemas.js'));
+  const codec = await import(urlOf('codecs/AnnotationCodec.js'));
+  const { classifyFilename } = await import(urlOf('codecs/CsvSchemas.js'));
   const { setNotifier, logging } = await import(urlOf('core/Notifier.js'));
   const { createAnnotationStore } = await import(urlOf('annotation/AnnotationStore.js'));
   const { installLegacyGlobals } = await import(urlOf('annotation/AnnotationStoreBridge.js'));

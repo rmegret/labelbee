@@ -9,7 +9,7 @@ const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js'
 const load = (rel) => import(pathToFileURL(path.join(JS_DIR, rel)).href);
 
 async function run(obj, options) {
-  const codec = await load('annotation/AnnotationCodec.js');
+  const codec = await load('codecs/AnnotationCodec.js');
   const { setNotifier } = await load('core/Notifier.js');
   const logs = [];
   setNotifier({ alert: () => {}, log: (m) => logs.push(String(m)), logError: () => {} });
@@ -70,6 +70,6 @@ test('v1 files: the policy applies to the observations, fixed in place', async (
 });
 
 test('an unknown policy throws', async () => {
-  const codec = await load('annotation/AnnotationCodec.js');
+  const codec = await load('codecs/AnnotationCodec.js');
   assert.throws(() => codec.sanitizeEvents(v2([]), { centerPolicy: 'xyz' }), /centerPolicy should be/);
 });

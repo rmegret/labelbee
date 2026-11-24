@@ -1,4 +1,4 @@
-// annotation/CsvSchemas.js: schema detection from the file suffix and the header, on the real sample files.
+// codecs/CsvSchemas.js: schema detection from the file suffix and the header, on the real sample files.
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -8,7 +8,7 @@ const { pathToFileURL } = require('url');
 
 const JS_DIR = path.resolve(__dirname, '../../../../labelbee/static/labelbee/js');
 const DATA = path.resolve(__dirname, '../../../../tests/webapp/data');
-const load = () => import(pathToFileURL(path.join(JS_DIR, 'annotation/CsvSchemas.js')).href);
+const load = () => import(pathToFileURL(path.join(JS_DIR, 'codecs/CsvSchemas.js')).href);
 const header = (f) => fs.readFileSync(path.join(DATA, f), 'utf8').split('\n')[0];
 
 test('parseHeaderLine: quotes, BOM, CRLF', async () => {
@@ -114,7 +114,7 @@ test('mappingTable: no mapping for a schema without loader', async () => {
   assert.equal(S.mappingTable(S.schemaByKey('packets'), ['frame']), null);
 });
 
-const codec = () => import(pathToFileURL(path.join(JS_DIR, 'annotation/AnnotationCodec.js')).href);
+const codec = () => import(pathToFileURL(path.join(JS_DIR, 'codecs/AnnotationCodec.js')).href);
 
 test('events_csv_to_json: start and end events, labels, partial tag, negative frames skipped', async () => {
   const C = await codec();

@@ -8,7 +8,7 @@ Browser tests (real page in headless Chromium, 91 tests, [browser/README.md](bro
 keep the checklist for what a script cannot judge (see its first lines). Environment: [devenv/README.md](devenv/README.md).
 
 ## Golden tests: CSV loading (off plan, no slice)
-- `golden/csvschemas/csv-schemas.test.js`: schema detection of `annotation/CsvSchemas.js` on the real sample files.
+- `golden/csvschemas/csv-schemas.test.js`: schema detection of `codecs/CsvSchemas.js` on the real sample files.
 - `golden/chrono/video-keyframes.test.js`: `parsePackets` and `nearestKeyframe` of `chrono/VideoKeyframes.js` ([ADR 0014](../design/0014-video-keyframes-preview.md)), `node --test refactor/tests/golden/chrono/`.
 - `perf/keyframe_hover_perf.py`: not a test, a script: decode time of hover previews on keyframes vs non-keyframes (random, sequential, reverse) on the gurabo sample, writes `refactor/scratch/keyframe-hover-perf.md`.
 - `golden/csvloaders/csv-loaders.test.js`: `events_csv_to_json` and `detections_csv_to_json`. Expected values are written by
@@ -25,7 +25,7 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
   (error name only), SQL sent to the db stub. Routine progress logs are not pinned.
 - `golden/harness/stubs.js`: recorder of observable effects (alerts, pinned logs, errors, SQL). Slice-1 specific
   (function list); generalize when a second slice needs it.
-- `golden/harness/new-impl.js`: loads `annotation/AnnotationCodec.js` (ESM) and sets the Notifier
+- `golden/harness/new-impl.js`: loads `codecs/AnnotationCodec.js` (ESM) and sets the Notifier
   like the page bridge; the test runs every case against the golden.
 - `golden/harness/run-case.js`, `golden/harness/serialize.js`: generic.
 - The golden was generated from the original `AnnotationIO.js` functions (last present in commit
@@ -42,7 +42,7 @@ Node >= 18, no npm dependency. In this setup Node lives in `~/.nvm/versions/node
   after the call, which is where the in-place mutations of `TracksInfo` (DEBT-706) and of the live `Tracks`
   (DEBT-707) are visible.
 - `golden/harness/save-stubs.js`: the list of save functions and the fixed string standing for `Date()`.
-- `golden/harness/new-save-impl.js`: loads the save side of `annotation/AnnotationCodec.js` (ESM), sets the
+- `golden/harness/new-save-impl.js`: loads the save side of `codecs/AnnotationCodec.js` (ESM), sets the
   Notifier like the page bridge and fixes `Date()` for the duration of each call; the test runs every case
   against the golden.
 - `golden/slice2/roundtrip.test.js`: v2 save then `sanitizeEvents` (slice 1 module); assertions, not a golden.

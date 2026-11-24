@@ -12,7 +12,7 @@
  *
  * DEBT: globals read at call time, set by the page and not yet modules: `db`, `adjustChronogramHeight`.
  */
-import * as codec from './AnnotationCodec.js';
+import * as codec from '../codecs/AnnotationCodec.js';
 import { AnnotationStore } from './AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
 import { refresh } from './RefreshBridge.js';
@@ -109,7 +109,7 @@ export function loadTagsFromText(text) {
   console.log("loadTagsFromFile: importing from JSON file. DONE");
 }
 
-/* From the rows of a CSV of one of the schemas of annotation/CsvSchemas.js (the `loader` field of a schema: tracks, tags,
+/* From the rows of a CSV of one of the schemas of codecs/CsvSchemas.js (the `loader` field of a schema: tracks, tags,
  * tracks_tagged, events, detections); `url` only names the source in the info of the loaded data. The CSV and database sources
  * trust cx, cy over x, y (ADR 0008 R7), except the detections. Throws if the schema is unknown or the data is invalid. */
 export function loadCSVFromRows(rows, schema, url) {

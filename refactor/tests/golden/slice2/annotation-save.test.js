@@ -1,5 +1,5 @@
 // Golden tests for the save/export functions (slice 2, ADR 0004). Run: node --test refactor/tests/golden/slice2/
-// Implementation under test: annotation/AnnotationCodec.js. The golden was pinned from the original
+// Implementation under test: codecs/AnnotationCodec.js. The golden was pinned from the original
 // AnnotationIO.js functions (deleted in step 3).
 'use strict';
 const test = require('node:test');

@@ -4,7 +4,7 @@
  * Entries are removed when their callers move to modules (the loaders and the save-to-file/server
  * functions of AnnotationIO.js).
  */
-import * as codec from './AnnotationCodec.js';
+import * as codec from '../codecs/AnnotationCodec.js';
 
 for (const name of [
   'sanitizeEvents', 'tagsAddFrames', 'decodeTags', 'db_to_json', 'flatjson_to_json', 'resultToObjects',

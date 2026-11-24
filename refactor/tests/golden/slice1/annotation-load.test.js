@@ -1,5 +1,5 @@
 // Golden tests for the pure load functions (slice 1, ADR 0002). Run: node --test refactor/tests/golden/slice1/
-// Implementation under test: annotation/AnnotationCodec.js. The golden was pinned from the
+// Implementation under test: codecs/AnnotationCodec.js. The golden was pinned from the
 // original AnnotationIO.js functions (deleted in step 3).
 'use strict';
 const test = require('node:test');

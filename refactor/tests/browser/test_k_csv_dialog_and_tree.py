@@ -1,4 +1,4 @@
-"""The "from /data" loader dialog with CSV schema detection (annotation/CsvSchemas.js: category badge, filter by type, header validation
+"""The "from /data" loader dialog with CSV schema detection (codecs/CsvSchemas.js: category badge, filter by type, header validation
 before loading) and the collapsible tree of the selected event in the "Events info" tab (form/EventTree.js)."""
 
 

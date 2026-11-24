@@ -22,7 +22,7 @@ import './annotation/SelectionModelBridge.js'; // window.selection (needs window
 import './annotation/AnnotationCodecBridge.js'; // the legacy converter names (loaders, savers)
 import * as Labels from './annotation/Labels.js';
 import * as WrongId from './annotation/WrongId.js';
-import * as CsvSchemas from './annotation/CsvSchemas.js';
+import * as CsvSchemas from './codecs/CsvSchemas.js';
 import * as EventTree from './form/EventTree.js';
 import {
   Observation,

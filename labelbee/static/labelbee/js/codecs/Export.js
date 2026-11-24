@@ -9,7 +9,7 @@
  * string. An unknown format or version throws.
  */
 import * as codec from './AnnotationCodec.js';
-import { AnnotationStore } from './AnnotationStore.js';
+import { AnnotationStore } from '../annotation/AnnotationStore.js';
 import { getVideoInfo } from '../video/VideoInfo.js';
 
 const events = AnnotationStore.events;

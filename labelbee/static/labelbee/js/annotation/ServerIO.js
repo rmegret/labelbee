@@ -12,9 +12,9 @@
  * DEBT: globals read at call time: `$`, `d3`, `videoManager`, `fromServerDialog` (the lineage
  * `basedOn` and its message) and `statusWidget`. `eventsToServer(format)` ignores `format` (always V2).
  */
-import { exportTracks } from './Export.js';
+import { exportTracks } from '../codecs/Export.js';
 import { loadTracks, loadTags, loadCSVFromRows } from './Load.js';
-import { classifyFilename } from './CsvSchemas.js';
+import { classifyFilename } from '../codecs/CsvSchemas.js';
 import { ajaxGetJSON, getJSONPromise, ajaxPostJSON, fetchCSVRows } from '../io/ServerIO.js';
 import { reportLoadError, showAjaxError } from '../core/Alerts.js';
 import { logging } from '../core/Notifier.js';
@@ -69,7 +69,7 @@ export function eventsFromServer(url) {
   ).catch(reportLoadError("loading events from " + url));
 }
 
-/* `schema`: one of the `loader` fields of annotation/CsvSchemas.js (tracks, tags, tracks_tagged, events, detections);
+/* `schema`: one of the `loader` fields of codecs/CsvSchemas.js (tracks, tags, tracks_tagged, events, detections);
  * by default the one the file name announces, else tracks. */
 export function loadCSVFromServer(url, schema) {
   schema = schema || (classifyFilename(url) || {}).loader || "tracks";

@@ -1,4 +1,4 @@
-// Adapts the ES module annotation/AnnotationCodec.js to the {fns, rec} shape used by run-case.js.
+// Adapts the ES module codecs/AnnotationCodec.js to the {fns, rec} shape used by run-case.js.
 // Connects it like the page bridge (AnnotationCodecBridge.js): alert/console recorded through the Notifier, logging.io on.
 'use strict';
 const path = require('path');
@@ -10,7 +10,7 @@ const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;
 
 // Async because the modules are ESM; returns a sync factory usable by runCase.
 async function loadNewImpl() {
-  const codec = await import(urlOf('annotation/AnnotationCodec.js'));
+  const codec = await import(urlOf('codecs/AnnotationCodec.js'));
   const { setNotifier, logging } = await import(urlOf('core/Notifier.js'));
   return function makeNewImpl({ logIO = true } = {}) {
     const { rec, stubs } = makeRecorder();
