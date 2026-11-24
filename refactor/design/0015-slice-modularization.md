@@ -444,6 +444,8 @@ As built in 13c: the four dialogs move unchanged, one file each, to the new fold
 - The temporaries (`html`, `success`, `idx`, `buttonHTML`, `fileData`) are declared per file where used, as module scope like before (they were shared by all dialogs; no dialog read what another assigned).
 - Left in `AnnotationIO.js`: the file inputs wiring, `chronoState.ttags = []`, `show_log_in`, `formattimestamp` and `tracksListFromServer` (already marked DEPRECATED), cut by 13d.
 
+As built in 13d, first commit: the dead code is cut from `AnnotationIO.js` (verified again: no reader in `labelbee/`, the tests or the template): `show_log_in` (empty), the top-level `formattimestamp` (unused; `tracksListFromServer` had its own inner copy) and `tracksListFromServer` (DEPRECATED, legacy `/rest/events/` route, fills a modal absent from the page; replaced by `FromServerDialog`). ~125 lines.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then
