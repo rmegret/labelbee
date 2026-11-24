@@ -162,7 +162,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (13b) login [x] `session/Login.js` owns user state and buttons; no login global left
   - (13c) dialogs [x] four dialogs in new `dialogs/`, one file each; `FilePickerFromServerDialog` off `window`
   - (13d) `initAnnotationIO` removed [x] `AnnotationIO.js` deleted; dead code cut in its own commit
-  - (13e) `annotation/` review [ ] data layer split from GUI layer, analysis first
+  - (13e) `annotation/` review [x] analysis/08 and ADR 0016 (layers annotation, codecs, io, commands)
+  - (13e2) annotation layers reorg [ ] eight small commits per ADR 0016, `SourceRef` last
   - (13f) user feedback interface [ ] one GUI interface for erase, load, save feedback (behavior change)
   - (14) globals [ ] list in `refactor/analysis/` (one ID each, necessary or spurious), then reduce the spurious ones
   - (15) record [ ]

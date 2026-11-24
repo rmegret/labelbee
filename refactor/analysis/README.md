@@ -18,6 +18,7 @@ Snapshot: branch `refactor` @ `eafbd6ac`. Size (excluding `extern/`, `legacy/`, 
 | 5 | [05-classes-and-interactions.md](05-classes-and-interactions.md) | Each class/module in detail + sequence diagrams of key scenarios |
 | 6 | [06-smells-and-risks.md](06-smells-and-risks.md) | Ranked findings: bugs, security, dead code, duplication |
 | 7 | [07-questions-and-proposals.md](07-questions-and-proposals.md) | **Open questions for the maintainer + proposed refactor strategy** |
+| 8 | [08-annotation-layers.md](08-annotation-layers.md) | `annotation/`: which files are data, I/O or GUI (slice 8 step 13e) |
 
 Diagrams are Mermaid (render in GitHub / VS Code / any Mermaid viewer).
 

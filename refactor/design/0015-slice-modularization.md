@@ -451,6 +451,8 @@ As built in 13d, second commit: `AnnotationIO.js` is deleted and `initAnnotation
 - `chronoState.ttags = []` becomes the initial value in `chrono/ChronoState.js` (`ttags: []` instead of `{}`): same value after init, no statement to run. `ttags` is rebuilt by the first refresh.
 - Comments that named `AnnotationIO.js` as a present location now name the module that holds it (`Form.js`, `CsvSchemas.js`, `Export.js`, the bridge); the "moved from AnnotationIO.js" ones stay as history.
 
+13e: the review of `annotation/` (data layer versus GUI layer) is [analysis/08](../analysis/08-annotation-layers.md); the target layers are decided in [ADR 0016](0016-annotation-layers.md).
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then

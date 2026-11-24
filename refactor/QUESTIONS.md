@@ -764,3 +764,13 @@ _Proposed_: the window, `onTrackWindowChanged`, `setTrackWindow`, `scaleTrackWin
 
 _Other loose state found in the constructor_ ([read], `OverlayControl.js:5-164`): `transformFactor`, `canvasTransform`, `canvasTransformReference` (read by no other file) are view state of the overlay, not options: they stay with the transform code of 11c, as fields of the overlay. `guiAngle.angleEnabled` and `tagMarker`/`tagMarkerOptions`: used only in `OverlayControl.js`; `guiAngle` follows the angle buttons to `form/`, `tagMarker` becomes an `opts` field. `overlay.interaction`, `lastActiveRect`, `videoSize`: moving state, stay on the overlay.
 
+
+**<a id='q43'>Q43</a>: How is `annotation/` split between the data layer and the GUI layer?**
+[read] [analysis/08](analysis/08-annotation-layers.md): 9 of the 21 files are pure data and need nothing; the mixes are in `Load.js` (Ann1-3), `ServerIO.js` (Ann4-8) and `EditActions.js` (Ann9), where each operation (erase, load, save) ends with a `confirm`, an alert, a dialog message or a view refresh; `EventTree.js` is GUI by nature (Ann12).
+_Significance_: it fixes the shape that the 13f feedback interface plugs into; moving the files before this is decided would be moved twice.
+_Proposed_: the layering `annotation/` (stable structure) / `codecs/` (formats, sanitize, no alerts) / `io/` (transport) / `commands/` (intent, confirmation, feedback, single mutation bottleneck, future undo), with the file-by-file table of [ADR 0016](design/0016-annotation-layers.md). Order: `EventTree.js` to `form/`, then `codecs/` (pure), `io/`, then `commands/` one family at a time, each its own commit; the survey of the writers of `events` (for undo) is a separate analysis.
+
+**<a id='q44'>Q44</a>: Where does the lineage of the next save (`fromServerDialog.basedOn`) live, and does the dead `#loadTracksFromServerDialog` hide go?**
+[read] `labelbee/static/labelbee/js/annotation/ServerIO.js:114` and `:257` store and read the id of the loaded server file as a property of the dialog object (the `created_from_id` of the next save); `:138` hides a modal that is not in the page ([Ann15, Ann16](analysis/08-annotation-layers.md#5-findings)).
+_Significance_: the dialog would be the only owner of a piece of annotation state; a data-layer `ServerIO` cannot depend on it.
+_Proposed_: the lineage becomes a field of `AnnotationStore` (`getBasedOn()`, `setBasedOn(id)`), set by `loadEventsFromServerByID` and the dialog, read by `eventsToServer`; the `modal("hide")` is deleted as dead code in its own commit (it has no effect today), both before the Q43 split.
