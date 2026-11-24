@@ -415,8 +415,8 @@ As a module (12c) `AnnotationIO.js` (934 lines) still mixes eight concerns: the 
 - 13b: login, `whoami`, `user_data`, `try_login`, `try_logout` to `session/Login.js`.
 - 13c: the dialogs go to a new folder `dialogs/`, one file each: `FromServerDialog`, the label-list dialog, the manual picker, and `FilePickerFromServerDialog` (~400 lines, still in `labelBee.js`, the same family).
 - 13d: `initAnnotationIO` is removed: each module gets its own `initX` (called by `init()` or the bridge); `chronoState.ttags = []` goes to the chrono init; `AnnotationIO.js` is deleted; the dead code below is cut in the same step, own commit, with the maintainer's approval.
-- 13e: review of `annotation/` (many files) to split the data layer from the GUI layer; analysis first, then an amendment of this ADR.
-- 13f (behavior change, own commit, designed when reached): one clean GUI interface that gives the user standardized feedback on the operations on the annotations: the erase (today silent), the loads (today alerts), the saves and so on. It may involve cleaning up the code of the dialogs.
+- 13e: review of `annotation/` (many files) to split the data layer from the GUI layer; analysis first, then [ADR 0016](0016-annotation-layers.md), implemented as PLAN step 14.
+- 13f, renumbered PLAN step 15 on 2026-11-24 after step 14 ([ADR 0016](0016-annotation-layers.md)) (behavior change, own commit, designed when reached): one clean GUI interface that gives the user standardized feedback on the operations on the annotations: the erase (today silent), the loads (today alerts), the saves and so on. It may involve cleaning up the code of the dialogs.
 
 Dead code check (2026-11-23, `[read]`): the candidates are dead, not dormant.
 | Candidate | Evidence | Verdict |
@@ -439,7 +439,7 @@ As built in 13b: the login block of `AnnotationIO.js` (`ajaxlogin`, `ajaxlogout`
 
 As built in 13c: the four dialogs move unchanged, one file each, to the new folder `dialogs/`.
 - `dialogs/FromServerDialog.js` (from `AnnotationIO.js`), `dialogs/LabelListFromServerDialog.js` (with `labelListFromServer`), `dialogs/EventsCSVManualFilePicker.js` (all from `AnnotationIO.js`), `dialogs/FilePickerFromServerDialog.js` (from `labelBee.js`, 416 lines). `AnnotationIO.js` goes from 717 to ~150 lines, `labelBee.js` from 980 to ~570.
-- Each of the three first files exports an `initX()` that builds its instance on `window` (`fromServerDialog`, `labelListFromServerDialog`, `pickEventsCSVDialog`), called by `init()` of `labelBee.js` where `initAnnotationIO` made them. The instances stay on `window` in this step: the page buttons and the HTML the dialogs build call their methods from inline handlers, and four modules read `fromServerDialog`. Step 14 and the feedback interface of 13f handle them.
+- Each of the three first files exports an `initX()` that builds its instance on `window` (`fromServerDialog`, `labelListFromServerDialog`, `pickEventsCSVDialog`), called by `init()` of `labelBee.js` where `initAnnotationIO` made them. The instances stay on `window` in this step: the page buttons and the HTML the dialogs build call their methods from inline handlers, and four modules read `fromServerDialog`. Step 16 (globals) and the feedback interface of step 15 handle them.
 - `FilePickerFromServerDialog` is imported by `EventsCSVManualFilePicker.js` and `video/VideoList.js`; it leaves `window`.
 - The temporaries (`html`, `success`, `idx`, `buttonHTML`, `fileData`) are declared per file where used, as module scope like before (they were shared by all dialogs; no dialog read what another assigned).
 - Left in `AnnotationIO.js`: the file inputs wiring, `chronoState.ttags = []`, `show_log_in`, `formattimestamp` and `tracksListFromServer` (already marked DEPRECATED), cut by 13d.

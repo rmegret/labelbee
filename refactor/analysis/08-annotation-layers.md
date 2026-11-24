@@ -50,7 +50,7 @@ network [read: grep `\$\(|document\.|\.modal\(|alert\(|confirm\(` over D files, 
 
 Reading: every mix is the same shape, a data operation that ends by telling the user (alert, confirm, message) or by refreshing a view.
 `Load.js` and `ServerIO.js` hold 8 of the 10 [read], each function being a small "operation" (erase, load, save) whose GUI feedback is
-inline. This is exactly the user-feedback interface the 13f step aims at ([QUESTIONS Q44](../QUESTIONS.md#q44)).
+inline. This is exactly the user-feedback interface step 15 (was 13f) aims at ([QUESTIONS Q44](../QUESTIONS.md#q44)).
 
 ## 3. Cross-layer imports [read]
 
@@ -68,7 +68,7 @@ No import cycle was found inside the folder [read: the import lists of the 21 fi
 ## 4. What the page and the tests read of this layer
 
 - The globals of this folder are the bridge installs (`install(Load, ...)`, `install(ServerIO, ...)`, the four `*Bridge.js`): see the globals list
-  of step 14 for the inventory.
+  of step 16 for the inventory.
 - Golden tests evaluate `Load.js`, `FileImport.js`, `ServerIO.js`, `core/Alerts.js`, `form/EventsNotes.js` in a `vm` with stubs
   (`refactor/tests/golden/harness/io-env.js`), so a function moved out of these files must keep a plain `function name(` declaration.
 - Browser tests exercise erase, loads from file, from server and from the pickers (`test_b`, `test_c`, `test_d`, `test_v`).
@@ -80,7 +80,7 @@ No import cycle was found inside the folder [read: the import lists of the 21 fi
 | Ann11 | The data layer (9 files) is already independent of the GUI; the split to do is inside `Load.js`, `ServerIO.js`, `EditActions.js` (3 files, 10 mix points) | [read] |
 | Ann12 | `EventTree.js` is GUI living in the data folder: its natural home is `form/` (it renders the selected event in a tab) | [read] |
 | Ann13 | `FileImport.js`/`FileExport.js` are browser I/O adapters; neither touches the stores except through `Load.js`/`Export.js` | [read] |
-| Ann14 | `*Bridge.js` and `DebugGlobals.js` are not annotation logic: they exist for the globals of step 14 and disappear with them | [read] |
+| Ann14 | `*Bridge.js` and `DebugGlobals.js` are not annotation logic: they exist for the globals of step 16 and disappear with them | [read] |
 | Ann15 | `eventsFromServer` hides a modal absent from the page (`#loadTracksFromServerDialog`, same dead target as the cut `tracksListFromServer`) | [read] `annotation/ServerIO.js:138` |
 | Ann16 | `fromServerDialog.basedOn` is state of the data (the lineage of the next save) stored on a GUI object | [read] `annotation/ServerIO.js:114,257` |
 

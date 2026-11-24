@@ -163,10 +163,20 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (13c) dialogs [x] four dialogs in new `dialogs/`, one file each; `FilePickerFromServerDialog` off `window`
   - (13d) `initAnnotationIO` removed [x] `AnnotationIO.js` deleted; dead code cut in its own commit
   - (13e) `annotation/` review [x] analysis/08 and ADR 0016 (layers annotation, codecs, io, commands)
-  - (13e2) annotation layers reorg [ ] eight small commits per ADR 0016, `SourceRef` last
-  - (13f) user feedback interface [ ] one GUI interface for erase, load, save feedback (behavior change)
-  - (14) globals [ ] list in `refactor/analysis/` (one ID each, necessary or spurious), then reduce the spurious ones
-  - (15) record [ ]
+  - (14) annotation layers reorg per [ADR 0016](design/0016-annotation-layers.md) (revised 2026-11-24), one commit each:
+    - (14a) dead code of `ServerIO.js` cut [ ]
+    - (14b) `EventTree.js` to `form/` [ ]
+    - (14c) AJAX error helpers to `core/Alerts.js` [ ]
+    - (14d) `io/ServerIO.js` (requests), `io/LocalFile.js` (read, download) [ ]
+    - (14e) `codecs/`: `AnnotationCodec`, `Export`, `CsvSchemas` [ ]
+    - (14f) `Load.js` split: `codecs/Decode.js`, `commands/Load.js` [ ]
+    - (14g) events lineage in the store, replaces `basedOn` [ ] (behavior fix, approval)
+    - (14h) server commands, dialogs import them [ ] h1 save, h2 load by id (dialog duplicate goes), h3 tags, h4 CSV/URL
+    - (14i) `commands/LoadFromFile.js`, `commands/SaveToFile.js` [ ]
+    - (14j) `EditActions.js` to `commands/` [ ]
+  - (15) user feedback interface [ ] one GUI interface for erase, load, save feedback (behavior change)
+  - (16) globals [ ] list in `refactor/analysis/` (one ID each, necessary or spurious), then reduce the spurious ones
+  - (17) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):
 
@@ -209,3 +219,4 @@ budget. They can be revisited when a slice needs them.
 - [ADR 0013](design/0013-video-cache-priority-queue.md): `VideoCache` dynamic queue (priority requests), cancel signal, failed decodes (proposed)
 - [ADR 0014](design/0014-video-keyframes-preview.md): `VideoKeyframes` from the packets sidecar, "Preview Keyframes Only", hover performance report (proposed)
 - [ADR 0015](design/0015-slice-modularization.md): slice 8, modularization of the remaining classic scripts, `labelbeeBridge.js` (proposed)
+- [ADR 0016](design/0016-annotation-layers.md): layers of the annotation code, `annotation/`, `codecs/`, `io/`, `commands/` (accepted 2026-11-24, step 14)
