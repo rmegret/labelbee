@@ -173,7 +173,7 @@ and is its own commit series and review. The next slice is chosen after the prev
     - (14g) events lineage in the store, replaces `basedOn` [ ] (behavior fix, approval)
     - (14h) server commands, dialogs import them [ ] h1 save, h2 load by id (dialog duplicate goes), h3 tags, h4 CSV/URL
     - (14i) `commands/LoadFromFile.js`, `commands/SaveToFile.js` [ ]
-    - (14j) `EditActions.js` to `commands/` [ ]
+    - (14j) `EditActions.js` to `commands/` [x] `EditActions.js` moved to `commands/`
   - (15) user feedback interface [ ] one GUI interface for erase, load, save feedback (behavior change)
   - (16) globals [ ] list in `refactor/analysis/` (one ID each, necessary or spurious), then reduce the spurious ones
   - (17) record [ ]

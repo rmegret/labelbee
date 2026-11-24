@@ -7,10 +7,10 @@
  * DEBT: `submitDraft` calls the classic global `printMessage` (labelBee.js) at call time; it becomes an import when
  * the status widget moves.
  */
-import { AnnotationStore } from './AnnotationStore.js';
-import { refresh } from './RefreshBridge.js';
-import { selection } from './SelectionModelBridge.js';
-import { deepcopy, getObsHandle, obsDoesExist } from './Model.js';
+import { AnnotationStore } from '../annotation/AnnotationStore.js';
+import { refresh } from '../annotation/RefreshBridge.js';
+import { selection } from '../annotation/SelectionModelBridge.js';
+import { deepcopy, getObsHandle, obsDoesExist } from '../annotation/Model.js';
 
 const events = AnnotationStore.events;
 

@@ -46,7 +46,7 @@ import {
   deleteEvent,
   submitDraft,
   storeUnit,
-} from './annotation/EditActions.js';
+} from './commands/EditActions.js';
 import * as FileExport from './annotation/FileExport.js';
 import * as LocalFile from './io/LocalFile.js';
 import * as Load from './commands/Load.js';
@@ -246,7 +246,7 @@ install(Alerts, [
   "mainAlert", // test_alerts.py
   "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, dialogs/
 ]);
-// annotation/EditActions.js
+// commands/EditActions.js
 installGlobals({
   deleteEvent, submitDraft, storeUnit,
 });
