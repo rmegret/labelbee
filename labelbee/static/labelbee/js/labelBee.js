@@ -7,6 +7,7 @@
 // Installed by labelbeeBridge.js (`init`, `printMessage`, `toggleFullScreen`, `onKeyDown_*`).
 
 import { initEventsNotes } from "./form/EventsNotes.js"
+import { initFileImport } from "./annotation/FileImport.js"
 import { initLogin } from "./session/Login.js"
 import { initFromServerDialog } from "./dialogs/FromServerDialog.js"
 import { initLabelListFromServerDialog } from "./dialogs/LabelListFromServerDialog.js"
@@ -46,8 +47,7 @@ export function init(videoID, tagID) {
   window.chrono = new Chronogram(); // TODO: fix direct access to #chronoTab, #chronoDiv, #svgVisualize
   initRegionFilters(); // ROI and exclude rects inputs (chrono/ChronoControlInteraction.js)
 
-  // import * from "AnnotationIO.js"
-  initAnnotationIO();
+  initFileImport();
   initLabelListFromServerDialog();
   initFromServerDialog();
   initEventsCSVManualFilePicker();

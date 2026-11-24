@@ -48,7 +48,6 @@ import {
   storeUnit,
 } from './annotation/EditActions.js';
 import * as FileExport from './annotation/FileExport.js';
-import * as FileImport from './annotation/FileImport.js';
 import * as Load from './annotation/Load.js';
 import * as ServerIO from './annotation/ServerIO.js';
 import * as Alerts from './core/Alerts.js';
@@ -68,9 +67,6 @@ import { initFitControls } from './layout/FitControls.js';
 import { initVideoSettings } from './layout/VideoSettings.js';
 import { initPanelRows } from './layout/PanelRows.js';
 import { initZoomView } from './zoom/ZoomView.js';
-import {
-  initAnnotationIO,
-} from './AnnotationIO.js';
 import {
   init, printMessage, toggleFullScreen, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
 } from './labelBee.js';
@@ -212,7 +208,7 @@ window.getLabels = (obs) => Labels.toArray(obs.labels);
 window.hasLabel = Labels.has;
 
 window.WrongId = WrongId;
-window.CsvSchemas = CsvSchemas; // used by the "from /data" loader dialog (AnnotationIO.js, labelBee.js)
+window.CsvSchemas = CsvSchemas; // used by the "from /data" loader dialog (dialogs/EventsCSVManualFilePicker.js, labelBee.js)
 window.EventTree = EventTree; // used by updateEventTree (SelectionControl.js)
 
 // Observation class and legacy accessors of the stored events (annotation/Model.js, moved from the classic Model.js);
@@ -238,13 +234,10 @@ install(Load, [
   "loadTracks", "loadTags", // labelBee.js, tests
   "eraseEvents", "eraseTags", // template buttons
 ]);
-install(FileImport, [
-  "loadEventsFromFile", "loadTagsFromFile", // AnnotationIO.js: the file inputs
-]);
 install(ServerIO, [
-  "loadCSVFromServer", "eventsFromServer", "tagsFromServer", // AnnotationIO.js, VideoControl.js, tests
+  "loadCSVFromServer", "eventsFromServer", "tagsFromServer", // dialogs/, VideoControl.js, tests
   "loadEventsFromServerByID", // labelBee.js
-  "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, AnnotationIO.js
+  "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, dialogs/
   "eventsToServer", // template button
   "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
 ]);
@@ -288,13 +281,8 @@ $(function () {
   initVideoSettings();
 });
 
-// The annotation IO dialogs (AnnotationIO.js): `initAnnotationIO` is called by `init()` of labelBee.js.
-installGlobals({
-  initAnnotationIO,
-});
-
-// The entry (labelBee.js): `init` is called by `window.onload` of the page, `printMessage` and `FilePickerFromServerDialog` by many modules
-// and by AnnotationIO.js, the others by inline handlers.
+// The entry (labelBee.js): `init` is called by `window.onload` of the page, `printMessage` by many modules
+// and by dialogs/, the others by inline handlers.
 installGlobals({
   init, printMessage, toggleFullScreen, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
 });

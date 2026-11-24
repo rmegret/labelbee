@@ -3,7 +3,7 @@
 // `LabelListDialog`, the ID field and the form (`updateForm`), the event tree, the delete button, the label toggles and the
 // annotation statistics. Part of the former SelectionControl.js; the selection itself, the undo stack and the span edits
 // stay in js/SelectionControl.js, which draws on this module (`updateSelectionPanels`), never the other way.
-// `labelButtonsArray` (written by AnnotationIO.js, read here) and `labelListDialog` (the inline handler of the page) stay page
+// `labelButtonsArray` (written by dialogs/LabelListFromServerDialog.js, read here) and `labelListDialog` (the inline handler of the page) stay page
 // globals. The functions are installed on window by labelbeeBridge.js; the entry points of the refresh are wrapped at the end.
 import { instrument } from "../core/RefreshInstrumentBridge.js";
 

@@ -17,5 +17,5 @@ export const chronoState = {
   tagIntervals: [],
   allTagsID: [],
   flatTags: [],
-  ttags: {},
+  ttags: [], // was set to [] by initAnnotationIO (AnnotationIO.js, removed in slice 8 step 13d); rebuilt by the first refresh
 };

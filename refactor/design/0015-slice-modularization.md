@@ -446,6 +446,11 @@ As built in 13c: the four dialogs move unchanged, one file each, to the new fold
 
 As built in 13d, first commit: the dead code is cut from `AnnotationIO.js` (verified again: no reader in `labelbee/`, the tests or the template): `show_log_in` (empty), the top-level `formattimestamp` (unused; `tracksListFromServer` had its own inner copy) and `tracksListFromServer` (DEPRECATED, legacy `/rest/events/` route, fills a modal absent from the page; replaced by `FromServerDialog`). ~125 lines.
 
+As built in 13d, second commit: `AnnotationIO.js` is deleted and `initAnnotationIO` leaves the bridge.
+- The wiring of the file inputs `#load` and `#loadtags` becomes `initFileImport()` in `annotation/FileImport.js`, called by `init()` of `labelBee.js`. `loadEventsFromFile` and `loadTagsFromFile` are no longer installed on `window` (only that wiring read them; the golden tests evaluate the source file).
+- `chronoState.ttags = []` becomes the initial value in `chrono/ChronoState.js` (`ttags: []` instead of `{}`): same value after init, no statement to run. `ttags` is rebuilt by the first refresh.
+- Comments that named `AnnotationIO.js` as a present location now name the module that holds it (`Form.js`, `CsvSchemas.js`, `Export.js`, the bridge); the "moved from AnnotationIO.js" ones stay as history.
+
 ## Inventory (step 1, 2026-11-20)
 
 Regenerate: `node refactor/tools/modularity_scan.js $TMPDIR/parser $TMPDIR/facts.json`, then
