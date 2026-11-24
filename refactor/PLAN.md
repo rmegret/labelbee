@@ -166,7 +166,7 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (14) annotation layers reorg per [ADR 0016](design/0016-annotation-layers.md) (revised 2026-11-24), one commit each:
     - (14a) dead code of `ServerIO.js` cut [x] `loadEventsFromFile0` and two dead blocks gone
     - (14b) `EventTree.js` to `form/` [x] moved unchanged, one import path fixed
-    - (14c) AJAX error helpers to `core/Alerts.js` [ ]
+    - (14c) AJAX error helpers to `core/Alerts.js` [x] `typesetAjaxError`, `showAjaxError` moved unchanged; bridge installs them from `Alerts`
     - (14d) `io/ServerIO.js` (requests), `io/LocalFile.js` (read, download) [ ]
     - (14e) `codecs/`: `AnnotationCodec`, `Export`, `CsvSchemas` [ ]
     - (14f) `Load.js` split: `codecs/Decode.js`, `commands/Load.js` [ ]

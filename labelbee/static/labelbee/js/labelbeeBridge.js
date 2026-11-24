@@ -237,11 +237,13 @@ install(Load, [
 install(ServerIO, [
   "loadCSVFromServer", "eventsFromServer", "tagsFromServer", // dialogs/, VideoControl.js, tests
   "loadEventsFromServerByID", // labelBee.js
-  "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, dialogs/
   "eventsToServer", // template button
   "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
 ]);
-install(Alerts, ["mainAlert"]); // test_alerts.py
+install(Alerts, [
+  "mainAlert", // test_alerts.py
+  "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, dialogs/
+]);
 // annotation/EditActions.js
 installGlobals({
   deleteEvent, submitDraft, storeUnit,

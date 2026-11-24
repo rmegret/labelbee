@@ -3,7 +3,7 @@
  * and Load.js (slice 3 behavior, ADR 0005). It owns the requests and their errors and separates the envelope of a response (the
  * metadata: `json.data.data`, `created_by_id`...) from the payload, which it hands to Load.js; it knows the formats only by name
  * (`exportTracks("v2")`, the CSV schema of `loadCSVFromServer`). A failed load is shown by core/Alerts.js and rejects.
- * The AJAX error handlers and the entry points still called by a classic script, a template button or a test are installed as
+ * The entry points still called by a classic script, a template button or a test are installed as
  * globals by labelbeeBridge.js (the template buttons `clickLoadTracks*`).
  *
  * Strict mode: the implicit globals `dataToSend`, `alertMSG`, `success` and `tags` of the old code are declared; nobody read them.
@@ -14,7 +14,7 @@
 import { exportTracks } from './Export.js';
 import { loadTracks, loadTags, loadCSVFromRows } from './Load.js';
 import { classifyFilename } from './CsvSchemas.js';
-import { mainAlert, reportLoadError } from '../core/Alerts.js';
+import { reportLoadError, showAjaxError } from '../core/Alerts.js';
 import { logging } from '../core/Notifier.js';
 import { url_for } from '../core/Utils.js';
 import { getUserId } from '../session/Login.js';
@@ -40,48 +40,6 @@ function getJSONPromise(url) {
   return new Promise(function (resolve, reject) {
     $.getJSON(url).done(resolve).fail(reject);
   });
-}
-
-export function typesetAjaxError(title, hook) {
-  var callback = function (jqXHR, textStatus, errorThrown) {
-    console.log(
-      "AJAX ERROR: " + title,
-      jqXHR,
-      textStatus,
-      errorThrown,
-      jqXHR.responseText
-    );
-    if (hook) {
-      var html =
-        "<div>" +
-        title +
-        "<br>Status: " +
-        textStatus +
-        "<br>Error: " +
-        errorThrown +
-        "<br>" +
-        jqXHR.responseText +
-        "</div>";
-      hook(html);
-    }
-  };
-  return callback;
-}
-export function showAjaxError(title, prehook, onlyConsole) {
-    var callback = function(jqXHR, textStatus, errorThrown) {
-        console.log('AJAX ERROR: '+title, jqXHR, textStatus, errorThrown, jqXHR.responseText)
-        if (prehook) {
-            prehook(jqXHR, textStatus, errorThrown)
-        }
-        if (!onlyConsole) {
-            mainAlert(title
-                    +'<br>Status: '+ textStatus
-                    +'<br>Error: '+ errorThrown
-                    +'<br>'+ jqXHR.responseText
-            )
-        }
-    }
-    return callback
 }
 
 /* LOADS FROM THE SERVER */

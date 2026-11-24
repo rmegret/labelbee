@@ -1,7 +1,8 @@
 /*
- * Alerts: the main alert modal and the display of a failed load (refactor slice 8 step 6c, ADR 0015). `mainAlert` moved from
- * annotation/ServerIO.js, `reportLoadError` from annotation/Load.js (slice 3, ADR 0005, Q23). Shared by the file and the
- * server loaders; it knows nothing of the data. `mainAlert` is installed as a global by labelbeeBridge.js (test_alerts.py).
+ * Alerts: the main alert modal, the display of a failed load and the AJAX error callbacks (refactor slice 8 steps 6c and 14c,
+ * ADR 0015, 0016). `mainAlert` and the AJAX error callbacks moved from annotation/ServerIO.js, `reportLoadError` from
+ * annotation/Load.js (slice 3, ADR 0005, Q23). Shared by the file and the server loaders and the dialogs; it knows nothing of the
+ * data. `mainAlert` and the AJAX error callbacks are installed as globals by labelbeeBridge.js.
  *
  * DEBT: globals read at call time: `$`, `fromServerDialog` (the load error goes to its message area while it is open).
  */
@@ -43,4 +44,48 @@ export function reportLoadError(what) {
     showLoadError(what, error);
     throw error;
   };
+}
+
+/* AJAX ERRORS (moved from annotation/ServerIO.js, slice 8 step 14c, ADR 0016 rule 7): the `error` callbacks of $.ajax. `typesetAjaxError`
+ * hands the formatted HTML to a hook, `showAjaxError` shows it in the main alert (or only logs it). */
+export function typesetAjaxError(title, hook) {
+  var callback = function (jqXHR, textStatus, errorThrown) {
+    console.log(
+      "AJAX ERROR: " + title,
+      jqXHR,
+      textStatus,
+      errorThrown,
+      jqXHR.responseText
+    );
+    if (hook) {
+      var html =
+        "<div>" +
+        title +
+        "<br>Status: " +
+        textStatus +
+        "<br>Error: " +
+        errorThrown +
+        "<br>" +
+        jqXHR.responseText +
+        "</div>";
+      hook(html);
+    }
+  };
+  return callback;
+}
+export function showAjaxError(title, prehook, onlyConsole) {
+    var callback = function(jqXHR, textStatus, errorThrown) {
+        console.log('AJAX ERROR: '+title, jqXHR, textStatus, errorThrown, jqXHR.responseText)
+        if (prehook) {
+            prehook(jqXHR, textStatus, errorThrown)
+        }
+        if (!onlyConsole) {
+            mainAlert(title
+                    +'<br>Status: '+ textStatus
+                    +'<br>Error: '+ errorThrown
+                    +'<br>'+ jqXHR.responseText
+            )
+        }
+    }
+    return callback
 }
