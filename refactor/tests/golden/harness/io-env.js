@@ -17,7 +17,7 @@ const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;
 const FIXED_DATE = '2000-01-02T03:04:05.000Z';
 
 // form/EventsNotes.js: updateEventsNotes (slice 8 step 13a); the erase and prompt handlers are in Load.js and ServerIO.js since the same step
-const IO_SOURCES = ['annotation/Load.js', 'annotation/FileImport.js', 'io/LocalFile.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'form/EventsNotes.js'];
+const IO_SOURCES = ['annotation/Load.js', 'annotation/FileImport.js', 'io/LocalFile.js', 'io/ServerIO.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'form/EventsNotes.js'];
 const IO_FUNCTIONS = [
   'loadTracks', 'eraseEvents', 'loadEventsFromFile',
   'eraseTags', 'loadTags', 'loadTagsFromFile', 'loadEventsFromServerByID',
@@ -25,7 +25,7 @@ const IO_FUNCTIONS = [
   'clickLoadTracksCSVFromServer', 'clickLoadTracksTaggedCSVFromServer',
   'tagsFromServer', 'mainAlert', 'showAjaxError', 'updateEventsNotes',
   // loader helpers (slice 3 step 4)
-  'readFileAsText', 'ajaxGetJSON', 'getJSONPromise', 'loadTracksFromText', 'loadTagsFromText',
+  'readFileAsText', 'ajaxGetJSON', 'getJSONPromise', 'fetchCSVRows', 'loadTracksFromText', 'loadTagsFromText',
   // load errors (slice 3 step 5, Q23)
   'escapeHTML', 'showLoadError', 'reportLoadError',
 ];
@@ -165,7 +165,7 @@ async function loadIoEnv() {
     const ctx = vm.createContext(sandbox);
     installLegacyGlobals(ctx, createAnnotationStore());
     ctx.$ = makeJQuery(rec, net, ctx);
-    vm.runInContext(code, ctx, { filename: 'Load.js+FileImport.js+ServerIO.js+Alerts.js(extracted)' });
+    vm.runInContext(code, ctx, { filename: 'Load.js+FileImport.js+LocalFile.js+io/ServerIO.js+ServerIO.js+Alerts.js(extracted)' });
     writeState(ctx, c.init || {});
     return { ctx, rec, fns: ctx };
   };

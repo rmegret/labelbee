@@ -1,6 +1,7 @@
 /*
- * ServerIO: the AJAX of the annotations, in both directions (refactor slice 8 steps 6b and 6c, ADR 0015). Moved from AnnotationIO.js
- * and Load.js (slice 3 behavior, ADR 0005). It owns the requests and their errors and separates the envelope of a response (the
+ * ServerIO: the flows of the annotations with the server, in both directions (refactor slice 8 steps 6b, 6c and 14d, ADR 0015, 0016).
+ * Moved from AnnotationIO.js and Load.js (slice 3 behavior, ADR 0005). The requests themselves are in io/ServerIO.js (a flow still
+ * reports their errors, step 14h splits the flows into commands/). It separates the envelope of a response (the
  * metadata: `json.data.data`, `created_by_id`...) from the payload, which it hands to Load.js; it knows the formats only by name
  * (`exportTracks("v2")`, the CSV schema of `loadCSVFromServer`). A failed load is shown by core/Alerts.js and rejects.
  * The entry points still called by a classic script, a template button or a test are installed as
@@ -14,34 +15,14 @@
 import { exportTracks } from './Export.js';
 import { loadTracks, loadTags, loadCSVFromRows } from './Load.js';
 import { classifyFilename } from './CsvSchemas.js';
+import { ajaxGetJSON, getJSONPromise, ajaxPostJSON, fetchCSVRows } from '../io/ServerIO.js';
 import { reportLoadError, showAjaxError } from '../core/Alerts.js';
 import { logging } from '../core/Notifier.js';
 import { url_for } from '../core/Utils.js';
 import { getUserId } from '../session/Login.js';
 
-/* REQUESTS. A loader is: get (a Promise) -> payload (Load.js) -> report. Chain the apply stage with `.then(apply, onError)`,
+/* A loader is: get (a Promise, io/ServerIO.js) -> payload (Load.js) -> report. Chain the apply stage with `.then(apply, onError)`,
  * never with `.then(apply).catch(onError)`: an exception of the apply stage is not a request error. */
-// Resolves with the JSON of the response; rejects with {jqXHR, textStatus, errorThrown}
-function ajaxGetJSON(url) {
-  return new Promise(function (resolve, reject) {
-    $.ajax({
-      url: url,
-      type: "GET",
-      contentType: "application/json",
-      data: "",
-      success: resolve,
-      error: function (jqXHR, textStatus, errorThrown) {
-        reject({ jqXHR: jqXHR, textStatus: textStatus, errorThrown: errorThrown });
-      },
-    });
-  });
-}
-function getJSONPromise(url) {
-  return new Promise(function (resolve, reject) {
-    $.getJSON(url).done(resolve).fail(reject);
-  });
-}
-
 /* LOADS FROM THE SERVER */
 export async function loadEventsFromServerByID(video_data_id) {
     //Sending GET request to flask API to retrieve json containing annotation data
@@ -94,7 +75,7 @@ export function loadCSVFromServer(url, schema) {
   schema = schema || (classifyFilename(url) || {}).loader || "tracks";
   console.log("loadCSVFromServer: importing " + schema + " CSV from URL '" + url + "'...");
 
-  return d3.csv(url)
+  return fetchCSVRows(url)
   .then(function (rows) {
       console.log("loadCSVFromServer: SUCCESS\ncsv=", rows);
 
@@ -171,12 +152,8 @@ export function eventsToServer(format) {
     created_from_id: fromServerDialog.basedOn
   }
 
-  $.ajax({
-    url: url_for(route), //server url
-    type: "POST", //passing data as post method
-    data: dataToSend, //form values OLD : JSON.stringify({ video: getVideoInfo().videoName, data: data })
-    dataType: 'json',
-    success: function (json) {
+  ajaxPostJSON(url_for(route), dataToSend).then(
+    function (json) {
       console.log(json)
       json = json['data']
       const alertMSG = "Save Events JSON (" + format + ") to server: Success." +
@@ -190,6 +167,8 @@ export function eventsToServer(format) {
       "\ntimestamp: " + json['timestamp'];
       alert(alertMSG); //response from the server given as alert message
     },
-    error: showAjaxError("ERROR in eventsToServer"),
-  });
+    function (err) {
+      showAjaxError("ERROR in eventsToServer")(err.jqXHR, err.textStatus, err.errorThrown);
+    }
+  );
 }

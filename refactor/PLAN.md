@@ -167,7 +167,7 @@ and is its own commit series and review. The next slice is chosen after the prev
     - (14a) dead code of `ServerIO.js` cut [x] `loadEventsFromFile0` and two dead blocks gone
     - (14b) `EventTree.js` to `form/` [x] moved unchanged, one import path fixed
     - (14c) AJAX error helpers to `core/Alerts.js` [x] `typesetAjaxError`, `showAjaxError` moved unchanged; bridge installs them from `Alerts`
-    - (14d) `io/ServerIO.js` (requests), `io/LocalFile.js` (read, download) [ ]
+    - (14d) `io/ServerIO.js` (requests), `io/LocalFile.js` (read, download) [x] `io/LocalFile.js`, `io/ServerIO.js` split off; POST now a Promise
     - (14e) `codecs/`: `AnnotationCodec`, `Export`, `CsvSchemas` [ ]
     - (14f) `Load.js` split: `codecs/Decode.js`, `commands/Load.js` [ ]
     - (14g) events lineage in the store, replaces `basedOn` [ ] (behavior fix, approval)
