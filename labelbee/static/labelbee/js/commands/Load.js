@@ -2,7 +2,7 @@
  * Load: the commands that take a payload (events, tags, CSV rows) into the store: `loadTracks`, `loadTags`, the loads from a text,
  * from CSV rows and from the database, and the erases (refactor slice 8 steps 6b to 6d and 14f, ADR 0015, 0016). The details of the
  * formats (converters, `centerPolicy`, info headers) are in codecs/Decode.js and codecs/AnnotationCodec.js; this file validates through
- * them, replaces the store, refreshes and confirms. The transports that fetch the payload, FileImport.js (a local file) and
+ * them, replaces the store, refreshes and confirms. The transports that fetch the payload, LoadFromFile.js (a local file) and
  * ServerIO.js (AJAX), know the formats only by name, and show the errors (core/Alerts.js). A load that fails throws;
  * `loadTracks` and `loadTags` return a boolean for the callers that check it.
  * `loadTracks`, `loadTags`, `eraseEvents` and `eraseTags` are installed as globals by labelbeeBridge.js (labelBee.js, template buttons, tests).

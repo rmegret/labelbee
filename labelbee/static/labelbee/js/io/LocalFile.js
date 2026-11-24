@@ -1,8 +1,8 @@
 /*
  * LocalFile: the browser side of a local file, nothing else (refactor slice 8 step 14d, ADR 0016): read a File as text (`FileReader`),
- * hand a Blob to the user as a download (a hidden link as only DOM). Moved unchanged from annotation/FileImport.js (`readFileAsText`)
- * and annotation/FileExport.js (`saveBlobToFile`, `saveObjToJsonFile`, `saveCSVToFile`). No format knowledge, no message to the user:
- * the callers (FileImport.js, FileExport.js, VideoList.js) choose the content, name the file and report the failure.
+ * hand a Blob to the user as a download (a hidden link as only DOM). Moved unchanged from commands/LoadFromFile.js (`readFileAsText`)
+ * and commands/SaveToFile.js (`saveBlobToFile`, `saveObjToJsonFile`, `saveCSVToFile`). No format knowledge, no message to the user:
+ * the callers (LoadFromFile.js, SaveToFile.js, VideoList.js) choose the content, name the file and report the failure.
  * `saveObjToJsonFile` and `saveCSVToFile` are installed as globals by labelbeeBridge.js (VideoList.js).
  */
 

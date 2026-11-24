@@ -1,5 +1,5 @@
 /*
- * FileExport: the saves to a file of the annotations, with the download link as only DOM (refactor slice 8 step 6a,
+ * SaveToFile (FileExport.js until slice 8 step 14i): the commands that save to a file of the annotations, with the download link as only DOM (refactor slice 8 step 6a,
  * ADR 0015). Moved from AnnotationIO.js (the block `saveBlobToFile` to `saveEventsToBBoxes`, and `saveTagsToFile`). What is
  * saved is picked by Export.js; these functions name the file and package the result.
  * The names are installed as globals by labelbeeBridge.js: the template buttons (`onclick="saveEventsToFile('v2')"`) and

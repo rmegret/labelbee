@@ -1,5 +1,5 @@
 // Environment for the slice 3 golden tests (ADR 0005): the REAL loadTracks/loadTags/loaders of
-// Load.js, FileImport.js, ServerIO.js and core/Alerts.js (AnnotationIO.js until slice 8 step 6b) evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
+// Load.js, LoadFromFile.js, ServerIO.js and core/Alerts.js (AnnotationIO.js until slice 8 step 6b) evaluated in a `vm` with the page APIs stubbed (jQuery, d3, FileReader, views, Date).
 // The functions stay the same code before and after each step of slice 8 (they moved to modules in steps 6b and 6c), so the same golden checks
 // them; since step 2 the data lives in a fresh
 // AnnotationStore per case (the bridge installs `AnnotationStore` and `events`; there are no data globals any more).
@@ -17,7 +17,7 @@ const urlOf = (rel) => pathToFileURL(path.join(JS_DIR, rel)).href;
 const FIXED_DATE = '2000-01-02T03:04:05.000Z';
 
 // form/EventsNotes.js: updateEventsNotes (slice 8 step 13a); the erase and prompt handlers are in Load.js and ServerIO.js since the same step
-const IO_SOURCES = ['commands/Load.js', 'codecs/Decode.js', 'annotation/FileImport.js', 'io/LocalFile.js', 'io/ServerIO.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'form/EventsNotes.js'];
+const IO_SOURCES = ['commands/Load.js', 'codecs/Decode.js', 'commands/LoadFromFile.js', 'io/LocalFile.js', 'io/ServerIO.js', 'annotation/ServerIO.js', 'core/Alerts.js', 'form/EventsNotes.js'];
 const IO_FUNCTIONS = [
   'loadTracks', 'eraseEvents', 'loadEventsFromFile',
   'eraseTags', 'loadTags', 'loadTagsFromFile', 'loadEventsFromServerByID',
@@ -165,7 +165,7 @@ async function loadIoEnv() {
     const ctx = vm.createContext(sandbox);
     installLegacyGlobals(ctx, createAnnotationStore());
     ctx.$ = makeJQuery(rec, net, ctx);
-    vm.runInContext(code, ctx, { filename: 'Load.js+FileImport.js+LocalFile.js+io/ServerIO.js+ServerIO.js+Alerts.js(extracted)' });
+    vm.runInContext(code, ctx, { filename: 'Load.js+LoadFromFile.js+LocalFile.js+io/ServerIO.js+ServerIO.js+Alerts.js(extracted)' });
     writeState(ctx, c.init || {});
     return { ctx, rec, fns: ctx };
   };

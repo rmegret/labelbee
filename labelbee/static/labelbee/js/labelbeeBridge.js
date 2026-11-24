@@ -47,7 +47,7 @@ import {
   submitDraft,
   storeUnit,
 } from './commands/EditActions.js';
-import * as FileExport from './annotation/FileExport.js';
+import * as SaveToFile from './commands/SaveToFile.js';
 import * as LocalFile from './io/LocalFile.js';
 import * as Load from './commands/Load.js';
 import * as ServerIO from './annotation/ServerIO.js';
@@ -227,7 +227,7 @@ function install(module, names) {
     window[name] = module[name];
   }
 }
-install(FileExport, [
+install(SaveToFile, [
   "saveEventsToFile", "saveEventsToCSV", "saveEventsToBBoxes", "saveTagsToFile", // template buttons
   "getTimestampNow", // VideoList.js
 ]);

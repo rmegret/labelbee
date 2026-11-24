@@ -7,7 +7,7 @@
 // Installed by labelbeeBridge.js (`init`, `printMessage`, `toggleFullScreen`, `onKeyDown_*`).
 
 import { initEventsNotes } from "./form/EventsNotes.js"
-import { initFileImport } from "./annotation/FileImport.js"
+import { initFileImport } from "./commands/LoadFromFile.js"
 import { initLogin } from "./session/Login.js"
 import { initFromServerDialog } from "./dialogs/FromServerDialog.js"
 import { initLabelListFromServerDialog } from "./dialogs/LabelListFromServerDialog.js"

@@ -1,5 +1,5 @@
 /*
- * Export: the annotations of the page state as a representation ready to be packaged, for a file (FileExport.js) or for the
+ * Export: the annotations of the page state as a representation ready to be packaged, for a file (SaveToFile.js) or for the
  * server (`eventsToServer`, now annotation/ServerIO.js) (refactor slice 8 step 6a, ADR 0015). No DOM, no network.
  *
  * Naming rule: `convertX(args)` of AnnotationCodec.js is pure, it converts what it is given; `exportX(...)` here picks its
