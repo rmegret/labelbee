@@ -109,7 +109,7 @@
     "axes": "ChronoAxes",
     "Labels": "annotation/Labels.js",
     "WrongId": "annotation/WrongId.js",
-    "EventTree": "annotation/EventTree.js",
+    "EventTree": "form/EventTree.js",
     "CsvSchemas": "annotation/CsvSchemas.js",
     "logging": "core/Notifier.js",
     "refreshLog": "core/Notifier.js",

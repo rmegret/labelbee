@@ -23,7 +23,7 @@ import './annotation/AnnotationCodecBridge.js'; // the legacy converter names (l
 import * as Labels from './annotation/Labels.js';
 import * as WrongId from './annotation/WrongId.js';
 import * as CsvSchemas from './annotation/CsvSchemas.js';
-import * as EventTree from './annotation/EventTree.js';
+import * as EventTree from './form/EventTree.js';
 import {
   Observation,
   deepcopy,

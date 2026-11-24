@@ -1,5 +1,5 @@
 """The "from /data" loader dialog with CSV schema detection (annotation/CsvSchemas.js: category badge, filter by type, header validation
-before loading) and the collapsible tree of the selected event in the "Events info" tab (annotation/EventTree.js)."""
+before loading) and the collapsible tree of the selected event in the "Events info" tab (form/EventTree.js)."""
 
 
 def open_picker_in_sample(ui, folder="sample"):
