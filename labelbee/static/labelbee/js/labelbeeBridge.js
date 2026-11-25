@@ -51,6 +51,7 @@ import * as SaveToFile from './commands/SaveToFile.js';
 import * as LocalFile from './io/LocalFile.js';
 import * as Load from './commands/Load.js';
 import * as ServerIO from './annotation/ServerIO.js';
+import * as SaveToServer from './commands/SaveToServer.js';
 import * as Alerts from './core/Alerts.js';
 import { VideoManager } from './video/VideoList.js';
 import { VideoControl } from './video/VideoControl.js';
@@ -239,9 +240,9 @@ install(Load, [
 install(ServerIO, [
   "loadCSVFromServer", "eventsFromServer", "tagsFromServer", // dialogs/, VideoControl.js, tests
   "loadEventsFromServerByID", // labelBee.js
-  "eventsToServer", // template button
   "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
 ]);
+install(SaveToServer, ["eventsToServer"]); // template button
 install(Alerts, [
   "mainAlert", // test_alerts.py
   "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, dialogs/

@@ -1,25 +1,22 @@
 /*
- * ServerIO: the flows of the annotations with the server, in both directions (refactor slice 8 steps 6b, 6c and 14d, ADR 0015, 0016).
+ * ServerIO: the flows of the loads from the server (refactor slice 8 steps 6b, 6c, 14d and 14h1, ADR 0015, 0016); the save is commands/SaveToServer.js.
  * Moved from AnnotationIO.js and Load.js (slice 3 behavior, ADR 0005). The requests themselves are in io/ServerIO.js (a flow still
  * reports their errors, step 14h splits the flows into commands/). It separates the envelope of a response (the
  * metadata: `json.data.data`, `created_by_id`...) from the payload, which it hands to Load.js; it knows the formats only by name
- * (`exportTracks("v2")`, the CSV schema of `loadCSVFromServer`). A failed load is shown by core/Alerts.js and rejects.
+ * (the CSV schema of `loadCSVFromServer`). A failed load is shown by core/Alerts.js and rejects.
  * The entry points still called by a classic script, a template button or a test are installed as
  * globals by labelbeeBridge.js (the template buttons `clickLoadTracks*`).
  *
  * Strict mode: the implicit globals `dataToSend`, `alertMSG`, `success` and `tags` of the old code are declared; nobody read them.
  *
- * DEBT: globals read at call time: `$`, `d3`, `videoManager`, `fromServerDialog` (its message) and `statusWidget`. `eventsToServer(format)` ignores `format` (always V2).
+ * DEBT: globals read at call time: `$`, `d3`, `videoManager`, `fromServerDialog` (its message) and `statusWidget`.
  */
-import { exportTracks } from '../codecs/Export.js';
 import { loadTracks, loadTags, loadCSVFromRows } from '../commands/Load.js';
 import { classifyFilename } from '../codecs/CsvSchemas.js';
-import { ajaxGetJSON, getJSONPromise, ajaxPostJSON, fetchCSVRows } from '../io/ServerIO.js';
+import { ajaxGetJSON, getJSONPromise, fetchCSVRows } from '../io/ServerIO.js';
 import { reportLoadError, showAjaxError } from '../core/Alerts.js';
-import { AnnotationStore } from './AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
 import { url_for } from '../core/Utils.js';
-import { getUserId } from '../session/Login.js';
 
 /* A loader is: get (a Promise, io/ServerIO.js) -> payload (Load.js) -> report. Chain the apply stage with `.then(apply, onError)`,
  * never with `.then(apply).catch(onError)`: an exception of the apply stage is not a request error. */
@@ -133,47 +130,6 @@ export function tagsFromServer(tagFileID) {
       console.log('tagsFromServer: ERROR loading tag file with ID "' + tagFileID + '"');
       statusWidget.statusUpdate("tagsLoad", false, "");
       return loadTags([]);
-    }
-  );
-}
-
-/* SAVE TO THE SERVER */
-// The server field is a database id: only a load from a database record is a parent (ADR 0016)
-function createdFromId() {
-  const basedOn = AnnotationStore.getBasedOn();
-  return basedOn && basedOn.source == "server-db" ? basedOn.id : undefined;
-}
-
-export function eventsToServer(format) {
-  var route = "/api/v1/annotations";
-
-  console.log("eventsToServer");
-
-  const dataToSend = {
-    video_id: videoManager.currentVideoID,
-    created_by_id: getUserId(),
-    data_type: "event",
-    data: JSON.stringify(exportTracks("v2")),
-    created_from_id: createdFromId()
-  }
-
-  ajaxPostJSON(url_for(route), dataToSend).then(
-    function (json) {
-      console.log(json)
-      json = json['data']
-      const alertMSG = "Save Events JSON (" + format + ") to server: Success." +
-      "\ncreated_by_id: " + json['created_by_id'] +
-      "\nfile_name: " + json['file_name'] +
-      "\npath: " + json['path'] +
-      "\ndata_type: " + json['data_type'] +
-      "\nid: " + json['id'] +
-      "\ncreated_from_id: " + json['created_from_id'] +
-      "\nvideo_id: " + json['video_id'] +
-      "\ntimestamp: " + json['timestamp'];
-      alert(alertMSG); //response from the server given as alert message
-    },
-    function (err) {
-      showAjaxError("ERROR in eventsToServer")(err.jqXHR, err.textStatus, err.errorThrown);
     }
   );
 }
