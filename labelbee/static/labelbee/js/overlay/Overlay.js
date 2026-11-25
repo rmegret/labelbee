@@ -16,6 +16,7 @@ import {
 import { plotROI, plotExcludeRects, plotTags, plotTagsTracks, plotTracks, rotatedRectGeometry, tagAngle } from "./Drawing.js"
 import { getObsHandle, getValidIDsForFrame } from "../annotation/Model.js"
 import { updateUndoButton } from "../SelectionControl.js"
+import { updateSelectionPanels } from "../form/Form.js"
 
 // ## Video + canvas
 

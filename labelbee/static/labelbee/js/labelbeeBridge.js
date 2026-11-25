@@ -67,14 +67,9 @@ import {
 import { newRectForCurrentTag } from './overlay/Mouse.js';
 import { identifyBeeRect, tagAngle } from './overlay/Drawing.js';
 import {
-  initSelectionControl,
-  hardRefreshLabelTogglePanel,
   onSelectIDChanged,
   updateEventTree,
   updateForm,
-  updateSelectionPanels,
-  updateDeleteButton,
-  labelsProcessKey,
   onLabelToggled,
   updateAnnotationStatistics, onClickResetAngle, onClickAngleFromTag,
 } from './form/Form.js';
@@ -254,8 +249,8 @@ installGlobals({
 // The form and the selection (Form.js, SelectionControl.js, from the former SelectionControl.js): called by the classic scripts, the
 // inline handlers of the page and the tests. The entry points of the refresh are already wrapped by `instrument` in their module.
 installGlobals({
-  initSelectionControl, hardRefreshLabelTogglePanel, onSelectIDChanged, updateEventTree, updateForm,
-  updateSelectionPanels, updateDeleteButton, labelsProcessKey, onLabelToggled, updateAnnotationStatistics,
+  onSelectIDChanged, updateEventTree, updateForm,
+  onLabelToggled, updateAnnotationStatistics,
   onClickResetAngle, onClickAngleFromTag,
 });
 installGlobals({
