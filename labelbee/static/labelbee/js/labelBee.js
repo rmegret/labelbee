@@ -15,6 +15,8 @@ import { initEventsCSVManualFilePicker } from "./dialogs/EventsCSVManualFilePick
 
 //var vis;
 
+const change_id_force = 'swap'  // What to do if conflict when changing id
+
 // Debugging levels: `logging` now lives in core/Notifier.js (exposed on window by labelbeeBridge.js)
 
 // ######################################################################
@@ -170,7 +172,6 @@ export function init(videoID, tagID) {
   // refresh();
   updateForm(null);
   selection.clear();
-  window.change_id_force = 'swap'  // What to do if conflict when changing id
 
   $('#alerttextblock').resizable()
 

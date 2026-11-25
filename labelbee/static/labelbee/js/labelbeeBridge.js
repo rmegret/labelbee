@@ -27,7 +27,6 @@ import * as EventTree from './form/EventTree.js';
 import {
   Observation,
   deepcopy,
-  hasParts,
   getValidIDsForFrame,
   getValidIDsForFrames,
   obsDoesExist,
@@ -36,7 +35,6 @@ import {
   getFramesWithID,
   getFramesWithSwapID,
   obs_swapID,
-  printTracks,
   cacheTags,
   getTags,
   getIdsInFocus,
@@ -72,13 +70,12 @@ import { initZoomView } from './zoom/ZoomView.js';
 import {
   init, printMessage, toggleFullScreen, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
 } from './labelBee.js';
-import { autoCentering, newRectForCurrentTag, onMouseDown, onObjectDeselected, onObjectSelected } from './overlay/Mouse.js';
-import { identifyBeeRect, plotExcludeRects, plotROI, rotatedRectGeometry, tagAngle } from './overlay/Drawing.js';
+import { autoCentering, newRectForCurrentTag } from './overlay/Mouse.js';
+import { identifyBeeRect, rotatedRectGeometry, tagAngle } from './overlay/Drawing.js';
 import { addRectFromObs } from './overlay/BeeRect.js';
 import {
   initSelectionControl,
   hardRefreshLabelTogglePanel,
-  updateSelectID,
   onSelectIDChanged,
   updateEventTree,
   updateForm,
@@ -163,29 +160,24 @@ import {
 import {
   refreshChronoLayout,
   adjustChronogramHeight,
-  validAllTagIdsDomain,
   validVisibleTagIdsDomain,
   updateChronoXDomainFromVideo,
   updateTimeMark,
-  updatePreviewTimeMark,
   updateChronoSelection,
   updateTrackWindowSpan,
   getWindow,
   refreshChronogram,
   drawChrono,
   updateChrono,
-  renderObsTable,
 } from './chrono/ChronoRender.js';
 import {
   updateChronoData,
   updateTagIntervals,
   augmentTrackWithTag,
-  computeMotionDirection,
   cleanObsoleteEvents,
   cleanObsoleteEventsCB,
   refreshTagsParameters,
   onTagsParametersChanged,
-  onTagsParametersSelectChanged,
   chronoFilter,
 } from './chrono/ChronoData.js';
 
@@ -200,9 +192,6 @@ window.logging = logging; // debug-level flags (`logging.io = true` from the con
 window.refreshLog = refreshLog; // read from the console and the tests; filled by core/RefreshInstrumentBridge.js
 
 window.Labels = Labels; // the namespace, for the classic scripts: Labels.bool_acts(obs), ...
-window.toLabelArray = Labels.toArray;
-window.toLabelString = Labels.toString;
-window.cleanLabels = Labels.clean;
 window.containsLabel = Labels.contains;
 window.getLabels = (obs) => Labels.toArray(obs.labels);
 // The legacy hasLabel wrote `labels = ""` on an observation that had none; it writes nothing now that the
@@ -216,8 +205,8 @@ window.EventTree = EventTree; // used by updateEventTree (SelectionControl.js)
 // Observation class and legacy accessors of the stored events (annotation/Model.js, moved from the classic Model.js);
 // read by the classic scripts at call time, never while the page parses.
 installGlobals({
-  Observation, deepcopy, hasParts, getValidIDsForFrame, getValidIDsForFrames, obsDoesExist, getObsHandle,
-  changeObservationID, getFramesWithID, getFramesWithSwapID, obs_swapID, printTracks, cacheTags, getTags,
+  Observation, deepcopy, getValidIDsForFrame, getValidIDsForFrames, obsDoesExist, getObsHandle,
+  changeObservationID, getFramesWithID, getFramesWithSwapID, obs_swapID, cacheTags, getTags,
   getIdsInFocus,
 });
 // The modules of the annotation IO export what they define; only the names a classic script, a template handler or a browser
@@ -266,8 +255,7 @@ window.OverlayOptions = OverlayOptions; // built by `OverlayControl` (`overlay.o
 // Form.js, SelectionControl.js, TimelinePicker.js, ChronoControlInteraction.js and the page.
 window.OverlayControl = OverlayControl;
 installGlobals({
-  addRectFromObs, autoCentering, identifyBeeRect, newRectForCurrentTag, onMouseDown, onObjectDeselected, onObjectSelected,
-  plotExcludeRects, plotROI, rotatedRectGeometry, tagAngle,
+  addRectFromObs, autoCentering, identifyBeeRect, newRectForCurrentTag, rotatedRectGeometry, tagAngle,
 });
 
 // The zoom view (zoom/ZoomView.js): `initZoomView` is called by `init()` of labelBee.js, which builds `window.zoomOverlay` (read by the
@@ -295,7 +283,7 @@ installGlobals({
 // The form and the selection (Form.js, SelectionControl.js, from the former SelectionControl.js): called by the classic scripts, the
 // inline handlers of the page and the tests. The entry points of the refresh are already wrapped by `instrument` in their module.
 installGlobals({
-  initSelectionControl, hardRefreshLabelTogglePanel, updateSelectID, onSelectIDChanged, updateEventTree, updateForm,
+  initSelectionControl, hardRefreshLabelTogglePanel, onSelectIDChanged, updateEventTree, updateForm,
   updateSelectionPanels, updateDeleteButton, labelsProcessKey, onLabelToggled, updateAnnotationStatistics,
   onClickResetAngle, onClickAngleFromTag,
 });
@@ -339,14 +327,14 @@ installGlobals({
 });
 // Refresh entry points, wrapped by core/RefreshInstrumentBridge.js (`instrument`)
 installGlobals({
-  refreshChronogram, updateChronoData, drawChrono, updateChrono, renderObsTable, updateTimeMark,
-  updatePreviewTimeMark, updateTrackWindowSpan, updateChronoSelection, updateChronoXDomainFromVideo,
+  refreshChronogram, updateChronoData, drawChrono, updateChrono, updateTimeMark,
+  updateTrackWindowSpan, updateChronoSelection, updateChronoXDomainFromVideo,
   updateTagIntervals,
 });
 // Read by other files
 installGlobals({
-  setRestrictID, validAllTagIdsDomain, validVisibleTagIdsDomain, getWindow, augmentTrackWithTag,
-  computeMotionDirection, cleanObsoleteEvents,
+  setRestrictID, validVisibleTagIdsDomain, getWindow, augmentTrackWithTag,
+  cleanObsoleteEvents,
 });
 // Inline handlers of labelbee_page.html (chronogram toggles, filters, axes)
 installGlobals({
@@ -354,7 +342,7 @@ installGlobals({
   onChronoParametersChanged, onMousewheelModeToggled, restrictIDFromSelection, restrictIDFromWindow,
   click_restrictID, onRestrictIDChanged, click_excludeID, onExcludeIDChanged, click_hideInvalid, click_hideFlowers,
   chronoAdjust, scaleTimeDomain, shiftTimeDomain, cleanObsoleteEventsCB,
-  refreshTagsParameters, onTagsParametersChanged, onTagsParametersSelectChanged, chronoFilter,
+  refreshTagsParameters, onTagsParametersChanged, chronoFilter,
 });
 
 // Console only (`installDebugGlobals()` or `?debug_globals`): the cache of the video, `videoControl.videoCache`
