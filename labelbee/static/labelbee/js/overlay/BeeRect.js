@@ -6,6 +6,7 @@
 import { identifyBeeRect, rotatedRectGeometry } from "./Drawing.js"
 import { getObsHandle, getValidIDsForFrame } from "../annotation/Model.js"
 import { logging } from "../core/Notifier.js"
+import { events } from "../annotation/AnnotationStore.js"
 
 // #MARK # FABRICJS RECTS MANAGEMENT
 

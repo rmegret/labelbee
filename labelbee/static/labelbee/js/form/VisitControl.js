@@ -7,6 +7,7 @@ import { getObsHandle } from '../annotation/Model.js'
 import { selectBeeByIDandFrame } from '../SelectionControl.js'
 import { deleteEvent } from '../commands/EditActions.js'
 import { refresh } from '../annotation/RefreshBridge.js'
+import { events } from '../annotation/AnnotationStore.js'
 
 let default_id
 

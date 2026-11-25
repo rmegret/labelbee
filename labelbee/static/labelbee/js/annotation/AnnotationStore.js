@@ -50,3 +50,6 @@ export function createAnnotationStore() {
 
 /** The page's single store. */
 export const AnnotationStore = createAnnotationStore();
+
+/** The events of the page's store (a constant of the store), imported by the readers instead of `window.events`. */
+export const events = AnnotationStore.events;

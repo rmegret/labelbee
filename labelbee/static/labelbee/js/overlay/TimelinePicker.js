@@ -7,6 +7,7 @@ import { updateSelectionPanels } from '../form/Form.js'
 import { getVideoInfo } from '../video/VideoInfo.js'
 import { refresh } from '../annotation/RefreshBridge.js'
 import { selection } from '../annotation/SelectionModelBridge.js'
+import { events } from '../annotation/AnnotationStore.js'
 
 // Timeline picking of the overlay: the interaction mode 'pick-frame' (set the span of an observation by picking frames in a
 // timeline, Pick Flower tool) and the timeline displays. Moved as it is out of OverlayControl.js and form/VisitControl.js

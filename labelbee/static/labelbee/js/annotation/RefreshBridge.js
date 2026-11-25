@@ -5,6 +5,7 @@
  */
 import { Refresh } from './Refresh.js';
 import { activateSelection } from '../SelectionControl.js';
+import { events } from './AnnotationStore.js';
 
 export const refresh = new Refresh({
   chrono: () => refreshChronogram(),
@@ -15,6 +16,5 @@ export const refresh = new Refresh({
   frame: () => videoControl.onFrameChanged(),
   selection: () => activateSelection(),
 });
-// AnnotationStoreBridge.js runs before this one and defines `window.events`
-refresh.audit(window.events);
+refresh.audit(events);
 window.refresh = refresh; // the modules import `refresh` from here; the classic scripts read the global

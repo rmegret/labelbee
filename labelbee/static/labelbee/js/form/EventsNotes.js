@@ -4,6 +4,7 @@
 // `events` is the page global, read at call time.
 
 import { instrument } from "../core/RefreshInstrumentBridge.js"
+import { events } from "../annotation/AnnotationStore.js"
 
 export function initEventsNotes() {
   $("#events-notes").on("input", onChanged_events_notes);
