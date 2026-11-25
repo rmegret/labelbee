@@ -5,6 +5,7 @@
 //    with a draggable splitter (#splitter2).
 // #chronoTab is moved in the DOM (not cloned), so the core code keeps working on the same
 // elements. Layout only.
+import { refreshChronoLayout } from "../chrono/ChronoRender.js"
 export function initChronoLayout() {
   var MIN_LEFT = 300;   // px, video pane
   var MIN_CHRONO = 200; // px

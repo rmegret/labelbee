@@ -4,6 +4,7 @@
 //    pane, keeping the aspect ratio ("Expand to Fit");
 //  - #chrono-fit-button ("Fit" in the chronogram Size panel): resizes the chronogram to the
 //    width of its pane, so that no horizontal scrollbar is needed.
+import { refreshChronoLayout } from "../chrono/ChronoRender.js"
 export function initFitControls() {
   function contentWidth(pane) {
     var cs = window.getComputedStyle(pane);

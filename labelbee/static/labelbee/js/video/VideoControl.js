@@ -8,6 +8,7 @@ import { VideoCache } from "./VideoCache.js";
 import { HoverControl } from "./HoverControl.js";
 import { getVideoInfo } from "./VideoInfo.js";
 import { url_for } from "../core/Utils.js";
+import { updateChronoXDomainFromVideo } from "../chrono/ChronoRender.js";
 
 // `lasthash` (page global, shared with labelBee.js:onhashchange) is created by labelBee.js, which runs first
 

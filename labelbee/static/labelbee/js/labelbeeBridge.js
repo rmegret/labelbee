@@ -147,17 +147,12 @@ import {
   shiftTimeDomain,
 } from './chrono/ChronoControls.js';
 import {
-  refreshChronoLayout,
   adjustChronogramHeight,
-  validVisibleTagIdsDomain,
-  updateChronoXDomainFromVideo,
   updateTimeMark,
-  updateChronoSelection,
   updateTrackWindowSpan,
-  getWindow,
   refreshChronogram,
-  drawChrono,
   updateChrono,
+  getWindow,
 } from './chrono/ChronoRender.js';
 import {
   updateChronoData,
@@ -303,17 +298,17 @@ installGlobals({
 // `videoKeyframes` and `videoCacheStatus` are created on window by the module itself (labelBee.js also assigns `chrono`).
 // Class and layout, used by labelBee.js, ChronoLayout.js, FitControls.js, OverlayControl.js
 installGlobals({
-  Chronogram, refreshChronoLayout, adjustChronogramHeight,
+  Chronogram, adjustChronogramHeight,
 });
 // Refresh entry points, wrapped by core/RefreshInstrumentBridge.js (`instrument`)
 installGlobals({
-  refreshChronogram, updateChronoData, drawChrono, updateChrono, updateTimeMark,
-  updateTrackWindowSpan, updateChronoSelection, updateChronoXDomainFromVideo,
+  refreshChronogram, updateChronoData, updateChrono, updateTimeMark,
+  updateTrackWindowSpan,
   updateTagIntervals,
 });
 // Read by other files
 installGlobals({
-  setRestrictID, validVisibleTagIdsDomain, getWindow, augmentTrackWithTag,
+  setRestrictID, getWindow, augmentTrackWithTag,
   cleanObsoleteEvents,
 });
 // Inline handlers of labelbee_page.html (chronogram toggles, filters, axes)

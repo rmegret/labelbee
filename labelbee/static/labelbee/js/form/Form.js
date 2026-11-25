@@ -11,6 +11,7 @@ import * as Labels from "../annotation/Labels.js";
 import { getCurrentTag } from "../SelectionControl.js";
 import { rotatedRectGeometry, tagAngle } from "../overlay/Drawing.js";
 import { storeUnit } from "../commands/EditActions.js";
+import { updateChronoSelection } from "../chrono/ChronoRender.js";
 
 window.labelButtonsArray = undefined; // [{label, description, ...}], set by initSelectionControl or by the labels loaded from the server
 window.labelListDialog = undefined; // LabelListDialog, built by initSelectionControl

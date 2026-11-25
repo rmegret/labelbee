@@ -10,6 +10,7 @@
 import { ROIChanged, excludeRectsChanged } from "./ChronoData.js"
 import { getObsHandle } from "../annotation/Model.js"
 import { autoCentering } from "../overlay/Mouse.js"
+import { refreshChronogram, updateChrono, updateChronoXDomainFromVideo, validVisibleTagIdsDomain } from "./ChronoRender.js"
 
 export function gotoEvent(frame, id) {
   videoControl.pause();

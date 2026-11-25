@@ -11,6 +11,7 @@ import { getCurrentTag } from "../SelectionControl.js"
 import { rotatedRectGeometry, tagAngle } from "../overlay/Drawing.js"
 import { url_for } from "../core/Utils.js"
 import { storeUnit } from "../commands/EditActions.js"
+import { refreshChronogram } from "../chrono/ChronoRender.js"
 
 // Formerly implicit globals, shared by the functions below (module scope)
 let idata, src_pts, angle
