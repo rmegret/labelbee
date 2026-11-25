@@ -94,12 +94,6 @@ import {
 import * as ChronoDragControl from './chrono/ChronoDragControl.js';
 import { chronoState } from './chrono/ChronoState.js';
 import {
-  gotoEvent,
-  onAxesClick,
-  onAxesDblClick,
-  onAxesChanged,
-  onAxesMoved,
-  updateEventSeekMode,
   eventSeekModeClicked,
   gotoFirstEvent,
   gotoLastEvent,
@@ -114,7 +108,6 @@ import {
   shiftTrackWindow,
   onClickFocusVideo,
   onClickFocusTrackWindow,
-  initRegionFilters,
   onClickROI,
   updateROIFromVideo,
   onROITextChanged,
@@ -283,14 +276,13 @@ window.chronoState = chronoState;
 // Navigation and seek of the chronogram (chrono/ChronoControlInteraction.js), the 14 names other files use.
 // Read by other files (VisitControl.js, OverlayControl.js, Chrono.js: initChrono and the preview of a frame)
 installGlobals({
-  gotoEvent, onAxesClick, onAxesDblClick, onAxesChanged, onAxesMoved, updateEventSeekMode,
 });
 // Inline handlers of labelbee_page.html (navigation and seek buttons)
 installGlobals({
   eventSeekModeClicked, gotoFirstEvent, gotoLastEvent, gotoNextEvent, gotoPreviousEvent, onClickNextID,
   onClickPrevID, onAutoEventButtonClick,
   onTrackWindowChanged, setTrackWindow, scaleTrackWindow, shiftTrackWindow, onClickFocusVideo, onClickFocusTrackWindow,
-  initRegionFilters, onClickROI, updateROIFromVideo, onROITextChanged, onClickExcludeRects, onClickExcludeRectAdd,
+  onClickROI, updateROIFromVideo, onROITextChanged, onClickExcludeRects, onClickExcludeRectAdd,
   onClickExcludeRectDelete, onClickExcludeRectNext, onClickExcludeRectParams,
 });
 

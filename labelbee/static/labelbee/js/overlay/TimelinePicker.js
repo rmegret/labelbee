@@ -2,6 +2,7 @@
 import { getObsHandle, obs_swapID } from '../annotation/Model.js'
 import { updateUndoButton } from '../SelectionControl.js'
 import { identifyBeeRect } from './Drawing.js'
+import { gotoEvent } from '../chrono/ChronoControlInteraction.js'
 
 // Timeline picking of the overlay: the interaction mode 'pick-frame' (set the span of an observation by picking frames in a
 // timeline, Pick Flower tool) and the timeline displays. Moved as it is out of OverlayControl.js and form/VisitControl.js

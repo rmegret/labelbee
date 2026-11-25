@@ -13,6 +13,7 @@ import { VideoCacheStatus } from "./VideoCacheStatus.js"
 import { VideoKeyframes } from "./VideoKeyframes.js"
 import { updateButtons_showIndividualEvents, updateButtons_showPartsOnChrono, updateButtons_showSpans, updateChronoCheckboxes, updateMousewheelModeButton } from "./ChronoControls.js"
 import { ChronoAxes } from "./ChronoAxes.js"
+import { onAxesChanged, onAxesClick, onAxesDblClick, onAxesMoved, updateEventSeekMode } from "./ChronoControlInteraction.js"
 
 // The derived data shared by the chrono files is `chronoState` (chrono/ChronoState.js), the options are `chrono.config`,
 // the d3 elements `chrono.axes` and `chrono.layers`. TODO: move the remaining singletons inside Chrono

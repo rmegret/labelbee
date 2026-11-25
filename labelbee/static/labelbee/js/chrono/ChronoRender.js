@@ -7,6 +7,7 @@ import { instrument } from "../core/RefreshInstrumentBridge.js"
 import { debouncer, format_HMS } from "./ChronoUtils.js"
 import { updateChronoData, updateFlatTracks, updateTagIntervals } from "./ChronoData.js"
 import { contains as containsLabel } from "../annotation/Labels.js"
+import { gotoEvent } from "./ChronoControlInteraction.js"
 
 export function refreshChronoLayout() {
   const doRefresh = function () {
