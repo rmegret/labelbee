@@ -87,6 +87,7 @@ Moves keep the content and fix the import paths; "split" is the only change of c
 - 14g. Events lineage `getBasedOn()` in the store (behavior fix, approval, browser test of the stale case).
 - 14h. Server commands, one family per commit, the dialogs import what they call: (h1) save; (h2) load by id, `FromServerDialog` loses its
   duplicate; (h3) tags, moved unchanged, then the repair or removal of [OQ-706](../QUESTIONS.md#oq-706) in its own commit if you decide one; (h4) CSV and URL loads, `clickLoadTracks*`.
+  Done. Left as DEBT: `tagsFromServer` still writes to `fromServerDialog` and `statusWidget`, and `videoManager` is still a page global. A failed load in the dialog shows the shared `reportLoadError` wording.
 - 14i. `commands/LoadFromFile.js`, `commands/SaveToFile.js`.
 - 14j. `EditActions.js` to `commands/`.
 
