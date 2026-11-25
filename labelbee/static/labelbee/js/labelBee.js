@@ -19,6 +19,9 @@ import { storeUnit, submitDraft } from "./commands/EditActions.js";
 import { initRegionFilters } from "./chrono/ChronoControlInteraction.js";
 import { initSelectionControl, labelsProcessKey, updateForm } from "./form/Form.js";
 import { OverlayControl } from "./overlay/Overlay.js";
+import { VideoControl } from "./video/VideoControl.js";
+import { VideoManager } from "./video/VideoList.js";
+import { initZoomView } from "./zoom/ZoomView.js";
 
 //var vis;
 

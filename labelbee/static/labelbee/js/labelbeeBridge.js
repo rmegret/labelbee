@@ -44,7 +44,6 @@ import * as Load from './commands/Load.js';
 import * as LoadFromServer from './commands/LoadFromServer.js';
 import * as SaveToServer from './commands/SaveToServer.js';
 import * as Alerts from './core/Alerts.js';
-import { VideoManager } from './video/VideoList.js';
 import { VideoControl } from './video/VideoControl.js';
 import { VisitWidget } from './form/VisitControl.js';
 import { TimelinePicker } from './overlay/TimelinePicker.js';
@@ -59,7 +58,6 @@ import { initChronoLayout } from './layout/ChronoLayout.js';
 import { initFitControls } from './layout/FitControls.js';
 import { initVideoSettings } from './layout/VideoSettings.js';
 import { initPanelRows } from './layout/PanelRows.js';
-import { initZoomView } from './zoom/ZoomView.js';
 import {
   init, printMessage, toggleFullScreen, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
 } from './labelBee.js';
@@ -207,7 +205,6 @@ window.url_for = url_for;
 // Video (video/*.js). `VideoControl` imports and builds the cache (`videoControl.videoCache`) and the hover control; the classic
 // scripts get the video metadata through `getVideoInfo()`.
 window.VideoControl = VideoControl; // built by `init()` of labelBee.js (`videoControl = new VideoControl("video")`)
-window.VideoManager = VideoManager; // built by `init()` of labelBee.js (`videoManager = new VideoManager()`)
 window.VisitWidget = VisitWidget; // built by `OverlayControl` (`overlay.visitWidget = new VisitWidget(overlay)`)
 window.TimelinePicker = TimelinePicker; // built by `OverlayControl` (`overlay.modes['pick-frame'] = new TimelinePicker(overlay)`)
 window.OverlayOptions = OverlayOptions; // built by `OverlayControl` (`overlay.opts = new OverlayOptions(overlay)`)
@@ -218,10 +215,6 @@ window.OverlayControl = OverlayControl;
 installGlobals({
   identifyBeeRect, newRectForCurrentTag, tagAngle,
 });
-
-// The zoom view (zoom/ZoomView.js): `initZoomView` is called by `init()` of labelBee.js, which builds `window.zoomOverlay` (read by the
-// inline handlers of the page and by the other modules).
-installGlobals({ initZoomView });
 
 // The page layout (layout/): patches and widgets that only touch the DOM, started once (they were classic scripts whose own
 // `$(function)` did the same). `initTouchResize` patches jQuery UI before any `.resizable()` (made by `init()` on window.onload).
