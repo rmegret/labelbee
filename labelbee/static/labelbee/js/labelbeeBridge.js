@@ -16,6 +16,7 @@
 import { logging, refreshLog } from './core/Notifier.js';
 import './core/RefreshInstrumentBridge.js'; // wraps the classic refresh functions (`refreshInstrumented`, exported)
 import './annotation/AnnotationStoreBridge.js'; // window.AnnotationStore, window.events, window.installDebugGlobals
+import { AnnotationStore } from './annotation/AnnotationStore.js';
 import { registerDebugGlobal } from './annotation/DebugGlobals.js';
 import './annotation/RefreshBridge.js'; // window.refresh (needs window.events)
 import './annotation/SelectionModelBridge.js'; // window.selection (needs window.events)
@@ -150,18 +151,12 @@ window.refreshLog = refreshLog; // read from the console and the tests; filled b
 
 window.getLabels = (obs) => Labels.toArray(obs.labels);
 
-window.WrongId = WrongId;
-window.CsvSchemas = CsvSchemas; // used by the "from /data" loader dialog (dialogs/EventsCSVManualFilePicker.js, labelBee.js)
-window.EventTree = EventTree; // used by updateEventTree (SelectionControl.js)
+// New observations of the page's store use the imported class (annotation/Model.js); this replaces the factory of
+// AnnotationStoreBridge.js, which looks `Observation` up on the target the golden tests give it.
+AnnotationStore.events.setObservationFactory((id) => new Observation(id));
 
-// Observation class and legacy accessors of the stored events (annotation/Model.js, moved from the classic Model.js);
-// read by the classic scripts at call time, never while the page parses.
-installGlobals({
-  Observation, deepcopy, getValidIDsForFrame, obsDoesExist, getObsHandle,
-  changeObservationID, getFramesWithID, obs_swapID, getTags,
-});
-// The modules of the annotation IO export what they define; only the names a classic script, a template handler or a browser
-// test still calls are installed as globals (a misspelled name throws). The list shrinks as the callers move.
+// What stays on window (ADR 0017): the names an inline handler or script of the page calls, the singletons, a few debug
+// names, and a handful still read by modules that cannot import them. Tests import the modules.
 function install(module, names) {
   for (const name of names) {
     if (!(name in module)) throw new Error("labelbeeBridge: '" + name + "' is not exported");
@@ -175,29 +170,13 @@ install(Load, [
   "eraseEvents", "eraseTags", // template buttons
 ]);
 install(LoadFromServer, [
-  "tagsFromServer", // dialogs/, VideoControl.js
   "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
-  "loadEventsFromServerByID", // labelBee.js
 ]);
 install(SaveToServer, ["eventsToServer"]); // template button
-// commands/EditActions.js
-installGlobals({
-  deleteEvent,
-});
-window.url_for = url_for;
 
-// Video (video/*.js). `VideoControl` imports and builds the cache (`videoControl.videoCache`) and the hover control; the classic
-// scripts get no global for the video metadata: `getVideoInfo()` of video/VideoInfo.js is imported.
-window.VideoControl = VideoControl; // built by `init()` of labelBee.js (`videoControl = new VideoControl("video")`)
-window.VisitWidget = VisitWidget; // built by `OverlayControl` (`overlay.visitWidget = new VisitWidget(overlay)`)
-window.TimelinePicker = TimelinePicker; // built by `OverlayControl` (`overlay.modes['pick-frame'] = new TimelinePicker(overlay)`)
-window.OverlayOptions = OverlayOptions; // built by `OverlayControl` (`overlay.opts = new OverlayOptions(overlay)`)
-
-// The overlay (overlay/Overlay.js): `OverlayControl` is built by `init()` of labelBee.js; the functions are called by ZoomView.js,
-// Form.js, SelectionControl.js, TimelinePicker.js, ChronoControlInteraction.js and the page.
-window.OverlayControl = OverlayControl;
+// overlay/Drawing.js
 installGlobals({
-  identifyBeeRect, newRectForCurrentTag,
+  newRectForCurrentTag,
 });
 
 // The page layout (layout/): patches and widgets that only touch the DOM, started once (they were classic scripts whose own
@@ -243,13 +222,11 @@ installGlobals({
 // `videoKeyframes` and `videoCacheStatus` are created on window by the module itself (labelBee.js also assigns `chrono`).
 // Class and layout, used by labelBee.js, ChronoLayout.js, FitControls.js, OverlayControl.js
 installGlobals({
-  Chronogram, adjustChronogramHeight,
+  adjustChronogramHeight,
 });
 // Refresh entry points, wrapped by core/RefreshInstrumentBridge.js (`instrument`)
 installGlobals({
-  refreshChronogram, updateChronoData, updateChrono, updateTimeMark,
-  updateTrackWindowSpan,
-  updateTagIntervals,
+  refreshChronogram, 
 });
 // Read by other files
 installGlobals({
@@ -261,7 +238,7 @@ installGlobals({
   onChronoParametersChanged, onMousewheelModeToggled, restrictIDFromSelection, restrictIDFromWindow,
   click_restrictID, onRestrictIDChanged, click_excludeID, onExcludeIDChanged, click_hideInvalid, click_hideFlowers,
   chronoAdjust, scaleTimeDomain, shiftTimeDomain, cleanObsoleteEventsCB,
-  refreshTagsParameters, onTagsParametersChanged, chronoFilter,
+  onTagsParametersChanged, chronoFilter,
 });
 
 // Console only (`installDebugGlobals()` or `?debug_globals`): the cache of the video, `videoControl.videoCache`
