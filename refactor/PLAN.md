@@ -170,7 +170,7 @@ and is its own commit series and review. The next slice is chosen after the prev
     - (14d) `io/ServerIO.js` (requests), `io/LocalFile.js` (read, download) [x] `io/LocalFile.js`, `io/ServerIO.js` split off; POST now a Promise
     - (14e) `codecs/`: `AnnotationCodec`, `Export`, `CsvSchemas` [x] three codec files moved to `codecs/`, importers and harness repointed
     - (14f) `Load.js` split: `codecs/Decode.js`, `commands/Load.js` [x] `Load.js` split into `codecs/Decode.js` (pure) and `commands/Load.js` (apply)
-    - (14g) events lineage in the store, replaces `basedOn` [ ] (behavior fix, approval)
+    - (14g) events lineage in the store, replaces `basedOn` [x] store keeps `getBasedOn()` `{source, id, retrievedOn}`; non-server loads and erase reset it
     - (14h) server commands, dialogs import them [ ] h1 save, h2 load by id (dialog duplicate goes), h3 tags, h4 CSV/URL
     - (14i) `commands/LoadFromFile.js`, `commands/SaveToFile.js` [x] `FileImport`/`FileExport` renamed to `commands/LoadFromFile.js`, `SaveToFile.js`
     - (14j) `EditActions.js` to `commands/` [x] `EditActions.js` moved to `commands/`

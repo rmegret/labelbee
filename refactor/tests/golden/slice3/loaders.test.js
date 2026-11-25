@@ -27,7 +27,25 @@ test('loadEventsFromServerByID resolves once the events are loaded and sets the 
   assert.ok(isThenable(p));
   await p;
   assert.equal(JSON.stringify(Object.keys(ctx.AnnotationStore.events.toObject())), '["0"]');
-  assert.deepEqual(rec.fx.filter((f) => f[0] === 'basedOn'), [['basedOn', 12]]);
+  assert.deepEqual({ ...ctx.AnnotationStore.getBasedOn() }, { source: 'server-db', id: 12, retrievedOn: '2000-01-02T03:04:05.000Z' });
+});
+
+// The lineage of the next save (ADR 0016, step 14g): every load of events replaces it with its own source, an erase clears it
+test('every load of events sets the lineage to its own source, and an erase clears it', async () => {
+  const env = await loadIoEnv();
+  const T = '2000-01-02T03:04:05.000Z';
+  const { ctx } = env({ net: { ajax: { ok: { data: { data: evts } } } } });
+  await ctx.loadEventsFromServerByID(12);
+  assert.equal(ctx.AnnotationStore.getBasedOn().source, 'server-db');
+  await ctx.loadEventsFromFile({ target: { files: [{ name: 'a.json', text: evts }], value: 'x' } });
+  assert.deepEqual({ ...ctx.AnnotationStore.getBasedOn() }, { source: 'local-file', id: 'a.json', retrievedOn: T });
+  ctx.eraseEvents();
+  assert.equal(ctx.AnnotationStore.getBasedOn(), undefined);
+  const e2 = env({ net: { getJSON: { ok: { data: { data: evts } } }, csv: { ok: [csvRow] } } });
+  await e2.ctx.loadCSVFromServer('/d/t.tracks.csv', 'tracks');
+  assert.deepEqual({ ...e2.ctx.AnnotationStore.getBasedOn() }, { source: 'server-file', id: '/d/t.tracks.csv', retrievedOn: T });
+  e2.ctx.loadTags({});
+  assert.equal(e2.ctx.AnnotationStore.getBasedOn().source, 'server-file', 'the tags have no lineage and leave the events one alone');
 });
 
 test('loadEventsFromServerByID rejects on a request error or invalid data, and shows the message (DEBT-722, Q23)', async () => {

@@ -22,7 +22,9 @@ import { updateEventsNotes } from '../form/EventsNotes.js';
 
 const { sanitizeEvents, decodeTags, tagsAddFrames } = codec;
 
-/* options.centerPolicy: which fields are the truth for the center when x, y and cx, cy disagree, "xy" (default,
+/* options.basedOn: `{source, id}` of the source of the events ("server-db", "server-file" or "local-file", see ADR 0016); stamped with
+ * `retrievedOn` and kept by the store; a load without it leaves the events without lineage.
+ * options.centerPolicy: which fields are the truth for the center when x, y and cx, cy disagree, "xy" (default,
  * the JSON formats) or "cxcy" (the CSV and database sources): the loader knows its source (ADR 0008 R7).
  * Takes ownership of `obj`: it is not copied, the store keeps it (and `sanitizeEvents` edits it), so pass freshly parsed data.
  * Returns false, with the events kept, when the format is rejected. */
@@ -36,7 +38,10 @@ export function loadTracks(obj, skipRefresh, options) {
     return false;
   }
 
-  AnnotationStore.replaceTracks(evts.data, evts.info);
+  const basedOn = options && options.basedOn
+    ? { source: options.basedOn.source, id: options.basedOn.id, retrievedOn: new Date().toISOString() }
+    : undefined;
+  AnnotationStore.replaceTracks(evts.data, evts.info, basedOn);
 
   updateEventsNotes();
 
@@ -87,8 +92,8 @@ export function eraseTags() {
   }
 }
 
-// From the JSON text of the events or of the tags; throws if the text or the format is invalid
-export function loadTracksFromText(text) {
+// From the JSON text of the events or of the tags (`filename`: the local file the events come from, for the lineage); throws if the text or the format is invalid
+export function loadTracksFromText(text, filename) {
   if (logging.io) {
     console.log(text);
   }
@@ -97,7 +102,9 @@ export function loadTracksFromText(text) {
     console.log(obj);
   }
 
-  if (!loadTracks(obj)) throw new Error("Invalid events format (details in the console)");
+  if (!loadTracks(obj, false, { basedOn: filename === undefined ? undefined : { source: "local-file", id: filename } })) {
+    throw new Error("Invalid events format (details in the console)");
+  }
 }
 export function loadTagsFromText(text) {
   var obj = JSON.parse(text);
@@ -114,7 +121,7 @@ export function loadCSVFromRows(rows, schema, url) {
   const decoded = decodeCSVRows(rows, schema, url);
 
   // skipRefresh when there are tags: loadTags below refreshes once for the events and the tags
-  if (!loadTracks(decoded.events.obj, !!decoded.tags, { centerPolicy: decoded.events.centerPolicy })) {
+  if (!loadTracks(decoded.events.obj, !!decoded.tags, { centerPolicy: decoded.events.centerPolicy, basedOn: { source: "server-file", id: url } })) {
     throw new Error("Invalid events in the CSV (details in the console)");
   }
   if (decoded.tags && !loadTags(decoded.tags)) throw new Error("Invalid tags in the CSV (details in the console)");

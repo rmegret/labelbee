@@ -254,7 +254,6 @@ function FromServerDialog() {
     if(this.data_type== "tag"){      // Case: tag file
       success = tagsFromServer(tag_event_ID);
       if(success){
-        theDialog.basedOn = tag_event_ID;
         div.find(".modal-message h4").css("color","black");
         div.find('.modal-message h4').html("Tags loaded successfully.")        
       }
@@ -276,7 +275,7 @@ function FromServerDialog() {
           console.log("loadEvents: Loaded events data:", json["data"]["data"]);
           // Case: event file
           let obj = JSON.parse(json["data"]["data"]);
-          success = loadTracks(obj);
+          success = loadTracks(obj, false, { basedOn: { source: "server-db", id: tag_event_ID } });
           // Setting basedon information
           // {
           //   var basedon = {};
@@ -293,7 +292,6 @@ function FromServerDialog() {
 
           if(success){
             console.log("Loaded event. ID:", tag_event_ID)
-            theDialog.basedOn = tag_event_ID;
             fromServerDialog.setMessage("black","Events loaded.");
           }
           else{

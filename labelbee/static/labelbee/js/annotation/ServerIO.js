@@ -9,14 +9,14 @@
  *
  * Strict mode: the implicit globals `dataToSend`, `alertMSG`, `success` and `tags` of the old code are declared; nobody read them.
  *
- * DEBT: globals read at call time: `$`, `d3`, `videoManager`, `fromServerDialog` (the lineage
- * `basedOn` and its message) and `statusWidget`. `eventsToServer(format)` ignores `format` (always V2).
+ * DEBT: globals read at call time: `$`, `d3`, `videoManager`, `fromServerDialog` (its message) and `statusWidget`. `eventsToServer(format)` ignores `format` (always V2).
  */
 import { exportTracks } from '../codecs/Export.js';
 import { loadTracks, loadTags, loadCSVFromRows } from '../commands/Load.js';
 import { classifyFilename } from '../codecs/CsvSchemas.js';
 import { ajaxGetJSON, getJSONPromise, ajaxPostJSON, fetchCSVRows } from '../io/ServerIO.js';
 import { reportLoadError, showAjaxError } from '../core/Alerts.js';
+import { AnnotationStore } from './AnnotationStore.js';
 import { logging } from '../core/Notifier.js';
 import { url_for } from '../core/Utils.js';
 import { getUserId } from '../session/Login.js';
@@ -35,11 +35,10 @@ export async function loadEventsFromServerByID(video_data_id) {
         console.log("loadEvents: Loaded events data:", json["data"]["data"]);
         // Case: event file
         let obj = JSON.parse(json["data"]["data"]);
-        const success = loadTracks(obj);
+        const success = loadTracks(obj, false, { basedOn: { source: "server-db", id: video_data_id } });
 
         if(success){
           console.log("Loaded event. ID:", video_data_id)
-          fromServerDialog.basedOn = video_data_id;
           fromServerDialog.setMessage("black","Events loaded.");
         }
         else{
@@ -61,7 +60,7 @@ export function eventsFromServer(url) {
       console.log("eventsFromServer: SUCCESS\njson=", json);
       let obj = json; //JSON.parse(json);
 
-      if (!loadTracks(obj)) throw new Error("Invalid events format (details in the console)");
+      if (!loadTracks(obj, false, { basedOn: { source: "server-file", id: url } })) throw new Error("Invalid events format (details in the console)");
     },
     function (err) {
       showAjaxError("ERROR in eventsFromServer")(err.jqXHR, err.textStatus, err.errorThrown);
@@ -139,6 +138,12 @@ export function tagsFromServer(tagFileID) {
 }
 
 /* SAVE TO THE SERVER */
+// The server field is a database id: only a load from a database record is a parent (ADR 0016)
+function createdFromId() {
+  const basedOn = AnnotationStore.getBasedOn();
+  return basedOn && basedOn.source == "server-db" ? basedOn.id : undefined;
+}
+
 export function eventsToServer(format) {
   var route = "/api/v1/annotations";
 
@@ -149,7 +154,7 @@ export function eventsToServer(format) {
     created_by_id: getUserId(),
     data_type: "event",
     data: JSON.stringify(exportTracks("v2")),
-    created_from_id: fromServerDialog.basedOn
+    created_from_id: createdFromId()
   }
 
   ajaxPostJSON(url_for(route), dataToSend).then(

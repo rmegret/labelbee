@@ -45,11 +45,16 @@ Rules (checked with the modularity scan at each step):
 6. The format taxonomy (`CsvSchemas.js`) is read by the file selection and by `codecs/`; `io/` imports no codec.
 7. Error formatting for the user (`typesetAjaxError`, `showAjaxError`) lives with `mainAlert` and `reportLoadError` in `core/Alerts.js`.
 
-Lineage: the store keeps the id of the server file the events were loaded from (`AnnotationStore.getEventsSourceId()`). `loadTracks` takes it as
-`options.sourceId` and every replace of the events sets it, to `undefined` when not given (local file, URL, CSV, erase); `eventsToServer` reads it.
-Whether a save also advances it to the new record is [OQ-707](../QUESTIONS.md#oq-707). The tags have no lineage. This replaces `fromServerDialog.basedOn` in both writers. A `SourceRef` module (kinds of source) is not built: the only
-reader is `created_from_id`, and `events.info.source` already describes the source. Resetting on a non-server load changes behavior (the stale case
-above, DEBT-721): own commit, maintainer approval, a browser test.
+Lineage (revised 2026-11-24 by the maintainer): the store keeps where the events were loaded from, `AnnotationStore.getBasedOn()`: `undefined`, or
+`{source, id, retrievedOn}` with `source` one of `"server-db"` (`id`: the database id of the record), `"server-file"` (`id`: the URL or path of the
+file) or `"local-file"` (`id`: the file name), and `retrievedOn` the ISO timestamp of the load. `loadTracks` takes `options.basedOn = {source, id}`,
+stamps `retrievedOn` and passes it to `replaceTracks`; every replace of the events sets it, to `undefined` when not given (erase, init, CSV from the
+database file of the page). `eventsToServer` sends `created_from_id` only when `source` is `"server-db"`: the server field is a database id.
+This replaces `fromServerDialog.basedOn` in both writers (`FromServerDialog.loadEvents`, `loadEventsFromServerByID`); the tags have no lineage (the
+write of the tag branch of the dialog was unreachable and goes). Whether a save also advances it to the new record stays
+[OQ-707](../QUESTIONS.md#oq-707) (not done in 14g). The `SourceRef` module of the first draft is not built: this one record is its whole content.
+Resetting on a load that is not from the database changes behavior (the stale case, DEBT-721): own commit, maintainer approval (given by this
+definition), a browser test.
 
 ## File by file
 
@@ -79,7 +84,7 @@ Moves keep the content and fix the import paths; "split" is the only change of c
 - 14d. `io/`: `io/ServerIO.js` (requests) and `io/LocalFile.js` (read, download).
 - 14e. `codecs/`: move `AnnotationCodec`, `Export`, `CsvSchemas` (importers, bridges, golden harness).
 - 14f. Split `Load.js`: `codecs/Decode.js` and `commands/Load.js`.
-- 14g. Events lineage in the store (behavior fix, approval, browser test of the stale case).
+- 14g. Events lineage `getBasedOn()` in the store (behavior fix, approval, browser test of the stale case).
 - 14h. Server commands, one family per commit, the dialogs import what they call: (h1) save; (h2) load by id, `FromServerDialog` loses its
   duplicate; (h3) tags, moved unchanged, then the repair or removal of [OQ-706](../QUESTIONS.md#oq-706) in its own commit if you decide one; (h4) CSV and URL loads, `clickLoadTracks*`.
 - 14i. `commands/LoadFromFile.js`, `commands/SaveToFile.js`.
@@ -95,8 +100,8 @@ Tests per step: the golden harness (`refactor/tests/golden/harness/io-env.js` ev
 - **Vertical slices per source** (`sources/server-db/` with its dialog, client and command): the shared selectors and feedback get duplicated
   or cross-imported. Not retained; the dialogs already have one file each.
 - **Source registry or port** (`list`, `fetch`, `save`), **event/mediator**: not needed with four known sources; more machinery than this code needs.
-- **`SourceRef` module** (server db, server file, local file, url, none): one reader only; a store field reset by every load gives the same
-  guarantee. Can grow into it if a second reader appears.
+- **`SourceRef` module** (server db, server file, local file, url, none): one reader only; the record `{source, id, retrievedOn}` in the store gives
+  the same guarantee without a module. Can grow into it if a second reader appears.
 
 ## Consequences and limits
 

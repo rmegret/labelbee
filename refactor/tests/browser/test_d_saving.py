@@ -166,6 +166,38 @@ def test_d6_the_lineage_of_a_hash_load_is_sent_with_the_next_save(ui, saved_dir)
     assert str(row["created_from_id"]) == "4"                          # DEBT-722 fixed: the hash load sets the lineage
 
 
+def _load_events_from_db(ui):
+    ui.open_subpanel("Server storage")
+    ui.page.click("input[value='Load Events from DB']")                # loads annotation 4 (events_v2.json)
+    ui.page.wait_for_selector("#from-server-dialog", state="visible")
+    ui.page.click("#from-server-dialog button:has-text('Yes')")
+    ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
+    ui.page.keyboard.press("Escape")
+
+
+def test_d6_a_local_file_load_replaces_the_lineage_of_the_server_load(ui, sample_dir, saved_dir):
+    """DEBT-721 fixed (ADR 0016, step 14g): the next save no longer names the server file the work was not made from."""
+    ui.open()
+    _load_events_from_db(ui)
+    assert str(ui.js("AnnotationStore.getBasedOn().id")) == "4"
+    ui.load_events(sample_dir / "events_v1.json")
+    based = ui.js("AnnotationStore.getBasedOn()")
+    assert based["source"] == "local-file" and based["id"] == "events_v1.json" and based["retrievedOn"]
+    ui.page.click("#eventsToServerV2")
+    row = _wait_saved(saved_dir)[0]
+    assert row["created_from_id"] in (None, "", "undefined")
+
+
+def test_d6_an_erase_clears_the_lineage(ui, saved_dir):
+    ui.open()
+    _load_events_from_db(ui)
+    ui.js("loadTracks([])")                                            # what the erase button does once confirmed
+    assert ui.js("AnnotationStore.getBasedOn()") is None
+    ui.page.click("#eventsToServerV2")
+    row = _wait_saved(saved_dir)[0]
+    assert row["created_from_id"] in (None, "", "undefined")
+
+
 def test_d7_an_unknown_format_or_version_throws(ui):
     """The exports raise instead of saving a file with null (slice 8 step 6a)."""
     ui.open()

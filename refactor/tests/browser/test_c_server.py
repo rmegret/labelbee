@@ -16,7 +16,8 @@ def test_c8_load_events_from_db_dialog(ui):
     ui.page.click("#from-server-dialog button:has-text('Yes')")
     ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert ui.n_observations() == 13
-    assert ui.js("fromServerDialog.basedOn") == "4" or ui.js("fromServerDialog.basedOn") == 4     # lineage of the next save
+    based = ui.js("AnnotationStore.getBasedOn()")                                # lineage of the next save (ADR 0016)
+    assert based["source"] == "server-db" and str(based["id"]) == "4" and based["retrievedOn"]
     assert "Events loaded." in ui.page.inner_text("#from-server-dialog .modal-message")
 
 
@@ -30,7 +31,8 @@ def test_c9_hash_change_on_an_open_page_loads_the_events_and_seeks(ui):
     ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     assert ui.n_observations() == 13
     ui.page.wait_for_function("videoControl.getCurrentFrame() === 10")
-    assert ui.js("fromServerDialog.basedOn") in ("4", 4)
+    assert ui.js("AnnotationStore.getBasedOn().source") == "server-db"
+    assert str(ui.js("AnnotationStore.getBasedOn().id")) == "4"
     ui.goto_frame(11)                                                       # moving away removes `frame=` from the hash
     ui.page.wait_for_function("!location.hash.includes('frame=')")
 

@@ -139,9 +139,9 @@
     if (!store || store.__dwPatched || !store.events || typeof store.replaceTracks !== 'function') return;
     store.__dwPatched = true;
     const replaceTracks = store.replaceTracks;
-    store.replaceTracks = function (data, info) {
+    store.replaceTracks = function (data, info, ...rest) {
       // replaceTracks goes through events.replace, reported through the API (no longer a dirty write)
-      return replaceTracks.call(store, raws.get(data) || data, info);
+      return replaceTracks.call(store, raws.get(data) || data, info, ...rest);
     };
     const getTags = store.getTags;
     const replaceTags = store.replaceTags;

@@ -28,7 +28,7 @@ export function loadEventsFromFile(event) {
   }
   console.log("loadEventsFromFile: importing from JSON file:", fileToRead);
 
-  return readFileAsText(fileToRead).then(loadTracksFromText)
+  return readFileAsText(fileToRead).then((text) => loadTracksFromText(text, fileToRead.name))
     .catch(reportLoadError("loading events from file " + fileToRead.name));
 }
 

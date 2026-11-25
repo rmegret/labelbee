@@ -5,7 +5,8 @@
  * derived data. The getters return the stored object itself, not a copy: the page code edits
  * `Tracks[frame][id]` in place and must keep seeing the same object.
  * The stored events and their info live in `events` (annotation/Events.js, refactor slice 4, ADR 0007) and are read
- * and written through it; the store only replaces them (`replaceTracks`, used by the loaders). The page reaches the
+ * and written through it; the store only replaces them (`replaceTracks`, used by the loaders), and keeps where they come from
+ * (`getBasedOn`, step 14g). The page reaches the
  * store through `window.AnnotationStore` (AnnotationStoreBridge.js).
  */
 import { Events } from './Events.js';
@@ -22,16 +23,21 @@ export function createAnnotationStore() {
   let tags = [];
   let tagsInfo;
   let tagsHaveDM = false;
+  let basedOn;
 
   return {
     events,
     getTags: () => tags,
     getTagsInfo: () => tagsInfo,
     getTagsHaveDM: () => tagsHaveDM,
+    /** Where the events were loaded from: undefined, or {source: "server-db"|"server-file"|"local-file", id, retrievedOn} (ADR 0016). */
+    getBasedOn: () => basedOn,
 
-    /** Replaces the Tracks and their info together (no validation: decoding is the codec's job). */
-    replaceTracks(data, info) {
+    /** Replaces the Tracks and their info together (no validation: decoding is the codec's job). `fromSource`: the new
+     * `getBasedOn()`; every replace sets it, to undefined when not given. */
+    replaceTracks(data, info, fromSource) {
       events.replace(data, info);
+      basedOn = fromSource;
     },
     /** Replaces the Tags and their info together (no validation: decoding is the codec's job) and derives `tagsHaveDM`. */
     replaceTags(data, info) {
