@@ -4,6 +4,7 @@
 // form and the panels are in Form.js. The functions are installed on window by labelbeeBridge.js.
 import { instrument } from "./core/RefreshInstrumentBridge.js";
 import { updateSelectionPanels } from "./form/Form.js";
+import { addRectFromObs } from "./overlay/BeeRect.js";
 
 function swapID_findAll(ID) {
     let frames = getFramesWithID([videoControl.getCurrentFrame(),-1],ID)

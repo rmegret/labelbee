@@ -72,7 +72,6 @@ import {
 } from './labelBee.js';
 import { autoCentering, newRectForCurrentTag } from './overlay/Mouse.js';
 import { identifyBeeRect, rotatedRectGeometry, tagAngle } from './overlay/Drawing.js';
-import { addRectFromObs } from './overlay/BeeRect.js';
 import {
   initSelectionControl,
   hardRefreshLabelTogglePanel,
@@ -255,7 +254,7 @@ window.OverlayOptions = OverlayOptions; // built by `OverlayControl` (`overlay.o
 // Form.js, SelectionControl.js, TimelinePicker.js, ChronoControlInteraction.js and the page.
 window.OverlayControl = OverlayControl;
 installGlobals({
-  addRectFromObs, autoCentering, identifyBeeRect, newRectForCurrentTag, rotatedRectGeometry, tagAngle,
+  autoCentering, identifyBeeRect, newRectForCurrentTag, rotatedRectGeometry, tagAngle,
 });
 
 // The zoom view (zoom/ZoomView.js): `initZoomView` is called by `init()` of labelBee.js, which builds `window.zoomOverlay` (read by the
