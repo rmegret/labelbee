@@ -121,7 +121,6 @@ import {
   onToggleButton_showSpans,
   onChronoParametersChanged,
   onMousewheelModeToggled,
-  setRestrictID,
   restrictIDFromSelection,
   restrictIDFromWindow,
   click_restrictID,
@@ -295,7 +294,7 @@ installGlobals({
 });
 // Read by other files
 installGlobals({
-  setRestrictID, getWindow, augmentTrackWithTag,
+  getWindow, augmentTrackWithTag,
   cleanObsoleteEvents,
 });
 // Inline handlers of labelbee_page.html (chronogram toggles, filters, axes)
