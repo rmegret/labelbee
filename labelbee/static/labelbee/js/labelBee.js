@@ -22,6 +22,9 @@ import { OverlayControl } from "./overlay/Overlay.js";
 import { VideoControl } from "./video/VideoControl.js";
 import { VideoManager } from "./video/VideoList.js";
 import { initZoomView } from "./zoom/ZoomView.js";
+import { loadEventsFromServerByID } from "./commands/LoadFromServer.js";
+import { loadTracks } from "./commands/Load.js";
+import * as WrongId from "./annotation/WrongId.js";
 
 //var vis;
 

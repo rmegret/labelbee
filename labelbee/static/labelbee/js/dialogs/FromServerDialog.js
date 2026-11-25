@@ -1,5 +1,5 @@
 /*jshint esversion: 6, asi: true */
-import { loadEventsFromServerByID } from '../commands/LoadFromServer.js';
+import { loadEventsFromServerByID, tagsFromServer } from '../commands/LoadFromServer.js';
 import { url_for } from '../core/Utils.js';
 import { typesetAjaxError } from '../core/Alerts.js';
 import { getVideoInfo } from '../video/VideoInfo.js';
