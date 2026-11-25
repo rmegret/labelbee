@@ -5,6 +5,7 @@
 import { instrument } from "./core/RefreshInstrumentBridge.js";
 import { updateSelectionPanels } from "./form/Form.js";
 import { addRectFromObs } from "./overlay/BeeRect.js";
+import { getFramesWithID, getFramesWithSwapID, obs_swapID } from "./annotation/Model.js";
 
 function swapID_findAll(ID) {
     let frames = getFramesWithID([videoControl.getCurrentFrame(),-1],ID)

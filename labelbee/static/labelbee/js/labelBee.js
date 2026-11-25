@@ -13,6 +13,7 @@ import { initFromServerDialog } from "./dialogs/FromServerDialog.js"
 import { initLabelListFromServerDialog } from "./dialogs/LabelListFromServerDialog.js"
 import { initEventsCSVManualFilePicker } from "./dialogs/EventsCSVManualFilePicker.js"
 import { Chronogram } from "./chrono/Chrono.js";
+import { changeObservationID } from "./annotation/Model.js";
 
 //var vis;
 

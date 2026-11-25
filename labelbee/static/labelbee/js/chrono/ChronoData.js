@@ -6,6 +6,7 @@
 import { instrument } from "../core/RefreshInstrumentBridge.js"
 import { contains as containsLabel, has as hasLabel } from "../annotation/Labels.js"
 import * as Labels from "../annotation/Labels.js"
+import { cacheTags, getTags } from "../annotation/Model.js"
 
 // Where the tags come from: 'Tracks' (the tag stored in each observation, the only mode the page uses) or 'Tags' (the raw tags of
 // the video, legacy, reachable from the console). A page global read at call time by this module, `ChronoRender.js` and `getTag`

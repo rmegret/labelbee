@@ -3,6 +3,7 @@
 // Moved out of OverlayControl.js. ES module (refactor slice 8 step 9b, ADR 0015): `VisitWidget` is installed on window by
 // labelbeeBridge.js (OverlayControl.js builds it) and is the helper of the mode 'edit-visit' (`overlay.modes`, step 11b2).
 // `default_id` was an implicit global, only written here.
+import { getObsHandle } from '../annotation/Model.js'
 
 let default_id
 

@@ -28,16 +28,12 @@ import {
   Observation,
   deepcopy,
   getValidIDsForFrame,
-  getValidIDsForFrames,
   obsDoesExist,
   getObsHandle,
   changeObservationID,
   getFramesWithID,
-  getFramesWithSwapID,
   obs_swapID,
-  cacheTags,
   getTags,
-  getIdsInFocus,
 } from './annotation/Model.js';
 import { htmlCheckmark, url_for } from './core/Utils.js';
 import {
@@ -199,9 +195,8 @@ window.EventTree = EventTree; // used by updateEventTree (SelectionControl.js)
 // Observation class and legacy accessors of the stored events (annotation/Model.js, moved from the classic Model.js);
 // read by the classic scripts at call time, never while the page parses.
 installGlobals({
-  Observation, deepcopy, getValidIDsForFrame, getValidIDsForFrames, obsDoesExist, getObsHandle,
-  changeObservationID, getFramesWithID, getFramesWithSwapID, obs_swapID, cacheTags, getTags,
-  getIdsInFocus,
+  Observation, deepcopy, getValidIDsForFrame, obsDoesExist, getObsHandle,
+  changeObservationID, getFramesWithID, obs_swapID, getTags,
 });
 // The modules of the annotation IO export what they define; only the names a classic script, a template handler or a browser
 // test still calls are installed as globals (a misspelled name throws). The list shrinks as the callers move.

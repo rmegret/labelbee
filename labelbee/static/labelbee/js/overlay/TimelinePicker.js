@@ -1,4 +1,6 @@
 /*jshint esversion: 6, asi: true */
+import { getObsHandle, obs_swapID } from '../annotation/Model.js'
+
 // Timeline picking of the overlay: the interaction mode 'pick-frame' (set the span of an observation by picking frames in a
 // timeline, Pick Flower tool) and the timeline displays. Moved as it is out of OverlayControl.js and form/VisitControl.js
 // (ES module, refactor slice 8 step 11b2, ADR 0015). Half broken legacy, to deal with later. A `TimelinePicker` is built by

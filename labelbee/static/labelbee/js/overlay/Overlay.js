@@ -14,6 +14,7 @@ import {
   onMouseDown, onMouseDown2, onMouseUp, onMouseWheel, onObjectDeselected, onObjectModified, onObjectMoving, onObjectSelected,
 } from "./Mouse.js"
 import { plotROI, plotExcludeRects, plotTags, plotTagsTracks, plotTracks, rotatedRectGeometry, tagAngle } from "./Drawing.js"
+import { getObsHandle, getValidIDsForFrame } from "../annotation/Model.js"
 
 // ## Video + canvas
 

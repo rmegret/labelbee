@@ -6,6 +6,7 @@
 
 import { instrument } from "../core/RefreshInstrumentBridge.js"
 import { has as hasLabel } from "../annotation/Labels.js"
+import { deepcopy, getIdsInFocus } from "../annotation/Model.js"
 
 // Formerly implicit globals, shared by the functions below (module scope)
 let idata, src_pts, angle

@@ -4,6 +4,7 @@
 // Page globals (`overlay`, `selection`, `fabric`...) are read at call time.
 
 import { identifyBeeRect, rotatedRectGeometry } from "./Drawing.js"
+import { getObsHandle, getValidIDsForFrame } from "../annotation/Model.js"
 
 // #MARK # FABRICJS RECTS MANAGEMENT
 
