@@ -40,7 +40,6 @@ import {
   deleteEvent,
 } from './commands/EditActions.js';
 import * as SaveToFile from './commands/SaveToFile.js';
-import * as LocalFile from './io/LocalFile.js';
 import * as Load from './commands/Load.js';
 import * as LoadFromServer from './commands/LoadFromServer.js';
 import * as SaveToServer from './commands/SaveToServer.js';
@@ -84,7 +83,6 @@ import {
 } from './SelectionControl.js';
 import {
   getVideoInfo,
-  setVideoInfoObject,
 } from './video/VideoInfo.js';
 import * as ChronoDragControl from './chrono/ChronoDragControl.js';
 import { chronoState } from './chrono/ChronoState.js';
@@ -185,9 +183,7 @@ function install(module, names) {
 }
 install(SaveToFile, [
   "saveEventsToFile", "saveEventsToCSV", "saveEventsToBBoxes", "saveTagsToFile", // template buttons
-  "getTimestampNow", // VideoList.js
 ]);
-install(LocalFile, ["saveObjToJsonFile", "saveCSVToFile"]); // VideoList.js
 install(Load, [
   "loadTracks", "loadTags", // labelBee.js, tests
   "eraseEvents", "eraseTags", // template buttons
@@ -200,7 +196,7 @@ install(LoadFromServer, [
 install(SaveToServer, ["eventsToServer"]); // template button
 install(Alerts, [
   "mainAlert", // test_alerts.py
-  "typesetAjaxError", "showAjaxError", // labelBee.js, ZoomView.js, dialogs/
+  "showAjaxError", // tests
 ]);
 // commands/EditActions.js
 installGlobals({
@@ -209,7 +205,7 @@ installGlobals({
 window.url_for = url_for;
 
 // Video (video/*.js). `VideoControl` imports and builds the cache (`videoControl.videoCache`) and the hover control; the classic
-// scripts get and set the video metadata through `getVideoInfo()` and `setVideoInfoObject()`.
+// scripts get the video metadata through `getVideoInfo()`.
 window.VideoControl = VideoControl; // built by `init()` of labelBee.js (`videoControl = new VideoControl("video")`)
 window.VideoManager = VideoManager; // built by `init()` of labelBee.js (`videoManager = new VideoManager()`)
 window.VisitWidget = VisitWidget; // built by `OverlayControl` (`overlay.visitWidget = new VisitWidget(overlay)`)
@@ -258,7 +254,7 @@ installGlobals({
 });
 window.undoStack = undoStack; // the same array (never reassigned), read by the tests
 installGlobals({
-  getVideoInfo, setVideoInfoObject,
+  getVideoInfo,
 });
 
 // The drag modes of the chronogram (chrono/ChronoDragControl.js): `ChronoDragControl.DragControl`, `.PanMode`, ... read by the tests.

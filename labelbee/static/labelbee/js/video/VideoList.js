@@ -15,6 +15,9 @@ import { getUserData } from "../session/Login.js";
 import { FilePickerFromServerDialog } from "../dialogs/FilePickerFromServerDialog.js";
 import { htmlCheckmark, url_for } from "../core/Utils.js";
 import { drawChrono, updateChronoXDomainFromVideo } from "../chrono/ChronoRender.js";
+import { saveCSVToFile, saveObjToJsonFile } from "../io/LocalFile.js";
+import { getTimestampNow } from "../commands/SaveToFile.js";
+import { getVideoInfo, setVideoInfoObject } from "./VideoInfo.js";
 
 export function VideoManager() {
   const videoManager = this;

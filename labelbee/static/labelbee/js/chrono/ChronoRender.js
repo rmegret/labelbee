@@ -8,6 +8,7 @@ import { debouncer, format_HMS } from "./ChronoUtils.js"
 import { updateChronoData, updateFlatTracks, updateTagIntervals } from "./ChronoData.js"
 import { contains as containsLabel } from "../annotation/Labels.js"
 import { gotoEvent } from "./ChronoControlInteraction.js"
+import { getVideoInfo } from "../video/VideoInfo.js"
 
 export function refreshChronoLayout() {
   const doRefresh = function () {

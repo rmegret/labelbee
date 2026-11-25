@@ -9,6 +9,7 @@ import { getObsHandle } from "../annotation/Model.js"
 import { deselectBee, getCurrentTag, selectBeeByIDandFrame } from "../SelectionControl.js"
 import { storeUnit, submitDraft } from "../commands/EditActions.js"
 import { updateDeleteButton, updateForm } from "../form/Form.js"
+import { getVideoInfo } from "../video/VideoInfo.js"
 
 // #MARK # LOW-LEVEL MOUSE EVENTS
 
