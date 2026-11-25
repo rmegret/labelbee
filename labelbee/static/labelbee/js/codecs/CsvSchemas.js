@@ -1,9 +1,9 @@
 /*
  * CSV schemas: which kind of data a CSV file holds, from its file suffix and its column list, and which
- * loader of annotation/ServerIO.js adapts it into the store. Used by the "from /data" loader dialog to show the
+ * loader of commands/LoadFromServer.js adapts it into the store. Used by the "from /data" loader dialog to show the
  * category, filter by type, and validate the header before loading.
  *
- * Pure, except `fetchCsvHeader` (browser fetch). `loader` names a loader of annotation/ServerIO.js ('tracks',
+ * Pure, except `fetchCsvHeader` (browser fetch). `loader` names a loader of commands/LoadFromServer.js ('tracks',
  * 'tags', 'tracks_tagged') or is null for a recognized format that has no loader yet.
  */
 

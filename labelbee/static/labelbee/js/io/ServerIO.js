@@ -1,9 +1,9 @@
 /*
  * io/ServerIO: the requests to the server and nothing else (refactor slice 8 step 14d, ADR 0016). Moved unchanged from
- * annotation/ServerIO.js (`ajaxGetJSON`, `getJSONPromise`), plus the two requests that were inline there: the CSV fetch and the
+ * the former annotation/ServerIO.js (`ajaxGetJSON`, `getJSONPromise`), plus the two requests that were inline there: the CSV fetch and the
  * POST of a record. Each returns a Promise of the payload, and a failed request rejects with `{jqXHR, textStatus, errorThrown}`
  * (`ajaxGetJSON`, `ajaxPostJSON`) or the jQuery failure (`getJSONPromise`). No format knowledge, no message to the user, no store:
- * the flows of annotation/ServerIO.js decode the payload, apply it and report.
+ * the flows of commands/LoadFromServer.js decode the payload, apply it and report.
  *
  * DEBT: globals read at call time: `$`, `d3`.
  */

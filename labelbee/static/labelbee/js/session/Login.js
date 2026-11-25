@@ -2,7 +2,7 @@
 // The login of the page: the login dialog, the log out, and `whoami` (the user info of the navigation bar, which enables the buttons that
 // need the server). ES module (refactor slice 8 step 13b, ADR 0015), moved from AnnotationIO.js.
 // The state of the user belongs to this module: `getUserData()` (the answer of `/auth/whoami`) and `getUserId()` (set when authenticated,
-// kept after a log out as before), read by video/VideoList.js and annotation/ServerIO.js. Nothing is on `window`: the buttons of the
+// kept after a log out as before), read by video/VideoList.js and commands/SaveToServer.js. Nothing is on `window`: the buttons of the
 // navigation bar are built by `whoami` and handled by `initLogin` (delegated click on `#whoami`).
 // Page globals read at call time: `url_for`.
 

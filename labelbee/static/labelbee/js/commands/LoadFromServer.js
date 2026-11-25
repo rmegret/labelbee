@@ -1,11 +1,11 @@
 /*
  * LoadFromServer: the commands that load annotations from the server: events by database id, events from a URL, a CSV from a URL,
- * the tags by database id (refactor slice 8 steps 14h2 and 14h3, ADR 0016). Moved from annotation/ServerIO.js (slice 3 behavior, ADR 0005): get (io/ServerIO.js) -> payload
+ * the tags by database id, the page buttons that ask for a URL (refactor slice 8 steps 14h2 to 14h4, ADR 0016). Moved from annotation/ServerIO.js (slice 3 behavior, ADR 0005): get (io/ServerIO.js) -> payload
  * -> apply (commands/Load.js) -> report a failure (core/Alerts.js, which also tells it to the from-server dialog when it is open) and
  * reject. The success message of the dialog is shown by the dialog after the promise resolves (rule 1: a command shows no dialog message).
  * Installed as globals by labelbeeBridge.js (labelBee.js, VideoControl.js, tests).
  *
- * DEBT: globals read at call time: `statusWidget` and `fromServerDialog` (its message) in `tagsFromServer`.
+ * DEBT: globals read at call time: `statusWidget` and `fromServerDialog` (its message) in `tagsFromServer`, `videoManager` in `clickLoadTracksTaggedCSVFromServer`.
  */
 import { loadTracks, loadTags, loadCSVFromRows } from './Load.js';
 import { classifyFilename } from '../codecs/CsvSchemas.js';
@@ -101,4 +101,30 @@ export function tagsFromServer(tagFileID) {
       return loadTags([]);
     }
   );
+}
+
+// Buttons of the page: ask the user for a URL, then load it (DEBT: the defaults hardcode the datasets `bee_feeder` and `gurabo4`)
+export async function clickLoadTracksCSVFromServer() {
+  console.log("clickLoadTracksCSVFromServer: loading .tracks.csv from URL");
+  const url = prompt("Enter tracks URL", url_for("/data")+"/datasets/bee_feeder/tracks/bf-cn_2025-01-30_01.cfr.mp4.tracks.csv");
+  if (url == null || url == "") {
+    console.log("clickLoadTracksCSVFromServer: no URL entered");
+    return;
+  }
+  return loadCSVFromServer(url, "tracks");
+}
+export async function clickLoadTracksTaggedCSVFromServer() {
+  console.log("clickLoadTracksTaggedCSVFromServer: loading video and .tracks_tagged.csv from URL");
+  const col_videoname = prompt("Enter gurabo4 col_videoname", "col10/9_02_R_190809120000.cfr.mp4");
+  if (col_videoname == null || col_videoname == "") {
+    console.log("clickLoadTracksCSVFromServer: no video entered");
+    return;
+  }
+  const videoURL = url_for("/data")+`/datasets/gurabo4/mp4/${col_videoname}`
+  console.log(`Trying to load video from ${videoURL}`)
+  videoManager.loadVideoManual(videoURL);
+  
+  const tracksURL = url_for("/data")+`/datasets/gurabo4/tracks/${col_videoname}.tracks_tagged.csv`
+  console.log(`Trying to load tracks_tagged from ${tracksURL}`)
+  return loadCSVFromServer(tracksURL, "tracks_tagged")
 }

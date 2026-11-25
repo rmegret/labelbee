@@ -50,7 +50,6 @@ import {
 import * as SaveToFile from './commands/SaveToFile.js';
 import * as LocalFile from './io/LocalFile.js';
 import * as Load from './commands/Load.js';
-import * as ServerIO from './annotation/ServerIO.js';
 import * as LoadFromServer from './commands/LoadFromServer.js';
 import * as SaveToServer from './commands/SaveToServer.js';
 import * as Alerts from './core/Alerts.js';
@@ -240,10 +239,8 @@ install(Load, [
 ]);
 install(LoadFromServer, [
   "loadCSVFromServer", "eventsFromServer", "tagsFromServer", // dialogs/, VideoControl.js, tests
-  "loadEventsFromServerByID", // labelBee.js
-]);
-install(ServerIO, [
   "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
+  "loadEventsFromServerByID", // labelBee.js
 ]);
 install(SaveToServer, ["eventsToServer"]); // template button
 install(Alerts, [

@@ -1,7 +1,7 @@
 /*jshint esversion: 6, asi: true */
 import { loadEventsFromServerByID } from '../commands/LoadFromServer.js';
 // The dialog that lists the annotation files of the database (recent events or tags, advanced search, metadata) and loads one (ES module, refactor slice 8 step 13c, ADR 0015), moved unchanged from AnnotationIO.js.
-// The instance is `window.fromServerDialog` (read by annotation/Alerts.js, annotation/ServerIO.js, video/VideoControl.js, video/VideoList.js, the
+// The instance is `window.fromServerDialog` (read by commands/LoadFromServer.js, core/Alerts.js, video/VideoControl.js, video/VideoList.js, the
 // page and the dialogs it builds from inline handlers), built by `initFromServerDialog`.
 
 // Formerly implicit globals (temporaries of the callbacks), module scope as before

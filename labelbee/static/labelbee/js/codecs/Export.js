@@ -1,6 +1,6 @@
 /*
  * Export: the annotations of the page state as a representation ready to be packaged, for a file (SaveToFile.js) or for the
- * server (`eventsToServer`, now annotation/ServerIO.js) (refactor slice 8 step 6a, ADR 0015). No DOM, no network.
+ * server (`eventsToServer`, now commands/SaveToServer.js) (refactor slice 8 step 6a, ADR 0015). No DOM, no network.
  *
  * Naming rule: `convertX(args)` of AnnotationCodec.js is pure, it converts what it is given; `exportX(...)` here picks its
  * input from the state (the store, `getVideoInfo()`) and calls the codec. The GUI functions only package the result.
