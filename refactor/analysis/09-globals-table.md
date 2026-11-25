@@ -70,7 +70,7 @@ Necessary (N) 166, spurious (S) 9. Criterion and families: [09-globals.md](09-gl
 | G081 | init | function | labelBee.js | N | page script |  | yes |  | 3 |
 | G085 | installDebugGlobals | function | annotation/AnnotationStoreBridge.js | N | tests, console |  |  |  | 2 |
 | G086 | jQuery | function |  | N | library |  |  | 1: layout/TouchResize.js | 3 |
-| G236 | jQuery112401678184473785591 | obj |  | N | library |  |  |  |  |
+| G237 | jQuery112409521226629078132 | obj |  | N | library |  |  |  |  |
 | G088 | jsGrid | obj |  | N | library |  |  |  |  |
 | G089 | labelButtonsArray | obj:Array | dialogs/LabelListFromServerDialog.js | N | tests, console |  |  |  | 1 |
 | G090 | labelListDialog | obj:LabelListDialog | form/Form.js | N | handler | 1 |  |  |  |

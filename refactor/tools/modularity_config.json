@@ -97,8 +97,7 @@
     "core/RefreshInstrumentBridge.js": "core/Notifier.js",
     "annotation/AnnotationStoreBridge.js": "annotation/AnnotationStore.js",
     "annotation/RefreshBridge.js": "annotation/Refresh.js",
-    "annotation/SelectionModelBridge.js": "annotation/SelectionModel.js",
-    "annotation/AnnotationCodecBridge.js": "codecs/AnnotationCodec.js"
+    "annotation/SelectionModelBridge.js": "annotation/SelectionModel.js"
   },
   "singletons": {
     "_doc": "Global name -> class or module box, when the code does not say it with `x = new C` (bridges, factories).",

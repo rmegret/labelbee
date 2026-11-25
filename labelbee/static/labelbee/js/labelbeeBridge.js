@@ -9,7 +9,7 @@
  *
  * Evaluation order = import order below = the order of the ten module tags this file replaced:
  * Notifier (folded into this file), RefreshInstrumentBridge, AnnotationStoreBridge, RefreshBridge, SelectionModelBridge,
- * Labels, WrongId (folded), AnnotationCodecBridge, CsvSchemas, EventTree (folded). The five imported bridges hold wiring
+ * Labels, WrongId (folded), CsvSchemas, EventTree (folded). The four imported bridges hold wiring
  * logic, are imported by the golden tests (`AnnotationStoreBridge.js`), or are named by the stack filter of
  * `core/Notifier.js` (`RefreshInstrumentBridge.js`); each is folded here when its last classic reader moves.
  */
@@ -19,7 +19,6 @@ import './annotation/AnnotationStoreBridge.js'; // window.AnnotationStore, windo
 import { registerDebugGlobal } from './annotation/DebugGlobals.js';
 import './annotation/RefreshBridge.js'; // window.refresh (needs window.events)
 import './annotation/SelectionModelBridge.js'; // window.selection (needs window.events)
-import './annotation/AnnotationCodecBridge.js'; // the legacy converter names (loaders, savers)
 import * as Labels from './annotation/Labels.js';
 import * as WrongId from './annotation/WrongId.js';
 import * as CsvSchemas from './codecs/CsvSchemas.js';

@@ -1,5 +1,5 @@
 // Adapts the ES module codecs/AnnotationCodec.js to the {fns, rec} shape used by run-case.js.
-// Connects it like the page bridge (AnnotationCodecBridge.js): alert/console recorded through the Notifier, logging.io on.
+// Connects it like the page bridge (labelbeeBridge.js): alert/console recorded through the Notifier, logging.io on.
 'use strict';
 const path = require('path');
 const { pathToFileURL } = require('url');
