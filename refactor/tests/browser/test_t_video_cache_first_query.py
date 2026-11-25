@@ -3,7 +3,7 @@ requestVideoFrameCallback used to be consumed by the first frame presented after
 query waited for ever and blocked the queue), and so do the next ones."""
 
 Q = """async (f) => { const vc = videoControl.videoCache; const url = videoControl.video.currentSrc; const t0 = performance.now();
-  const r = await Promise.race([vc.getFrameImageAsync(url, f, getVideoInfo().videofps).then(() => 'ok', e => 'rejected'),
+  const r = await Promise.race([vc.getFrameImageAsync(url, f, (await import(new URL('js/video/VideoInfo.js', document.baseURI).href)).getVideoInfo().videofps).then(() => 'ok', e => 'rejected'),
                                 new Promise(r => setTimeout(() => r('TIMEOUT'), 5000))]);
   return r; }"""
 
@@ -29,6 +29,6 @@ def test_t2_following_queries_answer_too(ui):
 def test_t3_queries_sent_together_before_the_video_is_loaded_all_answer(ui):
     ui.open()
     r = ui.page.evaluate("""async () => { const vc = videoControl.videoCache, url = videoControl.video.currentSrc;
-      const ps = [3, 9, 12].map(f => vc.getFrameImageAsync(url, f, getVideoInfo().videofps).then(() => 'ok', () => 'rejected'));
+      const fps = (await import(new URL('js/video/VideoInfo.js', document.baseURI).href)).getVideoInfo().videofps; const ps = [3, 9, 12].map(f => vc.getFrameImageAsync(url, f, fps).then(() => 'ok', () => 'rejected'));
       return await Promise.race([Promise.all(ps), new Promise(r => setTimeout(() => r('TIMEOUT'), 8000))]); }""")
     assert r == ["ok", "ok", "ok"]

@@ -1,8 +1,8 @@
 """VideoCacheStatus (ADR 0012): the chronogram shows the VideoCache content as runs under the frame axis.
 Cache entries are injected into the LRU (real decoding does not finish in headless Chromium)."""
 
-FILL = """() => { const vc = videoControl.videoCache; const url = videoControl.video.src;
-  const off = getVideoInfo().frameoffset;
+FILL = """async () => { const vc = videoControl.videoCache; const url = videoControl.video.src;
+  const off = (await import(new URL('js/video/VideoInfo.js', document.baseURI).href)).getVideoInfo().frameoffset;
   const put = (f, state) => vc.lrucache.set(url + ':' + (f + off), {state: state});
   [10, 11, 12].forEach(f => put(f, 'incache')); [13, 15].forEach(f => put(f, 'inqueue')); put(20, 'other');
   vc.updateStatus(); }"""

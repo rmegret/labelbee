@@ -78,9 +78,6 @@ import {
   undoStack,
   modifyCurrentObsSpan,
 } from './SelectionControl.js';
-import {
-  getVideoInfo,
-} from './video/VideoInfo.js';
 import * as ChronoDragControl from './chrono/ChronoDragControl.js';
 import { chronoState } from './chrono/ChronoState.js';
 import {
@@ -202,7 +199,7 @@ installGlobals({
 window.url_for = url_for;
 
 // Video (video/*.js). `VideoControl` imports and builds the cache (`videoControl.videoCache`) and the hover control; the classic
-// scripts get the video metadata through `getVideoInfo()`.
+// scripts get no global for the video metadata: `getVideoInfo()` of video/VideoInfo.js is imported.
 window.VideoControl = VideoControl; // built by `init()` of labelBee.js (`videoControl = new VideoControl("video")`)
 window.VisitWidget = VisitWidget; // built by `OverlayControl` (`overlay.visitWidget = new VisitWidget(overlay)`)
 window.TimelinePicker = TimelinePicker; // built by `OverlayControl` (`overlay.modes['pick-frame'] = new TimelinePicker(overlay)`)
@@ -245,9 +242,6 @@ installGlobals({
   modifyCurrentObsSpan,
 });
 window.undoStack = undoStack; // the same array (never reassigned), read by the tests
-installGlobals({
-  getVideoInfo,
-});
 
 // The drag modes of the chronogram (chrono/ChronoDragControl.js): `ChronoDragControl.DragControl`, `.PanMode`, ... read by the tests.
 window.ChronoDragControl = ChronoDragControl;

@@ -104,7 +104,7 @@ def test_s7_selected_id_row_does_not_capture_pointer_events(ui, sample_dir):
 def test_s8_video_span_and_track_window_bars_cover_whole_frames(ui, sample_dir):
     """Frame f is drawn as [f, f+1): the video bar ends at nframes, the track window bar at last frame + 1."""
     _start(ui, sample_dir)
-    r = ui.js("""() => { const n = getVideoInfo().nframes, xs = chrono.axes.xScale;
+    r = ui.js("""async () => { const n = (await import(new URL('js/video/VideoInfo.js', document.baseURI).href)).getVideoInfo().nframes, xs = chrono.axes.xScale;
       const v = document.querySelector('#videoSpan .interval');
       const f = videoControl.currentFrame, w = chrono.config.trackWindow, t = document.querySelector('#trackWindowSpan .interval');
       return {vx: +v.getAttribute('x'), vw: +v.getAttribute('width'), x0: xs(0), xn: xs(n),

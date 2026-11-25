@@ -87,10 +87,31 @@ class App:
         return self
 
     def wait_video(self, timeout=15000):
-        self.page.wait_for_function("videoControl.video && videoControl.video.readyState >= 2 && typeof getVideoInfo === 'function' && getVideoInfo() && getVideoInfo().nframes", timeout=timeout)
+        self.page.wait_for_function("async () => videoControl.video && videoControl.video.readyState >= 2 && (await import(new URL('js/video/VideoInfo.js', document.baseURI).href)).getVideoInfo()?.nframes", timeout=timeout)
 
     def js(self, expression, arg=None):
         return self.page.evaluate(expression, arg)
+
+    def video_info(self):
+        """`getVideoInfo()` of video/VideoInfo.js (the video metadata the page uses)."""
+        return self.mod("video/VideoInfo.js", "M.getVideoInfo()")
+
+    def mod(self, path, expression, arg=None):
+        """Evaluate `expression` in the page with `M` = the module `path` (relative to the page's `js/`, e.g.
+        "chrono/ChronoState.js") and `arg`. `import()` of the module URL returns the instance the page uses (the page loads
+        its modules without query string), so tests reach module functions without a global."""
+        return self.mods({"M": path}, expression, arg)
+
+    def mods(self, modules, expression, arg=None):
+        """Like `mod` for several modules: `modules` maps the name used in `expression` to the module path."""
+        return self.page.evaluate(
+            """async ([modules, expression, arg]) => {
+              const names = Object.keys(modules);
+              const loaded = await Promise.all(names.map((n) => import(new URL('js/' + modules[n], document.baseURI).href)));
+              return await new Function(...names, 'arg', 'return (' + expression + ')')(...loaded, arg);
+            }""",
+            [modules, expression, arg],
+        )
 
     # ---- the annotation model (what the user cannot read directly)
     def tracks(self):

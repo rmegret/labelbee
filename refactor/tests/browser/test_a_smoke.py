@@ -7,7 +7,7 @@ def test_a1_page_opens_and_shows_the_video(ui):
     ui.open()
     assert ui.js("[videoControl.video.videoWidth, videoControl.video.videoHeight]") == [480, 270]
     assert ui.frame() == 0
-    assert ui.js("getVideoInfo().nframes") == 40
+    assert ui.video_info()["nframes"] == 40
 
 
 def test_a2_play_and_pause(ui):
