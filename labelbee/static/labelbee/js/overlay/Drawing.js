@@ -1,4 +1,7 @@
 /*jshint esversion: 6, asi: true */
+import { has as hasLabel } from '../annotation/Labels.js'
+import * as Labels from '../annotation/Labels.js'
+
 // The drawing of the overlay on its canvas: bee IDs and event tracks, tags and tag tracks, ROI and exclude rects. ES module (refactor
 // slice 8 step 11c4, ADR 0015), cut from overlay/Overlay.js as it was. Page globals (`overlay`, `chrono`, `videoControl`,
 // `selection`...) are read at call time.

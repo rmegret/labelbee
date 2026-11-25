@@ -5,6 +5,7 @@
 // are read at call time; the bridge installs `initZoomView` for `init()` of labelBee.js.
 
 import { instrument } from "../core/RefreshInstrumentBridge.js"
+import { has as hasLabel } from "../annotation/Labels.js"
 
 // Formerly implicit globals, shared by the functions below (module scope)
 let idata, src_pts, angle

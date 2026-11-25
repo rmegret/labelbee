@@ -12,6 +12,7 @@ import { initLogin } from "./session/Login.js"
 import { initFromServerDialog } from "./dialogs/FromServerDialog.js"
 import { initLabelListFromServerDialog } from "./dialogs/LabelListFromServerDialog.js"
 import { initEventsCSVManualFilePicker } from "./dialogs/EventsCSVManualFilePicker.js"
+import { Chronogram } from "./chrono/Chrono.js";
 
 //var vis;
 

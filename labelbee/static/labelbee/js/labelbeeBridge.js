@@ -100,7 +100,6 @@ import {
   getVideoInfo,
   setVideoInfoObject,
 } from './video/VideoInfo.js';
-import { ChronoAxes } from './chrono/ChronoAxes.js';
 import * as ChronoDragControl from './chrono/ChronoDragControl.js';
 import { chronoState } from './chrono/ChronoState.js';
 import {
@@ -191,11 +190,7 @@ window.logging = logging; // debug-level flags (`logging.io = true` from the con
 window.refreshLog = refreshLog; // read from the console and the tests; filled by core/RefreshInstrumentBridge.js
 
 window.Labels = Labels; // the namespace, for the classic scripts: Labels.bool_acts(obs), ...
-window.containsLabel = Labels.contains;
 window.getLabels = (obs) => Labels.toArray(obs.labels);
-// The legacy hasLabel wrote `labels = ""` on an observation that had none; it writes nothing now that the
-// label editors write through `events.update` (ADR 0008 step 5). updateObsLabel is gone.
-window.hasLabel = Labels.has;
 
 window.WrongId = WrongId;
 window.CsvSchemas = CsvSchemas; // used by the "from /data" loader dialog (dialogs/EventsCSVManualFilePicker.js, labelBee.js)
@@ -294,9 +289,6 @@ window.undoStack = undoStack; // the same array (never reassigned), read by the 
 installGlobals({
   getVideoInfo, setVideoInfoObject,
 });
-
-// The chronogram axes (chrono/ChronoAxes.js); `initChrono` (Chrono.js) creates them with `new ChronoAxes(...)`.
-window.ChronoAxes = ChronoAxes;
 
 // The drag modes of the chronogram (chrono/ChronoDragControl.js): `ChronoDragControl.DragControl`, `.PanMode`, ... read by the tests.
 window.ChronoDragControl = ChronoDragControl;

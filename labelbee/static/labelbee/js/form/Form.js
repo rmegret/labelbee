@@ -6,6 +6,8 @@
 // `labelButtonsArray` (written by dialogs/LabelListFromServerDialog.js, read here) and `labelListDialog` (the inline handler of the page) stay page
 // globals. The functions are installed on window by labelbeeBridge.js; the entry points of the refresh are wrapped at the end.
 import { instrument } from "../core/RefreshInstrumentBridge.js";
+import { has as hasLabel } from "../annotation/Labels.js";
+import * as Labels from "../annotation/Labels.js";
 
 window.labelButtonsArray = undefined; // [{label, description, ...}], set by initSelectionControl or by the labels loaded from the server
 window.labelListDialog = undefined; // LabelListDialog, built by initSelectionControl
