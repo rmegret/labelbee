@@ -14,7 +14,7 @@
  * `core/Notifier.js` (`RefreshInstrumentBridge.js`); each is folded here when its last classic reader moves.
  */
 import { logging, refreshLog } from './core/Notifier.js';
-import './core/RefreshInstrumentBridge.js'; // wraps the classic refresh functions (window.refreshInstrumented)
+import './core/RefreshInstrumentBridge.js'; // wraps the classic refresh functions (`refreshInstrumented`, exported)
 import './annotation/AnnotationStoreBridge.js'; // window.AnnotationStore, window.events, window.installDebugGlobals
 import { registerDebugGlobal } from './annotation/DebugGlobals.js';
 import './annotation/RefreshBridge.js'; // window.refresh (needs window.events)
@@ -78,8 +78,6 @@ import {
   undoStack,
   modifyCurrentObsSpan,
 } from './SelectionControl.js';
-import * as ChronoDragControl from './chrono/ChronoDragControl.js';
-import { chronoState } from './chrono/ChronoState.js';
 import {
   eventSeekModeClicked,
   gotoFirstEvent,
@@ -136,8 +134,6 @@ import {
 import {
   updateChronoData,
   updateTagIntervals,
-  augmentTrackWithTag,
-  cleanObsoleteEvents,
   cleanObsoleteEventsCB,
   refreshTagsParameters,
   onTagsParametersChanged,
@@ -243,16 +239,6 @@ installGlobals({
 });
 window.undoStack = undoStack; // the same array (never reassigned), read by the tests
 
-// The drag modes of the chronogram (chrono/ChronoDragControl.js): `ChronoDragControl.DragControl`, `.PanMode`, ... read by the tests.
-window.ChronoDragControl = ChronoDragControl;
-
-// The state shared by the chronogram files (chrono/ChronoState.js), read by the classic scripts as `chronoState.X`.
-window.chronoState = chronoState;
-
-// Navigation and seek of the chronogram (chrono/ChronoControlInteraction.js), the 14 names other files use.
-// Read by other files (VisitControl.js, OverlayControl.js, Chrono.js: initChrono and the preview of a frame)
-installGlobals({
-});
 // Inline handlers of labelbee_page.html (navigation and seek buttons)
 installGlobals({
   eventSeekModeClicked, gotoFirstEvent, gotoLastEvent, gotoNextEvent, gotoPreviousEvent, onClickNextID,
@@ -276,8 +262,7 @@ installGlobals({
 });
 // Read by other files
 installGlobals({
-  getWindow, augmentTrackWithTag,
-  cleanObsoleteEvents,
+  getWindow,
 });
 // Inline handlers of labelbee_page.html (chronogram toggles, filters, axes)
 installGlobals({

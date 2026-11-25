@@ -44,4 +44,4 @@ for (const [phase, cls, method] of METHODS) {
 }
 if (missing.length) console.warn("RefreshInstrumentBridge: not found, not logged:", missing);
 
-window.refreshInstrumented = { wrapped, missing };
+export const refreshInstrumented = { wrapped, missing }; // read by the tests (import of the module)

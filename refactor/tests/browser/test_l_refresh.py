@@ -36,7 +36,7 @@ def run(ui, name, action, audited=False):
     if audited:
         assert ui.js("refresh.unrefreshed") == []
     assert ui.js(AGREE) == ui.js("selection.getKey()")     # ADR 0009 section 0b: the model and fabric's active object select the same key
-    assert ui.js("refreshInstrumented.missing") == []      # every entry point of RefreshInstrumentBridge.js exists
+    assert ui.mod("core/RefreshInstrumentBridge.js", "M.refreshInstrumented.missing") == []      # every entry point of RefreshInstrumentBridge.js exists
     compact = ui.js("refreshLog.tree()")                   # nested: parent(children), consecutive identical siblings as xN
     log = ui.js("refreshLog.filter(e => e.depth === 0).map(e => ({phase: e.phase, ms: e.ms}))")
     ms = {}                                                # top-level entries only: a nested call is already in its parent's time
@@ -300,7 +300,7 @@ def test_l17_span_buttons_leave_no_store_write_unrefreshed(ui, sample_dir):
             header.click()
     ui.page.check("#showSelected")
     ui.click_box("1")
-    start = ui.js("chronoState.flatTracksAll.find(t => t.obs.frame === 0 && String(t.obs.ID) === '1').span")
+    start = ui.mod("chrono/ChronoState.js", "M.chronoState.flatTracksAll.find(t => t.obs.frame === 0 && String(t.obs.ID) === '1').span")
     run(ui, "span_extend", lambda: ui.page.click("button[onclick=\"modifyCurrentObsSpan('extendright')\"]"), audited=True)
     assert ui.tracks()["0"]["1"]["span"] == {"f1": start["f1"], "f2": start["f2"] + 10}
     assert ui.js("refreshLog.tree()").count("refreshChronogram(") == 1
@@ -380,7 +380,7 @@ def test_l21_clean_obsolete_events_leaves_no_store_write_unrefreshed(ui, sample_
     """ADR 0009 step 4e, ChronoControl.js: 'Clean obsolete events' (a loop of `events.delete`) ends with one rebuild."""
     loaded(ui, sample_dir)
     ui.js("events.forEach((obs, F, id) => events.update(F, id, {labels: 'falsealarm'}))")
-    run(ui, "clean_obsolete", lambda: ui.js("cleanObsoleteEvents()"), audited=True)
+    run(ui, "clean_obsolete", lambda: ui.mod("chrono/ChronoData.js", "M.cleanObsoleteEvents()"), audited=True)
     assert ui.js("refreshLog.tree()").count("refresh.rebuild(") == 1
     assert ui.js("Object.keys(events.toObject()).length") == 0                                 # sample events carry no tag: all deleted
     RESULTS.pop("clean_obsolete")                                                              # audited only, not pinned in the baseline
@@ -456,6 +456,6 @@ def test_l24_overlay_update_redraws_over_a_clean_frame(ui, sample_dir):
     ui.js("onTrackWindowChanged()")
     ui.js("overlay.canvasTransformScale(1.1, [100, 100])")
     ui.settle(300)
-    assert ui.js("refreshInstrumented.missing") == []
+    assert ui.mod("core/RefreshInstrumentBridge.js", "M.refreshInstrumented.missing") == []
     calls = ui.js("refreshLog.tree()")
     assert "hardRefresh" not in calls and "videoControl.refresh" not in calls, calls

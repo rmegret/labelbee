@@ -32,7 +32,7 @@ def test_i2_a_field_of_a_stored_observation_through_any_handle(ui, sample_dir):
     loaded(ui, sample_dir)
     ui.js("events.get(0, 1).x = 5")                                      # a handle from events.get
     assert seen(ui) == [("set", 2, "x")]
-    ui.js("chronoState.flatTracksAll[0].obs.cx = 7")                                 # a handle that the chronogram keeps
+    ui.mod("chrono/ChronoState.js", "M.chronoState.flatTracksAll[0].obs.cx = 7")                                 # a handle that the chronogram keeps
     assert seen(ui) == [("set", 2, "cx")]
     ui.js("events.getFrame(0)[1].y = 1")                                 # an observation of a frame copy
     assert seen(ui) == [("set", 2, "y")]
@@ -58,7 +58,7 @@ def test_i4_a_tag_object_shared_with_the_tags_structure(ui, sample_dir):
     loaded(ui, sample_dir)
     ui.load_tags(ui.write("t.json", {"0": {"tags": [NEW_TAG]}}))
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
-    ui.js("augmentTrackWithTag()")                                       # the legacy one-shot (no longer part of the refresh, ADR 0009 Q34)
+    ui.mod("chrono/ChronoData.js", "M.augmentTrackWithTag()")                                       # the legacy one-shot (no longer part of the refresh, ADR 0009 Q34)
     ui.js(CLEAR)
     ui.js("AnnotationStore.getTags()[0].tags[0].dm = 5")                 # a write through the TAGS structure
     assert ui.js("events.get(0, 1).tag.dm") == 5                         # ... that changed obs.tag

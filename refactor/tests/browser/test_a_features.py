@@ -34,11 +34,11 @@ def test_a10_a_tags_file_attaches_its_tags_to_the_observations_with_the_same_id(
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
     ui.page.wait_for_timeout(300)
     assert "tag" not in ui.tracks()["0"]["1"]                          # the refresh does not write the store
-    ui.js("augmentTrackWithTag(); refreshChronogram()")
+    ui.mod("chrono/ChronoData.js", "M.augmentTrackWithTag()"); ui.js("refreshChronogram()")
     assert ui.tracks()["0"]["1"]["tag"]["dm"] == 60
     assert ui.js("tagMode") == "Tracks"
     ui.page.wait_for_function("/\\b1 tags/.test(document.body.innerText)")
-    assert ui.js("Object.keys(chronoState.ttags)") == ["1"]
+    assert ui.mod("chrono/ChronoState.js", "Object.keys(M.chronoState.ttags)") == ["1"]
 
 
 def test_a10_current_tag_reads_the_tag_of_the_observation_or_the_raw_tags_by_tag_mode(ui, sample_dir):
@@ -50,7 +50,7 @@ def test_a10_current_tag_reads_the_tag_of_the_observation_or_the_raw_tags_by_tag
     tag = {"id": 1, "dm": 60, "c": [84, 104], "hamming": 0, "goodness": 45.5, "p": [[70, 90], [98, 90], [98, 118], [70, 118]]}
     ui.load_tags(ui.write("tags_get_tag.json", {"0": {"tags": [tag]}}))
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
-    ui.js("augmentTrackWithTag()")
+    ui.mod("chrono/ChronoData.js", "M.augmentTrackWithTag()")
     ui.js("selection.select(0, 1)")
     assert ui.js("getCurrentTag().dm") == 60
     ui.js("selection.select(0, 99)")
@@ -70,7 +70,7 @@ def test_a10_a_tag_with_no_matching_observation_is_stored_but_attaches_to_nothin
     ui.page.wait_for_timeout(300)
     assert list(ui.tags()) == ["0", "4"]
     assert all("tag" not in o for frame in ui.tracks().values() for o in frame.values())
-    assert ui.js("Object.keys(chronoState.ttags).length") == 0
+    assert ui.mod("chrono/ChronoState.js", "Object.keys(M.chronoState.ttags).length") == 0
 
 
 def test_a10_the_standalone_tags_display_is_only_reachable_from_the_console(ui, sample_dir):
@@ -81,7 +81,7 @@ def test_a10_the_standalone_tags_display_is_only_reachable_from_the_console(ui, 
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
     assert ui.js("tagMode") == "Tracks"
     ui.js("tagMode = 'Tags'; refreshChronogram()")
-    ui.page.wait_for_function("Object.keys(chronoState.ttags).sort().join() === '5,6'")
+    ui.wait_mod("chrono/ChronoState.js", "Object.keys(M.chronoState.ttags).sort().join() === '5,6'")
     ui.page.wait_for_function("/\\b3 tags/.test(document.body.innerText)")   # the 3 tag detections of the file
 
 

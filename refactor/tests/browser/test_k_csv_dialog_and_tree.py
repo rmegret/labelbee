@@ -116,7 +116,7 @@ def test_k8_show_spans_in_the_chronogram(ui):
     assert bars() == 0                                                  # off by default
     ui.page.evaluate("chrono.config.chronoDisplay.flag_showSpans = true; refreshChronogram()")
     assert bars() > 0
-    n_tracks = ui.page.evaluate("new Set(chronoState.flatTracksAll.map(a => a.id)).size")
+    n_tracks = ui.mod("chrono/ChronoState.js", "new Set(M.chronoState.flatTracksAll.map(a => a.id)).size")
     assert bars() <= n_tracks                                           # start and end event of a track give one bar
     ui.page.evaluate("chrono.config.chronoDisplay.flag_showSpans = false; refreshChronogram()")
     assert bars() == 0

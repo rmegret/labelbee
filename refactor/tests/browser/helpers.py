@@ -96,6 +96,15 @@ class App:
         """`getVideoInfo()` of video/VideoInfo.js (the video metadata the page uses)."""
         return self.mod("video/VideoInfo.js", "M.getVideoInfo()")
 
+    def wait_mod(self, path, expression, timeout=5000):
+        """Wait until `expression` (with `M` = the module `path`, see `mod`) is truthy."""
+        self.page.wait_for_function(
+            """async ([path, expression]) => {
+              const M = await import(new URL('js/' + path, document.baseURI).href);
+              return new Function('M', 'return (' + expression + ')')(M);
+            }""",
+            arg=[path, expression], timeout=timeout)
+
     def mod(self, path, expression, arg=None):
         """Evaluate `expression` in the page with `M` = the module `path` (relative to the page's `js/`, e.g.
         "chrono/ChronoState.js") and `arg`. `import()` of the module URL returns the instance the page uses (the page loads

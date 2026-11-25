@@ -314,7 +314,7 @@ def test_j10c_angle_from_tag_writes_the_angle_of_the_tag_alone(ui, sample_dir):
     tag = {"id": 1, "dm": 60, "c": [84, 104], "hamming": 0, "goodness": 45.5, "p": [[70, 90], [98, 92], [96, 118], [70, 116]]}
     ui.load_tags(ui.write("tags_angle.json", {"0": {"tags": [tag]}}))
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
-    ui.js("augmentTrackWithTag()")
+    ui.mod("chrono/ChronoData.js", "M.augmentTrackWithTag()")
     ui.wait_tracks()
     before = select_at(ui, 0, "1")
     expected = ui.js("tagAngle(getCurrentTag())")

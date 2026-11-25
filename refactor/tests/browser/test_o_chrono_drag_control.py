@@ -43,7 +43,7 @@ def _ptr(ui, type_, pid, x, y, kind="touch"):
 
 def test_o1_instance_is_created_from_the_imported_namespace(ui, sample_dir):
     _start(ui, sample_dir)
-    assert ui.js("typeof ChronoDragControl.DragControl") == "function"
+    assert ui.mod("chrono/ChronoDragControl.js", "typeof M.DragControl") == "function"
     assert ui.js("chronoDragControl.mode") == "pan"
     assert ui.js("Object.keys(chronoDragControl.modes).sort()") == ["ignore", "pan", "preview"]
     assert ui.js("chronoDragControl.target === chrono.axes.dragTarget") is True
