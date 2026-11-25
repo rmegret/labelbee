@@ -1,4 +1,6 @@
 /*jshint esversion: 6, asi: true */
+import { url_for } from "../core/Utils.js"
+
 // The dialog that picks a file in a directory of the server (`/rest/...` listing, preview, load) (ES module, refactor slice 8 step 13c, ADR 0015), moved unchanged from labelBee.js.
 // Used by dialogs/EventsCSVManualFilePicker.js and video/VideoList.js (imports). Page globals read at call time: `url_for`...
 

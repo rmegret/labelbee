@@ -3,6 +3,7 @@
 // The instance is `window.pickEventsCSVDialog` (the button of the page calls `pickEventsCSVDialog.open()`), built by `initEventsCSVManualFilePicker`.
 
 import { FilePickerFromServerDialog } from "./FilePickerFromServerDialog.js"
+import { url_for } from "../core/Utils.js"
 
 // ## Manual load of events
 

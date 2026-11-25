@@ -4,6 +4,8 @@
 // labelbeeBridge.js (OverlayControl.js builds it) and is the helper of the mode 'edit-visit' (`overlay.modes`, step 11b2).
 // `default_id` was an implicit global, only written here.
 import { getObsHandle } from '../annotation/Model.js'
+import { selectBeeByIDandFrame } from '../SelectionControl.js'
+import { deleteEvent } from '../commands/EditActions.js'
 
 let default_id
 

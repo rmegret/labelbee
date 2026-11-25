@@ -1,4 +1,6 @@
 /*jshint esversion: 6, asi: true */
+import { url_for } from "../core/Utils.js"
+
 // The dialog that lists the label lists of the server and loads one (`/rest/config/labellist/`) (ES module, refactor slice 8 step 13c, ADR 0015), moved unchanged from AnnotationIO.js.
 // The instance is `window.labelListFromServerDialog` (the button of the page and the dialogs it builds call its methods from inline handlers),
 // built by `initLabelListFromServerDialog`. Sets `window.labelButtonsArray` (declared by form/Form.js).

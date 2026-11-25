@@ -4,6 +4,7 @@
  * The audit is attached from the start: `refresh.unrefreshed` lists the store writes with no refresh call after them.
  */
 import { Refresh } from './Refresh.js';
+import { activateSelection } from '../SelectionControl.js';
 
 export const refresh = new Refresh({
   chrono: () => refreshChronogram(),

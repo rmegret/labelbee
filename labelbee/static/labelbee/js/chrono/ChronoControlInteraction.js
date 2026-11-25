@@ -9,6 +9,7 @@
 
 import { ROIChanged, excludeRectsChanged } from "./ChronoData.js"
 import { getObsHandle } from "../annotation/Model.js"
+import { autoCentering } from "../overlay/Mouse.js"
 
 export function gotoEvent(frame, id) {
   videoControl.pause();

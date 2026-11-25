@@ -1,4 +1,6 @@
 /*jshint esversion: 6, asi: true */
+import { url_for } from '../core/Utils.js'
+
 // The login of the page: the login dialog, the log out, and `whoami` (the user info of the navigation bar, which enables the buttons that
 // need the server). ES module (refactor slice 8 step 13b, ADR 0015), moved from AnnotationIO.js.
 // The state of the user belongs to this module: `getUserData()` (the answer of `/auth/whoami`) and `getUserId()` (set when authenticated,

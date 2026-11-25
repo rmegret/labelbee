@@ -6,6 +6,8 @@
 import { addDraftRect, createRect, rectToGeometry, updateRectObsGeometry } from "./BeeRect.js"
 import { tagAngle } from "./Drawing.js"
 import { getObsHandle } from "../annotation/Model.js"
+import { deselectBee, getCurrentTag, selectBeeByIDandFrame } from "../SelectionControl.js"
+import { storeUnit, submitDraft } from "../commands/EditActions.js"
 
 // #MARK # LOW-LEVEL MOUSE EVENTS
 

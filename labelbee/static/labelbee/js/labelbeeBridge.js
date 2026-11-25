@@ -35,11 +35,9 @@ import {
   obs_swapID,
   getTags,
 } from './annotation/Model.js';
-import { htmlCheckmark, url_for } from './core/Utils.js';
+import { url_for } from './core/Utils.js';
 import {
   deleteEvent,
-  submitDraft,
-  storeUnit,
 } from './commands/EditActions.js';
 import * as SaveToFile from './commands/SaveToFile.js';
 import * as LocalFile from './io/LocalFile.js';
@@ -66,8 +64,8 @@ import { initZoomView } from './zoom/ZoomView.js';
 import {
   init, printMessage, toggleFullScreen, onKeyDown_IDEdit, onKeyDown_NewIDEdit,
 } from './labelBee.js';
-import { autoCentering, newRectForCurrentTag } from './overlay/Mouse.js';
-import { identifyBeeRect, rotatedRectGeometry, tagAngle } from './overlay/Drawing.js';
+import { newRectForCurrentTag } from './overlay/Mouse.js';
+import { identifyBeeRect, tagAngle } from './overlay/Drawing.js';
 import {
   initSelectionControl,
   hardRefreshLabelTogglePanel,
@@ -82,14 +80,11 @@ import {
 } from './form/Form.js';
 import {
   swapID_callback,
-  selectBeeByIDandFrame,
-  activateSelection,
   deselectBee,
   getCurrentTag,
   deleteSelected,
   undoAction,
   undoStack,
-  updateUndoButton,
   modifyCurrentObsSpan,
 } from './SelectionControl.js';
 import {
@@ -227,9 +222,8 @@ install(Alerts, [
 ]);
 // commands/EditActions.js
 installGlobals({
-  deleteEvent, submitDraft, storeUnit,
+  deleteEvent,
 });
-window.htmlCheckmark = htmlCheckmark; // core/Utils.js
 window.url_for = url_for;
 
 // Video (video/*.js). `VideoControl` imports and builds the cache (`videoControl.videoCache`) and the hover control; the classic
@@ -244,7 +238,7 @@ window.OverlayOptions = OverlayOptions; // built by `OverlayControl` (`overlay.o
 // Form.js, SelectionControl.js, TimelinePicker.js, ChronoControlInteraction.js and the page.
 window.OverlayControl = OverlayControl;
 installGlobals({
-  autoCentering, identifyBeeRect, newRectForCurrentTag, rotatedRectGeometry, tagAngle,
+  identifyBeeRect, newRectForCurrentTag, tagAngle,
 });
 
 // The zoom view (zoom/ZoomView.js): `initZoomView` is called by `init()` of labelBee.js, which builds `window.zoomOverlay` (read by the
@@ -277,8 +271,8 @@ installGlobals({
   onClickResetAngle, onClickAngleFromTag,
 });
 installGlobals({
-  swapID_callback, selectBeeByIDandFrame, activateSelection, deselectBee, getCurrentTag, deleteSelected, undoAction,
-  updateUndoButton, modifyCurrentObsSpan,
+  swapID_callback, deselectBee, getCurrentTag, deleteSelected, undoAction,
+  modifyCurrentObsSpan,
 });
 window.undoStack = undoStack; // the same array (never reassigned), read by the tests
 installGlobals({

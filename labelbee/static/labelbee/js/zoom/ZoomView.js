@@ -7,6 +7,10 @@
 import { instrument } from "../core/RefreshInstrumentBridge.js"
 import { has as hasLabel } from "../annotation/Labels.js"
 import { deepcopy, getIdsInFocus } from "../annotation/Model.js"
+import { getCurrentTag } from "../SelectionControl.js"
+import { rotatedRectGeometry, tagAngle } from "../overlay/Drawing.js"
+import { url_for } from "../core/Utils.js"
+import { storeUnit } from "../commands/EditActions.js"
 
 // Formerly implicit globals, shared by the functions below (module scope)
 let idata, src_pts, angle
