@@ -239,11 +239,10 @@ install(Load, [
   "eraseEvents", "eraseTags", // template buttons
 ]);
 install(LoadFromServer, [
-  "loadCSVFromServer", "eventsFromServer", // VideoControl.js, tests
+  "loadCSVFromServer", "eventsFromServer", "tagsFromServer", // dialogs/, VideoControl.js, tests
   "loadEventsFromServerByID", // labelBee.js
 ]);
 install(ServerIO, [
-  "tagsFromServer", // dialogs/, VideoControl.js, tests
   "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
 ]);
 install(SaveToServer, ["eventsToServer"]); // template button

@@ -1,14 +1,17 @@
 /*
- * LoadFromServer: the commands that load annotations from the server: events by database id, events from a URL, a CSV from a URL
- * (refactor slice 8 step 14h2, ADR 0016). Moved from annotation/ServerIO.js (slice 3 behavior, ADR 0005): get (io/ServerIO.js) -> payload
+ * LoadFromServer: the commands that load annotations from the server: events by database id, events from a URL, a CSV from a URL,
+ * the tags by database id (refactor slice 8 steps 14h2 and 14h3, ADR 0016). Moved from annotation/ServerIO.js (slice 3 behavior, ADR 0005): get (io/ServerIO.js) -> payload
  * -> apply (commands/Load.js) -> report a failure (core/Alerts.js, which also tells it to the from-server dialog when it is open) and
  * reject. The success message of the dialog is shown by the dialog after the promise resolves (rule 1: a command shows no dialog message).
  * Installed as globals by labelbeeBridge.js (labelBee.js, VideoControl.js, tests).
+ *
+ * DEBT: globals read at call time: `statusWidget` and `fromServerDialog` (its message) in `tagsFromServer`.
  */
-import { loadTracks, loadCSVFromRows } from './Load.js';
+import { loadTracks, loadTags, loadCSVFromRows } from './Load.js';
 import { classifyFilename } from '../codecs/CsvSchemas.js';
-import { ajaxGetJSON, fetchCSVRows } from '../io/ServerIO.js';
+import { ajaxGetJSON, getJSONPromise, fetchCSVRows } from '../io/ServerIO.js';
 import { reportLoadError, showAjaxError } from '../core/Alerts.js';
+import { logging } from '../core/Notifier.js';
 import { url_for } from '../core/Utils.js';
 
 /* A loader is: get (a Promise, io/ServerIO.js) -> payload (Load.js) -> report. Chain the apply stage with `.then(apply, onError)`,
@@ -70,4 +73,32 @@ export function loadCSVFromServer(url, schema) {
       loadCSVFromRows(rows, schema, url);
     })
   .catch(reportLoadError("loading " + schema + " CSV from " + url))
+}
+
+export function tagsFromServer(tagFileID) {
+  if (logging.io) {
+    console.log('tagsFromServer: loading tag file with ID "' + tagFileID + '"...');
+  }
+  statusWidget.statusRequest("tagsLoad", "");
+
+  // The Promise is deliberately not returned: FromServerDialog.loadEvents reads the return value as
+  // "success", and it has always been undefined (DEBT-719)
+  getJSONPromise(url_for("rest/v2/annotation/" + tagFileID)).then(
+    function (data) {
+      console.log('tagsFromServer: loaded tag file with ID "' + tagFileID + '"');
+      statusWidget.statusUpdate("tagsLoad", true, "");
+      const tags = data["data"]["data"];
+      console.log("Loaded tag data:", tags)
+      if (tags == null){
+        fromServerDialog.setMessage("red", "ERROR: Tag data stored in server is null.");
+        return
+      }
+      return loadTags(tags);
+    },
+    function () {
+      console.log('tagsFromServer: ERROR loading tag file with ID "' + tagFileID + '"');
+      statusWidget.statusUpdate("tagsLoad", false, "");
+      return loadTags([]);
+    }
+  );
 }
