@@ -8,6 +8,7 @@ import { addRectFromObs } from "./overlay/BeeRect.js";
 import { getFramesWithID, getFramesWithSwapID, obs_swapID } from "./annotation/Model.js";
 import { deleteEvent } from "./commands/EditActions.js";
 import { refreshChronogram } from "./chrono/ChronoRender.js";
+import { chronoState } from "./chrono/ChronoState.js";
 
 function swapID_findAll(ID) {
     let frames = getFramesWithID([videoControl.getCurrentFrame(),-1],ID)

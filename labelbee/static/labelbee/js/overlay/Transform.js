@@ -4,6 +4,7 @@
 // step 11c6, ADR 0015), cut from overlay/Overlay.js as it was. The methods are installed on OverlayControl.prototype
 // by Overlay.js (`Object.assign(OverlayControl.prototype, canvasMethods)`), so `overlay.canvasToVideoPoint(...)` etc. are unchanged.
 
+import { logging } from "../core/Notifier.js"
 export const canvasMethods = {}
 
 canvasMethods.canvasSetVideoSize = function (w, h) {

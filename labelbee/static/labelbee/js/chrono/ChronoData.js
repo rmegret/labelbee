@@ -8,6 +8,8 @@ import { contains as containsLabel, has as hasLabel } from "../annotation/Labels
 import * as Labels from "../annotation/Labels.js"
 import { cacheTags, getTags } from "../annotation/Model.js"
 import { refreshChronogram } from "./ChronoRender.js"
+import { logging } from "../core/Notifier.js"
+import { chronoState } from "./ChronoState.js"
 
 // Where the tags come from: 'Tracks' (the tag stored in each observation, the only mode the page uses) or 'Tags' (the raw tags of
 // the video, legacy, reachable from the console). A page global read at call time by this module, `ChronoRender.js` and `getTag`

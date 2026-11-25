@@ -14,6 +14,8 @@ import { storeUnit } from "../commands/EditActions.js"
 import { refreshChronogram } from "../chrono/ChronoRender.js"
 import { showAjaxError, typesetAjaxError } from "../core/Alerts.js"
 import * as WrongId from "../annotation/WrongId.js"
+import { logging } from "../core/Notifier.js"
+import { chronoState } from "../chrono/ChronoState.js"
 
 // Formerly implicit globals, shared by the functions below (module scope)
 let idata, src_pts, angle

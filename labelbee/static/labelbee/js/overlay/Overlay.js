@@ -22,6 +22,7 @@ import { getVideoInfo } from "../video/VideoInfo.js"
 import { VisitWidget } from "../form/VisitControl.js"
 import { OverlayOptions } from "./OverlayOptions.js"
 import { TimelinePicker } from "./TimelinePicker.js"
+import { logging } from "../core/Notifier.js"
 
 // ## Video + canvas
 

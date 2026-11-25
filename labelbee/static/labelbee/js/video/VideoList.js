@@ -18,6 +18,7 @@ import { drawChrono, updateChronoXDomainFromVideo } from "../chrono/ChronoRender
 import { saveCSVToFile, saveObjToJsonFile } from "../io/LocalFile.js";
 import { getTimestampNow } from "../commands/SaveToFile.js";
 import { getVideoInfo, setVideoInfoObject } from "./VideoInfo.js";
+import { logging } from "../core/Notifier.js";
 
 export function VideoManager() {
   const videoManager = this;

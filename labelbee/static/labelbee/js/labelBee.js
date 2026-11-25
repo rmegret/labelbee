@@ -25,6 +25,7 @@ import { initZoomView } from "./zoom/ZoomView.js";
 import { loadEventsFromServerByID } from "./commands/LoadFromServer.js";
 import { loadTracks } from "./commands/Load.js";
 import * as WrongId from "./annotation/WrongId.js";
+import { logging } from "./core/Notifier.js";
 
 //var vis;
 

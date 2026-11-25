@@ -9,6 +9,8 @@ import { updateChronoData, updateFlatTracks, updateTagIntervals } from "./Chrono
 import { contains as containsLabel } from "../annotation/Labels.js"
 import { gotoEvent } from "./ChronoControlInteraction.js"
 import { getVideoInfo } from "../video/VideoInfo.js"
+import { logging } from "../core/Notifier.js"
+import { chronoState } from "./ChronoState.js"
 
 export function refreshChronoLayout() {
   const doRefresh = function () {

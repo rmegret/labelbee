@@ -12,6 +12,8 @@ import { getObsHandle } from "../annotation/Model.js"
 import { autoCentering } from "../overlay/Mouse.js"
 import { refreshChronogram, updateChrono, updateChronoXDomainFromVideo, validVisibleTagIdsDomain } from "./ChronoRender.js"
 import { setRestrictID } from "./ChronoControls.js"
+import { logging } from "../core/Notifier.js"
+import { chronoState } from "./ChronoState.js"
 
 export function gotoEvent(frame, id) {
   videoControl.pause();

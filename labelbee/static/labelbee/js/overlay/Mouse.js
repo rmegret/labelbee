@@ -10,6 +10,7 @@ import { deselectBee, getCurrentTag, selectBeeByIDandFrame } from "../SelectionC
 import { storeUnit, submitDraft } from "../commands/EditActions.js"
 import { updateDeleteButton, updateForm } from "../form/Form.js"
 import { getVideoInfo } from "../video/VideoInfo.js"
+import { logging } from "../core/Notifier.js"
 
 // #MARK # LOW-LEVEL MOUSE EVENTS
 
