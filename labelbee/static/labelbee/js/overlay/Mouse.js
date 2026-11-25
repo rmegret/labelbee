@@ -11,6 +11,8 @@ import { storeUnit, submitDraft } from "../commands/EditActions.js"
 import { updateDeleteButton, updateForm } from "../form/Form.js"
 import { getVideoInfo } from "../video/VideoInfo.js"
 import { logging } from "../core/Notifier.js"
+import { refresh } from "../annotation/RefreshBridge.js"
+import { selection } from "../annotation/SelectionModelBridge.js"
 
 // #MARK # LOW-LEVEL MOUSE EVENTS
 

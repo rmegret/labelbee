@@ -23,6 +23,8 @@ import { VisitWidget } from "../form/VisitControl.js"
 import { OverlayOptions } from "./OverlayOptions.js"
 import { TimelinePicker } from "./TimelinePicker.js"
 import { logging } from "../core/Notifier.js"
+import { refresh } from "../annotation/RefreshBridge.js"
+import { selection } from "../annotation/SelectionModelBridge.js"
 
 // ## Video + canvas
 

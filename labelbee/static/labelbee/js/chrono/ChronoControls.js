@@ -7,6 +7,7 @@ import { adjustChronogramHeight, getWindow, refreshChronogram, sortIds } from ".
 import { debouncer } from "./ChronoUtils.js"
 import { logging } from "../core/Notifier.js"
 import { chronoState } from "./ChronoState.js"
+import { selection } from "../annotation/SelectionModelBridge.js"
 
 var __section__chronogram_controls
 

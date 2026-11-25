@@ -15,6 +15,8 @@ import { updateChronoSelection } from "../chrono/ChronoRender.js";
 import * as EventTree from "./EventTree.js";
 import * as WrongId from "../annotation/WrongId.js";
 import { logging } from "../core/Notifier.js";
+import { refresh } from "../annotation/RefreshBridge.js";
+import { selection } from "../annotation/SelectionModelBridge.js";
 
 window.labelButtonsArray = undefined; // [{label, description, ...}], set by initSelectionControl or by the labels loaded from the server
 window.labelListDialog = undefined; // LabelListDialog, built by initSelectionControl

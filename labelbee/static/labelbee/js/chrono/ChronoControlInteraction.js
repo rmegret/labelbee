@@ -14,6 +14,8 @@ import { refreshChronogram, updateChrono, updateChronoXDomainFromVideo, validVis
 import { setRestrictID } from "./ChronoControls.js"
 import { logging } from "../core/Notifier.js"
 import { chronoState } from "./ChronoState.js"
+import { refresh } from "../annotation/RefreshBridge.js"
+import { selection } from "../annotation/SelectionModelBridge.js"
 
 export function gotoEvent(frame, id) {
   videoControl.pause();

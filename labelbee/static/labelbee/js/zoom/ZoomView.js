@@ -16,6 +16,8 @@ import { showAjaxError, typesetAjaxError } from "../core/Alerts.js"
 import * as WrongId from "../annotation/WrongId.js"
 import { logging } from "../core/Notifier.js"
 import { chronoState } from "../chrono/ChronoState.js"
+import { refresh } from "../annotation/RefreshBridge.js"
+import { selection } from "../annotation/SelectionModelBridge.js"
 
 // Formerly implicit globals, shared by the functions below (module scope)
 let idata, src_pts, angle

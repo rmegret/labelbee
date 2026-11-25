@@ -11,6 +11,7 @@ import { gotoEvent } from "./ChronoControlInteraction.js"
 import { getVideoInfo } from "../video/VideoInfo.js"
 import { logging } from "../core/Notifier.js"
 import { chronoState } from "./ChronoState.js"
+import { selection } from "../annotation/SelectionModelBridge.js"
 
 export function refreshChronoLayout() {
   const doRefresh = function () {

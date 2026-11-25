@@ -9,6 +9,8 @@ import { getFramesWithID, getFramesWithSwapID, obs_swapID } from "./annotation/M
 import { deleteEvent } from "./commands/EditActions.js";
 import { refreshChronogram } from "./chrono/ChronoRender.js";
 import { chronoState } from "./chrono/ChronoState.js";
+import { refresh } from "./annotation/RefreshBridge.js";
+import { selection } from "./annotation/SelectionModelBridge.js";
 
 function swapID_findAll(ID) {
     let frames = getFramesWithID([videoControl.getCurrentFrame(),-1],ID)
