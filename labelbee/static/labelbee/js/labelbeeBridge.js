@@ -51,6 +51,7 @@ import * as SaveToFile from './commands/SaveToFile.js';
 import * as LocalFile from './io/LocalFile.js';
 import * as Load from './commands/Load.js';
 import * as ServerIO from './annotation/ServerIO.js';
+import * as LoadFromServer from './commands/LoadFromServer.js';
 import * as SaveToServer from './commands/SaveToServer.js';
 import * as Alerts from './core/Alerts.js';
 import { VideoManager } from './video/VideoList.js';
@@ -237,9 +238,12 @@ install(Load, [
   "loadTracks", "loadTags", // labelBee.js, tests
   "eraseEvents", "eraseTags", // template buttons
 ]);
-install(ServerIO, [
-  "loadCSVFromServer", "eventsFromServer", "tagsFromServer", // dialogs/, VideoControl.js, tests
+install(LoadFromServer, [
+  "loadCSVFromServer", "eventsFromServer", // VideoControl.js, tests
   "loadEventsFromServerByID", // labelBee.js
+]);
+install(ServerIO, [
+  "tagsFromServer", // dialogs/, VideoControl.js, tests
   "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
 ]);
 install(SaveToServer, ["eventsToServer"]); // template button

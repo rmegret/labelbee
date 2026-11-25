@@ -1,4 +1,5 @@
 /*jshint esversion: 6, asi: true */
+import { loadEventsFromServerByID } from '../commands/LoadFromServer.js';
 // The dialog that lists the annotation files of the database (recent events or tags, advanced search, metadata) and loads one (ES module, refactor slice 8 step 13c, ADR 0015), moved unchanged from AnnotationIO.js.
 // The instance is `window.fromServerDialog` (read by annotation/Alerts.js, annotation/ServerIO.js, video/VideoControl.js, video/VideoList.js, the
 // page and the dialogs it builds from inline handlers), built by `initFromServerDialog`.
@@ -263,47 +264,13 @@ function FromServerDialog() {
       }
     }
     else{                           // Case: event file
-      //Sending GET request to flask API to retrieve json containing annotation data
-      $.ajax({
-        url: url_for("api/v1/annotation/" + tag_event_ID), // url to tag/event file
-        type: "GET", //passing data as get method
-        contentType: "application/json", // returning data as json
-        data: "",
-        success: function (json) {
-          //alert("success");  //response from the server given as alert message
-
-          console.log("loadEvents: Loaded events data:", json["data"]["data"]);
-          // Case: event file
-          let obj = JSON.parse(json["data"]["data"]);
-          success = loadTracks(obj, false, { basedOn: { source: "server-db", id: tag_event_ID } });
-          // Setting basedon information
-          // {
-          //   var basedon = {};
-          //   var fields = [
-          //     "video",
-          //     "filename",
-          //     "timestamp",
-          //     "user_name",
-          //     "user_id",
-          //   ];
-          //   for (var f of fields) basedon[f] = info[f];
-          //   setEventsProp("basedon", basedon);
-          // }
-
-          if(success){
-            console.log("Loaded event. ID:", tag_event_ID)
-            fromServerDialog.setMessage("black","Events loaded.");
-          }
-          else{
-            div.find(".modal-message h4").css("color","red");
-            div.find('.modal-message h4').html("ERROR <br> loadTracks: Invalid event information obtained from server.");
-          }
+      // The request, the loading and the error message (shown here, the dialog is open) are the command's
+      loadEventsFromServerByID(tag_event_ID).then(
+        function () {
+          theDialog.setMessage("black", "Events loaded.");
         },
-        error:  function () {
-          div.find(".modal-message h4").css("color","red");
-          div.find(".modal-message h4").html("ERROR in loading tag or event with ID " + tag_event_ID);
-          },
-      });
+        function () {}  // already told by the command (core/Alerts.js)
+      );
     }
   };
   this.clickedShowMetadata = function () {

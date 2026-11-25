@@ -2899,7 +2899,7 @@
    "/some/url"
   ]
  },
- "loadEventsFromServerByID ok sets the lineage and the message (DEBT-722)": {
+ "loadEventsFromServerByID ok sets the lineage (DEBT-722)": {
   "state": {
    "Tracks": {
     "0": {
@@ -2971,11 +2971,6 @@
    ],
    [
     "onFrameChanged"
-   ],
-   [
-    "setMessage",
-    "black",
-    "Events loaded."
    ]
   ],
   "cbErrors": [],

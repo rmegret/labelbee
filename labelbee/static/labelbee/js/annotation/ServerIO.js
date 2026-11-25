@@ -1,9 +1,6 @@
 /*
- * ServerIO: the flows of the loads from the server (refactor slice 8 steps 6b, 6c, 14d and 14h1, ADR 0015, 0016); the save is commands/SaveToServer.js.
- * Moved from AnnotationIO.js and Load.js (slice 3 behavior, ADR 0005). The requests themselves are in io/ServerIO.js (a flow still
- * reports their errors, step 14h splits the flows into commands/). It separates the envelope of a response (the
- * metadata: `json.data.data`, `created_by_id`...) from the payload, which it hands to Load.js; it knows the formats only by name
- * (the CSV schema of `loadCSVFromServer`). A failed load is shown by core/Alerts.js and rejects.
+ * ServerIO: the load of the tags from the server and the page buttons that load a CSV (refactor slice 8 steps 6b, 6c, 14d, 14h1 and 14h2,
+ * ADR 0015, 0016). The events loads are commands/LoadFromServer.js, the save commands/SaveToServer.js; step 14h moves the rest.
  * The entry points still called by a classic script, a template button or a test are installed as
  * globals by labelbeeBridge.js (the template buttons `clickLoadTracks*`).
  *
@@ -11,74 +8,11 @@
  *
  * DEBT: globals read at call time: `$`, `d3`, `videoManager`, `fromServerDialog` (its message) and `statusWidget`.
  */
-import { loadTracks, loadTags, loadCSVFromRows } from '../commands/Load.js';
-import { classifyFilename } from '../codecs/CsvSchemas.js';
-import { ajaxGetJSON, getJSONPromise, fetchCSVRows } from '../io/ServerIO.js';
-import { reportLoadError, showAjaxError } from '../core/Alerts.js';
+import { loadTags } from '../commands/Load.js';
+import { loadCSVFromServer } from '../commands/LoadFromServer.js';
+import { getJSONPromise } from '../io/ServerIO.js';
 import { logging } from '../core/Notifier.js';
 import { url_for } from '../core/Utils.js';
-
-/* A loader is: get (a Promise, io/ServerIO.js) -> payload (Load.js) -> report. Chain the apply stage with `.then(apply, onError)`,
- * never with `.then(apply).catch(onError)`: an exception of the apply stage is not a request error. */
-/* LOADS FROM THE SERVER */
-export async function loadEventsFromServerByID(video_data_id) {
-    //Sending GET request to flask API to retrieve json containing annotation data
-    // Resolves once the events are loaded; rejects when the request fails or the data is invalid
-    // (the message is also written in the from-server dialog)
-    return ajaxGetJSON(url_for("api/v1/annotation/" + video_data_id)).then(
-      function (json) {
-        //alert("success");  //response from the server given as alert message
-
-        console.log("loadEvents: Loaded events data:", json["data"]["data"]);
-        // Case: event file
-        let obj = JSON.parse(json["data"]["data"]);
-        const success = loadTracks(obj, false, { basedOn: { source: "server-db", id: video_data_id } });
-
-        if(success){
-          console.log("Loaded event. ID:", video_data_id)
-          fromServerDialog.setMessage("black","Events loaded.");
-        }
-        else{
-          throw new Error("Invalid event information obtained from server (video_data id="+video_data_id+")")
-        }
-      },
-      function () {
-        throw new Error("Could not load video_data id="+video_data_id)
-      }
-    ).catch(reportLoadError("loading events with ID " + video_data_id));
-}
-
-export function eventsFromServer(url) {
-  console.log("eventsFromServer: importing Tracks from URL '" + url + "'...");
-
-  return ajaxGetJSON(url).then(
-    function (json) {
-      //alert("success");
-      console.log("eventsFromServer: SUCCESS\njson=", json);
-      let obj = json; //JSON.parse(json);
-
-      if (!loadTracks(obj, false, { basedOn: { source: "server-file", id: url } })) throw new Error("Invalid events format (details in the console)");
-    },
-    function (err) {
-      showAjaxError("ERROR in eventsFromServer")(err.jqXHR, err.textStatus, err.errorThrown);
-    }
-  ).catch(reportLoadError("loading events from " + url));
-}
-
-/* `schema`: one of the `loader` fields of codecs/CsvSchemas.js (tracks, tags, tracks_tagged, events, detections);
- * by default the one the file name announces, else tracks. */
-export function loadCSVFromServer(url, schema) {
-  schema = schema || (classifyFilename(url) || {}).loader || "tracks";
-  console.log("loadCSVFromServer: importing " + schema + " CSV from URL '" + url + "'...");
-
-  return fetchCSVRows(url)
-  .then(function (rows) {
-      console.log("loadCSVFromServer: SUCCESS\ncsv=", rows);
-
-      loadCSVFromRows(rows, schema, url);
-    })
-  .catch(reportLoadError("loading " + schema + " CSV from " + url))
-}
 
 // Buttons of the page: ask the user for a URL, then load it (DEBT: the defaults hardcode the datasets `bee_feeder` and `gurabo4`)
 export async function clickLoadTracksCSVFromServer() {
