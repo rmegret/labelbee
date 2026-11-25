@@ -18,6 +18,7 @@ import { htmlCheckmark } from "./core/Utils.js";
 import { storeUnit, submitDraft } from "./commands/EditActions.js";
 import { initRegionFilters } from "./chrono/ChronoControlInteraction.js";
 import { initSelectionControl, labelsProcessKey, updateForm } from "./form/Form.js";
+import { OverlayControl } from "./overlay/Overlay.js";
 
 //var vis;
 

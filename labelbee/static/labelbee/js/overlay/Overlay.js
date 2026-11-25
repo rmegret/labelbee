@@ -19,6 +19,9 @@ import { updateUndoButton } from "../SelectionControl.js"
 import { updateSelectionPanels } from "../form/Form.js"
 import { refreshTagsParameters } from "../chrono/ChronoData.js"
 import { getVideoInfo } from "../video/VideoInfo.js"
+import { VisitWidget } from "../form/VisitControl.js"
+import { OverlayOptions } from "./OverlayOptions.js"
+import { TimelinePicker } from "./TimelinePicker.js"
 
 // ## Video + canvas
 
