@@ -11,6 +11,7 @@ import { refreshChronogram } from "./chrono/ChronoRender.js";
 import { chronoState } from "./chrono/ChronoState.js";
 import { refresh } from "./annotation/RefreshBridge.js";
 import { selection } from "./annotation/SelectionModelBridge.js";
+import { AnnotationStore } from "./annotation/AnnotationStore.js";
 
 function swapID_findAll(ID) {
     let frames = getFramesWithID([videoControl.getCurrentFrame(),-1],ID)

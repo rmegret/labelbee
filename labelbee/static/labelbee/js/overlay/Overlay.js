@@ -25,6 +25,7 @@ import { TimelinePicker } from "./TimelinePicker.js"
 import { logging } from "../core/Notifier.js"
 import { refresh } from "../annotation/RefreshBridge.js"
 import { selection } from "../annotation/SelectionModelBridge.js"
+import { AnnotationStore } from "../annotation/AnnotationStore.js"
 
 // ## Video + canvas
 
