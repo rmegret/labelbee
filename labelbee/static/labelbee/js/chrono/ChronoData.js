@@ -13,11 +13,6 @@ import { chronoState } from "./ChronoState.js"
 import { refresh } from "../annotation/RefreshBridge.js"
 import { AnnotationStore, events } from "../annotation/AnnotationStore.js"
 
-// Where the tags come from: 'Tracks' (the tag stored in each observation, the only mode the page uses) or 'Tags' (the raw tags of
-// the video, legacy, reachable from the console). A page global read at call time by this module, `ChronoRender.js` and `getTag`
-// (`SelectionControl.js`), and set from the console.
-window.tagMode = 'Tracks';
-
 // ### CHRONO DATA PREPARATION TRACKS
 var __section__chronogram_data_preparation_tracks
 
@@ -384,7 +379,7 @@ function createIntervalList() {
 function getFlatTags(useFilter) {
   let flatTags = [];
 
-  if (tagMode == 'Tracks') {
+  if (chronoState.tagMode == 'Tracks') {
     // Asume we already have flatTracks
     for (let chronoObs of chronoState.flatTracksAll) {
       if (chronoObs.obs.tag) {
@@ -420,7 +415,7 @@ function getTTags() {
 
   /* Transpose Tags data structure */
   let ttags = {};
-  if (tagMode == 'Tracks') {
+  if (chronoState.tagMode == 'Tracks') {
     // Asume we already have flatTags
     for (let tag of chronoState.flatTags) {
       let id = String(tag.id);

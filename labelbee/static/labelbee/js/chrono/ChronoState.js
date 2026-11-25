@@ -16,5 +16,9 @@ export const chronoState = {
   tagIntervals: [],
   allTagsID: [],
   flatTags: [],
+  // Where the tags come from: 'Tracks' (the tag stored in each observation, the only mode the page uses) or 'Tags' (the raw tags
+  // of the video, legacy). An option read at call time by ChronoData.js, ChronoRender.js and `getTag` (SelectionControl.js);
+  // set only from the console (`debug_modules()`) and the tests.
+  tagMode: 'Tracks',
   ttags: [], // was set to [] by initAnnotationIO (AnnotationIO.js, removed in slice 8 step 13d); rebuilt by the first refresh
 };

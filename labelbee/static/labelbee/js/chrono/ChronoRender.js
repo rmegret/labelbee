@@ -162,7 +162,7 @@ export function sortIds(IDarray) {
 }
 function validIdsChrono() {
   let domainset
-  if (tagMode == 'Tracks')
+  if (chronoState.tagMode == 'Tracks')
     domainset = new Set([...validIdsDomain()]);
   else
     domainset = new Set([...validIdsDomain(), ...validTagIdsDomain()]);

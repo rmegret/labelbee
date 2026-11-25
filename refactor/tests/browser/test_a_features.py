@@ -36,7 +36,7 @@ def test_a10_a_tags_file_attaches_its_tags_to_the_observations_with_the_same_id(
     assert "tag" not in ui.tracks()["0"]["1"]                          # the refresh does not write the store
     ui.mod("chrono/ChronoData.js", "M.augmentTrackWithTag()"); ui.js("refreshChronogram()")
     assert ui.tracks()["0"]["1"]["tag"]["dm"] == 60
-    assert ui.js("tagMode") == "Tracks"
+    assert ui.mod("chrono/ChronoState.js", "M.chronoState.tagMode") == "Tracks"
     ui.page.wait_for_function("/\\b1 tags/.test(document.body.innerText)")
     assert ui.mod("chrono/ChronoState.js", "Object.keys(M.chronoState.ttags)") == ["1"]
 
@@ -55,7 +55,8 @@ def test_a10_current_tag_reads_the_tag_of_the_observation_or_the_raw_tags_by_tag
     assert ui.mod("SelectionControl.js", "M.getCurrentTag().dm") == 60
     ui.js("selection.select(0, 99)")
     assert ui.mod("SelectionControl.js", "M.getCurrentTag()") is None
-    ui.js("selection.select(0, 1); tagMode = 'Tags'")
+    ui.js("selection.select(0, 1)")
+    ui.mod("chrono/ChronoState.js", "M.chronoState.tagMode = 'Tags'")
     assert ui.mod("SelectionControl.js", "M.getCurrentTag().c") == [84, 104]
     ui.js("selection.select(0, 99)")
     assert ui.mod("SelectionControl.js", "M.getCurrentTag()") is None
@@ -79,8 +80,9 @@ def test_a10_the_standalone_tags_display_is_only_reachable_from_the_console(ui, 
     ui.open()
     ui.load_tags(sample_dir / "tags_v2.json")
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
-    assert ui.js("tagMode") == "Tracks"
-    ui.js("tagMode = 'Tags'; refreshChronogram()")
+    assert ui.mod("chrono/ChronoState.js", "M.chronoState.tagMode") == "Tracks"
+    ui.mod("chrono/ChronoState.js", "M.chronoState.tagMode = 'Tags'")
+    ui.js("refreshChronogram()")
     ui.wait_mod("chrono/ChronoState.js", "Object.keys(M.chronoState.ttags).sort().join() === '5,6'")
     ui.page.wait_for_function("/\\b3 tags/.test(document.body.innerText)")   # the 3 tag detections of the file
 
