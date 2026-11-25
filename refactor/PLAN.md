@@ -177,7 +177,8 @@ and is its own commit series and review. The next slice is chosen after the prev
   - (15) user feedback interface [ ] one GUI interface for erase, load, save feedback (behavior change)
   - (16a) globals listed and classified [x] 233 names, 127 necessary, 106 spurious (analysis/09)
   - (16b) no-reader globals not installed [x] 16 names off the bridge, `change_id_force` made local
-  - (16c-e) reduce the remaining spurious globals [ ] importable names, test-only names, page-script locals ([ADR 0017](design/0017-globals-reduction.md))
+  - (16c) readers import instead of reading globals [x] window 233 to 175 names; 9 spurious left, 4 need the Refresh design
+  - (16d-e) tests by import, `debug_modules()`, page-script locals [ ] ([ADR 0017](design/0017-globals-reduction.md), [Q45](QUESTIONS.md#q45))
   - (17) record [ ]
 
 Backlog, unordered, not commitments (module names from `intent/modules.md`):

@@ -53,6 +53,12 @@ const tplFiles = ["labelbee/blueprints/labelbee/templates/labelbee_page.html", "
 const scriptText = tplFiles.filter(fs.existsSync).map((f) => fs.readFileSync(f, "utf8")).join("\n")
   .replace(/<!--[\s\S]*?-->/g, " ").match(/<script(?![^>]*\ssrc=)[^>]*>[\s\S]*?<\/script>/g)?.join("\n").replace(/\/\*[\s\S]*?\*\/|(?<![:"'])\/\/[^\n]*/g, " ") || "";
 
+// every identifier inside an inline handler attribute of the templates (`onclick="videoControl.rewind(videoToolbar.stepMinute)"`, also a malformed `onkeypress="f(event)""`)
+const handlerWords = new Set();
+for (const f of walk(path.join(ROOT, "labelbee/blueprints"), (n) => n.endsWith(".html"))) {
+  for (const m of fs.readFileSync(f, "utf8").replace(/<!--[\s\S]*?-->/g, " ").matchAll(/\bon[a-z]+\s*=\s*"([^"]*)"/g)) for (const w of m[1].matchAll(/(?<![\w$.])[A-Za-z_$][\w$]*/g)) handlerWords.add(w[0]);
+}
+
 // 3. Module readers: files that use the name without importing or declaring it.
 const imported = {}; // file -> Set of local names
 for (const i of facts.imports) (imported[i.from] = imported[i.from] || new Set(), i.locals.forEach((l) => imported[i.from].add(l)));
@@ -72,7 +78,7 @@ const testText = testFiles.map((f) => [f, fs.readFileSync(f, "utf8")]);
 const LIB = new Set(["$", "jQuery", "fabric", "d3", "DataTable", "jsGrid", "FrameRates", "LRUCache", "ResizeSensor", "numeric", "PerspT", "initSqlJs", "bootstrap", "DataTable", "$_GET_PARAMETERS"]);
 const rows = dump.map((d) => {
   const n = d.name;
-  const handlers = handlerRoots[n] || 0;
+  const handlers = handlerRoots[n] || (handlerWords.has(n) ? 1 : 0);
   const script = wordRe(n).test(scriptText);
   const mods = [...(readers[n] || [])].filter((f) => f !== (owners[n] || "").split(" ")[0]).sort();
   const tests = testText.filter(([, t]) => wordRe(n).test(t)).length;

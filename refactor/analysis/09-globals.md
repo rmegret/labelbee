@@ -1,4 +1,4 @@
-# 09 Globals of the page (slice 8 step 16a)
+# 09 Globals of the page (slice 8 step 16a, counts refreshed after 16c)
 
 Question it answers: which names does the running page still hold on `window`, who needs each one, and which could be imported instead.
 Per-name table (one row and one ID each, `G001`...): [09-globals-table.md](09-globals-table.md), generated, do not edit.
@@ -7,9 +7,9 @@ Per-name table (one row and one ID each, `G001`...): [09-globals-table.md](09-gl
 
 | Part | Evidence | How |
 |---|---|---|
-| The names | [ran] | `refactor/tools/globals_probe_test.py` (copied into `refactor/tests/browser/` to run): opens the labelbee page with a video and events loaded, lists the own properties of `window` minus those of a blank iframe. Result: 233 |
+| The names | [ran] | `refactor/tools/globals_probe_test.py` (copied into `refactor/tests/browser/` to run): opens the labelbee page with a video and events loaded, lists the own properties of `window` minus those of a blank iframe. Result: 175 now (233 at 16a, before 16b-16c) |
 | Owner module | [read] | `labelbeeBridge.js` `install(Module, [...])`, `installGlobals({...})`, `window.X =`, the loops of `annotation/AnnotationCodecBridge.js`, `annotation/AnnotationStoreBridge.js`, the scan facts |
-| Handlers | [read] | `refactor/tools/modularity_scan.js` facts: 223 `on*=` calls of the template and of generated HTML, by first identifier (`overlay.foo()` counts for `overlay`) |
+| Handlers | [read] | `refactor/tools/modularity_scan.js` facts: the `on*=` calls of the templates and of generated HTML, by first identifier (`overlay.foo()` counts for `overlay`), plus every identifier inside an `on*="..."` attribute of the templates (`videoControl.rewind(videoToolbar.stepMinute)`, a malformed `onkeypress="f(event)""`) |
 | Page script | [read] | names inside the inline `<script>` blocks of `labelbee_page.html`, `layout.html`, `common/macros.html`, comments excluded |
 | Module readers | [read] | files that use the name without importing or declaring it (scan facts) |
 | Tests | [read] | name found in `refactor/tests/` (browser and golden) |
@@ -17,30 +17,30 @@ Per-name table (one row and one ID each, `G001`...): [09-globals-table.md](09-gl
 
 ## Criterion (maintainer, 2026-11-25): "can it be imported?"
 
-| Verdict | Meaning | Count |
-|---|---|---|
-| N library | third-party or jQuery globals | 15 |
-| N handler | named by an inline handler of the page or of generated HTML: a template cannot import | 72 |
-| N page script | read by an inline script of the page | 7 |
-| N tests, console | read by no module and no handler, only by tests: the console and the browser tests cannot import | 33 |
-| S importable | read only by modules that could import it from its owner | 87 |
-| S no reader | nothing reads it | 19 |
-| Total | | 233 |
+| Verdict | Meaning | Now | At 16a |
+|---|---|---|---|
+| N library | third-party or jQuery globals | 15 | 15 |
+| N handler | named by an inline handler of the page or of generated HTML: a template cannot import | 76 | 72 |
+| N page script | read by an inline script of the page | 7 | 7 |
+| N tests, console | read by no module and no handler, only by tests: the console and the browser tests cannot import | 68 | 33 |
+| S importable | read by modules that could import it from its owner | 9 | 87 |
+| S no reader | nothing reads it | 0 | 19 |
+| Total | | 175 | 233 |
 
-Necessary (N) 127, spurious (S) 106. Types of the spurious: 91 functions, 11 objects (among them `AnnotationStore`, `events`, `refresh`, `selection`, `statusWidget`), 3 strings, 1 getter.
+Necessary (N) 166, spurious (S) 9. The 68 test-or-console names include the 33 of 16a plus the names that modules now import and that tests still read through `window` (step 16d, [Q45](../QUESTIONS.md#q45)). Two of the 16a "no reader" names were not: `onKeyDown_NewIDEdit` (`labelbee_page.html:752`, a malformed attribute) and `videoToolbar` (`labelbee_page.html:251-267`, an argument of a handler) are necessary; the generator now reads handler arguments.
 
 ## Findings
 
 | ID | Finding | Evidence |
 |---|---|---|
-| Glob1 | 87 names are installed on `window` and read only by modules: each reader could import the exporting module. Biggest groups by owner: `annotation/Model.js` 11, `chrono/ChronoRender.js` 9, `chrono/ChronoControlInteraction.js` 7, `form/Form.js` 6, `SelectionControl.js` 5, `annotation/Labels.js` 3, `commands/EditActions.js` 3, `overlay/Drawing.js` 3, `labelBee.js` 3, `commands/LoadFromServer.js` 3; 28 more owners (38 in all) with 1 or 2 | [ran] table, `Why` = "read by modules, importable" |
-| Glob2 | 19 names have no reader at all: `change_id_force`, `cleanLabels`, `computeMotionDirection`, `hasParts`, `onKeyDown_NewIDEdit`, `onMouseDown`, `onObjectDeselected`, `onObjectSelected`, `onTagsParametersSelectChanged`, `plotExcludeRects`, `plotROI`, `printTracks`, `renderObsTable`, `toLabelArray`, `toLabelString`, `updatePreviewTimeMark`, `updateSelectID`, `validAllTagIdsDomain`, `videoToolbar` | [ran] table, `Why` = "no reader" |
-| Glob3 | The 10 singleton objects are all handler-named, so necessary: `overlay` (33 handler calls), `zoomOverlay` (27), `videoControl` (15), `videoManager` (13), `chrono`, `fromServerDialog`, `labelListDialog`, `labelListFromServerDialog`, `pickEventsCSVDialog`, `videoCacheStatus`. Eight globals are implicit: written without declaration by `init()` of `labelBee.js` or by an `init*` function (`videoControl`, `overlay`, `videoManager`, `statusWidget`, `zoomOverlay`, `fromServerDialog`, `labelListFromServerDialog`, `pickEventsCSVDialog`) | [read] `refactor/tools/globals_table.js` implicit-write scan |
-| Glob4 | Commands read page singletons that are not exported: `videoManager` (`commands/SaveToServer.js`, `commands/LoadFromServer.js`), `statusWidget` and `fromServerDialog` (`commands/LoadFromServer.js`, DEBT of step 14h) | [read] |
-| Glob5 | 4 handler functions are also called by modules without import: `deleteSelected`, `newRectForCurrentTag`, `onTrackWindowChanged`, `toggleHidden` (they stay global for the template, the modules could still import) | [ran] table |
+| Glob1 | 9 names are still read by modules without import. Four are readers that must not import the owner: the data layer or a command would import the chronogram or the form view (`getWindow` read by `annotation/Model.js`; `refreshChronogram` and `updateForm` read by `annotation/RefreshBridge.js`; `adjustChronogramHeight` read by `commands/Load.js`). Importing them pulls `window`-bound modules into Node, which the golden tests load (`window is not defined` in `core/RefreshInstrumentBridge.js`). They need the Refresh design (ADR 0009, step 15), not an import | [ran] table, golden run |
+| Glob2 | `tagMode` (`chrono/ChronoData.js:15`, `window.tagMode = 'Tracks'`) is a mutable global that the browser tests write (`refactor/tests/browser/test_a_features.py:58`): it cannot be an import until a test hook exists | [read] |
+| Glob3 | `printMessage`, `lasthash` and `statusWidget` have no exporting owner: defined or written in `labelBee.js` (the entry), read by 9, 1 and 3 modules. Importing from the entry creates a cycle; they need a home module first | [read] table |
+| Glob4 | `getLabels` is defined in `labelbeeBridge.js` and read by `form/Form.js`: it needs a home module | [read] table |
+| Glob5 | The 10 singleton objects are handler-named, so necessary: `overlay`, `zoomOverlay`, `videoControl`, `videoManager`, `chrono`, `fromServerDialog`, `labelListDialog`, `labelListFromServerDialog`, `pickEventsCSVDialog`, `videoCacheStatus`. Eight globals are implicit (written without declaration by `init()` of `labelBee.js` or an `init*` function). Commands read `videoManager`, `statusWidget`, `fromServerDialog` (DEBT of step 14h) | [read] table |
 | Glob6 | The inline script of `labelbee_page.html` leaks `p`, `i`, `temp` (`var` at the top level of a classic script): 3 of the 7 page-script names | [read] `labelbee_page.html:67-70` |
-| Glob7 | The 33 test-only names are mostly the codec functions (12: `sanitizeEvents`, `db_to_json`, `*_csv_to_json`...), the chronogram internals the tests probe (`updateChronoData`, `augmentTrackWithTag`, `cleanObsoleteEvents`, `updateTagIntervals`...), `loadTags`, `eventsFromServer`, `mainAlert`, `Observation`, `obsDoesExist`, `refreshInstrumented`, `refreshLog`, `undoStack`, `installDebugGlobals` | [ran] table, `Why` = "tests, console" |
-| Glob8 | `AnnotationStore` and `events` are handler-free; modules read them without import (6 and 10 files), so they are spurious today although 14 and 33 test files use them: the largest single reduction (16 module readers) | [ran] table |
+| Glob7 | Of the 68 test-or-console names, those modules import (16c) are `logging`, `chronoState`, `refresh`, `selection`, `events`, `AnnotationStore`, the chronogram and form functions, the overlay and video classes, the server loads, `CsvSchemas`, `EventTree`, `WrongId`: only tests read them through `window` now. The codec functions (12), the chronogram internals and `loadTags`, `eventsFromServer`, `mainAlert`, `Observation`, `obsDoesExist`, `refreshInstrumented`, `refreshLog`, `undoStack`, `installDebugGlobals` were test-only from the start | [ran] table |
+| Glob8 | The new `events` export of `annotation/AnnotationStore.js` (constant `AnnotationStore.events`) replaces `window.events` for modules; `annotation/RefreshBridge.js` and `annotation/SelectionModelBridge.js` use it | [read] |
 
 ## Not in the count
 
