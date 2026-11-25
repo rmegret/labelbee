@@ -52,13 +52,13 @@ def test_a10_current_tag_reads_the_tag_of_the_observation_or_the_raw_tags_by_tag
     ui.page.wait_for_function("Object.keys(AnnotationStore.getTags()).length > 0")
     ui.mod("chrono/ChronoData.js", "M.augmentTrackWithTag()")
     ui.js("selection.select(0, 1)")
-    assert ui.js("getCurrentTag().dm") == 60
+    assert ui.mod("SelectionControl.js", "M.getCurrentTag().dm") == 60
     ui.js("selection.select(0, 99)")
-    assert ui.js("getCurrentTag()") is None
+    assert ui.mod("SelectionControl.js", "M.getCurrentTag()") is None
     ui.js("selection.select(0, 1); tagMode = 'Tags'")
-    assert ui.js("getCurrentTag().c") == [84, 104]
+    assert ui.mod("SelectionControl.js", "M.getCurrentTag().c") == [84, 104]
     ui.js("selection.select(0, 99)")
-    assert ui.js("getCurrentTag()") is None
+    assert ui.mod("SelectionControl.js", "M.getCurrentTag()") is None
 
 
 def test_a10_a_tag_with_no_matching_observation_is_stored_but_attaches_to_nothing(ui, sample_dir):

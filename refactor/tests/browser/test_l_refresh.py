@@ -194,7 +194,7 @@ BIG = """(() => {
     for (let i = 0; i < 30; i++)
       data[f].push({id: String(i), frame: f, time: f / 20, x: 10 + 15 * i, y: 100, width: 12, height: 12, cx: 16 + 15 * i, cy: 106, angle: 0, notes: "", labels: ""});
   }
-  loadTracks({info: {type: "events-multiframe", source: "refresh test"}, data});
+  M.loadTracks({info: {type: "events-multiframe", source: "refresh test"}, data});
 })()"""
 
 
@@ -204,7 +204,7 @@ def test_l13_edit_with_18000_observations(ui):
     ui.open_panel("Annotations")
     ui.open_subpanel("Labels")
     ui.open_subpanel("BeeID")
-    ui.js(BIG)
+    ui.mod("commands/Load.js", BIG)
     ui.wait_tracks("n >= 18000")
     ui.settle(1500)
     ui.click_box("1")
@@ -388,11 +388,11 @@ def test_l21_clean_obsolete_events_leaves_no_store_write_unrefreshed(ui, sample_
 
 LOADERS = {   # each used to refresh again after `loadTracks` / `loadTags` (ADR 0009 Q36). Not covered: the loaders that need a database record
               # (server dialog `loadEvents`, `loadEventsFromServerByID`) or the DB (`loadTracksCSVFromDB`)
-    "tracks_csv": "loadCSVFromServer('/data/sample/tracks.csv', 'tracks')",
-    "tracks_tagged_csv": "loadCSVFromServer('/data/sample/tracks_tagged.csv', 'tracks_tagged')",
-    "tags_csv": "loadCSVFromServer('/data/sample/tracks_tagged.csv', 'tags')",
-    "converted_csv": "loadCSVFromServer('/data/sample_gurabo/sample_gurabo.cfr.mp4.events.csv', 'events')",
-    "events_json_url": "eventsFromServer('/data/sample/events_v2.json')",
+    "tracks_csv": "M.loadCSVFromServer('/data/sample/tracks.csv', 'tracks')",
+    "tracks_tagged_csv": "M.loadCSVFromServer('/data/sample/tracks_tagged.csv', 'tracks_tagged')",
+    "tags_csv": "M.loadCSVFromServer('/data/sample/tracks_tagged.csv', 'tags')",
+    "converted_csv": "M.loadCSVFromServer('/data/sample_gurabo/sample_gurabo.cfr.mp4.events.csv', 'events')",
+    "events_json_url": "M.eventsFromServer('/data/sample/events_v2.json')",
 }
 
 
@@ -402,7 +402,7 @@ def test_l22_loaders_refresh_once(ui, name):
     ui.open()
     ui.settle()
     ui.js("refreshLog.clear()")
-    ui.js(LOADERS[name])
+    ui.mod("commands/LoadFromServer.js", LOADERS[name])
     ui.page.wait_for_function("Object.keys(events.toObject()).length > 0")
     ui.settle(1000)
     tree = ui.js("refreshLog.tree()")
@@ -430,7 +430,7 @@ def test_l23_selection_model_follows_fabric(ui, sample_dir):
     assert ui.js("selection.getKey()") is None and ui.js("selection.getId()") == "no-such-id"
     ui.js("selection.select(videoControl.getCurrentFrame(), '1'); refresh.selection()")
     same()
-    ui.js("deselectBee()")
+    ui.mod("SelectionControl.js", "M.deselectBee()")
     same()
     assert ui.js("selection.getId()") is None                       # explicit deselect forgets the id
 

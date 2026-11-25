@@ -17,7 +17,7 @@ def frame_obs(ui, frame):
 def acts(ui, obs):
     """The four flags [fanning, pollen, entering, leaving]: derived from the labels, not stored (ADR 0008 step 4)."""
     assert "bool_acts" not in obs
-    return ui.page.evaluate("(o) => Labels.bool_acts(o)", obs)
+    return ui.mod("annotation/Labels.js", "M.bool_acts(arg)", obs)
 
 
 def shift_click_at(ui, vx, vy):
@@ -317,7 +317,7 @@ def test_j10c_angle_from_tag_writes_the_angle_of_the_tag_alone(ui, sample_dir):
     ui.mod("chrono/ChronoData.js", "M.augmentTrackWithTag()")
     ui.wait_tracks()
     before = select_at(ui, 0, "1")
-    expected = ui.js("tagAngle(getCurrentTag())")
+    expected = ui.mods({"D": "overlay/Drawing.js", "S": "SelectionControl.js"}, "D.tagAngle(S.getCurrentTag())")
     assert expected is not None and expected != before["angle"]
     ui.js("onClickAngleFromTag()")
     after = ui.tracks()["0"]["1"]

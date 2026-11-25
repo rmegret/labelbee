@@ -74,7 +74,7 @@ def test_c5_the_same_file_can_be_loaded_twice(ui, sample_dir):
     ui.open()
     ui.load_events(sample_dir / "events_v2.json")
     ui.wait_tracks()
-    ui.js("loadTracks([])")                              # empty the model without the confirmation dialog
+    ui.mod("commands/Load.js", "M.loadTracks([])")                              # empty the model without the confirmation dialog
     assert ui.n_observations() == 0
     ui.load_events(sample_dir / "events_v2.json")       # same file, same input: the input value was reset
     ui.wait_tracks()

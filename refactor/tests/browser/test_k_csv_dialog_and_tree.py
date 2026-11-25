@@ -82,23 +82,23 @@ def test_k6_event_tree_nesting_and_remembered_state(ui):
     ui.open_panel("Annotations")
     ui.open_subpanel("Events info")
     obs = "{id: '1', frame: 0, parts: [{label: 'head', posFrame: {x: 1, y: 2}}], tag: {id: 7, p: [[0, 1], [2, 3]]}}"
-    ui.page.evaluate("updateEventTree(%s)" % obs)
+    ui.mod("form/Form.js", "M.updateEventTree(%s)" % obs)
     parts = ui.page.locator("#event-tree details details > summary", has_text="parts [")
     assert parts.count() == 1
     assert not parts.evaluate("s => s.parentElement.open")             # nested levels start closed
     parts.click()
     assert parts.evaluate("s => s.parentElement.open")
     assert "0 {2}" in ui.page.inner_text("#event-tree")                # its first item is shown, closed
-    ui.page.evaluate("updateEventTree(%s)" % obs)                      # re-render (new selection or edit): the state is kept
+    ui.mod("form/Form.js", "M.updateEventTree(%s)" % obs)                      # re-render (new selection or edit): the state is kept
     assert ui.page.locator("#event-tree details details > summary", has_text="parts [").evaluate("s => s.parentElement.open")
     assert not ui.page.locator("#event-tree details details > summary", has_text="tag {").evaluate("s => s.parentElement.open")
-    ui.page.evaluate("updateEventTree(null)")
+    ui.mod("form/Form.js", "M.updateEventTree(null)")
     assert ui.page.inner_text("#event-tree") == "No event selected"
 
 
 def test_k7_event_tree_is_not_rendered_while_the_tab_is_closed(ui):
     ui.open()
-    ui.page.evaluate("updateEventTree({id: '1', frame: 3, parts: []})")
+    ui.mod("form/Form.js", "M.updateEventTree({id: '1', frame: 3, parts: []})")
     assert ui.page.evaluate("document.getElementById('event-tree').textContent") == "No event selected"   # hidden: untouched
     ui.open_panel("Annotations")
     ui.open_subpanel("Events info")

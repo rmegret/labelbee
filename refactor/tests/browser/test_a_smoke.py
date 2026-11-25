@@ -78,7 +78,7 @@ def test_a6_edit_a_box_and_its_label_and_keep_it(ui, sample_dir):
     assert obs["x"] > x0 + 10
     assert "pollen" in obs["labels"]
     assert "bool_acts" not in obs                 # derived from the labels since slice 5 step 4
-    assert ui.page.evaluate("(o) => Labels.bool_acts(o)", obs)[1] is True   # pollen is the second flag (BEH-701)
+    assert ui.mod("annotation/Labels.js", "M.bool_acts(arg)", obs)[1] is True   # pollen is the second flag (BEH-701)
 
 
 def test_a7_undo_is_off_for_now(ui, sample_dir):
@@ -95,7 +95,7 @@ def test_a7_undo_is_off_for_now(ui, sample_dir):
     ui.page.wait_for_function("(n) => !(events.toObject()['0'] || {})['1']", arg=n)     # the emptied frame is pruned
     assert ui.n_observations() == n - 1
     assert ui.page.locator("#undoButton").is_disabled()
-    assert ui.js("undoStack.length") == 0
+    assert ui.mod("SelectionControl.js", "M.undoStack.length") == 0
     ui.page.wait_for_timeout(300)
     assert ui.n_observations() == n - 1
 

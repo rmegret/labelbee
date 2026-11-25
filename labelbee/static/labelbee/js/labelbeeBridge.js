@@ -42,7 +42,6 @@ import * as SaveToFile from './commands/SaveToFile.js';
 import * as Load from './commands/Load.js';
 import * as LoadFromServer from './commands/LoadFromServer.js';
 import * as SaveToServer from './commands/SaveToServer.js';
-import * as Alerts from './core/Alerts.js';
 import { VideoControl } from './video/VideoControl.js';
 import { VisitWidget } from './form/VisitControl.js';
 import { TimelinePicker } from './overlay/TimelinePicker.js';
@@ -75,7 +74,6 @@ import {
   getCurrentTag,
   deleteSelected,
   undoAction,
-  undoStack,
   modifyCurrentObsSpan,
 } from './SelectionControl.js';
 import {
@@ -150,7 +148,6 @@ function installGlobals(fns) {
 window.logging = logging; // debug-level flags (`logging.io = true` from the console), same object the modules use
 window.refreshLog = refreshLog; // read from the console and the tests; filled by core/RefreshInstrumentBridge.js
 
-window.Labels = Labels; // the namespace, for the classic scripts: Labels.bool_acts(obs), ...
 window.getLabels = (obs) => Labels.toArray(obs.labels);
 
 window.WrongId = WrongId;
@@ -175,19 +172,14 @@ install(SaveToFile, [
   "saveEventsToFile", "saveEventsToCSV", "saveEventsToBBoxes", "saveTagsToFile", // template buttons
 ]);
 install(Load, [
-  "loadTracks", "loadTags", // labelBee.js, tests
   "eraseEvents", "eraseTags", // template buttons
 ]);
 install(LoadFromServer, [
-  "loadCSVFromServer", "eventsFromServer", "tagsFromServer", // dialogs/, VideoControl.js, tests
+  "tagsFromServer", // dialogs/, VideoControl.js
   "clickLoadTracksCSVFromServer", "clickLoadTracksTaggedCSVFromServer", // template buttons
   "loadEventsFromServerByID", // labelBee.js
 ]);
 install(SaveToServer, ["eventsToServer"]); // template button
-install(Alerts, [
-  "mainAlert", // test_alerts.py
-  "showAjaxError", // tests
-]);
 // commands/EditActions.js
 installGlobals({
   deleteEvent,
@@ -205,7 +197,7 @@ window.OverlayOptions = OverlayOptions; // built by `OverlayControl` (`overlay.o
 // Form.js, SelectionControl.js, TimelinePicker.js, ChronoControlInteraction.js and the page.
 window.OverlayControl = OverlayControl;
 installGlobals({
-  identifyBeeRect, newRectForCurrentTag, tagAngle,
+  identifyBeeRect, newRectForCurrentTag,
 });
 
 // The page layout (layout/): patches and widgets that only touch the DOM, started once (they were classic scripts whose own
@@ -229,15 +221,14 @@ installGlobals({
 // The form and the selection (Form.js, SelectionControl.js, from the former SelectionControl.js): called by the classic scripts, the
 // inline handlers of the page and the tests. The entry points of the refresh are already wrapped by `instrument` in their module.
 installGlobals({
-  onSelectIDChanged, updateEventTree, updateForm,
+  onSelectIDChanged, updateForm,
   onLabelToggled, updateAnnotationStatistics,
   onClickResetAngle, onClickAngleFromTag,
 });
 installGlobals({
-  swapID_callback, deselectBee, getCurrentTag, deleteSelected, undoAction,
+  swapID_callback, deleteSelected, undoAction,
   modifyCurrentObsSpan,
 });
-window.undoStack = undoStack; // the same array (never reassigned), read by the tests
 
 // Inline handlers of labelbee_page.html (navigation and seek buttons)
 installGlobals({
